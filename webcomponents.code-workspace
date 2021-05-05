@@ -1,0 +1,101 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.insertFinalNewline": true,
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorCustomizations": {
+      "titleBar.inactiveBackground": "#4f0000",
+      "titleBar.activeBackground": "#6A040F",
+      "titleBar.activeForeground": "#fff",
+      "activityBar.background": "#6A040F",
+      "activityBar.foreground": "#fff",
+      "activityBar.inactiveForeground": "#efe0e0",
+      "statusBar.foreground": "#efe0e0",
+      "statusBar.background": "#6A040F"
+    },
+    "editor.inlineSuggest.enabled": true,
+    "editor.renderWhitespace": "trailing",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "eslint.lintTask.enable": true,
+    "editor.formatOnSave": true,
+    "editor.rulers": [80, 120],
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "explorer.compactFolders": false,
+    "cSpell.caseSensitive": false,
+    "cSpell.words": [
+      "ecoacoustics",
+      "ecoacoustic",
+      "csspart",
+      "slotchange",
+      "webcomponents-workspace",
+      "webcomponents",
+      "jsdelivr"
+    ],
+    "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
+  },
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "streetsidesoftware.code-spell-checker",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "pkief.material-icon-theme",
+      "aaron-bond.better-comments",
+      "github.vscode-github-actions",
+      "github.copilot",
+      "github.copilot-chat",
+      "github.vscode-pull-request-github",
+      "eamodio.gitlens",
+      "zignd.html-css-class-completion",
+      "yzhang.markdown-all-in-one",
+      "davidanson.vscode-markdownlint",
+      "yoavbls.pretty-ts-errors",
+      "visualstudioexptteam.vscodeintellicode",
+      "visualstudioexptteam.intellicode-api-usage-examples",
+      "ms-playwright.playwright",
+      "ms-vscode.vscode-typescript-next",
+      "bierner.lit-html",
+      "ecmel.vscode-html-css",
+      "pushqrdx.inline-html"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Lint",
+        "command": "pnpm lint",
+        "request": "launch",
+        "type": "node-terminal"
+      },
+      {
+        "name": "Build Components",
+        "command": "pnpm build:components",
+        "request": "launch",
+        "type": "node-terminal"
+      },
+      {
+        "name": "Components Development Server",
+        "command": "pnpm dev",
+        "request": "launch",
+        "type": "node-terminal"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "pnpm dlx playwright install",
+        "command": "pnpm dlx playwright install",
+        "type": "shell"
+      }
+    ]
+  }
+}

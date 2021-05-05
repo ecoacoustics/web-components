@@ -1,0 +1,18 @@
+{
+  "root": true,
+  "rules": {
+    "strict": "error"
+  },
+  "overrides": [
+    {
+      "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+      "files": ["*.ts", "*.js"],
+      "parserOptions": {
+        "createDefaultProgram": true
+      },
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
+}

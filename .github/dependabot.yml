@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # this dependabot config should be used in repos that use the repo template
+  - package-ecosystem: "npm"
+    directory: "/src/components"
+    schedule:
+      interval: "daily"
+
+  # these dependabot configs should ONLY be used in the template repo
+  # this is because all updates to the workspace should be handled by the template repo
+  # while updates to the components developed in the template repo should be handled
+  # by clones
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"

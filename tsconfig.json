@@ -1,0 +1,33 @@
+{
+  "exclude": ["**/*.spec.ts", "**/*.d.ts", "*.config.ts"],
+  "compilerOptions": {
+    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "target": "ES2017",
+    "newLine": "lf",
+    "module": "ESNext",
+    "types": ["vite/client", "node"],
+
+    "outDir": "js",
+    "declarationDir": "@types",
+    "declaration": true,
+
+    "baseUrl": "src/components",
+    "paths": {
+      "": ["node_modules"]
+    },
+
+    /* Bundler mode */
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  }
+}

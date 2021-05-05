@@ -1,0 +1,15 @@
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+max_line_length = 120
+quote_type = double
+
+[*.ts,*.yml]
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.md,*.mdx]
+trim_trailing_whitespace = false
+indent_size = unset
