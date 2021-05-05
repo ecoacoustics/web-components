@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebComponents Workspace</title>
+    <script type="module" src="./src/components/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-media-controls for="media">
+      <div slot="play-icon">Play Me!</div>
+    </oe-media-controls>
+
+    <audio id="media" src="http://localhost:5173/example.flac"></audio>
+
+    <style>
+      oe-media-controls {
+        &::part(play-icon) {
+          color: green;
+          fill: green;
+        }
+
+        &::part(pause-icon) {
+          color: red;
+          fill: red;
+        }
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+name: Run Tests
+
+on: pull_request
+
+jobs:
+  Unit-Tests:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout and Setup
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: |
+            - recursive: true
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install
+
+      - name: Run unit tests
+        run: pnpm test:unit
