@@ -1,36 +1,36 @@
 import { newSpecPage } from '@stencil/core/testing';
-import { MyComponent } from './my-component';
+import { GridLinesX } from './grid-lines-x';
 
-describe('my-component', () => {
+describe('grid-lines-x', () => {
   it('renders', async () => {
     const { root } = await newSpecPage({
-      components: [MyComponent],
-      html: '<my-component></my-component>',
+      components: [GridLinesX],
+      html: '<grid-lines-x></grid-lines-x>',
     });
     expect(root).toEqualHtml(`
-      <my-component>
+      <grid-lines-x>
         <mock:shadow-root>
           <div>
             Hello, World! I'm
           </div>
         </mock:shadow-root>
-      </my-component>
+      </grid-lines-x>
     `);
   });
 
   it('renders with values', async () => {
     const { root } = await newSpecPage({
-      components: [MyComponent],
-      html: `<my-component first="Stencil" last="'Don't call me a framework' JS"></my-component>`,
+      components: [GridLinesX],
+      html: `<grid-lines-x first="Stencil" last="'Don't call me a framework' JS"></grid-lines-x>`,
     });
     expect(root).toEqualHtml(`
-      <my-component first="Stencil" last="'Don't call me a framework' JS">
+      <grid-lines-x first="Stencil" last="'Don't call me a framework' JS">
         <mock:shadow-root>
           <div>
             Hello, World! I'm Stencil 'Don't call me a framework' JS
           </div>
         </mock:shadow-root>
-      </my-component>
+      </grid-lines-x>
     `);
   });
 });

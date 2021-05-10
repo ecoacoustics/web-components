@@ -24,5 +24,8 @@
   "dependencies": {
     "@stencil/core": "^2.0.1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^26.0.23"
+  }
 }
