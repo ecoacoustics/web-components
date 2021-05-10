@@ -26,6 +26,11 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^26.0.23"
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "@types/jest": "^26.0.23",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
+    "husky": "^6.0.0"
   }
 }
