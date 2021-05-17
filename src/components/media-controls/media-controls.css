@@ -1,3 +1,23 @@
-:host {
-  display: block;
+:host > div {
+  display: flex;
+  flex-direction: row;
+}
+
+:host > div > button {
+  padding: 0.5em;
+  border-radius: 0;
+  border-width: 1px;
+  flex: 1;
+}
+
+:host > div :first-child {
+  border-radius: 5px 0 0 5px;
+}
+
+:host > div :last-child {
+  border-radius: 0 5px 5px 0;
+}
+
+:host > div :only-child {
+  border-radius: 5px 5px 5px 5px;
 }

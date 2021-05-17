@@ -9,6 +9,18 @@
     <script nomodule src="/build/listen-and-annotate.js"></script>
   </head>
   <body>
-    <media-controls first="Stencil" last="'Don't call me a framework' JS"></media-controls>
+    <audio id="audio">
+      <source src="https://thepaciellogroup.github.io/AT-browser-tests/audio/jeffbob.mp3" />
+    </audio>
+    <ewc-media-controls for="audio"></ewc-media-controls>
   </body>
+  <script>
+    let controls = document.querySelector('ewc-media-controls');
+    controls.onBack = () => {
+      console.log('test');
+    };
+    controls.onForward = () => {
+      console.log('test');
+    };
+  </script>
 </html>

@@ -1,32 +1,79 @@
-import { Component, Prop, h } from '@stencil/core';
-import { format } from '../../utils/utils';
+import { Component, Prop, State, h } from '@stencil/core';
+import { getMedia } from '../../utils/media';
 
 @Component({
-  tag: 'media-controls',
+  tag: 'ewc-media-controls',
   styleUrl: 'media-controls.css',
   shadow: true,
 })
 export class MediaControls {
-  /**
-   * The first name
-   */
-  @Prop() first: string;
+  // The id of the HTMLMediaElement
+  @Prop() for: string;
 
-  /**
-   * The middle name
-   */
-  @Prop() middle: string;
+  // Media control strings
+  @Prop() back: string = 'Back';
+  @Prop() play: string = 'Play';
+  @Prop() pause: string = 'Pause';
+  @Prop() forward: string = 'Forward';
 
-  /**
-   * The last name
-   */
-  @Prop() last: string;
+  // Action to be performed when the back button is pressed
+  @Prop() onBack: VoidFunction;
 
-  private getText(): string {
-    return format(this.first, this.middle, this.last);
+  // Action to be performed when the forward button is pressed
+  @Prop() onForward: VoidFunction;
+
+  // Media source reference retrieved by getMedia
+  @State() mediaSource: HTMLMediaElement;
+  @State() mediaPaused: boolean;
+
+  componentWillLoad() {
+    this.mediaSource = getMedia(this.for);
+    this.addPlayPauseListener();
   }
 
+  componentWillUpdate() {
+    this.mediaSource = getMedia(this.for);
+    this.addPlayPauseListener();
+  }
+
+  addPlayPauseListener = () => {
+    if (this.mediaSource) {
+      this.mediaSource.addEventListener('pause', () => {
+        this.mediaPaused = this.mediaSource.paused;
+      });
+      this.mediaSource.addEventListener('play', () => {
+        this.mediaPaused = this.mediaSource.paused;
+      });
+      this.mediaPaused = this.mediaSource.paused;
+    }
+  };
+
+  /**
+   * Control the media source
+   */
+  playSource = () => {
+    if (this.mediaSource) {
+      this.mediaSource.play();
+    }
+  };
+  pauseSource = () => {
+    if (this.mediaSource) {
+      this.mediaSource.pause();
+    }
+  };
+  toggleSource = () => {
+    if (this.mediaSource) {
+      this.mediaSource.paused ? this.playSource() : this.pauseSource();
+    }
+  };
+
   render() {
-    return <div>Hello, World! I'm {this.getText()}</div>;
+    return (
+      <div>
+        {this.onBack ? <button onClick={this.onBack}>{this.back}</button> : null}
+        <button onClick={this.toggleSource}>{this.mediaPaused ? this.play : this.pause}</button>
+        {this.onForward ? <button onClick={this.onForward}>{this.forward}</button> : null}
+      </div>
+    );
   }
 }

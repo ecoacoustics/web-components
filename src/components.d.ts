@@ -62,6 +62,15 @@ export namespace Components {
          */
         "middle": string;
     }
+    interface EwcMediaControls {
+        "back": string;
+        "for": string;
+        "forward": string;
+        "onBack": VoidFunction;
+        "onForward": VoidFunction;
+        "pause": string;
+        "play": string;
+    }
     interface GridLinesX {
         /**
           * The first name
@@ -77,20 +86,6 @@ export namespace Components {
         "middle": string;
     }
     interface GridLinesY {
-        /**
-          * The first name
-         */
-        "first": string;
-        /**
-          * The last name
-         */
-        "last": string;
-        /**
-          * The middle name
-         */
-        "middle": string;
-    }
-    interface MediaControls {
         /**
           * The first name
          */
@@ -242,6 +237,12 @@ declare global {
         prototype: HTMLAxisYElement;
         new (): HTMLAxisYElement;
     };
+    interface HTMLEwcMediaControlsElement extends Components.EwcMediaControls, HTMLStencilElement {
+    }
+    var HTMLEwcMediaControlsElement: {
+        prototype: HTMLEwcMediaControlsElement;
+        new (): HTMLEwcMediaControlsElement;
+    };
     interface HTMLGridLinesXElement extends Components.GridLinesX, HTMLStencilElement {
     }
     var HTMLGridLinesXElement: {
@@ -253,12 +254,6 @@ declare global {
     var HTMLGridLinesYElement: {
         prototype: HTMLGridLinesYElement;
         new (): HTMLGridLinesYElement;
-    };
-    interface HTMLMediaControlsElement extends Components.MediaControls, HTMLStencilElement {
-    }
-    var HTMLMediaControlsElement: {
-        prototype: HTMLMediaControlsElement;
-        new (): HTMLMediaControlsElement;
     };
     interface HTMLPositionIndicatorElement extends Components.PositionIndicator, HTMLStencilElement {
     }
@@ -313,9 +308,9 @@ declare global {
         "annotation-editor": HTMLAnnotationEditorElement;
         "axis-x": HTMLAxisXElement;
         "axis-y": HTMLAxisYElement;
+        "ewc-media-controls": HTMLEwcMediaControlsElement;
         "grid-lines-x": HTMLGridLinesXElement;
         "grid-lines-y": HTMLGridLinesYElement;
-        "media-controls": HTMLMediaControlsElement;
         "position-indicator": HTMLPositionIndicatorElement;
         "x-annotate": HTMLXAnnotateElement;
         "x-annotation": HTMLXAnnotationElement;
@@ -383,6 +378,15 @@ declare namespace LocalJSX {
          */
         "middle"?: string;
     }
+    interface EwcMediaControls {
+        "back"?: string;
+        "for"?: string;
+        "forward"?: string;
+        "onBack"?: VoidFunction;
+        "onForward"?: VoidFunction;
+        "pause"?: string;
+        "play"?: string;
+    }
     interface GridLinesX {
         /**
           * The first name
@@ -398,20 +402,6 @@ declare namespace LocalJSX {
         "middle"?: string;
     }
     interface GridLinesY {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
-    interface MediaControls {
         /**
           * The first name
          */
@@ -542,9 +532,9 @@ declare namespace LocalJSX {
         "annotation-editor": AnnotationEditor;
         "axis-x": AxisX;
         "axis-y": AxisY;
+        "ewc-media-controls": EwcMediaControls;
         "grid-lines-x": GridLinesX;
         "grid-lines-y": GridLinesY;
-        "media-controls": MediaControls;
         "position-indicator": PositionIndicator;
         "x-annotate": XAnnotate;
         "x-annotation": XAnnotation;
@@ -563,9 +553,9 @@ declare module "@stencil/core" {
             "annotation-editor": LocalJSX.AnnotationEditor & JSXBase.HTMLAttributes<HTMLAnnotationEditorElement>;
             "axis-x": LocalJSX.AxisX & JSXBase.HTMLAttributes<HTMLAxisXElement>;
             "axis-y": LocalJSX.AxisY & JSXBase.HTMLAttributes<HTMLAxisYElement>;
+            "ewc-media-controls": LocalJSX.EwcMediaControls & JSXBase.HTMLAttributes<HTMLEwcMediaControlsElement>;
             "grid-lines-x": LocalJSX.GridLinesX & JSXBase.HTMLAttributes<HTMLGridLinesXElement>;
             "grid-lines-y": LocalJSX.GridLinesY & JSXBase.HTMLAttributes<HTMLGridLinesYElement>;
-            "media-controls": LocalJSX.MediaControls & JSXBase.HTMLAttributes<HTMLMediaControlsElement>;
             "position-indicator": LocalJSX.PositionIndicator & JSXBase.HTMLAttributes<HTMLPositionIndicatorElement>;
             "x-annotate": LocalJSX.XAnnotate & JSXBase.HTMLAttributes<HTMLXAnnotateElement>;
             "x-annotation": LocalJSX.XAnnotation & JSXBase.HTMLAttributes<HTMLXAnnotationElement>;
