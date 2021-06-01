@@ -30,10 +30,18 @@
   "devDependencies": {
     "@commitlint/cli": "^12.1.1",
     "@commitlint/config-conventional": "^12.1.1",
+    "@jest/globals": "^26.6.2",
     "@types/jest": "^26.0.23",
-    "eslint": "^7.26.0",
+    "@types/puppeteer": "^5.4.3",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "eslint": "^7.27.0",
+    "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-prettier": "^3.4.0",
     "husky": "^6.0.0",
-    "jsdom": "^16.5.3"
+    "jsdom": "^16.5.3",
+    "puppeteer": "^9.1.1"
   }
 }

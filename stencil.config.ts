@@ -1,6 +1,6 @@
 import { Config } from '@stencil/core';
 
-export const config: Config = {
+const config: Config = {
   namespace: 'listen-and-annotate',
   outputTargets: [
     {
@@ -19,6 +19,8 @@ export const config: Config = {
     },
   ],
   testing: {
-    //testEnvironment: 'jsdom',
+    // testEnvironment: 'jsdom',
   },
 };
+
+module.exports = { config };
