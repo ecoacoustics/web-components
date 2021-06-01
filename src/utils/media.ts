@@ -10,7 +10,7 @@ export class MediaException extends Error {
 /**
  * Get the media element when the component loads or is updated
  */
-export function getMedia(element: string, owner: HTMLElement, logger: Logger): globalThis.HTMLMediaElement | null {
+export function getMedia(element: string, owner: globalThis.HTMLElement, logger: Logger): globalThis.HTMLMediaElement | null {
   const mediaSource = owner.querySelector(`#${element}`);
 
   // Warn if no element has been set
@@ -22,9 +22,9 @@ export function getMedia(element: string, owner: HTMLElement, logger: Logger): g
     throw new MediaException(`The HTMLElement ${element} does not exist`);
 
     // If mediaSource HTMLElement is a HTMLMediaElement
-  } else if (mediaSource instanceof window.HTMLMediaElement || mediaSource.id === 'allow-unsafe') {
+  } else if (mediaSource instanceof globalThis.HTMLMediaElement || mediaSource.id === 'allow-unsafe') {
     // Cast from HTMLElement to HTMLMediaElement and return mediaSource
-    return mediaSource as HTMLMediaElement;
+    return mediaSource as globalThis.HTMLMediaElement;
 
     // If the HTMLElement is not a HTMLMediaElement throw an error
   } else {

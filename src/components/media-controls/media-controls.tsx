@@ -18,15 +18,15 @@ export class MediaControls {
   @Prop() logger;
 
   // Media source reference retrieved by getMedia
-  @State() mediaSource: HTMLMediaElement;
+  @State() mediaSource: globalThis.HTMLMediaElement;
 
   // The owner of the component (document)
-  owner: HTMLElement;
+  owner: globalThis.HTMLElement;
 
   @State() mediaPaused: boolean;
 
   componentWillLoad() {
-    this.owner = this.el.ownerDocument as HTMLElement;
+    this.owner = this.el.ownerDocument as globalThis.HTMLElement;
     this.logger = this.logger ?? new Logger();
     this.logger.log('test');
 
