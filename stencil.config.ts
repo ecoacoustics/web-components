@@ -1,7 +1,8 @@
 import { Config } from '@stencil/core';
 
 const config: Config = {
-  namespace: 'listen-and-annotate',
+  namespace: 'ewc',
+  globalStyle: 'src/global/global.css',
   outputTargets: [
     {
       type: 'dist',
