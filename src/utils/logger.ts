@@ -1,4 +1,4 @@
-export default class Logger {
+class Logger {
   console: globalThis.Console | any;
 
   name: string;
@@ -23,3 +23,6 @@ export default class Logger {
     }
   }
 }
+
+const logger = new Logger();
+export default logger;

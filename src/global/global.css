@@ -1,6 +1,24 @@
 :root {
   --ewc-primary-color: #ffffff;
   --ewc-secondary-color: #c7c3c3;
+  --ewc-tertiary-color: #8f8e8e;
 
-  --ewc-primary-text-color: #f00000;
+  --ewc-primary-text-color: #000000;
+  --ewc-secondary-text-color: #ffffff;
+
+  --ewc-error-color: #d86a6a;
+  --ewc-warning-color: #eeb948;
+  --ewc-info-color: #6acbd8;
+
+  --ewc-margin-small: 0.5em;
+  --ewc-margin-normal: 1em;
+  --ewc-margin-large: 2em;
+
+  --ewc-padding-small: 0.5em;
+  --ewc-padding-normal: 1em;
+  --ewc-padding-large: 2em;
+
+  --ewc-border-radius: 0.25em;
+
+  --ewc-border-radius-thin: 1px;
 }
