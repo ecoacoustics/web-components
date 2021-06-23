@@ -1,4 +1,5 @@
-import { Component, Prop, State, h } from '@stencil/core';
+// eslint-disable-next-line no-unused-vars
+import { Element, Component, Prop, State, h } from '@stencil/core';
 import { getMedia } from '../../utils/media';
 
 @Component({
@@ -6,33 +7,29 @@ import { getMedia } from '../../utils/media';
   styleUrl: 'media-controls.css',
   shadow: true,
 })
+// eslint-disable-next-line import/prefer-default-export
 export class MediaControls {
+  @Element() el;
+
   // The id of the HTMLMediaElement
   @Prop() for: string;
 
-  // Media control strings
-  @Prop() back: string = 'Back';
-  @Prop() play: string = 'Play';
-  @Prop() pause: string = 'Pause';
-  @Prop() forward: string = 'Forward';
-
-  // Action to be performed when the back button is pressed
-  @Prop() onBack: VoidFunction;
-
-  // Action to be performed when the forward button is pressed
-  @Prop() onForward: VoidFunction;
-
   // Media source reference retrieved by getMedia
-  @State() mediaSource: HTMLMediaElement;
+  @State() mediaSource: globalThis.HTMLMediaElement;
+
+  // The owner of the component (document)
+  owner: globalThis.HTMLElement;
+
   @State() mediaPaused: boolean;
 
   componentWillLoad() {
-    this.mediaSource = getMedia(this.for);
+    this.owner = this.el.ownerDocument as globalThis.HTMLElement;
+    this.mediaSource = getMedia(this.for, this.owner);
     this.addPlayPauseListener();
   }
 
   componentWillUpdate() {
-    this.mediaSource = getMedia(this.for);
+    this.mediaSource = getMedia(this.for, this.owner);
     this.addPlayPauseListener();
   }
 
@@ -56,23 +53,25 @@ export class MediaControls {
       this.mediaSource.play();
     }
   };
+
   pauseSource = () => {
     if (this.mediaSource) {
       this.mediaSource.pause();
     }
   };
+
   toggleSource = () => {
-    if (this.mediaSource) {
-      this.mediaSource.paused ? this.playSource() : this.pauseSource();
+    if (this.mediaSource.paused) {
+      this.playSource();
+    } else {
+      this.pauseSource();
     }
   };
 
   render() {
     return (
       <div>
-        {this.onBack ? <button onClick={this.onBack}>{this.back}</button> : null}
-        <button onClick={this.toggleSource}>{this.mediaPaused ? this.play : this.pause}</button>
-        {this.onForward ? <button onClick={this.onForward}>{this.forward}</button> : null}
+        <button onClick={this.toggleSource}>{this.mediaPaused ? 'Play' : 'Pause'}</button>
       </div>
     );
   }

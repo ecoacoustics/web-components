@@ -1,32 +1,12 @@
+/* eslint-disable no-undef */
 import { newE2EPage } from '@stencil/core/testing';
 
 describe('media-controls', () => {
   it('renders', async () => {
     const page = await newE2EPage();
 
-    await page.setContent('<media-controls></media-controls>');
-    const element = await page.find('media-controls');
+    await page.setContent('<ewc-media-controls></ewc-media-controls>');
+    const element = await page.find('ewc-media-controls');
     expect(element).toHaveClass('hydrated');
-  });
-
-  it('renders changes to the name data', async () => {
-    const page = await newE2EPage();
-
-    await page.setContent('<media-controls></media-controls>');
-    const component = await page.find('media-controls');
-    const element = await page.find('media-controls >>> div');
-    expect(element.textContent).toEqual(`Hello, World! I'm `);
-
-    component.setProperty('first', 'James');
-    await page.waitForChanges();
-    expect(element.textContent).toEqual(`Hello, World! I'm James`);
-
-    component.setProperty('last', 'Quincy');
-    await page.waitForChanges();
-    expect(element.textContent).toEqual(`Hello, World! I'm James Quincy`);
-
-    component.setProperty('middle', 'Earl');
-    await page.waitForChanges();
-    expect(element.textContent).toEqual(`Hello, World! I'm James Earl Quincy`);
   });
 });

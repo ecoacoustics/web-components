@@ -63,13 +63,7 @@ export namespace Components {
         "middle": string;
     }
     interface EwcMediaControls {
-        "back": string;
         "for": string;
-        "forward": string;
-        "onBack": VoidFunction;
-        "onForward": VoidFunction;
-        "pause": string;
-        "play": string;
     }
     interface GridLinesX {
         /**
@@ -379,13 +373,7 @@ declare namespace LocalJSX {
         "middle"?: string;
     }
     interface EwcMediaControls {
-        "back"?: string;
         "for"?: string;
-        "forward"?: string;
-        "onBack"?: VoidFunction;
-        "onForward"?: VoidFunction;
-        "pause"?: string;
-        "play"?: string;
     }
     interface GridLinesX {
         /**
