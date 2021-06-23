@@ -1,23 +1,27 @@
-/* eslint-disable no-undef */
 import { newSpecPage } from '@stencil/core/testing';
 import { jest } from '@jest/globals';
 // eslint-disable-next-line no-unused-vars
 import { h } from '@stencil/core';
-import { MediaException } from '../../utils/media';
 import { MediaControls } from './media-controls';
-import Logger from '../../utils/logger';
+import globals from '../../utils/globals';
+import { TestHTMLElement, TestHTMLMediaElement } from '../../test/types';
 
-const logger = new Logger();
-logger.warn = jest.fn();
-logger.log = jest.fn();
+beforeEach(() => {
+  let logger = globals._logger;
+  logger.log = jest.fn();
+  logger.warn = jest.fn();
+
+  //let win = globals._win;
+  globals._win.HTMLElement = TestHTMLElement;
+  globals._win.HTMLMediaElement = TestHTMLMediaElement;
+});
 
 describe('ewc-media-controls', () => {
   it('Warns and renders if no media source is given', async () => {
     const { root } = await newSpecPage({
       components: [MediaControls],
-      template: () => <ewc-media-controls logger={logger}></ewc-media-controls>,
+      template: () => <ewc-media-controls></ewc-media-controls>,
     });
-    // eslint-disable-next-line no-undef
     expect(root).toEqualHtml(`
       <ewc-media-controls>
         <mock:shadow-root>
@@ -30,7 +34,7 @@ describe('ewc-media-controls', () => {
       </ewc-media-controls>
     `);
 
-    expect(logger.warn).toBeCalled();
+    expect(globals._logger.warn).toBeCalled();
   });
 
   // it('Throws an error when the media element does not exist', async () => {

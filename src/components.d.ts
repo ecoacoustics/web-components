@@ -64,7 +64,6 @@ export namespace Components {
     }
     interface EwcMediaControls {
         "for": string;
-        "logger": any;
     }
     interface GridLinesX {
         /**
@@ -375,7 +374,6 @@ declare namespace LocalJSX {
     }
     interface EwcMediaControls {
         "for"?: string;
-        "logger"?: any;
     }
     interface GridLinesX {
         /**

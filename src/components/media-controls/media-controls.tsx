@@ -1,6 +1,5 @@
 // eslint-disable-next-line no-unused-vars
 import { Element, Component, Prop, State, h } from '@stencil/core';
-import Logger from '../../utils/logger';
 import { getMedia } from '../../utils/media';
 
 @Component({
@@ -15,8 +14,6 @@ export class MediaControls {
   // The id of the HTMLMediaElement
   @Prop() for: string;
 
-  @Prop() logger;
-
   // Media source reference retrieved by getMedia
   @State() mediaSource: globalThis.HTMLMediaElement;
 
@@ -27,16 +24,12 @@ export class MediaControls {
 
   componentWillLoad() {
     this.owner = this.el.ownerDocument as globalThis.HTMLElement;
-    this.logger = this.logger ?? new Logger();
-    this.logger.log('test');
-
-    this.mediaSource = getMedia(this.for, this.owner, this.logger);
+    this.mediaSource = getMedia(this.for, this.owner);
     this.addPlayPauseListener();
   }
 
   componentWillUpdate() {
-    this.logger = this.logger ?? new Logger();
-    this.mediaSource = getMedia(this.for, this.owner, this.logger);
+    this.mediaSource = getMedia(this.for, this.owner);
     this.addPlayPauseListener();
   }
 

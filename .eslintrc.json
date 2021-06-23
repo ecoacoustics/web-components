@@ -18,7 +18,9 @@
     "no-alert": ["error"],
     "no-global-assign": ["error"],
     "import/no-extraneous-dependencies": ["error", { "devDependencies": ["**/*.spec.tsx", "**/*.e2e.ts"] }],
-    "prettier/prettier": ["error"]
+    "prettier/prettier": ["error"],
+    "no-undef": ["error", { "allow": [] }],
+    "no-underscore-dangle": [{ "allow": ["_win", "_doc", "_logger"], "allowAfterThis": true }]
   },
   "settings": {
     "import/resolver": {
