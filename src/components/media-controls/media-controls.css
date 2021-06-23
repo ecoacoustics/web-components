@@ -1,0 +1,24 @@
+:host > div {
+  display: flex;
+  flex-direction: row;
+}
+
+:host > div > button {
+  padding: var(--ewc-padding-small);
+  border-radius: 0;
+  border-width: 1px;
+  flex: 1;
+  color: var(--ewc-primary-text-color);
+}
+
+:host > div :first-child {
+  border-radius: var(--ewc-border-radius) 0 0 var(--ewc-border-radius);
+}
+
+:host > div :last-child {
+  border-radius: 0 var(--ewc-border-radius) var(--ewc-border-radius) 0;
+}
+
+:host > div :only-child {
+  border-radius: var(--ewc-border-radius) var(--ewc-border-radius) var(--ewc-border-radius) var(--ewc-border-radius);
+}

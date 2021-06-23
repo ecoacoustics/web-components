@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
   <head>
+    <link rel="stylesheet" href="/build/ewc.css" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
     <title>Stencil Component Starter</title>
 
-    <script type="module" src="/build/listen-and-annotate.esm.js"></script>
-    <script nomodule src="/build/listen-and-annotate.js"></script>
+    <script type="module" src="/build/ewc.esm.js"></script>
+    <script nomodule src="/build/ewc.js"></script>
   </head>
   <body>
-    <my-component first="Stencil" last="'Don't call me a framework' JS"></my-component>
+    <audio id="audio">
+      <source src="https://thepaciellogroup.github.io/AT-browser-tests/audio/jeffbob.mp3" />
+    </audio>
+    <ewc-media-controls for="audio"></ewc-media-controls>
   </body>
+  <script>
+    let controls = document.querySelector('ewc-media-controls');
+    controls.onBack = () => {
+      console.log('test');
+    };
+    controls.onForward = () => {
+      console.log('test');
+    };
+  </script>
 </html>

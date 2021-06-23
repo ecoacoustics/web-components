@@ -6,7 +6,192 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
-    interface MyComponent {
+    interface AnnotationContainer {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface AnnotationEditor {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface AxisX {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface AxisY {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface EwcMediaControls {
+        "for": string;
+    }
+    interface GridLinesX {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface GridLinesY {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface PositionIndicator {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XAnnotate {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XAnnotation {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XAxes {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XCoords {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XSpectrogram {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XTag {
+        /**
+          * The first name
+         */
+        "first": string;
+        /**
+          * The last name
+         */
+        "last": string;
+        /**
+          * The middle name
+         */
+        "middle": string;
+    }
+    interface XTags {
         /**
           * The first name
          */
@@ -22,18 +207,301 @@ export namespace Components {
     }
 }
 declare global {
-    interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
+    interface HTMLAnnotationContainerElement extends Components.AnnotationContainer, HTMLStencilElement {
     }
-    var HTMLMyComponentElement: {
-        prototype: HTMLMyComponentElement;
-        new (): HTMLMyComponentElement;
+    var HTMLAnnotationContainerElement: {
+        prototype: HTMLAnnotationContainerElement;
+        new (): HTMLAnnotationContainerElement;
+    };
+    interface HTMLAnnotationEditorElement extends Components.AnnotationEditor, HTMLStencilElement {
+    }
+    var HTMLAnnotationEditorElement: {
+        prototype: HTMLAnnotationEditorElement;
+        new (): HTMLAnnotationEditorElement;
+    };
+    interface HTMLAxisXElement extends Components.AxisX, HTMLStencilElement {
+    }
+    var HTMLAxisXElement: {
+        prototype: HTMLAxisXElement;
+        new (): HTMLAxisXElement;
+    };
+    interface HTMLAxisYElement extends Components.AxisY, HTMLStencilElement {
+    }
+    var HTMLAxisYElement: {
+        prototype: HTMLAxisYElement;
+        new (): HTMLAxisYElement;
+    };
+    interface HTMLEwcMediaControlsElement extends Components.EwcMediaControls, HTMLStencilElement {
+    }
+    var HTMLEwcMediaControlsElement: {
+        prototype: HTMLEwcMediaControlsElement;
+        new (): HTMLEwcMediaControlsElement;
+    };
+    interface HTMLGridLinesXElement extends Components.GridLinesX, HTMLStencilElement {
+    }
+    var HTMLGridLinesXElement: {
+        prototype: HTMLGridLinesXElement;
+        new (): HTMLGridLinesXElement;
+    };
+    interface HTMLGridLinesYElement extends Components.GridLinesY, HTMLStencilElement {
+    }
+    var HTMLGridLinesYElement: {
+        prototype: HTMLGridLinesYElement;
+        new (): HTMLGridLinesYElement;
+    };
+    interface HTMLPositionIndicatorElement extends Components.PositionIndicator, HTMLStencilElement {
+    }
+    var HTMLPositionIndicatorElement: {
+        prototype: HTMLPositionIndicatorElement;
+        new (): HTMLPositionIndicatorElement;
+    };
+    interface HTMLXAnnotateElement extends Components.XAnnotate, HTMLStencilElement {
+    }
+    var HTMLXAnnotateElement: {
+        prototype: HTMLXAnnotateElement;
+        new (): HTMLXAnnotateElement;
+    };
+    interface HTMLXAnnotationElement extends Components.XAnnotation, HTMLStencilElement {
+    }
+    var HTMLXAnnotationElement: {
+        prototype: HTMLXAnnotationElement;
+        new (): HTMLXAnnotationElement;
+    };
+    interface HTMLXAxesElement extends Components.XAxes, HTMLStencilElement {
+    }
+    var HTMLXAxesElement: {
+        prototype: HTMLXAxesElement;
+        new (): HTMLXAxesElement;
+    };
+    interface HTMLXCoordsElement extends Components.XCoords, HTMLStencilElement {
+    }
+    var HTMLXCoordsElement: {
+        prototype: HTMLXCoordsElement;
+        new (): HTMLXCoordsElement;
+    };
+    interface HTMLXSpectrogramElement extends Components.XSpectrogram, HTMLStencilElement {
+    }
+    var HTMLXSpectrogramElement: {
+        prototype: HTMLXSpectrogramElement;
+        new (): HTMLXSpectrogramElement;
+    };
+    interface HTMLXTagElement extends Components.XTag, HTMLStencilElement {
+    }
+    var HTMLXTagElement: {
+        prototype: HTMLXTagElement;
+        new (): HTMLXTagElement;
+    };
+    interface HTMLXTagsElement extends Components.XTags, HTMLStencilElement {
+    }
+    var HTMLXTagsElement: {
+        prototype: HTMLXTagsElement;
+        new (): HTMLXTagsElement;
     };
     interface HTMLElementTagNameMap {
-        "my-component": HTMLMyComponentElement;
+        "annotation-container": HTMLAnnotationContainerElement;
+        "annotation-editor": HTMLAnnotationEditorElement;
+        "axis-x": HTMLAxisXElement;
+        "axis-y": HTMLAxisYElement;
+        "ewc-media-controls": HTMLEwcMediaControlsElement;
+        "grid-lines-x": HTMLGridLinesXElement;
+        "grid-lines-y": HTMLGridLinesYElement;
+        "position-indicator": HTMLPositionIndicatorElement;
+        "x-annotate": HTMLXAnnotateElement;
+        "x-annotation": HTMLXAnnotationElement;
+        "x-axes": HTMLXAxesElement;
+        "x-coords": HTMLXCoordsElement;
+        "x-spectrogram": HTMLXSpectrogramElement;
+        "x-tag": HTMLXTagElement;
+        "x-tags": HTMLXTagsElement;
     }
 }
 declare namespace LocalJSX {
-    interface MyComponent {
+    interface AnnotationContainer {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface AnnotationEditor {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface AxisX {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface AxisY {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface EwcMediaControls {
+        "for"?: string;
+    }
+    interface GridLinesX {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface GridLinesY {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface PositionIndicator {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XAnnotate {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XAnnotation {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XAxes {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XCoords {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XSpectrogram {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XTag {
+        /**
+          * The first name
+         */
+        "first"?: string;
+        /**
+          * The last name
+         */
+        "last"?: string;
+        /**
+          * The middle name
+         */
+        "middle"?: string;
+    }
+    interface XTags {
         /**
           * The first name
          */
@@ -48,14 +516,42 @@ declare namespace LocalJSX {
         "middle"?: string;
     }
     interface IntrinsicElements {
-        "my-component": MyComponent;
+        "annotation-container": AnnotationContainer;
+        "annotation-editor": AnnotationEditor;
+        "axis-x": AxisX;
+        "axis-y": AxisY;
+        "ewc-media-controls": EwcMediaControls;
+        "grid-lines-x": GridLinesX;
+        "grid-lines-y": GridLinesY;
+        "position-indicator": PositionIndicator;
+        "x-annotate": XAnnotate;
+        "x-annotation": XAnnotation;
+        "x-axes": XAxes;
+        "x-coords": XCoords;
+        "x-spectrogram": XSpectrogram;
+        "x-tag": XTag;
+        "x-tags": XTags;
     }
 }
 export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
-            "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
+            "annotation-container": LocalJSX.AnnotationContainer & JSXBase.HTMLAttributes<HTMLAnnotationContainerElement>;
+            "annotation-editor": LocalJSX.AnnotationEditor & JSXBase.HTMLAttributes<HTMLAnnotationEditorElement>;
+            "axis-x": LocalJSX.AxisX & JSXBase.HTMLAttributes<HTMLAxisXElement>;
+            "axis-y": LocalJSX.AxisY & JSXBase.HTMLAttributes<HTMLAxisYElement>;
+            "ewc-media-controls": LocalJSX.EwcMediaControls & JSXBase.HTMLAttributes<HTMLEwcMediaControlsElement>;
+            "grid-lines-x": LocalJSX.GridLinesX & JSXBase.HTMLAttributes<HTMLGridLinesXElement>;
+            "grid-lines-y": LocalJSX.GridLinesY & JSXBase.HTMLAttributes<HTMLGridLinesYElement>;
+            "position-indicator": LocalJSX.PositionIndicator & JSXBase.HTMLAttributes<HTMLPositionIndicatorElement>;
+            "x-annotate": LocalJSX.XAnnotate & JSXBase.HTMLAttributes<HTMLXAnnotateElement>;
+            "x-annotation": LocalJSX.XAnnotation & JSXBase.HTMLAttributes<HTMLXAnnotationElement>;
+            "x-axes": LocalJSX.XAxes & JSXBase.HTMLAttributes<HTMLXAxesElement>;
+            "x-coords": LocalJSX.XCoords & JSXBase.HTMLAttributes<HTMLXCoordsElement>;
+            "x-spectrogram": LocalJSX.XSpectrogram & JSXBase.HTMLAttributes<HTMLXSpectrogramElement>;
+            "x-tag": LocalJSX.XTag & JSXBase.HTMLAttributes<HTMLXTagElement>;
+            "x-tags": LocalJSX.XTags & JSXBase.HTMLAttributes<HTMLXTagsElement>;
         }
     }
 }
