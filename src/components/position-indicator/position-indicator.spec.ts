@@ -1,7 +1,7 @@
 import { newSpecPage } from '@stencil/core/testing';
 import { PositionIndicator } from './position-indicator';
-
-describe('position-indicator', () => {
+/*
+describe('ewc-position-indicator', () => {
   it('renders', async () => {
     const { root } = await newSpecPage({
       components: [PositionIndicator],
@@ -34,3 +34,4 @@ describe('position-indicator', () => {
     `);
   });
 });
+*/
