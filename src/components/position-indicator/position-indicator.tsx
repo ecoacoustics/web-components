@@ -51,7 +51,6 @@ export class PositionIndicator {
         this.dragging = false;
       } else if (event.type === 'mousedown') {
         this.dragging = true;
-        console.log(this.dragging);
       } else if (event.type === 'timeupdate') {
         this.currentTime = this.mediaSource.currentTime;
         if (!this.dragging) {
@@ -60,10 +59,15 @@ export class PositionIndicator {
       }
     });
 
+    // Update the slider range if the recording duration changes
     this.mediaSource.ondurationchange = () => {
       this.duration = this.mediaSource.duration;
-      console.log(this.duration);
     };
+
+    // Set the initial slider position
+    if (!this.dragging) {
+      this.slider.value = `${this.mediaSource.currentTime}`;
+    }
   }
 
   componentWillLoad() {
