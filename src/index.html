@@ -14,6 +14,8 @@
       <source src="https://thepaciellogroup.github.io/AT-browser-tests/audio/jeffbob.mp3" />
     </audio>
     <ewc-media-controls for="audio"></ewc-media-controls>
+    <div id="fake" style="background-color: brown; width: 100vw; height: 120px"></div>
+    <ewc-axes media="audio" for="fake"></ewc-axes>
   </body>
   <script>
     let controls = document.querySelector('ewc-media-controls');

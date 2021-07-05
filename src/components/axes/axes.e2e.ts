@@ -1,4 +1,4 @@
-import { newE2EPage } from '@stencil/core/testing';
+/*import { newE2EPage } from '@stencil/core/testing';
 
 describe('x-axes', () => {
   it('renders', async () => {
@@ -30,3 +30,4 @@ describe('x-axes', () => {
     expect(element.textContent).toEqual(`Hello, World! I'm James Earl Quincy`);
   });
 });
+*/

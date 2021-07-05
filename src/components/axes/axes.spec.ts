@@ -1,4 +1,4 @@
-import { newSpecPage } from '@stencil/core/testing';
+/*import { newSpecPage } from '@stencil/core/testing';
 import { Axes } from './axes';
 
 describe('x-axes', () => {
@@ -33,4 +33,4 @@ describe('x-axes', () => {
       </x-axes>
     `);
   });
-});
+});*/

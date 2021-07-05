@@ -62,6 +62,9 @@ export namespace Components {
          */
         "middle": string;
     }
+    interface EwcAxes {
+        "media": string;
+    }
     interface EwcMediaControls {
         "for": string;
     }
@@ -122,20 +125,6 @@ export namespace Components {
         "middle": string;
     }
     interface XAnnotation {
-        /**
-          * The first name
-         */
-        "first": string;
-        /**
-          * The last name
-         */
-        "last": string;
-        /**
-          * The middle name
-         */
-        "middle": string;
-    }
-    interface XAxes {
         /**
           * The first name
          */
@@ -231,6 +220,12 @@ declare global {
         prototype: HTMLAxisYElement;
         new (): HTMLAxisYElement;
     };
+    interface HTMLEwcAxesElement extends Components.EwcAxes, HTMLStencilElement {
+    }
+    var HTMLEwcAxesElement: {
+        prototype: HTMLEwcAxesElement;
+        new (): HTMLEwcAxesElement;
+    };
     interface HTMLEwcMediaControlsElement extends Components.EwcMediaControls, HTMLStencilElement {
     }
     var HTMLEwcMediaControlsElement: {
@@ -267,12 +262,6 @@ declare global {
         prototype: HTMLXAnnotationElement;
         new (): HTMLXAnnotationElement;
     };
-    interface HTMLXAxesElement extends Components.XAxes, HTMLStencilElement {
-    }
-    var HTMLXAxesElement: {
-        prototype: HTMLXAxesElement;
-        new (): HTMLXAxesElement;
-    };
     interface HTMLXCoordsElement extends Components.XCoords, HTMLStencilElement {
     }
     var HTMLXCoordsElement: {
@@ -302,13 +291,13 @@ declare global {
         "annotation-editor": HTMLAnnotationEditorElement;
         "axis-x": HTMLAxisXElement;
         "axis-y": HTMLAxisYElement;
+        "ewc-axes": HTMLEwcAxesElement;
         "ewc-media-controls": HTMLEwcMediaControlsElement;
         "grid-lines-x": HTMLGridLinesXElement;
         "grid-lines-y": HTMLGridLinesYElement;
         "position-indicator": HTMLPositionIndicatorElement;
         "x-annotate": HTMLXAnnotateElement;
         "x-annotation": HTMLXAnnotationElement;
-        "x-axes": HTMLXAxesElement;
         "x-coords": HTMLXCoordsElement;
         "x-spectrogram": HTMLXSpectrogramElement;
         "x-tag": HTMLXTagElement;
@@ -371,6 +360,9 @@ declare namespace LocalJSX {
           * The middle name
          */
         "middle"?: string;
+    }
+    interface EwcAxes {
+        "media"?: string;
     }
     interface EwcMediaControls {
         "for"?: string;
@@ -445,20 +437,6 @@ declare namespace LocalJSX {
          */
         "middle"?: string;
     }
-    interface XAxes {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
     interface XCoords {
         /**
           * The first name
@@ -520,13 +498,13 @@ declare namespace LocalJSX {
         "annotation-editor": AnnotationEditor;
         "axis-x": AxisX;
         "axis-y": AxisY;
+        "ewc-axes": EwcAxes;
         "ewc-media-controls": EwcMediaControls;
         "grid-lines-x": GridLinesX;
         "grid-lines-y": GridLinesY;
         "position-indicator": PositionIndicator;
         "x-annotate": XAnnotate;
         "x-annotation": XAnnotation;
-        "x-axes": XAxes;
         "x-coords": XCoords;
         "x-spectrogram": XSpectrogram;
         "x-tag": XTag;
@@ -541,13 +519,13 @@ declare module "@stencil/core" {
             "annotation-editor": LocalJSX.AnnotationEditor & JSXBase.HTMLAttributes<HTMLAnnotationEditorElement>;
             "axis-x": LocalJSX.AxisX & JSXBase.HTMLAttributes<HTMLAxisXElement>;
             "axis-y": LocalJSX.AxisY & JSXBase.HTMLAttributes<HTMLAxisYElement>;
+            "ewc-axes": LocalJSX.EwcAxes & JSXBase.HTMLAttributes<HTMLEwcAxesElement>;
             "ewc-media-controls": LocalJSX.EwcMediaControls & JSXBase.HTMLAttributes<HTMLEwcMediaControlsElement>;
             "grid-lines-x": LocalJSX.GridLinesX & JSXBase.HTMLAttributes<HTMLGridLinesXElement>;
             "grid-lines-y": LocalJSX.GridLinesY & JSXBase.HTMLAttributes<HTMLGridLinesYElement>;
             "position-indicator": LocalJSX.PositionIndicator & JSXBase.HTMLAttributes<HTMLPositionIndicatorElement>;
             "x-annotate": LocalJSX.XAnnotate & JSXBase.HTMLAttributes<HTMLXAnnotateElement>;
             "x-annotation": LocalJSX.XAnnotation & JSXBase.HTMLAttributes<HTMLXAnnotationElement>;
-            "x-axes": LocalJSX.XAxes & JSXBase.HTMLAttributes<HTMLXAxesElement>;
             "x-coords": LocalJSX.XCoords & JSXBase.HTMLAttributes<HTMLXCoordsElement>;
             "x-spectrogram": LocalJSX.XSpectrogram & JSXBase.HTMLAttributes<HTMLXSpectrogramElement>;
             "x-tag": LocalJSX.XTag & JSXBase.HTMLAttributes<HTMLXTagElement>;
