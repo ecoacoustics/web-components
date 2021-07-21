@@ -60,9 +60,10 @@ export class PositionIndicator {
     });
 
     // Update the slider range if the recording duration changes
-    this.mediaSource.ondurationchange = () => {
+    let durationChange = fromEvent(this.mediaSource, "durationchange");
+    durationChange.subscribe(() => {
       this.duration = this.mediaSource.duration;
-    };
+    })
 
     // Set the initial slider position
     if (!this.dragging) {
@@ -74,6 +75,7 @@ export class PositionIndicator {
     this.owner = this.el.ownerDocument as typeof Globals._win.HTMLElement.prototype;
   }
 
+  // TODO avoid setup in componentDidLoad
   componentDidLoad() {
     this.setup();
   }
