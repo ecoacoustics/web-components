@@ -34,36 +34,15 @@ export namespace Components {
          */
         "middle": string;
     }
-    interface AxisX {
-        /**
-          * The first name
-         */
-        "first": string;
-        /**
-          * The last name
-         */
-        "last": string;
-        /**
-          * The middle name
-         */
-        "middle": string;
-    }
-    interface AxisY {
-        /**
-          * The first name
-         */
-        "first": string;
-        /**
-          * The last name
-         */
-        "last": string;
-        /**
-          * The middle name
-         */
-        "middle": string;
-    }
     interface EwcAxes {
+        "containerResize": any;
         "media": string;
+    }
+    interface EwcAxisX {
+        "disabled": boolean;
+    }
+    interface EwcAxisY {
+        "disabled": boolean;
     }
     interface EwcMediaControls {
         "for": string;
@@ -208,23 +187,23 @@ declare global {
         prototype: HTMLAnnotationEditorElement;
         new (): HTMLAnnotationEditorElement;
     };
-    interface HTMLAxisXElement extends Components.AxisX, HTMLStencilElement {
-    }
-    var HTMLAxisXElement: {
-        prototype: HTMLAxisXElement;
-        new (): HTMLAxisXElement;
-    };
-    interface HTMLAxisYElement extends Components.AxisY, HTMLStencilElement {
-    }
-    var HTMLAxisYElement: {
-        prototype: HTMLAxisYElement;
-        new (): HTMLAxisYElement;
-    };
     interface HTMLEwcAxesElement extends Components.EwcAxes, HTMLStencilElement {
     }
     var HTMLEwcAxesElement: {
         prototype: HTMLEwcAxesElement;
         new (): HTMLEwcAxesElement;
+    };
+    interface HTMLEwcAxisXElement extends Components.EwcAxisX, HTMLStencilElement {
+    }
+    var HTMLEwcAxisXElement: {
+        prototype: HTMLEwcAxisXElement;
+        new (): HTMLEwcAxisXElement;
+    };
+    interface HTMLEwcAxisYElement extends Components.EwcAxisY, HTMLStencilElement {
+    }
+    var HTMLEwcAxisYElement: {
+        prototype: HTMLEwcAxisYElement;
+        new (): HTMLEwcAxisYElement;
     };
     interface HTMLEwcMediaControlsElement extends Components.EwcMediaControls, HTMLStencilElement {
     }
@@ -289,9 +268,9 @@ declare global {
     interface HTMLElementTagNameMap {
         "annotation-container": HTMLAnnotationContainerElement;
         "annotation-editor": HTMLAnnotationEditorElement;
-        "axis-x": HTMLAxisXElement;
-        "axis-y": HTMLAxisYElement;
         "ewc-axes": HTMLEwcAxesElement;
+        "ewc-axis-x": HTMLEwcAxisXElement;
+        "ewc-axis-y": HTMLEwcAxisYElement;
         "ewc-media-controls": HTMLEwcMediaControlsElement;
         "grid-lines-x": HTMLGridLinesXElement;
         "grid-lines-y": HTMLGridLinesYElement;
@@ -333,36 +312,15 @@ declare namespace LocalJSX {
          */
         "middle"?: string;
     }
-    interface AxisX {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
-    interface AxisY {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
     interface EwcAxes {
+        "containerResize"?: any;
         "media"?: string;
+    }
+    interface EwcAxisX {
+        "disabled"?: boolean;
+    }
+    interface EwcAxisY {
+        "disabled"?: boolean;
     }
     interface EwcMediaControls {
         "for"?: string;
@@ -496,9 +454,9 @@ declare namespace LocalJSX {
     interface IntrinsicElements {
         "annotation-container": AnnotationContainer;
         "annotation-editor": AnnotationEditor;
-        "axis-x": AxisX;
-        "axis-y": AxisY;
         "ewc-axes": EwcAxes;
+        "ewc-axis-x": EwcAxisX;
+        "ewc-axis-y": EwcAxisY;
         "ewc-media-controls": EwcMediaControls;
         "grid-lines-x": GridLinesX;
         "grid-lines-y": GridLinesY;
@@ -517,9 +475,9 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "annotation-container": LocalJSX.AnnotationContainer & JSXBase.HTMLAttributes<HTMLAnnotationContainerElement>;
             "annotation-editor": LocalJSX.AnnotationEditor & JSXBase.HTMLAttributes<HTMLAnnotationEditorElement>;
-            "axis-x": LocalJSX.AxisX & JSXBase.HTMLAttributes<HTMLAxisXElement>;
-            "axis-y": LocalJSX.AxisY & JSXBase.HTMLAttributes<HTMLAxisYElement>;
             "ewc-axes": LocalJSX.EwcAxes & JSXBase.HTMLAttributes<HTMLEwcAxesElement>;
+            "ewc-axis-x": LocalJSX.EwcAxisX & JSXBase.HTMLAttributes<HTMLEwcAxisXElement>;
+            "ewc-axis-y": LocalJSX.EwcAxisY & JSXBase.HTMLAttributes<HTMLEwcAxisYElement>;
             "ewc-media-controls": LocalJSX.EwcMediaControls & JSXBase.HTMLAttributes<HTMLEwcMediaControlsElement>;
             "grid-lines-x": LocalJSX.GridLinesX & JSXBase.HTMLAttributes<HTMLGridLinesXElement>;
             "grid-lines-y": LocalJSX.GridLinesY & JSXBase.HTMLAttributes<HTMLGridLinesYElement>;

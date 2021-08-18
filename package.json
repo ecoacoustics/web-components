@@ -28,7 +28,8 @@
     "d3-scale": "^4.0.0",
     "d3-selection": "^1.4.2",
     "jest": "^26.6.3",
-    "jest-cli": "^26.6.3"
+    "jest-cli": "^26.6.3",
+    "rxjs": "^7.3.0"
   },
   "license": "MIT",
   "devDependencies": {

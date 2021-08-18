@@ -15,7 +15,10 @@
     </audio>
     <ewc-media-controls for="audio"></ewc-media-controls>
     <div id="fake" style="background-color: brown; width: 100vw; height: 120px"></div>
-    <ewc-axes media="audio" for="fake"></ewc-axes>
+    <ewc-axes media="audio" for="fake">
+      <ewc-axis-x disabled="{false}"></ewc-axis-x>
+      <ewc-axis-y disabled="{false}"></ewc-axis-y>
+    </ewc-axes>
   </body>
   <script>
     let controls = document.querySelector('ewc-media-controls');
