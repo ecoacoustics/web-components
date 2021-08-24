@@ -13,7 +13,7 @@ export class AxisX {
 
   @Prop() disabled: boolean = false;
 
-  @State() size: number;
+  @State() size: typeof Globals._win.DOMRect.prototype;
   @State() surface: typeof Globals._win.SVGElement.prototype;
 
   componentWillLoad() {
@@ -22,10 +22,10 @@ export class AxisX {
   }
 
   redraw() {
-    this.size = this.el.parentElement.getBoundingClientRect();
     this.surface = this.el.parentElement.shadowRoot.querySelector('div svg');
+    this.size = this.surface.getBoundingClientRect();
 
-    drawXAxis(this.surface, this.size, 30, 0);
+    drawXAxis(this.surface, this.size, this.el.parentElement.border, 30, 0);
   }
 
   render() {

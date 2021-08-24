@@ -35,7 +35,9 @@ export namespace Components {
         "middle": string;
     }
     interface EwcAxes {
+        "border": number;
         "containerResize": any;
+        "for": string;
         "media": string;
     }
     interface EwcAxisX {
@@ -313,7 +315,9 @@ declare namespace LocalJSX {
         "middle"?: string;
     }
     interface EwcAxes {
+        "border"?: number;
         "containerResize"?: any;
+        "for"?: string;
         "media"?: string;
     }
     interface EwcAxisX {

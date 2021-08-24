@@ -1,3 +1,14 @@
 :host {
-  display: block;
+  display: flex;
+  position: static;
+}
+
+:host div {
+  position: absolute;
+}
+
+:host svg {
+  position: static;
+  height: 100%;
+  width: 100%;
 }
