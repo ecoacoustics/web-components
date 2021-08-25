@@ -23,7 +23,7 @@ export class AxisY {
 
   redraw() {
     this.surface = this.el.parentElement.shadowRoot.querySelector('div svg');
-    this.size = this.surface.getBoundingClientRect();
+    this.size = this.el.ownerDocument.querySelector(`#${this.el.parentElement.for}`).getBoundingClientRect();
 
     drawYAxis(this.surface, this.size, this.el.parentElement.border, 10, 0);
   }
