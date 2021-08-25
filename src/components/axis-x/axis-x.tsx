@@ -16,8 +16,16 @@ export class AxisX {
   @State() size: typeof Globals._win.DOMRect.prototype;
   @State() surface: typeof Globals._win.SVGElement.prototype;
 
+  @Prop() min: number = 0;
+  @Prop() max: number = 30;
+
+  @Prop() step: number = null;
+
+  @State() ticks: number;
+
   componentWillLoad() {
-    //this.redraw();
+    this.ticks = this.step !== null ? (this.max - this.min) / this.step : null;
+
     this.el.parentElement.containerResize.subscribe(e => this.redraw());
   }
 
@@ -25,7 +33,7 @@ export class AxisX {
     this.surface = this.el.parentElement.shadowRoot.querySelector('div svg');
     this.size = this.el.ownerDocument.querySelector(`#${this.el.parentElement.for}`).getBoundingClientRect();
 
-    drawXAxis(this.surface, this.size, this.el.parentElement.border, 30, 0);
+    drawXAxis(this.surface, this.size, this.el.parentElement.border, this.max, this.min, this.ticks);
   }
 
   render() {

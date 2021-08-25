@@ -1,8 +1,5 @@
 import { Component, Prop, Element, State, h } from '@stencil/core';
-import { drawYAxis } from '../../utils/axes';
-import { resizeObservable } from '../../utils/resizeObserver';
-
-import { fromEvent } from 'rxjs';
+import { resizeObservable } from '../../utils/observables';
 
 import Globals from '../../utils/globals';
 

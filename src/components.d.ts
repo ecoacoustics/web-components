@@ -42,9 +42,15 @@ export namespace Components {
     }
     interface EwcAxisX {
         "disabled": boolean;
+        "max": number;
+        "min": number;
+        "step": number;
     }
     interface EwcAxisY {
         "disabled": boolean;
+        "max": number;
+        "min": number;
+        "step": number;
     }
     interface EwcMediaControls {
         "for": string;
@@ -322,9 +328,15 @@ declare namespace LocalJSX {
     }
     interface EwcAxisX {
         "disabled"?: boolean;
+        "max"?: number;
+        "min"?: number;
+        "step"?: number;
     }
     interface EwcAxisY {
         "disabled"?: boolean;
+        "max"?: number;
+        "min"?: number;
+        "step"?: number;
     }
     interface EwcMediaControls {
         "for"?: string;
