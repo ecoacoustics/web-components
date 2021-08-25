@@ -11,7 +11,9 @@ export function drawYAxis(surface, size, border, dataMin, dataMax) {
   drawAxis(surface, size, axisLeft, scale, translate, 'y_axis');
 }
 export function drawXAxis(surface, size, border, dataMin, dataMax) {
-  let scale = scaleLinear().domain([dataMin, dataMax]).range([size.width, 0]);
+  let scale = scaleLinear()
+    .domain([dataMin, dataMax])
+    .range([size.width - border, 0]);
   let translate = `translate(${border}, ${size.height - border})`;
   drawAxis(surface, size, axisBottom, scale, translate, 'x_axis');
 }
