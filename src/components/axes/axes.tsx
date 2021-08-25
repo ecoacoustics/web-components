@@ -1,5 +1,6 @@
 import { Component, Prop, Element, State, h } from '@stencil/core';
 import { drawYAxis } from '../../utils/axes';
+import { resizeObservable } from '../../utils/resizeObserver';
 
 import { fromEvent } from 'rxjs';
 
@@ -31,13 +32,12 @@ export class Axes {
 
   @Prop() border: number = 30;
 
-  // Observable fires on window resize. TODO find a way to do this on container resize
+  // Observable fires on window resize
   @Prop({ mutable: true }) containerResize;
 
   componentWillLoad() {
-    this.containerResize = fromEvent(Globals._win, 'resize');
-
     this.forElement = this.el.ownerDocument.querySelector(`#${this.for}`);
+    this.containerResize = resizeObservable(this.forElement);
 
     this.containerResize.subscribe(e => this.followTarget());
     this.followTarget();
@@ -45,7 +45,7 @@ export class Axes {
 
   followTarget() {
     let bounds = this.forElement.getBoundingClientRect();
-    console.log(this.top);
+
     this.left = bounds.left - this.border;
     this.top = bounds.top;
     this.width = bounds.width + this.border;
