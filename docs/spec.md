@@ -56,6 +56,12 @@ listen page. When being re-implemented, the components should:
   - especially through the use of client-side generated spectrograms
 - we should be able to export an entire component tree as an image
   - e.g. to save a spectrogram with annotations as an image
+- everything should be in SI units, un-prefixed. e.g. seconds, hertz, meters
+  - except for in presentation where it is appropriate to use
+- all measurements should aligned to the start of a recording
+  - e.g. seconds from the start of a recording
+- prefer coordinates + coordinates over coordinates + magnitude
+  - e.g. start and end seconds, rather than start seconds and duration
 
 ### Technologies
 
@@ -70,6 +76,7 @@ listen page. When being re-implemented, the components should:
   - annotations should not be rendered on `<canvas />`
   - annotations may be rendered with HTML
   - annotations may be rendered with SVG (optimal for image-export features)
+- preact/signals: https://www.npmjs.com/package/@lit-labs/preact-signals
 
 ### Diagram
 
@@ -114,6 +121,9 @@ We want this to work at various sizes:
     - particularly: faster than real time rendering
     - and only rendering what is in the view port
   - web workers for spectrogram generation
+  - probably use a canvas element
+  - resize observer
+  - request animation frame for frequent updates - particularly current time
 
 #### Axes (`<oe-axes>`)
 
@@ -311,7 +321,7 @@ OR
     <oe-coordinates id="wrapper" high-frequency="11025" low-frequency="0" start-seconds="3600" end-seconds="86400">
         <img id="FCS" src="my_FCS.png" />
     </oe-coordinates>
-    <oe-annotate for="wrapper" read-only="true">
+    <oe-annotate for="wrapper" readonly="true">
         <oe-annotation start-seconds="7200" end-seconds="10800" low-frequency="1000" high-frequency="7000" >
             <oe-tag>Koala</oe-tag>
             <oe-tag>Phascolarctos cinereus</oe-tag>

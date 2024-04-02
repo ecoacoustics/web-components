@@ -1,0 +1,44 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1062px" height="247px" viewBox="-0.5 -0.5 1062 247" content="&lt;mxfile&gt;&lt;diagram id=&quot;G2EjIaB_8GAR8T9eN123&quot; name=&quot;Page-1&quot;&gt;3ZpPk5owGMY/DddOQvh77KLbXnry0PaYShSmSJwYV+2nb5BEweDO6prEwYNDnjcQ8vCDvAl4KFvtvzG8Ln7QnFSeD/K9hyae78coFP+NcGgFGPmtsGRlLqWzMCv/ESkCqW7LnGx6FTmlFS/XfXFO65rMeU/DjNFdv9qCVv1W13hJNGE2x5Wu/ixzXqheAHAOfCflspBNpyqwwqqyFDYFzumuI6GphzJGKW+3VvuMVI13ypd2v9cr0dOJMVLzj+wgfX/D1Vb2TZ4XP6jOMrqtc9LUBx562RUlJ7M1njfRnbi6Qiv4qhIlKDYXZVVltKLsuC+KMACLRaPTmnf0xfEn9A1n9C/pRFAMQJaJiDwxwjjZX+0cPFkmUCN0RTg7iCpqh1C6rDA72b47XzXRYKsVnQsWSUCxBGV5OvbZS7Eh7Ry2Fpm1Fv7BkPi3WAtANP36+hhro+AD1oobwoy1wZitTaBLa8MxW5smLq1NNCdJLoYVWaxpTfrWiU6xwy9p87Hwuyl8CVVxsu8GJwdZaptpjv2+TeJU6JbNZa1IjqOYLYmsFQ+byUiFefnWP/pnjInMMkdCGABwC3MvPgAAGBqEINKZM4WcepQ8KXOxzlxqibl4zMz5l6OzVeZ0J99n7j52Up0deMWVh8OTjhkehFzCE1iBB6pZY5ceZIke1fg48Ql8l/gYnnS5tTa8nBlYtTZ86lQCDuSvMLF1R486g9Xm+laxi58bu0THrrOQZxi7ZMzYxU4HktRKHqK62MPHt4SPanyc+CTAIT6na20YH38AH1tprGp8pPhcLhVaxefWQe9OfNAAPqEtfEadqqeRS3zsTKLVu4IePpEtfAy/qHC8aAxc5twjX5CHLhNL33DO7vaNuzZVREC3NjTmrcl1WfnUvB3ZNqK+E0EPglh7Pgy8yQyCAaNT8HmjkcmZw3MZHWmr4QNGDxJ9h9GieP705xjrfD+Fpv8B&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <rect x="11" y="101" width="370" height="65" fill="#6a00ff" stroke="#3700cc" pointer-events="all"/>
+        <rect x="501" y="101" width="160" height="65" fill="#1ba1e2" stroke="#006eaf" pointer-events="all"/>
+        <rect x="671" y="101" width="160" height="65" fill="#1ba1e2" stroke="#006eaf" pointer-events="all"/>
+        <rect x="841" y="101" width="160" height="65" fill="#1ba1e2" stroke="#006eaf" pointer-events="all"/>
+        <path d="M 71 43.5 L 94.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 99.88 43.5 L 92.88 47 L 94.63 43.5 L 92.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="11" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 161 43.5 L 184.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 189.88 43.5 L 182.88 47 L 184.63 43.5 L 182.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="101" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 251 43.5 L 274.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 279.88 43.5 L 272.88 47 L 274.63 43.5 L 272.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="191" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 341 43.5 L 364.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 369.88 43.5 L 362.88 47 L 364.63 43.5 L 362.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="281" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <rect x="371" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 561 43.5 L 574.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 579.88 43.5 L 572.88 47 L 574.63 43.5 L 572.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="501" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 641 43.5 L 654.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 659.88 43.5 L 652.88 47 L 654.63 43.5 L 652.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="581" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 721 43.5 L 734.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 739.88 43.5 L 732.88 47 L 734.63 43.5 L 732.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="661" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 801 43.5 L 814.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 819.88 43.5 L 812.88 47 L 814.63 43.5 L 812.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="741" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 881 43.5 L 894.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 899.88 43.5 L 892.88 47 L 894.63 43.5 L 892.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="821" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <path d="M 961 43.5 L 974.63 43.5" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 979.88 43.5 L 972.88 47 L 974.63 43.5 L 972.88 40 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="901" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <rect x="981" y="11" width="60" height="65" fill="#e51400" stroke="#b20000" pointer-events="all"/>
+        <rect x="501" y="181" width="560" height="65" fill="#6a00ff" stroke="#3700cc" pointer-events="all"/>
+        <rect x="1" y="1" width="440" height="90" fill="none" stroke="#b20000" stroke-width="3" pointer-events="all"/>
+        <rect x="491" y="1" width="560" height="90" fill="none" stroke="#b20000" stroke-width="3" pointer-events="all"/>
+    </g>
+</svg>
