@@ -55,8 +55,8 @@ importers:
         specifier: ^4.4.7
         version: 4.5.1(@types/node@20.11.30)
       vite-plugin-cem:
-        specifier: ^0.7.0
-        version: 0.7.0(@types/node@20.11.30)
+        specifier: ^0.8.0
+        version: 0.8.0(@types/node@20.11.30)
       vite-svg-loader:
         specifier: ^5.1.0
         version: 5.1.0(vue@3.4.21)
@@ -3403,12 +3403,6 @@ packages:
       - supports-color
     dev: true
 
-  /typescript@5.3.3:
-    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-    dev: true
-
   /typescript@5.4.3:
     resolution: {integrity: sha512-KrPd3PKaCLr78MalgiwJnA25Nm8HAmdwN3mYUYZgG/wizIo9EainNVQI9/yDavtVFRN2h3k8uf3GLHuhDMgEHg==}
     engines: {node: '>=14.17'}
@@ -3447,12 +3441,12 @@ packages:
       punycode: 2.3.1
     dev: true
 
-  /vite-plugin-cem@0.7.0(@types/node@20.11.30):
-    resolution: {integrity: sha512-KGV/wjq+Fch1RKkA9I6vYleWf+8XBxJrG0EmsxeD/NqZ0gYDoqN2REmzUBoMJGpWSBGgDRkvyRpaiw8BLhtWsg==}
+  /vite-plugin-cem@0.8.0(@types/node@20.11.30):
+    resolution: {integrity: sha512-mA5yx0kGoy+fnaGo+YmC8TduSX+mKo7W980AF7i12UGqkl80EaiF+ZpYgBvTnogp21/k3JwimVm17DYkdmgOyQ==}
     dependencies:
       '@custom-elements-manifest/analyzer': 0.9.4
       glob: 8.1.0
-      typescript: 5.3.3
+      typescript: 5.4.3
       vite: 5.2.2(@types/node@20.11.30)
     transitivePeerDependencies:
       - '@types/node'
