@@ -22,7 +22,7 @@ jobs:
           # workflow will not trigger on the PR created by the bot
           # this is done to prevent recusive workflows
           # see: https://github.com/peter-evans/create-pull-request/issues/48#issuecomment-536184102
-          token: ${{ secrets.WCW_BOT_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
           config-file: release-please-config.json
 
   Publish-Release:
