@@ -29,13 +29,15 @@
     "explorer.compactFolders": false,
     "cSpell.caseSensitive": false,
     "cSpell.words": [
-      "ecoacoustics",
-      "ecoacoustic",
+      "Componentization",
       "csspart",
+      "ecoacoustic",
+      "ecoacoustics",
+      "jsdelivr",
       "slotchange",
-      "webcomponents-workspace",
+      "styleable",
       "webcomponents",
-      "jsdelivr"
+      "webcomponents-workspace"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },
@@ -62,7 +64,8 @@
       "ms-vscode.vscode-typescript-next",
       "bierner.lit-html",
       "ecmel.vscode-html-css",
-      "pushqrdx.inline-html"
+      "pushqrdx.inline-html",
+      "hediet.vscode-drawio"
     ]
   },
   "launch": {

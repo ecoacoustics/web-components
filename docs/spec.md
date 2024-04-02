@@ -15,17 +15,8 @@ Started - assigned to Hudson
 
 ## Outcomes
 
-1. a prototype web interface for sub-sampling playback and annotation
+1. a prototype web interface for sub-sampling playback, annotation, and possibly validation
 2. an beta integrated with the Acoustic Workbench
-
-## Potential supervisors
-
-- Anthony
-- Phil
-
-## Estimated difficulty
-
-Professional work
 
 ## Description
 
@@ -47,12 +38,11 @@ listen page. When being re-implemented, the components should:
 - be composable
 - be reusable in basic static web pages
 - be web components
-    - they should be fully useable in basic cases via html attributes and elements
-    - they should have a secondary, more advanced DOM object API
-    - the DOM API holds the "true" data objects and the DOM attributes are
-      serialized simplifications
-    - should use shadow DOM where necessary
-      - 2024 update: shadow DOM is generally less popular than light DOM
+  - they should be fully useable in basic cases via html attributes and elements
+  - they should have a secondary, more advanced DOM object API
+  - the DOM API holds the "true" data objects and the DOM attributes are
+    serialized simplifications
+  - should use shadow DOM where necessary
 - be styleable and ship with an agnostic default style (see `::part` and `::theme`)
 - be compiled to single-file javascript packages
 - be published to npm as source (so consumers can tree shake)
@@ -63,23 +53,23 @@ listen page. When being re-implemented, the components should:
   compiled from source) common dependencies should not be duplicated in compiled output
 - ensure that when used as part of any framework, should be isolated and interoperable
 - allow for more dynamic interactions with data
-    - especially through the use of client-side generated spectrograms
+  - especially through the use of client-side generated spectrograms
 - we should be able to export an entire component tree as an image
   - e.g. to save a spectrogram with annotations as an image
 
 ### Technologies
 
 - Web components should be with the Lit framework
-    - https://lit.dev
-    - We chose Lit because it is a small, fast, and modern web component library
+  - <https://lit.dev>
+  - We chose Lit because it is a small, fast, and modern web component library
 - Visualization should be done via `<canvas />` elements (and not `<img>` elements)
   - Open to discussion
 - D3 should be used for scales and unit conversions
-  - e.g. https://github.com/d3/d3-scale
+  - e.g. <https://github.com/d3/d3-scale>
 - DOM elements should be used for diagrammatic representations of annotations
-    - annotations should not be rendered on `<canvas />`
-    - annotations may be rendered with HTML
-    - annotations may be rendered with SVG (optimal for image-export features)
+  - annotations should not be rendered on `<canvas />`
+  - annotations may be rendered with HTML
+  - annotations may be rendered with SVG (optimal for image-export features)
 
 ### Diagram
 
@@ -96,8 +86,8 @@ Shows a spectrogram for a given media source.
 We want this to work at various sizes:
 
 - Full page width spectrogram
-    - page for new segments (audacity style)
-    - or translate
+  - page for new segments (audacity style)
+  - or translate
 - Snippets
   - variable-width but generally short (1 to 10 seconds)
   - fixed duration of media
@@ -105,15 +95,15 @@ We want this to work at various sizes:
   - support for many on a page - e.g. a grid of 25
 
 - Can accept one or multiple sources
-    - URL endpoint - for a whole file
-    - Base URL endpoint to query for parts of a file (callback?)
-    - User selected whole file input
+  - URL endpoint - for a whole file
+  - Base URL endpoint to query for parts of a file (callback?)
+  - User selected whole file input
 - Can change
-    - ColorProfile - grey scale, viridis, etc
-    - WindowSize - e.g. 512, 1024, 2048, 4096
-    - WindowOverlap - e.g. 0.5, 0.75
-    - WindowType - hammng, hanning, etc
-    - MelScale or linear scale
+  - ColorProfile - grey scale, viridis, etc
+  - WindowSize - e.g. 512, 1024, 2048, 4096
+  - WindowOverlap - e.g. 0.5, 0.75
+  - WindowType - hammng, hanning, etc
+  - MelScale or linear scale
 - Is dynamically resizeable
 - Can snap to aspect ratios
 - Can zoom vertically and horizontally
@@ -133,21 +123,21 @@ Shows axes and gridlines for a target
   - Must have a target (`for` like a label)
   - Or must wrap a target (e.g. a `<oe-spectrogram>` element)
 - Target may have coordinates
-    - or else coordinates may be referred to
+  - or else coordinates may be referred to
 - automatically
   - sizes to match target's boundaries
   - overlays itself on target
 - Can enable or disable
-    - x axis
-    - y axis
-    - x grid lines
-    - y grid lines
+  - x axis
+  - y axis
+  - x grid lines
+  - y grid lines
 - Can show logarithmic axis
 - Can customize
-    - scale step
-    - to show end tick (e.g. prioritize showing end value tick over last scale step tick)
-    - axis labels
-    - axis position
+  - scale step
+  - to show end tick (e.g. prioritize showing end value tick over last scale step tick)
+  - axis labels
+  - axis position
 
 #### Annotation surface (`<oe-annotation>`)
 
@@ -155,25 +145,25 @@ Shows axes and gridlines for a target
   - either linked (`for`)
   - or wrapped
 - Target may have coordinates
-    - or else coordinates may be referred to
+  - or else coordinates may be referred to
 - has a `readonly` attribute (which disables mutation)
 - automatically
   - sizes to match target's boundaries
   - overlays itself on target
 - can have many annotations
-    - an annotation has coordinates
-        - coordinates can be specified
-            - in the units of the target
-            - or in units value for a target that does not have a unit/coordinate interface
-    - an annotation may be temporally-dimensional (i.e. full-spectrum)
-    - an annotation may have one or many tags
+  - an annotation has coordinates
+    - coordinates can be specified
+      - in the units of the target
+      - or in units value for a target that does not have a unit/coordinate interface
+  - an annotation may be temporally-dimensional (i.e. full-spectrum)
+  - an annotation may have one or many tags
 - the surface editor will fire events that allow other components to interact
   with it, such as:
-    - annotation created
-    - annotation added
-    - annotation updating (high frequency)
-    - annotation updated
-    - annotation removed
+  - annotation created
+  - annotation added
+  - annotation updating (high frequency)
+  - annotation updated
+  - annotation removed
 
 #### Annotation Editor/Tag editor (`<oe-tag-editor> ????????`)
 
@@ -188,15 +178,15 @@ Shows axes and gridlines for a target
 - Target must be a `spectrogram`
 - Does have a position
 - Is interactive
-    - via grab handle out of bounds
+  - via grab handle out of bounds
 
 #### ~~Annotation container (`<oe-annotation-container> ??????`)~~
 
 - Generic container (e.g. div)
 - It will measure itself and provide information to children such as
-    - margin
-    - padding
-    - dimensions
+  - margin
+  - padding
+  - dimensions
 - Essentially the "image" that would get saved if we could save HTMLElement trees
   as images.
 
