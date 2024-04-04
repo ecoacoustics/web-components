@@ -8,11 +8,17 @@
   </head>
 
   <body>
-    <oe-media-controls for="media">
+    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
+    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
+      <source src="http://localhost:5173/example.flac" type="audio/flac" />
+    </oe-spectrogram>
+    <oe-media-controls for="spectrogram">
       <div slot="play-icon">Play Me!</div>
     </oe-media-controls>
 
-    <audio id="media" src="http://localhost:5173/example.flac"></audio>
+    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">
+      Change
+    </button>
 
     <style>
       oe-media-controls {

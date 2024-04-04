@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@lit-labs/preact-signals':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@lit/context':
         specifier: ^1.1.0
         version: 1.1.0
@@ -752,6 +755,13 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
+  /@lit-labs/preact-signals@1.0.2:
+    resolution: {integrity: sha512-HFgIhqLB5IiNbvJxEN3+o6n9x/fNZo7pqfElG56NHrOFBsIFW7wswbp6hHeoGzATQDOB2ZmrH/VrRGYdcgl29g==}
+    dependencies:
+      '@preact/signals-core': 1.6.0
+      lit: 3.1.2
+    dev: false
+
   /@lit-labs/ssr-dom-shim@1.2.0:
     resolution: {integrity: sha512-yWJKmpGE6lUURKAaIltoPIE/wrbY3TEkqQt+X0m+7fQNnAv0keydnYvbiJFP1PnMhizmIWRWOG5KLhYyc/xl+g==}
     dev: false
@@ -821,6 +831,10 @@ packages:
     dependencies:
       playwright: 1.41.0
     dev: true
+
+  /@preact/signals-core@1.6.0:
+    resolution: {integrity: sha512-O/XGxwP85h1F7+ouqTMOIZ3+V1whfaV9ToIVcuyGriD4JkSD00cQo54BKdqjvBJxbenvp7ynfqRHEwI6e+NIhw==}
+    dev: false
 
   /@rollup/rollup-android-arm-eabi@4.13.0:
     resolution: {integrity: sha512-5ZYPOuaAqEH/W3gYsRkxQATBW3Ii1MfaT4EQstTnLKViLi2gLSQmlmtTpGucNP3sXEpOiI5tdGhjdE111ekyEg==}
