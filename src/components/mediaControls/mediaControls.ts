@@ -1,15 +1,29 @@
-import { LitElement, html } from "lit";
-import { customElement, property, state, eventOptions } from "lit/decorators.js";
+import { LitElement, PropertyValues, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 import { mediaControlsStyles } from "./css/style";
 import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
+import { Spectrogram } from "../spectrogram/spectrogram";
 
-export interface MediaControlsProps {
-  for: string;
-}
+// class A {
+//   private map = new Map<object, (() => any)[]>();
+
+//   bindEvent(subject, event, callback) {
+//     const callbackWithContext = callback.bind(this);
+//     subject.addEventListener(event, callbackWithContext);
+
+//     this.map.set(subject, this.map.get(subject)?.concat([callbackWithContext]) ?? []);
+//   }
+
+//   unbindEvents(subject) {
+//     this.map.get(subject).forEach((callback) => {
+//       subject.removeEventListener(callback);
+//     });
+//   }
+// }
 
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.
@@ -27,7 +41,6 @@ export class MediaControls extends LitElement {
   public static styles = mediaControlsStyles;
 
   @provide({ context: rootContext })
-  @property({ attribute: false })
   public logger: ILogger = {
     log: console.log,
   };
@@ -35,32 +48,43 @@ export class MediaControls extends LitElement {
   @property({ type: String })
   public for: string = "";
 
-  @state()
-  public playing = false;
+  private spectrogramElement?: Spectrogram | null;
 
-  public toggleAudio(): void {
-    const audioElement = document.getElementById(this.for) as HTMLAudioElement;
-
-    if (this.playing) {
-      audioElement.pause();
-    } else {
-      audioElement.play();
-    }
-
-    this.playing = !this.playing;
-
-    this.logger.log(`Audio ${this.playing ? "playing" : "paused"}`);
-
-    this.onChange();
+  public disconnectedCallback(): void {
+    this.spectrogramElement?.removeEventListener("playing", this.callback);
+    super.disconnectedCallback();
   }
 
-  @eventOptions({ passive: true })
-  public onChange() {
-    this.dispatchEvent(
-      new CustomEvent("playing-event", {
-        detail: { value: `${this.playing ? "playing" : "paused"}` },
-      }),
-    );
+  private callback = this.handleUpdatePlaying.bind(this);
+
+  protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has("for")) {
+      // unbind the previous spectrogram element from the playing
+      this.spectrogramElement?.removeEventListener("playing", this.callback);
+      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
+
+      this.spectrogramElement?.addEventListener("playing", this.callback);
+    }
+  }
+
+  protected toggleAudio(): void {
+    // if the media controls element is not bound to a spectrogram element, do nothing
+    if (!this.spectrogramElement) return;
+
+    if (this.isSpectrogramPlaying()) {
+      this.spectrogramElement.pause();
+    } else {
+      this.spectrogramElement.play();
+    }
+  }
+
+  private handleUpdatePlaying(): void {
+    this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"}`);
+    this.requestUpdate();
+  }
+
+  private isSpectrogramPlaying(): boolean {
+    return this.spectrogramElement?.playing ?? false;
   }
 
   private playIcon() {
@@ -74,7 +98,7 @@ export class MediaControls extends LitElement {
   public render() {
     return html`
       <button id="action-button" @click="${() => this.toggleAudio()}">
-        ${this.playing ? this.pauseIcon() : this.playIcon()}
+        ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
       </button>
     `;
   }

@@ -3,4 +3,5 @@
 // from the .js directory
 
 export * from "./mediaControls/mediaControls";
+export * from "./spectrogram/spectrogram";
 export * from "./logger/logger";
