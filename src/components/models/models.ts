@@ -30,7 +30,7 @@
 // }
 
 // also consider: SpectrogramRenderSlice
-interface RenderWindow {
+export interface RenderWindow {
   startOffset: number;
   endOffset: number;
   lowFrequency: number;

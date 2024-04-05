@@ -1,6 +1,7 @@
 import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
+import { RenderWindow } from "models/models";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -17,7 +18,7 @@ export class Spectrogram extends LitElement {
   public static styles = spectrogramStyles;
 
   @property({ type: Boolean, reflect: true })
-  public playing = false;
+  public paused = true;
 
   @property({ type: String })
   public src = "";
@@ -30,8 +31,8 @@ export class Spectrogram extends LitElement {
   private mediaElement?: HTMLMediaElement;
 
   public willUpdate(change: PropertyValues<this>): void {
-    if (change.has("playing")) {
-        this.setPlaying();
+    if (change.has("paused")) {
+      this.setPlaying();
     }
   }
 
@@ -40,29 +41,28 @@ export class Spectrogram extends LitElement {
   }
 
   public play() {
-    this.playing = true;
+    this.paused = false;
   }
 
   public pause() {
-    this.playing = false;
+    this.paused = true;
   }
 
   private setPlaying() {
-    if (this.playing == !this.mediaElement?.paused) return;
+    if (this.paused == this.mediaElement?.paused) return;
 
-    if (this.playing) {
-        this.mediaElement?.play();
+    if (this.paused) {
+      this.mediaElement?.pause();
     } else {
-        this.mediaElement?.pause();
+      this.mediaElement?.play();
     }
 
-    this.dispatchEvent(new CustomEvent("playing", { detail: this.playing }));
+    this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
   }
 
   public render() {
     return html`
       <div id="spectrogram-container"></div>
-      ${this.playing}
       <audio id="media-element" src="${this.src}" @ended="${this.pause}">
         <slot></slot>
       </audio>
