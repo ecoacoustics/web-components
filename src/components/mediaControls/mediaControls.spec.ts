@@ -1,35 +1,5 @@
-import { expect, test } from "@sand4rt/experimental-ct-web";
+import { expect } from "@sand4rt/experimental-ct-web";
 import { mediaControlsFixture } from "./mediaControls.fixture";
-import { MediaControls } from "./mediaControls";
-import { insertHtml } from "../../tests/helpers";
-
-test.describe("unit tests", () => {
-  test("test", async ({ mount, page }) => {
-    await insertHtml(page, `<audio id="test"></audio>`);
-
-    let outside;
-    const component = await mount(MediaControls, {
-      props: {
-        for: "test",
-      },
-      on: {
-        "playing-event": (event) => {
-          outside = event;
-        },
-      },
-    });
-
-    let isPlaying = await component.evaluate((element) => element?.["playing"]);
-    await expect(isPlaying).toBe(false);
-    await expect(outside).toStrictEqual(undefined);
-
-    await component.evaluate((element: MediaControls) => element.toggleAudio());
-    isPlaying = await component.evaluate((element: MediaControls) => element.playing);
-
-    await expect(isPlaying).toBe(true);
-    await expect(outside).toStrictEqual({ value: "playing" });
-  });
-});
 
 mediaControlsFixture.describe("audio element communication", () => {
   mediaControlsFixture.beforeEach(async ({ fixture }) => {

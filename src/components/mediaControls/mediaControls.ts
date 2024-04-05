@@ -8,23 +8,6 @@ import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 import { Spectrogram } from "../spectrogram/spectrogram";
 
-// class A {
-//   private map = new Map<object, (() => any)[]>();
-
-//   bindEvent(subject, event, callback) {
-//     const callbackWithContext = callback.bind(this);
-//     subject.addEventListener(event, callbackWithContext);
-
-//     this.map.set(subject, this.map.get(subject)?.concat([callbackWithContext]) ?? []);
-//   }
-
-//   unbindEvents(subject) {
-//     this.map.get(subject).forEach((callback) => {
-//       subject.removeEventListener(callback);
-//     });
-//   }
-// }
-
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.
  *
@@ -51,23 +34,13 @@ export class MediaControls extends LitElement {
   private spectrogramElement?: Spectrogram | null;
 
   public disconnectedCallback(): void {
-    this.spectrogramElement?.removeEventListener("playing", this.callback);
+    this.spectrogramElement?.removeEventListener("play", this.playHandler);
     super.disconnectedCallback();
   }
 
-  private callback = this.handleUpdatePlaying.bind(this);
+  private playHandler = this.handleUpdatePlaying.bind(this);
 
-  protected willUpdate(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("for")) {
-      // unbind the previous spectrogram element from the playing
-      this.spectrogramElement?.removeEventListener("playing", this.callback);
-      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
-
-      this.spectrogramElement?.addEventListener("playing", this.callback);
-    }
-  }
-
-  protected toggleAudio(): void {
+  public toggleAudio(): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
     if (!this.spectrogramElement) return;
 
@@ -78,13 +51,23 @@ export class MediaControls extends LitElement {
     }
   }
 
+  protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has("for")) {
+      // unbind the previous spectrogram element from the playing
+      this.spectrogramElement?.removeEventListener("play", this.playHandler);
+      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
+
+      this.spectrogramElement?.addEventListener("play", this.playHandler);
+    }
+  }
+
   private handleUpdatePlaying(): void {
     this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"}`);
     this.requestUpdate();
   }
 
   private isSpectrogramPlaying(): boolean {
-    return this.spectrogramElement?.playing ?? false;
+    return !this.spectrogramElement?.paused ?? true;
   }
 
   private playIcon() {

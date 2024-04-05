@@ -37,7 +37,8 @@
       "slotchange",
       "styleable",
       "webcomponents",
-      "webcomponents-workspace"
+      "webcomponents-workspace",
+      "flac"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },
