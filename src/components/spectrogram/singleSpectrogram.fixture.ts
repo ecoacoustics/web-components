@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { Spectrogram } from "./spectrogram";
+import { Spectrogram } from "./Spectrogram";
 import { getBrowserValue, hasBrowserAttribute } from "../../tests/helpers";
 
 class SingleSpectrogramFixture {
