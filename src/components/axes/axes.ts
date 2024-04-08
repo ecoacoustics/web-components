@@ -2,8 +2,8 @@ import { html, LitElement } from "lit";
 import { customElement, property, queryAssignedElements } from "lit/decorators.js";
 import { axesStyles } from "./css/style";
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { Spectrogram } from "spectrogram/Spectrogram";
-import { RenderWindow } from "models/rendering";
+import { RenderWindow } from "../models/rendering";
+import { Spectrogram } from "../spectrogram/spectrogram";
 
 /**
  * @slot - A spectrogram element to add axes to
@@ -32,11 +32,11 @@ export class Axes extends SignalWatcher(LitElement) {
   public showYGrid: boolean = true;
 
   @queryAssignedElements()
-  private slotElements!: Array<HTMLElement>;
+  private slotElements!: Array<Spectrogram>;
 
-  private renderWindow(): RenderWindow | undefined {
-    const spectrogramElement = this.slotElements[0] as Spectrogram;
-    return spectrogramElement?.renderWindow;
+  private renderWindow(): RenderWindow | null {
+    const spectrogramElement = this.slotElements[0];
+    return spectrogramElement?.renderWindow?.value;
   }
 
   private axesSeconds(): number {}
@@ -77,12 +77,15 @@ export class Axes extends SignalWatcher(LitElement) {
     return html`
       <div id="axes-container">
         <div id="wrapped-element">
-          <slot></slot>
+          <slot @slotchange="${() => this.requestUpdate()}"></slot>
         </div>
 
         <ol id="x-axis" class="axis">
           x ${this.xAxis().map((_, i) => html`<li>${i}s,${i}px,${i}.0</li>`)}
         </ol>
+
+        ${this.renderWindow()?.endOffset}
+
         <ol id="y-axis" class="axis">
           y
           ${this.yAxis()

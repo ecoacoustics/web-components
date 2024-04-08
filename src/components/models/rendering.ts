@@ -1,3 +1,4 @@
+// 2D slices are alwyas a subset of an fft spectrogram
 export class TwoDSlice {
   public constructor(data: TwoDSlice) {
     this.x0 = data.x0;

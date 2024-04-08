@@ -4,7 +4,7 @@ import { spectrogramStyles } from "./css/style";
 import { signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
-import { UnitConverters } from "../models/unitConverters";
+import { Scales, UnitConverters } from "../models/unitConverters";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -20,10 +20,6 @@ import { UnitConverters } from "../models/unitConverters";
  */
 @customElement("oe-spectrogram")
 export class Spectrogram extends SignalWatcher(LitElement) {
-  public constructor() {
-    super();
-  }
-
   public static styles = spectrogramStyles;
 
   @property({ type: Boolean, reflect: true })
@@ -41,12 +37,13 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   @state()
   private audio?: AudioModel;
 
-  @state()
   public twoDSlice?: TwoDSlice;
 
-  public renderCanvasSize: Signal<RenderCanvasSize | null> = signal(null);
+  // TODO: fix up
+  public renderCanvasSize: Signal<RenderCanvasSize> = signal(new RenderCanvasSize({ width: 0, height: 0 }));
   public renderWindow: Signal<RenderWindow | null> = signal(null);
 
+  // TODO: Cleanup?? Make sure thre size obhserver is destroyed. We might want to use a static class to
   private resizeObserver = new ResizeObserver(() => {
     const canvasSize = new RenderCanvasSize({
       width: this.canvas?.clientWidth ?? 0,
@@ -67,15 +64,22 @@ export class Spectrogram extends SignalWatcher(LitElement) {
 
     this.twoDSlice = new TwoDSlice({
       x0: 0,
-      x1: this.renderCanvasSize.value?.width ?? 0,
+      x1: this.renderCanvasSize.value.width,
       y0: 0,
-      y1: this.renderCanvasSize.value?.height ?? 0,
+      y1: this.renderCanvasSize.value.height,
     });
 
     if (!this.audio) return;
 
-    this.renderWindow.value = UnitConverters.getRenderWindow(this.twoDSlice, this.audio);
-    console.log(this.renderWindow);
+    // TODO: we want to create a 2d slice from seconds, hertz, and an audio model
+
+    // TODO: Invert relation ship. A render window should be used to get a 2d slice
+    const scale = new Scales().renderWindowScale(
+      this.audio,
+      this.audio.originalAudioRecording!,
+      this.renderCanvasSize.value,
+    );
+    this.renderWindow.value = UnitConverters.getRenderWindow(scale, this.twoDSlice);
   }
 
   public updated() {
