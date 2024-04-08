@@ -31,7 +31,7 @@
     "@11ty/eleventy": "^2.0.1",
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
     "@custom-elements-manifest/analyzer": "^0.9.4",
-    "@playwright/test": "^1.41.0",
+    "@playwright/test": "^1.43.0",
     "@sand4rt/experimental-ct-web": "^1.41.0",
     "@types/node": "^20.11.30",
     "eslint": "^8.57.0",
