@@ -25,7 +25,7 @@
     "@lit-labs/preact-signals": "^1.0.2",
     "@lit/context": "^1.1.0",
     "lit": "^3.1.2",
-    "lucide-static": "^0.363.0"
+    "lucide-static": "^0.365.0"
   },
   "devDependencies": {
     "@11ty/eleventy": "^2.0.1",
