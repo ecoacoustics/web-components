@@ -33,7 +33,7 @@
     "@custom-elements-manifest/analyzer": "^0.9.4",
     "@playwright/test": "^1.41.0",
     "@sand4rt/experimental-ct-web": "^1.41.0",
-    "@types/node": "^20.11.30",
+    "@types/node": "^20.12.5",
     "eslint": "^8.57.0",
     "rimraf": "^5.0.5",
     "rollup-plugin-summary": "^2.0.0",
