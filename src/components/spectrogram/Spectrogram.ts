@@ -46,8 +46,6 @@ export class Spectrogram extends LitElement {
     });
 
     this.renderCanvasSize = signal(canvasSize);
-
-    console.log(this.renderCanvasSize);
   }
 
   public willUpdate(change: PropertyValues<this>): void {

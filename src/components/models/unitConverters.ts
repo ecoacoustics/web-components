@@ -1,5 +1,6 @@
 import { RenderWindow, TwoDSlice } from "./rendering";
 import { AudioModel } from "./recordings";
+import * as d3 from "d3-scale";
 
 export class UnitConverters {
   public static getRenderWindow(slice: TwoDSlice, audio: AudioModel): RenderWindow {
@@ -11,13 +12,27 @@ export class UnitConverters {
     });
   }
 
-  public static secondsToPixels(audio: AudioModel, seconds: number): number {}
+  public static secondsToPixels(audio: AudioModel, seconds: number): number {
+    const time = d3.scaleLinear().domain([0, audio.duration]).range([0, audio.sampleRate]);
+    return time(seconds);
+  }
 
-  public static hertzToPixels(audio: AudioModel, hertz: number): number {}
+  public static hertzToPixels(audio: AudioModel, hertz: number): number {
+    //? I might want to use the nyquist frequency here???
+    const frequency = d3.scaleLinear().domain([0, audio.sampleRate]).range([0, audio.sampleRate]);
+    return frequency(hertz);
+  }
 
-  public static pixelsToSeconds(audio: AudioModel, pixels: number): number {}
+  public static pixelsToSeconds(audio: AudioModel, pixels: number): number {
+    const time = d3.scaleLinear().domain([0, audio.sampleRate * audio.duration]).range([0, audio.duration]);
+    return time(pixels);
+  }
 
-  public static pixelsToHertz(audio: AudioModel, pixels: number): number {}
+  public static pixelsToHertz(audio: AudioModel, pixels: number): number {
+    //? I might want to use the nyquist frequency here???
+    const frequency = d3.scaleLinear().domain([0, audio.sampleRate]).range([0, audio.sampleRate]);
+    return frequency(pixels);
+  }
 
   public static nyquist(audio: AudioModel) {
     return audio.sampleRate / 2;
