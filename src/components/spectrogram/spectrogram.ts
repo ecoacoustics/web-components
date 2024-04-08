@@ -75,7 +75,7 @@ export class Spectrogram extends SignalWatcher(LitElement) {
     if (!this.audio) return;
 
     this.renderWindow.value = UnitConverters.getRenderWindow(this.twoDSlice, this.audio);
-    console.log(this.renderWindow.value);
+    console.log(this.renderWindow);
   }
 
   public updated() {
