@@ -6,7 +6,7 @@ import { provide } from "@lit/context";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
-import { Spectrogram } from "../spectrogram/spectrogram";
+import { Spectrogram } from "spectrogram/Spectrogram";
 
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.

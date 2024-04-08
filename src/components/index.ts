@@ -5,3 +5,4 @@
 export * from "./mediaControls/mediaControls";
 export * from "./spectrogram/spectrogram";
 export * from "./logger/logger";
+export * from "./axes/axes";

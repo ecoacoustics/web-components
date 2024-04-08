@@ -8,27 +8,40 @@
   </head>
 
   <body>
-    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
-    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
-      <source src="http://localhost:5173/example.flac" type="audio/flac" />
-    </oe-spectrogram>
-    <oe-media-controls for="spectrogram">
-      <div slot="play-icon">Play Me!</div>
-    </oe-media-controls>
+    <h2>5 Second Recordings</h2>
+    <div class="grid-container">
+      <oe-axes>
+        <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example.flac"></oe-spectrogram>
+      </oe-axes>
+      <oe-axes>
+        <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example.flac"></oe-spectrogram>
+      </oe-axes>
+    </div>
 
-    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">Change</button>
+    <h2>30 Second Recordings</h2>
+    <div class="grid-container">
+      <oe-axes>
+        <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
+      </oe-axes>
+      <oe-axes>
+        <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
+      </oe-axes>
+    </div>
 
     <style>
-      oe-media-controls {
-        &::part(play-icon) {
-          color: green;
-          fill: green;
-        }
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
 
-        &::part(pause-icon) {
-          color: red;
-          fill: red;
-        }
+      .small::part(spectrogram-container) {
+        height: 100px !important;
+        width: 100px !important;
+      }
+
+      .large::part(spectrogram-container) {
+        height: 200px !important;
+        width: 200px !important;
       }
     </style>
   </body>
