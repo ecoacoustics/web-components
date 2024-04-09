@@ -1,20 +1,20 @@
 // 2D slices are alwyas a subset of an fft spectrogram
-export class TwoDSlice {
-  public constructor(data: TwoDSlice) {
+export class TwoDSlice<XT extends number, YT extends number> {
+  public constructor(data: TwoDSlice<any, any>) {
     this.x0 = data.x0;
     this.x1 = data.x1;
     this.y0 = data.y0;
     this.y1 = data.y1;
   }
 
-  x0: number;
-  x1: number;
-  y0: number;
-  y1: number;
+  x0: XT;
+  x1: YT;
+  y0: XT;
+  y1: YT;
 }
 
-export class Spectrogram {
-  public constructor(data: Spectrogram) {
+export class SpectrogramModel {
+  public constructor(data: SpectrogramModel) {
     this.startOffset = data.startOffset;
     this.endOffset = data.endOffset;
   }
