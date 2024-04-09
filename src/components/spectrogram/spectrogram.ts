@@ -5,6 +5,7 @@ import { signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
+import { OeResizeObserver } from "../helpers/resizeObserver";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -28,6 +29,9 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   @property({ type: String })
   public src = "";
 
+  @property({ type: String, reflect: true })
+  public window: string = "";
+
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
 
@@ -44,13 +48,14 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
   public renderWindow: Signal<RenderWindow> = signal(this.createRenderWindow());
 
-  // TODO: Cleanup?? Make sure thre size obhserver is destroyed. We might want to use a static class to
-  private resizeObserver = new ResizeObserver(() => {
-    this.renderCanvasSize.value = this.canvasSize();
-  });
-
   public firstUpdated(): void {
-    this.resizeObserver.observe(this.canvas);
+    OeResizeObserver.observe(this.canvas, () => {
+      this.renderCanvasSize.value = this.canvasSize();
+    });
+  }
+
+  public disconnectedCallback(): void {
+    OeResizeObserver.instance.unobserve(this.canvas);
   }
 
   public willUpdate(change: PropertyValues<this>): void {
@@ -92,9 +97,6 @@ export class Spectrogram extends SignalWatcher(LitElement) {
       this.audio ??
       new AudioModel({ duration: 0, sampleRate: 0, originalAudioRecording: { startOffset: 0, duration: 0 } });
 
-    // TODO: we want to create a 2d slice from seconds, hertz, and an audio model
-
-    // TODO: Invert relation ship. A render window should be used to get a 2d slice
     const scale = new Scales().renderWindowScale(
       spectrogramAudio,
       spectrogramAudio.originalAudioRecording!,
@@ -102,6 +104,7 @@ export class Spectrogram extends SignalWatcher(LitElement) {
     );
 
     this.segmentToCanvasScale.value = scale;
+
     const rw = UnitConverters.getRenderWindow(scale, this.fftSlice);
 
     this.segmentToFractionalScale.value = new Scales().fractionalScale(rw);

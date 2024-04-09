@@ -24,8 +24,10 @@
   "dependencies": {
     "@lit-labs/preact-signals": "^1.0.2",
     "@lit/context": "^1.1.0",
+    "d3": "^7.9.0",
     "d3-axis": "^3.0.0",
     "d3-scale": "^4.0.2",
+    "d3-selection": "^3.0.0",
     "lit": "^3.1.2",
     "lucide-static": "^0.363.0"
   },
@@ -35,8 +37,10 @@
     "@custom-elements-manifest/analyzer": "^0.9.4",
     "@playwright/test": "^1.41.0",
     "@sand4rt/experimental-ct-web": "^1.41.0",
+    "@types/d3": "^7.4.3",
     "@types/d3-axis": "^3.0.6",
     "@types/d3-scale": "^4.0.8",
+    "@types/d3-selection": "^3.0.10",
     "@types/node": "^20.11.30",
     "eslint": "^8.57.0",
     "rimraf": "^5.0.5",

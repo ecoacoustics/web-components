@@ -61,6 +61,9 @@ export class Scales {
     return scales;
   }
 
+  // uses a render window to calculate the temporal and frequency scales
+  public renderWindowScaleAdvanced(): any {}
+
   public fractionalScale(renderWindow: RenderWindow) {
     const scales = new Scales();
 
