@@ -6,13 +6,26 @@ export const axesStyles = css`
   }
 
   #wrapped-element {
+    position: relative;
     display: inline-block;
     margin: 2rem;
   }
 
   #wrapped-element > svg {
     position: absolute;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     overflow: visible;
+  }
+
+  /* TODO: Replace with variable */
+  #x-gridlines-g,
+  #y-gridlines-g line {
+    stroke: black;
+  }
+
+  #x-axis-g {
+    transform: translateY(100%);
   }
 `;

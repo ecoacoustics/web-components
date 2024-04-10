@@ -6,19 +6,22 @@ import { RenderWindow } from "../models/rendering";
 import { Spectrogram } from "../../../playwright";
 import * as d3 from "d3";
 import * as d3Axis from "d3-axis";
+import { AbstractComponent } from "../mixins/abstractComponent";
 
 /**
  * @slot - A spectrogram element to add axes to
+ *
+ * @csspart axes - Used to style axis elements. Usually used to add padding/margin
  */
 @customElement("oe-axes")
-export class Axes extends SignalWatcher(LitElement) {
+export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = axesStyles;
 
   @property({ attribute: "x-step", type: Number })
-  public xStep: number = 1; // second
+  public userXStep?: number; // second
 
   @property({ attribute: "y-step", type: Number })
-  public yStep: number = 1_000; // hertz
+  public userYStep?: number; // hertz
 
   @property({ attribute: "x-axis", type: Boolean, reflect: true })
   public showXAxis: boolean = true;
@@ -38,8 +41,11 @@ export class Axes extends SignalWatcher(LitElement) {
   @query("#y-axis-g")
   private yAxisG!: SVGGElement;
 
-  @query("#axes-svg")
-  private axisElement!: SVGElement;
+  @query("#x-gridlines-g")
+  private xGridlinesG!: SVGGElement;
+
+  @query("#y-gridlines-g")
+  private yGridlinesG!: SVGGElement;
 
   @queryAssignedElements()
   private slotElements!: Array<Spectrogram>;
@@ -58,38 +64,61 @@ export class Axes extends SignalWatcher(LitElement) {
   }
 
   private updateAxes(): void {
-    const xAxisTicks = this.xAxisTime();
-    const yAxisTicks = this.yAxisHertz();
+    const temporalScale = this.spectrogramElement()?.segmentToCanvasScale.value.temporal;
+    const frequencyScale = this.spectrogramElement()?.segmentToCanvasScale.value.frequency;
 
     const temporalFormat = d3.format(".1f") as any;
     const frequencyFormat = d3.format(".0f") as any;
 
-    const xAxis = d3Axis
-      .axisBottom(this.spectrogramElement()?.segmentToCanvasScale.value.temporal)
-      .tickValues(xAxisTicks)
-      .tickFormat(temporalFormat)
-      .tickSize(this.spectrogramElement().renderCanvasSize.value.height);
+    const xAxisTicks = this.xAxisTime();
+    const yAxisTicks = this.yAxisHertz();
 
-    const yAxis = d3Axis
-      .axisLeft(this.spectrogramElement()?.segmentToCanvasScale.value.frequency)
-      .tickValues(yAxisTicks)
-      .tickFormat(frequencyFormat)
-      .tickSize(-this.spectrogramElement().renderCanvasSize.value.width);
+    const xAxis = d3Axis.axisBottom(temporalScale).tickValues(xAxisTicks).tickFormat(temporalFormat);
+    const yAxis = d3Axis.axisLeft(frequencyScale).tickValues(yAxisTicks).tickFormat(frequencyFormat);
+
+    d3.select(this.xGridlinesG)
+      .selectAll("line")
+      .data(xAxisTicks)
+      .enter()
+      .each((x: number) => {
+        d3.select(this.xGridlinesG)
+          .append("line")
+          .attr("x1", temporalScale(x))
+          .attr("x2", temporalScale(x))
+          .attr("y1", 0)
+          .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
+      });
+
+    d3.select(this.yGridlinesG)
+      .selectAll("line")
+      .data(yAxisTicks)
+      .enter()
+      .each((x: number) => {
+        d3.select(this.yGridlinesG)
+          .append("line")
+          .attr("x1", 0)
+          .attr("x2", this.spectrogramElement().renderCanvasSize.value.width)
+          .attr("y1", frequencyScale(x))
+          .attr("y2", frequencyScale(x));
+      });
 
     d3.select(this.xAxisG).call(xAxis);
     d3.select(this.yAxisG).call(yAxis);
-
-    this.axisElement.style.width = `${this.spectrogramElement().renderCanvasSize.value.width}px`;
-    this.axisElement.style.height = `${this.spectrogramElement().renderCanvasSize.value.height}px`;
   }
 
   private xAxisTime(): number[] {
     const renderWindow = this.renderWindow();
+    const x0 = renderWindow.startOffset;
     const xn = renderWindow.endOffset;
 
     const result = [];
-    for (let i = 0; i < xn; i += this.xStep) {
+    for (let i = x0; i < xn; i += this.xStep()) {
       result.push(i);
+    }
+
+    // TODO: Find a better algorithm for this
+    if (xn - result[result.length - 1] < this.xStep() / 2) {
+      result.pop();
     }
 
     result.push(xn);
@@ -99,10 +128,11 @@ export class Axes extends SignalWatcher(LitElement) {
 
   private yAxisHertz(): number[] {
     const renderWindow = this.renderWindow();
+    const y0 = renderWindow.lowFrequency;
     const yn = renderWindow.highFrequency;
 
     const result = [];
-    for (let i = 0; i < yn; i += this.yStep) {
+    for (let i = y0; i < yn; i += this.yStep()) {
       result.push(i);
     }
 
@@ -114,10 +144,11 @@ export class Axes extends SignalWatcher(LitElement) {
 
   private xAxis(): number[][] {
     const renderWindow = this.renderWindow();
+    const x0 = renderWindow.startOffset;
     const xn = renderWindow.endOffset;
 
     const result = [];
-    for (let i = 0; i < xn; i += this.xStep) {
+    for (let i = x0; i < xn; i += this.xStep()) {
       const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.temporal(i);
       const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.temporal(i);
       const time = i;
@@ -137,7 +168,7 @@ export class Axes extends SignalWatcher(LitElement) {
     const yn = renderWindow.highFrequency;
 
     const result = [];
-    for (let i = 0; i < yn; i += this.yStep) {
+    for (let i = 0; i < yn; i += this.yStep()) {
       const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.frequency(i);
       const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.frequency(i);
       const hertz = i;
@@ -152,14 +183,67 @@ export class Axes extends SignalWatcher(LitElement) {
     return result;
   }
 
+  // this is the "sane" defaults for the x-axis step
+  // it if is explicitly overwritten in the spectrogram attributes
+  // we will not contest it (we allow overlapping labels, grid lines, etc.. if the user explicitly defines a step)
+  private xStep(): number {
+    if (this.userXStep) {
+      return this.userXStep;
+    }
+
+    // we can not use the d3 default tick function because it is possible for labels
+    // to be overlapping
+    // const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
+    // const defaultXTicks = scale.ticks.apply(scale, []);
+    // return defaultXTicks[1] - defaultXTicks[0];
+
+    const labelFontSize = 10; //px
+    const labelPadding = 10; //px
+
+    const widthForEachLabel = labelFontSize + labelPadding * 2; //px
+    const canvasWidth = this.spectrogramElement().renderCanvasSize.value.width;
+
+    const numberOfLabels = Math.floor(canvasWidth / widthForEachLabel);
+
+    const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
+    const x1 = scale.invert(0);
+    const xn = scale.invert(this.spectrogramElement().renderCanvasSize.value.width);
+    const xDelta = xn - x1;
+
+    return Number((xDelta / numberOfLabels).toFixed(1));
+  }
+
+  private yStep(): number {
+    if (this.userYStep) {
+      return this.userYStep;
+    }
+
+    const labelFontSize = 10; //px
+    const labelPadding = 5; //px
+
+    const heightForEachLabel = labelFontSize + labelPadding * 2; //px
+    const canvasHeight = this.spectrogramElement().renderCanvasSize.value.height;
+
+    const numberOfLabels = Math.floor(canvasHeight / heightForEachLabel);
+
+    const scale = this.spectrogramElement().segmentToCanvasScale.value.frequency;
+    const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
+    const yn = scale.invert(0);
+    const yDelta = yn - y0;
+
+    return Number((yDelta / numberOfLabels).toFixed(1));
+  }
+
   public render() {
     return html`
       <div id="wrapped-element">
-        <svg id="axes-svg" viewBox="0 0 100% 100%">
+        <svg id="axes-svg">
           <g id="x-axis-g"></g>
           <g id="y-axis-g"></g>
+          <g id="x-gridlines-g"></g>
+          <g id="y-gridlines-g"></g>
         </svg>
-        <slot @slotchange="${() => this.requestUpdate()}"></slot>
+        <slot></slot>
       </div>
 
       <ol id="x-axis" class="axis">
