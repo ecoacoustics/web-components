@@ -11,8 +11,8 @@ export class UnitConverters {
     return new RenderWindow({
       startOffset: UnitConverters.pixelsToSeconds(scale, slice.x0),
       endOffset: UnitConverters.pixelsToSeconds(scale, slice.x1),
-      lowFrequency: UnitConverters.pixelsToHertz(scale, slice.y0),
-      highFrequency: UnitConverters.pixelsToHertz(scale, slice.y1),
+      lowFrequency: UnitConverters.pixelsToHertz(scale, slice.y1),
+      highFrequency: UnitConverters.pixelsToHertz(scale, slice.y0),
     });
   }
 
@@ -56,15 +56,29 @@ export class Scales {
     scales.frequency = d3Scale
       .scaleLinear()
       .domain([0, UnitConverters.nyquist(audioModel)])
-      .range([0, canvas.height]);
+      .range([canvas.height, 0]);
 
     return scales;
   }
 
   // uses a render window to calculate the temporal and frequency scales
-  public renderWindowScaleAdvanced(): any {}
+  public renderWindowScaleAdvanced(renderWindow: RenderWindow, canvas: RenderCanvasSize): Scales {
+    const scales = new Scales();
 
-  public fractionalScale(renderWindow: RenderWindow) {
+    scales.temporal = d3Scale
+      .scaleLinear()
+      .domain([renderWindow.startOffset, renderWindow.endOffset])
+      .range([0, canvas.width]);
+
+    scales.frequency = d3Scale
+      .scaleLinear()
+      .domain([renderWindow.lowFrequency, renderWindow.highFrequency])
+      .range([0, canvas.height]);
+
+    return scales;
+  }
+
+  public fractionalScale(renderWindow: RenderWindow): Scales {
     const scales = new Scales();
 
     scales.temporal = d3Scale.scaleLinear().domain([renderWindow.startOffset, renderWindow.endOffset]).range([0, 1]);

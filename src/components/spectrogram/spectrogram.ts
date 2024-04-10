@@ -6,6 +6,7 @@ import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
 import { OeResizeObserver } from "../helpers/resizeObserver";
+import { AbstractComponent } from "../mixins/abstractComponent";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -20,7 +21,7 @@ import { OeResizeObserver } from "../helpers/resizeObserver";
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
-export class Spectrogram extends SignalWatcher(LitElement) {
+export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = spectrogramStyles;
 
   @property({ type: Boolean, reflect: true })
@@ -29,8 +30,12 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   @property({ type: String })
   public src = "";
 
-  @property({ type: String, reflect: true })
-  public window: string = "";
+  // must be in the format startOffset, lowFreq, endOffset, highFreq
+  @property({ type: String })
+  public window?: string;
+
+  @property({ type: Number, reflect: true })
+  public offset: number = 0;
 
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
@@ -45,6 +50,7 @@ export class Spectrogram extends SignalWatcher(LitElement) {
 
   public segmentToCanvasScale: Signal<Scales | any> = signal(null);
   public segmentToFractionalScale: Signal<Scales | any> = signal(null);
+  public renderWindowScale: Signal<Scales | any> = signal(null);
   public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
   public renderWindow: Signal<RenderWindow> = signal(this.createRenderWindow());
 
@@ -86,30 +92,31 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   }
 
   private createRenderWindow(): RenderWindow {
-    this.fftSlice = new TwoDSlice({
-      x0: 0,
-      x1: this.renderCanvasSize.value.width,
-      y0: 0,
-      y1: this.renderCanvasSize.value.height,
-    });
-
-    const spectrogramAudio =
+    const segmentAudio =
       this.audio ??
-      new AudioModel({ duration: 0, sampleRate: 0, originalAudioRecording: { startOffset: 0, duration: 0 } });
+      new AudioModel({
+        duration: 0,
+        sampleRate: 0,
+        originalAudioRecording: {
+          startOffset: this.offset,
+          duration: 0,
+        },
+      });
 
     const scale = new Scales().renderWindowScale(
-      spectrogramAudio,
-      spectrogramAudio.originalAudioRecording!,
+      segmentAudio,
+      segmentAudio.originalAudioRecording!,
       this.renderCanvasSize.value,
     );
 
     this.segmentToCanvasScale.value = scale;
 
-    const rw = UnitConverters.getRenderWindow(scale, this.fftSlice);
+    const newRenderWindow = this.parseRenderWindow(segmentAudio);
 
-    this.segmentToFractionalScale.value = new Scales().fractionalScale(rw);
+    this.segmentToFractionalScale.value = new Scales().fractionalScale(newRenderWindow);
+    this.renderWindowScale.value = new Scales().renderWindowScaleAdvanced(newRenderWindow, this.renderCanvasSize.value);
 
-    return rw;
+    return newRenderWindow;
   }
 
   private setPlaying() {
@@ -127,7 +134,7 @@ export class Spectrogram extends SignalWatcher(LitElement) {
   private updateAudio(): void {
     if (!this.mediaElement) return;
 
-    const originalRecording = { duration: this.audioDuration(), startOffset: 0 };
+    const originalRecording = { duration: this.audioDuration(), startOffset: this.offset };
 
     this.audio = new AudioModel({
       duration: this.audioDuration(),
@@ -144,6 +151,27 @@ export class Spectrogram extends SignalWatcher(LitElement) {
     return this.mediaElement.duration;
   }
 
+  // creates a render window from an audio segment
+  private parseRenderWindow(segmentAudio: AudioModel): RenderWindow {
+    if (!this.window) {
+      return new RenderWindow({
+        startOffset: this.offset,
+        endOffset: this.offset + segmentAudio.duration,
+        lowFrequency: 0,
+        highFrequency: UnitConverters.nyquist(segmentAudio),
+      });
+    }
+
+    const [startOffset, lowFrequency, endOffset, highFrequency] = this.window.split(",").map(parseFloat);
+
+    return new RenderWindow({
+      startOffset,
+      endOffset,
+      lowFrequency,
+      highFrequency,
+    });
+  }
+
   public render() {
     return html`
       <div id="spectrogram-container" part="spectrogram-container">
@@ -156,7 +184,7 @@ export class Spectrogram extends SignalWatcher(LitElement) {
         @loadedmetadata="${this.updateAudio}"
         preload="metadata"
       >
-        <slot @slotchange="${() => this.requestUpdate()}"></slot>
+        <slot></slot>
       </audio>
     `;
   }

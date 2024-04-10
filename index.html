@@ -28,15 +28,34 @@
       </oe-axes>
     </div>
 
-    <h2>Render Window</h2>
-    <div>
+    <h2>30 Second Recordings (12 second offset)</h2>
+    <div class="grid-container">
       <oe-axes>
-        <!-- startSeconds, endSeconds, minHertz, maxHertz -->
+        <oe-spectrogram
+          id="spectrogram"
+          class="small"
+          src="http://localhost:5173/example_30s.flac"
+          offset="12"
+        ></oe-spectrogram>
+      </oe-axes>
+      <oe-axes>
         <oe-spectrogram
           id="spectrogram"
           class="large"
           src="http://localhost:5173/example_30s.flac"
-          window="12.5, 1000, 15, 8000"
+          offset="12"
+        ></oe-spectrogram>
+      </oe-axes>
+    </div>
+
+    <h2>Render Window through Attributes</h2>
+    <div>
+      <oe-axes>
+        <oe-spectrogram
+          id="spectrogram"
+          class="large"
+          src="http://localhost:5173/example_30s.flac"
+          window="0, 0, 5, 11025"
         ></oe-spectrogram>
       </oe-axes>
     </div>
