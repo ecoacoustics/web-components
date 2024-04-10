@@ -8,56 +8,69 @@
   </head>
 
   <body>
-    <h2>5 Second Recordings</h2>
+    <!-- <h2>5 Second Recordings</h2>
     <div class="grid-container">
-      <oe-axes>
-        <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example.flac"></oe-spectrogram>
-      </oe-axes>
-      <oe-axes>
-        <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example.flac"></oe-spectrogram>
-      </oe-axes>
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example.flac"></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
+
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example.flac"></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
     </div>
 
     <h2>30 Second Recordings</h2>
     <div class="grid-container">
-      <oe-axes>
-        <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
-      </oe-axes>
-      <oe-axes>
-        <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
-      </oe-axes>
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram id="spectrogram" class="small" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
+
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
     </div>
 
     <h2>30 Second Recordings (12 second offset)</h2>
     <div class="grid-container">
-      <oe-axes>
-        <oe-spectrogram
-          id="spectrogram"
-          class="small"
-          src="http://localhost:5173/example_30s.flac"
-          offset="12"
-        ></oe-spectrogram>
-      </oe-axes>
-      <oe-axes>
-        <oe-spectrogram
-          id="spectrogram"
-          class="large"
-          src="http://localhost:5173/example_30s.flac"
-          offset="12"
-        ></oe-spectrogram>
-      </oe-axes>
-    </div>
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram
+            id="spectrogram"
+            class="small"
+            src="http://localhost:5173/example_30s.flac"
+            offset="12"
+          ></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
+
+      <oe-indicator>
+        <oe-axes>
+          <oe-spectrogram
+            id="spectrogram"
+            class="large"
+            src="http://localhost:5173/example_30s.flac"
+            offset="12"
+          ></oe-spectrogram>
+        </oe-axes>
+      </oe-indicator>
+    </div> -->
 
     <h2>Render Window through Attributes</h2>
     <div>
       <oe-axes>
-        <oe-spectrogram
-          id="spectrogram"
-          class="large"
-          src="http://localhost:5173/example_30s.flac"
-          window="0, 0, 5, 11025"
-        ></oe-spectrogram>
+        <oe-indicator>
+          <oe-spectrogram id="spectrogram" class="large" src="http://localhost:5173/example_30s.flac"></oe-spectrogram>
+        </oe-indicator>
       </oe-axes>
+      <oe-media-controls for="spectrogram"></oe-media-controls>
     </div>
 
     <style>

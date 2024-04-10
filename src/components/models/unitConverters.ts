@@ -73,7 +73,7 @@ export class Scales {
     scales.frequency = d3Scale
       .scaleLinear()
       .domain([renderWindow.lowFrequency, renderWindow.highFrequency])
-      .range([0, canvas.height]);
+      .range([canvas.height, 0]);
 
     return scales;
   }

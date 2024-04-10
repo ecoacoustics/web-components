@@ -54,8 +54,17 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     this.updateAxes();
   }
 
-  private spectrogramElement(): Spectrogram {
-    return this.slotElements[0];
+  private spectrogramElement(): Spectrogram | any {
+    for (const slotElement of this.slotElements) {
+      if (slotElement instanceof Spectrogram) {
+        return slotElement;
+      }
+
+      const spectrogramSubElement = (slotElement as any).querySelector("oe-spectrogram");
+      if (spectrogramSubElement instanceof Spectrogram) {
+        return spectrogramSubElement;
+      }
+    }
   }
 
   private renderWindow(): RenderWindow {
@@ -64,8 +73,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private updateAxes(): void {
-    const temporalScale = this.spectrogramElement()?.segmentToCanvasScale.value.temporal;
-    const frequencyScale = this.spectrogramElement()?.segmentToCanvasScale.value.frequency;
+    const temporalScale = this.spectrogramElement()?.renderWindowScale.value.temporal;
+    const frequencyScale = this.spectrogramElement()?.renderWindowScale.value.frequency;
 
     const temporalFormat = d3.format(".1f") as any;
     const frequencyFormat = d3.format(".0f") as any;
@@ -80,26 +89,31 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       .selectAll("line")
       .data(xAxisTicks)
       .enter()
-      .each((x: number) => {
-        d3.select(this.xGridlinesG)
-          .append("line")
-          .attr("x1", temporalScale(x))
-          .attr("x2", temporalScale(x))
-          .attr("y1", 0)
-          .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
+      .each((x: number, i: number) => {
+        if (i !== xAxisTicks.length - 1 && i !== 0) {
+          d3.select(this.xGridlinesG)
+            .append("line")
+            .attr("x1", temporalScale(x))
+            .attr("x2", temporalScale(x))
+            .attr("y1", 0)
+            .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
+        }
       });
 
     d3.select(this.yGridlinesG)
       .selectAll("line")
       .data(yAxisTicks)
       .enter()
-      .each((x: number) => {
-        d3.select(this.yGridlinesG)
-          .append("line")
-          .attr("x1", 0)
-          .attr("x2", this.spectrogramElement().renderCanvasSize.value.width)
-          .attr("y1", frequencyScale(x))
-          .attr("y2", frequencyScale(x));
+      .each((x: number, i: number) => {
+        // TODO: I don't even know why
+        if (i !== xAxisTicks.length + 2 && i !== 0) {
+          d3.select(this.yGridlinesG)
+            .append("line")
+            .attr("x1", 0)
+            .attr("x2", this.spectrogramElement().renderCanvasSize.value.width)
+            .attr("y1", frequencyScale(x))
+            .attr("y2", frequencyScale(x));
+        }
       });
 
     d3.select(this.xAxisG).call(xAxis);
@@ -150,13 +164,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const result = [];
     for (let i = x0; i < xn; i += this.xStep()) {
       const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.temporal(i);
-      const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.temporal(i);
+      const canvasValue = this.spectrogramElement()?.renderWindowScale.value.temporal(i);
       const time = i;
       result.push([time, canvasValue, fractionalValue]);
     }
 
     const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.temporal(xn);
-    const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.temporal(xn);
+    const canvasValue = this.spectrogramElement()?.renderWindowScale.value.temporal(xn);
     const time = xn;
     result.push([time, canvasValue, fractionalValue]);
 
@@ -165,18 +179,19 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private yAxis(): number[][] {
     const renderWindow = this.renderWindow();
+    const y0 = renderWindow.lowFrequency;
     const yn = renderWindow.highFrequency;
 
     const result = [];
-    for (let i = 0; i < yn; i += this.yStep()) {
+    for (let i = y0; i < yn; i += this.yStep()) {
       const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.frequency(i);
-      const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.frequency(i);
+      const canvasValue = this.spectrogramElement()?.renderWindowScale.value.frequency(i);
       const hertz = i;
       result.push([hertz, canvasValue, fractionalValue]);
     }
 
     const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.frequency(yn);
-    const canvasValue = this.spectrogramElement()?.segmentToCanvasScale.value.frequency(yn);
+    const canvasValue = this.spectrogramElement()?.renderWindowScale.value.frequency(yn);
     const hertz = yn;
     result.push([hertz, canvasValue, fractionalValue]);
 
@@ -193,7 +208,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     // we can not use the d3 default tick function because it is possible for labels
     // to be overlapping
-    // const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
+    // const scale = this.spectrogramElement().renderWindowScale.value.temporal;
     // const defaultXTicks = scale.ticks.apply(scale, []);
     // return defaultXTicks[1] - defaultXTicks[0];
 
@@ -205,12 +220,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const numberOfLabels = Math.floor(canvasWidth / widthForEachLabel);
 
-    const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
+    const scale = this.spectrogramElement().renderWindowScale.value.temporal;
     const x1 = scale.invert(0);
     const xn = scale.invert(this.spectrogramElement().renderCanvasSize.value.width);
     const xDelta = xn - x1;
 
-    return Number((xDelta / numberOfLabels).toFixed(1));
+    const step = Number((xDelta / numberOfLabels).toFixed(1));
+    return step;
   }
 
   private yStep(): number {
@@ -226,12 +242,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const numberOfLabels = Math.floor(canvasHeight / heightForEachLabel);
 
-    const scale = this.spectrogramElement().segmentToCanvasScale.value.frequency;
+    const scale = this.spectrogramElement().renderWindowScale.value.frequency;
     const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
     const yn = scale.invert(0);
     const yDelta = yn - y0;
 
-    return Number((yDelta / numberOfLabels).toFixed(1));
+    const step = Number((yDelta / numberOfLabels).toFixed(1));
+    return Math.abs(step);
   }
 
   public render() {

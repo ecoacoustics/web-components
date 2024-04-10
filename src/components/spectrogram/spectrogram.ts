@@ -31,8 +31,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public src = "";
 
   // must be in the format startOffset, lowFreq, endOffset, highFreq
-  @property({ type: String })
-  public window?: string;
+  @property({ type: String, attribute: "window" })
+  public domRenderWindow?: string;
 
   @property({ type: Number, reflect: true })
   public offset: number = 0;
@@ -48,6 +48,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public fftSlice?: TwoDSlice<Pixels, Hertz>;
 
+  public currentTime: Signal<Seconds> = signal(this.offset);
   public segmentToCanvasScale: Signal<Scales | any> = signal(null);
   public segmentToFractionalScale: Signal<Scales | any> = signal(null);
   public renderWindowScale: Signal<Scales | any> = signal(null);
@@ -58,6 +59,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
     });
+
+    this.updateCurrentTime();
   }
 
   public disconnectedCallback(): void {
@@ -82,6 +85,13 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public pause() {
     this.paused = true;
+  }
+
+  private updateCurrentTime() {
+    if (!this.paused) {
+      this.currentTime.value = this.mediaElement.currentTime;
+      requestAnimationFrame(() => this.updateCurrentTime());
+    }
   }
 
   private canvasSize(): RenderCanvasSize {
@@ -126,6 +136,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.mediaElement?.pause();
     } else {
       this.mediaElement?.play();
+      requestAnimationFrame(() => this.updateCurrentTime());
     }
 
     this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
@@ -153,7 +164,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // creates a render window from an audio segment
   private parseRenderWindow(segmentAudio: AudioModel): RenderWindow {
-    if (!this.window) {
+    if (!this.domRenderWindow) {
       return new RenderWindow({
         startOffset: this.offset,
         endOffset: this.offset + segmentAudio.duration,
@@ -162,7 +173,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       });
     }
 
-    const [startOffset, lowFrequency, endOffset, highFrequency] = this.window.split(",").map(parseFloat);
+    const [startOffset, lowFrequency, endOffset, highFrequency] = this.domRenderWindow.split(",").map(parseFloat);
 
     return new RenderWindow({
       startOffset,
