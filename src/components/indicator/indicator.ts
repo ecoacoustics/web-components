@@ -39,7 +39,7 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private updateIndicator(): void {
-    this.time = this.spectrogramElement().currentTime.value;
+    this.time = this.spectrogramElement().currentTime.value + this.spectrogramElement().offset;
 
     const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
 
