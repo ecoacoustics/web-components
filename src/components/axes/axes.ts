@@ -105,8 +105,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       .data(yAxisTicks)
       .enter()
       .each((x: number, i: number) => {
-        // TODO: I don't even know why
-        if (i !== xAxisTicks.length + 2 && i !== 0) {
+        if (i !== yAxisTicks.length - 1 && i !== 0) {
           d3.select(this.yGridlinesG)
             .append("line")
             .attr("x1", 0)
@@ -128,11 +127,6 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const result = [];
     for (let i = x0; i < xn; i += this.xStep()) {
       result.push(i);
-    }
-
-    // TODO: Find a better algorithm for this
-    if (xn - result[result.length - 1] < this.xStep() / 2) {
-      result.pop();
     }
 
     result.push(xn);
@@ -205,50 +199,26 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     if (this.userXStep) {
       return this.userXStep;
     }
-
-    // we can not use the d3 default tick function because it is possible for labels
-    // to be overlapping
-    // const scale = this.spectrogramElement().renderWindowScale.value.temporal;
-    // const defaultXTicks = scale.ticks.apply(scale, []);
-    // return defaultXTicks[1] - defaultXTicks[0];
-
-    const labelFontSize = 10; //px
-    const labelPadding = 10; //px
-
-    const widthForEachLabel = labelFontSize + labelPadding * 2; //px
-    const canvasWidth = this.spectrogramElement().renderCanvasSize.value.width;
-
-    const numberOfLabels = Math.floor(canvasWidth / widthForEachLabel);
-
     const scale = this.spectrogramElement().renderWindowScale.value.temporal;
     const x1 = scale.invert(0);
     const xn = scale.invert(this.spectrogramElement().renderCanvasSize.value.width);
-    const xDelta = xn - x1;
 
-    const step = Number((xDelta / numberOfLabels).toFixed(1));
-    return step;
+    const midpoint = (xn + x1) / 2;
+
+    return Math.pow(10, Math.floor(Math.log10(midpoint)));
   }
 
   private yStep(): number {
     if (this.userYStep) {
       return this.userYStep;
     }
-
-    const labelFontSize = 10; //px
-    const labelPadding = 5; //px
-
-    const heightForEachLabel = labelFontSize + labelPadding * 2; //px
-    const canvasHeight = this.spectrogramElement().renderCanvasSize.value.height;
-
-    const numberOfLabels = Math.floor(canvasHeight / heightForEachLabel);
-
     const scale = this.spectrogramElement().renderWindowScale.value.frequency;
     const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
     const yn = scale.invert(0);
-    const yDelta = yn - y0;
 
-    const step = Number((yDelta / numberOfLabels).toFixed(1));
-    return Math.abs(step);
+    const midpoint = (yn + y0) / 2;
+
+    return Math.pow(10, Math.floor(Math.log10(midpoint)));
   }
 
   public render() {
