@@ -18,5 +18,10 @@ export const indicatorStyles = css`
     stroke: red;
     stroke-width: 2;
     height: 100%;
+    shape-rendering: crispEdges;
+
+    /* for some reason, rendering the line changes on the GPU causes artifacts
+    will-change: transform;
+    */
   }
 `;

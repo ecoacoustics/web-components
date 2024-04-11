@@ -93,8 +93,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         if (i !== xAxisTicks.length - 1 && i !== 0) {
           d3.select(this.xGridlinesG)
             .append("line")
-            .attr("x1", temporalScale(x))
-            .attr("x2", temporalScale(x))
+            .attr("x1", temporalScale(x) + 0.5)
+            .attr("x2", temporalScale(x) + 0.5)
             .attr("y1", 0)
             .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
         }
@@ -110,8 +110,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             .append("line")
             .attr("x1", 0)
             .attr("x2", this.spectrogramElement().renderCanvasSize.value.width)
-            .attr("y1", frequencyScale(x))
-            .attr("y2", frequencyScale(x));
+            .attr("y1", frequencyScale(x) + 0.5)
+            .attr("y2", frequencyScale(x) + 0.5);
         }
       });
 

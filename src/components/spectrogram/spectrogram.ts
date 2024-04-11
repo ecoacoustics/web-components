@@ -7,6 +7,7 @@ import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
 import { OeResizeObserver } from "../helpers/resizeObserver";
 import { AbstractComponent } from "../mixins/abstractComponent";
+import { AudioHelper } from "../helpers/audio";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -61,6 +62,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
 
     this.updateCurrentTime();
+
+    AudioHelper.connect(this.mediaElement);
   }
 
   public disconnectedCallback(): void {
@@ -183,18 +186,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
   }
 
+  private calculateFft() {}
+
+  private paintCanvasFft() {}
+
   public render() {
     return html`
       <div id="spectrogram-container" part="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio
-        id="media-element"
-        src="${this.src}"
-        @ended="${this.pause}"
-        @loadedmetadata="${this.updateAudio}"
-        preload="metadata"
-      >
+      <audio id="media-element" src="${this.src}" @ended="${this.pause}" @loadedmetadata="${this.updateAudio}">
         <slot></slot>
       </audio>
     `;
