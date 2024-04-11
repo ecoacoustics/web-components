@@ -17,6 +17,10 @@ export const axesStyles = css`
     height: 100%;
     z-index: 1;
     overflow: visible;
+
+    line {
+      shape-rendering: crispEdges;
+    }
   }
 
   /* TODO: Replace with variable */
@@ -26,6 +30,6 @@ export const axesStyles = css`
   }
 
   #x-axis-g {
-    transform: translateY(100%);
+    transform: translateY(calc(100% - 4px));
   }
 `;

@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { html, LitElement } from "lit";
-import { customElement, queryAssignedElements } from "lit/decorators.js";
+import { customElement, query, queryAssignedElements } from "lit/decorators.js";
 import { AbstractComponent } from "../mixins/abstractComponent";
 import { indicatorStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
@@ -14,14 +14,20 @@ import { Spectrogram } from "../spectrogram/spectrogram";
 export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = indicatorStyles;
 
+  @query("#indicator-line")
+  private indicatorLine!: SVGLineElement;
+
   @queryAssignedElements()
   private slotElements!: Array<HTMLElement>;
 
   private time: number = 0;
+  private xPos: number = 0;
+  private offset: number = 0;
 
   public firstUpdated(): void {
-    this.spectrogramElement().currentTime.subscribe(() => {
-      this.updateIndicator();
+    this.offset = this.spectrogramElement().offset;
+    this.spectrogramElement().currentTime.subscribe((elapsedTime: number) => {
+      this.updateIndicator(elapsedTime);
     });
   }
 
@@ -38,23 +44,20 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
     }
   }
 
-  private updateIndicator(): void {
-    this.time = this.spectrogramElement().currentTime.value + this.spectrogramElement().offset;
-
+  private updateIndicator(elapsedTime: number): void {
+    this.time = elapsedTime + this.offset;
     const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
 
-    const x = scale(this.time);
+    this.xPos = scale(this.time);
 
-    const indicatorLine = this.shadowRoot?.querySelector("#indicator-line") as SVGLineElement;
-    indicatorLine.setAttribute("x1", x.toString());
-    indicatorLine.setAttribute("x2", x.toString());
+    this.indicatorLine.style.transform = `translate3d(${this.xPos}px, 0, 0)`;
   }
 
   public render() {
     return html`
       <div id="wrapped-element">
         <svg id="indicator-svg">
-          <line part="indicator-line" id="indicator-line" x1="0" x2="0" y0="0" y2="100%"></line>
+          <line id="indicator-line" part="indicator-line" y0="0" y2="100%"></line>
         </svg>
         <slot></slot>
       </div>
