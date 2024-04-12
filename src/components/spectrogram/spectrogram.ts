@@ -62,8 +62,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
 
     this.updateCurrentTime();
-
-    AudioHelper.connect(this.mediaElement);
   }
 
   public disconnectedCallback(): void {
@@ -83,6 +81,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public play() {
+    AudioHelper.connect(this.mediaElement);
     this.paused = false;
   }
 

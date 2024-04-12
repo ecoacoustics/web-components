@@ -1,29 +1,14 @@
+import * as a from "./shared-buffer-worker";
+import * as b from "./shared-buffer-worklet-node";
+import * as c from "./shared-buffer-worklet-processor";
+
 export class AudioHelper {
   static generateFft() {}
 
   static connect(audioElement: HTMLAudioElement) {
-    const context = new OfflineAudioContext({
-      numberOfChannels: 1,
-      length: 5 * 22050,
+    const context = new AudioContext({
       sampleRate: 22050,
     });
-
-    context.onstatechange = (event) => {
-      console.log("change", event, context);
-    };
-
-    context.oncomplete = (event) => {
-      console.log("complete", event, context);
-    };
-
-    const bufferSource = context.createBufferSource();
-
-    let analyzer: any;
-    // const analyzer = context.createAnalyser();
-    // analyzer.fftSize = 4096;
-
-    // const bufferSize = (audioElement.duration * context.sampleRate) / 22050;
-    const output = new Float32Array(256);
 
     let source: any;
 
@@ -35,30 +20,22 @@ export class AudioHelper {
       .then((decodedBuffer) => {
         source = new AudioBufferSourceNode(context, { buffer: decodedBuffer });
       })
-      .then(() => context.audioWorklet.addModule("src/components/helpers/fft-processor.js"))
       .then(() => {
-        // bufferSource.buffer = decodedBuffer;
-        // source.connect(context.input);
+        import("./shared-buffer-worklet-node.ts").then(({ default: SharedBufferWorkletNode }) => {
+          context.audioWorklet.addModule("src/components/helpers/shared-buffer-worklet-processor.ts").then(() => {
+            const sbwNode = new SharedBufferWorkletNode(context);
 
-        analyzer = new AnalyserNode(context, { fftSize: 512 });
+            sbwNode.onInitialized = () => {
+              source.connect(sbwNode).connect(context.destination);
+              console.log("here");
+              source.start();
+            };
 
-        // const javascriptNode = context.createScriptProcessor(256, 1, 1);
-        // javascriptNode.onaudioprocess = () => {
-        //   analyzer.getFloatTimeDomainData(output);
-        //   console.log(output);
-        // };
-
-        const javascriptNode = new AudioWorkletNode(context, "fft-processor");
-
-        source.connect(context.destination);
-        source.connect(analyzer);
-        analyzer.connect(javascriptNode);
-        javascriptNode.connect(context.destination);
-
-        console.log(javascriptNode, context.audioWorklet);
-
-        return source.start();
-      })
-      .then(() => context.startRendering());
+            sbwNode.onError = (errorData) => {
+              console.log("[ERROR] " + errorData.detail);
+            };
+          });
+        });
+      });
   }
 }
