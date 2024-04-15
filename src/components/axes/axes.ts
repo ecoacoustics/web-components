@@ -17,10 +17,10 @@ import { AbstractComponent } from "../mixins/abstractComponent";
 export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = axesStyles;
 
-  @property({ attribute: "x-step", type: Number })
+  @property({ attribute: "x-step", type: Number, reflect: true })
   public userXStep?: number; // second
 
-  @property({ attribute: "y-step", type: Number })
+  @property({ attribute: "y-step", type: Number, reflect: true })
   public userYStep?: number; // hertz
 
   @property({ attribute: "x-axis", type: Boolean, reflect: true })
@@ -182,11 +182,11 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public render() {
     return html`
       <div id="wrapped-element">
-        <svg id="axes-svg">
-          <g id="x-axis-g"></g>
-          <g id="y-axis-g"></g>
-          <g id="x-gridlines-g"></g>
-          <g id="y-gridlines-g"></g>
+        <svg id="axes-svg" part="axes">
+          <g id="x-axis-g" part="x-ticks" part="ticks"></g>
+          <g id="y-axis-g" part="y-ticks" part="ticks"></g>
+          <g id="x-gridlines-g" part="x-grid" part="grid"></g>
+          <g id="y-gridlines-g" part="y-grid" part="grid"></g>
         </svg>
         <slot></slot>
       </div>

@@ -45,14 +45,21 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   private canvas!: HTMLCanvasElement;
 
   @state()
-  private audio!: AudioModel;
+  private audio: AudioModel = new AudioModel({
+    duration: 0,
+    sampleRate: 0,
+    originalAudioRecording: {
+      startOffset: this.offset,
+      duration: 0,
+    },
+  });
 
   public fftSlice?: TwoDSlice<Pixels, Hertz>;
 
   public currentTime: Signal<Seconds> = signal(this.offset);
   public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
   public segmentToCanvasScale: Signal<Scales> = computed(() => this.createCanvasScale());
-  public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow(this.audio));
+  public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow());
   public renderWindowScale: Signal<Scales> = computed(() => this.createRenderWindowScale());
   public segmentToFractionalScale: Signal<Scales> = computed(() => this.createFractionalScale());
 
@@ -147,13 +154,13 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   // creates a render window from an audio segment
-  private parseRenderWindow(segmentAudio: AudioModel): RenderWindow {
+  private parseRenderWindow(): RenderWindow {
     if (!this.domRenderWindow) {
       return new RenderWindow({
         startOffset: this.offset,
-        endOffset: this.offset + segmentAudio.duration,
+        endOffset: this.offset + this.audio.duration,
         lowFrequency: 0,
-        highFrequency: UnitConverters.nyquist(segmentAudio),
+        highFrequency: UnitConverters.nyquist(this.audio),
       });
     }
 
@@ -169,7 +176,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public render() {
     return html`
-      <div id="spectrogram-container" part="spectrogram-container">
+      <div id="spectrogram-container">
         <canvas></canvas>
       </div>
       <audio id="media-element" src="${this.src}" @ended="${this.pause}" @loadedmetadata="${this.updateAudio}">

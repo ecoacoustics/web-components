@@ -15,11 +15,8 @@ export async function setBrowserValue<T>(component: any, key: keyof T, value: T[
   await component.evaluate((element: T, { key, value }: any) => ((element as any)[key] = value), { key, value });
 }
 
-export async function getBrowserAttribute<T extends HTMLElement, Key extends keyof T>(
-  component: any,
-  key: Key,
-): Promise<string> {
-  return await component.evaluate((element: T, { key }: { key: Key }) => element.getAttribute(key.toString()), {
+export async function getBrowserAttribute<T extends HTMLElement>(component: any, key: string): Promise<string> {
+  return await component.evaluate((element: T, { key }: { key: string }) => element.getAttribute(key.toString()), {
     key,
   });
 }
