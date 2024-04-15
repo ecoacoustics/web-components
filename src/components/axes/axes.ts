@@ -150,48 +150,6 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return result;
   }
 
-  private xAxis(): number[][] {
-    const renderWindow = this.renderWindow();
-    const x0 = renderWindow.startOffset;
-    const xn = renderWindow.endOffset;
-
-    const result = [];
-    for (let i = x0; i < xn; i += this.xStep()) {
-      const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.temporal(i);
-      const canvasValue = this.spectrogramElement()?.renderWindowScale.value.temporal(i);
-      const time = i;
-      result.push([time, canvasValue, fractionalValue]);
-    }
-
-    const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.temporal(xn);
-    const canvasValue = this.spectrogramElement()?.renderWindowScale.value.temporal(xn);
-    const time = xn;
-    result.push([time, canvasValue, fractionalValue]);
-
-    return result;
-  }
-
-  private yAxis(): number[][] {
-    const renderWindow = this.renderWindow();
-    const y0 = renderWindow.lowFrequency;
-    const yn = renderWindow.highFrequency;
-
-    const result = [];
-    for (let i = y0; i < yn; i += this.yStep()) {
-      const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.frequency(i);
-      const canvasValue = this.spectrogramElement()?.renderWindowScale.value.frequency(i);
-      const hertz = i;
-      result.push([hertz, canvasValue, fractionalValue]);
-    }
-
-    const fractionalValue = this.spectrogramElement()?.segmentToFractionalScale.value.frequency(yn);
-    const canvasValue = this.spectrogramElement()?.renderWindowScale.value.frequency(yn);
-    const hertz = yn;
-    result.push([hertz, canvasValue, fractionalValue]);
-
-    return result;
-  }
-
   // this is the "sane" defaults for the x-axis step
   // it if is explicitly overwritten in the spectrogram attributes
   // we will not contest it (we allow overlapping labels, grid lines, etc.. if the user explicitly defines a step)
@@ -232,17 +190,6 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         </svg>
         <slot></slot>
       </div>
-
-      <ol id="x-axis" class="axis">
-        x ${this.xAxis().map((i) => html`<li>${i[0]}s,${i[1]}px,${i[2]}</li>`)}
-      </ol>
-
-      <ol id="y-axis" class="axis">
-        y
-        ${this.yAxis()
-          .reverse()
-          .map((i) => html`<li>${i[0]}hz,${i[1]}px,${i[2]}</li>`)}
-      </ol>
     `;
   }
 }
