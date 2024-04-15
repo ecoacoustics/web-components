@@ -20,31 +20,31 @@ class TestPage {
   }
 
   public async updateSlot(content: string) {
-    const componentElement = await this.component();
+    const componentElement = this.component();
     await componentElement.evaluate((element: HTMLElement, content: string) => {
       element.innerHTML = content;
     }, content);
   }
 
   public async toggleAudio() {
-    const actionButtonElement = await this.actionButton;
+    const actionButtonElement = this.actionButton;
     await actionButtonElement.click({ force: true });
   }
 
   public async isPlayingAudio() {
-    const audioElement = await this.audioOutlet();
+    const audioElement = this.audioOutlet();
     return await audioElement.evaluate((element: HTMLAudioElement) => !element.paused);
   }
 
   public async actionButtonSlotText(): Promise<(string | null)[]> {
-    const actionButtonSlotElement = await this.page.locator("oe-media-controls button > slot").first();
+    const actionButtonSlotElement = this.page.locator("oe-media-controls button > slot").first();
     return await actionButtonSlotElement.evaluate((element: HTMLSlotElement) =>
       element.assignedElements().map((element) => element.textContent),
     );
   }
 
   public async actionButtonStyles() {
-    const actionButtonElement = await this.actionButtonSlot();
+    const actionButtonElement = this.actionButtonSlot();
     return await actionButtonElement.evaluate((element: HTMLButtonElement) => {
       const styles = window.getComputedStyle(element);
 

@@ -26,7 +26,8 @@ export const axesStyles = css`
   /* TODO: Replace with variable */
   #x-gridlines-g,
   #y-gridlines-g line {
-    stroke: black;
+    stroke: lightblue;
+    opacity: 0.5;
   }
 
   #x-axis-g {

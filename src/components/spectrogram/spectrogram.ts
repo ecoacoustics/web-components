@@ -1,7 +1,7 @@
 import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
-import { signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
@@ -45,16 +45,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   private canvas!: HTMLCanvasElement;
 
   @state()
-  private audio?: AudioModel;
+  private audio!: AudioModel;
 
   public fftSlice?: TwoDSlice<Pixels, Hertz>;
 
   public currentTime: Signal<Seconds> = signal(this.offset);
-  public segmentToCanvasScale: Signal<Scales | any> = signal(null);
-  public segmentToFractionalScale: Signal<Scales | any> = signal(null);
-  public renderWindowScale: Signal<Scales | any> = signal(null);
   public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
-  public renderWindow: Signal<RenderWindow> = signal(this.createRenderWindow());
+  public segmentToCanvasScale: Signal<Scales> = computed(() => this.createCanvasScale());
+  public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow(this.audio));
+  public renderWindowScale: Signal<Scales> = computed(() => this.createRenderWindowScale());
+  public segmentToFractionalScale: Signal<Scales> = computed(() => this.createFractionalScale());
 
   public firstUpdated(): void {
     OeResizeObserver.observe(this.canvas, () => {
@@ -62,6 +62,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
 
     this.updateCurrentTime();
+    AudioHelper.connect(this.mediaElement, this.canvas);
   }
 
   public disconnectedCallback(): void {
@@ -72,8 +73,18 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     if (change.has("paused")) {
       this.setPlaying();
     }
+  }
 
-    this.renderWindow.value = this.createRenderWindow();
+  private createRenderWindowScale(): Scales {
+    return new Scales().renderWindowScaleAdvanced(this.renderWindow.value, this.renderCanvasSize.value);
+  }
+
+  private createFractionalScale(): Scales {
+    return new Scales().fractionalScale(this.renderWindow.value);
+  }
+
+  private createCanvasScale(): Scales {
+    return new Scales().renderWindowScale(this.audio, this.renderWindow.value, this.renderCanvasSize.value);
   }
 
   public updated() {
@@ -81,7 +92,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public play() {
-    AudioHelper.connect(this.mediaElement);
     this.paused = false;
   }
 
@@ -101,34 +111,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       width: this.canvas?.clientWidth ?? 0,
       height: this.canvas?.clientHeight ?? 0,
     });
-  }
-
-  private createRenderWindow(): RenderWindow {
-    const segmentAudio =
-      this.audio ??
-      new AudioModel({
-        duration: 0,
-        sampleRate: 0,
-        originalAudioRecording: {
-          startOffset: this.offset,
-          duration: 0,
-        },
-      });
-
-    const scale = new Scales().renderWindowScale(
-      segmentAudio,
-      segmentAudio.originalAudioRecording!,
-      this.renderCanvasSize.value,
-    );
-
-    this.segmentToCanvasScale.value = scale;
-
-    const newRenderWindow = this.parseRenderWindow(segmentAudio);
-
-    this.segmentToFractionalScale.value = new Scales().fractionalScale(newRenderWindow);
-    this.renderWindowScale.value = new Scales().renderWindowScaleAdvanced(newRenderWindow, this.renderCanvasSize.value);
-
-    return newRenderWindow;
   }
 
   private setPlaying() {
@@ -184,10 +166,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       highFrequency,
     });
   }
-
-  private calculateFft() {}
-
-  private paintCanvasFft() {}
 
   public render() {
     return html`

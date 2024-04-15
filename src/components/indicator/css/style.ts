@@ -14,8 +14,10 @@ export const indicatorStyles = css`
     overflow: visible;
   }
 
+  /* This element can be targeted through CSS parts */
   #indicator-line {
-    stroke: red;
+    color: red;
+    stroke: currentColor;
     stroke-width: 2;
     height: 100%;
     shape-rendering: crispEdges;
