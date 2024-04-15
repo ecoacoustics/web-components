@@ -23,7 +23,6 @@ export const axesStyles = css`
     }
   }
 
-  /* TODO: Replace with variable */
   #x-gridlines-g,
   #y-gridlines-g line {
     stroke: lightblue;
