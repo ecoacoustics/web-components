@@ -2,12 +2,13 @@ import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
-import { RenderCanvasSize, RenderWindow, TwoDFft, TwoDSlice } from "../models/rendering";
+import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
 import { OeResizeObserver } from "../helpers/resizeObserver";
 import { AbstractComponent } from "../mixins/abstractComponent";
-import { AudioHelper } from "../helpers/audio";
+import { AudioHelper } from "../helpers/audio/audio";
+import FFT from "fft.js";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -67,7 +68,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
-      AudioHelper.connect(this.mediaElement, this.drawSpectrogram.bind(this));
+      AudioHelper.connect(this.mediaElement, this.paintCanvas.bind(this));
     });
   }
 
@@ -79,39 +80,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     if (change.has("paused")) {
       this.setPlaying();
     }
-  }
-
-  protected drawSpectrogram(data: TwoDFft) {
-    const context = this.canvas.getContext("2d");
-
-    if (!context) {
-      throw new Error("Could not get 2d context from canvas");
-    }
-
-    console.log(data);
-
-    for (let fftX = 0; fftX < this.audioSampleRate() * 5; fftX++) {
-      for (let fftY = 0; fftY < this.audioSampleRate() / 2; fftY++) {
-        const color = Math.floor(fftY * 255);
-        context.fillStyle = `rgb(${color},${color},${color})`;
-      }
-    }
-
-    // data.forEach((fftX: Float32Array, xi: number) => {
-    //   fftX.forEach((fftY: number, yi: number) => {
-    //     const canvasX = this.renderWindowScale.value.temporal(xi / this.audioSampleRate());
-    //     const canvasY = this.renderWindowScale.value.temporal(yi / this.audioSampleRate());
-
-    //     const canvasXStep = this.renderWindowScale.value.temporal(1 / this.audioSampleRate());
-    //     const canvasYStep = this.renderWindowScale.value.temporal(1 / this.audioSampleRate());
-
-    //     // for grey scale spectrograms
-    //     const color = Math.floor(fftY * 255);
-    //     context.fillStyle = `rgb(${color},${color},${color})`;
-
-    //     context.fillRect(canvasX, canvasY, 10, 10);
-    //   });
-    // });
   }
 
   private createRenderWindowScale(): Scales {
@@ -143,6 +111,31 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.currentTime.value = this.mediaElement.currentTime;
       requestAnimationFrame(() => this.updateCurrentTime());
     }
+  }
+
+  // TODO: fix
+  private spectrogramPaintX = 0;
+
+  private paintCanvas(data: Float32Array) {
+    const f = new FFT(data.length);
+    const oneDFftData = f.createComplexArray();
+
+    f.realTransform(oneDFftData, data);
+
+    const ctx = this.canvas.getContext("2d");
+    if (!ctx) return;
+
+    oneDFftData.forEach((value, i) => {
+      const x = this.spectrogramPaintX;
+      const y = i;
+
+      const color = Math.abs(Math.floor(value * 255) * 10);
+
+      ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+      ctx.fillRect(x, y, 1, 1);
+    });
+
+    this.spectrogramPaintX++;
   }
 
   private canvasSize(): RenderCanvasSize {
