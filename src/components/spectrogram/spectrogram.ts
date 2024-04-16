@@ -1,8 +1,8 @@
 import { LitElement, PropertyValues, html } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
-import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
+import { RenderCanvasSize, RenderWindow, TwoDFft, TwoDSlice } from "../models/rendering";
 import { AudioModel } from "../models/recordings";
 import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitConverters";
 import { OeResizeObserver } from "../helpers/resizeObserver";
@@ -44,18 +44,18 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
-  @state()
-  private audio: AudioModel = new AudioModel({
-    duration: 0,
-    sampleRate: 0,
-    originalAudioRecording: {
-      startOffset: this.offset,
-      duration: 0,
-    },
-  });
-
   public fftSlice?: TwoDSlice<Pixels, Hertz>;
 
+  public audio: Signal<AudioModel> = signal(
+    new AudioModel({
+      duration: 0,
+      sampleRate: 0,
+      originalAudioRecording: {
+        startOffset: this.offset,
+        duration: 0,
+      },
+    }),
+  );
   public currentTime: Signal<Seconds> = signal(this.offset);
   public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
   public segmentToCanvasScale: Signal<Scales> = computed(() => this.createCanvasScale());
@@ -66,10 +66,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public firstUpdated(): void {
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
+      this.updateCurrentTime();
+      AudioHelper.connect(this.mediaElement, this.drawSpectrogram.bind(this));
     });
-
-    this.updateCurrentTime();
-    AudioHelper.connect(this.mediaElement, this.canvas);
   }
 
   public disconnectedCallback(): void {
@@ -82,6 +81,39 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     }
   }
 
+  protected drawSpectrogram(data: TwoDFft) {
+    const context = this.canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Could not get 2d context from canvas");
+    }
+
+    console.log(data);
+
+    for (let fftX = 0; fftX < this.audioSampleRate() * 5; fftX++) {
+      for (let fftY = 0; fftY < this.audioSampleRate() / 2; fftY++) {
+        const color = Math.floor(fftY * 255);
+        context.fillStyle = `rgb(${color},${color},${color})`;
+      }
+    }
+
+    // data.forEach((fftX: Float32Array, xi: number) => {
+    //   fftX.forEach((fftY: number, yi: number) => {
+    //     const canvasX = this.renderWindowScale.value.temporal(xi / this.audioSampleRate());
+    //     const canvasY = this.renderWindowScale.value.temporal(yi / this.audioSampleRate());
+
+    //     const canvasXStep = this.renderWindowScale.value.temporal(1 / this.audioSampleRate());
+    //     const canvasYStep = this.renderWindowScale.value.temporal(1 / this.audioSampleRate());
+
+    //     // for grey scale spectrograms
+    //     const color = Math.floor(fftY * 255);
+    //     context.fillStyle = `rgb(${color},${color},${color})`;
+
+    //     context.fillRect(canvasX, canvasY, 10, 10);
+    //   });
+    // });
+  }
+
   private createRenderWindowScale(): Scales {
     return new Scales().renderWindowScaleAdvanced(this.renderWindow.value, this.renderCanvasSize.value);
   }
@@ -91,7 +123,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private createCanvasScale(): Scales {
-    return new Scales().renderWindowScale(this.audio, this.renderWindow.value, this.renderCanvasSize.value);
+    return new Scales().renderWindowScale(this.audio.value, this.renderWindow.value, this.renderCanvasSize.value);
   }
 
   public updated() {
@@ -134,11 +166,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private updateAudio(): void {
-    if (!this.mediaElement) return;
-
     const originalRecording = { duration: this.audioDuration(), startOffset: this.offset };
 
-    this.audio = new AudioModel({
+    this.audio.value = new AudioModel({
       duration: this.audioDuration(),
       sampleRate: this.audioSampleRate(),
       originalAudioRecording: originalRecording,
@@ -158,9 +188,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     if (!this.domRenderWindow) {
       return new RenderWindow({
         startOffset: this.offset,
-        endOffset: this.offset + this.audio.duration,
+        endOffset: this.offset + this.audio.value.duration,
         lowFrequency: 0,
-        highFrequency: UnitConverters.nyquist(this.audio),
+        highFrequency: UnitConverters.nyquist(this.audio.value),
       });
     }
 

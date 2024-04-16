@@ -21,9 +21,7 @@ export const indicatorStyles = css`
     stroke-width: 2;
     height: 100%;
     shape-rendering: crispEdges;
-
-    /* for some reason, rendering the line changes on the GPU causes artifacts
+    /* Maybe not? Rendering on the GPU causes no lag, but a bit of sub-pixel rendering artifacts */
     will-change: transform;
-    */
   }
 `;

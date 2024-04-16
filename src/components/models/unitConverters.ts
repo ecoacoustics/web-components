@@ -6,6 +6,31 @@ export type Seconds = number;
 export type Hertz = number;
 export type Pixels = number;
 
+// // use we signals in the stateful unit converters so that when one value updates
+// // all the computed values also update
+// export class StatefulUC {
+//   public constructor(
+//     renderWindow: Signal<RenderWindow>,
+//     canvasSize: Signal<RenderCanvasSize>,
+//     audioModel: Signal<AudioModel>,
+//   ) {
+//     this.renderWindow = renderWindow;
+//     this.canvasSize = canvasSize;
+//     this.audioModel = audioModel;
+//   }
+
+//   public renderWindow: Signal<RenderWindow>;
+//   public canvasSize: Signal<RenderCanvasSize>;
+//   public audioModel: Signal<AudioModel>;
+
+//   public renderWindowScale = computed(() => {});
+//   public segmentToCanvasScale = computed(() => {});
+//   public segmentToFractionalScale = computed(() => {});
+
+//   public secondsToPixels(seconds: Seconds): Pixels {
+//   }
+// }
+
 export class UnitConverters {
   public static getRenderWindow(scale: Scales, slice: TwoDSlice<number, number>): RenderWindow {
     return new RenderWindow({

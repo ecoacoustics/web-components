@@ -1,3 +1,5 @@
+export type TwoDFft = Float32Array[];
+
 // 2D slices are alwyas a subset of an fft spectrogram
 export class TwoDSlice<XT extends number, YT extends number> {
   public constructor(data: TwoDSlice<any, any>) {

@@ -54,6 +54,9 @@ importers:
       '@sand4rt/experimental-ct-web':
         specifier: ^1.41.0
         version: 1.41.0(@playwright/test@1.41.0)(@types/node@20.11.30)
+      '@types/audioworklet':
+        specifier: ^0.0.55
+        version: 0.0.55
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -1125,6 +1128,10 @@ packages:
   /@trysound/sax@0.2.0:
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
+    dev: true
+
+  /@types/audioworklet@0.0.55:
+    resolution: {integrity: sha512-tL7tMCKPjsAVt2ywgoRhkBIOKHKSf0e9K3+3PTRp1tpUiHyrqA0EOdVeVg4j4bul6zHed3T4hRt0K1E7X5hXQQ==}
     dev: true
 
   /@types/d3-array@3.2.1:

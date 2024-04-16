@@ -32,9 +32,9 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
   private kernelLength!: number;
 
   // called from AudioWorkletProcessor
-  public process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: AudioParamMap) {
+  public process(inputs: Float32Array[][], outputs: Float32Array[][]) {
     if (!this.initialized) {
-      return false;
+      return true;
     }
 
     const inputChannelData = inputs[0][0];
@@ -43,58 +43,20 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     this.inputChannelData(inputChannelData);
     this.outputChannelData(outputChannelData);
 
-   
     if (this.states[STATE.IB_FRAMES_AVAILABLE] >= this.kernelLength) {
-      const kernelInput = this.inputRingBuffer[0].subarray(this.states[STATE.IB_READ_INDEX], this.kernelLength);
+      Atomics.notify(this.states, STATE.REQUEST_RENDER, 1);
+      // const kernelInput = this.inputRingBuffer[0].subarray(this.states[STATE.IB_READ_INDEX], this.kernelLength);
+      // const f = new FFT(this.kernelLength);
 
-      const f = new FFT(this.kernelLength);
+      // const out = f.createComplexArray();
+      // f.realTransform(out, kernelInput);
 
-      const out = f.createComplexArray();
-      f.realTransform(out, kernelInput);
-
-      const fftData = this.oneDFftToTwoD(out);
-
-      outputs[0].forEach((channel) => {
-        for (let i = 0; i < channel.length; i++) {
-          channel[i] = fftData[i][0];
-        }
-      });
+      // outputs[0] = out;
 
       return true;
     }
 
-    const kernelInput = this.inputRingBuffer[0].subarray(this.states[STATE.IB_READ_INDEX], this.kernelLength);
-
-    const f = new FFT(this.kernelLength);
-
-    const out = f.createComplexArray();
-    f.realTransform(out, kernelInput);
-
-    const fftData = this.oneDFftToTwoD(out);
-
-    outputs[0].forEach((channel) => {
-      for (let i = 0; i < channel.length; i++) {
-        channel[i] = fftData[i][0];
-      }
-    });
-
-    return false;
-  }
-
-  private oneDFftToTwoD(fftData: any[]): Float32Array[] {
-    const rowSize = 128;
-    const columnSize = 128;
-
-    const twoDArray: any[] = [];
-    for (let i = 0; i < rowSize; i++) {
-      const row = new Float32Array(columnSize);
-      for (let j = 0; j < columnSize; j++) {
-        row[j] = fftData[i * columnSize + j];
-      }
-      twoDArray.push(row);
-    }
-
-    return twoDArray;
+    return true;
   }
 
   private handlePortMessage(event: MessageEvent) {

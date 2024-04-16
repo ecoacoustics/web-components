@@ -2,7 +2,7 @@ export class SharedBufferWorkletNode extends AudioWorkletNode {
   constructor(context: OfflineAudioContext) {
     super(context, "fft-processor");
 
-    this.sharedBufferWorker = new Worker("src/components/helpers/shared-buffer-worker.js");
+    this.sharedBufferWorker = new Worker("/src/components/helpers/shared-buffer-worker.js");
 
     this.sharedBufferWorker.onmessage = this.handleWorkerMessage.bind(this);
     this.port.onmessage = this.handlePortMessage.bind(this);
@@ -32,6 +32,6 @@ export class SharedBufferWorkletNode extends AudioWorkletNode {
   // you should override this method in your calling
   // you should attach the audio processing pipeline here
   public onInitialized() {
-    throw new Error("Please override onInitialized in your calling class.")
+    throw new Error("Please override onInitialized in your calling class.");
   }
 }
