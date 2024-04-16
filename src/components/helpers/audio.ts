@@ -1,9 +1,10 @@
+import { TwoDFft } from "models/rendering";
 import { SharedBufferWorkletNode } from "./shared-buffer-worklet-node";
 
 export class AudioHelper {
   static generateFft() {}
 
-  static connect(audioElement: HTMLAudioElement, canvasElement: HTMLCanvasElement) {
+  static connect(audioElement: HTMLAudioElement, renderCallback: (data: TwoDFft) => void) {
     const context = new OfflineAudioContext({
       numberOfChannels: 1,
       length: 5 * 22050,
@@ -35,25 +36,14 @@ export class AudioHelper {
           source.connect(sbwNode).connect(context.destination);
 
           source.start();
-        
-          context.startRendering().then((renderedBuffer) => {
-            const fft = renderedBuffer.getChannelData(0);
-          
-            // paint the fft to the canvas
-            const canvasContext = canvasElement.getContext("2d");
-            const canvasWidth = canvasElement.width;
-            const canvasHeight = canvasElement.height;
-            const fftLength = fft.length;
-            const fftStep = canvasWidth / fftLength;
-            const fftHeight = canvasHeight / 2;
-            canvasContext.fillStyle = "white";
-            canvasContext.fillRect(0, 0, canvasWidth, canvasHeight);
-            canvasContext.fillStyle = "black";
-            for (let i = 0; i < fftLength; i++) {
-              canvasContext.fillRect(i * fftStep, fftHeight, fftStep, fft[i] * fftHeight);
-            }
 
-            source.stop();
+          context.startRendering().then((renderedBuffer) => {
+            const fft = [renderedBuffer.getChannelData(0)];
+
+            renderCallback(fft);
+
+            // TODO: we might want to call this
+            // source.stop();
           });
         };
       });

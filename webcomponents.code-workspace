@@ -38,7 +38,9 @@
       "styleable",
       "webcomponents",
       "webcomponents-workspace",
-      "flac"
+      "flac",
+      "worklet",
+      "audioworklet"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },
