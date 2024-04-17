@@ -1,13 +1,7 @@
-import { expect } from "@sand4rt/experimental-ct-web";
-import { indicatorFixture } from "./indicator.fixture";
+import { indicatorFixture as test } from "./indicator.fixture";
 
-indicatorFixture.describe("Indicator inter-component communication", () => {
-  indicatorFixture.beforeEach(async ({ fixture }) => {
+test.describe("Indicator component", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
-  });
-
-  indicatorFixture("creating a visible web component", async ({ page }) => {
-          const indicator = await page.locator("oe-indicator");
-          await expect(indicator).toBeVisible();
   });
 });

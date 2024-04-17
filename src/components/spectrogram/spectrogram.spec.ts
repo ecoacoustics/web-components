@@ -3,7 +3,7 @@ import { singleSpectrogramFixture } from "./singleSpectrogram.fixture";
 import { invokeBrowserMethod } from "../../tests/helpers";
 import { Spectrogram } from "./spectrogram";
 
-test.describe("unit test", () => {
+test.describe("unit tests", () => {
   test("play/pause events", async ({ mount }) => {
     let outside: CustomEvent<boolean> | undefined;
     const component = await mount(Spectrogram, {
@@ -34,6 +34,14 @@ singleSpectrogramFixture.describe("spectrogram", () => {
     const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
     await fixture.updateSlot(slot);
 
+    await invokeBrowserMethod<Spectrogram>(fixture.spectrogram, "play");
+    expect(await fixture.isPlayingAudio()).toBe(true);
+
+    await invokeBrowserMethod<Spectrogram>(fixture.spectrogram, "pause");
+    expect(await fixture.isPlayingAudio()).toBe(false);
+  });
+
+  singleSpectrogramFixture("playing and pausing audio with src attribute", async ({ fixture }) => {
     await invokeBrowserMethod<Spectrogram>(fixture.spectrogram, "play");
     expect(await fixture.isPlayingAudio()).toBe(true);
 

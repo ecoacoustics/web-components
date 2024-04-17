@@ -25,9 +25,16 @@ export class SpectrogramModel {
   endOffset: number;
 }
 
+interface IRenderWindow {
+  startOffset: number;
+  endOffset: number;
+  lowFrequency: number;
+  highFrequency: number;
+}
+
 // also consider: SpectrogramRenderSlice
-export class RenderWindow {
-  public constructor(data: RenderWindow) {
+export class RenderWindow implements IRenderWindow {
+  public constructor(data: IRenderWindow) {
     this.startOffset = data.startOffset;
     this.endOffset = data.endOffset;
     this.lowFrequency = data.lowFrequency;
@@ -38,6 +45,13 @@ export class RenderWindow {
   endOffset: number;
   lowFrequency: number;
   highFrequency: number;
+
+  // changes the render window to a DOM representation that can be used in the
+  // window="" attribute of the oe-spectrogram component
+  // format: x0, y0, x1, y1
+  public toDom(): string {
+    return `${this.startOffset}, ${this.lowFrequency}, ${this.endOffset}, ${this.highFrequency}`;
+  }
 }
 
 export class RenderCanvasSize {

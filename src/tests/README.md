@@ -29,3 +29,9 @@ Should mainly test:
 - Should be in a filed named `name.e2e.spec.ts`
 - If the e2e test has a main component that it is testing, it should be co-located with the component
   - If the e2e test does not have a main subject, it should be located under the [`/tests`](/tests) directory
+
+## Notes
+
+If you want to use the components imported by `playwright/index.html` and `playwright/index.ts`, you will need to use the `sand4rt/experimental-ct-web` package.
+
+This should be resolved when playwright add lit support to `ct-web`

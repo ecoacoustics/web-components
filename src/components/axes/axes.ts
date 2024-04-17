@@ -163,20 +163,25 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const midpoint = (xn + x1) / 2;
 
-    return Math.pow(10, Math.floor(Math.log10(midpoint)));
+    const derivedXStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
+    this.userXStep = derivedXStep;
+    return derivedXStep;
   }
 
   private yStep(): number {
     if (this.userYStep) {
       return this.userYStep;
     }
+
     const scale = this.spectrogramElement().renderWindowScale.value.frequency;
     const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
     const yn = scale.invert(0);
 
     const midpoint = (yn + y0) / 2;
 
-    return Math.pow(10, Math.floor(Math.log10(midpoint)));
+    const derivedYStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
+    this.userYStep = derivedYStep;
+    return derivedYStep;
   }
 
   public render() {

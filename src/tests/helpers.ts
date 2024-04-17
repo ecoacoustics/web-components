@@ -15,6 +15,14 @@ export async function setBrowserValue<T>(component: any, key: keyof T, value: T[
   await component.evaluate((element: T, { key, value }: any) => ((element as any)[key] = value), { key, value });
 }
 
+// TODO: The generic typing here is incorrect because it's for properties not attributes
+export async function setBrowserAttribute<T extends HTMLElement>(component: any, key: keyof T, value: string) {
+  await component.evaluate((element: T, { key, value }: any) => element.setAttribute(key.toString(), value), {
+    key,
+    value,
+  });
+}
+
 export async function getBrowserAttribute<T extends HTMLElement>(component: any, key: string): Promise<string> {
   return await component.evaluate((element: T, { key }: { key: string }) => element.getAttribute(key.toString()), {
     key,

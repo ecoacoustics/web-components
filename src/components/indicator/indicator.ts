@@ -37,6 +37,15 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
     });
   }
 
+  public updateIndicator(elapsedTime: number): void {
+    this.time = elapsedTime + this.offset;
+    const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
+
+    this.xPos = scale(this.time);
+
+    this.indicatorLine.style.transform = `translate3d(${this.xPos}px, 0, 0)`;
+  }
+
   private spectrogramElement(): Spectrogram | any {
     for (const slotElement of this.slotElements) {
       if (slotElement instanceof Spectrogram) {
@@ -50,20 +59,11 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
     }
   }
 
-  private updateIndicator(elapsedTime: number): void {
-    this.time = elapsedTime + this.offset;
-    const scale = this.spectrogramElement().segmentToCanvasScale.value.temporal;
-
-    this.xPos = scale(this.time);
-
-    this.indicatorLine.style.transform = `translate3d(${this.xPos}px, 0, 0)`;
-  }
-
   public render() {
     return html`
       <div id="wrapped-element">
         <svg id="indicator-svg">
-          <line id="indicator-line" part="indicator-line" y0="0" y2="100%"></line>
+          <line id="indicator-line" part="indicator-line" y1="0" y2="100%"></line>
         </svg>
         <slot></slot>
       </div>
