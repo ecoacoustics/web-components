@@ -1,10 +1,7 @@
-import { test } from "@sand4rt/experimental-ct-web";
-import { axesFixture } from "./axes.fixture";
+import { axesFixture as test } from "./axes.fixture";
 
-test.describe("unit test", () => {});
-
-axesFixture.describe("axes", () => {
-  axesFixture.beforeEach(async ({ fixture }) => {
+test.describe("axes", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 });

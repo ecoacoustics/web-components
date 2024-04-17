@@ -1,15 +1,15 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserValue } from "../helpers";
+import { getBrowserValue, setBrowserAttribute } from "../helpers";
 import { Indicator } from "indicator/indicator";
+import { Spectrogram } from "../../components/spectrogram/spectrogram";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
-  public indicatorComponent = () => this.page.locator("oe-indicator");
-  public spectrogramComponent = () => this.page.locator("oe-spectrogram");
-  public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button");
-  private audioSource = "/example.flac";
+  public indicatorComponent = () => this.page.locator("oe-indicator").first();
+  public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
+  public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
 
   public async create() {
     await this.page.setContent(`
@@ -17,12 +17,22 @@ class TestPage {
         <oe-spectrogram
           id="spectrogram"
           style="width: 200px; height: 200px;"
-          src="${this.audioSource}"
+          src="/example.flac"
         ></oe-spectrogram>
       </oe-indicator>
       <oe-media-controls for="spectrogram"></oe-media-controls>
    `);
     await this.page.waitForLoadState("networkidle");
+  }
+
+  public async removeSpectrogramElement() {
+    const element = this.spectrogramComponent();
+    await element.evaluate((element) => element.remove());
+  }
+
+  public async changeSpectrogramAudioSource(newSource: string) {
+    const element = this.spectrogramComponent();
+    await setBrowserAttribute<Spectrogram>(element, "src", newSource);
   }
 
   public async indicatorPosition(): Promise<number> {

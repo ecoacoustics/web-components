@@ -1,5 +1,5 @@
 import { LitElement, PropertyValues, html } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
@@ -38,6 +38,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   @property({ type: Number, reflect: true })
   public offset: number = 0;
+
+  @queryAssignedElements()
+  public slotElements!: Array<HTMLElement>;
 
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
@@ -79,6 +82,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public willUpdate(change: PropertyValues<this>): void {
     if (change.has("paused")) {
       this.setPlaying();
+    }
+
+    // if the src changes, we want to start the recording from the begining
+    if (change.has("src") || change.has("slotElements")) {
+      this.currentTime.value = 0;
     }
   }
 
