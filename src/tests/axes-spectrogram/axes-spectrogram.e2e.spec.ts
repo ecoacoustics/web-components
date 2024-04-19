@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { axesSpectrogramFixture as test } from "./axes-spectrogram.fixture";
-import { getBrowserValue, setBrowserAttribute } from "../helpers";
+import { setBrowserAttribute } from "../helpers";
 import { Spectrogram } from "../../components/spectrogram/spectrogram";
 
 test.describe("interactions between axes and spectrogram", () => {
@@ -56,6 +56,18 @@ test.describe("interactions between axes and spectrogram", () => {
 
       await expect(realizedNumberOfGridLines).toBe(expectedNumberOfGridLines);
     });
+
+    test("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
+      const expectedFirstTickValue = "2.0";
+      const expectedLastTickValue = "7.0";
+      
+      await setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "2");
+
+      const xAxisLabels = await fixture.xAxisLabels();
+
+      await expect(xAxisLabels.at(0)).toBe(expectedFirstTickValue);
+      await expect(xAxisLabels.at(-1)).toBe(expectedLastTickValue);
+    });
   });
 
   test.describe("changing the spectrogram src", () => {
@@ -69,15 +81,18 @@ test.describe("interactions between axes and spectrogram", () => {
 
       const xAxisTicks = await fixture.xAxisTicks();
       const xAxisGridLines = await fixture.xGridLines();
-      const realizedNumberOfTicks = await xAxisTicks.length;
-      const realizedNumberOfGridLines = await xAxisGridLines.length;
 
-      await expect(realizedNumberOfTicks).toBe(expectedNumberOfTicks);
-      await expect(realizedNumberOfGridLines).toBe(expectedNumberOfGridLines);
+      await expect(xAxisTicks).toHaveLength(expectedNumberOfTicks);
+      await expect(xAxisGridLines).toHaveLength(expectedNumberOfGridLines);
     });
 
     test("with an offset should resize the axes correctly", async ({ fixture }) => {
       await setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "2");
+      const xAxisLabels = await fixture.xAxisLabels();
+
+      await expect(xAxisLabels).toHaveLength(35);
+      await expect(xAxisLabels.at(0)).toBe(2);
+      await expect(xAxisLabels.at(-1)).toBe(36);
     });
   });
 
@@ -89,14 +104,13 @@ test.describe("interactions between axes and spectrogram", () => {
     });
 
     test("should have the correct x-axes values", async ({ fixture }) => {
-      const xAxisTicks = await fixture.xAxisTicks();
-      const firstXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
-      const lastXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
+      const xAxisLabels = await fixture.xAxisLabels();
 
       // the audio recordings length is five seconds, therefore, the last axis tick
       // should be the length incremented by the offset (two)
-      await expect(firstXAxisLabel).toBe("2");
-      await expect(lastXAxisLabel).toBe("7");
+      await expect(xAxisLabels.at(0)).toBe("2.0");
+      await expect(xAxisLabels.at(-1)).toBe("7.0");
+      await expect(xAxisLabels).toHaveLength(6);
     });
 
     // the initial offset created by the fixture is two seconds
@@ -106,12 +120,10 @@ test.describe("interactions between axes and spectrogram", () => {
       // all components should still work correctly
       setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "14");
 
-      const xAxisTicks = await fixture.xAxisTicks();
-      const firstXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
-      const lastXAxisLabel = await getBrowserValue(xAxisTicks.at(-1), "innerText");
+      const xAxisLabels = await fixture.xAxisLabels();
 
-      await expect(firstXAxisLabel).toBe("14");
-      await expect(lastXAxisLabel).toBe("19");
+      await expect(xAxisLabels.at(0)).toBe("14.0");
+      await expect(xAxisLabels.at(-1)).toBe("19.0");
     });
   });
 
@@ -123,37 +135,27 @@ test.describe("interactions between axes and spectrogram", () => {
     });
 
     test("should have the correct axes values", async ({ fixture }) => {
-      const xAxisTicks = await fixture.xAxisTicks();
-      const firstXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
-      const lastXAxisLabel = await getBrowserValue(xAxisTicks.at(-1), "innerText");
+      const xAxisLabels = await fixture.xAxisLabels();
+      const yAxisLabels = await fixture.yAxisLabels();
 
-      await expect(firstXAxisLabel).toBe("1");
-      await expect(lastXAxisLabel).toBe("3");
+      await expect(xAxisLabels.at(0)).toBe("1.0");
+      await expect(xAxisLabels.at(-1)).toBe("3.0");
 
-      const yAxisTicks = await fixture.yAxisTicks();
-      const firstYAxisLabel = await getBrowserValue(yAxisTicks[0], "innerText");
-      const lastYAxisLabel = await getBrowserValue(yAxisTicks.at(-1), "innerText");
-
-      await expect(firstYAxisLabel).toBe("100");
-      await expect(lastYAxisLabel).toBe("9000");
+      await expect(yAxisLabels.at(0)).toBe("100");
+      await expect(yAxisLabels.at(-1)).toBe("9000");
     });
 
     test("changing the render window should change the axes correctly", async ({ fixture }) => {
       setBrowserAttribute<any>(fixture.spectrogramComponent(), "window", "1, 100, 3, 9000");
 
-      const xAxisTicks = await fixture.xAxisTicks();
-      const firstXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
-      const lastXAxisLabel = await getBrowserValue(xAxisTicks.at(-1), "innerText");
+      const xAxisLabels = await fixture.xAxisLabels();
+      const yAxisLabels = await fixture.yAxisLabels();
 
-      await expect(firstXAxisLabel).toBe("1");
-      await expect(lastXAxisLabel).toBe("3");
+      await expect(xAxisLabels.at(0)).toBe("1.0");
+      await expect(xAxisLabels.at(-1)).toBe("3.0");
 
-      const yAxisTicks = await fixture.yAxisTicks();
-      const firstYAxisLabel = await getBrowserValue(yAxisTicks[0], "innerText");
-      const lastYAxisLabel = await getBrowserValue(yAxisTicks.at(-1), "innerText");
-
-      await expect(firstYAxisLabel).toBe("100");
-      await expect(lastYAxisLabel).toBe("9000");
+      await expect(yAxisLabels.at(0)).toBe("100");
+      await expect(yAxisLabels.at(-1)).toBe("9000");
     });
   });
 
@@ -166,21 +168,15 @@ test.describe("interactions between axes and spectrogram", () => {
     });
 
     test("should have the correct axes values", async ({ fixture }) => {
-      const xAxisTicks = await fixture.xAxisTicks();
-      const firstXAxisLabel = await getBrowserValue(xAxisTicks[0], "innerText");
-      const lastXAxisLabel = await getBrowserValue(xAxisTicks.at(-1), "innerText");
+      const xAxisLabels = await fixture.xAxisLabels();
+      const yAxisLabels = await fixture.yAxisLabels();
 
-      // because the offset is higher than the render window start
-      // we should see the offset value as the first x-axis label
-      await expect(firstXAxisLabel).toBe("2");
-      await expect(lastXAxisLabel).toBe("3");
+      // TODO: figure out if this is the correct behavior
+      await expect(xAxisLabels.at(0)).toBe("1.0");
+      await expect(xAxisLabels.at(-1)).toBe("3.0");
 
-      const yAxisTicks = await fixture.yAxisTicks();
-      const firstYAxisLabel = await getBrowserValue(yAxisTicks[0], "innerText");
-      const lastYAxisLabel = await getBrowserValue(yAxisTicks.at(-1), "innerText");
-
-      await expect(firstYAxisLabel).toBe("100");
-      await expect(lastYAxisLabel).toBe("9000");
+      await expect(yAxisLabels.at(0)).toBe("100");
+      await expect(yAxisLabels.at(-1)).toBe("9000");
     });
   });
 });

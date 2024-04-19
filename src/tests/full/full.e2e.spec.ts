@@ -39,10 +39,13 @@ test.describe("removing components", () => {
     await fixture.create();
   });
 
-  test("removing the spectrogram component", async ({ fixture }) => {});
+  test("removing the spectrogram component", async ({ fixture }) => {
+    await fixture.removeElement("oe-spectrogram");
+  });
 
-  test("removing components while audio is playing", async ({ fixture }) => {
+  test("removing components while audio is playing", async ({ fixture, page }) => {
     await fixture.playAudio();
+    await page.waitForTimeout(500);
   });
 });
 
@@ -52,8 +55,6 @@ test.describe("changing components", () => {
   });
 
   test("changing spectrogram element", async ({ fixture }) => {});
-
-  test("adding multiple spectrogram elements", async ({ fixture }) => {});
 });
 
 // the elements should work together correctly, but most functionality should
