@@ -1,4 +1,5 @@
-import { test, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
+import { test } from "@sand4rt/experimental-ct-web";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases

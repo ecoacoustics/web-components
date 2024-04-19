@@ -102,8 +102,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     return new Scales().renderWindowScale(this.audio.value, this.renderWindow.value, this.renderCanvasSize.value);
   }
 
-  public updated() {
+  public updated(change: PropertyValues<this>) {
     this.setPlaying();
+
+    if (change.has("offset") || change.has("renderWindow")) {
+      this.shadowRoot?.dispatchEvent(new Event("slotchange"));
+    }
   }
 
   public play() {
@@ -176,6 +180,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
   }
 
+  // TODO: Actually get the sample rate from the audio file
   private audioSampleRate(): Hertz {
     return 22050;
   }

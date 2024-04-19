@@ -40,7 +40,8 @@
       "webcomponents-workspace",
       "flac",
       "worklet",
-      "audioworklet"
+      "audioworklet",
+      "testid"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },
