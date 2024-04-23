@@ -27,23 +27,6 @@
       "source.fixAll.eslint": "explicit"
     },
     "explorer.compactFolders": false,
-    "cSpell.caseSensitive": false,
-    "cSpell.words": [
-      "Componentization",
-      "csspart",
-      "ecoacoustic",
-      "ecoacoustics",
-      "jsdelivr",
-      "slotchange",
-      "styleable",
-      "webcomponents",
-      "webcomponents-workspace",
-      "flac",
-      "worklet",
-      "audioworklet",
-      "testid"
-    ],
-    "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },
   "extensions": {
     "recommendations": [

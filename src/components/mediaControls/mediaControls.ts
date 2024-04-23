@@ -54,6 +54,8 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
+      if (!this.for) return;
+
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener("play", this.playHandler);
       this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
@@ -68,6 +70,8 @@ export class MediaControls extends AbstractComponent(LitElement) {
   }
 
   private isSpectrogramPlaying(): boolean {
+    if (!this.spectrogramElement) return false;
+
     return !this.spectrogramElement?.paused;
   }
 
