@@ -68,7 +68,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   }
 
   private isSpectrogramPlaying(): boolean {
-    return !this.spectrogramElement?.paused ?? true;
+    return !this.spectrogramElement?.paused;
   }
 
   private playIcon() {
