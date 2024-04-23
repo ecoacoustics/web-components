@@ -70,6 +70,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
+      this.resizeCanvasViewport();
       AudioHelper.connect(this.mediaElement, this.canvas);
     });
   }
@@ -123,11 +124,17 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       requestAnimationFrame(() => this.updateCurrentTime());
     }
   }
+
   private canvasSize(): RenderCanvasSize {
     return new RenderCanvasSize({
       width: this.canvas?.clientWidth ?? 0,
       height: this.canvas?.clientHeight ?? 0,
     });
+  }
+
+  private resizeCanvasViewport(): void {
+    this.canvas.width = this.canvas.clientWidth;
+    this.canvas.height = 512;
   }
 
   private setPlaying() {

@@ -66,7 +66,6 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
     // initial state
     new Int32Array(this.sharedBuffers.states)[STATE.BUFFERS_AVAILABLE] = 0;
     new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = 0;
-    new Int32Array(this.sharedBuffers.states)[STATE.FULL_BUFFER_LENGTH] = 4;
 
     this.port.postMessage("ready");
   }

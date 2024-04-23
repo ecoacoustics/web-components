@@ -1,5 +1,4 @@
 import { ISharedBuffers } from "./buffer-builder-processor";
-import webfft from "webfft";
 
 export class AudioHelper {
   static generateFft() {}
@@ -35,13 +34,17 @@ export class AudioHelper {
 
         const offscreenCanvas = canvas.transferControlToOffscreen();
 
+        const fullBufferLength = 4;
+
         const sharedBuffers: ISharedBuffers = {
           states: new SharedArrayBuffer(1024),
-          buffer: new SharedArrayBuffer(2048),
+          buffer: new SharedArrayBuffer(512 * fullBufferLength),
         };
 
         new Float32Array(sharedBuffers.buffer).fill(0);
         new Float32Array(sharedBuffers.states).fill(0);
+
+        new Int32Array(sharedBuffers.states)[2] = fullBufferLength;
 
         bufferKernelWorker.postMessage({ ...sharedBuffers, canvas: offscreenCanvas }, [offscreenCanvas]);
         bufferProcessorNode.port.postMessage(sharedBuffers);
