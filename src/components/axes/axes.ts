@@ -7,33 +7,46 @@ import { Spectrogram } from "../../../playwright";
 import * as d3 from "d3";
 import * as d3Axis from "d3-axis";
 import { AbstractComponent } from "../mixins/abstractComponent";
+import { Hertz, Seconds } from "models/unitConverters";
 
 /**
- * @slot - A spectrogram element to add axes to
+ * X and Y axis grid lines showing duration and frequency of a spectrogram
  *
- * @csspart axes - Used to style axis elements. Usually used to add padding/margin
+ * @property x-step - The step size for the x-axis
+ * @property y-step - The step size for the y-axis
+ * @property x-axis - Whether to show or hide the x-axis
+ * @property y-axis - Whether to show or hide the x-axis
+ * @property x-grid - Whether to show or hide the x-axis grid lines
+ * @property y-grid - Whether to show or hide the y-axis grid lines
+ *
+ * @csspart tick - Apply styles to both x and y ticks
+ * @csspart grid - Apply styles to both x and y ticks
+ * @csspart x-grid - Apply styles to only the x grid lines
+ * @csspart y-grid - Apply styles to only the y grid lines
+ *
+ * @slot - A spectrogram element to add axes to
  */
 @customElement("oe-axes")
 export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = axesStyles;
 
   @property({ attribute: "x-step", type: Number, reflect: true })
-  public userXStep?: number; // second
+  public userXStep?: Seconds;
 
   @property({ attribute: "y-step", type: Number, reflect: true })
-  public userYStep?: number; // hertz
+  public userYStep?: Hertz;
 
   @property({ attribute: "x-axis", type: Boolean, reflect: true })
-  public showXAxis: boolean = true;
+  public showXAxis = true;
 
   @property({ attribute: "y-axis", type: Boolean, reflect: true })
-  public showYAxis: boolean = true;
+  public showYAxis = true;
 
   @property({ attribute: "x-grid", type: Boolean, reflect: true })
-  public showXGrid: boolean = true;
+  public showXGrid = true;
 
   @property({ attribute: "y-grid", type: Boolean, reflect: true })
-  public showYGrid: boolean = true;
+  public showYGrid = true;
 
   @query("#x-axis-g")
   private xAxisG!: SVGGElement;
@@ -187,12 +200,18 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public render() {
     return html`
       <div id="wrapped-element">
-        <svg id="axes-svg" part="axes">
-          <g id="x-axis-g" part="x-ticks" part="ticks"></g>
-          <g id="y-axis-g" part="y-ticks" part="ticks"></g>
-          <g id="x-gridlines-g" part="x-grid" part="grid"></g>
-          <g id="y-gridlines-g" part="y-grid" part="grid"></g>
+        <svg id="axes-svg">
+          <g part="tick">
+            <g id="x-axis-g" part="x-ticks"></g>
+            <g id="y-axis-g" part="y-ticks"></g>
+          </g>
+          
+          <g part="grid">
+            <g id="x-gridlines-g" part="x-grid"></g>
+            <g id="y-gridlines-g" part="y-grid"></g>
+          </g>
         </svg>
+
         <slot></slot>
       </div>
     `;

@@ -23,10 +23,13 @@ export const axesStyles = css`
     }
   }
 
-  #x-gridlines-g,
-  #y-gridlines-g line {
-    stroke: lightblue;
-    opacity: 0.5;
+  svg g {
+    stroke: currentColor;
+  }
+
+  ::part(grid) {
+    color: lightblue;
+    opacity: 0.6;
   }
 
   #x-axis-g {

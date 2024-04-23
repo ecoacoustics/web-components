@@ -6,11 +6,9 @@ import { indicatorStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
 
 /**
+ * A red line that displays the playback position on a spectrogram
+ *
  * @slot - A spectrogram component to add an indicator to
- *
- * @csspart indicator-line - The line that indicates the current position
- *
- * @slot - The spectrogram component to add an indicator to
  */
 @customElement("oe-indicator")
 export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
@@ -22,9 +20,9 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   @queryAssignedElements()
   private slotElements!: Array<HTMLElement>;
 
-  public xPos: number = 0;
-  private time: number = 0;
-  private offset: number = 0;
+  public xPos = 0;
+  private time = 0;
+  private offset = 0;
 
   public firstUpdated(): void {
     if (this.slotElements.length === 0) {
@@ -43,7 +41,7 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
 
     this.xPos = scale(this.time);
 
-    this.indicatorLine.style.transform = `translate3d(${this.xPos}px, 0, 0)`;
+    this.indicatorLine.style.transform = `translateX(${this.xPos}px)`;
   }
 
   private spectrogramElement(): Spectrogram | any {
