@@ -1,9 +1,10 @@
 import { ISharedBuffers } from "./buffer-builder-processor";
+import webfft from "webfft";
 
 export class AudioHelper {
   static generateFft() {}
 
-  static connect(audioElement: HTMLAudioElement, paintSpectrogram: (data: Float32Array) => void) {
+  static connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement) {
     const context = new OfflineAudioContext({
       numberOfChannels: 1,
       length: 5 * 22050,
@@ -28,22 +29,28 @@ export class AudioHelper {
       .then(() => context.audioWorklet.addModule("src/components/helpers/audio/buffer-builder-processor.ts"))
       .then(() => {
         const bufferProcessorNode = new AudioWorkletNode(context, "buffer-builder-processor");
-        const bufferKernelWorker = new Worker("src/components/helpers/audio/worker.ts");
+        const bufferKernelWorker = new Worker("src/components/helpers/audio/worker.ts", {
+          type: "module",
+        });
+
+        const offscreenCanvas = canvas.transferControlToOffscreen();
 
         const sharedBuffers: ISharedBuffers = {
           states: new SharedArrayBuffer(1024),
-          buffer: new SharedArrayBuffer(1024),
+          buffer: new SharedArrayBuffer(2048),
         };
 
-        bufferKernelWorker.postMessage({ ...sharedBuffers });
+        new Float32Array(sharedBuffers.buffer).fill(0);
+        new Float32Array(sharedBuffers.states).fill(0);
+
+        bufferKernelWorker.postMessage({ ...sharedBuffers, canvas: offscreenCanvas }, [offscreenCanvas]);
         bufferProcessorNode.port.postMessage(sharedBuffers);
 
         source.connect(bufferProcessorNode).connect(context.destination);
 
-        bufferKernelWorker.onmessage = (event) => {
-          const { fftData } = event.data;
-          paintSpectrogram(fftData);
-        };
+        context.addEventListener("complete", () => {
+          new Int32Array(sharedBuffers.states)[3] = 1;
+        });
 
         bufferProcessorNode.port.onmessage = (event) => {
           if (event.data === "ready") {

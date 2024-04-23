@@ -15,5 +15,6 @@ export const spectrogramStyles = css`
     position: relative;
     width: 100%;
     height: 100%;
+    filter: invert(1);
   }
 `;

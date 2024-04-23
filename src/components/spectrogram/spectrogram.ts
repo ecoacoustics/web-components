@@ -8,7 +8,6 @@ import { Hertz, Pixels, Scales, Seconds, UnitConverters } from "../models/unitCo
 import { OeResizeObserver } from "../helpers/resizeObserver";
 import { AbstractComponent } from "../mixins/abstractComponent";
 import { AudioHelper } from "../helpers/audio/audio";
-import FFT from "fft.js";
 
 /**
  * A simple spectrogram component that can be used with the open ecoacoustics components
@@ -71,7 +70,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
-      AudioHelper.connect(this.mediaElement, this.paintCanvas.bind(this));
+      AudioHelper.connect(this.mediaElement, this.canvas);
     });
   }
 
@@ -124,32 +123,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       requestAnimationFrame(() => this.updateCurrentTime());
     }
   }
-
-  // TODO: fix
-  private spectrogramPaintX = 0;
-
-  private paintCanvas(data: Float32Array) {
-    const f = new FFT(data.length);
-    const oneDFftData = f.createComplexArray();
-
-    f.realTransform(oneDFftData, data);
-
-    const ctx = this.canvas.getContext("2d");
-    if (!ctx) return;
-
-    oneDFftData.forEach((value, i) => {
-      const x = this.spectrogramPaintX;
-      const y = i;
-
-      const color = Math.abs(Math.floor(value * 255) * 10);
-
-      ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
-      ctx.fillRect(x, y, 1, 1);
-    });
-
-    this.spectrogramPaintX++;
-  }
-
   private canvasSize(): RenderCanvasSize {
     return new RenderCanvasSize({
       width: this.canvas?.clientWidth ?? 0,

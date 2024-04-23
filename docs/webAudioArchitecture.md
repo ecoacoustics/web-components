@@ -53,3 +53,7 @@ _We might do it if we have time._
 Once we have the file (`OfflineAudioContext` + `fetch()`), we can use `AudioWorkletProcessor` to collect samples into a shared array buffer.
 Once enough samples are accumulated to render the FFT, we can send a message to the worker to tell it to perform the fft on a web worker thread and store it in another buffer (or even paint it directly to a canvas).
 For this plan to work, we will probably use an FFT library, the industry standard here is to ship WASM which we probably won't do.
+
+---
+
+Although webfft has by far the best performance and exposed APIs, it cannot run in a worker context. Therefore, I will not be using it.

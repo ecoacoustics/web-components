@@ -1,14 +1,42 @@
-import { ISharedBuffers } from "./buffer-builder-processor";
+import webfft from "webfft";
+
+interface IWorkerSharedBuffers {
+  buffer: SharedArrayBuffer;
+  states: SharedArrayBuffer;
+  canvas: OffscreenCanvas;
+}
 
 // this worker is concerned with rendering an audio buffer nodes from the linked list buffer
-let sharedBuffers: any;
+let sharedBuffers: IWorkerSharedBuffers;
+let spectrogramPaintX = 1;
+let ctxWorker: OffscreenCanvasRenderingContext2D | null = null;
+let canvas = null;
 
 // a kernel operation is a function which can be applied to full buffer
 function kernel(): void {
-  const bufferToProcess = buffer();
+  const bufferToProcess = new Float32Array(sharedBuffers.buffer);
 
-  self.postMessage({ fftData: bufferToProcess });
+  if (!ctxWorker) return;
 
+  const fft = new webfft(bufferToProcess.length / 2);
+
+  const out = fft.fft(bufferToProcess) as Float32Array;
+
+  out.forEach((value, i) => {
+    const x = spectrogramPaintX;
+    const y = i;
+
+    const color = Math.abs(Math.floor(value * 255));
+
+    if (!ctxWorker) return;
+
+    ctxWorker.fillStyle = `rgb(${color}, ${color}, ${color})`;
+    ctxWorker.fillRect(x, y, 1, 1);
+  });
+
+  spectrogramPaintX++;
+
+  fft.dispose();
   releaseProcessor();
 }
 
@@ -25,12 +53,11 @@ function releaseProcessor(): void {
   new Int32Array(sharedBuffers.states)[0] = 0;
 }
 
-function buffer(): Float32Array {
-  return new Float32Array(sharedBuffers.buffer);
-}
-
-function handleMessage(event: MessageEvent<ISharedBuffers>) {
+function handleMessage(event: MessageEvent<IWorkerSharedBuffers>) {
   sharedBuffers = event.data;
+
+  canvas = event.data.canvas;
+  ctxWorker = canvas.getContext("2d");
 
   waitForFullBuffer();
 }

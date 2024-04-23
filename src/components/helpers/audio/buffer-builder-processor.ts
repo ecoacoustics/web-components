@@ -22,18 +22,20 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
   private sharedBuffers!: ISharedBuffers;
 
   public process(inputs: Float32Array[][], outputs: Float32Array[][]) {
-    const input = inputs[0];
+    const input = new Float32Array(inputs[0][0]);
 
-    const inputBufferLength = input.length;
     let currentBufferLength = new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH];
 
     const sharedBuffer = new Float32Array(this.sharedBuffers.buffer);
 
-    sharedBuffer.set(input[0], currentBufferLength);
-    currentBufferLength += inputBufferLength;
+    sharedBuffer.set(input, currentBufferLength * 128);
+
+    // console.log(currentBufferLength);
+    // console.log("input", Array.from(input));
+    // console.log("shared", Array.from(sharedBuffer));
 
     // TODO: fix this hacky solution
-    new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = currentBufferLength;
+    new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = ++currentBufferLength;
 
     const fullBufferLength = new Int32Array(this.sharedBuffers.states)[STATE.FULL_BUFFER_LENGTH];
 
@@ -44,6 +46,8 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
       while (new Int32Array(this.sharedBuffers.states)[STATE.BUFFERS_AVAILABLE] === 1) {
         // wait
       }
+
+      new Float32Array(this.sharedBuffers.buffer).fill(0);
 
       // rest the linked list header to 0 (start overwriting the linked list again)
       new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = 0;
