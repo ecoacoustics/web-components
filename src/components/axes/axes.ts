@@ -73,8 +73,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private updateAxes(): void {
-    const temporalScale = this.spectrogramElement()?.renderWindowScale.value.temporal;
-    const frequencyScale = this.spectrogramElement()?.renderWindowScale.value.frequency;
+    const temporalScale = this.spectrogramElement()?.unitConverters.renderWindowScale.value.temporal;
+    const frequencyScale = this.spectrogramElement()?.unitConverters.renderWindowScale.value.frequency;
 
     const temporalFormat = d3.format(".1f") as any;
     const frequencyFormat = d3.format(".0f") as any;
@@ -157,7 +157,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     if (this.userXStep) {
       return this.userXStep;
     }
-    const scale = this.spectrogramElement().renderWindowScale.value.temporal;
+    const scale = this.spectrogramElement().unitConverters.renderWindowScale.value.temporal;
     const x1 = scale.invert(0);
     const xn = scale.invert(this.spectrogramElement().renderCanvasSize.value.width);
 
@@ -173,7 +173,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       return this.userYStep;
     }
 
-    const scale = this.spectrogramElement().renderWindowScale.value.frequency;
+    const scale = this.spectrogramElement().unitConverters.renderWindowScale.value.frequency;
     const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
     const yn = scale.invert(0);
 
