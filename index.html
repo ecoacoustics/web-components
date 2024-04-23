@@ -38,14 +38,38 @@
       </oe-axes>
     </div>
 
-    <oe-axes>
-      <oe-indicator>
+    <oe-axes id="axes">
+      <oe-indicator style="color: blue;">
         <oe-spectrogram id="playing-spectrogram" class="large" src="/example_34s.flac"></oe-spectrogram>
       </oe-indicator>
     </oe-axes>
     <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
     <style>
+      #axes {
+        color: blue;
+/* 
+        &::part(tick) {
+          color: lime;
+        }
+ */
+        &::part(x-ticks) {
+          color: red;
+        }
+
+        &::part(y-ticks) {
+          color: green;
+        }
+
+        &::part(y-grid) {
+          color: purple;
+        }
+
+        &::part(x-grid) {
+          color: orange;
+        }
+      }
+
       .grid-container {
         display: grid;
         grid-template-columns: repeat(2, 1fr);

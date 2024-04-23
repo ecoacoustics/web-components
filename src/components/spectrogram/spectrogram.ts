@@ -19,14 +19,12 @@ const defaultAudioModel = new AudioModel({
 });
 
 /**
- * A simple spectrogram component that can be used with the open ecoacoustics components
+ * A spectrogram component that can be used with the open ecoacoustics components
  *
- * @property playing - Whether the spectrogram is playing
+ * @property paused - Whether the spectrogram is paused
  * @property src - The source of the audio file to play
- *
- * @csspart spectrogram-container - Styling applied to the spectrogram container
- *
- * @fires playing - When the spectrogram starts or stops playing
+ * @property window - What part of the spectrogram is currently visible
+ * @property offset - What should second 0 be shown as in the spectrogram
  *
  * @slot - A `<source>` element to provide the audio source
  */
@@ -45,7 +43,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public domRenderWindow?: string;
 
   @property({ type: Number, reflect: true })
-  public offset: number = 0;
+  public offset = 0;
 
   @queryAssignedElements()
   public slotElements!: Array<HTMLElement>;

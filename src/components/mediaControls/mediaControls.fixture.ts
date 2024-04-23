@@ -9,7 +9,7 @@ class TestPage {
   public actionButtonSlot = () => this.page.locator("oe-media-controls button > slot").first();
   public audioOutlet = () => this.page.locator("audio").first();
 
-  public async create(slotTemplate: string = "") {
+  public async create(slotTemplate = "") {
     await this.page.setContent(`
         <oe-media-controls for="media">
             ${slotTemplate ?? ""}

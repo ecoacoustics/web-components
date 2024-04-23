@@ -30,7 +30,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   };
 
   @property({ type: String })
-  public for: string = "";
+  public for = "";
 
   private spectrogramElement?: Spectrogram | null;
 

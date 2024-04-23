@@ -54,7 +54,7 @@ test.describe("changing components", () => {
     await fixture.create();
   });
 
-  test("changing spectrogram element", async ({ fixture }) => {});
+  test("changing spectrogram element", async () => { });
 });
 
 // the elements should work together correctly, but most functionality should
