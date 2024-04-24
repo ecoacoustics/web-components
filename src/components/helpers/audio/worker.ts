@@ -11,14 +11,13 @@ let sharedBuffers: IWorkerSharedBuffers;
 let spectrogramPaintX = 1;
 let ctxWorker: OffscreenCanvasRenderingContext2D | null = null;
 let canvas = null;
+let fft: any;
 
 // a kernel operation is a function which can be applied to full buffer
 function kernel(): void {
   const bufferToProcess = new Float32Array(sharedBuffers.buffer);
 
   if (!ctxWorker) return;
-
-  const fft = new webfft(bufferToProcess.length / 2);
 
   const out = fft.fft(bufferToProcess) as Float32Array;
 
@@ -36,7 +35,6 @@ function kernel(): void {
 
   spectrogramPaintX++;
 
-  fft.dispose();
   releaseProcessor();
 }
 
@@ -46,6 +44,12 @@ function waitForFullBuffer(): void {
       kernel();
     }
   }
+
+  cleanup();
+}
+
+function cleanup(): void {
+  fft.dispose();
 }
 
 // if the buffer is full, the processor will wait until it is released
@@ -58,6 +62,12 @@ function handleMessage(event: MessageEvent<IWorkerSharedBuffers>) {
 
   canvas = event.data.canvas;
   ctxWorker = canvas.getContext("2d");
+
+  // I have moved the fft initialization here after extensive micro benchmarking
+  // if you move this to the processing kernel, it will be very slow on Chrome (not firefox)
+  // This is because chrome re-compiles the WASM module every time it's initialized
+  // while Firefox will cache the WASM module compilation
+  fft = new webfft(256);
 
   waitForFullBuffer();
 }
