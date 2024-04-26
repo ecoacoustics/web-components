@@ -1,4 +1,4 @@
-import { ISharedBuffers } from "./buffer-builder-processor";
+import { ISharedBuffers } from "./state";
 
 export class AudioHelper {
   static generateFft() {}
@@ -55,7 +55,7 @@ export class AudioHelper {
           new Int32Array(sharedBuffers.states)[3] = 1;
         });
 
-        bufferProcessorNode.port.onmessage = (event) => {
+        bufferProcessorNode.port.onmessage = (event: MessageEvent) => {
           if (event.data === "ready") {
             source.start();
             context.startRendering();

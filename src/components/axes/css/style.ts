@@ -25,6 +25,10 @@ export const axesStyles = css`
 
   svg g {
     stroke: currentColor;
+
+    > text {
+      stroke: none;
+    }
   }
 
   ::part(grid) {

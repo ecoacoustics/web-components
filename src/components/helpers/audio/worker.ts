@@ -1,36 +1,23 @@
 import webfft from "webfft";
-
-interface IWorkerSharedBuffers {
-  buffer: SharedArrayBuffer;
-  states: SharedArrayBuffer;
-  canvas: OffscreenCanvas;
-}
+import { WebfftWrapper } from "../../../types/webfft";
+import { IWorkerSharedBuffers, STATE } from "./state";
 
 // this worker is concerned with rendering an audio buffer nodes from the linked list buffer
-let sharedBuffers: IWorkerSharedBuffers;
 let spectrogramPaintX = 1;
 let ctxWorker: OffscreenCanvasRenderingContext2D | null = null;
-let canvas = null;
-let fft: any;
+let canvas: OffscreenCanvas | null = null;
+let fft: WebfftWrapper;
+let state: Int32Array;
+let buffer: Float32Array;
 
-// a kernel operation is a function which can be applied to full buffer
 function kernel(): void {
-  const bufferToProcess = new Float32Array(sharedBuffers.buffer);
+  const out = fft.fft(buffer);
 
-  if (!ctxWorker) return;
-
-  const out = fft.fft(bufferToProcess) as Float32Array;
-
-  out.forEach((value, i) => {
-    const x = spectrogramPaintX;
-    const y = i;
-
+  out.forEach((value: number, i: number) => {
     const color = Math.abs(Math.floor(value * 255));
 
-    if (!ctxWorker) return;
-
-    ctxWorker.fillStyle = `rgb(${color}, ${color}, ${color})`;
-    ctxWorker.fillRect(x, y, 1, 1);
+    ctxWorker!.fillStyle = `rgb(${color}, ${color}, ${color})`;
+    ctxWorker!.fillRect(spectrogramPaintX, i, 1, 1);
   });
 
   spectrogramPaintX++;
@@ -39,27 +26,22 @@ function kernel(): void {
 }
 
 function waitForFullBuffer(): void {
-  while (new Int32Array(sharedBuffers.states)[3] !== 1) {
-    if (new Int32Array(sharedBuffers.states)[0] === 1) {
-      kernel();
-    }
+  while (!state[STATE.FINISHED_PROCESSING]) {
+    Atomics.wait(state, STATE.BUFFERS_AVAILABLE, 0);
+    kernel();
   }
 
-  cleanup();
-}
-
-function cleanup(): void {
   fft.dispose();
 }
 
-// if the buffer is full, the processor will wait until it is released
 function releaseProcessor(): void {
-  new Int32Array(sharedBuffers.states)[0] = 0;
+  // Atomics.notify(state, STATE.BUFFERS_AVAILABLE, 1);
+  Atomics.add(state, STATE.BUFFERS_AVAILABLE, 1);
 }
 
 function handleMessage(event: MessageEvent<IWorkerSharedBuffers>) {
-  sharedBuffers = event.data;
-
+  state = new Int32Array(event.data.states);
+  buffer = new Float32Array(event.data.buffer);
   canvas = event.data.canvas;
   ctxWorker = canvas.getContext("2d");
 
@@ -72,6 +54,4 @@ function handleMessage(event: MessageEvent<IWorkerSharedBuffers>) {
   waitForFullBuffer();
 }
 
-onmessage = (event) => {
-  handleMessage(event);
-};
+onmessage = handleMessage;

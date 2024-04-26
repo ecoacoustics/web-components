@@ -1,16 +1,4 @@
-// this processor worklet is concerned with building a linked list buffer of audio buffer nodes
-
-export enum STATE {
-  BUFFERS_AVAILABLE = 0,
-  BUFFER_LENGTH = 1,
-  FULL_BUFFER_LENGTH = 2,
-  FINISHED_PROCESSING = 3,
-}
-
-export interface ISharedBuffers {
-  states: SharedArrayBuffer;
-  buffer: SharedArrayBuffer;
-}
+import { ISharedBuffers, STATE } from "./state";
 
 class BufferBuilderProcessor extends AudioWorkletProcessor {
   public constructor() {
@@ -19,53 +7,36 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
-  private sharedBuffers!: ISharedBuffers;
+  private fullBufferLength!: number;
+  private states!: Int32Array;
+  private buffer!: Float32Array;
 
-  public process(inputs: Float32Array[][], outputs: Float32Array[][]) {
-    const input = new Float32Array(inputs[0][0]);
+  public process(inputs: Float32Array[][]) {
+    const input = inputs[0][0];
+    const offset = this.states[STATE.BUFFER_LENGTH] * input.length;
 
-    let currentBufferLength = new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH];
-
-    const sharedBuffer = new Float32Array(this.sharedBuffers.buffer);
-
-    sharedBuffer.set(input, currentBufferLength * 128);
-
-    // console.log(currentBufferLength);
-    // console.log("input", Array.from(input));
-    // console.log("shared", Array.from(sharedBuffer));
-
-    // TODO: fix this hacky solution
-    new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = ++currentBufferLength;
-
-    const fullBufferLength = new Int32Array(this.sharedBuffers.states)[STATE.FULL_BUFFER_LENGTH];
+    this.buffer.set(input, offset);
+    this.states[STATE.BUFFER_LENGTH]++;
 
     // if the buffer is full, we need to wait for the buffer to be consumed
-    if (currentBufferLength >= fullBufferLength) {
-      new Int32Array(this.sharedBuffers.states)[STATE.BUFFERS_AVAILABLE] = 1;
+    if (this.states[STATE.BUFFER_LENGTH] >= this.fullBufferLength) {
+      Atomics.store(this.states, STATE.BUFFERS_AVAILABLE, 1);
 
-      while (new Int32Array(this.sharedBuffers.states)[STATE.BUFFERS_AVAILABLE] === 1) {
-        // wait
+      // Atomics.wait(this.states, STATE.BUFFERS_AVAILABLE, 1);
+      while (Atomics.load(this.states, STATE.BUFFERS_AVAILABLE) === 1) {
+        // do nothing
       }
 
-      new Float32Array(this.sharedBuffers.buffer).fill(0);
-
-      // rest the linked list header to 0 (start overwriting the linked list again)
-      new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = 0;
+      this.states[STATE.BUFFER_LENGTH] = 0;
     }
 
-    // simply reflect the input to the output
-    // because it is done by reference, we should disable warning where we don't do anything with it
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    outputs = inputs;
     return true;
   }
 
   private handleMessage(event: MessageEvent<ISharedBuffers>) {
-    this.sharedBuffers = event.data;
-
-    // initial state
-    new Int32Array(this.sharedBuffers.states)[STATE.BUFFERS_AVAILABLE] = 0;
-    new Int32Array(this.sharedBuffers.states)[STATE.BUFFER_LENGTH] = 0;
+    this.states = new Int32Array(event.data.states);
+    this.buffer = new Float32Array(event.data.buffer);
+    this.fullBufferLength = new Int32Array(event.data.states)[STATE.FULL_BUFFER_LENGTH];
 
     this.port.postMessage("ready");
   }
