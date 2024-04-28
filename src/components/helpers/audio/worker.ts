@@ -13,11 +13,16 @@ let buffer: Float32Array;
 function kernel(): void {
   const out = fft.fft(buffer);
 
+  let y = 0;
   out.forEach((value: number, i: number) => {
-    const color = Math.abs(Math.floor(value * 255));
+    if (i < out.length / 2) {
+      const color = Math.abs(Math.floor(value * 255));
 
-    ctxWorker!.fillStyle = `rgb(${color}, ${color}, ${color})`;
-    ctxWorker!.fillRect(spectrogramPaintX, i, 1, 1);
+      ctxWorker!.fillStyle = `rgb(${color}, ${color}, ${color})`;
+      ctxWorker!.fillRect(spectrogramPaintX, y, 1, 1);
+
+      y++;
+    }
   });
 
   spectrogramPaintX++;

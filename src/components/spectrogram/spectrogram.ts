@@ -82,7 +82,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.setPlaying();
     }
 
-    // if the src changes, we want to start the recording from the begining
+    // if the src changes, we want to start the recording from the beginning
     if (change.has("src") || change.has("slotElements")) {
       this.currentTime.value = 0;
     }

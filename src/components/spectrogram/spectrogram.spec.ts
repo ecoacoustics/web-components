@@ -1,7 +1,7 @@
 import { expect, test } from "@sand4rt/experimental-ct-web";
 import { singleSpectrogramFixture } from "./singleSpectrogram.fixture";
-import { invokeBrowserMethod } from "../../tests/helpers";
 import { Spectrogram } from "./spectrogram";
+import { invokeBrowserMethod } from "../../tests/helpers";
 
 test.describe("unit tests", () => {
   test("play/pause events", async ({ mount }) => {
