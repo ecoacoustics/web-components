@@ -54,6 +54,18 @@ You can then import them into a file using
 import * from "@ecoacoustics/web-components";
 ```
 
+## Contributing
+
+- Install a recent stable version of Node JS
+- Install pnpm: `corepack enable pnpm`, followed by `corepack use pnpm@latest`
+- The install dependencies: `pnpm install` (this should have happened with the last step)
+
+Then you can run the following commands:
+
+- `pnpm dev` to start a development server
+- `pnpm build` to build the components
+- `pnpm test` to run the tests
+
 ### GitHub Releases
 
 You can manually import the example components in this repository using the [GitHub releases page](https://github.com/QutEcoacoustics/ecoacoustics-web-components/releases)
