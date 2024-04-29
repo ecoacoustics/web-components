@@ -18,8 +18,8 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2
       lucide-static:
-        specifier: ^0.363.0
-        version: 0.363.0
+        specifier: ^0.376.0
+        version: 0.376.0
     devDependencies:
       '@11ty/eleventy':
         specifier: ^2.0.1
@@ -2586,8 +2586,8 @@ packages:
     resolution: {integrity: sha512-wPlCjgDBqbXVSMsOQnGfsfyUnGm39+XeSj5637CO8ZX6tXs3PcgW1qHWwWa8UJmUcHo1ciYMS5ovTIzYBXYL/g==}
     dev: false
 
-  /lucide-static@0.363.0:
-    resolution: {integrity: sha512-M3qAYZaXC9UIP+i2+bB5f7stYzyCBRPkXqxm8EQF6Ys2MXXbdHzkReHDdstoa8VKJznoXm/Br1bDf67BoVnSBQ==}
+  /lucide-static@0.376.0:
+    resolution: {integrity: sha512-FididZNu2MA0L8lUpA7CI25wEKUUh6ulOQhMnxKDI8dhy2KZMBK939Jb822fK9woIlLJvJuSxFN8tDceY7z3pA==}
     dev: false
 
   /luxon@3.4.4:
