@@ -15,7 +15,8 @@
     "audioworklet",
     "testid",
     "preact",
-    "nyquist"
+    "nyquist",
+    "webfft"
   ],
   "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
 }

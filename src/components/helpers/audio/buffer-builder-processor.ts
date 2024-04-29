@@ -23,6 +23,8 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
       Atomics.store(this.states, STATE.BUFFERS_AVAILABLE, 1);
 
       // Atomics.wait(this.states, STATE.BUFFERS_AVAILABLE, 1);
+      // we have to do this because Chrome doesn't support Atomics.wait inside of
+      // AudioProcessorWorklet's (Firefox does)
       while (Atomics.load(this.states, STATE.BUFFERS_AVAILABLE) === 1) {
         // do nothing
       }

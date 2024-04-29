@@ -1,8 +1,6 @@
-import { ISharedBuffers } from "./state";
+import { ISharedBuffers, STATE } from "./state";
 
 export class AudioHelper {
-  static generateFft() {}
-
   static connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement) {
     const context = new OfflineAudioContext({
       numberOfChannels: 1,
@@ -32,9 +30,8 @@ export class AudioHelper {
           type: "module",
         });
 
-        const offscreenCanvas = canvas.transferControlToOffscreen();
-
         const fullBufferLength = 4;
+        const offscreenCanvas = canvas.transferControlToOffscreen();
 
         const sharedBuffers: ISharedBuffers = {
           states: new SharedArrayBuffer(1024),
@@ -44,7 +41,7 @@ export class AudioHelper {
         new Float32Array(sharedBuffers.buffer).fill(0);
         new Float32Array(sharedBuffers.states).fill(0);
 
-        new Int32Array(sharedBuffers.states)[2] = fullBufferLength;
+        new Int32Array(sharedBuffers.states)[STATE.FULL_BUFFER_LENGTH] = fullBufferLength;
 
         bufferKernelWorker.postMessage({ ...sharedBuffers, canvas: offscreenCanvas }, [offscreenCanvas]);
         bufferProcessorNode.port.postMessage(sharedBuffers);
@@ -52,7 +49,7 @@ export class AudioHelper {
         source.connect(bufferProcessorNode).connect(context.destination);
 
         context.addEventListener("complete", () => {
-          new Int32Array(sharedBuffers.states)[3] = 1;
+          new Int32Array(sharedBuffers.states)[STATE.FINISHED_PROCESSING] = 1;
         });
 
         bufferProcessorNode.port.onmessage = (event: MessageEvent) => {
