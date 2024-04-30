@@ -27,13 +27,17 @@ let bytesPerPixel: number;
 function kernel(): void {
   // temporarily call fft lots, and do our own windowing and overlaps
   // for each frame
-  length = options.windowSize;
+  const step = options.windowSize - options.windowOverlap;
 
-  let window;
-  for (let i = 0; i < state.fullBufferLength; i += length) {
-    window = buffer.slice(i, i + length);
+  for (let frame = 0; frame < state.fullBufferLength; frame += step) {
+    // copy-less slice
+    const window = buffer.subarray(frame, frame + step);
 
-    const out = fft.fft(window);
+    // apply a window function
+    const smoothed = 
+
+    // returns real (magnitude) and complex (phase) parts
+    const out = fft.fftr(window);
 
     for (let j = 0; j < out.length; j++) {
       const value = out[j];
@@ -51,7 +55,7 @@ function kernel(): void {
     spectrogramPaintX++;
   }
 
-  state.bufferProcessed(window as Float32Array);
+  state.bufferProcessed(buffer);
 }
 
 // main loop, only called once after we have received the shared buffers
