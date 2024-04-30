@@ -8,10 +8,11 @@ import { Hertz, Pixels, Seconds, UnitConverter } from "../models/unitConverters"
 import { OeResizeObserver } from "../helpers/resizeObserver";
 import { AbstractComponent } from "../mixins/abstractComponent";
 import { AudioHelper } from "../helpers/audio/audio";
+import { SpectrogramOptions } from "../helpers/audio/state";
 
 const defaultAudioModel = new AudioModel({
   duration: 0,
-  sampleRate: 0,
+  sampleRate: 22050,
   originalAudioRecording: {
     startOffset: 0,
     duration: 0,
@@ -67,7 +68,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
       this.resizeCanvasViewport();
-      AudioHelper.connect(this.mediaElement, this.canvas);
+      AudioHelper.connect(this.mediaElement, this.canvas, this.audio.value, this.spectrogramOptions());
     });
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio);
@@ -120,7 +121,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private resizeCanvasViewport(): void {
     this.canvas.width = this.canvas.clientWidth;
-    this.canvas.height = 512;
+    this.canvas.height = this.canvas.clientHeight;
+  }
+
+  private spectrogramOptions(): SpectrogramOptions {
+    return new SpectrogramOptions(512, 0, "", 0, 0, 22050, "");
   }
 
   private setPlaying() {

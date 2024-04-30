@@ -1,4 +1,4 @@
-import { ISharedBuffers, STATE } from "./state";
+import { getSharedBuffer, SharedBuffers, MESSAGE_PROCESSOR_READY, getSharedProcessorState, ProcessorState } from "./state";
 
 class BufferBuilderProcessor extends AudioWorkletProcessor {
   public constructor() {
@@ -7,40 +7,43 @@ class BufferBuilderProcessor extends AudioWorkletProcessor {
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
-  private fullBufferLength!: number;
-  private states!: Int32Array;
+  private state!: ProcessorState;
   private buffer!: Float32Array;
 
+  /**
+   * @param inputs - is an array of inputs, each having an array of channels, with an array of samples
+   */
+
   public process(inputs: Float32Array[][]) {
+    // we should always have single input with one single channel of data by this point
+    // any mixing or channel selection should be done before this processor
     const input = inputs[0][0];
-    const offset = this.states[STATE.BUFFER_LENGTH] * input.length;
+    const offset = this.state.bufferWriteHead;
 
     this.buffer.set(input, offset);
-    this.states[STATE.BUFFER_LENGTH]++;
+
+    this.state.bufferWriteHead = offset + input.length;
 
     // if the buffer is full, we need to wait for the buffer to be consumed
-    if (this.states[STATE.BUFFER_LENGTH] >= this.fullBufferLength) {
-      Atomics.store(this.states, STATE.BUFFERS_AVAILABLE, 1);
+    if (this.state.bufferWriteHead >= this.state.fullBufferLength) {
+      // signal worker to process the sample buffer
+      this.state.bufferReady();
 
-      // Atomics.wait(this.states, STATE.BUFFERS_AVAILABLE, 1);
-      // we have to do this because Chrome doesn't support Atomics.wait inside of
-      // AudioProcessorWorklet's (Firefox does)
-      while (Atomics.load(this.states, STATE.BUFFERS_AVAILABLE) === 1) {
-        // do nothing
-      }
-
-      this.states[STATE.BUFFER_LENGTH] = 0;
+      // wait for the worker to finish processing the buffer
+      this.state.spinWaitForWorker();
     }
 
     return true;
   }
 
-  private handleMessage(event: MessageEvent<ISharedBuffers>) {
-    this.states = new Int32Array(event.data.states);
-    this.buffer = new Float32Array(event.data.buffer);
-    this.fullBufferLength = new Int32Array(event.data.states)[STATE.FULL_BUFFER_LENGTH];
+  // runs when the processor is first created
+  // should only be run once and only to share buffers
+  private handleMessage(event: MessageEvent<SharedBuffers>) {
+    this.state = getSharedProcessorState(event.data);
+    this.buffer = getSharedBuffer(event.data);
 
-    this.port.postMessage("ready");
+    // signal back that we're ready
+    this.port.postMessage(MESSAGE_PROCESSOR_READY);
   }
 }
 

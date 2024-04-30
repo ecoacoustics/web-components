@@ -26,6 +26,9 @@ importers:
       d3-selection:
         specifier: ^3.0.0
         version: 3.0.0
+      fft-windowing-ts:
+        specifier: ^0.2.7
+        version: 0.2.7
       lit:
         specifier: ^3.1.3
         version: 3.1.3
@@ -3001,6 +3004,10 @@ packages:
     dependencies:
       reusify: 1.0.4
     dev: true
+
+  /fft-windowing-ts@0.2.7:
+    resolution: {integrity: sha512-xJOVJPn6JhNBq5Tgd2NYghbzRQOh1ub/zUFldPCyNujScqia5jqX+GLVhzXVD6imAyK4KaMjG+iBeHycE2JV9w==}
+    dev: false
 
   /file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
