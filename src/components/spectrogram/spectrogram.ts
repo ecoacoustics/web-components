@@ -12,7 +12,7 @@ import { SpectrogramOptions } from "../helpers/audio/state";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
-  duration: 7,
+  duration: 7.5,
   sampleRate: 44100,
   originalAudioRecording: {
     startOffset: 0,
@@ -126,7 +126,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private spectrogramOptions(): SpectrogramOptions {
-    return new SpectrogramOptions(512, 0, "hamming", 0, 0, "");
+    return new SpectrogramOptions(512, 0, "hann", 0, 0, "");
   }
 
   private setPlaying() {

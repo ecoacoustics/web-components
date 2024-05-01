@@ -22,7 +22,7 @@ import { smooth } from "./window";
  * 2. Window through the sample buffer
  * 3. Apply a window function to smooth the signal to each window
  * 4. Perform a FFT on the windowed signal
- * 5. Apply transforms to the FFT output (magnitude, phase, decibels, mel scale, etc)
+ * 5. Apply transforms to the FFT output (magnitude, amplitude, decibels, mel scale, etc)
  * 6. Paint the output to the spectrogram canvas (colors, brightness, contrast, etc)
  * 7. Paint the spectrogram canvas to the destination canvas (and stretch it to fit the destination canvas)
  *
@@ -62,8 +62,66 @@ let fftWidth: number;
 let audioInformation: IAudioInformation;
 let fftCache: Float32Array;
 
-let min = 99999999;
-let max = 0;
+class Profiler {
+  private firstSample = 0;
+  private lastSample = 0;
+  private samples: number[] = [];
+
+  constructor(private name: string) {}
+
+  public addSample(value: number): void {
+    if (this.samples.length === 0) {
+      this.firstSample = performance.now();
+    }
+    this.samples.push(value);
+    this.lastSample = performance.now();
+  }
+
+  public addSamples(values: number[]): void {
+    if (this.samples.length === 0) {
+      this.firstSample = performance.now();
+    }
+    this.samples = this.samples.concat(values);
+    this.lastSample = performance.now();
+  }
+
+  public calculate() {
+    // calculate basic stats
+    let min = Infinity,
+      max = -Infinity,
+      sum = 0;
+    this.samples.forEach((value) => {
+      if (value < min) min = value;
+      if (value > max) max = value;
+      sum += value;
+    });
+
+    const elapsed = this.lastSample - this.firstSample;
+    let result = {
+      name: this.name,
+      min,
+      max,
+      sum,
+      average: sum / this.samples.length,
+      length: this.samples.length,
+      elapsed,
+    };
+
+    this.samples = [];
+    this.firstSample = 0;
+    this.lastSample = 0;
+
+    return result;
+  }
+}
+
+const sampleProfiler = new Profiler("sample");
+const fftRealProfiler = new Profiler("fft real");
+const fftComplexProfiler = new Profiler("fft complex");
+const magnitudeProfiler = new Profiler("magnitude");
+const amplitudeProfiler = new Profiler("amplitude");
+const decibelsProfiler = new Profiler("decibels");
+const normalizedIntensityProfiler = new Profiler("normalized intensity");
 
 const bytesPerPixel = 4 as const;
 
@@ -77,7 +135,12 @@ function calculateMagnitude(complexData: number[]): number[] {
     const real = complexData[sourceIndex];
     const complex = complexData[sourceIndex + 1];
 
-    newData[i] = Math.sqrt((real * real) + (complex * complex));
+    fftRealProfiler.addSample(real);
+    fftComplexProfiler.addSample(complex);
+
+    newData[i] = Math.sqrt(real * real + complex * complex);
+
+    magnitudeProfiler.addSample(newData[i]);
   }
 
   return newData;
@@ -88,6 +151,19 @@ function calculateDecibels(magnitudeBuffer: number[]): number[] {
     // because we square the amplitude in the magnitude function, we indirectly have power
     // therefore, we use the power relationship to convert to decibels
     magnitudeBuffer[i] = 10 * Math.log10(magnitudeBuffer[i]);
+    decibelsProfiler.addSample(magnitudeBuffer[i]);
+  }
+
+  return magnitudeBuffer;
+}
+
+function scaleValues(magnitudeBuffer: number[]): number[] {
+  for (let i = 0; i < magnitudeBuffer.length; i++) {
+    // normalize the magnitude by the window size
+    // https://dsp.stackexchange.com/a/63006
+    // https://stackoverflow.com/a/20170717/224512
+    magnitudeBuffer[i] = magnitudeBuffer[i] / options.windowSize;
+    amplitudeProfiler.addSample(magnitudeBuffer[i]);
   }
 
   return magnitudeBuffer;
@@ -115,6 +191,10 @@ function kernel(): void {
       window.fill(0, lastSampleIndex, size);
     }
 
+    sampleProfiler.addSamples(Array.from(window));
+
+    // TODO remove DC offset
+
     // apply a window function to smooth the signal
     const smoothed = smooth(window, options.windowFunction);
 
@@ -122,12 +202,14 @@ function kernel(): void {
     //@ts-expect-error the FFT library doesn't ship its types and is not available on definitely typed
     const out = fft.fftr(smoothed);
 
-    // collapse magnitude and phase into a single value
+    // collapse real and complex parts into magnitude
     const magnitude = calculateMagnitude(out);
 
+    // convert to amplitude
+    const amplitude = scaleValues(magnitude);
+
     // convert to decibels
-    // const decibels = calculateDecibels(magnitude);
-    const decibels = magnitude;
+    const decibels = calculateDecibels(amplitude);
 
     // convert to mel scale (optional based on settings)
 
@@ -140,12 +222,13 @@ function kernel(): void {
     for (let frequencyBin = 0; frequencyBin < decibels.length; frequencyBin++) {
       const value = decibels[frequencyBin];
 
-      const minDecibels = -120;
-      const maxDecibels = 30;
+      const minDecibels = -80;
+      const maxDecibels = 0;
       const range = maxDecibels - minDecibels;
 
-      // const intensity = 255 - (((value + Math.abs(minDecibels)) / range) * 255);
-      const intensity = 255 - (value * 255);
+      const intensity = 255 - ((value - minDecibels) / range) * 255;
+      //const intensity = 255 - value * 255;
+      normalizedIntensityProfiler.addSample(intensity);
 
       // todo: color, brightness, contrast
       pixel[0] = intensity;
@@ -170,7 +253,16 @@ function kernel(): void {
   // accumulating more samples
   renderImageBuffer(imageBuffer);
 
-  console.log(min, max);
+  // print out all the profilers
+  console.table([
+    sampleProfiler.calculate(),
+    fftRealProfiler.calculate(),
+    fftComplexProfiler.calculate(),
+    magnitudeProfiler.calculate(),
+    amplitudeProfiler.calculate(),
+    decibelsProfiler.calculate(),
+    normalizedIntensityProfiler.calculate(),
+  ]);
 
   state.bufferProcessed(sampleBuffer);
 }

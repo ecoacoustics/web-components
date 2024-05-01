@@ -1,4 +1,4 @@
-# Ecoacoustics Web Components
+  # Ecoacoustics Web Components
 
 ## Online deployment of example components
 
