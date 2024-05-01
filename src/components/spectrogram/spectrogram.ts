@@ -10,9 +10,10 @@ import { AbstractComponent } from "../mixins/abstractComponent";
 import { AudioHelper } from "../helpers/audio/audio";
 import { SpectrogramOptions } from "../helpers/audio/state";
 
+// TODO: fix
 const defaultAudioModel = new AudioModel({
-  duration: 0,
-  sampleRate: 22050,
+  duration: 7,
+  sampleRate: 44100,
   originalAudioRecording: {
     startOffset: 0,
     duration: 0,
@@ -125,7 +126,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private spectrogramOptions(): SpectrogramOptions {
-    return new SpectrogramOptions(512, 0, "", 0, 0, 22050, "");
+    return new SpectrogramOptions(512, 0, "hamming", 0, 0, "");
   }
 
   private setPlaying() {
@@ -153,7 +154,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // TODO: Actually get the sample rate from the audio file
   private audioSampleRate(): Hertz {
-    return 22050;
+    return defaultAudioModel.sampleRate;
   }
 
   private audioDuration(): Seconds {

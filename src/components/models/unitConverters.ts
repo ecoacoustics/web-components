@@ -6,6 +6,7 @@ import { computed, Signal } from "@lit-labs/preact-signals";
 export type Seconds = number;
 export type Hertz = number;
 export type Pixels = number;
+export type Sample = number;
 
 interface IScale {
   temporal: d3Scale.ScaleLinear<number, number, never>;

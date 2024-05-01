@@ -1,103 +1,239 @@
 import webfft from "webfft";
 import { WebfftWrapper } from "../../../types/webfft";
 import {
+  getAudioInformation,
   getSharedBuffer,
   getSharedCanvas,
   getSharedWorkerState,
   getSpectrogramOptions,
+  IAudioInformation,
   SharedBuffersWithCanvas,
   SpectrogramOptions,
   WorkerState,
 } from "./state";
+import { smooth } from "./window";
 
 // this worker is concerned with rendering an audio buffer
-let spectrogramPaintX = 1;
-let surface!: OffscreenCanvasRenderingContext2D;
-let canvas!: OffscreenCanvas;
+// let spectrogramPaintX = 0;
+
+/**
+ * Render process
+ * 1. Receive a full sample buffer from the processor
+ * 2. Window through the sample buffer
+ * 3. Apply a window function to smooth the signal to each window
+ * 4. Perform a FFT on the windowed signal
+ * 5. Apply transforms to the FFT output (magnitude, phase, decibels, mel scale, etc)
+ * 6. Paint the output to the spectrogram canvas (colors, brightness, contrast, etc)
+ * 7. Paint the spectrogram canvas to the destination canvas (and stretch it to fit the destination canvas)
+ *
+ */
+
+/** the canvas from the main thread */
+let destinationCanvas!: OffscreenCanvas;
+/** the surface for the main thread canvas */
+let destinationSurface!: OffscreenCanvasRenderingContext2D;
+/**
+ * a canvas for the spectrogram, a 1:1 representation of the 2D FFT painted with colors
+ * Its size should be the complete 2d fft for the render window
+ *
+ * e.g. If the render window is 1.5 -> 9.5 seconds
+ *      Then the spectrogram canvas should be 7 seconds long
+ *      Which should be approximately 43 * 7 (301) pixels wide
+ *      (given a window size of 512 and an overlap of 0 and a sample rate of 22050 Hz)
+ */
+let spectrogramCanvas!: OffscreenCanvas;
+/** the surface for the spectrogram canvas */
+let spectrogramSurface!: OffscreenCanvasRenderingContext2D;
+
 let options: SpectrogramOptions;
 let fft: WebfftWrapper;
 let state: WorkerState;
-let buffer: Float32Array;
 let imageBuffer: Uint8ClampedArray;
 
-let height: number;
-let width: number;
-let bytesPerPixel: number;
+/** contains samples accumulated by the processor */
+let sampleBuffer: Float32Array;
 
-function kernel(): void {
-  // temporarily call fft lots, and do our own windowing and overlaps
-  // for each frame
-  const step = options.windowSize - options.windowOverlap;
+let lastFrameIndex = 0;
 
-  for (let frame = 0; frame < state.fullBufferLength; frame += step) {
-    // copy-less slice
-    const window = buffer.subarray(frame, frame + step);
+// TODO: scope these
+let fftHeight: number;
+let fftWidth: number;
 
-    // apply a window function
-    const smoothed = 
+let audioInformation: IAudioInformation;
+let fftCache: Float32Array;
 
-    // returns real (magnitude) and complex (phase) parts
-    const out = fft.fftr(window);
+let min = 99999999;
+let max = 0;
 
-    for (let j = 0; j < out.length; j++) {
-      const value = out[j];
+const bytesPerPixel = 4 as const;
 
-      // TODO: Remove this, I am currently just painting a minimum of grey pixels so that we
-      // can see where the render function gets up to
-      const intensity = Math.abs(value * 200) + 55;
-      const alpha = 255;
+function calculateMagnitude(complexData: number[]): number[] {
+  const half = complexData.length / 2;
+  const newData = Array(half);
 
-      const pxValue = [intensity, intensity, intensity, alpha];
+  for (let i = 0; i < half; i++) {
+    const sourceIndex = i * 2;
 
-      imageBuffer.set(pxValue, j * bytesPerPixel + out.length * spectrogramPaintX);
-    }
+    const real = complexData[sourceIndex];
+    const complex = complexData[sourceIndex + 1];
 
-    spectrogramPaintX++;
+    newData[i] = Math.sqrt((real * real) + (complex * complex));
   }
 
-  state.bufferProcessed(buffer);
+  return newData;
+}
+
+function calculateDecibels(magnitudeBuffer: number[]): number[] {
+  for (let i = 0; i < magnitudeBuffer.length; i++) {
+    // because we square the amplitude in the magnitude function, we indirectly have power
+    // therefore, we use the power relationship to convert to decibels
+    magnitudeBuffer[i] = 10 * Math.log10(magnitudeBuffer[i]);
+  }
+
+  return magnitudeBuffer;
+}
+
+function kernel(): void {
+  console.count("kernel");
+  // temporarily call fft lots, and do our own windowing and overlaps
+  // for each frame
+  const size = options.windowSize;
+  const step = options.windowSize - options.windowOverlap;
+
+  const cacheOffset = lastFrameIndex;
+
+  // frame is the index of the column of pixel we are painting
+  let frame = 0;
+  const lastSampleIndex = state.bufferWriteHead;
+
+  for (let sampleIndex = 0; sampleIndex < lastSampleIndex; sampleIndex += step) {
+    // copy-less slice
+    const window = sampleBuffer.subarray(sampleIndex, sampleIndex + size);
+
+    // if the window buffer is partially full, we want to fill the rest with zeros
+    if (lastSampleIndex < state.fullBufferLength) {
+      window.fill(0, lastSampleIndex, size);
+    }
+
+    // apply a window function to smooth the signal
+    const smoothed = smooth(window, options.windowFunction);
+
+    // returns real (magnitude) and complex (phase) parts
+    //@ts-expect-error the FFT library doesn't ship its types and is not available on definitely typed
+    const out = fft.fftr(smoothed);
+
+    // collapse magnitude and phase into a single value
+    const magnitude = calculateMagnitude(out);
+
+    // convert to decibels
+    // const decibels = calculateDecibels(magnitude);
+    const decibels = magnitude;
+
+    // convert to mel scale (optional based on settings)
+
+    // cache the fft results so that we don't have to re-calculate it every time
+    fftCache.set(decibels, cacheOffset);
+
+    // RGBA, alpha hard coded to 255. Re use one pixel buffer for efficiency
+    const pixel = [0, 0, 0, 255];
+    // TODO: Fix length / 2 by collapsing phase an decibels
+    for (let frequencyBin = 0; frequencyBin < decibels.length; frequencyBin++) {
+      const value = decibels[frequencyBin];
+
+      const minDecibels = -120;
+      const maxDecibels = 30;
+      const range = maxDecibels - minDecibels;
+
+      // const intensity = 255 - (((value + Math.abs(minDecibels)) / range) * 255);
+      const intensity = 255 - (value * 255);
+
+      // todo: color, brightness, contrast
+      pixel[0] = intensity;
+      pixel[1] = intensity;
+      pixel[2] = intensity;
+
+      const x = frame + lastFrameIndex;
+      const y = frequencyBin;
+      const offset = bytesPerPixel * (x + y * fftWidth);
+      if (offset >= imageBuffer.length) {
+        console.log("overflow coordinates", x, y, offset, imageBuffer.length);
+      }
+      imageBuffer.set(pixel, offset);
+    }
+
+    frame++;
+  }
+
+  lastFrameIndex += frame;
+
+  // let the processor know we are done with the buffer and it can continue
+  // accumulating more samples
+  renderImageBuffer(imageBuffer);
+
+  console.log(min, max);
+
+  state.bufferProcessed(sampleBuffer);
 }
 
 // main loop, only called once after we have received the shared buffers
 function work(): void {
   while (!state.isFinished()) {
-    state.waitForFullBuffer();
-    kernel();
+    state.waitForBuffer();
+
+    console.log("work", state.bufferWriteHead);
+    // In the optimal case, the buffer write head is zero at the end of an audio stream
+    // if not, we render what ever else is left
+    if (state.bufferWriteHead >= 0) {
+      kernel();
+    }
   }
 
-  renderSpectrogram();
   fft.dispose();
 }
 
-function renderSpectrogram(): void {
-  imageBuffer.set([255, 0, 0, 1], imageBuffer.length - 4);
-  console.log(imageBuffer);
-  const imageData = new ImageData(imageBuffer, imageBuffer.length / height, height);
-  surface.putImageData(imageData, 0, 0);
-  surface.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+function renderImageBuffer(buffer: Uint8ClampedArray): void {
+  const imageData = new ImageData(buffer, fftWidth, fftHeight);
+
+  // paint buffer to the spectrogram canvas
+  spectrogramSurface.putImageData(imageData, 0, 0);
+
+  // paint the spectrogram canvas to the destination canvas
+  // and stretch to fill
+  destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
+
+  destinationSurface.commit && destinationSurface.commit();
 }
 
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
 function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
   state = getSharedWorkerState(event.data);
-  buffer = getSharedBuffer(event.data);
-
-  canvas = getSharedCanvas(event.data);
-  surface = canvas.getContext("2d")!;
-
+  sampleBuffer = getSharedBuffer(event.data);
   options = getSpectrogramOptions(event.data);
+  audioInformation = getAudioInformation(event.data);
+  destinationCanvas = getSharedCanvas(event.data);
 
-  height = options.windowSize / 2;
-  width = state.fullBufferLength / (options.windowSize - options.windowOverlap);
-  bytesPerPixel = 4;
-  imageBuffer = new Uint8ClampedArray(height * width * bytesPerPixel);
+  const totalSamples = audioInformation.endSample - audioInformation.startSample;
+  const frameCount = Math.ceil(totalSamples / (options.windowSize - options.windowOverlap));
+
+  fftWidth = frameCount;
+  fftHeight = options.windowSize / 2;
+
+  // raw fft values
+  fftCache = new Float32Array(fftWidth * fftHeight);
+
+  // is fft with colour and transforms applied to it
+  imageBuffer = new Uint8ClampedArray(fftHeight * fftWidth * bytesPerPixel);
+
+  spectrogramCanvas = new OffscreenCanvas(fftWidth, fftHeight);
+  spectrogramSurface = spectrogramCanvas.getContext("2d")!;
+
+  destinationSurface = destinationCanvas.getContext("2d")!;
 
   // I have moved the fft initialization here after micro benchmarking
   // if you move this to the processing kernel, it will be very slow on Chrome (not firefox)
   // This is because chrome re-compiles the WASM module every time it's initialized
   // while Firefox will cache the WASM module compilation
-  // TODO: pass in other relevant options here
   fft = new webfft(options.windowSize);
 
   work();

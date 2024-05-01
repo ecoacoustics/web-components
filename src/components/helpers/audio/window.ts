@@ -33,12 +33,12 @@ export const windowFunctions: Map<WindowFunctionName, WindowFunction> = new Map(
   ["flat_top", flat_top],
 ]);
 
-export function window(input: Float32Array, windowType: WindowFunctionName = "hann") {
+export function smooth(input: Float32Array, windowType: WindowFunctionName = "hann") {
   let windowFunction = windowFunctions.get(windowType);
 
   if (!windowFunction) {
     windowFunction = hann;
   }
 
-  return windowFunction(input);
+  return windowFunction(input as any);
 }

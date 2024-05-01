@@ -1,3 +1,6 @@
+import { WindowFunctionName } from "fft-windowing-ts";
+import { Sample } from "models/unitConverters";
+
 /**
  * There are names for indexes in a packed struct stored in a SharedArrayBuffer
  *
@@ -47,7 +50,8 @@ export type SharedBuffersWithCanvas = [
   state: SharedArrayBuffer,
   sampleBuffer: SharedArrayBuffer,
   canvas: OffscreenCanvas,
-  spectrogramOptions: SpectrogramOptions
+  spectrogramOptions: SpectrogramOptions,
+  audioInformation: IAudioInformation,
 ];
 
 export function getSharedProcessorState(buffers: SharedBuffers): ProcessorState {
@@ -70,6 +74,10 @@ export function getSpectrogramOptions(buffers: SharedBuffersWithCanvas): Spectro
   return buffers[3];
 }
 
+export function getAudioInformation(buffers: SharedBuffersWithCanvas): IAudioInformation {
+  return buffers[4];
+}
+
 export const MESSAGE_PROCESSOR_READY = "processor-ready";
 
 // TODO: some kind of well known set of strings, probably the D3 colour schemes
@@ -77,16 +85,19 @@ export const MESSAGE_PROCESSOR_READY = "processor-ready";
 // https://d3js.org/d3-scale-chromatic
 type ColorMap = string;
 
+export interface IAudioInformation {
+  startSample: Sample;
+  endSample: Sample;
+}
+
 export class SpectrogramOptions {
-  sampleRate: number;
   constructor(
     windowSize: number,
     
     windowOverlap: number,
-    windowFunction: string,
+    windowFunction: WindowFunctionName,
     brightness: number,
     contrast: number,
-    sampleRate: number,
     colorMap: ColorMap
   ) {
     this.windowSize = windowSize;
@@ -94,19 +105,17 @@ export class SpectrogramOptions {
     this.windowFunction = windowFunction;
     this.brightness = brightness;
     this.contrast = contrast;
-    this.sampleRate = sampleRate;
     this.colorMap = colorMap;
   }
 
-  /** number of samples in each window for the fft
-   *  must be a power of 2
+  /**
+   * number of samples in each window for the fft
+   * must be a power of 2
    */
   public windowSize: number;
-  /**
-   *  number of samples to overlap between windows
-   */ 
+  /** number of samples to overlap between windows */ 
   public windowOverlap: number;
-  public windowFunction: string;
+  public windowFunction: WindowFunctionName;
   public brightness: number;
   public contrast: number;
   public colorMap: ColorMap;
@@ -150,13 +159,6 @@ export class State {
     return this.state[STATE.FINISHED_PROCESSING] === TRUE;
   }
 
-  /**
-   * called by the processor when it has finished writing to the buffer
-   */
-  public bufferReady(): void {
-    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
-  }
-
   public bufferProcessing(): boolean {
     return Atomics.load(this.state, STATE.BUFFERS_AVAILABLE) === TRUE;
   }
@@ -177,6 +179,9 @@ export class State {
 
   public finished(): void {
     Atomics.store(this.state, STATE.FINISHED_PROCESSING, TRUE);
+    console.log("state: finished");
+    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+    Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
   }
 
   public isFinished(): boolean {
@@ -189,7 +194,9 @@ export class State {
    */
   public static createState(fullBufferLength: number): State {
     // TODO: There's probably a better way than using Object.key() here
-    const buffer = new SharedArrayBuffer(Object.keys(STATE).length * Int32Array.BYTES_PER_ELEMENT);
+    // enum's have two way key-value pairs (eg. key -> value and value -> key)
+    // and we only want the key -> value pair, we divide the object key length by two
+    const buffer = new SharedArrayBuffer((Object.keys(STATE).length / 2) * Int32Array.BYTES_PER_ELEMENT);
 
     // because we are manually allocating memory, the buffer will initially be filled with random data
     // to avoid this, we can fill the buffer with zeros
@@ -212,10 +219,19 @@ export class ProcessorState extends State {
       // TODO: can we do something here other than burn cycles?
     }
   }
+
+  /**
+   * called by the processor when it has finished writing to the buffer
+   */
+  public bufferReady(): void {
+    console.log("state: buffer ready");
+    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+    Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+  }
 }
 
 export class WorkerState extends State {
-  public waitForFullBuffer() {
-    return Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, 0);
+  public waitForBuffer() {
+    Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, FALSE, 1);
   }
 }

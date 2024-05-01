@@ -1,5 +1,5 @@
 import { AudioModel } from "models/recordings";
-import { MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
+import { IAudioInformation, MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
 
 export class AudioHelper {
   static connect(
@@ -8,18 +8,15 @@ export class AudioHelper {
     audioModel: AudioModel,
     spectrogramOptions: SpectrogramOptions,
   ) {
+    // TODO: It is problematic that we have to define audio meta data before we decode the audio metadata
+    // TODO: Also, we need to work out if the OfflineAudioContext Buffer can be smaller than the audio file
     const context = new OfflineAudioContext({
       numberOfChannels: 1,
-      length: 5 * 22050,
-      sampleRate: 22050,
+      length: audioModel.sampleRate * audioModel.duration,
+      sampleRate: audioModel.sampleRate,
     });
 
-    // I usually find that AudioContext is much easier to debug than an OfflineAudioContext
-    // const context = new AudioContext({
-    //   sampleRate: 22050,
-    // });
-
-    let source: any;
+    let source: AudioBufferSourceNode;
 
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
@@ -44,15 +41,16 @@ export class AudioHelper {
         // the balance of this number is a performance tradeoff
         // - too many samples and we'll use more memory and render in larger clunky chunks
         // - too few samples and we'll be rendering too often and hit performance bottlenecks e.g. with canvas painting, wasm interop, signalling primitives, etc.
-        const renderSize = Math.floor(
-          sampleRate * (spectrogramOptions.windowSize - spectrogramOptions.windowOverlap)
-        ); // about one seconds-worth of samples
+        const windowStep = (spectrogramOptions.windowSize - spectrogramOptions.windowOverlap);
+        const segmentSize = Math.floor(
+          sampleRate / windowStep
+        ) * windowStep; // about one seconds-worth of samples
 
         // the buffer is where we write samples to. Why bigger? If the processor emits non-aligned frames of samples
         // we can write the overflow to the buffer and use it in the next render
-        const bufferSize = renderSize * 2;
+        const bufferSize = segmentSize * 2;
 
-        const state = State.createState(renderSize);
+        const state = State.createState(segmentSize);
         const sampleBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * bufferSize);
         const offscreenCanvas = canvas.transferControlToOffscreen();
 
@@ -68,14 +66,25 @@ export class AudioHelper {
         // 4. when the rendering is complete, signal the worker to finish (and render the last frame)
         context.addEventListener("complete", () => {
           state.finished();
+          console.timeEnd("rendering");
         });
+
+        // TODO: This should be passed in the function signature and derived from the render window
+        // TODO: Take sample rate out of spectrogram options and move to audioModel
+        const tempAudioInformation: IAudioInformation = {
+          startSample: 0,
+          endSample: source.buffer!.duration * sampleRate,
+        };
+
+        console.log(segmentSize, source.buffer!.duration, tempAudioInformation.endSample, source.buffer!.sampleRate);
 
         // give buffers and canvas to the worker
         spectrogramWorker.postMessage(
-          [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions],
+          [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions, tempAudioInformation],
           [offscreenCanvas],
         );
 
+        console.time("rendering");
         // 1. give state and sample buffer to the processor - this will kick start the process
         processorNode.port.postMessage([state.buffer, sampleBuffer]);
       });
