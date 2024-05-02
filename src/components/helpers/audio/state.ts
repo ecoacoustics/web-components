@@ -83,7 +83,7 @@ export const MESSAGE_PROCESSOR_READY = "processor-ready";
 // TODO: some kind of well known set of strings, probably the D3 colour schemes
 // maybe even extensible to allow custom colour maps e.g. 
 // https://d3js.org/d3-scale-chromatic
-type ColorMap = string;
+type ColorMap = any;
 
 export interface IAudioInformation {
   startSample: Sample;
@@ -93,7 +93,6 @@ export interface IAudioInformation {
 export class SpectrogramOptions {
   constructor(
     windowSize: number,
-    
     windowOverlap: number,
     windowFunction: WindowFunctionName,
     brightness: number,

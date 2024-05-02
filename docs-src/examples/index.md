@@ -5,9 +5,30 @@ title: Webcomponents Workspace ⌲ Examples
 
 # Examples
 
-## `<oe-media-controls>`
+## Spectrogram
 
 ```html
-<audio id="media-outlet" src="https://www.w3schools.com/tags/horse.ogg"></audio>
-<oe-media-controls for="media-outlet"></oe-media-controls>
+<oe-axes>
+    <oe-indicator>
+    <oe-spectrogram
+        id="playing-spectrogram"
+        class="large"
+        src="/merged_diagnostic.wav"
+        color-map="cubehelix"
+    ></oe-spectrogram>
+    </oe-indicator>
+</oe-axes>
+<oe-media-controls for="playing-spectrogram"></oe-media-controls>
 ```
+
+<oe-axes>
+    <oe-indicator>
+        <oe-spectrogram
+            id="playing-spectrogram"
+            class="large"
+            src="/merged_diagnostic.wav"
+            color-map="cubehelix"
+        ></oe-spectrogram>
+    </oe-indicator>
+</oe-axes>
+<oe-media-controls for="playing-spectrogram"></oe-media-controls>

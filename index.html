@@ -8,7 +8,7 @@
   </head>
 
   <body>
-<!-- 
+    <!-- 
     <h2>5 Second Recordings</h2>
     <div class="grid-container">
       <oe-axes>
@@ -47,11 +47,16 @@
 
     <oe-axes>
       <oe-indicator>
-        <oe-spectrogram id="playing-spectrogram" class="large" src="/merged_diagnostic.wav"></oe-spectrogram>
+        <oe-spectrogram
+          id="playing-spectrogram"
+          class="large"
+          src="/merged_diagnostic.wav"
+          color-map="cubehelix"
+        ></oe-spectrogram>
       </oe-indicator>
     </oe-axes>
     <oe-media-controls for="playing-spectrogram"></oe-media-controls>
-<!-- 
+    <!-- 
     <oe-spectrogram id="playing-spectrogram" class="small" src="/example.flac"></oe-spectrogram>
     <oe-spectrogram id="playing-spectrogram" class="small" src="/example.flac"></oe-spectrogram>
     <oe-spectrogram id="playing-spectrogram" class="small" src="/example.flac"></oe-spectrogram>
@@ -93,7 +98,7 @@
     <style>
       #axes {
         color: blue;
-/* 
+        /* 
         &::part(tick) {
           color: lime;
         }

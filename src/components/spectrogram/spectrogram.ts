@@ -9,6 +9,7 @@ import { OeResizeObserver } from "../helpers/resizeObserver";
 import { AbstractComponent } from "../mixins/abstractComponent";
 import { AudioHelper } from "../helpers/audio/audio";
 import { SpectrogramOptions } from "../helpers/audio/state";
+import { WindowFunctionName } from "fft-windowing-ts";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
@@ -25,8 +26,14 @@ const defaultAudioModel = new AudioModel({
  *
  * @property paused - Whether the spectrogram is paused
  * @property src - The source of the audio file to play
- * @property window - What part of the spectrogram is currently visible
  * @property offset - What should second 0 be shown as in the spectrogram
+ * @property window - What part of the spectrogram is currently visible
+ * @property window-size - The size of the fft window
+ * @property window-overlap - The amount of overlap between fft windows
+ * @property window-function - The window function to use for the spectrogram
+ * @property color-map - The color map to use for the spectrogram
+ * @property brightness - The brightness of the spectrogram
+ * @property contrast - The contrast of the spectrogram
  *
  * @slot - A `<source>` element to provide the audio source
  */
@@ -43,6 +50,24 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // must be in the format startOffset, lowFreq, endOffset, highFreq
   @property({ type: String, attribute: "window" })
   public domRenderWindow?: string;
+
+  @property({ type: Number, attribute: "window-size" })
+  public windowSize = 512;
+
+  @property({ type: String, attribute: "window-function" })
+  public windowFunction: WindowFunctionName = "hann";
+
+  @property({ type: Number, attribute: "window-overlap" })
+  public windowOverlap = 0;
+
+  @property({ type: String, attribute: "color-map" })
+  public colorMap = "interpolateCubehelixDefault";
+
+  @property({ type: Number })
+  public brightness = 1;
+
+  @property({ type: Number })
+  public contrast = 1;
 
   @property({ type: Number, reflect: true })
   public offset = 0;
@@ -69,7 +94,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
       this.resizeCanvasViewport();
-      AudioHelper.connect(this.mediaElement, this.canvas, this.audio.value, this.spectrogramOptions());
+      AudioHelper.connect(this.mediaElement, this.canvas, this.spectrogramOptions());
     });
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio);
@@ -126,7 +151,14 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private spectrogramOptions(): SpectrogramOptions {
-    return new SpectrogramOptions(512, 0, "hann", 0, 0, "");
+    return new SpectrogramOptions(
+      this.windowSize,
+      this.windowOverlap,
+      this.windowFunction,
+      this.brightness,
+      this.contrast,
+      this.colorMap,
+    );
   }
 
   private setPlaying() {

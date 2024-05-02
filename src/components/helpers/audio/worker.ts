@@ -12,6 +12,8 @@ import {
   WorkerState,
 } from "./state";
 import { smooth } from "./window";
+import { getColorFunction } from "./colors";
+import * as d3 from "d3";
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;
@@ -97,7 +99,7 @@ class Profiler {
     });
 
     const elapsed = this.lastSample - this.firstSample;
-    let result = {
+    const result = {
       name: this.name,
       min,
       max,
@@ -119,7 +121,7 @@ const sampleProfiler = new Profiler("sample");
 const fftRealProfiler = new Profiler("fft real");
 const fftComplexProfiler = new Profiler("fft complex");
 const magnitudeProfiler = new Profiler("magnitude");
-const amplitudeProfiler = new Profiler("amplitude");
+const scaledProfiler = new Profiler("scaled");
 const decibelsProfiler = new Profiler("decibels");
 const normalizedIntensityProfiler = new Profiler("normalized intensity");
 
@@ -150,7 +152,7 @@ function calculateDecibels(magnitudeBuffer: number[]): number[] {
   for (let i = 0; i < magnitudeBuffer.length; i++) {
     // because we square the amplitude in the magnitude function, we indirectly have power
     // therefore, we use the power relationship to convert to decibels
-    magnitudeBuffer[i] = 10 * Math.log10(magnitudeBuffer[i]);
+    magnitudeBuffer[i] = 20 * Math.log10(magnitudeBuffer[i]);
     decibelsProfiler.addSample(magnitudeBuffer[i]);
   }
 
@@ -162,11 +164,31 @@ function scaleValues(magnitudeBuffer: number[]): number[] {
     // normalize the magnitude by the window size
     // https://dsp.stackexchange.com/a/63006
     // https://stackoverflow.com/a/20170717/224512
-    magnitudeBuffer[i] = magnitudeBuffer[i] / options.windowSize;
-    amplitudeProfiler.addSample(magnitudeBuffer[i]);
+
+    magnitudeBuffer[i] = magnitudeBuffer[i] * (1 / (options.windowSize));
+    scaledProfiler.addSample(magnitudeBuffer[i]);
   }
 
   return magnitudeBuffer;
+}
+
+function sumOfSquares(values: number[]): number {
+  let square = 0;
+  let mean = 0.0;
+  let root = 0.0;
+
+  // Calculate square.
+  for (let i = 0; i < values.length; i++) {
+    square += Math.pow(values[i], 2);
+  }
+
+  // Calculate Mean.
+  mean = square / values.length;
+
+  // Calculate Root.
+  root = mean; //Math.sqrt(mean);
+
+  return root;
 }
 
 function kernel(): void {
@@ -193,52 +215,73 @@ function kernel(): void {
 
     sampleProfiler.addSamples(Array.from(window));
 
-    // TODO remove DC offset
+    // TODO remove DC offset?
+
+    //const windowSumOfSquares = sumOfSquares(window as number[]);
 
     // apply a window function to smooth the signal
     const smoothed = smooth(window, options.windowFunction);
+
+    const smoothedSumOfSquares = sumOfSquares(smoothed);
 
     // returns real (magnitude) and complex (phase) parts
     //@ts-expect-error the FFT library doesn't ship its types and is not available on definitely typed
     const out = fft.fftr(smoothed);
 
+    // TODO: collapse the following post transform functions into a single function
+
     // collapse real and complex parts into magnitude
-    const magnitude = calculateMagnitude(out);
+    const magnitude = calculateMagnitude(out as number[]);
 
     // convert to amplitude
-    const amplitude = scaleValues(magnitude);
+    const scaled = scaleValues(magnitude, smoothedSumOfSquares);
+
+    // might want to do a mel scale conversion here (check that this is correct)
+
+    //const fftSumOfSquares = sumOfSquares(scaled as number[]);
+    //console.log("smoothedSumOfSquares", smoothedSumOfSquares, windowSumOfSquares, fftSumOfSquares);
 
     // convert to decibels
-    const decibels = calculateDecibels(amplitude);
+    const decibels = calculateDecibels(scaled);
 
     // convert to mel scale (optional based on settings)
 
     // cache the fft results so that we don't have to re-calculate it every time
     fftCache.set(decibels, cacheOffset);
 
+    // calculate d3 color scale here and cache the value
+
     // RGBA, alpha hard coded to 255. Re use one pixel buffer for efficiency
     const pixel = [0, 0, 0, 255];
-    // TODO: Fix length / 2 by collapsing phase an decibels
+    const colorScale = getColorFunction(options.colorMap);
+
     for (let frequencyBin = 0; frequencyBin < decibels.length; frequencyBin++) {
       const value = decibels[frequencyBin];
 
-      const minDecibels = -80;
-      const maxDecibels = 0;
+      const minDecibels = -180;
+      const maxDecibels = -10;
       const range = maxDecibels - minDecibels;
 
-      const intensity = 255 - ((value - minDecibels) / range) * 255;
-      //const intensity = 255 - value * 255;
-      normalizedIntensityProfiler.addSample(intensity);
+      // TODO: this range expression is probably incorrect
+      let intensity = (value - minDecibels) / range;
 
-      // todo: color, brightness, contrast
-      pixel[0] = intensity;
-      pixel[1] = intensity;
-      pixel[2] = intensity;
+      // brightness and contrast
+      intensity += options.brightness - 1;
+      intensity *= options.contrast;
+
+      normalizedIntensityProfiler.addSample(intensity);
+      
+      const color = d3.color(colorScale(intensity))!;
+      const rgbColor = color.rgb();
+
+      pixel[0] = rgbColor.r;
+      pixel[1] = rgbColor.g;
+      pixel[2] = rgbColor.b;
 
       const x = frame + lastFrameIndex;
       const y = frequencyBin;
       const offset = bytesPerPixel * (x + y * fftWidth);
-      if (offset >= imageBuffer.length) {
+      if (offset > imageBuffer.length - 4) {
         console.log("overflow coordinates", x, y, offset, imageBuffer.length);
       }
       imageBuffer.set(pixel, offset);
@@ -249,17 +292,13 @@ function kernel(): void {
 
   lastFrameIndex += frame;
 
-  // let the processor know we are done with the buffer and it can continue
-  // accumulating more samples
-  renderImageBuffer(imageBuffer);
-
   // print out all the profilers
   console.table([
     sampleProfiler.calculate(),
     fftRealProfiler.calculate(),
     fftComplexProfiler.calculate(),
     magnitudeProfiler.calculate(),
-    amplitudeProfiler.calculate(),
+    scaledProfiler.calculate(),
     decibelsProfiler.calculate(),
     normalizedIntensityProfiler.calculate(),
   ]);
@@ -280,6 +319,10 @@ function work(): void {
     }
   }
 
+  // let the processor know we are done with the buffer and it can continue
+  // accumulating more samples
+  renderImageBuffer(imageBuffer);
+
   fft.dispose();
 }
 
@@ -293,6 +336,7 @@ function renderImageBuffer(buffer: Uint8ClampedArray): void {
   // and stretch to fill
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
+  // commit doesn't exist on chrome!
   destinationSurface.commit && destinationSurface.commit();
 }
 
@@ -314,7 +358,7 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
   // raw fft values
   fftCache = new Float32Array(fftWidth * fftHeight);
 
-  // is fft with colour and transforms applied to it
+  // is fft with color and transforms applied to it
   imageBuffer = new Uint8ClampedArray(fftHeight * fftWidth * bytesPerPixel);
 
   spectrogramCanvas = new OffscreenCanvas(fftWidth, fftHeight);
