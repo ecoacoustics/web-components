@@ -16,7 +16,8 @@
     "testid",
     "preact",
     "nyquist",
-    "webfft"
+    "webfft",
+    "roseus"
   ],
   "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
 }

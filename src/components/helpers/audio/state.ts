@@ -80,9 +80,6 @@ export function getAudioInformation(buffers: SharedBuffersWithCanvas): IAudioInf
 
 export const MESSAGE_PROCESSOR_READY = "processor-ready";
 
-// TODO: some kind of well known set of strings, probably the D3 colour schemes
-// maybe even extensible to allow custom colour maps e.g. 
-// https://d3js.org/d3-scale-chromatic
 type ColorMap = any;
 
 export interface IAudioInformation {

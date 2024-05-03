@@ -12,8 +12,9 @@ import {
   WorkerState,
 } from "./state";
 import { smooth } from "./window";
-import { getColorFunction } from "./colors";
-import * as d3 from "d3";
+import { ColorScaler, getColorScale } from "./colors";
+import { Profiler } from "../debug/profiler";
+
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;
@@ -60,62 +61,11 @@ let lastFrameIndex = 0;
 // TODO: scope these
 let fftHeight: number;
 let fftWidth: number;
+let colorScale: ColorScaler;
 
 let audioInformation: IAudioInformation;
 let fftCache: Float32Array;
 
-class Profiler {
-  private firstSample = 0;
-  private lastSample = 0;
-  private samples: number[] = [];
-
-  constructor(private name: string) {}
-
-  public addSample(value: number): void {
-    if (this.samples.length === 0) {
-      this.firstSample = performance.now();
-    }
-    this.samples.push(value);
-    this.lastSample = performance.now();
-  }
-
-  public addSamples(values: number[]): void {
-    if (this.samples.length === 0) {
-      this.firstSample = performance.now();
-    }
-    this.samples = this.samples.concat(values);
-    this.lastSample = performance.now();
-  }
-
-  public calculate() {
-    // calculate basic stats
-    let min = Infinity,
-      max = -Infinity,
-      sum = 0;
-    this.samples.forEach((value) => {
-      if (value < min) min = value;
-      if (value > max) max = value;
-      sum += value;
-    });
-
-    const elapsed = this.lastSample - this.firstSample;
-    const result = {
-      name: this.name,
-      min,
-      max,
-      sum,
-      average: sum / this.samples.length,
-      length: this.samples.length,
-      elapsed,
-    };
-
-    this.samples = [];
-    this.firstSample = 0;
-    this.lastSample = 0;
-
-    return result;
-  }
-}
 
 const sampleProfiler = new Profiler("sample");
 const fftRealProfiler = new Profiler("fft real");
@@ -127,9 +77,9 @@ const normalizedIntensityProfiler = new Profiler("normalized intensity");
 
 const bytesPerPixel = 4 as const;
 
-function calculateMagnitude(complexData: number[]): number[] {
+function calculateMagnitude(complexData: Float32Array): Float32Array {
   const half = complexData.length / 2;
-  const newData = Array(half);
+  const newData = new Float32Array(half);
 
   for (let i = 0; i < half; i++) {
     const sourceIndex = i * 2;
@@ -159,40 +109,40 @@ function calculateDecibels(magnitudeBuffer: number[]): number[] {
   return magnitudeBuffer;
 }
 
-function scaleValues(magnitudeBuffer: number[]): number[] {
+function scaleValues(magnitudeBuffer: number[], scale: number): number[] {
+  const maxMagnitude = magnitudeBuffer.reduce((a, b) => Math.max(a, b), 0);
   for (let i = 0; i < magnitudeBuffer.length; i++) {
     // normalize the magnitude by the window size
     // https://dsp.stackexchange.com/a/63006
     // https://stackoverflow.com/a/20170717/224512
 
-    magnitudeBuffer[i] = magnitudeBuffer[i] * (1 / (options.windowSize));
+    magnitudeBuffer[i] = (magnitudeBuffer[i] / maxMagnitude) * scale;
     scaledProfiler.addSample(magnitudeBuffer[i]);
   }
 
   return magnitudeBuffer;
 }
 
-function sumOfSquares(values: number[]): number {
-  let square = 0;
-  let mean = 0.0;
-  let root = 0.0;
-
-  // Calculate square.
-  for (let i = 0; i < values.length; i++) {
-    square += Math.pow(values[i], 2);
+function max(samples: Float32Array): number {
+  let max = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const sample = Math.abs(samples[i]);
+    if (sample > max) {
+      max = sample;
+    }
   }
 
-  // Calculate Mean.
-  mean = square / values.length;
-
-  // Calculate Root.
-  root = mean; //Math.sqrt(mean);
-
-  return root;
+  return max;
 }
 
 function kernel(): void {
   console.count("kernel");
+
+  // RGBA, alpha hard coded to 255. Re use one pixel buffer for efficiency
+  const pixel = new Uint8ClampedArray(4);
+  pixel[3] = 255;
+
+      
   // temporarily call fft lots, and do our own windowing and overlaps
   // for each frame
   const size = options.windowSize;
@@ -215,14 +165,10 @@ function kernel(): void {
 
     sampleProfiler.addSamples(Array.from(window));
 
-    // TODO remove DC offset?
-
-    //const windowSumOfSquares = sumOfSquares(window as number[]);
+    const maxAmplitude = max(window);
 
     // apply a window function to smooth the signal
     const smoothed = smooth(window, options.windowFunction);
-
-    const smoothedSumOfSquares = sumOfSquares(smoothed);
 
     // returns real (magnitude) and complex (phase) parts
     //@ts-expect-error the FFT library doesn't ship its types and is not available on definitely typed
@@ -231,10 +177,10 @@ function kernel(): void {
     // TODO: collapse the following post transform functions into a single function
 
     // collapse real and complex parts into magnitude
-    const magnitude = calculateMagnitude(out as number[]);
+    const magnitude = calculateMagnitude(out);
 
     // convert to amplitude
-    const scaled = scaleValues(magnitude, smoothedSumOfSquares);
+    const scaled = scaleValues(magnitude, maxAmplitude);
 
     // might want to do a mel scale conversion here (check that this is correct)
 
@@ -249,34 +195,28 @@ function kernel(): void {
     // cache the fft results so that we don't have to re-calculate it every time
     fftCache.set(decibels, cacheOffset);
 
-    // calculate d3 color scale here and cache the value
-
-    // RGBA, alpha hard coded to 255. Re use one pixel buffer for efficiency
-    const pixel = [0, 0, 0, 255];
-    const colorScale = getColorFunction(options.colorMap);
 
     for (let frequencyBin = 0; frequencyBin < decibels.length; frequencyBin++) {
       const value = decibels[frequencyBin];
 
-      const minDecibels = -180;
-      const maxDecibels = -10;
+      const minDecibels = -120;
+      const maxDecibels = 0;
       const range = maxDecibels - minDecibels;
 
       // TODO: this range expression is probably incorrect
       let intensity = (value - minDecibels) / range;
 
       // brightness and contrast
-      intensity += options.brightness - 1;
+      intensity += options.brightness;
       intensity *= options.contrast;
 
-      normalizedIntensityProfiler.addSample(intensity);
-      
-      const color = d3.color(colorScale(intensity))!;
-      const rgbColor = color.rgb();
+      // clamp
+      intensity = Math.min(1, Math.max(0, intensity));
 
-      pixel[0] = rgbColor.r;
-      pixel[1] = rgbColor.g;
-      pixel[2] = rgbColor.b;
+      normalizedIntensityProfiler.addSample(intensity);
+
+      const rgbColor = colorScale(intensity);
+      pixel.set(rgbColor);
 
       const x = frame + lastFrameIndex;
       const y = frequencyBin;
@@ -351,6 +291,8 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
 
   const totalSamples = audioInformation.endSample - audioInformation.startSample;
   const frameCount = Math.ceil(totalSamples / (options.windowSize - options.windowOverlap));
+
+  colorScale = getColorScale(options.colorMap);
 
   fftWidth = frameCount;
   fftHeight = options.windowSize / 2;

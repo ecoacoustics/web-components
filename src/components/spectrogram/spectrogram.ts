@@ -64,7 +64,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public colorMap = "interpolateCubehelixDefault";
 
   @property({ type: Number })
-  public brightness = 1;
+  public brightness = 0;
 
   @property({ type: Number })
   public contrast = 1;

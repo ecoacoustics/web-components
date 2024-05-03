@@ -15,6 +15,10 @@ module.exports = function (data) {
     <link rel="stylesheet" href="${relative(page.url, "/docs.css")}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600|Roboto+Mono">
     <link href="${relative(page.url, "/prism-okaidia.css")}" rel="stylesheet" />
+    <script type="module" src="${relative(
+      page.url,
+      './js/components.js'
+    )}"></script>
   </head>
   <body>
     ${header()}

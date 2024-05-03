@@ -13,7 +13,7 @@ title: Webcomponents Workspace ⌲ Examples
     <oe-spectrogram
         id="playing-spectrogram"
         class="large"
-        src="/merged_diagnostic.wav"
+        src="/example.flac"
         color-map="cubehelix"
     ></oe-spectrogram>
     </oe-indicator>
@@ -26,7 +26,7 @@ title: Webcomponents Workspace ⌲ Examples
         <oe-spectrogram
             id="playing-spectrogram"
             class="large"
-            src="/merged_diagnostic.wav"
+            src="/example.flac"
             color-map="cubehelix"
         ></oe-spectrogram>
     </oe-indicator>

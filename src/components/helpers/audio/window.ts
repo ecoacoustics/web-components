@@ -34,11 +34,6 @@ export const windowFunctions: Map<WindowFunctionName, WindowFunction> = new Map(
 ]);
 
 export function smooth(input: Float32Array, windowType: WindowFunctionName = "hann") {
-  let windowFunction = windowFunctions.get(windowType);
-
-  if (!windowFunction) {
-    windowFunction = hann;
-  }
-
+  const windowFunction = windowFunctions.get(windowType) ?? hann;
   return windowFunction(input as any);
 }
