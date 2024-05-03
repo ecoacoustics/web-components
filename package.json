@@ -8,9 +8,9 @@
   "scripts": {
     "dev": "vite",
     "build": "build:components && build:docs",
-    "dev:docs": "pnpm build:docs && vite ./dist/docs/",
+    "dev:docs": "concurrently \"eleventy --watch --incremental\" \"vite ./dist/docs/\"",
     "start:docs": "vite ./dist/docs/",
-    "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=.eleventy.cjs",
+    "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=.eleventy.js",
     "build:components": "vite build && tsc",
     "publish:components": "pnpm build:components && npm publish --access public",
     "test": "pnpm test:unit; pnpm test:e2e",
@@ -38,7 +38,7 @@
     "webfft": "^1.0.3"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^2.0.1",
+    "@11ty/eleventy": "3.0.0-alpha.10",
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
     "@custom-elements-manifest/analyzer": "^0.9.4",
     "@playwright/test": "^1.43.1",
@@ -50,6 +50,7 @@
     "@types/d3-scale": "^4.0.8",
     "@types/d3-selection": "^3.0.10",
     "@types/node": "^20.12.7",
+    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "rimraf": "^5.0.5",
     "rollup": "4.12.0",

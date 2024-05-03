@@ -1,8 +1,8 @@
-const header = require("./header.11ty.cjs");
-const nav = require("./nav.11ty.cjs");
-const relative = require("./relative-path.cjs");
+import header from "./header.11ty.js";
+import nav from "./nav.11ty.js";
+import relative from "./relative-path.js";
 
-module.exports = function (data) {
+export default function (data) {
   const { title, page, content } = data;
   return `
 <!doctype html>
@@ -15,10 +15,7 @@ module.exports = function (data) {
     <link rel="stylesheet" href="${relative(page.url, "/docs.css")}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600|Roboto+Mono">
     <link href="${relative(page.url, "/prism-okaidia.css")}" rel="stylesheet" />
-    <script type="module" src="${relative(
-      page.url,
-      './js/components.js'
-    )}"></script>
+    <script type="module" src="${relative(page.url, "./js/components.js")}"></script>
   </head>
   <body>
     ${header()}
@@ -30,4 +27,4 @@ module.exports = function (data) {
     </div>
   </body>
 </html>`;
-};
+}

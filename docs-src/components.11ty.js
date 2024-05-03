@@ -1,13 +1,13 @@
-const fs = require("fs");
+import fs from "fs";
 
 /**
  * This page generates its content from the custom-element.json file as read by
  * the _data/api.11tydata.js script.
  */
-module.exports = class Docs {
+export default class Docs {
   data() {
     return {
-      layout: "page.11ty.cjs",
+      layout: "page.11ty.js",
       title: "Open Ecoacoustics - Components",
     };
   }

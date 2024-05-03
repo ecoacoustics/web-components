@@ -1,5 +1,5 @@
 ---
-layout: page.11ty.cjs
+layout: page.11ty.js
 title: Ecoacoustics Web Components
 ---
 

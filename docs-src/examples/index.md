@@ -1,5 +1,5 @@
 ---
-layout: example.11ty.cjs
+layout: example.11ty.js
 title: Webcomponents Workspace ⌲ Examples
 ---
 

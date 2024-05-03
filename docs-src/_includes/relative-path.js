@@ -1,6 +1,6 @@
-const path = require("path");
+import path from "path";
 
-module.exports = (base, p) => {
+export default (base, p) => {
   const relativePath = path.posix.relative(base, p);
 
   if (p.endsWith("/") && !relativePath.endsWith("/") && relativePath !== "") {
