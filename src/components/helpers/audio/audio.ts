@@ -1,12 +1,17 @@
 import { IAudioInformation, MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
 import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 
+// we have to use ?url in the vite import
+// see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
+import bufferBuilderProcessor from "./buffer-builder-processor.ts?url";
+
 export class AudioHelper {
   static connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement, spectrogramOptions: SpectrogramOptions) {
     let context: OfflineAudioContext;
     let source: AudioBufferSourceNode;
     let metadata: IAudioMetadata;
 
+    const bufferProcessor = bufferBuilderProcessor.replace("*", "");
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
     fetch(audioElement.src)
@@ -27,7 +32,7 @@ export class AudioHelper {
         return context.decodeAudioData(downloadedBuffer);
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-      .then(() => context.audioWorklet.addModule("src/components/helpers/audio/buffer-builder-processor.ts"))
+      .then(() => context.audioWorklet.addModule(bufferProcessor))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
         const spectrogramWorker = new Worker("src/components/helpers/audio/worker.ts", {

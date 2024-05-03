@@ -10,7 +10,7 @@ import { jetColorScheme } from "./colors/jet";
 
 export type RgbTuple = [r: number, g: number, b: number];
 export type IntensityTuple = [ri: number, gi: number, bi: number];
-type ColorScaler = (intensity: number) => RgbTuple;
+export type ColorScaler = (intensity: number) => RgbTuple;
 
 const rgbMaxValue = 255 as const;
 
@@ -19,7 +19,7 @@ function precomputedRgb(scheme: IntensityTuple[]): ColorScaler {
     const index = Math.floor(intensity * rgbMaxValue);
     const color = scheme[index];
 
-    return color.map((x) => x * rgbMaxValue);
+    return color.map((x) => x * rgbMaxValue) as any;
   };
 }
 
@@ -56,6 +56,7 @@ export const translationTable: Record<string, string | (() => ColorScaler)> = {
   cubeHelix: () => cubeHelixScale,
   gammaII: () => gammaIIScale,
   jet: () => jetScale,
+  raven: () => jetScale,
 };
 
 export function getColorScale(name: string): ColorScaler {

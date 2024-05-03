@@ -8,9 +8,9 @@
   "scripts": {
     "dev": "vite",
     "build": "build:components && build:docs",
-    "dev:docs": "concurrently \"eleventy --watch --incremental\" \"vite ./dist/docs/\"",
+    "dev:docs": "concurrently \"eleventy --config eleventy.config.js --watch --incremental\" \"vite ./dist/docs/\"",
     "start:docs": "vite ./dist/docs/",
-    "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=.eleventy.js",
+    "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=eleventy.config.js",
     "build:components": "vite build && tsc",
     "publish:components": "pnpm build:components && npm publish --access public",
     "test": "pnpm test:unit; pnpm test:e2e",

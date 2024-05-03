@@ -1,6 +1,6 @@
 import { getSharedBuffer, SharedBuffers, MESSAGE_PROCESSOR_READY, getSharedProcessorState, ProcessorState } from "./state";
 
-class BufferBuilderProcessor extends AudioWorkletProcessor {
+export class BufferBuilderProcessor extends AudioWorkletProcessor {
   public constructor() {
     super();
 
