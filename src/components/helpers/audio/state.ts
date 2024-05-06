@@ -1,5 +1,5 @@
 import { WindowFunctionName } from "fft-windowing-ts";
-import { Sample } from "models/unitConverters";
+import { Hertz, Sample } from "models/unitConverters";
 
 /**
  * There are names for indexes in a packed struct stored in a SharedArrayBuffer
@@ -85,6 +85,7 @@ type ColorMap = any;
 export interface IAudioInformation {
   startSample: Sample;
   endSample: Sample;
+  sampleRate: Hertz;
 }
 
 export class SpectrogramOptions {
@@ -92,13 +93,15 @@ export class SpectrogramOptions {
     windowSize: number,
     windowOverlap: number,
     windowFunction: WindowFunctionName,
+    melScale: boolean,
     brightness: number,
     contrast: number,
-    colorMap: ColorMap
+    colorMap: ColorMap,
   ) {
     this.windowSize = windowSize;
     this.windowOverlap = windowOverlap;
     this.windowFunction = windowFunction;
+    this.melScale = melScale;
     this.brightness = brightness;
     this.contrast = contrast;
     this.colorMap = colorMap;
@@ -109,9 +112,10 @@ export class SpectrogramOptions {
    * must be a power of 2
    */
   public windowSize: number;
-  /** number of samples to overlap between windows */ 
+  /** number of samples to overlap between windows */
   public windowOverlap: number;
   public windowFunction: WindowFunctionName;
+  public melScale: boolean;
   public brightness: number;
   public contrast: number;
   public colorMap: ColorMap;

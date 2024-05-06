@@ -14,7 +14,7 @@ import {
 import { smooth } from "./window";
 import { ColorScaler, getColorScale } from "./colors";
 import { Profiler } from "../debug/profiler";
-
+import { construct } from "./mel";
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;
@@ -62,16 +62,17 @@ let lastFrameIndex = 0;
 let fftHeight: number;
 let fftWidth: number;
 let colorScale: ColorScaler;
+let melScale: (fft: Float32Array) => Float32Array;
 
 let audioInformation: IAudioInformation;
 let fftCache: Float32Array;
-
 
 const sampleProfiler = new Profiler("sample");
 const fftRealProfiler = new Profiler("fft real");
 const fftComplexProfiler = new Profiler("fft complex");
 const magnitudeProfiler = new Profiler("magnitude");
 const scaledProfiler = new Profiler("scaled");
+const melProfiler = new Profiler("mel");
 const decibelsProfiler = new Profiler("decibels");
 const normalizedIntensityProfiler = new Profiler("normalized intensity");
 
@@ -98,7 +99,7 @@ function calculateMagnitude(complexData: Float32Array): Float32Array {
   return newData;
 }
 
-function calculateDecibels(magnitudeBuffer: number[]): number[] {
+function calculateDecibels(magnitudeBuffer: Float32Array): Float32Array {
   for (let i = 0; i < magnitudeBuffer.length; i++) {
     // because we square the amplitude in the magnitude function, we indirectly have power
     // therefore, we use the power relationship to convert to decibels
@@ -109,7 +110,7 @@ function calculateDecibels(magnitudeBuffer: number[]): number[] {
   return magnitudeBuffer;
 }
 
-function scaleValues(magnitudeBuffer: number[], scale: number): number[] {
+function scaleValues(magnitudeBuffer: Float32Array, scale: number): Float32Array {
   const maxMagnitude = magnitudeBuffer.reduce((a, b) => Math.max(a, b), 0);
   for (let i = 0; i < magnitudeBuffer.length; i++) {
     // normalize the magnitude by the window size
@@ -142,7 +143,6 @@ function kernel(): void {
   const pixel = new Uint8ClampedArray(4);
   pixel[3] = 255;
 
-      
   // temporarily call fft lots, and do our own windowing and overlaps
   // for each frame
   const size = options.windowSize;
@@ -180,24 +180,26 @@ function kernel(): void {
     const magnitude = calculateMagnitude(out);
 
     // convert to amplitude
-    const scaled = scaleValues(magnitude, maxAmplitude);
+    let scaled = scaleValues(magnitude, maxAmplitude);
 
     // might want to do a mel scale conversion here (check that this is correct)
 
-    //const fftSumOfSquares = sumOfSquares(scaled as number[]);
-    //console.log("smoothedSumOfSquares", smoothedSumOfSquares, windowSumOfSquares, fftSumOfSquares);
-
-    // convert to decibels
-    const decibels = calculateDecibels(scaled);
-
     // convert to mel scale (optional based on settings)
+    if (options.melScale) {
+      scaled = melScale(scaled);
+      melProfiler.addSamples(Array.from(scaled));
+      console.log("mel scale length", scaled.length, "expected", options.windowSize / 2);
+    } else {
+      // noop
+    }
+    // convert to decibels
+    scaled = calculateDecibels(scaled);
 
     // cache the fft results so that we don't have to re-calculate it every time
-    fftCache.set(decibels, cacheOffset);
+    // fftCache.set(decibels, cacheOffset);
 
-
-    for (let frequencyBin = 0; frequencyBin < decibels.length; frequencyBin++) {
-      const value = decibels[frequencyBin];
+    for (let frequencyBin = 0; frequencyBin < scaled.length; frequencyBin++) {
+      const value = scaled[frequencyBin];
 
       const minDecibels = -120;
       const maxDecibels = 0;
@@ -239,6 +241,7 @@ function kernel(): void {
     fftComplexProfiler.calculate(),
     magnitudeProfiler.calculate(),
     scaledProfiler.calculate(),
+    melProfiler.calculate(),
     decibelsProfiler.calculate(),
     normalizedIntensityProfiler.calculate(),
   ]);
@@ -293,9 +296,22 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
   const frameCount = Math.ceil(totalSamples / (options.windowSize - options.windowOverlap));
 
   colorScale = getColorScale(options.colorMap);
+  const something = 256;
+  if (options.melScale) {
+    melScale = construct(
+      {
+        fftSize: options.windowSize / 2,
+        bankCount: something,
+        lowFrequency: 0,
+        highFrequency: audioInformation.sampleRate / 2,
+        sampleRate: audioInformation.sampleRate,
+      },
+      something,
+    );
+  }
 
   fftWidth = frameCount;
-  fftHeight = options.windowSize / 2;
+  fftHeight = options.melScale ? something : options.windowSize / 2;
 
   // raw fft values
   fftCache = new Float32Array(fftWidth * fftHeight);

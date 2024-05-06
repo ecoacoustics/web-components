@@ -14,12 +14,24 @@ export type ColorScaler = (intensity: number) => RgbTuple;
 
 const rgbMaxValue = 255 as const;
 
+function intensityToIndex(intensity: number) {
+  if (intensity < 0) {
+    return 0;
+  } else if (intensity > 1) {
+    return rgbMaxValue;
+  } else if (Number.isNaN(intensity)) {
+    return 0;
+  }
+
+  return Math.floor(intensity * rgbMaxValue);
+}
+
 function precomputedRgb(scheme: IntensityTuple[]): ColorScaler {
   return (intensity: number): RgbTuple => {
-    const index = Math.floor(intensity * rgbMaxValue);
+    const index = intensityToIndex(intensity);
     const color = scheme[index];
 
-    return color.map((x) => x * rgbMaxValue) as any;
+    return [color[0] * rgbMaxValue, color[1] * rgbMaxValue, color[2] * rgbMaxValue];
   };
 }
 

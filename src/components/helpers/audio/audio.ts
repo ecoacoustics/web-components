@@ -11,6 +11,8 @@ export class AudioHelper {
     let source: AudioBufferSourceNode;
     let metadata: IAudioMetadata;
 
+    console.log("start spectrogram rendering", spectrogramOptions);
+
     const bufferProcessor = bufferBuilderProcessor.replace("*", "");
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
@@ -22,7 +24,13 @@ export class AudioHelper {
         metadata = await parseBlob(new Blob([downloadedBuffer]));
 
         const length = metadata.format.duration! * metadata.format.sampleRate! * metadata.format.numberOfChannels!;
-        console.log("channels, sample rate, duration, length", metadata.format.numberOfChannels, metadata.format.sampleRate, metadata.format.duration, length);
+        console.log(
+          "channels, sample rate, duration, length",
+          metadata.format.numberOfChannels,
+          metadata.format.sampleRate,
+          metadata.format.duration,
+          length,
+        );
         context = new OfflineAudioContext({
           numberOfChannels: metadata.format.numberOfChannels!,
           sampleRate: metadata.format.sampleRate!,
@@ -76,6 +84,7 @@ export class AudioHelper {
         const tempAudioInformation: IAudioInformation = {
           startSample: 0,
           endSample: source.buffer!.duration * metadata.format.sampleRate!,
+          sampleRate: metadata.format.sampleRate!,
         };
 
         // give buffers and canvas to the worker

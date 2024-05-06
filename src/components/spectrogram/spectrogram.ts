@@ -47,7 +47,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: String })
   public src = "";
 
-  // must be in the format startOffset, lowFreq, endOffset, highFreq
+  // must be in the format startOffset, lowFrequency, endOffset, highFrequency
   @property({ type: String, attribute: "window" })
   public domRenderWindow?: string;
 
@@ -60,8 +60,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: Number, attribute: "window-overlap" })
   public windowOverlap = 0;
 
+  @property({ type: Boolean, attribute: "mel-scale" })
+  public melScale = false;
+
   @property({ type: String, attribute: "color-map" })
-  public colorMap = "interpolateCubehelixDefault";
+  public colorMap = "";
 
   @property({ type: Number })
   public brightness = 0;
@@ -155,6 +158,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.windowSize,
       this.windowOverlap,
       this.windowFunction,
+      this.melScale,
       this.brightness,
       this.contrast,
       this.colorMap,
