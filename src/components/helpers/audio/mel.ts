@@ -14,59 +14,7 @@
  * tool to understand the Mel-scale and its related coefficients used in
  * human speech analysis.
 \*===========================================================================*/
-const cosMap: Map<number, Array<number>> = new Map();
-
-// Builds a cosine map for the given input size. This allows multiple input sizes to be memoized automagically
-// if you want to run the DCT over and over.
-const memoizeCosines = function (number: number): Array<number> {
-  if (cosMap.has(number)) {
-    return cosMap.get(number)!;
-  }
-
-  const result = new Array(number * number);
-
-  const piOnN = Math.PI / number;
-
-  for (let k = 0; k < number; k++) {
-    for (let n = 0; n < number; n++) {
-      result[n + k * number] = Math.cos(piOnN * (n + 0.5) * k);
-    }
-  }
-
-  cosMap.set(number, result);
-
-  return result;
-};
-
-function dct(signal: Float32Array, scale?: number | undefined) {
-  const length = signal.length;
-  scale = scale || 2;
-
-  const cosines = memoizeCosines(length);
-  const coefficients = new Float32Array(length);
-
-  for (let i = 0; i < length; i++) {
-    let sum = 0;
-    for (let j = 0; j < length; j++) {
-      sum += signal[j] * cosines[j + i * length];
-    }
-    coefficients[i] = scale * sum;
-  }
-  return coefficients;
-}
-
-const log_ = (m: number) => Math.log(1 + m);
-
-/**
- * Converts from Mel-scale to hertz. Used by constructFilterBank.
- * @param {Number} mels - mels to convert to hertz
- */
-const melsToHertz = (mels: number) => 700 * (Math.exp(mels / 1127) - 1);
-/**
- * Converts from hertz to the Mel-scale. Used by constructFilterBank.
- * @param {Number} hertz - hertz to convert to mels
- */
-const hertzToMels = (hertz: number) => 1127 * Math.log(1 + hertz / 700);
+type BankFilter = (freqPowers: Float32Array) => Float32Array;
 
 interface MelConfig {
   fftSize: number;
@@ -83,18 +31,78 @@ interface MelFilterBank {
   deltaMel: number;
   lowFreq: number;
   highFreq: number;
-  filter(freqPowers: Float32Array): Float32Array;
+  filter: BankFilter;
+}
+
+const cosMap = new Map<number, Array<number>>();
+
+/**
+ * Converts from Mel-scale to hertz. Used by constructFilterBank.
+ * @param mels - mels to convert to hertz
+ */
+export function melsToHz(mels: number) {
+        return 700 * (Math.exp(mels / 1127) - 1);
+}
+
+/**
+ * Converts from hertz to the Mel-scale. Used by constructFilterBank.
+ * @param hertz - hertz to convert to mels
+ */
+export function hertzToMels(hertz: number) {
+        return 1127 * Math.log(1 + hertz / 700);
+}
+
+// Builds a cosine map for the given input size. This allows multiple input sizes to be memoized automagically
+// if you want to run the DCT over and over.
+function memoizeCosines(count: number): Array<number> {
+  if (cosMap.has(count)) {
+    return cosMap.get(count)!;
+  }
+
+  const result = new Array(count * count);
+
+  const piOnN = Math.PI / count;
+
+  for (let k = 0; k < count; k++) {
+    for (let n = 0; n < count; n++) {
+      result[n + k * count] = Math.cos(piOnN * (n + 0.5) * k);
+    }
+  }
+
+  cosMap.set(count, result);
+
+  return result;
+}
+
+function dct(signal: Float32Array, scale?: number | undefined) {
+  const length = signal.length;
+  scale = scale || 2;
+
+  const cosines = memoizeCosines(length);
+  const coefficients = new Float32Array(length).fill(0);
+
+  for (let i = 0; i < length; i++) {
+    let sum = 0;
+
+    for (let j = 0; j < length; j++) {
+      sum += signal[j] * cosines[j + i * length];
+    }
+
+    coefficients[i] = scale * sum;
+  }
+
+  return coefficients;
 }
 
 /**
  * Creates a filter bank with config.bankCount triangular filters.
  * Filters are distributed according to the mel scale.
  *
- * @param {Object} config - Object containing the config for mfccBank
+ * @param config - Object containing the config for mfccBank
  * (eg: config = {  fftSize: 32,  bankCount: 24,  lowFrequency: 1,
  *   highFrequency: 8000,  sampleRate: 16000,})
  */
-const constructMelFilterBank = (config: MelConfig): MelFilterBank => {
+export function constructMelFilterBank(config: MelConfig): MelFilterBank {
   const bins = [];
   const fq = [];
   const filters: Array<Array<number>> = [];
@@ -104,7 +112,7 @@ const constructMelFilterBank = (config: MelConfig): MelFilterBank => {
   const deltaMel = (highMel - lowMel) / (config.bankCount + 1);
 
   for (let i = 0; i < config.bankCount; i++) {
-    fq[i] = melsToHertz(lowMel + i * deltaMel);
+    fq[i] = melsToHz(lowMel + i * deltaMel);
     bins[i] = Math.floor(((config.fftSize + 1) * fq[i]) / (config.sampleRate / 2));
   }
 
@@ -134,14 +142,7 @@ const constructMelFilterBank = (config: MelConfig): MelFilterBank => {
 
   //filters.bins = bins;
 
-  return {
-    filters,
-    lowMel: lowMel,
-    highMel: highMel,
-    deltaMel: deltaMel,
-    lowFreq: config.lowFrequency,
-    highFreq: config.highFrequency,
-    filter(freqPowers: Float32Array) {
+  const bankFilter: BankFilter = (freqPowers: Float32Array) => {
       const returnValue = new Float32Array(filters.length);
 
       for (const [fIx, filter] of filters.entries()) {
@@ -154,9 +155,18 @@ const constructMelFilterBank = (config: MelConfig): MelFilterBank => {
       }
 
       return returnValue;
-    },
   };
-};
+
+  return {
+    filters,
+    lowMel: lowMel,
+    highMel: highMel,
+    deltaMel: deltaMel,
+    lowFreq: config.lowFrequency,
+    highFreq: config.highFrequency,
+    filter: bankFilter,
+  };
+}
 
 /**
  * Construct the mfcc
@@ -164,9 +174,13 @@ const constructMelFilterBank = (config: MelConfig): MelFilterBank => {
  * (eg: config = {  fftSize: 32,  bankCount: 24,  lowFrequency: 1,
  *   highFrequency: 8000,  sampleRate: 16000,})
  * @param numberOfMFCCs - the number of mfcc you want as output,
- * can't be superior to config.bankCount
+ * can't be larger than config.bankCount
+ *
+ * @description
+ * To calculate an MFCC from an audio input, we do the following steps:
+ * audio input -> log of power spectrum from FFT -> Resample spectrum on Mel filter bank -> DCT -> MFCC Output
  */
-const construct = (config: MelConfig, numberOfMFCCs = 12) => {
+export function constructMfcc(config: MelConfig, numberOfMFCCs = 12) {
   const filterBank = constructMelFilterBank(config);
 
   /**
@@ -185,17 +199,10 @@ const construct = (config: MelConfig, numberOfMFCCs = 12) => {
     }
 
     const melSpec = filterBank.filter(fft);
-    const melSpecLog = melSpec.map(log_);
+    const melSpecLog = melSpec.map(
+            (x) => Math.log(1 + x)
+    );
 
     return dct(melSpecLog).slice(0, numberOfMFCCs);
   };
-};
-
-/**
- * Estimate the power spectrum density from FFT amplitudes.
- * @param amplitudes - Amplitudes to for the power spectrum
- * @returns Power spectrum
- */
-const powerSpectrum = (amplitudes: Float32Array) => amplitudes.map((a) => (a * a) / amplitudes.length);
-
-export { powerSpectrum, hertzToMels, melsToHertz as melsToHz, constructMelFilterBank, construct };
+}

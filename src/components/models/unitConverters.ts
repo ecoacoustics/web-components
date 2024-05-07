@@ -42,21 +42,6 @@ export class UnitConverter {
       .domain([this.renderWindow.value.startOffset, this.renderWindow.value.endOffset])
       .range([0, this.canvasSize.value.width]);
 
-    scales.frequency = scales.frequency.domain([0, this.nyquist()]).range([this.canvasSize.value.height, 0]);
-
-    return scales;
-  });
-
-  public segmentToCanvasScale = computed<IScale>(() => {
-    const scales: IScale = {
-      temporal: d3Scale.scaleLinear(),
-      frequency: d3Scale.scaleLinear(),
-    };
-
-    scales.temporal = scales.temporal
-      .domain([this.renderWindow.value.startOffset, this.renderWindow.value.startOffset + this.audioModel.value.duration])
-      .range([0, this.canvasSize.value.width]);
-
     scales.frequency = scales.frequency
       .domain([0, this.nyquist()])
       .range([this.canvasSize.value.height, 0]);
@@ -64,7 +49,29 @@ export class UnitConverter {
     return scales;
   });
 
-  public nyquist() {
+  /**
+   * @todo Remove all references to this unit converter
+   * @deprecated Prefer to use renderWindowScale over segmentToCanvasScale
+   */
+  public segmentToCanvasScale = computed<IScale>(() => {
+    const scales: IScale = {
+      temporal: d3Scale.scaleLinear(),
+      frequency: d3Scale.scaleLinear(),
+    };
+
+    scales.temporal = scales.temporal
+      .domain([
+        this.renderWindow.value.startOffset,
+        this.renderWindow.value.startOffset + this.audioModel.value.duration,
+      ])
+      .range([0, this.canvasSize.value.width]);
+
+    scales.frequency = scales.frequency.domain([0, this.nyquist()]).range([this.canvasSize.value.height, 0]);
+
+    return scales;
+  });
+
+  public nyquist(): number {
     return this.audioModel.value.sampleRate / 2;
   }
 }

@@ -14,7 +14,7 @@ import {
 import { smooth } from "./window";
 import { ColorScaler, getColorScale } from "./colors";
 import { Profiler } from "../debug/profiler";
-import { construct } from "./mel";
+import { constructMfcc } from "./mel";
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;
@@ -189,9 +189,8 @@ function kernel(): void {
       scaled = melScale(scaled);
       melProfiler.addSamples(Array.from(scaled));
       console.log("mel scale length", scaled.length, "expected", options.windowSize / 2);
-    } else {
-      // noop
     }
+
     // convert to decibels
     scaled = calculateDecibels(scaled);
 
@@ -290,28 +289,34 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
   sampleBuffer = getSharedBuffer(event.data);
   options = getSpectrogramOptions(event.data);
   audioInformation = getAudioInformation(event.data);
-  destinationCanvas = getSharedCanvas(event.data);
+
+  const temp = getSharedCanvas(event.data);
+  if (temp) {
+    destinationCanvas = getSharedCanvas(event.data);
+  }
+  lastFrameIndex = 0;
 
   const totalSamples = audioInformation.endSample - audioInformation.startSample;
   const frameCount = Math.ceil(totalSamples / (options.windowSize - options.windowOverlap));
 
   colorScale = getColorScale(options.colorMap);
-  const something = 256;
+
+  const mfccCount = 256;
   if (options.melScale) {
-    melScale = construct(
+    melScale = constructMfcc(
       {
         fftSize: options.windowSize / 2,
-        bankCount: something,
+        bankCount: mfccCount,
         lowFrequency: 0,
         highFrequency: audioInformation.sampleRate / 2,
         sampleRate: audioInformation.sampleRate,
       },
-      something,
+      mfccCount,
     );
   }
 
   fftWidth = frameCount;
-  fftHeight = options.melScale ? something : options.windowSize / 2;
+  fftHeight = options.melScale ? mfccCount : options.windowSize / 2;
 
   // raw fft values
   fftCache = new Float32Array(fftWidth * fftHeight);

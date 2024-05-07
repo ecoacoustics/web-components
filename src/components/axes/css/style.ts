@@ -8,7 +8,8 @@ export const axesStyles = css`
   #wrapped-element {
     position: relative;
     display: inline-block;
-    margin: 2rem;
+    margin-left: 4rem;
+    margin-bottom: 4rem;
   }
 
   #wrapped-element > svg {

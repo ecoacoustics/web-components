@@ -111,7 +111,14 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             .attr("y1", 0)
             .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
         }
-      });
+      })
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("x", this.spectrogramElement().renderCanvasSize.value.width)
+      .attr("y", this.spectrogramElement().renderCanvasSize.value.height - 6)
+      .attr("dy", "2.75em")
+      .attr("dx", "-50%")
+      .text("Time (seconds)");
 
     d3.select(this.yGridlinesG)
       .selectAll("line")
@@ -126,7 +133,14 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             .attr("y1", frequencyScale(x) + 0.5)
             .attr("y2", frequencyScale(x) + 0.5);
         }
-      });
+      })
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", -6)
+      .attr("dy", "-2.75em")
+      .attr("dx", "-50%")
+      .attr("transform", "rotate(-90)")
+      .text("Frequency (hz)");
 
     d3.select(this.xAxisG).call(xAxis);
     d3.select(this.yAxisG).call(yAxis);
@@ -137,8 +151,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const x0 = renderWindow.startOffset;
     const xn = renderWindow.endOffset;
 
+    const spectrogramElement = this.spectrogramElement();
+    const scale = spectrogramElement.unitConverters.renderWindowScale.value.temporal;
+    const maximumValue = spectrogramElement.renderCanvasSize.value.width;
+    const xStep = this.userXStep || this.calculateStep(maximumValue, scale);
+
     const result = [];
-    for (let i = x0; i < xn; i += this.xStep()) {
+    for (let i = x0; i < xn; i += xStep) {
       result.push(i);
     }
 
@@ -152,8 +171,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const y0 = renderWindow.lowFrequency;
     const yn = renderWindow.highFrequency;
 
+    const spectrogramElement = this.spectrogramElement();
+    const scale = spectrogramElement.unitConverters.renderWindowScale.value.frequency;
+    const maximumValue = spectrogramElement.renderCanvasSize.value.height;
+    const yStep = this.userYStep || this.calculateStep(maximumValue, scale);
+
     const result = [];
-    for (let i = y0; i < yn; i += this.yStep()) {
+    for (let i = y0; i < yn; i += yStep) {
       result.push(i);
     }
 
@@ -163,38 +187,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return result;
   }
 
-  // this is the "sane" defaults for the x-axis step
-  // it if is explicitly overwritten in the spectrogram attributes
-  // we will not contest it (we allow overlapping labels, grid lines, etc.. if the user explicitly defines a step)
-  private xStep(): number {
-    if (this.userXStep) {
-      return this.userXStep;
-    }
-    const scale = this.spectrogramElement().unitConverters.renderWindowScale.value.temporal;
-    const x1 = scale.invert(0);
-    const xn = scale.invert(this.spectrogramElement().renderCanvasSize.value.width);
+  private calculateStep(pxMaximum: number, scale: any): number {
+    const largestValue = scale.invert(pxMaximum);
+    const smallestValue = scale.invert(0);
 
-    const midpoint = (xn + x1) / 2;
+    const midpoint = (smallestValue + largestValue) / 4;
 
-    const derivedXStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
-    this.userXStep = derivedXStep;
-    return derivedXStep;
-  }
-
-  private yStep(): number {
-    if (this.userYStep) {
-      return this.userYStep;
-    }
-
-    const scale = this.spectrogramElement().unitConverters.renderWindowScale.value.frequency;
-    const y0 = scale.invert(this.spectrogramElement().renderCanvasSize.value.height);
-    const yn = scale.invert(0);
-
-    const midpoint = (yn + y0) / 2;
-
-    const derivedYStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
-    this.userYStep = derivedYStep;
-    return derivedYStep;
+    return Math.pow(10, Math.floor(Math.log10(midpoint)));
   }
 
   public render() {
@@ -205,7 +204,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             <g id="x-axis-g" part="x-ticks"></g>
             <g id="y-axis-g" part="y-ticks"></g>
           </g>
-          
+
           <g part="grid">
             <g id="x-gridlines-g" part="x-grid"></g>
             <g id="y-gridlines-g" part="y-grid"></g>

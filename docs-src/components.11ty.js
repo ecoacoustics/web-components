@@ -80,19 +80,16 @@ const renderTable = (name, properties, data) => {
   }
   return `
      ${name ? `<h3>${name}</h3>` : ""}
-     <table>
-       <tr>
-         ${properties.map((p) => `<th>${capitalize((Array.isArray(p) ? p[0] : p).split(".")[0])}</th>`).join("")}
-       </tr>
-       ${data
-         .map(
-           (i) => `
-         <tr>
-           ${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}
+     <table class="table">
+       <thead class="thead-dark">
+         <tr scope="row">
+           ${properties.map((p) => `<th>${capitalize((Array.isArray(p) ? p[0] : p).split(".")[0])}</th>`).join("")}
          </tr>
-       `,
-         )
-         .join("")}
+       </thead>
+       <tbody>
+         ${data
+           .map( (i) => `<tr scope="row">${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}</tr>`).join("")}
+       </tbody>
      </table>
    `;
 };

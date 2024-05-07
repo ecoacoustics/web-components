@@ -128,7 +128,7 @@ export class State {
     this.state = state;
   }
 
-  protected state: Int32Array;
+  public state: Int32Array;
 
   public get buffer(): SharedArrayBuffer {
     // we control creation of this and guarantee it is a SharedArrayBuffer

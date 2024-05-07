@@ -14,7 +14,7 @@ export default function (data) {
     <title>${title}</title>
     <link rel="stylesheet" href="${relative(page.url, "/docs.css")}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600|Roboto+Mono">
-    <link href="${relative(page.url, "/prism-okaidia.css")}" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script type="module" src="${relative(page.url, "./js/components.js")}"></script>
   </head>
   <body>

@@ -4,19 +4,26 @@ import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 // we have to use ?url in the vite import
 // see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
 import bufferBuilderProcessor from "./buffer-builder-processor.ts?url";
+import spectrogramWorkerPath from "./worker.ts?worker&url";
 
 export class AudioHelper {
-  static connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement, spectrogramOptions: SpectrogramOptions) {
+  static worker: Worker | undefined;
+
+  static async connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement, spectrogramOptions: SpectrogramOptions): Promise<IAudioMetadata> {
     let context: OfflineAudioContext;
     let source: AudioBufferSourceNode;
     let metadata: IAudioMetadata;
 
     console.log("start spectrogram rendering", spectrogramOptions);
 
+    // TODO: Remove the need for this
+    // I suspect there is something wrong with the way we are doing vite imports
     const bufferProcessor = bufferBuilderProcessor.replace("*", "");
+    const spectrogramWorkerPathFinal = spectrogramWorkerPath.replace("*", "");
+
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
-    fetch(audioElement.src)
+    return fetch(audioElement.src)
       .then((response) => response.arrayBuffer())
       .then(async (downloadedBuffer) => {
         // TODO: One the web codec API's are more stable, we should replace this
@@ -43,8 +50,14 @@ export class AudioHelper {
       .then(() => context.audioWorklet.addModule(bufferProcessor))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
-        const spectrogramWorker = new Worker("src/components/helpers/audio/worker.ts", {
+
+        /*
+        const spectrogramWorker = AudioHelper.worker || new Worker("src/components/helpers/audio/worker.ts", {
           type: "module",
+        });
+        */
+        const spectrogramWorker = AudioHelper.worker || new Worker(spectrogramWorkerPathFinal, {
+                type: "module"
         });
 
         source.connect(processorNode).connect(context.destination);
@@ -62,7 +75,6 @@ export class AudioHelper {
 
         const state = State.createState(segmentSize);
         const sampleBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * bufferSize);
-        const offscreenCanvas = canvas.transferControlToOffscreen();
 
         // 2. wait for buffers to be assigned into the processor
         processorNode.port.onmessage = (event: MessageEvent) => {
@@ -87,16 +99,26 @@ export class AudioHelper {
           sampleRate: metadata.format.sampleRate!,
         };
 
-        // give buffers and canvas to the worker
-        spectrogramWorker.postMessage(
-          [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions, tempAudioInformation],
-          [offscreenCanvas],
-        );
+        if (AudioHelper.worker) {
+                // give buffers to the worker
+                AudioHelper.worker.postMessage([state.buffer, sampleBuffer, null, spectrogramOptions, tempAudioInformation]);
+        } else {
+                const offscreenCanvas = canvas.transferControlToOffscreen();
+
+                // give buffers and canvas to the worker
+                spectrogramWorker.postMessage(
+                  [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions, tempAudioInformation],
+                  [offscreenCanvas],
+                );
+
+                AudioHelper.worker = spectrogramWorker;
+        }
 
         console.time("rendering");
         // 1. give state and sample buffer to the processor - this will kick start the process
         processorNode.port.postMessage([state.buffer, sampleBuffer]);
+
+        return metadata;
       });
-    // });
   }
 }
