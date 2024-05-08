@@ -148,7 +148,7 @@ function kernel(): void {
   const size = options.windowSize;
   const step = options.windowSize - options.windowOverlap;
 
-  const cacheOffset = lastFrameIndex;
+  // const cacheOffset = lastFrameIndex;
 
   // frame is the index of the column of pixel we are painting
   let frame = 0;

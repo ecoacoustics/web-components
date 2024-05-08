@@ -4,7 +4,7 @@ import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 // we have to use ?url in the vite import
 // see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
 import bufferBuilderProcessor from "./buffer-builder-processor.ts?url";
-import spectrogramWorkerPath from "./worker.ts?worker&url";
+import SpectrogramWorkerConstructor from "./worker.ts?worker";
 
 export class AudioHelper {
   static worker: Worker | undefined;
@@ -15,11 +15,6 @@ export class AudioHelper {
     let metadata: IAudioMetadata;
 
     console.log("start spectrogram rendering", spectrogramOptions);
-
-    // TODO: Remove the need for this
-    // I suspect there is something wrong with the way we are doing vite imports
-    const bufferProcessor = bufferBuilderProcessor.replace("*", "");
-    const spectrogramWorkerPathFinal = spectrogramWorkerPath.replace("*", "");
 
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
@@ -47,7 +42,7 @@ export class AudioHelper {
         return context.decodeAudioData(downloadedBuffer);
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-      .then(() => context.audioWorklet.addModule(bufferProcessor))
+      .then(() => context.audioWorklet.addModule(bufferBuilderProcessor))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
 
@@ -56,9 +51,7 @@ export class AudioHelper {
           type: "module",
         });
         */
-        const spectrogramWorker = AudioHelper.worker || new Worker(spectrogramWorkerPathFinal, {
-                type: "module"
-        });
+        const spectrogramWorker = AudioHelper.worker || new SpectrogramWorkerConstructor();
 
         source.connect(processorNode).connect(context.destination);
 

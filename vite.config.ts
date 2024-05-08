@@ -16,7 +16,6 @@ export default defineConfig({
   // we have to enable a secure context and set the Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy
   // headers to use the SharedArrayBuffer
   server: {
-    origin: "*",
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
