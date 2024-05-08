@@ -3,7 +3,7 @@ import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 
 // we have to use ?url in the vite import
 // see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
-import bufferBuilderProcessor from "./buffer-builder-processor.ts?url";
+import bufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
 import SpectrogramWorkerConstructor from "./worker.ts?worker";
 
 export class AudioHelper {
@@ -42,7 +42,7 @@ export class AudioHelper {
         return context.decodeAudioData(downloadedBuffer);
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-      .then(() => context.audioWorklet.addModule(bufferBuilderProcessor))
+      .then(() => context.audioWorklet.addModule(bufferBuilderProcessor as any))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
 

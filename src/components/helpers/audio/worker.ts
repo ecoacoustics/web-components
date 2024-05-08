@@ -320,6 +320,7 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
 
   // raw fft values
   fftCache = new Float32Array(fftWidth * fftHeight);
+  console.log(fftCache.length);
 
   // is fft with color and transforms applied to it
   imageBuffer = new Uint8ClampedArray(fftHeight * fftWidth * bytesPerPixel);

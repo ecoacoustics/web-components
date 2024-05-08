@@ -33,7 +33,7 @@ export default class Docs {
            "Properties",
            ["name", "attribute", "description", "type.text", "default"],
            element.members.filter((m) => m.kind === "field"),
-         )}  
+         )}
          ${renderTable(
            "Methods",
            ["name", "parameters", "description", "return.type.text"],
@@ -44,8 +44,8 @@ export default class Docs {
                parameters: renderTable("", ["name", "description", "type.text"], m.parameters),
              })),
          )}
-         ${renderTable("Events", ["name", "description"], element.events)}    
-         ${renderTable("Slots", [["name", "(default)"], "description"], element.slots)}  
+         ${renderTable("Events", ["name", "description"], element.events)}
+         ${renderTable("Slots", [["name", "(default)"], "description"], element.slots)}
          ${renderTable("CSS Shadow Parts", ["name", "description"], element.cssParts)}
          ${renderTable("CSS Custom Properties", ["name", "description"], element.cssProperties)}
          `,
