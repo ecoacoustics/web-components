@@ -1,14 +1,14 @@
 {
-  "exclude": ["**/*.spec.ts", "**/*.d.ts", "vite.config.ts"],
+  "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "**/*.d.ts", "vite.config.ts"],
   "compilerOptions": {
-    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "lib": ["ES2017", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ES2017",
     "newLine": "lf",
     "module": "ESNext",
     // I have to import @types/audioworklet from the TS DOM lib generator
     // because TS doesn't automatically include AudioWorkletProcessor
     // see: github.com/microsoft/TypeScript/issues/28308#issuecomment-1030710851
-    "types": ["vite/client", "node", "@types/audioworklet"],
+    "types": ["vite/client", "@types/node", "@types/audioworklet"],
 
     "outDir": "js",
     "declarationDir": "@types",
@@ -30,6 +30,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
 
     "experimentalDecorators": true,
     "useDefineForClassFields": false

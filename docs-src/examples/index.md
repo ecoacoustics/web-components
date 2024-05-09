@@ -127,6 +127,7 @@ oe-spectrogram {
                 <input 
                     type="number"
                     value="0"
+                    step="0.1"
                     class="form-control"
                     onchange="updateAttribute('brightness', Number(event.target.value))"
                 />
@@ -136,6 +137,7 @@ oe-spectrogram {
                 <input
                     type="number"
                     value="1"
+                    step="0.1"
                     class="form-control"
                     onchange="updateAttribute('contrast', Number(event.target.value))"
                 />

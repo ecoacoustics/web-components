@@ -226,10 +226,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
   }
 
-  private audioDuration(): Seconds {
-    return this.mediaElement.duration;
-  }
-
   // creates a render window from an audio segment
   private parseRenderWindow(): RenderWindow {
     if (!this.domRenderWindow) {

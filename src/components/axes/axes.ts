@@ -18,6 +18,8 @@ import { Hertz, Seconds } from "models/unitConverters";
  * @property y-axis - Whether to show or hide the x-axis
  * @property x-grid - Whether to show or hide the x-axis grid lines
  * @property y-grid - Whether to show or hide the y-axis grid lines
+ * @property x-label - Whether to show or hide the x-axis labels
+ * @property y-label - Whether to show or hide the y-axis labels
  *
  * @csspart tick - Apply styles to both x and y ticks
  * @csspart grid - Apply styles to both x and y ticks
@@ -47,6 +49,12 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   @property({ attribute: "y-grid", type: Boolean, reflect: true })
   public showYGrid = true;
+
+  @property({ attribute: "x-label", type: Boolean, reflect: true })
+  public showXLabel = true;
+
+  @property({ attribute: "y-label", type: Boolean, reflect: true })
+  public showYLabel = true;
 
   @query("#x-axis-g")
   private xAxisG!: SVGGElement;
@@ -98,7 +106,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const xAxis = d3Axis.axisBottom(temporalScale).tickValues(xAxisTicks).tickFormat(temporalFormat);
     const yAxis = d3Axis.axisLeft(frequencyScale).tickValues(yAxisTicks).tickFormat(frequencyFormat);
 
-    d3.select(this.xGridlinesG)
+    const xAxisElement = d3
+      .select(this.xGridlinesG)
       .selectAll("line")
       .data(xAxisTicks)
       .enter()
@@ -111,16 +120,21 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             .attr("y1", 0)
             .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
         }
-      })
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("x", this.spectrogramElement().renderCanvasSize.value.width)
-      .attr("y", this.spectrogramElement().renderCanvasSize.value.height - 6)
-      .attr("dy", "2.75em")
-      .attr("dx", "-50%")
-      .text("Time (seconds)");
+      });
 
-    d3.select(this.yGridlinesG)
+    if (this.showXLabel) {
+      xAxisElement
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", this.spectrogramElement().renderCanvasSize.value.width)
+        .attr("y", this.spectrogramElement().renderCanvasSize.value.height - 6)
+        .attr("dy", "2.75em")
+        .attr("dx", "-50%")
+        .text("Time (seconds)");
+    }
+
+    const yAxisElement = d3
+      .select(this.yGridlinesG)
       .selectAll("line")
       .data(yAxisTicks)
       .enter()
@@ -133,14 +147,18 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
             .attr("y1", frequencyScale(x) + 0.5)
             .attr("y2", frequencyScale(x) + 0.5);
         }
-      })
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("y", -6)
-      .attr("dy", "-2.75em")
-      .attr("dx", "-50%")
-      .attr("transform", "rotate(-90)")
-      .text("Frequency (hz)");
+      });
+
+    if (this.showYLabel) {
+      yAxisElement
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", -6)
+        .attr("dy", "-2.75em")
+        .attr("dx", "-50%")
+        .attr("transform", "rotate(-90)")
+        .text("Frequency (hz)");
+    }
 
     d3.select(this.xAxisG).call(xAxis);
     d3.select(this.yAxisG).call(yAxis);

@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "vite",
     "build": "build:components && build:docs",
-    "dev:docs": "concurrently \"eleventy --config eleventy.config.js --watch --incremental\" \"vite ./dist/docs/\"",
-    "start:docs": "vite ./dist/docs/",
+    "dev:docs": "concurrently \"eleventy --config eleventy.config.js --watch --incremental\" \"pnpm start:docs\"",
+    "start:docs": "vite ./dist/docs/ --config ./vite.config.ts",
     "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=eleventy.config.js",
     "build:components": "vite build && tsc",
     "publish:components": "pnpm build:components && npm publish --access public",
@@ -49,17 +49,20 @@
     "@types/d3-axis": "^3.0.6",
     "@types/d3-scale": "^4.0.8",
     "@types/d3-selection": "^3.0.10",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.12.10",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "rimraf": "^5.0.5",
     "rollup": "4.12.0",
     "rollup-plugin-summary": "^2.0.0",
+    "rollup-plugin-web-worker-loader": "^1.6.1",
+    "terser": "^5.31.0",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.7.1",
     "vite": "^5.2.10",
     "vite-plugin-cem": "^0.7.0",
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-svg-loader": "^5.1.0"
-  }
+  },
+  "packageManager": "pnpm@9.0.6+sha256.0624e30eff866cdeb363b15061bdb7fd9425b17bc1bb42c22f5f4efdea21f6b3"
 }

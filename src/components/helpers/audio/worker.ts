@@ -161,7 +161,7 @@ function kernel(): void {
   const size = options.windowSize;
   const step = options.windowSize - options.windowOverlap;
 
-  const cacheOffset = lastFrameIndex;
+  // const cacheOffset = lastFrameIndex;
 
   // frame is the index of the column of pixel we are painting
   let frame = 0;
@@ -331,6 +331,7 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
 
   // raw fft values
   fftCache = new Float32Array(fftWidth * fftHeight);
+  console.log(fftCache.length);
 
   // is fft with color and transforms applied to it
   imageBuffer = new Uint8ClampedArray(fftHeight * fftWidth * bytesPerPixel);

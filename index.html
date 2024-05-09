@@ -21,21 +21,16 @@
       </oe-indicator>
     </oe-axes>
 
-    <div>
-            <button onclick="switchSource();">Switch Source</button>
-    </div>
+    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
+    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
+      <source src="http://localhost:5173/example.flac" type="audio/flac" />
+    </oe-spectrogram>
 
-    <script>
-                const spectrogramElement = document.getElementById("playing-spectrogram");
+    <oe-media-controls for="spectrogram">
+      <div slot="play-icon">Play Me!</div>
+    </oe-media-controls>
 
-            function switchSource() {
-                    if (spectrogramElement.src === "/merged_diagnostic.wav") {
-                            spectrogramElement.setAttribute("src", "/example.flac");
-                    } else {
-                            spectrogramElement.setAttribute("src", "/merged_diagnostic.wav");
-                    }
-            }
-    </script>
+    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">Change</button>
 
     <style>
       #axes {
