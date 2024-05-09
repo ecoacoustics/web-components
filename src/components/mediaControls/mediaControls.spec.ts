@@ -1,8 +1,8 @@
 import { expect } from "@sand4rt/experimental-ct-web";
-import { mediaControlsFixture } from "./mediaControls.fixture";
+import { mediaControlsFixture as test } from "./mediaControls.fixture";
 
-mediaControlsFixture.describe("audio element communication", () => {
-  mediaControlsFixture.beforeEach(async ({ fixture }) => {
+test.describe("audio element communication", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
@@ -11,23 +11,23 @@ mediaControlsFixture.describe("audio element communication", () => {
   // the component failed and will make all other tests fail because no content = a "hidden" state
   // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
   // we have mounted the component incorrectly
-  mediaControlsFixture("creating a visible web component", async ({ page }) => {
+  test("creating a visible web component", async ({ page }) => {
     const mediaControls = await page.locator("oe-media-controls");
     await expect(mediaControls).toBeVisible();
   });
 
-  mediaControlsFixture("state before interaction", async ({ fixture }) => {
+  test("state before interaction", async ({ fixture }) => {
     const isPlaying = await fixture.isPlayingAudio();
     await expect(isPlaying).toBe(false);
   });
 
-  mediaControlsFixture("play functionality", async ({ fixture }) => {
+  test("play functionality", async ({ fixture }) => {
     await fixture.toggleAudio();
     const isPlaying = await fixture.isPlayingAudio();
     await expect(isPlaying).toBe(true);
   });
 
-  mediaControlsFixture("play pause functionality", async ({ fixture }) => {
+  test("play pause functionality", async ({ fixture }) => {
     // start playing audio
     // by clicking the action button again, we should stop playing audio
     await fixture.toggleAudio();
@@ -39,8 +39,8 @@ mediaControlsFixture.describe("audio element communication", () => {
   });
 });
 
-mediaControlsFixture.describe("slots", () => {
-  mediaControlsFixture("custom play and pause icon via slots", async ({ fixture }) => {
+test.describe("slots", () => {
+  test("custom play and pause icon via slots", async ({ fixture }) => {
     fixture.updateSlot(`
       <div slot="play-icon">Play Me!</div>
       <div slot="pause-icon">Pause<div>
@@ -59,8 +59,8 @@ mediaControlsFixture.describe("slots", () => {
   });
 });
 
-mediaControlsFixture.describe("css parts", () => {
-  mediaControlsFixture.beforeEach(async ({ fixture }) => {
+test.describe("css parts", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
@@ -76,11 +76,11 @@ mediaControlsFixture.describe("css parts", () => {
     }
   `;
 
-  mediaControlsFixture.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.addStyleTag({ content: cssPartsStyling });
   });
 
-  mediaControlsFixture("custom styling for the default play/pause icons via css parts", async ({ fixture }) => {
+  test("custom styling for the default play/pause icons via css parts", async ({ fixture }) => {
     const playButtonStyles = await fixture.actionButtonStyles();
     await expect(playButtonStyles).toEqual({
       color: "rgb(255, 0, 0)",
@@ -96,7 +96,7 @@ mediaControlsFixture.describe("css parts", () => {
     });
   });
 
-  mediaControlsFixture("custom styling for a custom play/pause slot via css parts", async ({ fixture }) => {
+  test("custom styling for a custom play/pause slot via css parts", async ({ fixture }) => {
     const playButtonStyles = await fixture.actionButtonStyles();
     await expect(playButtonStyles).toEqual({
       color: "rgb(255, 0, 0)",

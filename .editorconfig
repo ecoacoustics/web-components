@@ -9,7 +9,3 @@ quote_type = double
 [*.ts,*.yml]
 indent_size = 4
 trim_trailing_whitespace = true
-
-[*.md,*.mdx]
-trim_trailing_whitespace = false
-indent_size = unset

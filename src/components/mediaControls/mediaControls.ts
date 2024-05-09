@@ -6,7 +6,8 @@ import { provide } from "@lit/context";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
-import { Spectrogram } from "../spectrogram/spectrogram";
+import { AbstractComponent } from "../mixins/abstractComponent";
+import { Spectrogram } from "spectrogram/spectrogram";
 
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.
@@ -20,7 +21,7 @@ import { Spectrogram } from "../spectrogram/spectrogram";
  * @slot pause-icon - The icon to display when the media is playing
  */
 @customElement("oe-media-controls")
-export class MediaControls extends LitElement {
+export class MediaControls extends AbstractComponent(LitElement) {
   public static styles = mediaControlsStyles;
 
   @provide({ context: rootContext })
@@ -29,7 +30,7 @@ export class MediaControls extends LitElement {
   };
 
   @property({ type: String })
-  public for: string = "";
+  public for = "";
 
   private spectrogramElement?: Spectrogram | null;
 
@@ -53,6 +54,8 @@ export class MediaControls extends LitElement {
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
+      if (!this.for) return;
+
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener("play", this.playHandler);
       this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
@@ -67,7 +70,9 @@ export class MediaControls extends LitElement {
   }
 
   private isSpectrogramPlaying(): boolean {
-    return !this.spectrogramElement?.paused ?? true;
+    if (!this.spectrogramElement) return false;
+
+    return !this.spectrogramElement?.paused;
   }
 
   private playIcon() {

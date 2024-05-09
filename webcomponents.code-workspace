@@ -7,16 +7,6 @@
   "settings": {
     "files.insertFinalNewline": true,
     "workbench.iconTheme": "material-icon-theme",
-    "workbench.colorCustomizations": {
-      "titleBar.inactiveBackground": "#4f0000",
-      "titleBar.activeBackground": "#6A040F",
-      "titleBar.activeForeground": "#fff",
-      "activityBar.background": "#6A040F",
-      "activityBar.foreground": "#fff",
-      "activityBar.inactiveForeground": "#efe0e0",
-      "statusBar.foreground": "#efe0e0",
-      "statusBar.background": "#6A040F"
-    },
     "editor.inlineSuggest.enabled": true,
     "editor.renderWhitespace": "trailing",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -38,7 +28,16 @@
       "styleable",
       "webcomponents",
       "webcomponents-workspace",
-      "flac"
+      "flac",
+      "worklet",
+      "audioworklet",
+      "testid",
+      "preact",
+      "nyquist",
+      "webfft",
+      "roseus",
+      "mels",
+      "mfcc"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
   },

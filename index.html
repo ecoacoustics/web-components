@@ -8,27 +8,60 @@
   </head>
 
   <body>
-    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
-    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
-      <source src="http://localhost:5173/example.flac" type="audio/flac" />
-    </oe-spectrogram>
-    <oe-media-controls for="spectrogram">
-      <div slot="play-icon">Play Me!</div>
-    </oe-media-controls>
-
-    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">Change</button>
+    <oe-axes>
+      <oe-indicator>
+        <oe-spectrogram
+          id="playing-spectrogram"
+          class="large"
+          src="/merged_diagnostic.wav"
+          window-size="1024"
+          color-map="audacity"
+          mel-scale
+        ></oe-spectrogram>
+      </oe-indicator>
+    </oe-axes>
+    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
     <style>
-      oe-media-controls {
-        &::part(play-icon) {
-          color: green;
-          fill: green;
+      #axes {
+        color: blue;
+
+        /* 
+        &::part(tick) {
+          color: lime;
+        }
+        */
+
+        &::part(x-ticks) {
+          color: red;
         }
 
-        &::part(pause-icon) {
-          color: red;
-          fill: red;
+        &::part(y-ticks) {
+          color: green;
         }
+
+        &::part(y-grid) {
+          color: purple;
+        }
+
+        &::part(x-grid) {
+          color: orange;
+        }
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .small {
+        height: 200px;
+        width: 200px;
+      }
+
+      .large {
+        height: 300px;
+        width: 300px;
       }
     </style>
   </body>

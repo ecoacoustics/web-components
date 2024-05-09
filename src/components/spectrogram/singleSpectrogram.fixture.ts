@@ -21,7 +21,7 @@ class SingleSpectrogramFixture {
   }
 
   public async updateSlot(content: string) {
-    const componentElement = await this.spectrogram;
+    const componentElement = this.spectrogram;
     await componentElement.evaluate((element: HTMLElement, content: string) => {
       element.innerHTML = content;
     }, content);

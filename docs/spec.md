@@ -124,6 +124,7 @@ We want this to work at various sizes:
   - probably use a canvas element
   - resize observer
   - request animation frame for frequent updates - particularly current time
+  - Emitting a D3-scale object
 
 #### Axes (`<oe-axes>`)
 
@@ -142,9 +143,9 @@ Shows axes and gridlines for a target
   - y axis
   - x grid lines
   - y grid lines
-- Can show logarithmic axis
 - Can customize
-  - scale step
+  - x scale step
+  - y scale step (separated from *x scale step* because the units are not the same)
   - to show end tick (e.g. prioritize showing end value tick over last scale step tick)
   - axis labels
   - axis position

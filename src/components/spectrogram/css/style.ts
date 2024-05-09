@@ -1,10 +1,19 @@
 import { css } from "lit";
 
 export const spectrogramStyles = css`
-    #spectrogram-container {
-        position: relative;
-        width: 100px;
-        height: 100px;
-        background-color: black;
-    }
+  :host {
+    display: inline-block;
+  }
+
+  #spectrogram-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  #spectrogram-container > canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
 `;

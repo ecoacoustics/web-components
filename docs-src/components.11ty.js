@@ -1,14 +1,14 @@
-const fs = require("fs");
+import fs from "fs";
 
 /**
  * This page generates its content from the custom-element.json file as read by
  * the _data/api.11tydata.js script.
  */
-module.exports = class Docs {
+export default class Docs {
   data() {
     return {
-      layout: "page.11ty.cjs",
-      title: "Web Component Workspace Documentation",
+      layout: "page.11ty.js",
+      title: "Open Ecoacoustics - Components",
     };
   }
 
@@ -33,7 +33,7 @@ module.exports = class Docs {
            "Properties",
            ["name", "attribute", "description", "type.text", "default"],
            element.members.filter((m) => m.kind === "field"),
-         )}  
+         )}
          ${renderTable(
            "Methods",
            ["name", "parameters", "description", "return.type.text"],
@@ -44,8 +44,8 @@ module.exports = class Docs {
                parameters: renderTable("", ["name", "description", "type.text"], m.parameters),
              })),
          )}
-         ${renderTable("Events", ["name", "description"], element.events)}    
-         ${renderTable("Slots", [["name", "(default)"], "description"], element.slots)}  
+         ${renderTable("Events", ["name", "description"], element.events)}
+         ${renderTable("Slots", [["name", "(default)"], "description"], element.slots)}
          ${renderTable("CSS Shadow Parts", ["name", "description"], element.cssParts)}
          ${renderTable("CSS Custom Properties", ["name", "description"], element.cssProperties)}
          `,
@@ -80,19 +80,16 @@ const renderTable = (name, properties, data) => {
   }
   return `
      ${name ? `<h3>${name}</h3>` : ""}
-     <table>
-       <tr>
-         ${properties.map((p) => `<th>${capitalize((Array.isArray(p) ? p[0] : p).split(".")[0])}</th>`).join("")}
-       </tr>
-       ${data
-         .map(
-           (i) => `
-         <tr>
-           ${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}
+     <table class="table">
+       <thead class="thead-dark">
+         <tr scope="row">
+           ${properties.map((p) => `<th>${capitalize((Array.isArray(p) ? p[0] : p).split(".")[0])}</th>`).join("")}
          </tr>
-       `,
-         )
-         .join("")}
+       </thead>
+       <tbody>
+         ${data
+           .map( (i) => `<tr scope="row">${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}</tr>`).join("")}
+       </tbody>
      </table>
    `;
 };

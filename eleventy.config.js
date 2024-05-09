@@ -1,9 +1,10 @@
-const syntaxHighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
+import syntaxHighlight from "@11ty/eleventy-plugin-syntaxhighlight";
 
-module.exports = function (eleventyConfig) {
+export default function (eleventyConfig) {
   eleventyConfig.addPlugin(syntaxHighlight);
   eleventyConfig.addPassthroughCopy("docs-src/docs.css");
   eleventyConfig.addPassthroughCopy("public/");
+  eleventyConfig.addPassthroughCopy("js/");
 
   return {
     dir: {

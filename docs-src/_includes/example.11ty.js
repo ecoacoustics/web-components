@@ -1,12 +1,12 @@
-const page = require("./page.11ty.cjs");
-const relative = require("./relative-path.cjs");
+import page from "./page.11ty.js";
+import relative from "./relative-path.js";
 
-module.exports = function (data) {
+export default function (data) {
   return page({
     ...data,
     content: renderExample(data),
   });
-};
+}
 
 const renderExample = ({ name, content, collections, page }) => {
   return `

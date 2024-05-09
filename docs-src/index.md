@@ -1,11 +1,11 @@
 ---
-layout: page.11ty.cjs
-title: Web Components Workspace Documentation
+layout: page.11ty.js
+title: Ecoacoustics Web Components
 ---
 
-# Install
+## Install
 
-## CDN
+### CDN
 
 All JavaScript files are automatically deployed [jsdelivr](https://www.jsdelivr.com/package/npm/@ecoacoustics/web-components)
 
@@ -15,13 +15,13 @@ To use the CDN, simply add the following code into the `<head>` tag of your webs
 <script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
 ```
 
-## Install via NPM
+### Install via NPM
 
 ```sh
 $ npm i @ecoacoustics/webcomponents-workspace
 >
 ```
 
-## Manually Install JS Files
+### Manually Install JS Files
 
-You can find all releases on [github](https://github.com/ecoacoustics/webcomponents-workspace/releases)
+You can find all releases on [github](https://github.com/ecoacoustics/web-components/releases)
