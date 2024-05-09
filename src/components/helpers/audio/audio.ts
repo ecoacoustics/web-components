@@ -3,13 +3,17 @@ import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 
 // we have to use ?url in the vite import
 // see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
-import bufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
-import SpectrogramWorkerConstructor from "./worker.ts?worker";
+import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?url";
+import WorkerConstructor from "./worker.ts?worker&inline";
 
 export class AudioHelper {
   static worker: Worker | undefined;
 
-  static async connect(audioElement: HTMLAudioElement, canvas: HTMLCanvasElement, spectrogramOptions: SpectrogramOptions): Promise<IAudioMetadata> {
+  static async connect(
+    audioElement: HTMLAudioElement,
+    canvas: HTMLCanvasElement,
+    spectrogramOptions: SpectrogramOptions,
+  ): Promise<IAudioMetadata> {
     let context: OfflineAudioContext;
     let source: AudioBufferSourceNode;
     let metadata: IAudioMetadata;
@@ -42,7 +46,9 @@ export class AudioHelper {
         return context.decodeAudioData(downloadedBuffer);
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-      .then(() => context.audioWorklet.addModule(bufferBuilderProcessor as any))
+      .then(() => {
+        context.audioWorklet.addModule(bufferBuilderProcessorPath);
+      })
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
 
@@ -51,7 +57,7 @@ export class AudioHelper {
           type: "module",
         });
         */
-        const spectrogramWorker = AudioHelper.worker || new SpectrogramWorkerConstructor();
+        const spectrogramWorker = AudioHelper.worker || new WorkerConstructor();
 
         source.connect(processorNode).connect(context.destination);
 
@@ -93,18 +99,18 @@ export class AudioHelper {
         };
 
         if (AudioHelper.worker) {
-                // give buffers to the worker
-                AudioHelper.worker.postMessage([state.buffer, sampleBuffer, null, spectrogramOptions, tempAudioInformation]);
+          // give buffers to the worker
+          AudioHelper.worker.postMessage([state.buffer, sampleBuffer, null, spectrogramOptions, tempAudioInformation]);
         } else {
-                const offscreenCanvas = canvas.transferControlToOffscreen();
+          const offscreenCanvas = canvas.transferControlToOffscreen();
 
-                // give buffers and canvas to the worker
-                spectrogramWorker.postMessage(
-                  [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions, tempAudioInformation],
-                  [offscreenCanvas],
-                );
+          // give buffers and canvas to the worker
+          spectrogramWorker.postMessage(
+            [state.buffer, sampleBuffer, offscreenCanvas, spectrogramOptions, tempAudioInformation],
+            [offscreenCanvas],
+          );
 
-                AudioHelper.worker = spectrogramWorker;
+          AudioHelper.worker = spectrogramWorker;
         }
 
         console.time("rendering");
