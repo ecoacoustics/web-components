@@ -63,5 +63,6 @@
     "vite-plugin-cem": "^0.7.0",
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-svg-loader": "^5.1.0"
-  }
+  },
+  "packageManager": "pnpm@9.0.6+sha256.0624e30eff866cdeb363b15061bdb7fd9425b17bc1bb42c22f5f4efdea21f6b3"
 }

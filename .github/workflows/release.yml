@@ -1,18 +1,19 @@
-name: Release
+#! disabled while components are a WIP
+# name: Release
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  Create-Release:
-    name: Create Release request
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    permissions: write-all
+# jobs:
+#   Create-Release:
+#     name: Create Release request
+#     runs-on: ubuntu-latest
+#     outputs:
+#       release_created: ${{ steps.release.outputs.release_created }}
+#       tag_name: ${{ steps.release.outputs.tag_name }}
+#     permissions: write-all
 
     steps:
       - uses: google-github-actions/release-please-action@v4
@@ -25,10 +26,10 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
           config-file: release-please-config.json
 
-  Publish-Release:
-    needs: Create-Release
-    if: ${{ needs.Create-Release.outputs.release_created }}
-    uses: ./.github/workflows/publish.yml
-    with:
-      tag_name: ${{ needs.Create-Release.outputs.tag_name }}
-    secrets: inherit
+#   Publish-Release:
+#     needs: Create-Release
+#     if: ${{ needs.Create-Release.outputs.release_created }}
+#     uses: ./.github/workflows/publish.yml
+#     with:
+#       tag_name: ${{ needs.Create-Release.outputs.tag_name }}
+#     secrets: inherit

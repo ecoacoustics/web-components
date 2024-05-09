@@ -8,33 +8,15 @@
   </head>
 
   <body>
-    <oe-axes>
-      <oe-indicator>
-        <oe-spectrogram
-          id="playing-spectrogram"
-          class="large"
-          src="/merged_diagnostic.wav"
-          color-map="audacity"
-          mel-scale
-        ></oe-spectrogram>
-      </oe-indicator>
-    </oe-axes>
+    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
+    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
+      <source src="http://localhost:5173/example.flac" type="audio/flac" />
+    </oe-spectrogram>
+    <oe-media-controls for="spectrogram">
+      <div slot="play-icon">Play Me!</div>
+    </oe-media-controls>
 
-    <div>
-            <button onclick="switchSource();">Switch Source</button>
-    </div>
-
-    <script>
-                const spectrogramElement = document.getElementById("playing-spectrogram");
-
-            function switchSource() {
-                    if (spectrogramElement.src === "/merged_diagnostic.wav") {
-                            spectrogramElement.setAttribute("src", "/example.flac");
-                    } else {
-                            spectrogramElement.setAttribute("src", "/merged_diagnostic.wav");
-                    }
-            }
-    </script>
+    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">Change</button>
 
     <style>
       #axes {
