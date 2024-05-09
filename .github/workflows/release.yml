@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_created: true
-      tag_name: "v0.1.0-alpha.0"
+      tag_name: "v0.1.1-alpha.0"
     permissions: write-all
 
   #! Disabled during pre-releases as we want to manage pre-release versions manually
