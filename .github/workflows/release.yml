@@ -1,35 +1,43 @@
-#! disabled while components are a WIP
-# name: Release
+name: Release
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   Create-Release:
-#     name: Create Release request
-#     runs-on: ubuntu-latest
-#     outputs:
-#       release_created: ${{ steps.release.outputs.release_created }}
-#       tag_name: ${{ steps.release.outputs.tag_name }}
-#     permissions: write-all
+jobs:
+  # Create-Release:
+  #   name: Create Release request
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     release_created: ${{ steps.release.outputs.release_created }}
+  #     tag_name: ${{ steps.release.outputs.tag_name }}
+  #   permissions: write-all
 
-    steps:
-      - uses: google-github-actions/release-please-action@v4
-        id: release
-        with:
-          # we use a service account because GitHub has a restriction where if we use the GITHUB_TOKEN
-          # workflow will not trigger on the PR created by the bot
-          # this is done to prevent recusive workflows
-          # see: https://github.com/peter-evans/create-pull-request/issues/48#issuecomment-536184102
-          token: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
-          config-file: release-please-config.json
+  Create-Release:
+    name: Create Release request
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: true
+      tag_name: "v0.1.0-alpha.0"
+    permissions: write-all
 
-#   Publish-Release:
-#     needs: Create-Release
-#     if: ${{ needs.Create-Release.outputs.release_created }}
-#     uses: ./.github/workflows/publish.yml
-#     with:
-#       tag_name: ${{ needs.Create-Release.outputs.tag_name }}
-#     secrets: inherit
+  #! Disabled during pre-releases as we want to manage pre-release versions manually
+  # steps:
+  #   - uses: google-github-actions/release-please-action@v4
+  #     id: release
+  #     with:
+  #       # we use a service account because GitHub has a restriction where if we use the GITHUB_TOKEN
+  #       # workflow will not trigger on the PR created by the bot
+  #       # this is done to prevent recusive workflows
+  #       # see: https://github.com/peter-evans/create-pull-request/issues/48#issuecomment-536184102
+  #       token: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
+  #       config-file: release-please-config.json
+
+  Publish-Release:
+    needs: Create-Release
+    if: ${{ needs.Create-Release.outputs.release_created }}
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag_name: ${{ needs.Create-Release.outputs.tag_name }}
+    secrets: inherit

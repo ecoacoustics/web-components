@@ -20,17 +20,7 @@
         ></oe-spectrogram>
       </oe-indicator>
     </oe-axes>
-
-    <oe-spectrogram id="spectrogram" src="http://localhost:5173/example.flac"></oe-spectrogram>
-    <oe-spectrogram id="spectrogram2" src="http://localhost:5173/example.flac">
-      <source src="http://localhost:5173/example.flac" type="audio/flac" />
-    </oe-spectrogram>
-
-    <oe-media-controls for="spectrogram">
-      <div slot="play-icon">Play Me!</div>
-    </oe-media-controls>
-
-    <button onclick="document.querySelector('oe-media-controls').setAttribute('for', 'spectrogram2')">Change</button>
+    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
     <style>
       #axes {

@@ -15,8 +15,6 @@ import { smooth } from "./window";
 import { ColorScaler, getColorScale } from "./colors";
 import { Profiler } from "../debug/profiler";
 import { constructMfcc } from "./mel";
-import { melSpectrogram } from "./mel3";
-import { construct_mel_banks, get_mel_filters } from "./mel2";
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;

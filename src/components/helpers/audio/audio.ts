@@ -1,10 +1,7 @@
 import { IAudioInformation, MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
 import { IAudioMetadata, parseBlob } from "music-metadata-browser";
-
-// we have to use ?url in the vite import
-// see: https://github.com/vitejs/vite/blob/main/docs/guide/assets.md#explicit-url-imports
 import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?url";
-import WorkerConstructor from "./worker.ts?worker&inline";
+import WorkerConstructor from "./worker.ts?worker";
 
 export class AudioHelper {
   static worker: Worker | undefined;
@@ -46,17 +43,12 @@ export class AudioHelper {
         return context.decodeAudioData(downloadedBuffer);
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-      .then(() => {
-        context.audioWorklet.addModule(bufferBuilderProcessorPath);
-      })
+      .then(() => context.audioWorklet.addModule(bufferBuilderProcessorPath))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
-
-        /*
-        const spectrogramWorker = AudioHelper.worker || new Worker("src/components/helpers/audio/worker.ts", {
-          type: "module",
-        });
-        */
+        // const spectrogramWorker = new Worker("src/components/helpers/audio/worker.ts", {
+        //   type: "module",
+        // });
         const spectrogramWorker = AudioHelper.worker || new WorkerConstructor();
 
         source.connect(processorNode).connect(context.destination);
