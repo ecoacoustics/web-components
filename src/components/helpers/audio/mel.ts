@@ -1,19 +1,7 @@
 // Sourced from
-// https://github.com/vail-systems/node-dct/blob/a643a5d071a3a087e2f187c3a764b93568707be1/src/dct.js
-// and
 // https://github.com/Waxo/sound-parameters-extractor/blob/067a334e699713da227bdb2fc9d25f9de80dcdfd/src/mfcc.js
-//
-// Both under the MIT license.
+// under the MIT license.
 
-/*===========================================================================*\
- * Discrete Cosine Transform
- *
- * (c) Vail Systems. Joshua Jung and Ben Bryan. 2015
- *
- * This code is not designed to be highly optimized but as an educational
- * tool to understand the Mel-scale and its related coefficients used in
- * human speech analysis.
-\*===========================================================================*/
 type BankFilter = (freqPowers: Float32Array) => Float32Array;
 
 interface MelConfig {
@@ -34,14 +22,12 @@ interface MelFilterBank {
   filter: BankFilter;
 }
 
-const cosMap = new Map<number, Array<number>>();
-
 /**
  * Converts from Mel-scale to hertz. Used by constructFilterBank.
  * @param mels - mels to convert to hertz
  */
 export function melsToHz(mels: number) {
-        return 700 * (Math.exp(mels / 1127) - 1);
+  return 700 * (Math.exp(mels / 1127) - 1);
 }
 
 /**
@@ -49,49 +35,7 @@ export function melsToHz(mels: number) {
  * @param hertz - hertz to convert to mels
  */
 export function hertzToMels(hertz: number) {
-        return 1127 * Math.log(1 + hertz / 700);
-}
-
-// Builds a cosine map for the given input size. This allows multiple input sizes to be memoized automagically
-// if you want to run the DCT over and over.
-function memoizeCosines(count: number): Array<number> {
-  if (cosMap.has(count)) {
-    return cosMap.get(count)!;
-  }
-
-  const result = new Array(count * count);
-
-  const piOnN = Math.PI / count;
-
-  for (let k = 0; k < count; k++) {
-    for (let n = 0; n < count; n++) {
-      result[n + k * count] = Math.cos(piOnN * (n + 0.5) * k);
-    }
-  }
-
-  cosMap.set(count, result);
-
-  return result;
-}
-
-function dct(signal: Float32Array, scale?: number | undefined) {
-  const length = signal.length;
-  scale = scale || 2;
-
-  const cosines = memoizeCosines(length);
-  const coefficients = new Float32Array(length).fill(0);
-
-  for (let i = 0; i < length; i++) {
-    let sum = 0;
-
-    for (let j = 0; j < length; j++) {
-      sum += signal[j] * cosines[j + i * length];
-    }
-
-    coefficients[i] = scale * sum;
-  }
-
-  return coefficients;
+  return 1127 * Math.log(1 + hertz / 700);
 }
 
 /**
@@ -119,7 +63,7 @@ export function constructMelFilterBank(config: MelConfig): MelFilterBank {
   for (let i = 0; i < bins.length; i++) {
     filters[i] = [];
     const filterRange = i === bins.length - 1 ? bins[i] - bins[i - 1] : bins[i + 1] - bins[i];
-    //filters[i].filterRange = filterRange;
+
     for (let f = 0; f < config.fftSize; f++) {
       if (f > bins[i] + filterRange) {
         // Right, outside of cone
@@ -140,21 +84,31 @@ export function constructMelFilterBank(config: MelConfig): MelFilterBank {
     }
   }
 
-  //filters.bins = bins;
+  /**
+   * Applies the filter bank to a power spectrum.
+   */
+  const bankFilter: BankFilter = (bins: Float32Array) => {
+    // I don't know why we have to transpose twice but it's the only way
+    // to get legible results.
+    const returnValue = new Float32Array(filters.length);
 
-  const bankFilter: BankFilter = (freqPowers: Float32Array) => {
-      const returnValue = new Float32Array(filters.length);
+    for (let f = 0; f < filters.length; f++) {
+      // essentially a dot product
+      let tot = 0;
 
-      for (const [fIx, filter] of filters.entries()) {
-        let tot = 0;
-        for (const [pIx, fp] of freqPowers.entries()) {
-          tot += fp * filter[pIx];
-        }
-
-        returnValue[fIx] = tot;
+      for (let b = 0; b < bins.length; b++) {
+        // we index from the end to simulate a transpose of the input
+        // but we still need to grab the filters from the start
+        const fromEnd = bins.length - 1 - b;
+        tot += bins[fromEnd] * filters[f][b];
       }
 
-      return returnValue;
+      // we then have to transpose the result again
+      const resultIndex = filters.length - 1 - f;
+      returnValue[resultIndex] = tot;
+    }
+
+    return returnValue;
   };
 
   return {
@@ -180,7 +134,7 @@ export function constructMelFilterBank(config: MelConfig): MelFilterBank {
  * To calculate an MFCC from an audio input, we do the following steps:
  * audio input -> log of power spectrum from FFT -> Resample spectrum on Mel filter bank -> DCT -> MFCC Output
  */
-export function constructMfcc(config: MelConfig, numberOfMFCCs = 12) {
+export function constructMfcc(config: MelConfig) {
   const filterBank = constructMelFilterBank(config);
 
   /**
@@ -191,18 +145,10 @@ export function constructMfcc(config: MelConfig, numberOfMFCCs = 12) {
    */
   return (fft: Float32Array) => {
     if (fft.length !== config.fftSize) {
-      const errorMessage = [
-        "Passed in FFT bins were incorrect size.",
-        `Expected ${config.fftSize} but was ${fft.length}`,
-      ];
-      throw new Error(errorMessage.join(" "));
+      const errorMessage = `Passed in FFT bins were incorrect size. Expected ${config.fftSize} but was ${fft.length}`;
+      throw new Error(errorMessage);
     }
 
-    const melSpec = filterBank.filter(fft);
-    const melSpecLog = melSpec.map(
-            (x) => Math.log(1 + x)
-    );
-
-    return dct(melSpecLog).slice(0, numberOfMFCCs);
+    return filterBank.filter(fft);
   };
 }

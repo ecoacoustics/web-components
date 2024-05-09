@@ -15,6 +15,8 @@ import { smooth } from "./window";
 import { ColorScaler, getColorScale } from "./colors";
 import { Profiler } from "../debug/profiler";
 import { constructMfcc } from "./mel";
+import { melSpectrogram } from "./mel3";
+import { construct_mel_banks, get_mel_filters } from "./mel2";
 
 // this worker is concerned with rendering an audio buffer
 // let spectrogramPaintX = 0;
@@ -116,8 +118,19 @@ function scaleValues(magnitudeBuffer: Float32Array, scale: number): Float32Array
     // normalize the magnitude by the window size
     // https://dsp.stackexchange.com/a/63006
     // https://stackoverflow.com/a/20170717/224512
+    //
 
-    magnitudeBuffer[i] = (magnitudeBuffer[i] / maxMagnitude) * scale;
+    let rescaled = magnitudeBuffer[i] / maxMagnitude;
+
+    //let rescaled = magnitudeBuffer[i] / options.windowSize;
+
+    // scale the magnitude to fit the color scale
+    rescaled = rescaled * scale;
+
+    // power?
+    //rescaled = Math.pow(rescaled, 2);
+
+    magnitudeBuffer[i] = rescaled;
     scaledProfiler.addSample(magnitudeBuffer[i]);
   }
 
@@ -187,6 +200,7 @@ function kernel(): void {
     // convert to mel scale (optional based on settings)
     if (options.melScale) {
       scaled = melScale(scaled);
+
       melProfiler.addSamples(Array.from(scaled));
       console.log("mel scale length", scaled.length, "expected", options.windowSize / 2);
     }
@@ -301,18 +315,15 @@ function handleMessage(event: MessageEvent<SharedBuffersWithCanvas>) {
 
   colorScale = getColorScale(options.colorMap);
 
-  const mfccCount = 256;
+  const mfccCount = options.windowSize / 2;
   if (options.melScale) {
-    melScale = constructMfcc(
-      {
-        fftSize: options.windowSize / 2,
-        bankCount: mfccCount,
-        lowFrequency: 0,
-        highFrequency: audioInformation.sampleRate / 2,
-        sampleRate: audioInformation.sampleRate,
-      },
-      mfccCount,
-    );
+    melScale = constructMfcc({
+      fftSize: options.windowSize / 2,
+      bankCount: mfccCount,
+      lowFrequency: 0,
+      highFrequency: audioInformation.sampleRate / 2,
+      sampleRate: audioInformation.sampleRate,
+    });
   }
 
   fftWidth = frameCount;
