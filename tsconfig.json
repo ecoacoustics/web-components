@@ -10,9 +10,9 @@
     // see: github.com/microsoft/TypeScript/issues/28308#issuecomment-1030710851
     "types": ["vite/client", "@types/node", "@types/audioworklet"],
 
-    "outDir": "/",
     "declarationDir": "@types",
     "declaration": true,
+    "emitDeclarationOnly": true,
 
     "baseUrl": "src/components",
     "paths": {
