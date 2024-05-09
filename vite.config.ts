@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "js/",
+    outDir: "./",
     copyPublicDir: false,
     lib: {
       name: "components",

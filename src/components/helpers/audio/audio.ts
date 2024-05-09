@@ -1,6 +1,6 @@
 import { IAudioInformation, MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
 import { IAudioMetadata, parseBlob } from "music-metadata-browser";
-import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?url";
+import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?worker&url";
 import WorkerConstructor from "./worker.ts?worker";
 
 export class AudioHelper {
@@ -44,11 +44,9 @@ export class AudioHelper {
       })
       .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
       .then(() => context.audioWorklet.addModule(bufferBuilderProcessorPath))
+      // .then(() => context.audioWorklet.addModule(bufferBuilderProcessorPath))
       .then(() => {
         const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
-        // const spectrogramWorker = new Worker("src/components/helpers/audio/worker.ts", {
-        //   type: "module",
-        // });
         const spectrogramWorker = AudioHelper.worker || new WorkerConstructor();
 
         source.connect(processorNode).connect(context.destination);
