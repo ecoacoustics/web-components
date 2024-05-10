@@ -1,4 +1,12 @@
-import { getSharedBuffer, SharedBuffers, MESSAGE_PROCESSOR_READY, getSharedProcessorState, ProcessorState } from "./state";
+import {
+  getSharedBuffer,
+  SharedBuffers,
+  MESSAGE_PROCESSOR_READY,
+  getSharedProcessorState,
+  ProcessorState,
+  ProcessorMessages,
+  NamedMessageEvent,
+} from "./state";
 
 export default class BufferBuilderProcessor extends AudioWorkletProcessor {
   public constructor() {
@@ -18,32 +26,52 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     // we should always have single input with one single channel of data by this point
     // any mixing or channel selection should be done before this processor
     const input = inputs[0][0];
-    const offset = this.state.bufferWriteHead;
+    let writeHead = this.state.bufferWriteHead;
+    const bufferLength = this.state.fullBufferLength;
 
-    this.buffer.set(input, offset);
+    let newHead = writeHead + input.length;
 
-    this.state.bufferWriteHead = offset + input.length;
+    // 3 cases
+    // 1. filling buffer
+    // 2. filling buffer wholly
+    // 3. filling buffer and overflowing
 
-    // if the buffer is full, we need to wait for the buffer to be consumed
-    if (this.state.bufferWriteHead >= this.state.fullBufferLength) {
+    // since we support partial consumption of buffers the easiest way to deal
+    // with an overflow is to just run the worker to empty the buffer
+    if (newHead >= bufferLength) {
       // signal worker to process the sample buffer
       this.state.bufferReady();
 
       // wait for the worker to finish processing the buffer
       this.state.spinWaitForWorker();
+
+      // update write head - it is often non-zero
+      writeHead = this.state.bufferWriteHead;
+      newHead = writeHead + input.length;
     }
+
+    this.buffer.set(input, writeHead);
+    this.state.bufferWriteHead = newHead;
 
     return true;
   }
 
   // runs when the processor is first created
   // should only be run once and only to share buffers
-  private handleMessage(event: MessageEvent<SharedBuffers>) {
-    this.state = getSharedProcessorState(event.data);
-    this.buffer = getSharedBuffer(event.data);
+  private handleMessage(event: NamedMessageEvent<ProcessorMessages, any>) {
+    if (event.data[0] === "setup") {
+      const data = event.data[1] as SharedBuffers;
 
-    // signal back that we're ready
-    this.port.postMessage(MESSAGE_PROCESSOR_READY);
+      this.state = new ProcessorState(data.state);
+      this.buffer = new Float32Array(data.sampleBuffer);
+
+      // console.log("processor setup");
+
+      // signal back that we're ready
+      this.port.postMessage(MESSAGE_PROCESSOR_READY);
+    } else {
+      throw new Error("Unknown message type");
+    }
   }
 }
 

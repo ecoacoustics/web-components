@@ -44,39 +44,18 @@ enum STATE {
   FINISHED_PROCESSING = 3,
 }
 
-export type SharedBuffers = [state: SharedArrayBuffer, sampleBuffer: SharedArrayBuffer];
+export type NamedMessageData<TMessage, TData> = [name: TMessage, data: TData];
+export type NamedMessageEvent<TMessage, TData> = MessageEvent<NamedMessageData<TMessage, TData>>;
 
-export type SharedBuffersWithCanvas = [
-  state: SharedArrayBuffer,
-  sampleBuffer: SharedArrayBuffer,
-  canvas: OffscreenCanvas,
-  spectrogramOptions: SpectrogramOptions,
-  audioInformation: IAudioInformation,
-];
+export type SharedBuffers = { state: SharedArrayBuffer; sampleBuffer: SharedArrayBuffer };
+export type ProcessorMessages = "setup";
+export type WorkerMessages = "setup";
 
-export function getSharedProcessorState(buffers: SharedBuffers): ProcessorState {
-  return new ProcessorState(new Int32Array(buffers[0]));
-}
-
-export function getSharedWorkerState(buffers: SharedBuffersWithCanvas): WorkerState {
-  return new WorkerState(new Int32Array(buffers[0]));
-}
-
-export function getSharedBuffer(buffers: SharedBuffers | SharedBuffersWithCanvas): Float32Array {
-  return new Float32Array(buffers[1]);
-}
-
-export function getSharedCanvas(buffers: SharedBuffersWithCanvas): OffscreenCanvas {
-  return buffers[2];
-}
-
-export function getSpectrogramOptions(buffers: SharedBuffersWithCanvas): SpectrogramOptions {
-  return buffers[3];
-}
-
-export function getAudioInformation(buffers: SharedBuffersWithCanvas): IAudioInformation {
-  return buffers[4];
-}
+export type SharedBuffersWithCanvas = SharedBuffers & {
+  canvas: OffscreenCanvas;
+  spectrogramOptions: SpectrogramOptions;
+  audioInformation: IAudioInformation;
+};
 
 export const MESSAGE_PROCESSOR_READY = "processor-ready";
 
@@ -124,8 +103,8 @@ export class SpectrogramOptions {
 const TRUE = 1 as const;
 const FALSE = 0 as const;
 export class State {
-  constructor(state: Int32Array) {
-    this.state = state;
+  constructor(state: SharedArrayBuffer) {
+    this.state = new Int32Array(state);
   }
 
   public state: Int32Array;
@@ -163,14 +142,16 @@ export class State {
     return Atomics.load(this.state, STATE.BUFFERS_AVAILABLE) === TRUE;
   }
 
-  /** called by the worker when it has finished processing the buffer
-   *  this will also move any remaining samples to the start of the buffer
-   *  and reset the buffer write head
+  /** Called by the worker when it has finished processing the buffer.
+   *  This will reset the buffer write head.
+   *  If any samples weren't consumed, they will be copied to the beginning of the buffer.
    */
-  public bufferProcessed(sampleBuffer: Float32Array): void {
-    if (this.bufferWriteHead >= this.fullBufferLength) {
-      sampleBuffer.copyWithin(0, this.fullBufferLength, this.bufferWriteHead);
-      this.bufferWriteHead -= this.fullBufferLength;
+  public bufferProcessed(sampleBuffer: Float32Array, consumed: number): void {
+    if (consumed < this.bufferWriteHead) {
+      const remainingSamples = this.bufferWriteHead - consumed;
+      sampleBuffer.copyWithin(0, consumed, this.bufferWriteHead);
+      //console.log("state: partial buffer processed", remainingSamples, consumed, this.bufferWriteHead);
+      this.bufferWriteHead = remainingSamples;
     } else {
       this.bufferWriteHead = 0;
     }
@@ -198,10 +179,7 @@ export class State {
     // and we only want the key -> value pair, we divide the object key length by two
     const buffer = new SharedArrayBuffer((Object.keys(STATE).length / 2) * Int32Array.BYTES_PER_ELEMENT);
 
-    // because we are manually allocating memory, the buffer will initially be filled with random data
-    // to avoid this, we can fill the buffer with zeros
-    const castedBuffer = new Int32Array(buffer).fill(0);
-    const state = new State(castedBuffer);
+    const state = new State(buffer);
 
     state.fullBufferLength = fullBufferLength;
 
@@ -232,6 +210,6 @@ export class ProcessorState extends State {
 
 export class WorkerState extends State {
   public waitForBuffer() {
-    Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, FALSE, 1);
+    Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, FALSE);
   }
 }

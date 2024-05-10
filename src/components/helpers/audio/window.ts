@@ -33,7 +33,9 @@ export const windowFunctions: Map<WindowFunctionName, WindowFunction> = new Map(
   ["flat_top", flat_top],
 ]);
 
-export function smooth(input: Float32Array, windowType: WindowFunctionName = "hann") {
+export type SmoothingFunction = (array: Float32Array) => Float32Array;
+
+export function resolveSmoother(windowType: WindowFunctionName = "hann"): SmoothingFunction {
   const windowFunction = windowFunctions.get(windowType) ?? hann;
-  return windowFunction(input as any);
+  return (input) => windowFunction(input as any) as unknown as Float32Array;
 }

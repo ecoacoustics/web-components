@@ -88,24 +88,16 @@ export function constructMelFilterBank(config: MelConfig): MelFilterBank {
    * Applies the filter bank to a power spectrum.
    */
   const bankFilter: BankFilter = (bins: Float32Array) => {
-    // I don't know why we have to transpose twice but it's the only way
-    // to get legible results.
     const returnValue = new Float32Array(filters.length);
 
     for (let f = 0; f < filters.length; f++) {
       // essentially a dot product
-      let tot = 0;
-
+      let total = 0;
       for (let b = 0; b < bins.length; b++) {
-        // we index from the end to simulate a transpose of the input
-        // but we still need to grab the filters from the start
-        const fromEnd = bins.length - 1 - b;
-        tot += bins[fromEnd] * filters[f][b];
+        total += bins[b] * filters[f][b];
       }
 
-      // we then have to transpose the result again
-      const resultIndex = filters.length - 1 - f;
-      returnValue[resultIndex] = tot;
+      returnValue[f] = total;
     }
 
     return returnValue;
