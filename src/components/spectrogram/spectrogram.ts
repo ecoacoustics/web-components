@@ -132,10 +132,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.shadowRoot?.dispatchEvent(new Event("slotchange"));
     }
 
+    // spectrogram regeneration functionality
     if (this.doneFirstRender && this.shouldInvalidateSpectrogram(change)) {
-      console.log("intentionally broken!");
-      //! HUDSON TODO
-      //this.renderSpectrogram();
+      this.audioHelper.regenerateSpectrogram(this.mediaElement, this.spectrogramOptions());
     }
   }
 
@@ -266,7 +265,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}">
+      <audio id="media-element" src="${this.src}" @ended="${this.pause}" crossorigin>
         <slot></slot>
       </audio>
     `;

@@ -4,7 +4,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addPlugin(syntaxHighlight);
   eleventyConfig.addPassthroughCopy("docs-src/docs.css");
   eleventyConfig.addPassthroughCopy("public/");
-  eleventyConfig.addPassthroughCopy("js/");
+  eleventyConfig.addPassthroughCopy("components.js");
+  eleventyConfig.addPassthroughCopy("assets/");
 
   return {
     dir: {
@@ -16,4 +17,4 @@ export default function (eleventyConfig) {
       "11tydata.js": "11tydata.js",
     },
   };
-};
+}

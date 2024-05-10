@@ -4,7 +4,7 @@
 
 Using this workspace, the [`src/components`](/src/components/) directory has been automatically deployed to the following locations
 
-- Documentation: [663c4393d9697c4cdaec32ab--oe-web-components.netlify.app](https://663c4393d9697c4cdaec32ab--oe-web-components.netlify.app)
+- Documentation: [oe-web-components.netlify.app](https://oe-web-components.netlify.app)
 - NPM: [npmjs.com/package/@ecoacoustics/web-components](https://www.npmjs.com/package/@ecoacoustics/web-components)
 - CDN: [jsdelivr.com/package/npm/@ecoacoustics/web-components](https://www.jsdelivr.com/package/npm/@ecoacoustics/web-components)
 - GitHub Releases: [github.com/ecoacoustics/web-components/releases](https://github.com/ecoacoustics/web-components/releases)

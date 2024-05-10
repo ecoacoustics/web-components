@@ -49,7 +49,7 @@ export type NamedMessageEvent<TMessage, TData> = MessageEvent<NamedMessageData<T
 
 export type SharedBuffers = { state: SharedArrayBuffer; sampleBuffer: SharedArrayBuffer };
 export type ProcessorMessages = "setup";
-export type WorkerMessages = "setup" | "resize-canvas";
+export type WorkerMessages = "setup" | "resize-canvas" | "regenerate-spectrogram";
 
 export type SharedBuffersWithCanvas = SharedBuffers & {
   canvas: OffscreenCanvas;
@@ -167,6 +167,11 @@ export class State {
     //console.log("state: finished");
     Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
     Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+  }
+
+  public resetWork(): void {
+    this.bufferWriteHead = 0;
+    Atomics.store(this.state, STATE.FINISHED_PROCESSING, FALSE);
   }
 
   public isFinished(): boolean {

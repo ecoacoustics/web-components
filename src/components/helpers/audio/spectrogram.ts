@@ -13,7 +13,6 @@ const bytesPerPixel = 4 as const;
  * The output is a Uint8ClampedArray that can be painted into a canvas.
  * This is a big messy, stateful, side-effecty class that is designed to
  * reduce allocations and improve performance.
- *
  */
 export class SpectrogramGenerator {
   private audio: IAudioInformation;

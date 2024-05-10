@@ -149,4 +149,64 @@ export class AudioHelper {
   public resizeCanvas(size: Size) {
     this.spectrogramWorker.postMessage(["resize-canvas", size]);
   }
+
+  public async regenerateSpectrogram(audioElement: HTMLAudioElement, options: SpectrogramOptions) {
+    this.spectrogramWorker.postMessage(["regenerate-spectrogram", options]);
+
+    const response = await fetch(audioElement.src);
+
+    const downloadedBuffer = await response.arrayBuffer();
+
+    const metadata = await parseBlob(new Blob([downloadedBuffer]));
+    const length = metadata.format.duration! * metadata.format.sampleRate! * metadata.format.numberOfChannels!;
+    const context = new OfflineAudioContext({
+      numberOfChannels: metadata.format.numberOfChannels!,
+      sampleRate: metadata.format.sampleRate!,
+      length,
+    });
+
+    const decodedBuffer = await context.decodeAudioData(downloadedBuffer);
+
+    const source = new AudioBufferSourceNode(context, { buffer: decodedBuffer });
+
+    await context.audioWorklet.addModule(new URL(bufferBuilderProcessorPath, import.meta.url));
+
+    this.processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
+    this.setupProcessor();
+
+    source.connect(this.processorNode).connect(context.destination);
+
+    // 2. wait for buffers to be assigned into the processor
+    this.processorNode.port.onmessage = (event: MessageEvent) => {
+      if (event.data == MESSAGE_PROCESSOR_READY) {
+        // 3. then start the audio source and start the processor
+        source.start();
+        context.startRendering();
+      }
+    };
+
+    // 4. when the rendering is complete, signal the worker to finish (and render the last frame)
+    context.addEventListener("complete", () => {
+      if (!this.state) {
+        throw new Error("state must be defined");
+      }
+
+      this.state.finished();
+      console.timeEnd("rendering");
+    });
+
+    // TODO: This should be passed in the function signature and derived from the render window
+    const tempAudioInformation: IAudioInformation = {
+      startSample: 0,
+      endSample: source.buffer!.duration * metadata.format.sampleRate!,
+      sampleRate: metadata.format.sampleRate!,
+    };
+
+    // 0. give buffers and canvas to the worker
+    this.setupWorker(tempAudioInformation);
+
+    console.time("rendering");
+    // 1. give state and sample buffer to the processor - this will kick start the process
+    this.setupProcessor();
+  }
 }
