@@ -28,5 +28,5 @@ jobs:
   Publish-Release:
     uses: ./.github/workflows/publish.yml
     with:
-      tag_name: "v0.1.1-alpha.2"
+      tag_name: "v0.1.1-alpha.3"
     secrets: inherit
