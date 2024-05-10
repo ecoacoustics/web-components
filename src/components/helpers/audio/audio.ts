@@ -1,7 +1,8 @@
 import { IAudioInformation, MESSAGE_PROCESSOR_READY, SpectrogramOptions, State } from "./state";
 import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?worker&url";
-import WorkerConstructor from "./worker.ts?worker";
+// import workerPath from "./worker.ts?worker&url";
+import WorkerConstructor from "./worker.ts?worker&inline";
 
 export class AudioHelper {
   static worker: Worker | undefined;
@@ -14,8 +15,6 @@ export class AudioHelper {
     let context: OfflineAudioContext;
     let source: AudioBufferSourceNode;
     let metadata: IAudioMetadata;
-
-    console.log("start spectrogram rendering", spectrogramOptions);
 
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
@@ -44,10 +43,11 @@ export class AudioHelper {
           return context.decodeAudioData(downloadedBuffer);
         })
         .then((decodedBuffer) => (source = new AudioBufferSourceNode(context, { buffer: decodedBuffer })))
-        .then(() => context.audioWorklet.addModule(bufferBuilderProcessorPath))
+        .then(() => context.audioWorklet.addModule(new URL(bufferBuilderProcessorPath, import.meta.url)))
         // .then(() => context.audioWorklet.addModule(bufferBuilderProcessorPath))
         .then(() => {
           const processorNode = new AudioWorkletNode(context, "buffer-builder-processor");
+          // const spectrogramWorker = AudioHelper.worker || new Worker(new URL(workerPath, import.meta.url));
           const spectrogramWorker = AudioHelper.worker || new WorkerConstructor();
 
           source.connect(processorNode).connect(context.destination);

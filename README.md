@@ -1,13 +1,13 @@
-  # Ecoacoustics Web Components
+# Ecoacoustics Web Components
 
 ## Online deployment of example components
 
 Using this workspace, the [`src/components`](/src/components/) directory has been automatically deployed to the following locations
 
-- Documentation: [wc-workspace-demojtgf4zsprh.netlify.app](https://wc-workspace-demojtgf4zsprh.netlify.app)
+- Documentation: [663c4393d9697c4cdaec32ab--oe-web-components.netlify.app](https://663c4393d9697c4cdaec32ab--oe-web-components.netlify.app)
 - NPM: [npmjs.com/package/@ecoacoustics/web-components](https://www.npmjs.com/package/@ecoacoustics/web-components)
 - CDN: [jsdelivr.com/package/npm/@ecoacoustics/web-components](https://www.jsdelivr.com/package/npm/@ecoacoustics/web-components)
-- GitHub Releases: [github.com/QutEcoacoustics/ecoacoustics-web-components/releases](https://github.com/QutEcoacoustics/ecoacoustics-web-components/releases)
+- GitHub Releases: [github.com/ecoacoustics/web-components/releases](https://github.com/ecoacoustics/web-components/releases)
 
 ## How to use
 
@@ -68,6 +68,6 @@ Then you can run the following commands:
 
 ### GitHub Releases
 
-You can manually import the example components in this repository using the [GitHub releases page](https://github.com/QutEcoacoustics/ecoacoustics-web-components/releases)
+You can manually import the example components in this repository using the [GitHub releases page](https://github.com/ecoacoustics/web-components/releases)
 
 Download the `component.js` file to use all web components or import a subset of components through the `components.zip` zip archive.
