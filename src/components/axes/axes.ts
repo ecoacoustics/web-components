@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import * as d3Axis from "d3-axis";
 import { AbstractComponent } from "../mixins/abstractComponent";
 import { Hertz, Seconds } from "models/unitConverters";
+import { ScaleLinear } from "d3";
 
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
@@ -45,16 +46,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public showYAxis = true;
 
   @property({ attribute: "x-grid", type: Boolean, reflect: true })
-  public showXGrid = true;
+  public showXGrid = false;
 
   @property({ attribute: "y-grid", type: Boolean, reflect: true })
-  public showYGrid = true;
+  public showYGrid = false;
 
   @property({ attribute: "x-label", type: Boolean, reflect: true })
-  public showXLabel = true;
+  public showXLabel = false;
 
   @property({ attribute: "y-label", type: Boolean, reflect: true })
-  public showYLabel = true;
+  public showYLabel = false;
 
   @query("#x-axis-g")
   private xAxisG!: SVGGElement;
@@ -69,42 +70,52 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private yGridlinesG!: SVGGElement;
 
   @queryAssignedElements()
-  private slotElements!: Array<Spectrogram>;
+  private slotElements!: Spectrogram[];
+
+  private spectrogramElement!: Spectrogram;
+  private temporalScale!: ScaleLinear<number, number, never>;
+  private frequencyScale!: ScaleLinear<number, number, never>;
+  private renderWindow!: RenderWindow;
 
   public updated() {
+    this.spectrogramElement = this.getSpectrogramElement();
+
+    this.temporalScale = this.spectrogramElement.unitConverters!.renderWindowScale.value.temporal;
+    this.frequencyScale = this.spectrogramElement.unitConverters!.renderWindowScale.value.frequency;
+    this.renderWindow = this.spectrogramElement.renderWindow?.value;
+
     this.updateAxes();
   }
 
-  private spectrogramElement(): Spectrogram | any {
+  private getSpectrogramElement(): Spectrogram {
     for (const slotElement of this.slotElements) {
-      if (slotElement instanceof Spectrogram) {
-        return slotElement;
-      }
+      const queriedElement = slotElement.querySelector("oe-spectrogram");
 
-      const spectrogramSubElement = (slotElement as any).querySelector("oe-spectrogram");
-      if (spectrogramSubElement instanceof Spectrogram) {
-        return spectrogramSubElement;
+      if (queriedElement instanceof Spectrogram) {
+        return queriedElement;
       }
     }
+
+    throw new Error("No spectrogram element found");
   }
 
-  private renderWindow(): RenderWindow {
-    const spectrogramElement = this.spectrogramElement();
-    return spectrogramElement?.renderWindow?.value ?? [];
-  }
+  // private drawAxis(
+  //   scale: ScaleLinear<number, number, never>,
+  //   start: Seconds | Hertz,
+  //   end: Seconds | Hertz,
+  //   rotation: number,
+  // ): void {
+  // }
 
   private updateAxes(): void {
-    const temporalScale = this.spectrogramElement()?.unitConverters.renderWindowScale.value.temporal;
-    const frequencyScale = this.spectrogramElement()?.unitConverters.renderWindowScale.value.frequency;
-
-    const temporalFormat = d3.format(".1f") as any;
-    const frequencyFormat = d3.format(".0f") as any;
+    const temporalFormat = d3.format(".1f");
+    const frequencyFormat = d3.format(".0f");
 
     const xAxisTicks = this.xAxisTime();
     const yAxisTicks = this.yAxisHertz();
 
-    const xAxis = d3Axis.axisBottom(temporalScale).tickValues(xAxisTicks).tickFormat(temporalFormat);
-    const yAxis = d3Axis.axisLeft(frequencyScale).tickValues(yAxisTicks).tickFormat(frequencyFormat);
+    const xAxis = d3Axis.axisBottom(this.temporalScale).tickValues(xAxisTicks).tickFormat(temporalFormat);
+    const yAxis = d3Axis.axisLeft(this.frequencyScale).tickValues(yAxisTicks).tickFormat(frequencyFormat);
 
     const xAxisElement = d3
       .select(this.xGridlinesG)
@@ -115,10 +126,10 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         if (i !== xAxisTicks.length - 1 && i !== 0) {
           d3.select(this.xGridlinesG)
             .append("line")
-            .attr("x1", temporalScale(x) + 0.5)
-            .attr("x2", temporalScale(x) + 0.5)
+            .attr("x1", this.temporalScale(x) + 0.5)
+            .attr("x2", this.temporalScale(x) + 0.5)
             .attr("y1", 0)
-            .attr("y2", this.spectrogramElement().renderCanvasSize.value.height);
+            .attr("y2", this.spectrogramElement.renderCanvasSize.value.height);
         }
       });
 
@@ -126,8 +137,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       xAxisElement
         .append("text")
         .attr("text-anchor", "middle")
-        .attr("x", this.spectrogramElement().renderCanvasSize.value.width)
-        .attr("y", this.spectrogramElement().renderCanvasSize.value.height - 6)
+        .attr("x", this.spectrogramElement.renderCanvasSize.value.width)
+        .attr("y", this.spectrogramElement.renderCanvasSize.value.height - 6)
         .attr("dy", "2.75em")
         .attr("dx", "-50%")
         .text("Time (seconds)");
@@ -143,9 +154,9 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           d3.select(this.yGridlinesG)
             .append("line")
             .attr("x1", 0)
-            .attr("x2", this.spectrogramElement().renderCanvasSize.value.width)
-            .attr("y1", frequencyScale(x) + 0.5)
-            .attr("y2", frequencyScale(x) + 0.5);
+            .attr("x2", this.spectrogramElement.renderCanvasSize.value.width)
+            .attr("y1", this.frequencyScale(x) + 0.5)
+            .attr("y2", this.frequencyScale(x) + 0.5);
         }
       });
 
@@ -165,14 +176,12 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private xAxisTime(): number[] {
-    const renderWindow = this.renderWindow();
-    const x0 = renderWindow.startOffset;
-    const xn = renderWindow.endOffset;
+    const x0 = this.renderWindow.startOffset;
+    const xn = this.renderWindow.endOffset;
 
-    const spectrogramElement = this.spectrogramElement();
-    const scale = spectrogramElement.unitConverters.renderWindowScale.value.temporal;
+    const spectrogramElement = this.spectrogramElement;
     const maximumValue = spectrogramElement.renderCanvasSize.value.width;
-    const xStep = this.userXStep || this.calculateStep(maximumValue, scale);
+    const xStep = this.userXStep || this.calculateStep(maximumValue, this.temporalScale);
 
     const result = [];
     for (let i = x0; i < xn; i += xStep) {
@@ -185,14 +194,12 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private yAxisHertz(): number[] {
-    const renderWindow = this.renderWindow();
-    const y0 = renderWindow.lowFrequency;
-    const yn = renderWindow.highFrequency;
+    const y0 = this.renderWindow.lowFrequency;
+    const yn = this.renderWindow.highFrequency;
 
-    const spectrogramElement = this.spectrogramElement();
-    const scale = spectrogramElement.unitConverters.renderWindowScale.value.frequency;
+    const spectrogramElement = this.spectrogramElement;
     const maximumValue = spectrogramElement.renderCanvasSize.value.height;
-    const yStep = this.userYStep || this.calculateStep(maximumValue, scale);
+    const yStep = this.userYStep || this.calculateStep(maximumValue, this.frequencyScale);
 
     const result = [];
     for (let i = y0; i < yn; i += yStep) {

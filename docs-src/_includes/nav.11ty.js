@@ -5,6 +5,7 @@ export default function ({ page }) {
 <nav>
   <a href="${relative(page.url, "/")}">Install</a>
   <a href="${relative(page.url, "/components/")}">Components</a>
+  <a href="${relative(page.url, "/spectrogram-creator/")}">Spectrogram Creator</a>
   <a href="${relative(page.url, "/examples/")}">Examples</a>
 </nav>`;
 }

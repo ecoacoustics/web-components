@@ -18,6 +18,9 @@
     },
     "explorer.compactFolders": false,
     "cSpell.caseSensitive": false,
+    // TODO: Add support for vscode auto-complete of custom elements
+    // https://github.com/microsoft/vscode-html-languageservice/blob/main/docs/customData.md
+    "html.customData": [],
     "cSpell.words": [
       "audioworklet",
       "Componentization",
@@ -40,7 +43,11 @@
       "webfft",
       "worklet"
     ],
-    "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"]
+    "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
+    "markdownlint.config": {
+      // disable no Inline HTML because we use inline HTML for the 11ty pages
+      "MD033": false
+    }
   },
   "extensions": {
     "recommendations": [
@@ -66,7 +73,8 @@
       "bierner.lit-html",
       "ecmel.vscode-html-css",
       "pushqrdx.inline-html",
-      "hediet.vscode-drawio"
+      "hediet.vscode-drawio",
+      "htmlhint.vscode-htmlhint"
     ]
   },
   "launch": {

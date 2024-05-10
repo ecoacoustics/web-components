@@ -6,7 +6,6 @@ import {
   WorkerMessages,
   WorkerState,
 } from "./state";
-
 import { SpectrogramGenerator } from "./spectrogram";
 import { Size } from "models/rendering";
 
@@ -40,7 +39,7 @@ let audioInformation: IAudioInformation;
 // TODO: add a fft cache
 
 function kernel(): void {
-  // console.count("kernel");
+  console.count("kernel");
 
   const consumed = spectrogram.partialGenerate(sampleBuffer, state.bufferWriteHead, state.finishedProcessing);
 
@@ -54,7 +53,7 @@ function work(): void {
   while (!state.isFinished()) {
     state.waitForBuffer();
 
-    // console.log("work", state.bufferWriteHead);
+    console.log("work", state.bufferWriteHead);
     // In the optimal case, the buffer write head is zero at the end of an audio stream
     // if not, we render what ever else is left
     if (state.bufferWriteHead >= 0) {
@@ -115,6 +114,13 @@ function setup(data: SharedBuffersWithCanvas): void {
   work();
 }
 
+function regenerate(options: SpectrogramOptions): void {
+  state.resetWork();
+  spectrogram = new SpectrogramGenerator(audioInformation, options);
+
+  work();
+}
+
 function resizeCanvas(data: Size): void {
   destinationCanvas.width = data.width;
   destinationCanvas.height = data.height;
@@ -128,16 +134,18 @@ function resizeCanvas(data: Size): void {
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
 function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
-  switch (event.data[0]) {
+  const eventMessage = event.data[0];
+
+  switch (eventMessage) {
     case "setup":
       setup(event.data[1] as SharedBuffersWithCanvas);
       break;
     case "resize-canvas":
       resizeCanvas(event.data[1] as Size);
       break;
-    // case "regenerate-spectogram":
-    //   spectrogram.regenerate();
-    //   break;
+    case "regenerate-spectrogram":
+      regenerate(event.data[1] as SpectrogramOptions);
+      break;
     default:
       throw new Error("unknown message: " + event.data[0]);
   }
