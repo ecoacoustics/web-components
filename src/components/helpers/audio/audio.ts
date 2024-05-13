@@ -12,10 +12,14 @@ export class AudioHelper {
   private sampleBuffer: SharedArrayBuffer | undefined;
   private offscreenCanvas: OffscreenCanvas | undefined;
   private spectrogramOptions: SpectrogramOptions | undefined;
+  private static instanceCounter = 0;
+  private readonly timerTag: string;
 
   public constructor() {
     // const spectrogramWorker = AudioHelper.worker || new Worker(new URL(workerPath, import.meta.url));
     this.spectrogramWorker = new WorkerConstructor();
+    AudioHelper.instanceCounter++;
+    this.timerTag = `AudioHelper ${AudioHelper.instanceCounter}: rendering`;
   }
 
   public get canvasTransferred(): boolean {
@@ -39,17 +43,17 @@ export class AudioHelper {
     // TODO: We might want to move this out to the spectrogram component instead
     const metadata = await parseBlob(new Blob([downloadedBuffer]));
 
-    const length = metadata.format.duration! * metadata.format.sampleRate! * metadata.format.numberOfChannels!;
-    console.log(
-      "channels, sample rate, duration, length",
-      metadata.format.numberOfChannels,
-      metadata.format.sampleRate,
-      metadata.format.duration,
-      length,
-    );
+    const format = metadata.format;
+    const length = format.duration! * format.sampleRate! * format.numberOfChannels!;
+    console.log("audio metadata:", {
+      channels: format.numberOfChannels,
+      sampleRate: format.sampleRate,
+      duration: format.duration,
+      samples: length,
+    });
     const context = new OfflineAudioContext({
-      numberOfChannels: metadata.format.numberOfChannels!,
-      sampleRate: metadata.format.sampleRate!,
+      numberOfChannels: format.numberOfChannels!,
+      sampleRate: format.sampleRate!,
       length,
     });
 
@@ -92,7 +96,7 @@ export class AudioHelper {
       }
 
       this.state.finished();
-      console.timeEnd("rendering");
+      console.timeEnd(this.timerTag);
     });
 
     // TODO: This should be passed in the function signature and derived from the render window
@@ -107,7 +111,7 @@ export class AudioHelper {
     // 0. give buffers and canvas to the worker
     this.setupWorker(tempAudioInformation);
 
-    console.time("rendering");
+    console.time(this.timerTag);
     // 1. give state and sample buffer to the processor - this will kick start the process
     this.setupProcessor();
 
