@@ -74,6 +74,9 @@ export class SpectrogramGenerator {
     this.fftHeight = binCount;
 
     this.imageBuffer = new Uint8ClampedArray(this.fftWidth * this.fftHeight * bytesPerPixel);
+    // set opacity to 255 (fully opaque). This actual just paints everything as opaque white
+    // but it's faster than stepping through every 4 bytes and setting the alpha channel.
+    this.imageBuffer.fill(255);
 
     this.complexInput = new Float32Array(this.size * 2);
     this.window = new Float32Array(this.size);
@@ -279,9 +282,9 @@ export class SpectrogramGenerator {
       if (offset > this.imageBuffer.length - 4) {
         console.log("overflow coordinates", x, y, offset, this.imageBuffer.length);
       }
+
+      // shift r, g, and b directly in. Opacity set in buffer initialization.
       this.imageBuffer.set(rgbColor, offset);
-      // opacity
-      this.imageBuffer[offset + 3] = 255;
     }
   }
 }
