@@ -14,8 +14,8 @@ import { IAudioMetadata } from "music-metadata-browser";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
-  duration: 7.5,
-  sampleRate: 44100,
+  duration: 0,
+  sampleRate: 0,
   originalAudioRecording: {
     startOffset: 0,
     duration: 0,
@@ -93,19 +93,23 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow());
   public unitConverters?: UnitConverter;
   private doneFirstRender = false;
+  private audioHelper = new AudioHelper();
 
   public firstUpdated(): void {
+    // todo: retrieve size data from even callback
     OeResizeObserver.observe(this.canvas, () => {
       this.renderCanvasSize.value = this.canvasSize();
       this.updateCurrentTime();
       this.resizeCanvasViewport();
-      this.renderSpectrogram();
+
       this.doneFirstRender = true;
     });
 
+    this.renderSpectrogram();
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio);
   }
 
+  // todo: this should be part of a mixin
   public disconnectedCallback(): void {
     OeResizeObserver.instance.unobserve(this.canvas);
   }
@@ -129,20 +133,24 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     }
 
     if (this.doneFirstRender && this.shouldInvalidateSpectrogram(change)) {
-      this.renderSpectrogram();
+      console.log("intentionally broken!");
+      //! HUDSON TODO
+      //this.renderSpectrogram();
     }
   }
 
   public renderSpectrogram(): void {
-    AudioHelper.connect(this.mediaElement, this.canvas, this.spectrogramOptions()).then((metadata: IAudioMetadata) => {
-      const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+    this.audioHelper
+      .connect(this.mediaElement, this.canvas, this.spectrogramOptions())
+      .then((metadata: IAudioMetadata) => {
+        const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
 
-      this.audio.value = new AudioModel({
-        duration: metadata.format.duration!,
-        sampleRate: metadata.format.sampleRate!,
-        originalAudioRecording: originalRecording,
+        this.audio.value = new AudioModel({
+          duration: metadata.format.duration!,
+          sampleRate: metadata.format.sampleRate!,
+          originalAudioRecording: originalRecording,
+        });
       });
-    });
   }
 
   public play(): void {
@@ -189,6 +197,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     }
   }
 
+  // TODO: we shouldn't query the element for this size - it can cause a repaint every time we ask
+  // instead use the resize observer's data and cache the size
   private canvasSize(): RenderCanvasSize {
     return new RenderCanvasSize({
       width: this.canvas?.clientWidth ?? 0,
@@ -197,8 +207,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private resizeCanvasViewport(): void {
-    this.canvas.width = this.canvas.clientWidth;
-    this.canvas.height = this.canvas.clientHeight;
+    if (this.audioHelper.canvasTransferred) {
+      this.audioHelper.resizeCanvas(this.canvasSize());
+    } else {
+      this.canvas.width = this.canvas.clientWidth;
+      this.canvas.height = this.canvas.clientHeight;
+    }
   }
 
   private spectrogramOptions(): SpectrogramOptions {

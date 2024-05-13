@@ -54,7 +54,12 @@ export class RenderWindow implements IRenderWindow {
   }
 }
 
-export class RenderCanvasSize {
+export interface Size {
+  width: number;
+  height: number;
+}
+
+export class RenderCanvasSize implements Size {
   public constructor(data: RenderCanvasSize) {
     this.width = data.width;
     this.height = data.height;

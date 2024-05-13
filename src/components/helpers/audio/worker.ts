@@ -8,6 +8,7 @@ import {
 } from "./state";
 
 import { SpectrogramGenerator } from "./spectrogram";
+import { Size } from "models/rendering";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -73,6 +74,10 @@ function renderImageBuffer(buffer: Uint8ClampedArray): void {
   // paint buffer to the spectrogram canvas at  a 1:1 scale
   spectrogramSurface.putImageData(imageData, 0, 0);
 
+  drawSpectrogramOntoDestinationCanvas();
+}
+
+function drawSpectrogramOntoDestinationCanvas(): void {
   // paint the spectrogram canvas to the destination canvas and stretch to fill
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
@@ -107,6 +112,16 @@ function setup(data: SharedBuffersWithCanvas): void {
   work();
 }
 
+function resizeCanvas(data: Size): void {
+  destinationCanvas.width = data.width;
+  destinationCanvas.height = data.height;
+
+  // redraw the spectrogram from the 1:1 spectrogram canvas
+  // onto the destination
+  drawSpectrogramOntoDestinationCanvas();
+  console.log("resized canvas", data);
+}
+
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
 function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
@@ -114,6 +129,12 @@ function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
     case "setup":
       setup(event.data[1] as SharedBuffersWithCanvas);
       break;
+    case "resize-canvas":
+      resizeCanvas(event.data[1] as Size);
+      break;
+    // case "regenerate-spectogram":
+    //   spectrogram.regenerate();
+    //   break;
     default:
       throw new Error("unknown message: " + event.data[0]);
   }

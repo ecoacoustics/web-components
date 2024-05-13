@@ -1,12 +1,4 @@
-import {
-  getSharedBuffer,
-  SharedBuffers,
-  MESSAGE_PROCESSOR_READY,
-  getSharedProcessorState,
-  ProcessorState,
-  ProcessorMessages,
-  NamedMessageEvent,
-} from "./state";
+import { SharedBuffers, MESSAGE_PROCESSOR_READY, ProcessorState, ProcessorMessages, NamedMessageEvent } from "./state";
 
 export default class BufferBuilderProcessor extends AudioWorkletProcessor {
   public constructor() {

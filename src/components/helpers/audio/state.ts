@@ -49,7 +49,7 @@ export type NamedMessageEvent<TMessage, TData> = MessageEvent<NamedMessageData<T
 
 export type SharedBuffers = { state: SharedArrayBuffer; sampleBuffer: SharedArrayBuffer };
 export type ProcessorMessages = "setup";
-export type WorkerMessages = "setup";
+export type WorkerMessages = "setup" | "resize-canvas";
 
 export type SharedBuffersWithCanvas = SharedBuffers & {
   canvas: OffscreenCanvas;
@@ -98,6 +98,10 @@ export class SpectrogramOptions {
   public brightness: number;
   public contrast: number;
   public colorMap: ColorMap;
+
+  public get windowStep(): number {
+    return this.windowSize - this.windowOverlap;
+  }
 }
 
 const TRUE = 1 as const;
@@ -160,7 +164,7 @@ export class State {
 
   public finished(): void {
     Atomics.store(this.state, STATE.FINISHED_PROCESSING, TRUE);
-    console.log("state: finished");
+    //console.log("state: finished");
     Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
     Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
   }
@@ -202,7 +206,7 @@ export class ProcessorState extends State {
    * called by the processor when it has finished writing to the buffer
    */
   public bufferReady(): void {
-    console.log("state: buffer ready");
+    //console.log("state: buffer ready");
     Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
     Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
   }
