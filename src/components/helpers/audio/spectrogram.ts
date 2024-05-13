@@ -4,7 +4,7 @@ import webfft from "webfft";
 import { ColorScaler, getColorScale } from "./colors";
 import { constructMfcc } from "./mel";
 import { IAudioInformation, SpectrogramOptions } from "./state";
-import { resolveSmoother, SmoothingFunction } from "./window";
+import { estimateSmootherAttenuation, resolveSmoother, SmoothingFunction } from "./window";
 
 const bytesPerPixel = 4 as const;
 
@@ -43,6 +43,8 @@ export class SpectrogramGenerator {
   private complexInput: Float32Array;
   private window: Float32Array;
   private spectrum: Float32Array;
+  public readonly estimatedWindowLoss: number;
+  private readonly amplificationFactor: number;
 
   constructor(audio: IAudioInformation, options: SpectrogramOptions) {
     this.audio = audio;
@@ -76,6 +78,9 @@ export class SpectrogramGenerator {
     this.complexInput = new Float32Array(this.size * 2);
     this.window = new Float32Array(this.size);
     this.spectrum = new Float32Array(this.size / 2);
+
+    this.estimatedWindowLoss = estimateSmootherAttenuation(options.windowFunction, options.windowSize);
+    this.amplificationFactor = 1 / this.estimatedWindowLoss;
   }
 
   public get nyquist(): number {
@@ -135,28 +140,24 @@ export class SpectrogramGenerator {
         break;
       }
 
-      // 2. extract maximum so we can normalize the signal after the fft
-      const maxAmplitude = this.max(this.window);
-
-      // 3. apply a window function to smooth the signal
+      // 2. apply a window function to smooth the signal
       this.smooth(this.window);
 
-      // 4. Do the fft
+      // 3. arrange input
       // the source library is poorly documented but the input is
       // a Float32Array of interleaved real and complex parts
       // this.window -> this.complexInput
       this.interleaveReals();
+
+      // 4. Do the fft
       const out = this.fft.fft(this.complexInput);
 
       // 5. for positive frequencies, collapse real and complex parts into magnitude
       // (writes into the spectrum array)
       // out -> this.spectrum
-      const maxMagnitude = this.extractMagnitude(out);
+      this.extractMagnitudeAndScale(out);
 
-      // 6. convert to amplitude
-      this.rescaleValues(maxMagnitude, maxAmplitude);
-
-      // 7. convert to mel scale (optional based on settings)
+      // 6. convert to mel scale (optional based on settings)
       if (this.melScale) {
         const melSpectrum = this.melScale(this.spectrum);
 
@@ -164,7 +165,7 @@ export class SpectrogramGenerator {
         this.spectrum.set(melSpectrum);
       }
 
-      // 8. convert to decibels, colorize and write the spectrum to the image buffer
+      // 7. convert to decibels, colorize and write the spectrum to the image buffer
       this.paintSpectrumIntoPixelBuffer();
 
       this.lastFrameIndex++;
@@ -190,18 +191,6 @@ export class SpectrogramGenerator {
     return true;
   }
 
-  private max(samples: Float32Array): number {
-    let max = 0;
-    for (let i = 0; i < samples.length; i++) {
-      const sample = Math.abs(samples[i]);
-      if (sample > max) {
-        max = sample;
-      }
-    }
-
-    return max;
-  }
-
   private interleaveReals() {
     const source = this.window;
     const destination = this.complexInput;
@@ -213,18 +202,17 @@ export class SpectrogramGenerator {
   }
 
   /**
-   * We keep only the positive frequencies and discard the dc offset and negative frequencies
+   * Converts the output of the fft into a magnitude and scales it.
+   * We keep only the positive frequencies and discard the dc offset and negative frequencies.
    * @param fftOutput The output of the fft.
    * @param spectrum The array to store the magnitude of the fft.
    * @param windowSize
-   * @returns The maximum magnitude of the fft.
    */
-  private extractMagnitude(fftOutput: Float32Array): number {
+  private extractMagnitudeAndScale(fftOutput: Float32Array) {
     const spectrum = this.spectrum;
     const half = spectrum.length;
-
-    // record the maximum value for scaling purposes
-    let max = 0;
+    const size = this.size;
+    const amplify = this.amplificationFactor;
 
     // fft structure: [ dc offset, ...positive frequencies, the nyquist bin, ...negative frequencies]
     // Where all values are interleaved real and complex components.
@@ -235,60 +223,52 @@ export class SpectrogramGenerator {
     for (let i = 0; i < half; i++) {
       const sourceIndex = skipDc + i * 2;
 
-      const real = fftOutput[sourceIndex];
-      const complex = fftOutput[sourceIndex + 1];
+      // real and complex components
+      // divide each by window size to normalize
+      const real = fftOutput[sourceIndex] / size;
+      const complex = fftOutput[sourceIndex + 1] / size;
+
+      let magnitude = Math.sqrt(real * real + complex * complex);
 
       // we have half of the energy in the positive frequencies and half in the negative frequencies
       // so we need to double the components to get the full energy
-      const magnitude = Math.sqrt(real * real + complex * complex) * 2;
+      magnitude = magnitude * 2;
+
+      // multiply by the window loss to correct for the energy lost in the windowing process
+      magnitude = magnitude * amplify;
+
       spectrum[i] = magnitude;
-
-      if (magnitude > max) {
-        max = magnitude;
-      }
-    }
-
-    return max;
-  }
-
-  private rescaleValues(magnitudeMax: number, amplitudeMax: number) {
-    const spectrum = this.spectrum;
-    for (let i = 0; i < spectrum.length; i++) {
-      // various sources note that dividing by the window size is the correct way to scale
-      // but this doesn't work well when a window is applied to the data because it's hard
-      // to know how the window affects the energy envelope of the signal
-      // //rescaled = spectrum[i] / options.windowSize;
-      //
-      // Instead:
-      // 1. we normalize each frame by it's maximum to make the spectrum unit values
-      let rescaled = spectrum[i] / magnitudeMax;
-
-      // 2. Then scale it down so that the maximum intensity of the spectrum is equivalent to the maximum amplitude of the input signal.
-      rescaled = rescaled * amplitudeMax;
-
-      spectrum[i] = rescaled;
     }
   }
 
   private paintSpectrumIntoPixelBuffer() {
     for (let frequencyBin = 0; frequencyBin < this.spectrum.length; frequencyBin++) {
       const value = this.spectrum[frequencyBin];
-      // because we square the amplitude in the magnitude function, we indirectly have power
-      // therefore, we use the power relationship to convert to decibels
-      const decibels = 20 * Math.log10(value);
 
-      const minDecibels = -120;
-      const maxDecibels = 0;
+      let decibels = 20 * Math.log10(value);
+
+      // apply gain
+      // TODO: parameterize gain
+      const gain = 20;
+      decibels += gain;
+
+      // TODO: parameterize range
+      const minDecibels = -86;
+      const maxDecibels = -6;
       const range = maxDecibels - minDecibels;
 
       let intensity = (decibels - minDecibels) / range;
 
       // brightness and contrast
+      // TODO: deprecate in favor of gain and range
       intensity += this.options.brightness;
       intensity *= this.options.contrast;
 
       // clamp
-      intensity = Math.min(1, Math.max(0, intensity));
+      // TODO: remove when confident it's not needed
+      // we we're doing this because our color functions could not handle out of bounds values
+      // but now they can... so skip here?
+      // intensity = Math.min(1, Math.max(0, intensity));
 
       const rgbColor = this.colorScale(intensity);
 

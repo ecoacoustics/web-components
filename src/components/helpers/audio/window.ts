@@ -39,3 +39,10 @@ export function resolveSmoother(windowType: WindowFunctionName = "hann"): Smooth
   const windowFunction = windowFunctions.get(windowType) ?? hann;
   return (input) => windowFunction(input as any) as unknown as Float32Array;
 }
+
+export function estimateSmootherAttenuation(windowType: WindowFunctionName = "hann", windowSize: number): number {
+  const windowFunction = windowFunctions.get(windowType) ?? hann;
+  const window = windowFunction(new Array(windowSize).fill(1));
+  const sum = window.reduce((acc, val) => acc + val, 0);
+  return sum / window.length;
+}

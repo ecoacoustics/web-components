@@ -91,15 +91,18 @@ function setup(data: SharedBuffersWithCanvas): void {
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
 
+  console.log(options);
+
   spectrogram = new SpectrogramGenerator(audioInformation, options);
 
-  console.log(
-    "totalSamples, buffer size , native fft size",
-    spectrogram.totalSamples,
-    state.fullBufferLength,
-    spectrogram.width,
-    spectrogram.height,
-  );
+  console.log("spectrogram worker:", {
+    samples: spectrogram.totalSamples,
+    bufferLength: state.fullBufferLength,
+    naturalWidth: spectrogram.width,
+    naturalHeight: spectrogram.height,
+    windowSize: spectrogram.size,
+    windowStep: spectrogram.step,
+  });
 
   spectrogramCanvas = new OffscreenCanvas(spectrogram.width, spectrogram.height);
   spectrogramSurface = spectrogramCanvas.getContext("2d")!;
@@ -119,7 +122,7 @@ function resizeCanvas(data: Size): void {
   // redraw the spectrogram from the 1:1 spectrogram canvas
   // onto the destination
   drawSpectrogramOntoDestinationCanvas();
-  console.log("resized canvas", data);
+  //console.log("resized canvas", data);
 }
 
 // runs when the processor is first created
