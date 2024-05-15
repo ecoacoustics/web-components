@@ -17,9 +17,6 @@ importers:
       chroma-js:
         specifier: ^2.4.2
         version: 2.4.2
-      d3-format:
-        specifier: ^3.1.0
-        version: 3.1.0
       d3-scale:
         specifier: ^4.0.2
         version: 4.0.2
@@ -60,9 +57,6 @@ importers:
       '@types/chroma-js':
         specifier: ^2.4.4
         version: 2.4.4
-      '@types/d3-format':
-        specifier: ^3.0.4
-        version: 3.0.4
       '@types/d3-scale':
         specifier: ^4.0.8
         version: 4.0.8
@@ -603,9 +597,6 @@ packages:
 
   '@types/chroma-js@2.4.4':
     resolution: {integrity: sha512-/DTccpHTaKomqussrn+ciEvfW4k6NAHzNzs/sts1TCqg333qNxOhy8TNIoQCmbGG3Tl8KdEhkGAssb1n3mTXiQ==}
-
-  '@types/d3-format@3.0.4':
-    resolution: {integrity: sha512-fALi2aI6shfg7vM5KiR1wNJnZ7r6UuggVqtDA+xiEdPZQwy/trcQaHnwShLuLdta2rTymCNpxYTiMZX/e09F4g==}
 
   '@types/d3-scale@4.0.8':
     resolution: {integrity: sha512-gkK1VVTr5iNiYJ7vWDI+yUFFlszhNMtVeneJ6lUTKPjprsvLLI9/tgEGiXJOnlINJA8FyA88gfnQsHbybVZrYQ==}
@@ -2906,8 +2897,6 @@ snapshots:
   '@types/audioworklet@0.0.55': {}
 
   '@types/chroma-js@2.4.4': {}
-
-  '@types/d3-format@3.0.4': {}
 
   '@types/d3-scale@4.0.8':
     dependencies:

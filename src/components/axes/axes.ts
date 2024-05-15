@@ -1,22 +1,24 @@
 import { html, LitElement, svg, TemplateResult } from "lit";
-import { customElement, property, queryAssignedElements, state } from "lit/decorators.js";
+import { customElement, property, queryAssignedElements } from "lit/decorators.js";
 import { axesStyles } from "./css/style";
 import { Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { Spectrogram } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { format } from "d3-format";
 import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, IScale } from "../../models/unitConverters";
 import { RenderCanvasSize, RenderWindow } from "../../models/rendering";
-
-// TODO: move this to a different place
-type FormatterFunction = (n: number | { valueOf(): number }) => string;
-type AxisOptions = "visible" | "hidden" | "axis" | "grid";
 
 // TODO: move this to a different place
 const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
+ *
+ * @example
+ * ```html
+ * <oe-axes x-axis y-axis="false">
+ *     <oe-spectrogram src="/example.flac"></oe-spectrogram>
+ * </oe-axes>
+ * ```
  *
  * @property x-step - The step size for the x-axis
  * @property y-step - The step size for the y-axis
@@ -73,17 +75,18 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = "true";
 
-  @state()
+  @queryAssignedElements()
+  private slotElements!: HTMLElement[];
+
   private spectrogram!: Spectrogram;
   private scales!: Signal<IScale>;
   private renderWindow!: Signal<RenderWindow>;
   private canvasShape!: Signal<RenderCanvasSize>;
-
-  @queryAssignedElements()
-  private slotElements!: HTMLElement[];
+  private fontSize = 8; // px
+  private fontPadding = 3; // px
 
   // TODO: We should only extract the UC out of the spectrogram element
-  public handleSlotchange(): void {
+  private handleSlotchange(): void {
     this.spectrogram = this.getSpectrogramElement();
     this.scales = this.spectrogram.unitConverters!.renderWindowScale;
     this.renderWindow = this.spectrogram.renderWindow;
@@ -112,13 +115,11 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     orientation: "x" | "y",
     values: Seconds[],
     scale: TemporalScale | FrequencyScale,
-    formatter: FormatterFunction,
+    formatter: (value: number) => string,
     label: string,
     canvasSize: Pixel,
   ) {
     const isYAxis = orientation === "y";
-
-    const fontSize = 8; // px
 
     const xAxisStep = isYAxis ? 0 : 1;
     const yAxisStep = isYAxis ? 1 : 0;
@@ -128,9 +129,10 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const x = (i: number) => scale(i) * xAxisStep;
     const y = (i: number) => scale(i) * yAxisStep + yOffset;
 
-    const labelX = isYAxis ? yOffset : canvasSize / 2;
-    const labelY = isYAxis ? canvasSize / 2 : yOffset;
-    const labelRotation = isYAxis ? -90 : 0;
+    const labelX = isYAxis ? -(this.fontSize * 7) : canvasSize / 2;
+    const labelY = isYAxis ? canvasSize / 2 : canvasSize + (this.fontSize * 3);
+
+    const labelRotation = isYAxis ? 90 : 0;
 
     // const gridLine = svg`
     //   <line
@@ -150,8 +152,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const tickLine = svg`
       ${isYAxis
-        ? svg`<line class="axis-tick y-tick" part="tick y-tick" x1="0" x2="${-fontSize}"></line>`
-        : svg`<line class="axis-tick x-tick" part="tick x-tick" y1="0" y2="${fontSize}"></line>`
+        ? svg`<line class="axis-tick y-tick" part="tick y-tick" x1="0" x2="${-this.fontSize}"></line>`
+        : svg`<line class="axis-tick x-tick" part="tick x-tick" y1="0" y2="${this.fontSize}"></line>`
       }
     `;
 
@@ -161,6 +163,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         part="legend ${orientation}-legend"
         x="${labelX}"
         y="${labelY}"
+        text-anchor="middle"
         transform="rotate(${labelRotation}, ${labelX}, ${labelY})"
       >
         ${label}
@@ -173,7 +176,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           <g transform="translate(${x(i)}, ${y(i)})">
             ${gridLine}
             ${tickLine}
-            <text part="label ${orientation}-label">
+            <text text-anchor="end" part="label ${orientation}-label">
               ${formatter(i)}
             </text>
           </g>
@@ -196,7 +199,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       "x",
       values,
       this.scales.value.temporal,
-      format(".1f"),
+      (x) => x.toFixed(1),
       this.xLabel,
       this.canvasShape.value.width,
     );
@@ -215,7 +218,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       "y",
       values,
       this.scales.value.frequency,
-      format(".0f"),
+      (x) => x.toFixed(0),
       this.yLabel,
       this.canvasShape.value.height,
     );
@@ -224,9 +227,37 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private calculateStep(scale: TemporalScale | FrequencyScale): number {
     const smallestValue = scale.domain()[0];
     const largestValue = scale.domain()[1];
+    const valueDelta = largestValue - smallestValue;
+
+    const canvasSize = Math.abs(scale.range()[1] - scale.range()[0]);
+
     const midpoint = (smallestValue + largestValue) / 2;
 
-    return Math.pow(10, Math.floor(Math.log10(midpoint)));
+    const baseTenStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
+
+    // we try to divide the base ten step by some nice factors and see if they still fit
+    // if they do, we should use them instead
+    // higher in the list takes higher priority
+    const niceFactors = [5, 2];
+
+    for (const factor of niceFactors) {
+      const proposedStep = baseTenStep / factor;
+
+      // the total label size includes the labels font size and the padding at
+      // the start and end (which is why we multiply this.fontPadding by two)
+      const totalLabelSize = this.fontSize * (this.fontPadding * 2);
+      const numberOfLabels = Math.ceil(valueDelta / proposedStep);
+      const proposedSize = numberOfLabels * totalLabelSize;
+
+      console.log(canvasSize);
+      const willFitStep = proposedSize < canvasSize;
+
+      if (willFitStep) {
+        return proposedStep;
+      }
+    }
+
+    return baseTenStep;
   }
 
   private generateAxisValues(
