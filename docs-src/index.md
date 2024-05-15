@@ -25,3 +25,13 @@ $ npm i @ecoacoustics/webcomponents-workspace
 ### Manually Install JS Files
 
 You can find all releases on [github](https://github.com/ecoacoustics/web-components/releases)
+
+### Important Notes
+
+If you are self-hosting the web components through NPM, GitHub releases, or copying
+the source code, you will have to enable the following headers on your web sever
+
+```http
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```

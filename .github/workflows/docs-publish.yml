@@ -1,0 +1,47 @@
+name: Publish Documentation
+
+on:
+  workflow_call:
+    inputs:
+      production:
+        required: true
+        type: boolean
+
+jobs:
+  Documentation-Publish:
+    name: Deploy Preview on Netlify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: |
+            - recursive: true
+
+      # TODO: We are building the components twice (once for publishing to CDN)
+      # and once for publishing to docs. We might want to combine the workflows
+      # so we only build artifacts once
+      - name: Build components
+        run: pnpm build:components
+
+      - name: Build docs
+        run: pnpm build:docs
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: "./dist/docs"
+          production-branch: main
+          production-deploy: ${{ inputs.production }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Documentation Deployment Preview"
+          enable-github-deployment: false
+          enable-commit-comment: false
+          netlify-config-path: ./netlify.toml
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 1

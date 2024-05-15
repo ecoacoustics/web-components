@@ -1,6 +1,6 @@
 ---
 layout: example.11ty.js
-title: Webcomponents Workspace ⌲ Examples ⌲ Validation Grid
+title: Open Ecoacoustics | Examples | Validation Grid
 ---
 
 ## Validation Interface
