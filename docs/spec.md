@@ -28,7 +28,7 @@ For a detailed list of the problems, and potential solutions, see the associated
 
 **NOTE**: This project will remain design agnostic! Design decisions will be made
 by the [Listen Page User Experience](./Listen%20UX.md) project. This project will
-build components that can be composed into *multiple different* designs,
+build components that can be composed into _multiple different_ designs,
 depending on the need of the project and target audience.
 
 The goal of this project is to re-implement some of the core components of the
@@ -96,6 +96,7 @@ We want this to work at various sizes:
   - page for new segments (audacity style)
   - or translate
 - Snippets
+
   - variable-width but generally short (1 to 10 seconds)
   - fixed duration of media
   - maybe with some padding
@@ -145,7 +146,7 @@ Shows axes and gridlines for a target
   - y grid lines
 - Can customize
   - x scale step
-  - y scale step (separated from *x scale step* because the units are not the same)
+  - y scale step (separated from _x scale step_ because the units are not the same)
   - to show end tick (e.g. prioritize showing end value tick over last scale step tick)
   - axis labels
   - axis position
@@ -239,14 +240,14 @@ but that now is taken care of via [lit context](https://lit.dev/docs/data/contex
 All use cases have the following in their header:
 
 ```html
-<script type="application/javascript" src="somecdn.org/oe-components-1.2.3.js" >
+<script type="module" src="somecdn.org/oe-components-1.2.3.js" >
 ```
 
 #### Show a spectrogram for some audio
 
 ```html
 <body>
-    <oe-spectrogram src="./myaudio.wav" />
+  <oe-spectrogram src="./myaudio.wav" />
 </body>
 ```
 
@@ -254,48 +255,40 @@ All use cases have the following in their header:
 
 ```html
 <body>
-    <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
-    <oe-axes for="spectrogram" />
+  <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
+  <oe-axes for="spectrogram" />
 </body>
 ```
+
 OR
 
 ```html
 <body>
-    <oe-axes>
-        <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
-    </oe-axes>
+  <oe-axes>
+    <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
+  </oe-axes>
 </body>
 ```
-
 
 #### Show a spectrogram for some audio, with customized grid lines and axes
 
 ```html
 <body>
-    <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
-    <oe-axes for="spectrogram"
-        show="x,y"
-        step="5,10"
-        last-value="x,y"
-    >
-        <span slot="x-axis-label">Time (seconds, relative to start of file)</span>
-        <span slot="y-axis-label">Freq.</span>
-    </oe-axes>
+  <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
+  <oe-axes for="spectrogram" show="x,y" step="5,10" last-value="x,y">
+    <span slot="x-axis-label">Time (seconds, relative to start of file)</span>
+    <span slot="y-axis-label">Freq.</span>
+  </oe-axes>
 </body>
 ```
 
 ```html
 <body>
-    <oe-axes
-        show="x,y"
-        step="5,10"
-        last-value="x,y"
-    >
-        <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
-        <span slot="x-axis-label">Time (seconds, relative to start of file)</span>
-        <span slot="y-axis-label">Freq.</span>
-    </oe-axes>
+  <oe-axes show="x,y" step="5,10" last-value="x,y">
+    <oe-spectrogram id="spectrogram" src="./myaudio.wav" />
+    <span slot="x-axis-label">Time (seconds, relative to start of file)</span>
+    <span slot="y-axis-label">Freq.</span>
+  </oe-axes>
 </body>
 ```
 
@@ -337,16 +330,17 @@ OR
 
 ```html
 <body>
-    <oe-spectrogram id="spectrogram" src="my_audio.wav" />
-    <oe-annotate for="spectrogram" readonly>
-        <!-- coordinate system pulled from spectrogram -->
-        <oe-annotation start-seconds="36.53" end-seconds="41.32" low-frequency="600" high-frequency="1600">
-            <oe-tag>Koala</oe-tag>
-            <oe-tag>Phascolarctos cinereus</oe-tag>
-            <oe-tag>Male</oe-tag>
-        </oe-annotation>
-        <oe-annotation  /> <!-- snip -->
-    </oe-annotate>
+  <oe-spectrogram id="spectrogram" src="my_audio.wav" />
+  <oe-annotate for="spectrogram" readonly>
+    <!-- coordinate system pulled from spectrogram -->
+    <oe-annotation start-seconds="36.53" end-seconds="41.32" low-frequency="600" high-frequency="1600">
+      <oe-tag>Koala</oe-tag>
+      <oe-tag>Phascolarctos cinereus</oe-tag>
+      <oe-tag>Male</oe-tag>
+    </oe-annotation>
+    <oe-annotation />
+    <!-- snip -->
+  </oe-annotate>
 </body>
 ```
 
@@ -372,4 +366,123 @@ OR
     <!-- play, pause, volume -->
     <oe-media-controls for="spectrogram" ></oe-media-controls>
 </body>
+```
+
+_TODO: Add verification grid example_
+
+Use a template element inside a slot for a spectrogram component
+
+These components will pre-fetch and cache the previous and next pages for quick navigation.
+Because we have pre-fetched the next page, we can use this to test if the next page exists.
+This means that the component does not depend on a data structure for pagination.
+
+All the `oe-verification-grid` component takes as a callback that can be used to instantiate
+an array of validation items.
+
+- Single-class (verify a single existing tag)
+- Multi-class (verify multiple existing tags)
+- Single-class and add additional tags
+- Multi-class and add additional tags
+
+```ts
+interface VerificationGrid {
+  download: () => unknown;
+  nextPage: () => unknown;
+  previousPage: () => unknown;
+}
+```
+
+##### Single Class
+
+Existing tag
+
+```html
+<oe-verification-grid id="verification-grid" getPage="(pageNumber) => getPage(pageNumber)">
+  <template>
+    <oe-spectrogram id="playing-spectrogram"></oe-spectrogram>
+    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
+  </template>
+
+  <oe-next shortcut="B">Back</oe-next>
+  <oe-previous shortcut="S">Skip</oe-previous>
+
+  <!-- Maybe something like -->
+  <oe-decision value="verified" tag="koala" shortcut="Y">Koala<oe-decision>
+  <oe-decision value="not-verified" tag="koala" shortcut="N">Not a Koala<oe-decision>
+</oe-verification-grid>
+
+<script>
+  document.getElementById("verification-grid").addEventListener("decision-made", (decision) => {
+    console.log(decision);
+  });
+</script>
+```
+
+##### Multi Class
+
+Existing tags
+
+Are all the tags that are applied correct (Y/N)
+
+Tag attribute is not present
+
+```html
+<oe-verification-grid id="verification-grid" getPage="(pageNumber) => getPage(pageNumber)">
+  <!-- Snip -->
+  <oe-decision value="verified" shortcut="Y">Labeled Correctly<oe-decision>
+  <oe-decision value="not-verified" shortcut="N">Labeled Incorrect<oe-decision>
+</oe-verification-grid>
+```
+
+##### Single Class, additional tags
+
+```html
+<oe-verification-grid id="verification-grid" getPage="(pageNumber) => getPage(pageNumber)">
+  <!-- Snip -->
+  <oe-decision value="verified" shortcut="1" tag="Red-tail Black Cockatoo" additional-tags="adult"><oe-decision>
+  <oe-decision value="verified" shortcut="2" tag="Red-tail Black Cockatoo" additional-tags="juvenile"><oe-decision>
+  <oe-decision value="verified" shortcut="3" tag="Red-tail Black Cockatoo" additional-tags="fledgling"><oe-decision>
+  <oe-decision value="verified" shortcut="4" tag="Red-tail Black Cockatoo" additional-tags="juvenile, fledgling"><oe-decision>
+  <oe-decision value="verified" shortcut="5" tag="Red-tail Black Cockatoo" additional-tags="flight"><oe-decision>
+  <oe-decision value="not-verified" shortcut="0" tag="Red-tail Black Cockatoo">No Cockatoo<oe-decision>
+  <oe-decision value="not-verified" shortcut="9" tag="Red-tail Black Cockatoo">No Cockatoo (but other bird)<oe-decision>
+</oe-verification-grid>
+```
+
+##### Multi Class, additional tags
+
+If you're not interested in verification, but you are interested in adding more tags to an event
+
+```html
+<oe-verification-grid id="verification-grid" getPage="(pageNumber) => getPage(pageNumber)">
+  <!-- Snip -->
+  <oe-decision value="verified" shortcut="1" additional-tags="adult"><oe-decision>
+  <oe-decision value="verified" shortcut="2" additional-tags="juvenile"><oe-decision>
+  <oe-decision value="verified" shortcut="3" additional-tags="fledgling"><oe-decision>
+  <oe-decision value="verified" shortcut="4" additional-tags="juvenile, fledgling"><oe-decision>
+  <oe-decision value="verified" shortcut="5" additional-tags="flight"><oe-decision>
+  <oe-decision value="not-verified" shortcut="0">No Cockatoo<oe-decision>
+  <oe-decision value="not-verified" shortcut="9">No Cockatoo (but other bird)<oe-decision>
+</oe-verification-grid>
+```
+
+<!--
+Helper functions to load resources:
+
+- `oe.loadUrl(url)`
+- `oe.loadList(...items)`
+
+```html
+<oe-verification-grid getPage="oe.loadUrl('grid-items.json')" pageSize="10">
+  <oe-spectrogram slot="spectrogram"></oe-spectrogram>
+</oe-verification-grid>
+```
+-->
+
+OR
+
+```html
+<oe-verification-grid src="grid-items.json" gridSize="10">
+  <oe-spectrogram slot="spectrogram"></oe-spectrogram>
+</oe-verification-grid>
 ```
