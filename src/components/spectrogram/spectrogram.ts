@@ -36,6 +36,13 @@ const defaultAudioModel = new AudioModel({
  * @property brightness - The brightness of the spectrogram
  * @property contrast - The contrast of the spectrogram
  *
+ * TODO
+ * @property aspect-ratio (stretch | fit-width | fit-height | natural) - The aspect ratio of the spectrogram
+ * stretch - fills parent and distorts image
+ * fit-width - fits the width of the container and scales the height (fills its parent in the x direction) (maintaining the correct aspect ratio)
+ * fit-height - fits the height of the container and scales the width (fills its parent in the y direction) (maintaining the correct aspect ratio)
+ * natural - a 1:1 mapping to the natural FFT height
+ *
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
@@ -138,6 +145,18 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
           originalAudioRecording: originalRecording,
         });
       });
+  }
+
+  public regenerateSpectrogram(): void {
+    this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((metadata: IAudioMetadata) => {
+      const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+
+      this.audio.value = new AudioModel({
+        duration: metadata.format.duration!,
+        sampleRate: metadata.format.sampleRate!,
+        originalAudioRecording: originalRecording,
+      });
+    });
   }
 
   public regenerateSpectrogram(): void {

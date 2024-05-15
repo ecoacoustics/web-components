@@ -15,7 +15,10 @@
         window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
-  <oe-media-controls for="playing-spectrogram"></oe-media-controls>
+  <oe-media-controls for="playing-spectrogram">
+    <button slot="play-icon">Pause</button>
+    <button slot="play-icon">2</button>
+  </oe-media-controls>
 
   <button onclick="changeSource();">Change source</button>
   <button onclick="changeColorMap();">Change colour map</button>
