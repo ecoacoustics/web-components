@@ -304,6 +304,17 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return values;
   }
 
+  private generateAxisValues(start: Seconds | Hertz, end: Seconds | Hertz, step: Seconds | Hertz): number[] {
+    const values: number[] = [];
+    for (let i = start; i < end; i += step) {
+      values.push(i);
+    }
+
+    values.push(end);
+
+    return values;
+  }
+
   public render() {
     let axes: TemplateResult<1> | undefined;
 

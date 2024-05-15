@@ -161,7 +161,7 @@ export class AudioHelper {
   }
 
   private abort() {
-    console.log("ABORTED")
+    console.log("ABORTED");
     if (!this.state) {
       throw new Error("Shared state is not defined");
     }

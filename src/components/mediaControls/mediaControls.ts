@@ -77,7 +77,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   }
 
   private playIcon() {
-    return html`<slot name="play-icon" part = "play-icon"> ${unsafeSVG(lucidPlayIcon)} </slot>`;
+    return html`<slot name="play-icon" part="play-icon"> ${unsafeSVG(lucidPlayIcon)} </slot>`;
   }
 
   private pauseIcon() {

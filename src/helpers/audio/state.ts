@@ -54,7 +54,7 @@ export type WorkerMessages = "setup" | "resize-canvas" | "regenerate-spectrogram
 
 // TODO: Change the name or extract these out to separate types
 export type SharedBuffersWithCanvas = SharedBuffers & {
-  canvas: OffscreenCanvas;
+  canvas?: OffscreenCanvas;
   spectrogramOptions: SpectrogramOptions;
   audioInformation: IAudioInformation;
 };
