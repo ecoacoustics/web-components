@@ -1,18 +1,13 @@
 import { css } from "lit";
 
 export const axesStyles = css`
-  li {
-    list-style-type: none;
-  }
-
   #wrapped-element {
     position: relative;
     display: inline-block;
-    margin-left: 4rem;
-    margin-bottom: 4rem;
+    margin: 4rem;
   }
 
-  #wrapped-element > svg {
+  svg {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -22,22 +17,32 @@ export const axesStyles = css`
     line {
       shape-rendering: crispEdges;
     }
-  }
 
-  svg g {
-    stroke: currentColor;
-
-    > text {
+    text {
       stroke: none;
+    }
+
+    g {
+      stroke: currentColor;
     }
   }
 
+  .grid-line {
+    stroke-width: 1;
+    stroke: currentColor;
+    opacity: 0.6;
+  }
+
+  /*
+    I style these with css parts so that if the user uses css parts
+    These styles will be overwritten
+  */
   ::part(grid) {
     color: lightblue;
     opacity: 0.6;
   }
 
-  #x-axis-g {
-    transform: translateY(calc(100% - 4px));
+  ::part(tick) {
+    color: black;
   }
 `;

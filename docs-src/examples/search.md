@@ -1,6 +1,6 @@
 ---
 layout: example.11ty.js
-title: Webcomponents Workspace ⌲ Examples ⌲ A2O Search
+title: Open Ecoacoustics | Examples | A2O Search
 ---
 
 ## A2O Search Grid

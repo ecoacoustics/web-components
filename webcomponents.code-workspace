@@ -41,12 +41,16 @@
       "webcomponents",
       "webcomponents-workspace",
       "webfft",
-      "worklet"
+      "worklet",
+      "colour"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
     "markdownlint.config": {
       // disable no Inline HTML because we use inline HTML for the 11ty pages
       "MD033": false
+    },
+    "[html]": {
+      "editor.defaultFormatter": "vscode.html-language-features"
     }
   },
   "extensions": {

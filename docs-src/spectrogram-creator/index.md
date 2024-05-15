@@ -1,17 +1,12 @@
 ---
 layout: example.11ty.js
-title: Webcomponents Workspace ⌲ Spectrogram Creator
+title: Open Ecoacoustics Web Components | Spectrogram Creator
 ---
 
-# Spectrogram Creator
+## Spectrogram Creator
 
 ```html
-<oe-axes>
-<oe-indicator>
-<oe-spectrogram id="playing-spectrogram" src="/example.flac"></oe-spectrogram>
-</oe-indicator>
-</oe-axes>
-<oe-media-controls for="playing-spectrogram"></oe-media-controls>
+Loading...
 ```
 
 <div class="container">
@@ -52,7 +47,7 @@ title: Webcomponents Workspace ⌲ Spectrogram Creator
             <label>
                 Window Size
                 <select class="form-select" onchange="updateAttribute('window-size', event.target.value)">
-                    <option value="128">128</option>
+                    <!-- <option value="128">128</option> -->
                     <option value="256">256</option>
                     <option value="512" selected>512</option>
                     <option value="1024">1024</option>
@@ -62,8 +57,8 @@ title: Webcomponents Workspace ⌲ Spectrogram Creator
             <label>
                 Window Overlap
                 <select class="form-select" onchange="updateAttribute('window-overlap', event.target.value)">
-                    <option value="0">None</option>
-                    <option value="128" selected>128</option>
+                    <option value="0" selected>None</option>
+                    <option value="128">128</option>
                     <option value="256">256</option>
                     <option value="512">512</option>
                     <option value="1024">1024</option>
@@ -90,6 +85,13 @@ title: Webcomponents Workspace ⌲ Spectrogram Creator
                 </select>
             </label>
             <label>
+                Scale
+                <select class="form-select" onchange="booleanAttribute('mel-scale', event.target.value)">
+                    <option value="false" selected>Linear</option>
+                    <option value="true">Mel</option>
+                </select>
+            </label>
+            <label>
                 Brightness
                 <input
                     type="number"
@@ -109,26 +111,52 @@ title: Webcomponents Workspace ⌲ Spectrogram Creator
                     onchange="updateAttribute('contrast', Number(event.target.value))"
                 />
             </label>
+            <label>
+                URL Source
+                <input
+                    type="url"
+                    value="/public/example.flac"
+                    list="source-options"
+                    class="form-control"
+                    onchange="updateAttribute('src', event.target.value)"
+                />
+                <datalist id="source-options">
+                    <option value="/public/example.flac">/public/example.flac</option>
+                    <option value="/public/example_34s.flac">/public/example_34s.flac</option>
+                </datalist>
+            </label>
         </div>
     </div>
 </div>
 
 <script>
-let spectrogramElement = null;
-
 window.onload = () => {
-    spectrogramElement = document.getElementById("playing-spectrogram");
+     updateCodeExample();
 };
 
-function updateAttribute(attribute, value) {
-    spectrogramElement.setAttribute(attribute, value);
-
+function updateCodeExample() {
     // update the code that can be copied
     const codeInputElement = document.getElementById("spectrogram-output");
     const codeOutputElement = document.getElementsByTagName("pre")[0];
 
-    console.log(codeInputElement);
     codeOutputElement.innerText = codeInputElement.innerHTML.trim().replace(/^[\s]*/gm, "");
+}
+
+function updateAttribute(attribute, value) {
+    document.getElementById("playing-spectrogram").setAttribute(attribute, value);
+
+    updateCodeExample();
+}
+
+function booleanAttribute(attribute, show) {
+    const shouldShow = show === "true";
+    const spectrogram = document.getElementById("playing-spectrogram");
+
+    if (shouldShow) {
+        spectrogram.setAttribute(attribute, "");
+    } else {
+        spectrogram.removeAttribute(attribute);
+    }
 }
 </script>
 
@@ -141,6 +169,6 @@ label {
 oe-spectrogram {
     position: relative;
     width: 400px;
-    height: 300px;
+    height: 400px;
 }
 </style>

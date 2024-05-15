@@ -1,5 +1,5 @@
 import { WindowFunctionName } from "fft-windowing-ts";
-import { Hertz, Sample } from "models/unitConverters";
+import { Sample, Hertz } from "../../models/unitConverters";
 
 /**
  * There are names for indexes in a packed struct stored in a SharedArrayBuffer
@@ -44,13 +44,15 @@ enum STATE {
   FINISHED_PROCESSING = 3,
 }
 
+// TODO: improve the TS typing here
 export type NamedMessageData<TMessage, TData> = [name: TMessage, data: TData];
 export type NamedMessageEvent<TMessage, TData> = MessageEvent<NamedMessageData<TMessage, TData>>;
 
 export type SharedBuffers = { state: SharedArrayBuffer; sampleBuffer: SharedArrayBuffer };
 export type ProcessorMessages = "setup";
-export type WorkerMessages = "setup" | "resize-canvas" | "regenerate-spectrogram";
+export type WorkerMessages = "setup" | "resize-canvas" | "regenerate-spectrogram" | "new-buffers";
 
+// TODO: Change the name or extract these out to separate types
 export type SharedBuffersWithCanvas = SharedBuffers & {
   canvas: OffscreenCanvas;
   spectrogramOptions: SpectrogramOptions;

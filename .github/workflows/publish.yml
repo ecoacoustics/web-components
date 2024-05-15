@@ -51,35 +51,7 @@ jobs:
           gh release upload ${{ inputs.tag_name }} ./components.js
 
   Publish-Documentation:
-    name: Publish Documentation
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-          run_install: |
-            - recursive: true
-
-      - name: Build docs
-        run: pnpm build:docs
-
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: "./dist/docs"
-          production-branch: main
-          production-deploy: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          github-deployment-environment: "Documentation"
-          enable-github-deployment: true
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 1
+    uses: ./.github/workflows/docs-publish.yml
+    with:
+      production: true
+    secrets: inherit
