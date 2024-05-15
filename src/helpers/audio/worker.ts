@@ -7,7 +7,7 @@ import {
   WorkerState,
 } from "./state";
 import { SpectrogramGenerator } from "./spectrogram";
-import { Size } from "models/rendering";
+import { Size } from "../../models/rendering";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -85,7 +85,7 @@ function drawSpectrogramOntoDestinationCanvas(): void {
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
-  ({ spectrogramOptions: options, audioInformation, canvas: destinationCanvas } = data);
+  ({ spectrogramOptions: options, audioInformation } = data);
 
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
@@ -106,16 +106,23 @@ function setup(data: SharedBuffersWithCanvas): void {
   spectrogramCanvas = new OffscreenCanvas(spectrogram.width, spectrogram.height);
   spectrogramSurface = spectrogramCanvas.getContext("2d")!;
 
-  destinationSurface = destinationCanvas.getContext("2d")!;
-  destinationSurface.imageSmoothingEnabled = true;
-  destinationSurface.imageSmoothingQuality = "high";
-
   // start polling
   work();
 }
 
-function regenerate(options: SpectrogramOptions): void {
+function transferCanvas(canvas: OffscreenCanvas) {
+  destinationCanvas = canvas;
+
+  destinationSurface = destinationCanvas.getContext("2d")!;
+  destinationSurface.imageSmoothingEnabled = true;
+  destinationSurface.imageSmoothingQuality = "high";
+}
+
+function regenerate(newOptions: SpectrogramOptions): void {
   state.resetWork();
+  options = newOptions;
+  console.log(newOptions);
+
   spectrogram = new SpectrogramGenerator(audioInformation, options);
 
   work();
@@ -138,6 +145,10 @@ function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
 
   switch (eventMessage) {
     case "setup":
+      transferCanvas(event.data[1].canvas)
+      setup(event.data[1] as SharedBuffersWithCanvas);
+      break;
+    case "new-buffers":
       setup(event.data[1] as SharedBuffersWithCanvas);
       break;
     case "resize-canvas":

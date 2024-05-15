@@ -1,16 +1,20 @@
 import { RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
-import * as d3Scale from "d3-scale";
+import { scaleLinear, ScaleLinear } from "d3-scale";
 import { computed, Signal } from "@lit-labs/preact-signals";
 
 export type Seconds = number;
 export type Hertz = number;
-export type Pixels = number;
+export type Pixel = number;
 export type Sample = number;
 
-interface IScale {
-  temporal: d3Scale.ScaleLinear<number, number, never>;
-  frequency: d3Scale.ScaleLinear<number, number, never>;
+export type TemporalScale = LinearScale;
+export type FrequencyScale = LinearScale;
+type LinearScale = ScaleLinear<number, number, never>;
+
+export interface IScale {
+  temporal: LinearScale;
+  frequency: LinearScale;
 }
 
 // use we signals in the stateful unit converters so that when one value updates
@@ -30,12 +34,16 @@ export class UnitConverter {
   public canvasSize: Signal<RenderCanvasSize>;
   public audioModel: Signal<AudioModel>;
 
+  public nyquist = computed(() =>
+    this.audioModel.value.sampleRate / 2
+  );
+
   // TODO: The scales constant should be a class property so that when preact
   // diffs the computed signal, it will compare against a value (not a property)
   public renderWindowScale = computed<IScale>(() => {
     const scales: IScale = {
-      temporal: d3Scale.scaleLinear(),
-      frequency: d3Scale.scaleLinear(),
+      temporal: scaleLinear(),
+      frequency: scaleLinear(),
     };
 
     scales.temporal = scales.temporal
@@ -43,35 +51,9 @@ export class UnitConverter {
       .range([0, this.canvasSize.value.width]);
 
     scales.frequency = scales.frequency
-      .domain([0, this.nyquist()])
+      .domain([0, this.nyquist.value])
       .range([this.canvasSize.value.height, 0]);
 
     return scales;
   });
-
-  /**
-   * @todo Remove all references to this unit converter
-   * @deprecated Prefer to use renderWindowScale over segmentToCanvasScale
-   */
-  public segmentToCanvasScale = computed<IScale>(() => {
-    const scales: IScale = {
-      temporal: d3Scale.scaleLinear(),
-      frequency: d3Scale.scaleLinear(),
-    };
-
-    scales.temporal = scales.temporal
-      .domain([
-        this.renderWindow.value.startOffset,
-        this.renderWindow.value.startOffset + this.audioModel.value.duration,
-      ])
-      .range([0, this.canvasSize.value.width]);
-
-    scales.frequency = scales.frequency.domain([0, this.nyquist()]).range([this.canvasSize.value.height, 0]);
-
-    return scales;
-  });
-
-  public nyquist(): number {
-    return this.audioModel.value.sampleRate / 2;
-  }
 }

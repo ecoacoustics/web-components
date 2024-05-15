@@ -2,13 +2,13 @@ import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
-import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../models/rendering";
-import { AudioModel } from "../models/recordings";
-import { Hertz, Pixels, Seconds, UnitConverter } from "../models/unitConverters";
-import { OeResizeObserver } from "../helpers/resizeObserver";
-import { AbstractComponent } from "../mixins/abstractComponent";
-import { AudioHelper } from "../helpers/audio/audio";
-import { SpectrogramOptions } from "../helpers/audio/state";
+import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../../models/rendering";
+import { AudioModel } from "../../models/recordings";
+import { Hertz, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
+import { OeResizeObserver } from "../../helpers/resizeObserver";
+import { AbstractComponent } from "../../mixins/abstractComponent";
+import { AudioHelper } from "../../helpers/audio/audio";
+import { SpectrogramOptions } from "../../helpers/audio/state";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioMetadata } from "music-metadata-browser";
 
@@ -85,7 +85,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
-  public fftSlice?: TwoDSlice<Pixels, Hertz>;
+  public fftSlice?: TwoDSlice<Pixel, Hertz>;
 
   public audio: Signal<AudioModel> = signal(defaultAudioModel);
   public currentTime: Signal<Seconds> = signal(this.offset);
@@ -114,33 +114,41 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     OeResizeObserver.instance.unobserve(this.canvas);
   }
 
-  public willUpdate(change: PropertyValues<this>): void {
-    if (change.has("paused")) {
-      this.setPlaying();
-    }
-
-    // if the src changes, we want to start the recording from the beginning
-    if (change.has("src") || change.has("slotElements")) {
-      this.currentTime.value = 0;
-    }
-  }
-
   public updated(change: PropertyValues<this>) {
-    this.setPlaying();
-
     if (change.has("offset") || change.has("renderWindow")) {
       this.shadowRoot?.dispatchEvent(new Event("slotchange"));
     }
 
-    // spectrogram regeneration functionality
-    if (this.doneFirstRender && this.shouldInvalidateSpectrogram(change)) {
-      this.audioHelper.regenerateSpectrogram(this.mediaElement, this.spectrogramOptions());
+    if (this.doneFirstRender) {
+      // spectrogram regeneration functionality
+      if (this.invalidateSpectrogramOptions(change)) {
+        this.audioHelper.regenerateSpectrogramOptions(this.spectrogramOptions());
+      }
+
+      if (this.invalidateSpectrogramSource(change)) {
+        this.currentTime.value = 0;
+        this.regenerateSpectrogram();
+      }
     }
   }
 
   public renderSpectrogram(): void {
     this.audioHelper
-      .connect(this.mediaElement, this.canvas, this.spectrogramOptions())
+      .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
+      .then((metadata: IAudioMetadata) => {
+        const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+
+        this.audio.value = new AudioModel({
+          duration: metadata.format.duration!,
+          sampleRate: metadata.format.sampleRate!,
+          originalAudioRecording: originalRecording,
+        });
+      });
+  }
+
+  public regenerateSpectrogram(): void {
+    this.audioHelper
+      .regenerateSpectrogram(this.mediaElement.src, this.spectrogramOptions())
       .then((metadata: IAudioMetadata) => {
         const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
 
@@ -154,17 +162,19 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public play(): void {
     this.paused = false;
+    this.setPlaying();
   }
 
   public pause(): void {
     this.paused = true;
+    this.setPlaying();
   }
 
   /**
    * Specifies if the spectrogram is invalidated with the new parameters
    * This method can be used to check if the spectrogram needs to be re-rendered
    */
-  private shouldInvalidateSpectrogram(change: PropertyValues<this>): boolean {
+  private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
     const invalidationKeys: (keyof Spectrogram)[] = [
       "slotElements",
@@ -180,13 +190,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       "offset",
     ];
 
-    for (const key of invalidationKeys) {
-      if (change.has(key)) {
-        return true;
-      }
-    }
+    return invalidationKeys.some((key) => change.has(key));
+  }
 
-    return false;
+  private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
+    const invalidationKeys: (keyof Spectrogram)[] = [
+      "src",
+      "slotElements"
+    ];
+
+    return invalidationKeys.some((key) => change.has(key));
   }
 
   private updateCurrentTime(): void {
@@ -246,7 +259,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         startOffset: this.offset,
         endOffset: this.offset + this.audio.value.duration,
         lowFrequency: 0,
-        highFrequency: this.unitConverters?.nyquist() ?? 0,
+        highFrequency: this.unitConverters?.nyquist.value ?? 0,
       });
     }
 

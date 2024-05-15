@@ -1,6 +1,6 @@
 ---
 layout: example.11ty.js
-title: Webcomponents Workspace ⌲ Examples
+title: Open Ecoacoustics | Examples
 ---
 
 ## Examples

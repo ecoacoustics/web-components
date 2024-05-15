@@ -6,7 +6,7 @@ import { provide } from "@lit/context";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
-import { AbstractComponent } from "../mixins/abstractComponent";
+import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Spectrogram } from "spectrogram/spectrogram";
 
 /**
@@ -33,13 +33,12 @@ export class MediaControls extends AbstractComponent(LitElement) {
   public for = "";
 
   private spectrogramElement?: Spectrogram | null;
+  private playHandler = this.handleUpdatePlaying.bind(this);
 
   public disconnectedCallback(): void {
     this.spectrogramElement?.removeEventListener("play", this.playHandler);
     super.disconnectedCallback();
   }
-
-  private playHandler = this.handleUpdatePlaying.bind(this);
 
   public toggleAudio(): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
@@ -58,14 +57,14 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener("play", this.playHandler);
-      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
 
+      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
       this.spectrogramElement?.addEventListener("play", this.playHandler);
     }
   }
 
   private handleUpdatePlaying(): void {
-    this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"}`);
+    this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"} `);
     this.requestUpdate();
   }
 
@@ -76,7 +75,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   }
 
   private playIcon() {
-    return html`<slot name="play-icon" part="play-icon">${unsafeSVG(lucidPlayIcon)}</slot>`;
+    return html`<slot name = "play-icon" part = "play-icon"> ${unsafeSVG(lucidPlayIcon)} </slot>`;
   }
 
   private pauseIcon() {

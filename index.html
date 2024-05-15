@@ -1,67 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Components</title>
-    <script type="module" src="./src/components/index.ts"></script>
-  </head>
 
-  <body>
-    <oe-axes>
-      <oe-indicator>
-        <oe-spectrogram
-          style="width: 100%; height: 1024px"
-          id="playing-spectrogram"
-          class="large"
-          src="/example.flac"
-          window-size="1024"
-          window-overlap="512"
-          color-map="audacity"
-        ></oe-spectrogram>
-      </oe-indicator>
-    </oe-axes>
-    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Components</title>
+  <script type="module" src="./src/components/index.ts"></script>
+</head>
 
-    <style>
-      #axes {
-        color: blue;
+<body>
+  <oe-axes x-axis="visible | hidden" x-axis="axis" x-axis="axis, grid" x-axis="grid">
+    <oe-indicator>
+      <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
+        window-size="1024" window-overlap="512" color-map="audacity"></oe-spectrogram>
+    </oe-indicator>
+  </oe-axes>
+  <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
-        &::part(tick) {
-          color: lime;
-        }
+  <button onclick="changeSource();">Change source</button>
+  <button onclick="changeColorMap();">Change colour map</button>
+  <button onclick="changeSize();">Change Size</button>
 
-        &::part(x-ticks) {
-          color: red;
-        }
+  <script>
+    function changeSource() {
+      const element = document.getElementById("playing-spectrogram");
 
-        &::part(y-ticks) {
-          color: green;
-        }
+      if (element.src === "/example.flac") {
+        element.setAttribute("src", "/example_34s.flac");
+      } else {
+        element.setAttribute("src", "/example.flac");
+      }
+    }
 
-        &::part(y-grid) {
-          color: purple;
-        }
+    function changeColorMap() {
+      const element = document.getElementById("playing-spectrogram");
 
-        &::part(x-grid) {
-          color: orange;
-        }
+      if (element.getAttribute("color-map") === "audacity") {
+        element.setAttribute("color-map", "raven");
+      } else {
+        element.setAttribute("color-map", "audacity");
+      }
+    }
+
+    function changeSize() {
+      const element = document.getElementById("playing-spectrogram");
+
+      if (element.style.width === "600px") {
+        element.style.width = "300px";
+        element.style.height = "300px";
+      } else {
+        element.style.width = "600px";
+        element.style.height = "600px";
+      }
+    }
+  </script>
+
+  <style>
+    #axes {
+      color: blue;
+
+      &::part(tick) {
+        color: lime;
       }
 
-      .grid-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
+      &::part(x-ticks) {
+        color: red;
       }
 
-      .small {
-        height: 200px;
-        width: 200px;
+      &::part(y-ticks) {
+        color: green;
       }
 
-      .large {
-        height: 300px;
-        width: 300px;
+      &::part(y-grid) {
+        color: purple;
       }
-    </style>
-  </body>
+
+      &::part(x-grid) {
+        color: orange;
+      }
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .small {
+      height: 200px;
+      width: 200px;
+    }
+
+    .large {
+      height: 300px;
+      width: 300px;
+    }
+  </style>
+</body>
+
 </html>

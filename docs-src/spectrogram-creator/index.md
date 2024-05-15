@@ -1,17 +1,12 @@
 ---
 layout: example.11ty.js
-title: Webcomponents Workspace ⌲ Spectrogram Creator
+title: Open Ecoacoustics Web Components | Spectrogram Creator
 ---
 
-# Spectrogram Creator
+## Spectrogram Creator
 
 ```html
-<oe-axes>
-<oe-indicator>
-<oe-spectrogram id="playing-spectrogram" src="/example.flac"></oe-spectrogram>
-</oe-indicator>
-</oe-axes>
-<oe-media-controls for="playing-spectrogram"></oe-media-controls>
+Loading...
 ```
 
 <div class="container">
@@ -109,26 +104,41 @@ title: Webcomponents Workspace ⌲ Spectrogram Creator
                     onchange="updateAttribute('contrast', Number(event.target.value))"
                 />
             </label>
+            <label>
+                URL Source
+                <input
+                    type="url"
+                    value="/public/example.flac"
+                    list="source-options"
+                    class="form-control"
+                    onchange="updateAttribute('src', event.target.value)"
+                />
+                <datalist id="source-options">
+                    <option value="/public/example.flac">/public/example.flac</option>
+                    <option value="/public/example_34s.flac">/public/example_34s.flac</option>
+                </datalist>
+            </label>
         </div>
     </div>
 </div>
 
 <script>
-let spectrogramElement = null;
-
 window.onload = () => {
-    spectrogramElement = document.getElementById("playing-spectrogram");
+     updateCodeExample();
 };
 
-function updateAttribute(attribute, value) {
-    spectrogramElement.setAttribute(attribute, value);
-
+function updateCodeExample() {
     // update the code that can be copied
     const codeInputElement = document.getElementById("spectrogram-output");
     const codeOutputElement = document.getElementsByTagName("pre")[0];
 
-    console.log(codeInputElement);
     codeOutputElement.innerText = codeInputElement.innerHTML.trim().replace(/^[\s]*/gm, "");
+}
+
+function updateAttribute(attribute, value) {
+    document.getElementById("playing-spectrogram").setAttribute(attribute, value);
+
+    updateCodeExample();
 }
 </script>
 
