@@ -85,6 +85,13 @@ Loading...
                 </select>
             </label>
             <label>
+                Scale
+                <select class="form-select" onchange="booleanAttribute('mel-scale', event.target.value)">
+                    <option value="false" selected>Linear</option>
+                    <option value="true">Mel</option>
+                </select>
+            </label>
+            <label>
                 Brightness
                 <input
                     type="number"
@@ -139,6 +146,17 @@ function updateAttribute(attribute, value) {
     document.getElementById("playing-spectrogram").setAttribute(attribute, value);
 
     updateCodeExample();
+}
+
+function booleanAttribute(attribute, show) {
+    const shouldShow = show === "true";
+    const spectrogram = document.getElementById("playing-spectrogram");
+
+    if (shouldShow) {
+        spectrogram.setAttribute(attribute, "");
+    } else {
+        spectrogram.removeAttribute(attribute);
+    }
 }
 </script>
 

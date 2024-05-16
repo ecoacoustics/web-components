@@ -93,6 +93,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     this.scales = this.spectrogram.unitConverters!.renderWindowScale;
     this.renderWindow = this.spectrogram.renderWindow;
     this.canvasShape = this.spectrogram.renderCanvasSize;
+
+    console.log("new canvas size", this.canvasShape);
   }
 
   // TODO: I think there might be a better way to do this using a combination of
@@ -212,7 +214,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       this.scales.value.temporal,
       (x) => x.toFixed(1),
       this.xLabel,
-      this.canvasShape.value.width,
+      // TODO: This is incorrect, but it works for the demo
+      this.canvasShape.value.height,
     );
   }
 
