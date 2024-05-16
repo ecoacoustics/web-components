@@ -69,13 +69,15 @@ export class MediaControls extends AbstractComponent(LitElement) {
   }
 
   private isSpectrogramPlaying(): boolean {
-    if (!this.spectrogramElement) return false;
+    if (!this.spectrogramElement) {
+      return false;
+    }
 
     return !this.spectrogramElement?.paused;
   }
 
   private playIcon() {
-    return html`<slot name = "play-icon" part = "play-icon"> ${unsafeSVG(lucidPlayIcon)} </slot>`;
+    return html`<slot name="play-icon" part = "play-icon"> ${unsafeSVG(lucidPlayIcon)} </slot>`;
   }
 
   private pauseIcon() {

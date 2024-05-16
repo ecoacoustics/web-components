@@ -148,7 +148,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public regenerateSpectrogram(): void {
     this.audioHelper
-      .regenerateSpectrogram(this.mediaElement.src, this.spectrogramOptions())
+      .changeSource(this.mediaElement.src, this.spectrogramOptions())
       .then((metadata: IAudioMetadata) => {
         const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
 
@@ -177,8 +177,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
     const invalidationKeys: (keyof Spectrogram)[] = [
-      "slotElements",
-      "src",
       "domRenderWindow",
       "brightness",
       "contrast",

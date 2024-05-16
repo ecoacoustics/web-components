@@ -5,8 +5,8 @@ import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?worker&url
 import WorkerConstructor from "./worker.ts?worker&inline";
 import { Size } from "../../models/rendering";
 
-interface ICachedAudio {
-  response: Response;
+interface IFetchedAudio<T = Response | ArrayBuffer> {
+  response: T;
   metadata: IAudioMetadata;
 }
 
@@ -21,17 +21,17 @@ export class AudioHelper {
   private state: State | undefined;
   private sampleBuffer: SharedArrayBuffer | undefined;
   private offscreenCanvas: OffscreenCanvas | undefined;
-  private cachedFile!: ICachedAudio;
+  private cachedFile!: IFetchedAudio<Response>;
+  private segmentSize = 41100;
 
   public get canvasTransferred(): boolean {
     return this.offscreenCanvas !== undefined;
   }
 
   public async connect(src: string, canvas: HTMLCanvasElement, options: SpectrogramOptions): Promise<IAudioMetadata> {
-    const downloadedBuffer = await this.fetchAudio(src);
-    const metadata = this.cachedFile.metadata;
+    const { response, metadata } = await this.fetchAudio(src);
 
-    const context = await this.createAudioContext(metadata, downloadedBuffer);
+    const context = await this.createAudioContext(metadata, response);
 
     // the number of samples after which to trigger a render of the spectrogram
     // the balance of this number is a performance tradeoff
@@ -40,10 +40,8 @@ export class AudioHelper {
     //   e.g. with canvas painting, wasm interop, signalling primitives, etc.
     //
     // about one seconds-worth of samples
-    const segmentSize =
-      Math.floor(metadata.format.sampleRate! / options.windowStep) * options.windowStep;
-    this.state = State.createState(segmentSize);
-    this.sampleBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * segmentSize);
+    this.state = State.createState(this.segmentSize);
+    this.sampleBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.segmentSize);
 
     if (!this.canvasTransferred) {
       this.offscreenCanvas = canvas.transferControlToOffscreen();
@@ -65,6 +63,7 @@ export class AudioHelper {
   }
 
   /**
+   * @description
    * This method is similar to `connect()`, however, it can re-use:
    *  - workers
    *  - state objects
@@ -77,66 +76,29 @@ export class AudioHelper {
    */
   public async regenerateSpectrogramOptions(options: SpectrogramOptions): Promise<IAudioMetadata> {
     if (!this.spectrogramWorker) {
-      throw new Error("Worker is not initialized");
+      throw new Error("Worker is not initialized. Call connect() first.");
     }
 
     const downloadedBuffer = await this.cachedBuffer();
     const metadata = this.cachedMetadata();
     const context = await this.createAudioContext(metadata, downloadedBuffer);
-
     this.setupProcessor(context);
+
     this.spectrogramWorker.postMessage(["regenerate-spectrogram", options]);
 
     return metadata;
   }
 
-  /**
-   * This method is similar to `regenerateSpectrogramOptions()` in that it can re-use:
-   *  - Workers
-   *  - Canvas References
-   *
-   * But it cannot re-use:
-   *  - OfflineAudioContext
-   *  - AudioWorkletProcessor
-   *  - Shared Buffers
-   *  - State
-   *
-   * This is useful if you are changing audio source because different audio sources may require different buffer sizes
-   */
-  public async regenerateSpectrogram(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
+  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
     if (!this.spectrogramWorker) {
-      throw new Error("Worker is not initialized");
+      throw new Error("Worker is not initialized. Call connect() first.");
     }
 
-    const downloadedBuffer = await this.fetchAudio(src);
-    const metadata = this.cachedFile.metadata;
-
-    const context = await this.createAudioContext(metadata, downloadedBuffer);
-
-    const segmentSize =
-      Math.floor(metadata.format.sampleRate! / options.windowStep) * options.windowStep;
-    this.state = State.createState(segmentSize);
-    this.sampleBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * segmentSize);
-
+    const { response, metadata } = await this.fetchAudio(src);
+    const context = await this.createAudioContext(metadata, response);
     this.setupProcessor(context);
 
-    const audioInformation: IAudioInformation = {
-      startSample: 0,
-      endSample: metadata.format.duration! * metadata.format.sampleRate!,
-      sampleRate: metadata.format.sampleRate!,
-    };
-
-    this.spectrogramWorker!.postMessage(
-      [
-        "new-buffers",
-        {
-          state: this.state.buffer,
-          sampleBuffer: this.sampleBuffer,
-          spectrogramOptions: options,
-          audioInformation,
-        },
-      ],
-    );
+    this.spectrogramWorker.postMessage(["regenerate-spectrogram", options]);
 
     return metadata;
   }
@@ -185,14 +147,13 @@ export class AudioHelper {
     );
   }
 
-  private async fetchAudio(src: string): Promise<ArrayBuffer> {
+  private async fetchAudio(src: string): Promise<IFetchedAudio<ArrayBuffer>> {
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
     const response = await fetch(src);
-
+    
     const cachedResponse = response.clone();
     const responseBuffer = await response.arrayBuffer();
-
     const cachedMetadata = await parseBlob(new Blob([responseBuffer]));
 
     this.cachedFile = {
@@ -200,7 +161,10 @@ export class AudioHelper {
       metadata: cachedMetadata,
     };
 
-    return responseBuffer;
+    return {
+      response: responseBuffer,
+      metadata: cachedMetadata,
+    };
   }
 
   private async cachedBuffer(): Promise<ArrayBuffer> {

@@ -47,7 +47,7 @@ Loading...
             <label>
                 Window Size
                 <select class="form-select" onchange="updateAttribute('window-size', event.target.value)">
-                    <option value="128">128</option>
+                    <!-- <option value="128">128</option> -->
                     <option value="256">256</option>
                     <option value="512" selected>512</option>
                     <option value="1024">1024</option>
@@ -57,8 +57,8 @@ Loading...
             <label>
                 Window Overlap
                 <select class="form-select" onchange="updateAttribute('window-overlap', event.target.value)">
-                    <option value="0">None</option>
-                    <option value="128" selected>128</option>
+                    <option value="0" selected>None</option>
+                    <option value="128">128</option>
                     <option value="256">256</option>
                     <option value="512">512</option>
                     <option value="1024">1024</option>
@@ -151,6 +151,6 @@ label {
 oe-spectrogram {
     position: relative;
     width: 400px;
-    height: 300px;
+    height: 400px;
 }
 </style>

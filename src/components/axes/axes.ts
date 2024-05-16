@@ -10,6 +10,8 @@ import { RenderCanvasSize, RenderWindow } from "../../models/rendering";
 // TODO: move this to a different place
 const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 
+type Orientation = "x" | "y";
+
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
  *
@@ -58,7 +60,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public yStepOverride: Hertz | undefined;
 
   @property({ attribute: "x-label", type: String, reflect: true })
-  public xLabel = "Time (seconds)"
+  public xLabel = "Time (seconds)";
 
   @property({ attribute: "y-label", type: String, reflect: true })
   public yLabel = "Frequency (Hertz)";
@@ -83,7 +85,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private renderWindow!: Signal<RenderWindow>;
   private canvasShape!: Signal<RenderCanvasSize>;
   private fontSize = 8; // px
-  private fontPadding = 3; // px
+  private labelPadding = 3; // px
 
   // TODO: We should only extract the UC out of the spectrogram element
   private handleSlotchange(): void {
@@ -112,7 +114,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private createAxis(
-    orientation: "x" | "y",
+    orientation: Orientation,
     values: Seconds[],
     scale: TemporalScale | FrequencyScale,
     formatter: (value: number) => string,
@@ -130,7 +132,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const y = (i: number) => scale(i) * yAxisStep + yOffset;
 
     const labelX = isYAxis ? -(this.fontSize * 7) : canvasSize / 2;
-    const labelY = isYAxis ? canvasSize / 2 : canvasSize + (this.fontSize * 3);
+    const labelY = isYAxis ? canvasSize / 2 : canvasSize + this.fontSize * 3;
 
     const labelRotation = isYAxis ? 90 : 0;
 
@@ -144,16 +146,18 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // `;
 
     const gridLine = svg`
-      ${isYAxis
-        ? svg`<line class="grid-line y-grid" part="grid y-grid" x1="0%" x2="100%"></line>`
-        : svg`<line class="grid-line x-grid" part="grid x-grid" y1="0%" y2="-100%"></line>`
+      ${
+        isYAxis
+          ? svg`<line class="grid-line y-grid" part="grid y-grid" x1="0%" x2="100%"></line>`
+          : svg`<line class="grid-line x-grid" part="grid x-grid" y1="0%" y2="-100%"></line>`
       }
     `;
 
     const tickLine = svg`
-      ${isYAxis
-        ? svg`<line class="axis-tick y-tick" part="tick y-tick" x1="0" x2="${-this.fontSize}"></line>`
-        : svg`<line class="axis-tick x-tick" part="tick x-tick" y1="0" y2="${this.fontSize}"></line>`
+      ${
+        isYAxis
+          ? svg`<line class="axis-tick y-tick" part="tick y-tick" x1="0" x2="${-this.fontSize}"></line>`
+          : svg`<line class="axis-tick x-tick" part="tick x-tick" y1="0" y2="${this.fontSize}"></line>`
       }
     `;
 
@@ -165,6 +169,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         y="${labelY}"
         text-anchor="middle"
         transform="rotate(${labelRotation}, ${labelX}, ${labelY})"
+        font-family="sans-serif"
       >
         ${label}
       </text>
@@ -172,15 +177,21 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     return svg`
       <g>
-        ${values.map((i) => svg`
+        ${values.map(
+          (i) => svg`
           <g transform="translate(${x(i)}, ${y(i)})">
             ${gridLine}
             ${tickLine}
-            <text text-anchor="end" part="label ${orientation}-label">
+            <text
+              text-anchor="end"
+              font-family="sans-serif"
+              part="label ${orientation}-label"
+            >
               ${formatter(i)}
             </text>
           </g>
-        `)}
+        `,
+        )}
       ${axisLegend}
     </g>
   `;
@@ -239,17 +250,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // if they do, we should use them instead
     // higher in the list takes higher priority
     const niceFactors = [5, 2];
+    const totalLabelSize = this.fontSize * (this.labelPadding * 2);
 
     for (const factor of niceFactors) {
       const proposedStep = baseTenStep / factor;
 
       // the total label size includes the labels font size and the padding at
       // the start and end (which is why we multiply this.fontPadding by two)
-      const totalLabelSize = this.fontSize * (this.fontPadding * 2);
       const numberOfLabels = Math.ceil(valueDelta / proposedStep);
       const proposedSize = numberOfLabels * totalLabelSize;
 
-      console.log(canvasSize);
       const willFitStep = proposedSize < canvasSize;
 
       if (willFitStep) {
@@ -260,11 +270,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return baseTenStep;
   }
 
-  private generateAxisValues(
-    start: Seconds | Hertz,
-    end: Seconds | Hertz,
-    step: Seconds | Hertz,
-  ): number[] {
+  private generateAxisValues(start: Seconds | Hertz, end: Seconds | Hertz, step: Seconds | Hertz): number[] {
     const values: number[] = [];
     for (let i = start; i < end; i += step) {
       values.push(i);
@@ -279,12 +285,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     let axes: TemplateResult<1> | undefined;
 
     if (this.spectrogram) {
-      axes = html`
-        <svg id="axes-svg">
-          ${this.showXAxis && this.xAxis()}
-          ${this.showYAxis && this.yAxis()}
-        </svg>
-      `;
+      axes = html` <svg id="axes-svg">${this.showXAxis && this.xAxis()} ${this.showYAxis && this.yAxis()}</svg> `;
     }
 
     return html`

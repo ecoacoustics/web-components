@@ -12,7 +12,7 @@
   <oe-axes x-axis="false">
     <oe-indicator>
       <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
-        window-size="1024" window-overlap="512" color-map="audacity"></oe-spectrogram>
+        window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
   <oe-media-controls for="playing-spectrogram"></oe-media-controls>
@@ -20,6 +20,8 @@
   <button onclick="changeSource();">Change source</button>
   <button onclick="changeColorMap();">Change colour map</button>
   <button onclick="changeSize();">Change Size</button>
+  <button onclick="changeWindowSize();">Change Window Size</button>
+  <button onclick="changeOffset();">Change Offset</button>
 
   <script>
     function changeSource() {
@@ -32,6 +34,16 @@
       }
     }
 
+    function changeOffset() {
+      const element = document.getElementById("playing-spectrogram");
+
+      if (element.offset === "2") {
+        element.setAttribute("offset", "0");
+      } else {
+        element.setAttribute("offset", "2");
+      }
+    }
+
     function changeColorMap() {
       const element = document.getElementById("playing-spectrogram");
 
@@ -39,6 +51,16 @@
         element.setAttribute("color-map", "raven");
       } else {
         element.setAttribute("color-map", "audacity");
+      }
+    }
+
+    function changeWindowSize() {
+      const element = document.getElementById("playing-spectrogram");
+
+      if (element.getAttribute("window-size") === "1024") {
+        element.setAttribute("window-size", "256");
+      } else {
+        element.setAttribute("window-size", "1024");
       }
     }
 
