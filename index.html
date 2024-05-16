@@ -22,10 +22,7 @@
   <button onclick="changeSize();">Change Size</button>
   <button onclick="changeWindowSize();">Change Window Size</button>
   <button onclick="changeOffset();">Change Offset</button>
-<<<<<<< HEAD
   <button onclick="changeScale();">Change Scale</button>
-=======
->>>>>>> 27721be (Pushing for docs demo deployment)
 
   <script>
     function changeSource() {
@@ -41,11 +38,7 @@
     function changeOffset() {
       const element = document.getElementById("playing-spectrogram");
 
-<<<<<<< HEAD
       if (element.getAttribute("offset") === "2") {
-=======
-      if (element.offset === "2") {
->>>>>>> 27721be (Pushing for docs demo deployment)
         element.setAttribute("offset", "0");
       } else {
         element.setAttribute("offset", "2");
@@ -63,19 +56,6 @@
     }
 
     function changeWindowSize() {
-<<<<<<< HEAD
-=======
-      const element = document.getElementById("playing-spectrogram");
-
-      if (element.getAttribute("window-size") === "1024") {
-        element.setAttribute("window-size", "256");
-      } else {
-        element.setAttribute("window-size", "1024");
-      }
-    }
-
-    function changeSize() {
->>>>>>> 27721be (Pushing for docs demo deployment)
       const element = document.getElementById("playing-spectrogram");
 
       if (element.getAttribute("window-size") === "1024") {
