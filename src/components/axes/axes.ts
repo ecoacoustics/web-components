@@ -312,6 +312,21 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       values.push(i);
     }
 
+    // we always want to show the last value in the axes
+    // however, if appending the largest value would result in the labels overlapping
+    // we want to remove the last "step" label and replace it with the real last value
+    const lastLabel = values.at(-1)!;
+    const proposedLastLabel = end;
+
+    const lastLabelPosition = scale(lastLabel);
+    const proposedLastLabelPosition = scale(proposedLastLabel);
+    const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
+
+    const areLabelsOverlapping = proposedPositionDelta < this.fontSize + this.labelPadding;
+    if (areLabelsOverlapping) {
+      values.pop();
+    }
+
     values.push(end);
 
     return values;

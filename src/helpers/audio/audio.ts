@@ -135,6 +135,7 @@ export class AudioHelper {
 
     this.processorNode.port.onmessage = (event: MessageEvent) => {
       if (event.data == MESSAGE_PROCESSOR_READY) {
+        console.time("rendering");
         context.startRendering();
       }
     };
