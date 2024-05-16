@@ -57,15 +57,15 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
       }
 
       const queriedElement = slotElement.querySelector("oe-spectrogram");
-
       if (queriedElement instanceof Spectrogram) {
         return queriedElement;
+      } else {
+        throw new Error("oe-spectrogram is not defined");
       }
     }
 
     throw new Error("No spectrogram element found");
   }
-
 
   public render() {
     return html`

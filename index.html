@@ -9,7 +9,7 @@
 </head>
 
 <body>
-  <oe-axes x-axis="false">
+  <oe-axes>
     <oe-indicator>
       <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
         window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
@@ -22,6 +22,7 @@
   <button onclick="changeSize();">Change Size</button>
   <button onclick="changeWindowSize();">Change Window Size</button>
   <button onclick="changeOffset();">Change Offset</button>
+  <button onclick="changeScale();">Change Scale</button>
 
   <script>
     function changeSource() {
@@ -37,7 +38,7 @@
     function changeOffset() {
       const element = document.getElementById("playing-spectrogram");
 
-      if (element.offset === "2") {
+      if (element.getAttribute("offset") === "2") {
         element.setAttribute("offset", "0");
       } else {
         element.setAttribute("offset", "2");
@@ -66,13 +67,27 @@
 
     function changeSize() {
       const element = document.getElementById("playing-spectrogram");
+      const currentSize = element.style.width;
 
-      if (element.style.width === "600px") {
+      if (currentSize === "90vw") {
         element.style.width = "1200px";
         element.style.height = "200px";
-      } else {
+      } else if (currentSize === "1200px") {
         element.style.width = "600px";
         element.style.height = "600px";
+      } else {
+        element.style.width = "90vw";
+        element.style.height = "90vh";
+      }
+    }
+
+    function changeScale() {
+      const element = document.getElementById("playing-spectrogram");
+
+      if (element.hasAttribute("mel-scale")) {
+        element.removeAttribute("mel-scale");
+      } else {
+        element.setAttribute("mel-scale", "");
       }
     }
   </script>

@@ -52,6 +52,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: String, attribute: "window" })
   public domRenderWindow?: string;
 
+  @property({ type: Number })
+  public offset = 0;
+
   @property({ type: Number, attribute: "window-size" })
   public windowSize = 512;
 
@@ -72,9 +75,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   @property({ type: Number })
   public contrast = 1;
-
-  @property({ type: Number, reflect: true })
-  public offset = 0;
 
   @queryAssignedElements()
   public slotElements!: Array<HTMLElement>;
@@ -115,17 +115,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public updated(change: PropertyValues<this>) {
-    if (change.has("offset") || change.has("renderWindow")) {
-      this.shadowRoot?.dispatchEvent(new Event("slotchange"));
-    }
-
     if (this.doneFirstRender) {
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
         this.audioHelper.regenerateSpectrogramOptions(this.spectrogramOptions());
-      }
-
-      if (this.invalidateSpectrogramSource(change)) {
+      } else if (this.invalidateSpectrogramSource(change)) {
         this.currentTime.value = 0;
         this.regenerateSpectrogram();
       }
@@ -147,17 +141,15 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public regenerateSpectrogram(): void {
-    this.audioHelper
-      .changeSource(this.mediaElement.src, this.spectrogramOptions())
-      .then((metadata: IAudioMetadata) => {
-        const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+    this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((metadata: IAudioMetadata) => {
+      const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
 
-        this.audio.value = new AudioModel({
-          duration: metadata.format.duration!,
-          sampleRate: metadata.format.sampleRate!,
-          originalAudioRecording: originalRecording,
-        });
+      this.audio.value = new AudioModel({
+        duration: metadata.format.duration!,
+        sampleRate: metadata.format.sampleRate!,
+        originalAudioRecording: originalRecording,
       });
+    });
   }
 
   public play(): void {
@@ -192,10 +184,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
-    const invalidationKeys: (keyof Spectrogram)[] = [
-      "src",
-      "slotElements"
-    ];
+    const invalidationKeys: (keyof Spectrogram)[] = ["src", "slotElements"];
 
     return invalidationKeys.some((key) => change.has(key));
   }
@@ -276,7 +265,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}" crossorigin>
+      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
         <slot></slot>
       </audio>
     `;

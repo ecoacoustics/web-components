@@ -85,7 +85,7 @@ function drawSpectrogramOntoDestinationCanvas(): void {
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
-  ({ spectrogramOptions: options, audioInformation, canvas: destinationCanvas as any } = data);
+  ({ spectrogramOptions: options, audioInformation, canvas: destinationCanvas } = data);
 
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
@@ -114,10 +114,13 @@ function setup(data: SharedBuffersWithCanvas): void {
   work();
 }
 
-function regenerate(newOptions: SpectrogramOptions): void {
-  state.resetWork();
-  options = newOptions;
-  console.log(newOptions);
+interface ITemp {
+  options: SpectrogramOptions;
+  audioInformation: IAudioInformation;
+}
+
+function regenerate(data: ITemp): void {
+  ({ options, audioInformation } = data);
 
   spectrogram = new SpectrogramGenerator(audioInformation, options);
 
@@ -150,7 +153,7 @@ function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
       resizeCanvas(event.data[1] as Size);
       break;
     case "regenerate-spectrogram":
-      regenerate(event.data[1] as SpectrogramOptions);
+      regenerate(event.data[1] as ITemp);
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

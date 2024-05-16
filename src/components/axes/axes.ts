@@ -6,9 +6,7 @@ import { Spectrogram } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, IScale } from "../../models/unitConverters";
 import { RenderCanvasSize, RenderWindow } from "../../models/rendering";
-
-// TODO: move this to a different place
-const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
+import { booleanConverter } from "../../helpers/attributes";
 
 type Orientation = "x" | "y";
 
@@ -65,17 +63,17 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ attribute: "y-label", type: String, reflect: true })
   public yLabel = "Frequency (Hertz)";
 
-  @property({ attribute: "hide-x-axis", converter: booleanConverter })
-  public showXAxis = "true";
+  @property({ attribute: "x-axis", converter: booleanConverter })
+  public showXAxis = true;
 
   @property({ attribute: "y-axis", converter: booleanConverter })
-  public showYAxis = "true";
+  public showYAxis = true;
 
   @property({ attribute: "x-grid", converter: booleanConverter })
-  public showXGrid = "true";
+  public showXGrid = true;
 
   @property({ attribute: "y-grid", converter: booleanConverter })
-  public showYGrid = "true";
+  public showYGrid = true;
 
   @queryAssignedElements()
   private slotElements!: HTMLElement[];
@@ -163,7 +161,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       }
     `;
 
-    const axisLegend = svg`
+    const axisTitle = svg`
       <text
         class="axis-label axis-label-${orientation}"
         part="legend ${orientation}-legend"
@@ -194,7 +192,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           </g>
         `,
         )}
-      ${axisLegend}
+      ${axisTitle}
     </g>
   `;
   }
@@ -206,6 +204,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       this.renderWindow.value.startOffset,
       this.renderWindow.value.endOffset,
       step,
+      this.scales.value.temporal,
     );
 
     return this.createAxis(
@@ -226,6 +225,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       this.renderWindow.value.lowFrequency,
       this.renderWindow.value.highFrequency,
       step,
+      this.scales.value.frequency,
     );
 
     return this.createAxis(
@@ -273,10 +273,30 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return baseTenStep;
   }
 
-  private generateAxisValues(start: Seconds | Hertz, end: Seconds | Hertz, step: Seconds | Hertz): number[] {
+  private generateAxisValues(
+    start: Seconds | Hertz,
+    end: Seconds | Hertz,
+    step: Seconds | Hertz,
+    scale: FrequencyScale | TemporalScale,
+  ): number[] {
     const values: number[] = [];
     for (let i = start; i < end; i += step) {
       values.push(i);
+    }
+
+    // we always want to show the last value in the axes
+    // however, if appending the largest value would result in the labels overlapping
+    // we want to remove the last "step" label and replace it with the real last value
+    const lastLabel = values.at(-1)!;
+    const proposedLastLabel = end;
+
+    const lastLabelPosition = scale(lastLabel);
+    const proposedLastLabelPosition = scale(proposedLastLabel);
+    const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
+
+    const areLabelsOverlapping = proposedPositionDelta < this.fontSize + this.labelPadding;
+    if (areLabelsOverlapping) {
+      values.pop();
     }
 
     values.push(end);
@@ -288,7 +308,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     let axes: TemplateResult<1> | undefined;
 
     if (this.spectrogram) {
-      axes = html` <svg id="axes-svg">${this.showXAxis && this.xAxis()} ${this.showYAxis && this.yAxis()}</svg> `;
+      axes = html`<svg id="axes-svg">${this.showXAxis && this.xAxis()} ${this.showYAxis && this.yAxis()}</svg>`;
     }
 
     return html`

@@ -8,7 +8,7 @@ on:
         type: boolean
 
 jobs:
-  Documentation-Preview:
+  Documentation-Publish:
     name: Deploy Preview on Netlify
     runs-on: ubuntu-latest
     steps:

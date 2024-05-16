@@ -45,7 +45,7 @@ export class SpectrogramGenerator {
   public readonly estimatedWindowLoss: number;
   private readonly amplificationFactor: number;
 
-  constructor(audio: IAudioInformation, options: SpectrogramOptions) {
+  public constructor(audio: IAudioInformation, options: SpectrogramOptions) {
     this.audio = audio;
     this.options = options;
 
