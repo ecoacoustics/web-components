@@ -10,6 +10,8 @@ import { booleanConverter } from "../../helpers/attributes";
 
 type Orientation = "x" | "y";
 
+type Orientation = "x" | "y";
+
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
  *

@@ -97,10 +97,10 @@ importers:
         version: 0.7.0(@types/node@20.12.12)(terser@5.31.0)
       vite-plugin-node-polyfills:
         specifier: ^0.21.0
-        version: 0.21.0(rollup@4.12.0)(vite@5.2.11(@types/node@20.12.11)(terser@5.31.0))
+        version: 0.21.0(rollup@4.12.0)(vite@5.2.11)
       vite-svg-loader:
         specifier: ^5.1.0
-        version: 5.1.0(vue@3.4.27(typescript@5.4.5))
+        version: 5.1.0(vue@3.4.27)
 
 packages:
   "@11ty/dependency-tree-esm@1.0.0":
@@ -3343,7 +3343,6 @@ snapshots:
       "@rollup/pluginutils": 5.1.0(rollup@4.12.0)
       estree-walker: 2.0.2
       magic-string: 0.30.10
-    optionalDependencies:
       rollup: 4.12.0
 
   "@rollup/pluginutils@5.1.0(rollup@4.12.0)":
@@ -3351,7 +3350,6 @@ snapshots:
       "@types/estree": 1.0.5
       estree-walker: 2.0.2
       picomatch: 2.3.1
-    optionalDependencies:
       rollup: 4.12.0
 
   "@rollup/rollup-android-arm-eabi@4.12.0":
@@ -3498,7 +3496,6 @@ snapshots:
       ignore: 5.3.1
       natural-compare: 1.4.0
       ts-api-utils: 1.3.0(typescript@5.4.5)
-    optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -3511,7 +3508,6 @@ snapshots:
       "@typescript-eslint/visitor-keys": 7.9.0
       debug: 4.3.4
       eslint: 8.57.0
-    optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -3528,7 +3524,6 @@ snapshots:
       debug: 4.3.4
       eslint: 8.57.0
       ts-api-utils: 1.3.0(typescript@5.4.5)
-    optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -3545,7 +3540,6 @@ snapshots:
       minimatch: 9.0.4
       semver: 7.6.2
       ts-api-utils: 1.3.0(typescript@5.4.5)
-    optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -4834,9 +4828,8 @@ snapshots:
     dependencies:
       a-sync-waterfall: 1.0.1
       asap: 2.0.6
-      commander: 5.1.0
-    optionalDependencies:
       chokidar: 3.6.0
+      commander: 5.1.0
 
   object-inspect@1.13.1: {}
 
@@ -5369,7 +5362,6 @@ snapshots:
       "@typescript-eslint/parser": 7.9.0(eslint@8.57.0)(typescript@5.4.5)
       "@typescript-eslint/utils": 7.9.0(eslint@8.57.0)(typescript@5.4.5)
       eslint: 8.57.0
-    optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -5422,7 +5414,7 @@ snapshots:
       - sugarss
       - terser
 
-  vite-plugin-node-polyfills@0.21.0(rollup@4.12.0)(vite@5.2.11(@types/node@20.12.11)(terser@5.31.0)):
+  vite-plugin-node-polyfills@0.21.0(rollup@4.12.0)(vite@5.2.11):
     dependencies:
       "@rollup/plugin-inject": 5.0.5(rollup@4.12.0)
       node-stdlib-browser: 1.2.0
@@ -5430,7 +5422,7 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-svg-loader@5.1.0(vue@3.4.27(typescript@5.4.5)):
+  vite-svg-loader@5.1.0(vue@3.4.27):
     dependencies:
       svgo: 3.3.2
       vue: 3.4.27(typescript@5.4.5)
@@ -5445,6 +5437,8 @@ snapshots:
       "@types/node": 20.12.11
       fsevents: 2.3.3
       terser: 5.31.0
+    optionalDependencies:
+      fsevents: 2.3.3
 
   vm-browserify@1.1.2: {}
 

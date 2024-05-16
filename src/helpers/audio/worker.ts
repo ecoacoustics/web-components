@@ -94,7 +94,7 @@ function drawSpectrogramOntoDestinationCanvas(): void {
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
-  ({ spectrogramOptions: options, audioInformation } = data);
+  ({ spectrogramOptions: options, audioInformation, canvas: destinationCanvas as any } = data);
 
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
