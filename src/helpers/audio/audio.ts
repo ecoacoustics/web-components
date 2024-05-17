@@ -35,6 +35,8 @@ export class AudioHelper {
   private cachedFile!: IFetchedAudio<Response>;
   private segmentSize = 44100 as const;
 
+  private context: OfflineAudioContext | undefined | null;
+
   public get canvasTransferred(): boolean {
     return this.offscreenCanvas !== undefined;
   }
@@ -42,14 +44,14 @@ export class AudioHelper {
   public async connect(src: string, canvas: HTMLCanvasElement, options: SpectrogramOptions): Promise<IAudioMetadata> {
     const { response, metadata, audioInformation } = await this.fetchAudio(src);
 
-    const context = await this.createAudioContext(metadata, response);
+    this.context = await this.createAudioContext(metadata, response);
 
     if (!this.canvasTransferred) {
       this.offscreenCanvas = canvas.transferControlToOffscreen();
     }
 
     this.setupWorker(audioInformation, options);
-    this.setupProcessor(context);
+    this.setupProcessor(this.context);
 
     return metadata;
   }
@@ -75,15 +77,18 @@ export class AudioHelper {
    *  - AudioWorkletProcessor
    */
   public async regenerateSpectrogramOptions(options: SpectrogramOptions): Promise<IAudioMetadata> {
+    console.log("REGENERATE");
     if (!this.spectrogramWorker || !this.state) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
 
+    this.abort();
+
     const downloadedBuffer = await this.cachedBuffer();
     const metadata = this.cachedMetadata();
     const audioInformation = this.cachedAudioInformation();
-    const context = await this.createAudioContext(metadata, downloadedBuffer);
-    this.setupProcessor(context);
+    this.context = await this.createAudioContext(metadata, downloadedBuffer);
+    this.setupProcessor(this.context);
 
     this.spectrogramWorker.postMessage([
       "regenerate-spectrogram",
@@ -97,13 +102,16 @@ export class AudioHelper {
   }
 
   public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
+    console.log("CHANGE SOURCE");
     if (!this.spectrogramWorker || !this.state) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
 
+    this.abort();
+
     const { response, metadata, audioInformation } = await this.fetchAudio(src);
-    const context = await this.createAudioContext(metadata, response);
-    this.setupProcessor(context);
+    this.context = await this.createAudioContext(metadata, response);
+    this.setupProcessor(this.context);
 
     this.spectrogramWorker.postMessage([
       "regenerate-spectrogram",
@@ -121,12 +129,12 @@ export class AudioHelper {
       throw new Error("connect must be called before setupProcessor");
     }
 
-    this.state.resetWork();
+    this.state.reset();
+
     this.processorNode.port.postMessage(["setup", { state: this.state.buffer, sampleBuffer: this.sampleBuffer }]);
 
     this.processorNode.port.onmessage = (event: MessageEvent) => {
       if (event.data == MESSAGE_PROCESSOR_READY) {
-        console.time("rendering");
         context.startRendering();
       }
     };
@@ -150,6 +158,35 @@ export class AudioHelper {
       ],
       [this.offscreenCanvas],
     );
+  }
+
+  private abort() {
+    console.log("ABORTED")
+    if (!this.state) {
+      throw new Error("Shared state is not defined");
+    }
+
+    if (this.state.isFinished()) {
+      return;
+    }
+
+    // this is multithreaded-async, and we don't wait for results
+    // this means that we can't guarantee that the processor noticed an abort before we reset state
+    // we don't want to deal with the complexity of this now, but this may be the cause
+    // of a race condition in some very unlikely cases
+    this.state.startAbort();
+
+    // there is no way to stop or destroy an OfflineAudioContext
+    // all we can do is set it to null and hope browsers destroy it in garbage collection
+    this.context = null;
+
+    let i = 0;
+    while (this.state.aborting) {
+      // noop
+      i++;
+    }
+
+    console.log("waited n cycles to abort", i);
   }
 
   private createAudioInformation(metadata: IAudioMetadata): IAudioInformation {
@@ -223,7 +260,6 @@ export class AudioHelper {
       }
 
       this.state.finished();
-      console.timeEnd("rendering");
     });
 
     return context;

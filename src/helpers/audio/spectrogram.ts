@@ -279,7 +279,7 @@ export class SpectrogramGenerator {
       const y = this.fftHeight - 1 - frequencyBin;
       const offset = bytesPerPixel * (x + y * this.fftWidth);
       if (offset > this.imageBuffer.length - 4) {
-        console.log("overflow coordinates", x, y, offset, this.imageBuffer.length);
+        console.log("overflow coordinates", x, y, offset, this.imageBuffer.length, this.fftWidth, this.fftHeight);
       }
 
       // shift r, g, and b directly in. Opacity set in buffer initialization.
