@@ -9,12 +9,17 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
 
   private state!: ProcessorState;
   private buffer!: Float32Array;
+  private aborted = false;
 
   /**
    * @param inputs - is an array of inputs, each having an array of channels, with an array of samples
    */
 
   public process(inputs: Float32Array[][]) {
+    if (this.checkAborted()) {
+      return false;
+    }
+
     // we should always have single input with one single channel of data by this point
     // any mixing or channel selection should be done before this processor
     const input = inputs[0][0];
@@ -32,10 +37,17 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     // with an overflow is to just run the worker to empty the buffer
     if (newHead >= bufferLength) {
       // signal worker to process the sample buffer
+      console.log("buffer ready", newHead, bufferLength);
       this.state.bufferReady();
 
       // wait for the worker to finish processing the buffer
       this.state.spinWaitForWorker();
+
+      if (this.checkAborted()) {
+        return false;
+      }
+
+      console.log("buffer ready 2", newHead, bufferLength);
 
       // update write head - it is often non-zero
       writeHead = this.state.bufferWriteHead;
@@ -46,6 +58,20 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     this.state.bufferWriteHead = newHead;
 
     return true;
+  }
+
+  private checkAborted(): boolean {
+    if (this.aborted) {
+      throw new Error("Processor aborted");
+    }
+
+    if (this.state.abortingOrAborted) {
+      this.aborted = true;
+      console.log("Processor aborted", this.aborted);
+      return true;
+    }
+
+    return false;
   }
 
   // runs when the processor is first created

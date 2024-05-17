@@ -25,7 +25,7 @@ enum STATE {
   // if the shared buffer is full, and available to be processed
   // BUFFERS_AVAILABLE will be set to 1 (true)
   // This should cause the canvas worker to process the buffer and create an fft
-  //* Type: Boolean
+  //* Type: BUFFER_READY_STATES
   BUFFERS_AVAILABLE = 0,
 
   // this is the index where the last sample has been written to in the buffer
@@ -40,8 +40,8 @@ enum STATE {
 
   // If there is no more work to be done, this value will be set to one
   // indicating to the worker that it should terminate itself
-  //* Type: Boolean
-  FINISHED_PROCESSING = 3,
+  //* Type: PROCESSING_STATES
+  PROCESSING_STATE = 3,
 }
 
 // TODO: improve the TS typing here
@@ -106,8 +106,21 @@ export class SpectrogramOptions {
   }
 }
 
-const TRUE = 1 as const;
-const FALSE = 0 as const;
+enum PROCESSING_STATES {
+  PROCESSING = 0,
+  FINISHED = 1,
+  ABORTING = 2,
+  ABORTED = 3,
+}
+
+enum BUFFER_READY_STATES {
+  NOT_READY = 0,
+  READY = 1,
+
+  // free allows the Atomics.wait to return immediately. We use this in the abort case
+  FREE = 2,
+}
+
 export class State {
   constructor(state: SharedArrayBuffer) {
     this.state = new Int32Array(state);
@@ -120,8 +133,17 @@ export class State {
     return this.state.buffer as SharedArrayBuffer;
   }
 
-  public get buffersAvailable(): boolean {
-    return this.state[STATE.BUFFERS_AVAILABLE] === TRUE;
+  public get buffersReady(): boolean {
+    return this.state[STATE.BUFFERS_AVAILABLE] === BUFFER_READY_STATES.READY;
+  }
+
+  protected set buffersAvailable(value: BUFFER_READY_STATES) {
+    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, value);
+
+    if (value !== BUFFER_READY_STATES.NOT_READY) {
+      Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, value);
+    }
+    // Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, value);
   }
 
   public get bufferWriteHead(): number {
@@ -141,11 +163,32 @@ export class State {
   }
 
   public get finishedProcessing(): boolean {
-    return this.state[STATE.FINISHED_PROCESSING] === TRUE;
+    return Atomics.load(this.state, STATE.PROCESSING_STATE) === PROCESSING_STATES.FINISHED;
+    // return this.state[STATE.FINISHED_PROCESSING] === TRUE;
   }
 
-  public bufferProcessing(): boolean {
-    return Atomics.load(this.state, STATE.BUFFERS_AVAILABLE) === TRUE;
+  public get processing(): boolean {
+    return Atomics.load(this.state, STATE.PROCESSING_STATE) === PROCESSING_STATES.PROCESSING;
+  }
+
+  public get aborted(): boolean {
+    return Atomics.load(this.state, STATE.PROCESSING_STATE) === PROCESSING_STATES.ABORTED;
+  }
+
+  public get aborting(): boolean {
+    return Atomics.load(this.state, STATE.PROCESSING_STATE) === PROCESSING_STATES.ABORTING;
+  }
+
+  public get abortingOrAborted(): boolean {
+    return this.aborted || this.aborting;
+  }
+
+  protected set processingState(value: PROCESSING_STATES) {
+    Atomics.store(this.state, STATE.PROCESSING_STATE, value);
+  }
+
+  public workerConsumingBuffer(): boolean {
+    return Atomics.load(this.state, STATE.BUFFERS_AVAILABLE) === BUFFER_READY_STATES.READY;
   }
 
   /** Called by the worker when it has finished processing the buffer.
@@ -161,23 +204,31 @@ export class State {
     } else {
       this.bufferWriteHead = 0;
     }
-    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, FALSE);
+    this.buffersAvailable = BUFFER_READY_STATES.NOT_READY;
+    // Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, BUFFER_READY_STATES.NOT_READY);
   }
 
   public finished(): void {
-    Atomics.store(this.state, STATE.FINISHED_PROCESSING, TRUE);
+    this.processingState = PROCESSING_STATES.FINISHED;
     //console.log("state: finished");
-    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
-    Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+    this.buffersAvailable = BUFFER_READY_STATES.READY;
   }
 
-  public resetWork(): void {
+  public reset(): void {
+    console.log("RESET");
     this.bufferWriteHead = 0;
-    Atomics.store(this.state, STATE.FINISHED_PROCESSING, FALSE);
+    this.processingState = PROCESSING_STATES.PROCESSING;
+    this.buffersAvailable = BUFFER_READY_STATES.NOT_READY;
+  }
+
+  public startAbort() {
+    this.processingState = PROCESSING_STATES.ABORTING;
+    this.buffersAvailable = BUFFER_READY_STATES.FREE;
   }
 
   public isFinished(): boolean {
-    return Atomics.load(this.state, STATE.FINISHED_PROCESSING) === TRUE;
+    return this.finishedProcessing;
+    // return Atomics.load(this.state, STATE.FINISHED_PROCESSING) === TRUE;
   }
 
   /**
@@ -200,10 +251,9 @@ export class State {
 
 export class ProcessorState extends State {
   public spinWaitForWorker() {
-    // Atomics.wait(this.states, STATE.BUFFERS_AVAILABLE, 1);
     // we have to do this because Chrome doesn't support Atomics.wait inside of
     // AudioProcessorWorklet's (Firefox does)
-    while (this.bufferProcessing()) {
+    while (this.workerConsumingBuffer()) {
       // do nothing
       // TODO: can we do something here other than burn cycles?
     }
@@ -213,14 +263,26 @@ export class ProcessorState extends State {
    * called by the processor when it has finished writing to the buffer
    */
   public bufferReady(): void {
-    //console.log("state: buffer ready");
-    Atomics.store(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
-    Atomics.notify(this.state, STATE.BUFFERS_AVAILABLE, TRUE);
+    console.log("state: buffer ready");
+    this.buffersAvailable = BUFFER_READY_STATES.READY;
   }
 }
 
 export class WorkerState extends State {
   public waitForBuffer() {
-    Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, FALSE);
+    Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, BUFFER_READY_STATES.NOT_READY);
+
+    // while (Atomics.wait(this.state, STATE.BUFFERS_AVAILABLE, BUFFER_READY_STATES.NOT_READY) === "ok") {
+    //   // noop
+    // }
+  }
+
+  public workerAborted() {
+    Atomics.compareExchange(
+      this.state,
+      STATE.PROCESSING_STATE,
+      PROCESSING_STATES.ABORTING,
+      PROCESSING_STATES.ABORTED
+    );
   }
 }
