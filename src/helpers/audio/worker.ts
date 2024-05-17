@@ -50,21 +50,30 @@ function kernel(): void {
 
 // main loop, only called once after we have received the shared buffers
 function work(): void {
-  while (!state.isFinished()) {
+  console.time("rendering");
+
+  while (state.processing) {
     state.waitForBuffer();
+
+    if (state.abortingOrAborted) {
+      console.log("Worker aborted");
+      console.timeEnd("rendering");
+      state.workerAborted();
+      return;
+    }
 
     console.log("work", state.bufferWriteHead);
     // In the optimal case, the buffer write head is zero at the end of an audio stream
     // if not, we render what ever else is left
-    if (state.bufferWriteHead >= 0) {
+    if (state.bufferWriteHead > 0) {
       kernel();
     }
   }
 
+  console.timeEnd("rendering");
+
   // actually paint the spectrogram to the canvas
   renderImageBuffer(spectrogram.outputBuffer);
-
-  spectrogram.dispose();
 }
 
 function renderImageBuffer(buffer: Uint8ClampedArray): void {
