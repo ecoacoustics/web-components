@@ -8,3 +8,5 @@ title: Open Ecoacoustics | Examples
 [A2O Search](./search/index.html)
 
 [Validation Grid](./validation/index.html)
+
+[Presets](./presets/index.html)

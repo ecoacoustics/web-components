@@ -84,8 +84,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private scales!: Signal<IScale>;
   private renderWindow!: Signal<RenderWindow>;
   private canvasShape!: Signal<RenderCanvasSize>;
+
+  // font size is the size of the font
+  // while label padding is the minimum additional distance between the labels
+  // while the labelOffset is the distance between the label and the edge of the canvas
   private fontSize = 8; // px
   private labelPadding = 3; // px
+  private labelOffset = this.fontSize;
 
   // TODO: We should only extract the UC out of the spectrogram element
   private handleSlotchange(): void {
@@ -134,7 +139,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const y = (i: number) => scale(i) * yAxisStep + yOffset;
 
     const labelX = isYAxis ? -(this.fontSize * 7) : canvasSize / 2;
-    const labelY = isYAxis ? canvasSize / 2 : canvasSize + this.fontSize * 3;
+    const labelY = isYAxis ? canvasSize / 2 : canvasSize + this.fontSize * 5;
 
     const labelRotation = isYAxis ? 90 : 0;
 
@@ -188,6 +193,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
               text-anchor="end"
               font-family="sans-serif"
               part="label ${orientation}-label"
+              transform="translate(0, ${this.fontSize + this.labelOffset})"
             >
               ${formatter(i)}
             </text>
