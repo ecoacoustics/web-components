@@ -3,8 +3,8 @@
 import webfft from "webfft";
 import { ColorScaler, getColorScale } from "./colors";
 import { constructMfcc } from "./mel";
-import { IAudioInformation, SpectrogramOptions } from "./state";
 import { estimateSmootherAttenuation, resolveSmoother, SmoothingFunction } from "./window";
+import { IAudioInformation, SpectrogramOptions } from "./models";
 
 const bytesPerPixel = 4 as const;
 
@@ -272,8 +272,6 @@ export class SpectrogramGenerator {
       // but now they can... so skip here?
       // intensity = Math.min(1, Math.max(0, intensity));
 
-      const rgbColor = this.colorScale(intensity);
-
       const x = this.lastFrameIndex;
       // inverted y-axis
       const y = this.fftHeight - 1 - frequencyBin;
@@ -283,6 +281,7 @@ export class SpectrogramGenerator {
       }
 
       // shift r, g, and b directly in. Opacity set in buffer initialization.
+      const rgbColor = this.colorScale(intensity);
       this.imageBuffer.set(rgbColor, offset);
     }
   }

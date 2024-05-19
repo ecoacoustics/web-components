@@ -1,30 +1,43 @@
-import { SharedBuffers, MESSAGE_PROCESSOR_READY, ProcessorState, ProcessorMessages, NamedMessageEvent } from "./state";
+import { BUFFER_PROCESSOR_NAME, ProcessorMessage } from "./messages";
+import { ProcessorState } from "./state";
 
+/**
+ * Runs once and only once to add samples to a buffer.
+ * A new processor is needed for each render.
+ * We keep a track of the generation to ensure the processor discards
+ * samples from multiple concurrent processors invoking process.
+ */
 export default class BufferBuilderProcessor extends AudioWorkletProcessor {
+  private state!: ProcessorState;
+  private buffer!: Float32Array;
+  private aborted = false;
+  private generation = 0;
+  private tag = "processor:";
+
   public constructor() {
     super();
 
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
-  private state!: ProcessorState;
-  private buffer!: Float32Array;
-  private aborted = false;
-
   /**
    * @param inputs - is an array of inputs, each having an array of channels, with an array of samples
    */
 
   public process(inputs: Float32Array[][]) {
-    if (this.checkAborted()) {
+    if (this.aborted) {
+      console.log(this.tag, "Processor aborted");
       return false;
     }
 
     // we should always have single input with one single channel of data by this point
     // any mixing or channel selection should be done before this processor
+    if (!this.state) {
+      console.error(this.tag, "Processor not setup");
+    }
     const input = inputs[0][0];
     let writeHead = this.state.bufferWriteHead;
-    const bufferLength = this.state.fullBufferLength;
+    const bufferLength = this.buffer.length;
 
     let newHead = writeHead + input.length;
 
@@ -37,21 +50,20 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     // with an overflow is to just run the worker to empty the buffer
     if (newHead >= bufferLength) {
       // signal worker to process the sample buffer
-      console.log("buffer ready", newHead, bufferLength);
+      console.log(this.tag, "buffer ready", newHead, bufferLength);
       this.state.bufferReady();
 
       // wait for the worker to finish processing the buffer
-      this.state.spinWaitForWorker();
-
-      if (this.checkAborted()) {
-        return false;
-      }
-
-      console.log("buffer ready 2", newHead, bufferLength);
+      this.state.busyWaitForWorkerToProcessBuffer();
 
       // update write head - it is often non-zero
       writeHead = this.state.bufferWriteHead;
       newHead = writeHead + input.length;
+    }
+
+    // we may need to check for aborts more frequently
+    if (this.needsToAbort()) {
+      return false;
     }
 
     this.buffer.set(input, writeHead);
@@ -60,37 +72,34 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     return true;
   }
 
-  private checkAborted(): boolean {
-    if (this.aborted) {
-      throw new Error("Processor aborted");
-    }
-
-    if (this.state.abortingOrAborted) {
+  private needsToAbort(): boolean {
+    if (this.state.matchesCurrentGeneration(this.generation)) {
+      return false;
+    } else {
       this.aborted = true;
-      console.log("Processor aborted", this.aborted);
+      console.log(this.tag, "Processor aborted");
       return true;
     }
-
-    return false;
   }
 
   // runs when the processor is first created
   // should only be run once and only to share buffers
-  private handleMessage(event: NamedMessageEvent<ProcessorMessages, any>) {
+  private handleMessage(event: ProcessorMessage) {
     if (event.data[0] === "setup") {
-      const data = event.data[1] as SharedBuffers;
+      const data = event.data[1];
 
       this.state = new ProcessorState(data.state);
       this.buffer = new Float32Array(data.sampleBuffer);
-
-      // console.log("processor setup");
+      this.generation = this.state.generation;
+      this.tag = `processor (${this.generation}):`;
 
       // signal back that we're ready
-      this.port.postMessage(MESSAGE_PROCESSOR_READY);
+      console.log(this.tag, "Processor ready");
+      this.state.processorReady();
     } else {
       throw new Error("Unknown message type");
     }
   }
 }
 
-registerProcessor("buffer-builder-processor", BufferBuilderProcessor);
+registerProcessor(BUFFER_PROCESSOR_NAME, BufferBuilderProcessor);
