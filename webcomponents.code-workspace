@@ -23,13 +23,17 @@
     "html.customData": [],
     "cSpell.words": [
       "audioworklet",
+      "colour",
       "Componentization",
       "csspart",
+      "cubehelix",
       "ecoacoustic",
       "ecoacoustics",
+      "effecty",
       "flac",
       "hann",
       "jsdelivr",
+      "lrgb",
       "mels",
       "mfcc",
       "nyquist",
@@ -38,11 +42,11 @@
       "slotchange",
       "styleable",
       "testid",
+      "viridis",
       "webcomponents",
       "webcomponents-workspace",
       "webfft",
-      "worklet",
-      "colour"
+      "worklet"
     ],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
     "markdownlint.config": {

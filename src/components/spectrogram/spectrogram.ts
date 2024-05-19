@@ -8,9 +8,9 @@ import { Hertz, Pixel, Seconds, UnitConverter } from "../../models/unitConverter
 import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { AudioHelper } from "../../helpers/audio/audio";
-import { SpectrogramOptions } from "../../helpers/audio/state";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioMetadata } from "music-metadata-browser";
+import { SpectrogramOptions } from "../../helpers/audio/models";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
@@ -118,7 +118,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     if (this.doneFirstRender) {
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
-        this.audioHelper.regenerateSpectrogramOptions(this.spectrogramOptions());
+        this.audioHelper.regenerateSpectrogram(this.spectrogramOptions());
       } else if (this.invalidateSpectrogramSource(change)) {
         this.currentTime.value = 0;
         this.regenerateSpectrogram();
