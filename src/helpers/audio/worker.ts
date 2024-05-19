@@ -1,13 +1,8 @@
-import {
-  IAudioInformation,
-  NamedMessageEvent,
-  SharedBuffersWithCanvas,
-  SpectrogramOptions,
-  WorkerMessages,
-  WorkerState,
-} from "./state";
 import { SpectrogramGenerator } from "./spectrogram";
 import { Size } from "../../models/rendering";
+import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
+import { SpectrogramOptions, IAudioInformation } from "./models";
+import { WorkerState } from "./state";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -36,57 +31,88 @@ let sampleBuffer: Float32Array;
 
 let audioInformation: IAudioInformation;
 
-// TODO: add a fft cache
+function paintBuffer(generation: number): void {
+  //console.log(`worker (${generation}):work:`, state.bufferWriteHead);
 
-function kernel(): void {
-  console.count("kernel");
-
-  const consumed = spectrogram.partialGenerate(sampleBuffer, state.bufferWriteHead, state.finishedProcessing);
+  const consumed = spectrogram.partialGenerate(
+    sampleBuffer,
+    state.bufferWriteHead,
+    state.isProcessorComplete(generation),
+  );
 
   state.bufferProcessed(sampleBuffer, consumed);
-
-  // console.log("wrote n frames, write head", state.bufferWriteHead);
 }
 
-// main loop, only called once after we have received the shared buffers
-function work(): void {
-  console.time("rendering");
+/** main loop, only called once after we have received the shared buffers
+ * @param generation - the render generation
+ */
+function work(generation: number): void {
+  const tag = `worker (${generation}):`;
+  const timerTag = `${tag} render`;
+  console.time(timerTag);
 
-  while (state.processing) {
-    state.waitForBuffer();
+  state.workerBusy();
 
-    if (state.abortingOrAborted) {
-      console.log("Worker aborted");
-      console.timeEnd("rendering");
-      state.workerAborted();
-      return;
+  let aborted = false;
+  while (state.processorCanGenerate(generation)) {
+    // wait for a buffer
+    if (!state.waitForBuffer()) {
+      // if buffer is not ready, it is either a
+      if (state.matchesCurrentGeneration(generation)) {
+        // timeout
+        //console.log(tag, "timeout");
+        continue;
+      } else {
+        // or an abort
+        //console.log(tag, "abort");
+        aborted = true;
+        break;
+      }
     }
 
-    console.log("work", state.bufferWriteHead);
+    paintBuffer(generation);
+  }
+
+  //console.log(tag, "remaining samples?", state.bufferWriteHead);
+
+  // actually paint the spectrogram to the canvas
+  if (!aborted) {
     // In the optimal case, the buffer write head is zero at the end of an audio stream
     // if not, we render what ever else is left
     if (state.bufferWriteHead > 0) {
-      kernel();
+      paintBuffer(generation);
     }
+
+    renderImageBuffer(spectrogram.outputBuffer, generation);
   }
 
-  console.timeEnd("rendering");
+  console.timeEnd(timerTag);
 
-  // actually paint the spectrogram to the canvas
-  renderImageBuffer(spectrogram.outputBuffer);
+  state.workerReady();
 }
 
-function renderImageBuffer(buffer: Uint8ClampedArray): void {
+function renderImageBuffer(buffer: Uint8ClampedArray, generation: number): void {
   const imageData = new ImageData(buffer, spectrogram.width, spectrogram.height);
 
   // paint buffer to the spectrogram canvas at  a 1:1 scale
   spectrogramSurface.putImageData(imageData, 0, 0);
 
-  drawSpectrogramOntoDestinationCanvas();
+  drawSpectrogramOntoDestinationCanvas(generation);
 }
 
-function drawSpectrogramOntoDestinationCanvas(): void {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   // paint the spectrogram canvas to the destination canvas and stretch to fill
+
+  //? AT: I actually don't like the look of this solution. During high frequency
+  //? changes you don't actually see the spectrogram being updated.
+  //? The alternative is that during high frequency changes you may see the
+  //? a partial spectrogram being updated but it will update more frequently
+  // ? and it never lands/finishes on a partial update.
+  // with one last check that we're still in the current generation
+  // if (!state.matchesCurrentGeneration(generation)) {
+  //   return;
+  // }
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
   // commit doesn't exist on chrome!
@@ -94,49 +120,43 @@ function drawSpectrogramOntoDestinationCanvas(): void {
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
-  ({ spectrogramOptions: options, audioInformation, canvas: destinationCanvas } = data);
-
+  //console.log("worker:setup:", data);
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
+  destinationCanvas = data.canvas;
 
-  console.log(options);
-
-  spectrogram = new SpectrogramGenerator(audioInformation, options);
-
-  console.log("spectrogram worker:", {
-    samples: spectrogram.totalSamples,
-    bufferLength: state.fullBufferLength,
-    naturalWidth: spectrogram.width,
-    naturalHeight: spectrogram.height,
-    windowSize: spectrogram.size,
-    windowStep: spectrogram.step,
-  });
-
-  spectrogramCanvas = new OffscreenCanvas(spectrogram.width, spectrogram.height);
+  // just use a default size - regenerate will resize it in a second
+  spectrogramCanvas = new OffscreenCanvas(512, 512);
   spectrogramSurface = spectrogramCanvas.getContext("2d")!;
 
   destinationSurface = destinationCanvas.getContext("2d")!;
   destinationSurface.imageSmoothingEnabled = true;
   destinationSurface.imageSmoothingQuality = "high";
 
-  // start polling
-  work();
+  state.workerReady();
 }
 
-interface ITemp {
-  options: SpectrogramOptions;
-  audioInformation: IAudioInformation;
-}
-
-function regenerate(data: ITemp): void {
+function regenerate(data: GenerationMetadata): void {
   ({ options, audioInformation } = data);
 
   spectrogram = new SpectrogramGenerator(audioInformation, options);
 
+  console.log(
+    `worker (${data.generation}): regenerate`,
+    {
+      samples: spectrogram.totalSamples,
+      naturalWidth: spectrogram.width,
+      naturalHeight: spectrogram.height,
+      windowSize: spectrogram.size,
+      windowStep: spectrogram.step,
+    },
+    options,
+  );
+
   spectrogramCanvas.width = spectrogram.width;
   spectrogramCanvas.height = spectrogram.height;
 
-  work();
+  work(data.generation);
 }
 
 function resizeCanvas(data: Size): void {
@@ -145,24 +165,24 @@ function resizeCanvas(data: Size): void {
 
   // redraw the spectrogram from the 1:1 spectrogram canvas
   // onto the destination
-  drawSpectrogramOntoDestinationCanvas();
-  //console.log("resized canvas", data);
+  drawSpectrogramOntoDestinationCanvas(state.generation);
+  //console.log("worker: resized canvas", data);
 }
 
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
-function handleMessage(event: NamedMessageEvent<WorkerMessages, any>) {
+function handleMessage(event: WorkerMessage) {
   const eventMessage = event.data[0];
 
   switch (eventMessage) {
     case "setup":
-      setup(event.data[1] as SharedBuffersWithCanvas);
+      setup(event.data[1]);
       break;
     case "resize-canvas":
-      resizeCanvas(event.data[1] as Size);
+      resizeCanvas(event.data[1]);
       break;
     case "regenerate-spectrogram":
-      regenerate(event.data[1] as ITemp);
+      regenerate(event.data[1]);
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

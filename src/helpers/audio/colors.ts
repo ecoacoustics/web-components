@@ -23,55 +23,55 @@ function intensityToIndex(intensity: number) {
     return 0;
   }
 
-  return Math.floor(intensity * rgbMaxValue);
+  return Math.round(intensity * rgbMaxValue);
 }
 
-function precomputedRgb(scheme: IntensityTuple[]): ColorScaler {
-  return (intensity: number): RgbTuple => {
-    const index = intensityToIndex(intensity);
-    const color = scheme[index];
+function precomputedRgb(scheme: IntensityTuple[], intensity: number): RgbTuple {
+  const index = intensityToIndex(intensity);
+  const color = scheme[index];
 
-    return [color[0] * rgbMaxValue, color[1] * rgbMaxValue, color[2] * rgbMaxValue];
-  };
+  return [color[0] * rgbMaxValue, color[1] * rgbMaxValue, color[2] * rgbMaxValue];
 }
 
 function makeScaler(closedScaler: Scale): ColorScaler {
   return (i) => closedScaler(i).rgb();
 }
 
-const roseusScale = precomputedRgb(roseus);
-const viridisScale = precomputedRgb(viridisColorScheme);
-const turboScale = precomputedRgb(turboColorScheme);
-const plasmaScale = precomputedRgb(plasmaColorScheme);
-const infernoScale = precomputedRgb(infernoColorScheme);
-const magmaScale = precomputedRgb(magmaColorScheme);
+const roseusScale = precomputedRgb.bind(null, roseus);
+const viridisScale = precomputedRgb.bind(null, viridisColorScheme);
+const turboScale = precomputedRgb.bind(null, turboColorScheme);
+const plasmaScale = precomputedRgb.bind(null, plasmaColorScheme);
+const infernoScale = precomputedRgb.bind(null, infernoColorScheme);
+const magmaScale = precomputedRgb.bind(null, magmaColorScheme);
 const cubeHelixScale = makeScaler(chroma.cubehelix().scale());
 const gammaIIScale = makeScaler(chroma.scale(gammaIIColorScheme.map((a) => chroma.rgb(a[0], a[1], a[2]))).mode("lab"));
 const jetScale = makeScaler(
   chroma.scale(jetColorScheme.map((a) => chroma.rgb(a[0] * 255, a[1] * 255, a[2] * 255))).mode("lrgb"),
 );
 
-export const translationTable: Record<string, string | (() => ColorScaler)> = {
+export const translationTable: Record<string, string | ColorScaler> = {
   grayscale: "Greys",
   blue: "Blues",
   green: "Greens",
   orange: "Oranges",
   purple: "Purples",
   red: "Reds",
-  audacity: () => roseusScale,
-  roseus: () => roseusScale,
-  viridis: () => viridisScale,
-  turbo: () => turboScale,
-  plasma: () => plasmaScale,
-  inferno: () => infernoScale,
-  magma: () => magmaScale,
-  cubeHelix: () => cubeHelixScale,
-  gammaII: () => gammaIIScale,
-  jet: () => jetScale,
-  raven: () => jetScale,
+  audacity: roseusScale,
+  roseus: roseusScale,
+  viridis: viridisScale,
+  turbo: turboScale,
+  plasma: plasmaScale,
+  inferno: infernoScale,
+  magma: magmaScale,
+  cubeHelix: cubeHelixScale,
+  gammaII: gammaIIScale,
+  jet: jetScale,
+  raven: jetScale,
 };
 
-export function getColorScale(name: string): ColorScaler {
+export type ColorMapName = keyof typeof translationTable;
+
+export function getColorScale(name: ColorMapName): ColorScaler {
   let scaler = translationTable[name];
 
   if (scaler === undefined) {
@@ -84,5 +84,5 @@ export function getColorScale(name: string): ColorScaler {
     return makeScaler(chroma.scale(scaler));
   }
 
-  return scaler();
+  return scaler;
 }

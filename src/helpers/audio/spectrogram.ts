@@ -1,12 +1,14 @@
 /** helper functions for generating spectrograms */
 
-import webfft from "webfft";
 import { ColorScaler, getColorScale } from "./colors";
 import { constructMfcc } from "./mel";
-import { IAudioInformation, SpectrogramOptions } from "./state";
 import { estimateSmootherAttenuation, resolveSmoother, SmoothingFunction } from "./window";
+import { IAudioInformation, SpectrogramOptions } from "./models";
+import FFT_indutny from "./fft";
 
 const bytesPerPixel = 4 as const;
+
+const FftSizeCAche = new Map<number, typeof FFT_indutny>();
 
 /**
  * A class to generate a spectrogram from an sample buffer.
@@ -18,7 +20,7 @@ export class SpectrogramGenerator {
   private audio: IAudioInformation;
   private options: SpectrogramOptions;
 
-  private fft: webfft;
+  private fft: typeof FFT_indutny;
 
   // the spectrogram always "covers" some window of samples from the audio
   // file. This is the total number of samples in that window.
@@ -39,9 +41,10 @@ export class SpectrogramGenerator {
   private imageBuffer: Uint8ClampedArray;
 
   // reuse for efficiency - trying to reduce allocations as much as possible
-  private complexInput: Float32Array;
-  private window: Float32Array;
-  private spectrum: Float32Array;
+  private readonly fftOutput: Float32Array;
+  private readonly complexInput: Float32Array;
+  private readonly window: Float32Array;
+  private readonly spectrum: Float32Array;
   public readonly estimatedWindowLoss: number;
   private readonly amplificationFactor: number;
 
@@ -50,7 +53,13 @@ export class SpectrogramGenerator {
     this.options = options;
 
     this.lastFrameIndex = 0;
-    this.fft = new webfft(options.windowSize);
+
+    if (FftSizeCAche.has(options.windowSize)) {
+      this.fft = FftSizeCAche.get(options.windowSize)!;
+    } else {
+      this.fft = new (FFT_indutny as any)(options.windowSize);
+      FftSizeCAche.set(options.windowSize, this.fft);
+    }
 
     this.#totalSamples = audio.endSample - audio.startSample;
     const frameCount = Math.ceil(this.totalSamples / this.step);
@@ -78,6 +87,7 @@ export class SpectrogramGenerator {
     this.imageBuffer.fill(255);
 
     this.complexInput = new Float32Array(this.size * 2);
+    this.fftOutput = new Float32Array(this.size * 2);
     this.window = new Float32Array(this.size);
     this.spectrum = new Float32Array(this.size / 2);
 
@@ -111,10 +121,6 @@ export class SpectrogramGenerator {
 
   public get totalSamples(): number {
     return this.#totalSamples;
-  }
-
-  public dispose() {
-    this.fft.dispose();
   }
 
   /**
@@ -152,12 +158,12 @@ export class SpectrogramGenerator {
       this.interleaveReals();
 
       // 4. Do the fft
-      const out = this.fft.fft(this.complexInput);
+      (this.fft as any).transform(this.fftOutput, this.complexInput);
 
       // 5. for positive frequencies, collapse real and complex parts into magnitude
       // (writes into the spectrum array)
       // out -> this.spectrum
-      this.extractMagnitudeAndScale(out);
+      this.extractMagnitudeAndScale(this.fftOutput);
 
       // 6. convert to mel scale (optional based on settings)
       if (this.melScale) {
@@ -272,17 +278,16 @@ export class SpectrogramGenerator {
       // but now they can... so skip here?
       // intensity = Math.min(1, Math.max(0, intensity));
 
-      const rgbColor = this.colorScale(intensity);
-
       const x = this.lastFrameIndex;
       // inverted y-axis
       const y = this.fftHeight - 1 - frequencyBin;
       const offset = bytesPerPixel * (x + y * this.fftWidth);
       if (offset > this.imageBuffer.length - 4) {
-        console.log("overflow coordinates", x, y, offset, this.imageBuffer.length, this.fftWidth, this.fftHeight);
+        console.error("overflow coordinates", x, y, offset, this.imageBuffer.length, this.fftWidth, this.fftHeight);
       }
 
       // shift r, g, and b directly in. Opacity set in buffer initialization.
+      const rgbColor = this.colorScale(intensity);
       this.imageBuffer.set(rgbColor, offset);
     }
   }
