@@ -1,10 +1,11 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { html, LitElement } from "lit";
-import { customElement, query, queryAssignedElements } from "lit/decorators.js";
+import { customElement, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { indicatorStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
+import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 
 /**
  * A red line that displays the playback position on a spectrogram
@@ -20,8 +21,8 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("#indicator-line")
   private indicatorLine!: SVGLineElement;
 
-  @queryAssignedElements()
-  private slotElements!: HTMLElement[];
+  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
+  private spectrogram!: Spectrogram;
 
   public xPos = 0;
   private time = 0;
@@ -29,12 +30,10 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   private unitConverter!: UnitConverter;
 
   public handleSlotChange(): void {
-    const spectrogram = this.getSpectrogramElement();
+    this.offset = this.spectrogram.offset;
+    this.unitConverter = this.spectrogram.unitConverters!;
 
-    this.offset = spectrogram.offset;
-    this.unitConverter = spectrogram.unitConverters!;
-
-    spectrogram.currentTime.subscribe((elapsedTime: number) => {
+    this.spectrogram.currentTime.subscribe((elapsedTime: number) => {
       this.updateIndicator(elapsedTime);
     });
   }
@@ -46,25 +45,6 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
     this.xPos = scale(this.time);
 
     this.indicatorLine.style.transform = `translateX(${this.xPos}px)`;
-  }
-
-  // TODO: I think there might be a better way to do this using a combination of
-  // the queryAssignedElements() and query() decorators
-  private getSpectrogramElement(): Spectrogram {
-    for (const slotElement of this.slotElements) {
-      if (slotElement instanceof Spectrogram) {
-        return slotElement;
-      }
-
-      const queriedElement = slotElement.querySelector("oe-spectrogram");
-      if (queriedElement instanceof Spectrogram) {
-        return queriedElement;
-      } else {
-        throw new Error("oe-spectrogram is not defined");
-      }
-    }
-
-    throw new Error("No spectrogram element found");
   }
 
   public render() {

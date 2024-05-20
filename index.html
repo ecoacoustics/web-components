@@ -9,16 +9,27 @@
 </head>
 
 <body>
+  <div>
+    <oe-verification-grid src="/grid-items.json" key="AudioLink" grid-size="8">
+      <template>
+        <oe-spectrogram color-map="raven"></oe-spectrogram>
+      </template>
+
+      <h3 style="text-align: center;">Are all of these a Koala?</h3>
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <oe-decision value="verified" tag="koala" shortcut="J">Koala (J)</oe-decision>
+        <oe-decision value="not-verified" tag="koala" shortcut="K">Not a Koala (K)</oe-decision>
+      </div>
+    </oe-verification-grid>
+  </div>
+
   <oe-axes>
     <oe-indicator>
       <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
         window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
-  <oe-media-controls for="playing-spectrogram">
-    <button slot="play-icon">Pause</button>
-    <button slot="play-icon">2</button>
-  </oe-media-controls>
+  <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
   <button onclick="changeSource();">Change source</button>
   <button onclick="changeColorMap();">Change colour map</button>
