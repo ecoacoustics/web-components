@@ -26,15 +26,12 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
 
   public process(inputs: Float32Array[][]) {
     if (this.aborted) {
-      console.log(this.tag, "Processor aborted");
+      //console.log(this.tag, "Processor aborted");
       return false;
     }
 
     // we should always have single input with one single channel of data by this point
     // any mixing or channel selection should be done before this processor
-    if (!this.state) {
-      console.error(this.tag, "Processor not setup");
-    }
     const input = inputs[0][0];
     let writeHead = this.state.bufferWriteHead;
     const bufferLength = this.buffer.length;
@@ -50,7 +47,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     // with an overflow is to just run the worker to empty the buffer
     if (newHead >= bufferLength) {
       // signal worker to process the sample buffer
-      console.log(this.tag, "buffer ready", newHead, bufferLength);
+      //console.log(this.tag, "buffer ready", newHead, bufferLength);
       this.state.bufferReady();
 
       // wait for the worker to finish processing the buffer
@@ -87,15 +84,20 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
   private handleMessage(event: ProcessorMessage) {
     if (event.data[0] === "setup") {
       const data = event.data[1];
+      const generation = data.generation;
 
       this.state = new ProcessorState(data.state);
       this.buffer = new Float32Array(data.sampleBuffer);
-      this.generation = this.state.generation;
-      this.tag = `processor (${this.generation}):`;
+      this.generation = generation;
+      this.tag = `processor (${generation}):`;
 
       // signal back that we're ready
-      console.log(this.tag, "Processor ready");
-      this.state.processorReady();
+      //console.log(this.tag, "Processor ready");
+      const valid = this.state.processorReady(generation);
+      if (!valid) {
+        console.error(this.tag, "Processor not valid, aborting");
+        this.aborted = true;
+      }
     } else {
       throw new Error("Unknown message type");
     }

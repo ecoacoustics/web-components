@@ -31,14 +31,14 @@ let sampleBuffer: Float32Array;
 
 let audioInformation: IAudioInformation;
 
-let iterations = 0;
+function paintBuffer(generation: number): void {
+  //console.log(`worker (${generation}):work:`, state.bufferWriteHead);
 
-function paintBuffer(tag: string): void {
-  console.log(tag, "work", iterations, state.bufferWriteHead);
-
-  const consumed = spectrogram.partialGenerate(sampleBuffer, state.bufferWriteHead, state.processorFinished);
-
-  iterations++;
+  const consumed = spectrogram.partialGenerate(
+    sampleBuffer,
+    state.bufferWriteHead,
+    state.isProcessorComplete(generation),
+  );
 
   state.bufferProcessed(sampleBuffer, consumed);
 }
@@ -54,36 +54,36 @@ function work(generation: number): void {
   state.workerBusy();
 
   let aborted = false;
-  while (state.processorProcessing) {
+  while (state.processorCanGenerate(generation)) {
     // wait for a buffer
     if (!state.waitForBuffer()) {
       // if buffer is not ready, it is either a
       if (state.matchesCurrentGeneration(generation)) {
         // timeout
-        console.log(tag, "timeout");
+        //console.log(tag, "timeout");
         continue;
       } else {
         // or an abort
-        console.log(tag, "abort");
+        //console.log(tag, "abort");
         aborted = true;
         break;
       }
     }
 
-    paintBuffer(tag);
+    paintBuffer(generation);
   }
 
-  console.log(tag, "remaining samples?", state.bufferWriteHead);
+  //console.log(tag, "remaining samples?", state.bufferWriteHead);
 
   // actually paint the spectrogram to the canvas
   if (!aborted) {
     // In the optimal case, the buffer write head is zero at the end of an audio stream
     // if not, we render what ever else is left
     if (state.bufferWriteHead > 0) {
-      paintBuffer(tag);
+      paintBuffer(generation);
     }
 
-    renderImageBuffer(spectrogram.outputBuffer);
+    renderImageBuffer(spectrogram.outputBuffer, generation);
   }
 
   console.timeEnd(timerTag);
@@ -91,17 +91,28 @@ function work(generation: number): void {
   state.workerReady();
 }
 
-function renderImageBuffer(buffer: Uint8ClampedArray): void {
+function renderImageBuffer(buffer: Uint8ClampedArray, generation: number): void {
   const imageData = new ImageData(buffer, spectrogram.width, spectrogram.height);
 
   // paint buffer to the spectrogram canvas at  a 1:1 scale
   spectrogramSurface.putImageData(imageData, 0, 0);
 
-  drawSpectrogramOntoDestinationCanvas();
+  drawSpectrogramOntoDestinationCanvas(generation);
 }
 
-function drawSpectrogramOntoDestinationCanvas(): void {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   // paint the spectrogram canvas to the destination canvas and stretch to fill
+
+  //? AT: I actually don't like the look of this solution. During high frequency
+  //? changes you don't actually see the spectrogram being updated.
+  //? The alternative is that during high frequency changes you may see the
+  //? a partial spectrogram being updated but it will update more frequently
+  // ? and it never lands/finishes on a partial update.
+  // with one last check that we're still in the current generation
+  // if (!state.matchesCurrentGeneration(generation)) {
+  //   return;
+  // }
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
   // commit doesn't exist on chrome!
@@ -150,7 +161,7 @@ function resizeCanvas(data: Size): void {
 
   // redraw the spectrogram from the 1:1 spectrogram canvas
   // onto the destination
-  drawSpectrogramOntoDestinationCanvas();
+  drawSpectrogramOntoDestinationCanvas(state.generation);
   //console.log("worker: resized canvas", data);
 }
 
