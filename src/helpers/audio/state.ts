@@ -34,14 +34,10 @@ enum STATE {
   //* Type: Int32
   BUFFER_WRITE_HEAD = 1,
 
-  // The state of the audio processor.
-  //* Type: PROCESSOR_STATES
-  PROCESSOR_STATE = 2,
-
   // The state of the worker.
   // Mainly used so the main thread knows when the worker is idle.
   //* Type: WORKER_STATES
-  WORKER_STATE = 3,
+  WORKER_STATE = 2,
 
   // The worker and the main thread are reused for each render cycle.
   // However, the processor always needs to be recreated for each render cycle.
@@ -49,13 +45,18 @@ enum STATE {
   // render cycle - their generation. If the generation counter changes, the processor
   // should no longer write samples to the buffer - this is effectively an abort signal.
   //* Type: Int32
-  GENERATION = 4,
-}
+  GENERATION = 3,
 
-enum PROCESSOR_STATES {
-  NEW = 0,
-  PROCESSING = 1,
-  FINISHED = 2,
+  // The generation of the most recently ready processor.
+  // Initial value is -1, which means no processor is ready.
+  //* Type: Int32
+  PROCESSOR_READY = 4,
+
+  // The generation of the most recently completed processor.
+  // This is used to determine if the processor has finished writing to the buffer.
+  // Initial value is -1, which means no processor has completed.
+  //* Type: Int32
+  PROCESSOR_COMPLETE = 5,
 }
 
 enum BUFFER_READY_STATES {
@@ -79,7 +80,13 @@ export class State {
     // and we only want the key -> value pair, we divide the object key length by two
     const buffer = new SharedArrayBuffer((Object.keys(STATE).length / 2) * Int32Array.BYTES_PER_ELEMENT);
 
-    return new State(buffer);
+    const state = new State(buffer);
+
+    // initialize the state
+    state.processorReadyGeneration = -1;
+    state.processorCompleteGeneration = -1;
+
+    return state;
   }
 
   public constructor(state: SharedArrayBuffer) {
@@ -116,22 +123,6 @@ export class State {
     Atomics.store(this.state, STATE.BUFFER_WRITE_HEAD, value);
   }
 
-  public get processorNew(): boolean {
-    return Atomics.load(this.state, STATE.PROCESSOR_STATE) === PROCESSOR_STATES.NEW;
-  }
-
-  public get processorProcessing(): boolean {
-    return Atomics.load(this.state, STATE.PROCESSOR_STATE) === PROCESSOR_STATES.PROCESSING;
-  }
-
-  public get processorFinished(): boolean {
-    return Atomics.load(this.state, STATE.PROCESSOR_STATE) === PROCESSOR_STATES.FINISHED;
-  }
-
-  protected set processorState(value: PROCESSOR_STATES) {
-    Atomics.store(this.state, STATE.PROCESSOR_STATE, value);
-  }
-
   public get workerNew(): boolean {
     return Atomics.load(this.state, STATE.WORKER_STATE) === WORKER_STATES.NEW;
   }
@@ -153,15 +144,51 @@ export class State {
     return Atomics.load(this.state, STATE.GENERATION);
   }
 
+  public get processorReadyGeneration(): number {
+    return Atomics.load(this.state, STATE.PROCESSOR_READY);
+  }
+
+  protected set processorReadyGeneration(value: number) {
+    Atomics.store(this.state, STATE.PROCESSOR_READY, value);
+  }
+
+  public get processorCompleteGeneration(): number {
+    return Atomics.load(this.state, STATE.PROCESSOR_COMPLETE);
+  }
+
+  private set processorCompleteGeneration(value: number) {
+    Atomics.store(this.state, STATE.PROCESSOR_COMPLETE, value);
+  }
+
+  public isProcessorReady(generation: number): boolean {
+    return Atomics.load(this.state, STATE.PROCESSOR_READY) === generation;
+  }
+
+  public isProcessorComplete(generation: number): boolean {
+    return Atomics.load(this.state, STATE.PROCESSOR_COMPLETE) === generation;
+  }
+
   /**
    * Called by the main thread when the processor has finished writing to the buffer.
    * The processor has no more samples to write. We trigger the buffer available state
    * to signal the worker to process the buffer.
    */
-  public processorComplete(): void {
-    this.processorState = PROCESSOR_STATES.FINISHED;
-    //console.log("state: finished");
-    this.bufferAvailable = BUFFER_READY_STATES.READY;
+  public processorComplete(generation: number): void {
+    // replace the value with the new generation
+    // only if it is greater than the current generation.
+    // We don't use compareExchange because if we're out of sync we still want
+    // to advance the generation, otherwise we'll be in a deadlock.
+    const current = this.processorCompleteGeneration;
+    if (generation > current) {
+      this.processorCompleteGeneration = generation;
+    }
+
+    // A valid call should increment the generation by 1.
+    // Any other case is a signal to abort.
+    //console.log("state: processor complete", generation, current, this.processorCompleteGeneration);
+    if (generation === current + 1) {
+      this.bufferAvailable = BUFFER_READY_STATES.READY;
+    }
   }
 
   /**
@@ -173,14 +200,13 @@ export class State {
    */
   public reset(): number {
     // this will abort the current processor
-    Atomics.add(this.state, STATE.GENERATION, 1);
-    const nextGeneration = this.generation;
+    const old = Atomics.add(this.state, STATE.GENERATION, 1);
+    const nextGeneration = old + 1;
 
     // this will notify
-    this.bufferAvailable = BUFFER_READY_STATES.NOT_READY;
-    this.processorState = PROCESSOR_STATES.NEW;
     this.bufferWriteHead = 0;
-    console.log("state: reset", nextGeneration);
+    this.bufferAvailable = BUFFER_READY_STATES.NOT_READY;
+    //console.log("state: reset", nextGeneration);
     return nextGeneration;
   }
 
@@ -194,16 +220,14 @@ export class State {
   public async waitForProcessorReady(generation: number) {
     // waitAsync not supported in FF, wait not allowed on main thread
 
-    let match = true;
-    while (this.processorNew && (match = this.matchesCurrentGeneration(generation))) {
-      // do nothing
-      console.warn("state: waiting for processor ready", generation, this.generation, this.processorNew);
+    while (this.processorReadyGeneration < generation) {
+      // do nothing but still yield
       await sleep(0);
     }
 
-    console.warn("state: processor ready", generation, this.generation, this.processorNew);
+    //console.warn("state: processor ready", generation, this.generation, this.processorReadyGeneration);
 
-    return match;
+    return this.matchesCurrentGeneration(generation);
   }
 
   /**
@@ -230,9 +254,22 @@ export class ProcessorState extends State {
   /**
    * Called by the processor thread when it is ready to start processing.
    * This will signal the main thread to start rendering.
+   * @param generation - The generation of the processor.
+   * @returns true if the ready call is valid, false if the processor should abort.
    */
-  public processorReady(): void {
-    this.processorState = PROCESSOR_STATES.PROCESSING;
+  public processorReady(generation: number): boolean {
+    // replace the value with the new generation
+    // only if it is greater than the current generation.
+    // We don't use compareExchange because if we're out of sync we still want
+    // to advance the generation, otherwise we'll be in a deadlock.
+    const current = this.processorReadyGeneration;
+    if (generation > current) {
+      this.processorReadyGeneration = generation;
+    }
+
+    // A valid call should increment the generation by 1.
+    // Any other case is a signal to abort.
+    return generation === current + 1;
   }
 
   public busyWaitForWorkerToProcessBuffer() {
@@ -258,6 +295,10 @@ export class ProcessorState extends State {
 export class WorkerState extends State {
   TIMEOUT = 1;
 
+  public processorCanGenerate(generation: number): boolean {
+    return this.isProcessorReady(generation) && !this.isProcessorComplete(generation);
+  }
+
   /**
    * Waits for the buffer to become available.
    *
@@ -266,9 +307,10 @@ export class WorkerState extends State {
    * - When the value is different from the expected value.
    * - After the timeout period.
    *
-   * Initially, the method chooses to never exit unless the value has changed.
-   * However, long waits like this don't give us the opportunity to check for aborts.
-   * Therefore, there is no guarantee that BUFFER_AVAILABLE is true when we exit.
+   * In our first design we chose to never exit unless the value has changed.
+   * However, long waits like that don't give us the opportunity to check for aborts.
+   *
+   * The tradeoff however, there is no guarantee that BUFFER_AVAILABLE is true when we exit.
    * @returns true if the buffer is available, false if the buffer is not available.
    */
   public waitForBuffer(): boolean {

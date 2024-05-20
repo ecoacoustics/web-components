@@ -18,12 +18,6 @@ interface IFetchedAudio<T = Response | ArrayBuffer> {
   metadata: IAudioMetadata;
   audioInformation: IAudioInformation;
 }
-
-interface GenerationMetadata {
-  source: AudioBufferSourceNode;
-  processor: AudioWorkletNode;
-}
-
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
   private readonly state: State;
@@ -32,9 +26,10 @@ export class AudioHelper {
   private cachedFile!: IFetchedAudio<Response>;
   private offscreenCanvas: OffscreenCanvas | null = null;
 
-  // this data changes every time we render.
-  // keeping them as single instance variables resulted in race conditions
-  private generationData: Map<number, GenerationMetadata> = new Map();
+  // This data changes every time we render.
+  // Keeping them as single instance variables resulted in race conditions
+  // We keep references here to disconnect the audio graph on disposal.
+  private generationData: Map<number, AudioBufferSourceNode> = new Map();
 
   private segmentSize = 44100 as const;
   private generation = 0;
@@ -72,7 +67,7 @@ export class AudioHelper {
   }
 
   public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
-    console.log("audio: change source");
+    //console.log("audio: change source");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
@@ -85,7 +80,8 @@ export class AudioHelper {
   }
 
   public async regenerateSpectrogram(options: SpectrogramOptions) {
-    console.log("audio: regenerate");
+    const now = performance.now();
+    //console.log("audio: regenerate");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
@@ -93,6 +89,8 @@ export class AudioHelper {
     const newGeneration = await this.abort();
 
     await this.render(false, null, options, newGeneration);
+
+    console.log("audio: regenerate complete", performance.now() - now);
   }
 
   public resizeCanvas(size: Size) {
@@ -105,21 +103,19 @@ export class AudioHelper {
 
   private async abort() {
     const abortedGeneration = this.generation;
-    console.log("audio: abort start", { abortedGeneration });
+    //console.log("audio: abort start", { abortedGeneration });
 
     const metadata = this.generationData.get(abortedGeneration);
 
     if (metadata) {
-      const { source, processor: processorNode } = metadata;
+      const source = metadata;
       // there is no way to stop or destroy an OfflineAudioContext
       //
-      // chrome and firefox have different implementations of the audio worklet.
-      // one way to tell both that we no longer want it to process is to disconnect it!
-      //
-      // we also don't need to do this if the processor is already finished or not yet set up
-      if (source && processorNode && this.state.processorProcessing) {
-        source.disconnect();
-      }
+      // Chrome and firefox have different implementations of the audio worklet.
+      // (Returning `false` from the `process` method may not stop the processor)
+      // One way to tell both that we no longer want it to process is to disconnect
+      // the graph! No more input, no more frame buffers!
+      source.disconnect();
 
       this.generationData.delete(abortedGeneration);
     }
@@ -132,8 +128,7 @@ export class AudioHelper {
 
     this.state.waitForWorkerIdle();
 
-    console.log("audio: abort complete", { abortedGeneration, generation: this.generation });
-
+    //console.log("audio: abort complete", { abortedGeneration, generation: this.generation });
     return generation;
   }
 
@@ -167,7 +162,7 @@ export class AudioHelper {
   private async fetchAudio(src: string): Promise<ArrayBuffer> {
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
-    const tag = `fetch and decode audio" (${this.generation}):`;
+    const tag = `fetch and decode audio (${this.generation})`;
     console.time(tag);
     const response = await fetch(src);
 
@@ -224,22 +219,19 @@ export class AudioHelper {
     // do not refactor into the class - we don't want to mixup state with a
     // object that is recreated many times
     context.addEventListener("complete", () => {
-      console.log(`audio (${generation}): context complete`);
-      this.state.processorComplete();
+      //console.log(`audio (${generation}): context complete`);
+      this.state.processorComplete(generation);
     });
 
-    console.log(`audio (${generation}):context: setup start`, this.state.processorNew);
+    //console.log(`audio (${generation}):context: setup start`, this.state.isProcessorReady(generation));
     const success = await this.setupProcessor(processor, generation);
-    console.log(`audio (${generation}):context: setup end`, success, this.state.processorNew);
 
     if (success) {
-      this.generationData.set(generation, { source, processor: processor });
+      this.generationData.set(generation, source);
 
-      console.log(`audio (${generation}):context: source start`);
+      //console.log(`audio (${generation}):context: source start and start rendering`);
 
       source.start();
-      console.log(`audio (${generation}):context: start rendering`);
-
       context.startRendering();
     }
 

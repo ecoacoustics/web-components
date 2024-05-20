@@ -23,7 +23,7 @@
   <button onclick="changeWindowSize();">Change Window Size</button>
   <button onclick="changeOffset();">Change Offset</button>
   <button onclick="changeScale();">Change Scale</button>
-
+  <input type="text" readonly value="0" id="generation" autocomplete="off" />
   <script>
     function changeSource() {
       const element = document.getElementById("playing-spectrogram");
@@ -46,6 +46,7 @@
     }
 
     function changeColorMap() {
+      document.getElementById("generation").value = parseInt(document.getElementById("generation").value) + 1;
       const element = document.getElementById("playing-spectrogram");
 
       if (element.getAttribute("color-map") === "audacity") {
