@@ -1,9 +1,9 @@
 ---
 layout: example.11ty.js
-title: Open Ecoacoustics | Examples | Validation Grid
+title: Open Ecoacoustics | Examples | Validation Interface (fake)
 ---
 
-## Validation Interface
+## Validation Interface (fake)
 
 This example tried to mimic what a minimal implementation of a validation interface could look like using the web components.
 

@@ -1,12 +1,13 @@
 import { html, LitElement, svg, TemplateResult } from "lit";
-import { customElement, property, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { axesStyles } from "./css/style";
 import { Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { Spectrogram } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, IScale } from "../../models/unitConverters";
+import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
 import { RenderCanvasSize, RenderWindow } from "../../models/rendering";
 import { booleanConverter } from "../../helpers/attributes";
+import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 
 type Orientation = "x" | "y";
 
@@ -75,13 +76,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
 
-  @queryAssignedElements()
-  private slotElements!: HTMLElement[];
-
+  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
   private spectrogram!: Spectrogram;
-  private scales!: Signal<IScale>;
+
   private renderWindow!: Signal<RenderWindow>;
   private canvasShape!: Signal<RenderCanvasSize>;
+
+  private unitConverter!: UnitConverter;
 
   // font size is the size of the font
   // while label padding is the minimum additional distance between the labels
@@ -92,30 +93,10 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // TODO: We should only extract the UC out of the spectrogram element
   private handleSlotchange(): void {
-    this.spectrogram = this.getSpectrogramElement();
-    this.scales = this.spectrogram.unitConverters!.renderWindowScale;
+    this.unitConverter = this.spectrogram.unitConverters!;
+
     this.renderWindow = this.spectrogram.renderWindow;
     this.canvasShape = this.spectrogram.renderCanvasSize;
-
-    console.log("new canvas size", this.canvasShape);
-  }
-
-  // TODO: I think there might be a better way to do this using a combination of
-  // the queryAssignedElements() and query() decorators
-  private getSpectrogramElement(): Spectrogram {
-    for (const slotElement of this.slotElements) {
-      if (slotElement instanceof Spectrogram) {
-        return slotElement;
-      }
-
-      const queriedElement = slotElement.querySelector("oe-spectrogram");
-
-      if (queriedElement instanceof Spectrogram) {
-        return queriedElement;
-      }
-    }
-
-    throw new Error("No spectrogram element found");
   }
 
   private createAxis(
@@ -204,19 +185,19 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private xAxis() {
-    const step = this.xStepOverride || this.calculateStep(this.scales.value.temporal);
+    const step = this.xStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.temporal);
 
     const values = this.generateAxisValues(
       this.renderWindow.value.startOffset,
       this.renderWindow.value.endOffset,
       step,
-      this.scales.value.temporal,
+      this.unitConverter.renderWindowScale.value.temporal,
     );
 
     return this.createAxis(
       "x",
       values,
-      this.scales.value.temporal,
+      this.unitConverter.renderWindowScale.value.temporal,
       (x) => x.toFixed(1),
       this.xLabel,
       // TODO: This is incorrect, but it works for the demo
@@ -225,19 +206,19 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private yAxis() {
-    const step = this.yStepOverride || this.calculateStep(this.scales.value.frequency);
+    const step = this.yStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.frequency);
 
     const values = this.generateAxisValues(
       this.renderWindow.value.lowFrequency,
       this.renderWindow.value.highFrequency,
       step,
-      this.scales.value.frequency,
+      this.unitConverter.renderWindowScale.value.frequency,
     );
 
     return this.createAxis(
       "y",
       values,
-      this.scales.value.frequency,
+      this.unitConverter.renderWindowScale.value.frequency,
       (x) => x.toFixed(0),
       this.yLabel,
       this.canvasShape.value.height,
