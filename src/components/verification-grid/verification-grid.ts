@@ -48,6 +48,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @state()
   private pageNumber = 0;
   private totalItems = 0;
+  private subSelection: Set<any> = new Set([]);
 
   protected firstUpdated(): void {
     if (this.src && !this.getPage) {
@@ -62,9 +63,13 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private catchDecision(event: CustomEvent) {
-    console.log(event);
+    const decision = event.detail.value;
+    const selectedItems = this.subSelection.size > 0 ? Array.from(this.subSelection) : "all items";
+
+    console.debug(`you selected:\n\n${decision} for:\n${selectedItems}`);
 
     this.pageNumber++;
+    this.removeSubSelection();
     this.updateResults();
   }
 
@@ -82,6 +87,21 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     };
   }
 
+  private selectSubSelection(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = target.value;
+
+    if (target.checked) {
+      this.subSelection.add(value);
+    } else {
+      this.subSelection.delete(value);
+    }
+  }
+
+  private removeSubSelection(): void {
+    this.subSelection = new Set([]);
+  }
+
   // we have to use the template provided in the slot
   // an change the src of all oe-spectrogram elements to the src attribute
   // then we return the instantiated templates as a Lit HTML template
@@ -95,14 +115,28 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     return this.page.map((source) => {
       const derivedSource = source[this.key];
       const template = spectrogramTemplate.content.cloneNode(true) as HTMLElement;
-      const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
+      const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram")!;
 
       if (spectrogram && derivedSource) {
         spectrogram.src = derivedSource;
       }
 
-      return html`${template}`;
+      return this.spectrogramTemplate(spectrogram);
     });
+  }
+
+  private spectrogramTemplate(spectrogram: Spectrogram) {
+    return html`
+      <div>
+        <input
+          @change="${this.selectSubSelection}"
+          type="checkbox"
+          class="sub-selection-checkbox"
+          value="${spectrogram.src}"
+        />
+        ${spectrogram}
+      </div>
+    `;
   }
 
   private noItemsTemplate() {
@@ -118,7 +152,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     `;
   }
 
-  public render() {
+  protected render() {
     const instantiatedSpectrograms = this.renderSpectrograms();
 
     return html`

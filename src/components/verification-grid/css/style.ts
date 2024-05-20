@@ -15,10 +15,9 @@ export const verificationGridStyles = css`
     }
   }
 
-  .slot-elements {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .sub-selection-checkbox {
+    position: absolute;
+    z-index: 1;
   }
 
   .no-items-message {
