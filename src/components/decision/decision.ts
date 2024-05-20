@@ -45,7 +45,7 @@ export class Decision extends AbstractComponent(LitElement) {
       }),
     );
 
-    setTimeout(() => this.decisionButton.classList.remove("hover"), 200);
+    setTimeout(() => this.decisionButton.classList.remove("hover"), 100);
   }
 
   public render() {

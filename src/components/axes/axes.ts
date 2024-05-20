@@ -1,5 +1,5 @@
 import { html, LitElement, svg, TemplateResult } from "lit";
-import { customElement, property, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { axesStyles } from "./css/style";
 import { Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { Spectrogram } from "../../../playwright";
@@ -7,6 +7,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, IScale } from "../../models/unitConverters";
 import { RenderCanvasSize, RenderWindow } from "../../models/rendering";
 import { booleanConverter } from "../../helpers/attributes";
+import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 
 type Orientation = "x" | "y";
 
@@ -77,10 +78,9 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
 
-  @queryAssignedElements()
-  private slotElements!: HTMLElement[];
-
+  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
   private spectrogram!: Spectrogram;
+
   private scales!: Signal<IScale>;
   private renderWindow!: Signal<RenderWindow>;
   private canvasShape!: Signal<RenderCanvasSize>;
@@ -94,30 +94,11 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // TODO: We should only extract the UC out of the spectrogram element
   private handleSlotchange(): void {
-    this.spectrogram = this.getSpectrogramElement();
     this.scales = this.spectrogram.unitConverters!.renderWindowScale;
     this.renderWindow = this.spectrogram.renderWindow;
     this.canvasShape = this.spectrogram.renderCanvasSize;
 
     console.log("new canvas size", this.canvasShape);
-  }
-
-  // TODO: I think there might be a better way to do this using a combination of
-  // the queryAssignedElements() and query() decorators
-  private getSpectrogramElement(): Spectrogram {
-    for (const slotElement of this.slotElements) {
-      if (slotElement instanceof Spectrogram) {
-        return slotElement;
-      }
-
-      const queriedElement = slotElement.querySelector("oe-spectrogram");
-
-      if (queriedElement instanceof Spectrogram) {
-        return queriedElement;
-      }
-    }
-
-    throw new Error("No spectrogram element found");
   }
 
   private createAxis(

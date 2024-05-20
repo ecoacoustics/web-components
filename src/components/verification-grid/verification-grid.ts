@@ -47,6 +47,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   @state()
   private pageNumber = 0;
+  private totalItems = 0;
 
   protected firstUpdated(): void {
     if (this.src && !this.getPage) {
@@ -75,8 +76,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       const startIndex = pageNumber * this.gridSize;
       const endIndex = startIndex + this.gridSize;
 
+      this.totalItems = data.length;
+
       return data.slice(startIndex, endIndex);
-    }
+    };
   }
 
   // we have to use the template provided in the slot
@@ -85,10 +88,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private renderSpectrograms() {
     if (!this.page.length) {
       return this.noItemsTemplate();
-    }
-
-    if (!this.slotElements.length) {
-      return;
     }
 
     const spectrogramTemplate = this.slotElements[0];
@@ -105,10 +104,17 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       return html`${template}`;
     });
   }
- 
+
   private noItemsTemplate() {
     return html`
-        <strong>No more items to verify.</strong>
+      <span class="no-items-message">
+        <div>
+          <p>
+            <strong>No un-validated results found</strong>
+          </p>
+          <p>All ${this.totalItems} annotations are validated</p>
+        </div>
+      </span>
     `;
   }
 
@@ -117,9 +123,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     return html`
       <div>
-        <div class="grid">
-          ${instantiatedSpectrograms}
-        </div>
+        <div class="grid">${instantiatedSpectrograms}</div>
       </div>
 
       <div class="slot-elements">

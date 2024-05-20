@@ -20,4 +20,12 @@ export const verificationGridStyles = css`
     justify-content: center;
     align-items: center;
   }
+
+  .no-items-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 1.2rem;
+  }
 `;
