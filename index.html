@@ -1,140 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components</title>
+    <script type="module" src="./src/components/index.ts"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Web Components</title>
-  <script type="module" src="./src/components/index.ts"></script>
-</head>
+  <body>
+    <div>
+      <oe-verification-grid src="/grid-items.json" key="AudioLink" grid-size="2">
+        <template>
+          <oe-spectrogram></oe-spectrogram>
+        </template>
 
-<body>
-  <oe-axes>
+        <oe-decision value="verified" tag="koala" shortcut="J">Koala (J)</oe-decision>
+        <oe-decision value="not-verified" tag="koala" shortcut="K">Not a Koala (K)</oe-decision>
+      </oe-verification-grid>
+    </div>
+
+    <oe-axes>
     <oe-indicator>
-      <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
-        window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
+      <oe-spectrogram style="width: 600px; height: 600px" id="playing-spectrogram" class="large"
+        src="/example.flac" window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
-  <oe-media-controls for="playing-spectrogram">
-    <button slot="play-icon">Pause</button>
-    <button slot="play-icon">2</button>
-  </oe-media-controls>
+  <oe-media-controls for="playing-spectrogram"></oe-media-controls>
 
-  <button onclick="changeSource();">Change source</button>
-  <button onclick="changeColorMap();">Change colour map</button>
-  <button onclick="changeSize();">Change Size</button>
-  <button onclick="changeWindowSize();">Change Window Size</button>
-  <button onclick="changeOffset();">Change Offset</button>
-  <button onclick="changeScale();">Change Scale</button>
+    <button onclick="changeSource();">Change source</button>
+    <button onclick="changeColorMap();">Change colour map</button>
+    <button onclick="changeSize();">Change Size</button>
+    <button onclick="changeWindowSize();">Change Window Size</button>
+    <button onclick="changeOffset();">Change Offset</button>
+    <button onclick="changeScale();">Change Scale</button>
 
-  <script>
-    function changeSource() {
-      const element = document.getElementById("playing-spectrogram");
+    <script>
+      function changeSource() {
+        const element = document.getElementById("playing-spectrogram");
 
-      if (element.src === "/example.flac") {
-        element.setAttribute("src", "/example_34s.flac");
-      } else {
-        element.setAttribute("src", "/example.flac");
-      }
-    }
-
-    function changeOffset() {
-      const element = document.getElementById("playing-spectrogram");
-
-      if (element.getAttribute("offset") === "2") {
-        element.setAttribute("offset", "0");
-      } else {
-        element.setAttribute("offset", "2");
-      }
-    }
-
-    function changeColorMap() {
-      const element = document.getElementById("playing-spectrogram");
-
-      if (element.getAttribute("color-map") === "audacity") {
-        element.setAttribute("color-map", "raven");
-      } else {
-        element.setAttribute("color-map", "audacity");
-      }
-    }
-
-    function changeWindowSize() {
-      const element = document.getElementById("playing-spectrogram");
-
-      if (element.getAttribute("window-size") === "1024") {
-        element.setAttribute("window-size", "256");
-      } else {
-        element.setAttribute("window-size", "1024");
-      }
-    }
-
-    function changeSize() {
-      const element = document.getElementById("playing-spectrogram");
-      const currentSize = element.style.width;
-
-      if (currentSize === "90vw") {
-        element.style.width = "1200px";
-        element.style.height = "200px";
-      } else if (currentSize === "1200px") {
-        element.style.width = "600px";
-        element.style.height = "600px";
-      } else {
-        element.style.width = "90vw";
-        element.style.height = "90vh";
-      }
-    }
-
-    function changeScale() {
-      const element = document.getElementById("playing-spectrogram");
-
-      if (element.hasAttribute("mel-scale")) {
-        element.removeAttribute("mel-scale");
-      } else {
-        element.setAttribute("mel-scale", "");
-      }
-    }
-  </script>
-
-  <style>
-    #axes {
-      color: blue;
-
-      &::part(tick) {
-        color: lime;
+        if (element.src === "/example.flac") {
+          element.setAttribute("src", "/example_34s.flac");
+        } else {
+          element.setAttribute("src", "/example.flac");
+        }
       }
 
-      &::part(x-ticks) {
-        color: red;
+      function changeOffset() {
+        const element = document.getElementById("playing-spectrogram");
+
+        if (element.getAttribute("offset") === "2") {
+          element.setAttribute("offset", "0");
+        } else {
+          element.setAttribute("offset", "2");
+        }
       }
 
-      &::part(y-ticks) {
-        color: green;
+      function changeColorMap() {
+        const element = document.getElementById("playing-spectrogram");
+
+        if (element.getAttribute("color-map") === "audacity") {
+          element.setAttribute("color-map", "raven");
+        } else {
+          element.setAttribute("color-map", "audacity");
+        }
       }
 
-      &::part(y-grid) {
-        color: purple;
+      function changeWindowSize() {
+        const element = document.getElementById("playing-spectrogram");
+
+        if (element.getAttribute("window-size") === "1024") {
+          element.setAttribute("window-size", "256");
+        } else {
+          element.setAttribute("window-size", "1024");
+        }
       }
 
-      &::part(x-grid) {
-        color: orange;
+      function changeSize() {
+        const element = document.getElementById("playing-spectrogram");
+        const currentSize = element.style.width;
+
+        if (currentSize === "90vw") {
+          element.style.width = "1200px";
+          element.style.height = "200px";
+        } else if (currentSize === "1200px") {
+          element.style.width = "600px";
+          element.style.height = "600px";
+        } else {
+          element.style.width = "90vw";
+          element.style.height = "90vh";
+        }
       }
-    }
 
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-    }
+      function changeScale() {
+        const element = document.getElementById("playing-spectrogram");
 
-    .small {
-      height: 200px;
-      width: 200px;
-    }
+        if (element.hasAttribute("mel-scale")) {
+          element.removeAttribute("mel-scale");
+        } else {
+          element.setAttribute("mel-scale", "");
+        }
+      }
+    </script>
 
-    .large {
-      height: 300px;
-      width: 300px;
-    }
-  </style>
-</body>
+    <style>
+      #axes {
+        color: blue;
 
+        &::part(tick) {
+          color: lime;
+        }
+
+        &::part(x-ticks) {
+          color: red;
+        }
+
+        &::part(y-ticks) {
+          color: green;
+        }
+
+        &::part(y-grid) {
+          color: purple;
+        }
+
+        &::part(x-grid) {
+          color: orange;
+        }
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .small {
+        height: 200px;
+        width: 200px;
+      }
+
+      .large {
+        height: 300px;
+        width: 300px;
+      }
+    </style>
+  </body>
 </html>
