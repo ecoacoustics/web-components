@@ -13,17 +13,13 @@ import {
   WorkerSetupMessage,
 } from "./messages";
 
-interface IFetchedAudio<T = Response | ArrayBuffer> {
-  response: T;
-  metadata: IAudioMetadata;
-  audioInformation: IAudioInformation;
-}
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
   private readonly state: State;
   private readonly sampleBuffer: SharedArrayBuffer;
 
-  private cachedFile!: IFetchedAudio<Response>;
+  private cachedResponse: Response | null = null;
+  private cachedAudioInformation: IAudioInformation | null = null;
   private offscreenCanvas: OffscreenCanvas | null = null;
 
   // This data changes every time we render.
@@ -53,7 +49,11 @@ export class AudioHelper {
     return !!this.offscreenCanvas;
   }
 
-  public async connect(src: string, canvas: HTMLCanvasElement, options: SpectrogramOptions): Promise<IAudioMetadata> {
+  public async connect(
+    src: string,
+    canvas: HTMLCanvasElement,
+    options: SpectrogramOptions,
+  ): Promise<IAudioInformation> {
     if (this.offscreenCanvas) {
       throw new Error("Connect can only be called once. Use regenerateSpectrogram to update the spectrogram.");
     }
@@ -63,13 +63,13 @@ export class AudioHelper {
     this.offscreenCanvas = canvas.transferControlToOffscreen();
     this.setupWorker();
 
-    await this.render(true, src, options, this.generation);
+    const info = await this.render(options, this.generation, src);
 
     console.log("audio: connect complete", performance.now() - now);
-    return this.cachedMetadata();
+    return info;
   }
 
-  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
+  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
     //console.log("audio: change source");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
@@ -77,9 +77,9 @@ export class AudioHelper {
 
     const newGeneration = await this.abort();
 
-    await this.render(true, src, options, newGeneration);
+    const info = await this.render(options, newGeneration, src);
 
-    return this.cachedMetadata();
+    return info;
   }
 
   public async regenerateSpectrogram(options: SpectrogramOptions) {
@@ -91,7 +91,7 @@ export class AudioHelper {
 
     const newGeneration = await this.abort();
 
-    await this.render(false, null, options, newGeneration);
+    await this.render(options, newGeneration);
 
     console.log("audio: regenerate complete", performance.now() - now);
   }
@@ -129,7 +129,7 @@ export class AudioHelper {
     const generation = this.state.reset();
     this.generation = generation;
 
-    this.state.waitForWorkerIdle();
+    await this.state.waitForWorkerIdle();
 
     //console.log("audio: abort complete", { abortedGeneration, generation: this.generation });
     return generation;
@@ -137,29 +137,42 @@ export class AudioHelper {
 
   /**
    * Internal render function. Does not check if we need to abort.
-   * @param refreshAudio if true fetches the audio again, otherwise clones a buffer of the last response
-   * @param src the source of the audio
    * @param options the spectrogram options
+   * @param generation the generation number
+   * @param src  if provided fetches the audio at the supplied source, otherwise clones a buffer of the last response
    */
-  private async render(refreshAudio: boolean, src: string | null, options: SpectrogramOptions, generation: number) {
-    const downloadedBuffer = refreshAudio ? await this.fetchAudio(src!) : await this.cachedBuffer();
+  private async render(
+    options: SpectrogramOptions,
+    generation: number,
+    src: string | null = null,
+  ): Promise<IAudioInformation> {
+    const downloadedBuffer = src ? await this.fetchAudio(src) : await this.cachedBuffer();
+    const info = this.cachedAudioInformation!;
 
     // recreate the processor every time!
-    await this.createAudioContext(this.cachedMetadata(), downloadedBuffer, generation);
+    await this.createAudioContext(info, downloadedBuffer, generation);
+
     //console.log(`audio (${generation}): audio context created, starting spectrogram generation`);
-    this.regenerateWorker(options, this.cachedAudioInformation(), generation);
+    this.regenerateWorker(options, info, generation);
 
     // returns before the worker finishes painting
     // but abort will wait for the worker to finish
     // before this method is called again
+    return info;
   }
 
   private createAudioInformation(metadata: IAudioMetadata): IAudioInformation {
-    return {
+    if (!metadata.format.duration || !metadata.format.sampleRate || !metadata.format.numberOfChannels) {
+      throw new Error("Could not determine all audio metadata");
+    }
+
+    return Object.freeze({
       startSample: 0,
-      endSample: metadata.format.duration! * metadata.format.sampleRate!,
-      sampleRate: metadata.format.sampleRate!,
-    };
+      endSample: metadata.format.duration * metadata.format.sampleRate,
+      sampleRate: metadata.format.sampleRate,
+      channels: metadata.format.numberOfChannels,
+      duration: metadata.format.duration,
+    });
   }
 
   private async fetchAudio(src: string): Promise<ArrayBuffer> {
@@ -174,40 +187,33 @@ export class AudioHelper {
     const cachedMetadata = await parseBlob(new Blob([responseBuffer]));
     const audioInformation = this.createAudioInformation(cachedMetadata);
 
-    this.cachedFile = {
-      response: cachedResponse,
-      metadata: cachedMetadata,
-      audioInformation,
-    };
+    this.cachedResponse = cachedResponse;
+    this.cachedAudioInformation = audioInformation;
 
     console.timeEnd(tag);
     return responseBuffer;
   }
 
   private async cachedBuffer(): Promise<ArrayBuffer> {
-    const cacheClone = this.cachedFile.response.clone();
-    const buffer = await this.cachedFile.response.arrayBuffer();
+    if (!this.cachedResponse) {
+      throw new Error("No cached file");
+    }
+
+    const cacheClone = this.cachedResponse.clone();
+    const buffer = await this.cachedResponse.arrayBuffer();
     // todo: needed?
-    this.cachedFile.response = cacheClone;
+    this.cachedResponse = cacheClone;
 
     return buffer;
   }
 
-  private cachedMetadata(): IAudioMetadata {
-    return this.cachedFile.metadata;
-  }
+  private async createAudioContext(info: IAudioInformation, buffer: ArrayBuffer, generation: number) {
+    const length = info.duration * info.sampleRate * info.channels;
 
-  private cachedAudioInformation(): IAudioInformation {
-    return this.cachedFile.audioInformation;
-  }
-
-  private async createAudioContext(metadata: IAudioMetadata, buffer: ArrayBuffer, generation: number) {
-    const format = metadata.format;
-    const length = format.duration! * format.sampleRate! * format.numberOfChannels!;
-
+    //! creates a buffer the size of the entire audio file
     const context = new OfflineAudioContext({
-      numberOfChannels: format.numberOfChannels!,
-      sampleRate: format.sampleRate!,
+      numberOfChannels: info.channels,
+      sampleRate: info.sampleRate,
       length,
     });
 

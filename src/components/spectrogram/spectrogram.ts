@@ -9,8 +9,7 @@ import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
-import { IAudioMetadata } from "music-metadata-browser";
-import { SpectrogramOptions } from "../../helpers/audio/models";
+import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
@@ -129,24 +128,24 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public renderSpectrogram(): void {
     this.audioHelper
       .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
-      .then((metadata: IAudioMetadata) => {
-        const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+      .then((info: IAudioInformation) => {
+        const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
         this.audio.value = new AudioModel({
-          duration: metadata.format.duration!,
-          sampleRate: metadata.format.sampleRate!,
+          duration: info.duration!,
+          sampleRate: info.sampleRate!,
           originalAudioRecording: originalRecording,
         });
       });
   }
 
   public regenerateSpectrogram(): void {
-    this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((metadata: IAudioMetadata) => {
-      const originalRecording = { duration: metadata.format.duration!, startOffset: this.offset };
+    this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((info: IAudioInformation) => {
+      const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
       this.audio.value = new AudioModel({
-        duration: metadata.format.duration!,
-        sampleRate: metadata.format.sampleRate!,
+        duration: info.duration!,
+        sampleRate: info.sampleRate!,
         originalAudioRecording: originalRecording,
       });
     });

@@ -11,7 +11,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
   private state!: ProcessorState;
   private buffer!: Float32Array;
   private aborted = false;
-  private generation = 0;
+  private generation: number | undefined = undefined;
   private tag = "processor:";
 
   public constructor() {
@@ -51,7 +51,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
       this.state.bufferReady();
 
       // wait for the worker to finish processing the buffer
-      this.state.busyWaitForWorkerToProcessBuffer();
+      this.state.busyWaitForWorkerToProcessBuffer(this.generation!);
 
       // update write head - it is often non-zero
       writeHead = this.state.bufferWriteHead;
@@ -70,7 +70,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
   }
 
   private needsToAbort(): boolean {
-    if (this.state.matchesCurrentGeneration(this.generation)) {
+    if (this.state.matchesCurrentGeneration(this.generation!)) {
       return false;
     } else {
       this.aborted = true;
