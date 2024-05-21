@@ -22,7 +22,8 @@ export type SharedBuffersWithCanvas = SharedBuffers & { canvas: OffscreenCanvas 
 export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanvas>;
 export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
+export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
 
 export type WorkerMessage = MessageEvent<
-  WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage
+  WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
 >;

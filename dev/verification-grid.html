@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Components - Verification Component</title>
+    <script type="module" src="/src/components/index.ts"></script>
+</head>
+
+<body>
+    <div id="grid-host">
+        <oe-verification-grid id="verification-grid" src="/grid-items.json" grid-size="12" selection-behavior="desktop">
+            <template>
+                <div style="position: relative;">
+                    <oe-axes style="padding-left: 3rem; padding-bottom: 1.5rem;">
+                        <oe-indicator>
+                            <oe-spectrogram id="spectrogram" color-map="raven"></oe-spectrogram>
+                        </oe-indicator>
+                    </oe-axes>
+                    <oe-media-controls class="media-controls" for="spectrogram"
+                        style="position: absolute; top: 0.5rem; right: 0.5rem; border-radius: 9999px; z-index: 99; padding: 0px; zoom: 0.65;"></oe-media-controls>
+                </div>
+            </template>
+
+            <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Koala</oe-decision>
+            <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
+            <oe-decision verified="false" tag="*" shortcut="L">Negative</oe-decision>
+        </oe-verification-grid>
+    </div>
+
+    <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
+    <button onclick="changeVerificationKey();">Create Key Error</button>
+    <button onclick="changeGridSize();">Change verification grid host size</button>
+    <button onclick="changeSelectionBehavior();">Change selection behavior</button>
+
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        .media-controls {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            border-radius: 9999em;
+            border-color: var(--primary-color);
+            padding: 0px;
+            zoom: 0.75;
+        }
+    </style>
+
+    <script>
+        const verificationGridElement = document.getElementById("verification-grid");
+
+        function changeGridSize() {
+            const hostElement = document.getElementById("grid-host");
+
+            if (hostElement.style.width === "70%") {
+                hostElement.style.width = "20%";
+                hostElement.style.left = "40%";
+            } else {
+                hostElement.style.width = "70%";
+                hostElement.style.left = "15%";
+            }
+        }
+
+        function changeSelectionBehavior() {
+            if (verificationGridElement.getAttribute("selection-behavior") === "desktop") {
+                verificationGridElement.setAttribute("selection-behavior", "tablet");
+            } else {
+                verificationGridElement.setAttribute("selection-behavior", "desktop");
+            }
+        }
+
+        function changeVerificationGridSize() {
+            if (verificationGridElement.getAttribute("grid-size") == 8) {
+                verificationGridElement.setAttribute("grid-size", 3);
+            } else {
+                verificationGridElement.setAttribute("grid-size", 8);
+            }
+        }
+
+        function changeVerificationKey() {
+            if (verificationGridElement.getAttribute("key") === "AudioLink") {
+                verificationGridElement.setAttribute("key", "fail");
+            } else {
+                verificationGridElement.setAttribute("key", "AudioLink");
+            }
+        }
+
+        verificationGridElement.addEventListener("decision-made", (event) => {
+            console.log("new decision", event);
+        })
+    </script>
+</body>
+
+</html>

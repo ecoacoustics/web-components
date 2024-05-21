@@ -403,10 +403,6 @@ Existing tag
     <oe-media-controls for="playing-spectrogram"></oe-media-controls>
   </template>
 
-  <oe-next shortcut="B">Back</oe-next>
-  <oe-previous shortcut="S">Skip</oe-previous>
-
-  <!-- Maybe something like -->
   <oe-decision value="verified" tag="koala" shortcut="Y">Koala</oe-decision>
   <oe-decision value="not-verified" tag="koala" shortcut="N">Not a Koala</oe-decision>
 </oe-verification-grid>

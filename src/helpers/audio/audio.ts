@@ -70,12 +70,13 @@ export class AudioHelper {
   }
 
   public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
-    //console.log("audio: change source");
+    console.log("audio: change source");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
 
     const newGeneration = await this.abort();
+    this.clearCanvas();
 
     const info = await this.render(options, newGeneration, src);
 
@@ -100,6 +101,7 @@ export class AudioHelper {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized");
     }
+
     const message: WorkerResizeCanvasMessage = ["resize-canvas", size];
     this.spectrogramWorker.postMessage(message);
   }
@@ -277,6 +279,10 @@ export class AudioHelper {
     processor.port.postMessage(message);
 
     return await this.state.waitForProcessorReady(generation);
+  }
+
+  private clearCanvas(): void {
+    this.spectrogramWorker?.postMessage(["clear-canvas"]);
   }
 
   private regenerateWorker(options: SpectrogramOptions, audioInformation: IAudioInformation, generation: number) {
