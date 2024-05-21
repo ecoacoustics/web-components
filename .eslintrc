@@ -5,7 +5,7 @@
   },
   "overrides": [
     {
-      "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+      "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:lit/recommended"],
       "files": ["*.ts", "*.js"],
       "parserOptions": {
         "createDefaultProgram": true

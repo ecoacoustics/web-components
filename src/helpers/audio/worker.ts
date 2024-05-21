@@ -1,8 +1,8 @@
 import { SpectrogramGenerator } from "./spectrogram";
-import { Size } from "../../models/rendering";
 import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
 import { SpectrogramOptions, IAudioInformation } from "./models";
 import { WorkerState } from "./state";
+import { Size } from "../../models/rendering";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -159,6 +159,10 @@ function regenerate(data: GenerationMetadata): void {
   work(data.generation);
 }
 
+function clearCanvas(): void {
+  destinationSurface.clearRect(0, 0, destinationCanvas.width, destinationCanvas.height);
+}
+
 function resizeCanvas(data: Size): void {
   destinationCanvas.width = data.width;
   destinationCanvas.height = data.height;
@@ -166,7 +170,7 @@ function resizeCanvas(data: Size): void {
   // redraw the spectrogram from the 1:1 spectrogram canvas
   // onto the destination
   drawSpectrogramOntoDestinationCanvas(state.generation);
-  //console.log("worker: resized canvas", data);
+  //console.log("resized canvas", data);
 }
 
 // runs when the processor is first created
@@ -183,6 +187,9 @@ function handleMessage(event: WorkerMessage) {
       break;
     case "regenerate-spectrogram":
       regenerate(event.data[1]);
+      break;
+    case "clear-canvas":
+      clearCanvas();
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

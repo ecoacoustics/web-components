@@ -1,10 +1,14 @@
 import { css } from "lit";
 
 export const axesStyles = css`
+  :host {
+    position: relative;
+    display: inline-block !important;
+    width: 100%;
+  }
+
   #wrapped-element {
     position: relative;
-    display: inline-block;
-    margin: 4rem;
   }
 
   svg {
@@ -19,7 +23,11 @@ export const axesStyles = css`
     }
 
     text {
-      stroke: none;
+      font-size: 0.8rem;
+      stroke: darkgray;
+      font-family: var(--oe-font-family);
+      /* TODO: Find out why we have to do this */
+      stroke-width: 0.5;
     }
 
     g {
@@ -28,21 +36,8 @@ export const axesStyles = css`
   }
 
   .grid-line {
-    stroke-width: 1;
-    stroke: currentColor;
-    opacity: 0.6;
-  }
-
-  /*
-    I style these with css parts so that if the user uses css parts
-    These styles will be overwritten
-  */
-  ::part(grid) {
     color: lightblue;
+    stroke-width: 1;
     opacity: 0.6;
-  }
-
-  ::part(tick) {
-    color: black;
   }
 `;

@@ -1,8 +1,8 @@
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, TemplateResult, html } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
-import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../../models/rendering";
+import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Hertz, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
@@ -10,6 +10,8 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
+
+export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
@@ -35,12 +37,13 @@ const defaultAudioModel = new AudioModel({
  * @property brightness - The brightness of the spectrogram
  * @property contrast - The contrast of the spectrogram
  *
- * TODO
- * @property aspect-ratio (stretch | fit-width | fit-height | natural) - The aspect ratio of the spectrogram
- * stretch - fills parent and distorts image
- * fit-width - fits the width of the container and scales the height (fills its parent in the x direction) (maintaining the correct aspect ratio)
- * fit-height - fits the height of the container and scales the width (fills its parent in the y direction) (maintaining the correct aspect ratio)
- * natural - a 1:1 mapping to the natural FFT height
+ * @property scaling - (stretch | natural | original) - The aspect ratio of the spectrogram
+ * stretch should scale without aspect ratio
+ * natural should scale 1/1 until one of the dimensions overflows (probably set a max height of the natural fft window)
+ * original should scale 1/1 with a max height of the spectrogram set to the fft window
+ *
+ * @fires Loading
+ * @fires Finished
  *
  * @slot - A `<source>` element to provide the audio source
  */
@@ -48,18 +51,15 @@ const defaultAudioModel = new AudioModel({
 export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = spectrogramStyles;
 
+  // must be in the format startOffset, lowFrequency, endOffset, highFrequency
+  @property({ type: String, attribute: "window", reflect: true })
+  public domRenderWindow?: string;
+
   @property({ type: Boolean, reflect: true })
   public paused = true;
 
-  @property({ type: String })
-  public src = "";
-
-  // must be in the format startOffset, lowFrequency, endOffset, highFrequency
-  @property({ type: String, attribute: "window" })
-  public domRenderWindow?: string;
-
-  @property({ type: Number })
-  public offset = 0;
+  @property({ type: String, reflect: true })
+  public scaling: SpectrogramCanvasScale = "stretch";
 
   @property({ type: Number, attribute: "window-size" })
   public windowSize = 512;
@@ -77,6 +77,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public colorMap = "";
 
   @property({ type: Number })
+  public offset = 0;
+
+  @property({ type: String })
+  public src = "";
+
+  @property({ type: Number })
   public brightness = 0;
 
   @property({ type: Number })
@@ -91,48 +97,65 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
-  public fftSlice?: TwoDSlice<Pixel, Hertz>;
-
   public audio: Signal<AudioModel> = signal(defaultAudioModel);
   public currentTime: Signal<Seconds> = signal(this.offset);
-  public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
+  // TODO: remove this temp value
+  public renderCanvasSize: Signal<RenderCanvasSize> = signal({ width: 0, height: 0 });
   public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow());
+  public useMelScale: Signal<boolean> = signal(this.melScale);
+  public fftSlice?: TwoDSlice<Pixel, Hertz>;
   public unitConverters?: UnitConverter;
-  private doneFirstRender = false;
   private audioHelper = new AudioHelper();
+  // TODO: remove this
+  private doneFirstRender = false;
 
-  public firstUpdated(): void {
-    // todo: retrieve size data from even callback
-    OeResizeObserver.observe(this.canvas, () => {
-      this.renderCanvasSize.value = this.canvasSize();
-      this.updateCurrentTime();
-      this.resizeCanvasViewport();
-
-      this.doneFirstRender = true;
-    });
-
-    this.renderSpectrogram();
-    this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio);
+  public hasSource(): boolean {
+    return !!this.src || this.slotElements.length > 0;
   }
 
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
     OeResizeObserver.instance.unobserve(this.canvas);
+    super.disconnectedCallback();
+  }
+
+  public firstUpdated(): void {
+    OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
+    this.resizeCanvas(this.canvas);
+
+    if (this.hasSource()) {
+      this.renderSpectrogram();
+    }
+
+    this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
   }
 
   public updated(change: PropertyValues<this>) {
     if (this.doneFirstRender) {
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
-        this.audioHelper.regenerateSpectrogram(this.spectrogramOptions());
+        this.regenerateSpectrogramOptions();
+        this.useMelScale.value = this.melScale;
       } else if (this.invalidateSpectrogramSource(change)) {
-        this.currentTime.value = 0;
+        this.pause();
         this.regenerateSpectrogram();
+        this.updateCurrentTime();
+      }
+    } else if (this.invalidateSpectrogramSource(change)) {
+      if (this.hasSource()) {
+        this.renderSpectrogram();
       }
     }
   }
 
   public renderSpectrogram(): void {
+    console.log("rendering spectrogram");
+    this.dispatchEvent(
+      new CustomEvent("loading", {
+        bubbles: true,
+      }),
+    );
+
     this.audioHelper
       .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
       .then((info: IAudioInformation) => {
@@ -143,10 +166,25 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
           sampleRate: info.sampleRate!,
           originalAudioRecording: originalRecording,
         });
+
+        this.dispatchEvent(
+          new CustomEvent("loaded", {
+            bubbles: true,
+          }),
+        );
+
+        this.doneFirstRender = true;
       });
   }
 
   public regenerateSpectrogram(): void {
+    console.log("regenerating spectrogram");
+    this.dispatchEvent(
+      new CustomEvent("loading", {
+        bubbles: true,
+      }),
+    );
+
     this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((info: IAudioInformation) => {
       const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
@@ -155,6 +193,22 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         sampleRate: info.sampleRate!,
         originalAudioRecording: originalRecording,
       });
+
+      this.dispatchEvent(
+        new CustomEvent("loaded", {
+          bubbles: true,
+        }),
+      );
+    });
+  }
+
+  public regenerateSpectrogramOptions(): void {
+    this.audioHelper.regenerateSpectrogram(this.spectrogramOptions()).then(() => {
+      this.dispatchEvent(
+        new CustomEvent("loaded", {
+          bubbles: true,
+        }),
+      );
     });
   }
 
@@ -180,6 +234,74 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.setPlaying();
   }
 
+  private originalFftSize(): Size {
+    const options = this.spectrogramOptions();
+    const step = options.windowSize - options.windowOverlap;
+    const duration = this.audio.value.duration;
+    const sampleRate = this.audio.value.sampleRate;
+    const totalSamples = duration * sampleRate;
+
+    const width = Math.ceil(totalSamples / step);
+    const height = options.windowSize / 2;
+
+    return { width, height };
+  }
+
+  private naturalSize(originalSize: Size, target: HTMLElement): Size {
+    // the natural size is where we scale the width and height up
+    // until one of the dimensions overflows the targetEntry.contentRect
+    // while keeping the aspect ratio
+    const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
+
+    return {
+      width: originalSize.width * scale,
+      height: originalSize.height * scale,
+    };
+  }
+
+  private stretchSize(entry: HTMLElement): Size {
+    return { width: entry.clientWidth, height: entry.clientHeight };
+  }
+
+  private handleResize(entries: ResizeObserverEntry[]): void {
+    if (entries.length === 0) return;
+
+    const targetEntry = entries[0].target as HTMLElement;
+
+    this.resizeCanvas(targetEntry);
+  }
+
+  // TODO: refactor this procedure
+  private resizeCanvas(targetEntry: HTMLElement): void {
+    let size: Size | undefined;
+
+    if (this.scaling === "original") {
+      size = this.originalFftSize();
+    } else if (this.scaling === "natural") {
+      const originalSize = this.originalFftSize();
+      size = this.naturalSize(originalSize, targetEntry);
+    } else {
+      size = this.stretchSize(targetEntry);
+    }
+
+    console.log("resize to", size);
+
+    this.renderCanvasSize.value = size;
+
+    if (this.audioHelper.canvasTransferred) {
+      this.audioHelper.resizeCanvas(size);
+    } else {
+      this.canvas.width = size.width;
+      this.canvas.height = size.height;
+    }
+
+    if (this.scaling === "stretch") {
+      this.canvas.style.width = "100%";
+    } else {
+      this.canvas.style.width = "auto";
+    }
+  }
+
   /**
    * Specifies if the spectrogram is invalidated with the new parameters
    * This method can be used to check if the spectrogram needs to be re-rendered
@@ -203,32 +325,53 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
     const invalidationKeys: (keyof Spectrogram)[] = ["src", "slotElements"];
-
     return invalidationKeys.some((key) => change.has(key));
   }
 
-  private updateCurrentTime(): void {
-    if (!this.paused) {
+  private updateCurrentTime(poll = false): void {
+    if (poll) {
+      if (this.nextRequestId) {
+        window.cancelAnimationFrame(this.nextRequestId);
+        this.nextRequestId = null;
+      }
+
+      this.highFreqUpdateCurrentTime();
+    } else {
       this.currentTime.value = this.mediaElement.currentTime;
-      requestAnimationFrame(() => this.updateCurrentTime());
     }
   }
 
-  // TODO: we shouldn't query the element for this size - it can cause a repaint every time we ask
-  // instead use the resize observer's data and cache the size
-  private canvasSize(): RenderCanvasSize {
-    return new RenderCanvasSize({
-      width: this.canvas?.clientWidth ?? 0,
-      height: this.canvas?.clientHeight ?? 0,
-    });
-  }
+  // TODO: move somewhere else
+  private nextRequestId: number | null = null;
 
-  private resizeCanvasViewport(): void {
-    if (this.audioHelper.canvasTransferred) {
-      this.audioHelper.resizeCanvas(this.canvasSize());
-    } else {
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
+  private highFreqUpdateCurrentTime(
+    lastHighResSync: DOMHighResTimeStamp = performance.now(),
+    lastObservedTime: number | null = null,
+  ): void {
+    // this will become a problem if we want to update the time in the future without pausing the media element
+    // e.g. seeking
+    if (!this.paused) {
+      const mediaElementTime = this.mediaElement.currentTime;
+      let exactTimeDelta = 0;
+
+      // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
+      // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
+      // couple of milliseconds to be skipped
+      // to fix this, we use a high resolution timer, and if we see the same value twice, we calculate the difference
+      // that we have seen, so that we can "fill in the gaps"
+      // in browsers which report the real time (e.g. Chrome) this condition should never be true
+      const highResTime = performance.now();
+      if (mediaElementTime === lastObservedTime) {
+        exactTimeDelta = (highResTime - lastHighResSync) / 1_000;
+      } else {
+        lastHighResSync = highResTime;
+      }
+
+      this.currentTime.value = mediaElementTime + exactTimeDelta;
+
+      this.nextRequestId = requestAnimationFrame(() =>
+        this.highFreqUpdateCurrentTime(lastHighResSync, mediaElementTime),
+      );
     }
   }
 
@@ -251,7 +394,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.mediaElement?.pause();
     } else {
       this.mediaElement?.play();
-      requestAnimationFrame(() => this.updateCurrentTime());
+      this.updateCurrentTime(true);
     }
 
     this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
@@ -279,13 +422,29 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public render() {
+    // TODO: I'm sure there's a way to do this in the lit html template
+    let derivedMediaElement: TemplateResult<1> | undefined;
+    if (this.src) {
+      derivedMediaElement = html`
+        <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
+          <slot></slot>
+        </audio>
+      `;
+    } else if (this.slotElements.length > 0) {
+      derivedMediaElement = html`
+        <audio id="media-element" @ended="${this.pause}" preload crossorigin>
+          <slot></slot>
+        </audio>
+      `;
+    } else {
+      derivedMediaElement = html`<audio id="media-element" @ended="${this.pause}" preload crossorigin></audio>`;
+    }
+
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
-        <slot></slot>
-      </audio>
+      ${derivedMediaElement}
     `;
   }
 }
