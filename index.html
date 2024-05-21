@@ -10,7 +10,7 @@
 
 <body>
   <div>
-    <oe-verification-grid src="/grid-items.json" key="AudioLink" grid-size="8">
+    <oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="8">
       <template>
         <oe-spectrogram color-map="raven"></oe-spectrogram>
       </template>
@@ -22,6 +22,31 @@
       </div>
     </oe-verification-grid>
   </div>
+
+  <button onclick="changeVerificationGridSize();">Change grid size</button>
+  <button onclick="changeVerificationKey();">Create Key Error</button>
+
+  <script>
+    const verificationGridElement = document.getElementById("verification-grid");
+
+    function changeVerificationGridSize() {
+      if (verificationGridElement.getAttribute("grid-size") == 8) {
+        verificationGridElement.setAttribute("grid-size", 3);
+      } else {
+        verificationGridElement.setAttribute("grid-size", 8);
+      }
+    }
+
+    function changeVerificationKey() {
+      if (verificationGridElement.getAttribute("key") === "AudioLink") {
+        verificationGridElement.setAttribute("key", "fail");
+      } else {
+        verificationGridElement.setAttribute("key", "AudioLink");
+      }
+    }
+  </script>
+
+  <hr>
 
   <oe-axes>
     <oe-indicator>

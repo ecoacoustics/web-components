@@ -1,9 +1,7 @@
-import { html, LitElement, PropertyValueMap, PropertyValues } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
-
-type ShortcutCallback = (event: KeyboardEvent) => void;
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -33,22 +31,26 @@ export class Decision extends AbstractComponent(LitElement) {
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
-  private shortcutCallback: ShortcutCallback = () => void 0;
+  private shortcutHandler = this.handleKeyDown.bind(this);
 
-  protected update(changedProperties: PropertyValueMap<this>): void {
-    if (changedProperties.has("shortcut")) {
-      const key = changedProperties.get("shortcut");
-      this.shortcutCallback = this.createShortcutCallback(key);
-    }
+  public connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener("keyup", this.shortcutHandler);
   }
 
-  // protected shouldUpdate(changedProperties: PropertyValues): boolean {
-  //   const excludedProperties: (keyof this)[] = ["shortcut"];
-  //   return excludedProperties.some((key) => changedProperties.has(key));
-  // }
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keyup", this.shortcutHandler);
+  }
 
-  protected firstUpdated(): void {
-    document.addEventListener("keydown", this.shortcutCallback);
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (this.shortcut === undefined) {
+      return;
+    }
+
+    if (event.key.toLocaleLowerCase() === this.shortcut.toLocaleLowerCase()) {
+      this.emitDecision();
+    }
   }
 
   private emitDecision(): void {
@@ -67,18 +69,6 @@ export class Decision extends AbstractComponent(LitElement) {
         bubbles: true,
       }),
     );
-  }
-
-  private createShortcutCallback(key: string | undefined): ShortcutCallback {
-    if (key === undefined) {
-      return () => void 0;
-    }
-
-    return (event: KeyboardEvent) => {
-      if (event.key.toLocaleLowerCase() === key.toLocaleLowerCase()) {
-        this.emitDecision();
-      }
-    };
   }
 
   public render() {

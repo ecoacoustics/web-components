@@ -1,8 +1,9 @@
-import { customElement, property, queryAssignedElements, state } from "lit/decorators.js";
+import { customElement, property, queryAll, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement } from "lit";
+import { html, LitElement, PropertyValueMap } from "lit";
 import { verificationGridStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
+import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 
 type PageFetcher = (pageNumber: number) => Promise<any[]>;
 
@@ -21,67 +22,88 @@ type PageFetcher = (pageNumber: number) => Promise<any[]>;
  * @property grid-size - The number of items to display in a single grid
  * @property key - An object key to use as the audio source
  *
+ * @csspart sub-selection-checkbox - A css target for the sub-selection checkbox
+ *
  * @slot - A template to display the audio event to be verified
  */
 @customElement("oe-verification-grid")
 export class VerificationGrid extends AbstractComponent(LitElement) {
   public static styles = verificationGridStyles;
 
-  @property({ attribute: "get-page", type: String, reflect: false })
-  public getPage!: PageFetcher;
-
   @property({ attribute: "grid-size", type: Number, reflect: true })
-  public gridSize = 10;
+  public gridSize = 8;
 
-  @property({ type: String, reflect: true })
+  // we use pagedItems instead of page here so that if the grid size changes
+  // half way through, we can continue verifying from where it left off
+  @property({ attribute: "paged-items", type: Number, reflect: true })
+  private pagedItems = 0;
+
+  @property({ type: String })
   public src: string | undefined;
 
-  @property({ type: String, reflect: true })
+  @property({ type: String })
   public key!: string;
 
-  @queryAssignedElements()
-  public slotElements!: HTMLTemplateElement[];
+  @property({ attribute: "get-page", type: String })
+  public getPage!: PageFetcher;
+
+  @queryDeeplyAssignedElements({ selector: "template" })
+  public spectrogramTemplate!: HTMLTemplateElement;
+
+  @queryAll("oe-spectrogram")
+  public spectrograms: Spectrogram[] | undefined;
+
+  @queryAll(".sub-selection-checkbox")
+  public subSelectionCheckboxes: HTMLInputElement[] | undefined;
 
   @state()
-  private page: any[] = [];
+  private spectrogramElements: any;
 
-  @state()
-  private pageNumber = 0;
   private totalItems = 0;
   private subSelection: Set<any> = new Set([]);
 
-  protected firstUpdated(): void {
-    if (this.src && !this.getPage) {
-      this.getPage = this.computedCallback(this.src);
-    }
+  protected willUpdate(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    const invalidationKeys: (keyof this)[] = ["gridSize", "src", "getPage", "key"];
 
-    this.updateResults();
+    if (invalidationKeys.some((key) => changedProperties.has(key))) {
+      if (!this.getPage) {
+        if (!this.src) {
+          throw new Error("Neither getPage or src is defined on oe-verification-grid element");
+        }
+
+        this.getPage = this.computedCallback(this.src);
+      }
+
+      this.gridSize = this.calculateGridSize(this.gridSize);
+      this.renderSpectrograms();
+    }
   }
 
-  private async updateResults(): Promise<void> {
-    this.page = await this.getPage(this.pageNumber);
+  private calculateGridSize(target: number): number {
+    // TODO: We might want to use the window size here
+    return target;
   }
 
   private catchDecision(event: CustomEvent) {
     const decision = event.detail.value;
     const selectedItems = this.subSelection.size > 0 ? Array.from(this.subSelection) : "all items";
 
-    console.debug(`you selected:\n\n${decision} for:\n${selectedItems}`);
+    console.log(`you selected:\n${decision} for:\n${selectedItems}`);
 
-    this.pageNumber++;
+    this.pagedItems += this.gridSize;
     this.removeSubSelection();
-    this.updateResults();
+
+    this.virtualPage();
   }
 
   private computedCallback(src: string): PageFetcher {
-    return async (pageNumber: number) => {
+    return async () => {
       const response = await fetch(src);
       const data = await response.json();
-
-      const startIndex = pageNumber * this.gridSize;
-      const endIndex = startIndex + this.gridSize;
-
       this.totalItems = data.length;
+
+      const startIndex = this.pagedItems;
+      const endIndex = startIndex + this.gridSize;
 
       return data.slice(startIndex, endIndex);
     };
@@ -100,32 +122,64 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private removeSubSelection(): void {
     this.subSelection = new Set([]);
+    this.subSelectionCheckboxes?.forEach((element) => {
+      element.checked = false;
+    });
+  }
+
+  private async virtualPage(): Promise<void> {
+    this.removeSubSelection();
+
+    const elements = this.spectrograms;
+
+    if (!elements?.length) {
+      throw new Error("Could not find instantiated spectrogram elements");
+    }
+
+    const nextPage = await this.getPage(this.pagedItems);
+
+    if (nextPage.length === 0) {
+      this.spectrogramElements = this.noItemsTemplate();
+    }
+
+    nextPage.forEach((url: any, i: number) => {
+      const target = elements[i];
+      const source = url[this.key];
+      target.src = source;
+    });
+
+    // if we are on the last page, we should hide some elements
+    const pagedDelta = elements.length - nextPage.length;
+
+    if (pagedDelta > 0) {
+      // TODO: do something here
+    }
   }
 
   // we have to use the template provided in the slot
   // an change the src of all oe-spectrogram elements to the src attribute
   // then we return the instantiated templates as a Lit HTML template
-  private renderSpectrograms() {
-    if (!this.page.length) {
-      return this.noItemsTemplate();
+  private async renderSpectrograms() {
+    const page = await this.getPage(this.pagedItems);
+
+    if (!page.length) {
+      this.spectrogramElements = this.noItemsTemplate();
     }
 
-    const spectrogramTemplate = this.slotElements[0];
-
-    return this.page.map((source) => {
+    this.spectrogramElements = page.map((source) => {
       const derivedSource = source[this.key];
-      const template = spectrogramTemplate.content.cloneNode(true) as HTMLElement;
+      const template = this.spectrogramTemplate.content.cloneNode(true) as HTMLElement;
       const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram")!;
 
       if (spectrogram && derivedSource) {
         spectrogram.src = derivedSource;
       }
 
-      return this.spectrogramTemplate(spectrogram);
+      return this.spectrogramElement(spectrogram);
     });
   }
 
-  private spectrogramTemplate(spectrogram: Spectrogram) {
+  private spectrogramElement(spectrogram: Spectrogram) {
     return html`
       <div>
         <input
@@ -133,6 +187,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
           type="checkbox"
           class="sub-selection-checkbox"
           value="${spectrogram.src}"
+          part="sub-selection-checkbox"
         />
         ${spectrogram}
       </div>
@@ -141,28 +196,19 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private noItemsTemplate() {
     return html`
-      <span class="no-items-message">
-        <div>
-          <p>
-            <strong>No un-validated results found</strong>
-          </p>
-          <p>All ${this.totalItems} annotations are validated</p>
-        </div>
-      </span>
+      <div class="no-items-message">
+        <p>
+          <strong>No un-validated results found</strong>
+        </p>
+        <p>All ${this.totalItems} annotations are validated</p>
+      </div>
     `;
   }
 
   public render() {
-    const instantiatedSpectrograms = this.renderSpectrograms();
-
     return html`
-      <div>
-        <div class="grid">${instantiatedSpectrograms}</div>
-      </div>
-
-      <div class="slot-elements">
-        <slot @decision="${this.catchDecision}"></slot>
-      </div>
+      <div class="grid">${this.spectrogramElements}</div>
+      <slot @decision="${this.catchDecision}"></slot>
     `;
   }
 }
