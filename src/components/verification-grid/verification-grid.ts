@@ -54,13 +54,12 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   public spectrograms: Spectrogram[] | undefined;
 
   @queryAll(".sub-selection-checkbox")
-  public subSelectionCheckboxes: HTMLInputElement[] | undefined;
+  public subSelectionCheckboxes!: HTMLInputElement[];
 
   @state()
   private spectrogramElements: any;
 
   private totalItems = 0;
-  private subSelection: Set<any> = new Set([]);
 
   protected willUpdate(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     const invalidationKeys: (keyof this)[] = ["gridSize", "src", "getPage", "key"];
@@ -86,9 +85,21 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private catchDecision(event: CustomEvent) {
     const decision = event.detail.value;
-    const selectedItems = this.subSelection.size > 0 ? Array.from(this.subSelection) : "all items";
+    const selectedItems = Array.from(this.subSelectionCheckboxes)
+      .filter((checkbox) => checkbox.checked)
+      .map((element) => element.value);
 
-    console.log(`you selected:\n${decision} for:\n${selectedItems}`);
+    const value =
+      selectedItems.length > 0 ? selectedItems : Array.from(this.subSelectionCheckboxes).map((item) => item.value);
+
+    this.dispatchEvent(
+      new CustomEvent("decision-made", {
+        detail: {
+          decision,
+          value,
+        },
+      }),
+    );
 
     this.pagedItems += this.gridSize;
     this.removeSubSelection();
@@ -109,20 +120,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     };
   }
 
-  private selectSubSelection(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.value;
-
-    if (target.checked) {
-      this.subSelection.add(value);
-    } else {
-      this.subSelection.delete(value);
-    }
-  }
-
   private removeSubSelection(): void {
-    this.subSelection = new Set([]);
-    this.subSelectionCheckboxes?.forEach((element) => {
+    this.subSelectionCheckboxes.forEach((element) => {
       element.checked = false;
     });
   }
@@ -175,18 +174,17 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         spectrogram.src = derivedSource;
       }
 
-      return this.spectrogramElement(spectrogram);
+      return this.spectrogramElement(template);
     });
   }
 
-  private spectrogramElement(spectrogram: Spectrogram) {
+  private spectrogramElement(spectrogram: HTMLElement) {
     return html`
       <div>
         <input
-          @change="${this.selectSubSelection}"
           type="checkbox"
           class="sub-selection-checkbox"
-          value="${spectrogram.src}"
+          value="${spectrogram.toString()}"
           part="sub-selection-checkbox"
         />
         ${spectrogram}
