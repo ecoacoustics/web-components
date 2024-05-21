@@ -152,7 +152,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     `;
   }
 
-  protected render() {
+  public render() {
     const instantiatedSpectrograms = this.renderSpectrograms();
 
     return html`

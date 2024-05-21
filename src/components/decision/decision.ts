@@ -1,7 +1,9 @@
-import { html, LitElement } from "lit";
+import { html, LitElement, PropertyValueMap, PropertyValues } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
+
+type ShortcutCallback = (event: KeyboardEvent) => void;
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -31,8 +33,30 @@ export class Decision extends AbstractComponent(LitElement) {
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
+  private shortcutCallback: ShortcutCallback = () => void 0;
+
+  protected update(changedProperties: PropertyValueMap<this>): void {
+    if (changedProperties.has("shortcut")) {
+      const key = changedProperties.get("shortcut");
+      this.shortcutCallback = this.createShortcutCallback(key);
+    }
+  }
+
+  // protected shouldUpdate(changedProperties: PropertyValues): boolean {
+  //   const excludedProperties: (keyof this)[] = ["shortcut"];
+  //   return excludedProperties.some((key) => changedProperties.has(key));
+  // }
+
+  protected firstUpdated(): void {
+    document.addEventListener("keydown", this.shortcutCallback);
+  }
+
   private emitDecision(): void {
-    this.decisionButton.classList.add("hover");
+    // I focus on the button clicked with keyboard shortcuts
+    // so that the user gets some visual feedback on what button they clicked
+    // it also mimics the user clicking on the button where it would be focused
+    // after clicking
+    this.decisionButton.focus();
 
     this.dispatchEvent(
       new CustomEvent("decision", {
@@ -41,26 +65,27 @@ export class Decision extends AbstractComponent(LitElement) {
           additionalTags: this.additionalTags,
         },
         bubbles: true,
-        composed: true,
       }),
     );
+  }
 
-    setTimeout(() => this.decisionButton.classList.remove("hover"), 100);
+  private createShortcutCallback(key: string | undefined): ShortcutCallback {
+    if (key === undefined) {
+      return () => void 0;
+    }
+
+    return (event: KeyboardEvent) => {
+      if (event.key.toLocaleLowerCase() === key.toLocaleLowerCase()) {
+        this.emitDecision();
+      }
+    };
   }
 
   public render() {
-    if (this.shortcut) {
-      document.addEventListener("keydown", (event) => {
-        if (event.key === this.shortcut || event.key === this.shortcut?.toLowerCase()) {
-          this.emitDecision();
-        }
-      });
-    }
-
     return html`
       <button
         id="decision-button"
-        @click="${() => this.emitDecision()}"
+        @click="${this.emitDecision}"
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
       >
