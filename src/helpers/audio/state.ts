@@ -9,15 +9,16 @@ import { sleep } from "../utilities";
  * const states = new Int32Array(stateBuffer);
  * ```
  *
- * A state is a packed struct with the following layout:
+ * A state is a packed struct of 6 Int32s with the following layout:
  * @example
  * ```ts
  * [
  *     STATE.BUFFER_AVAILABLE,
  *     STATE.BUFFER_WRITE_HEAD,
- *     STATE.PROCESSOR_STATE,
  *     STATE.WORKER_STATE,
  *     STATE.GENERATION,
+ *     STATE.PROCESSOR_READY,
+ *     STATE.PROCESSOR_COMPLETE,
  * ]
  * ```
  */
@@ -41,8 +42,8 @@ enum STATE {
 
   // The worker and the main thread are reused for each render cycle.
   // However, the processor always needs to be recreated for each render cycle.
-  // This allows us create multiple processors that are assigned to a particular
-  // render cycle - their generation. If the generation counter changes, the processor
+  // This state variables allows us to create multiple processors that are assigned to a particular
+  // render cycle - a.k.a. their generation. If the generation counter changes, the processor
   // should no longer write samples to the buffer - this is effectively an abort signal.
   //* Type: Int32
   GENERATION = 3,
@@ -70,6 +71,8 @@ enum WORKER_STATES {
   PROCESSING = 2,
 }
 
+const INITIAL_GENERATION = -1;
+
 export class State {
   /**
    * Create a new SharedArrayBuffer that backs the state object.
@@ -83,8 +86,8 @@ export class State {
     const state = new State(buffer);
 
     // initialize the state
-    state.processorReadyGeneration = -1;
-    state.processorCompleteGeneration = -1;
+    state.processorReadyGeneration = INITIAL_GENERATION;
+    state.processorCompleteGeneration = INITIAL_GENERATION;
 
     return state;
   }
@@ -199,7 +202,8 @@ export class State {
    * @returns The new generation.
    */
   public reset(): number {
-    // this will abort the current processor
+    // this will abort the current processor and the worker will break out of
+    // it's work loop
     const old = Atomics.add(this.state, STATE.GENERATION, 1);
     const nextGeneration = old + 1;
 
@@ -272,10 +276,10 @@ export class ProcessorState extends State {
     return generation === current + 1;
   }
 
-  public busyWaitForWorkerToProcessBuffer() {
+  public busyWaitForWorkerToProcessBuffer(generation: number) {
     // we have to do this because Chrome doesn't support Atomics.wait inside of
     // AudioProcessorWorklet's (Firefox does)
-    while (this.bufferAvailable) {
+    while (this.bufferAvailable && this.matchesCurrentGeneration(generation)) {
       // do nothing
       // TODO: can we do something here other than burn cycles?
     }

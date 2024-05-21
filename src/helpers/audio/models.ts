@@ -6,6 +6,8 @@ export interface IAudioInformation {
   startSample: Sample;
   endSample: Sample;
   sampleRate: Hertz;
+  channels: number;
+  duration: number;
 }
 
 export class SpectrogramOptions {
