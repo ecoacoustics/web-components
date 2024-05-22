@@ -4,6 +4,8 @@ import { html, LitElement, PropertyValueMap, TemplateResult } from "lit";
 import { verificationGridStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
 import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { Verification } from "../../models/verification";
+import { VerificationGridTile } from "../../../playwright";
 
 type PageFetcher = (elapsedItems: number) => Promise<VerificationModel[]>;
 type VerificationModel = any;
@@ -53,14 +55,13 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @queryDeeplyAssignedElements({ selector: "template" })
   public gridItemTemplate!: HTMLTemplateElement;
 
-  @queryAll("oe-spectrogram")
-  public spectrograms: NodeListOf<Spectrogram> | undefined;
-
-  @queryAll(".sub-selection-checkbox")
-  public subSelectionCheckboxes!: NodeListOf<HTMLInputElement>;
+  @queryAll("oe-verification-grid-tile")
+  public gridTiles: NodeListOf<VerificationGridTile> | undefined;
 
   @state()
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
+
+  private model!: Verification;
 
   protected willUpdate(changedProperties: PropertyValueMap<this>): void {
     const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
@@ -84,6 +85,12 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       this.gridSize = this.calculateGridSize(this.gridSize);
       this.createSpectrogramElements();
     }
+
+    this.model = this.verificationModel();
+  }
+
+  private verificationModel(): Verification {
+          return new Verification({});
   }
 
   private computedPageCallback(src: string): PageFetcher {
@@ -111,15 +118,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private catchDecision(event: CustomEvent) {
     const decision: VerificationModel[] = event.detail.value;
-    const hasSelectedSubset = decision.length > 0;
 
-    // TODO: work out if there is a better way than Array.from()
-    const selectedItems = Array.from(this.subSelectionCheckboxes);
-    if (hasSelectedSubset) {
-      selectedItems.filter((checkbox) => checkbox.checked);
-    }
-
-    const value = selectedItems.map((checkbox) => checkbox.value);
+    const value: any[] = [];
 
     this.dispatchEvent(
       new CustomEvent("decision-made", {
@@ -139,15 +139,12 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private removeSubSelection(): void {
-    for (const element of this.subSelectionCheckboxes) {
-      element.checked = false;
-    }
   }
 
   private async renderVirtualPage(): Promise<void> {
     this.removeSubSelection();
 
-    const elements = this.spectrograms;
+    const elements = this.gridTiles;
 
     //? HN asking AT: `!elements?.length` or `elements === undefined || elements.length === 0`
     if (elements === undefined || elements.length === 0) {
@@ -202,12 +199,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private spectrogramTemplate(spectrogram: HTMLElement) {
-    // TODO: We shouldn't be using toString() for the value here
     return html`
-      <div>
-        <input type="checkbox" class="sub-selection-checkbox" value="${spectrogram}" part="sub-selection-checkbox" />
+      <oe-verification-grid-tile>
         ${spectrogram}
-      </div>
+      </oe-verification-grid-tile>
     `;
   }
 

@@ -5,19 +5,22 @@ interface Tag {
 
 // the Verification model is emitted by the oe-verification-grid as a CustomEvent
 export class Verification {
-  public constructor(subject: Record<string, any>, url: string) {
-    this.subject = subject;
-    this.url = url;
+  public constructor(data: Verification) {
+    this.subject = data.subject;
+    this.url = data.url;
+    this.tag = data.tag;
+    this.confirmed = data.confirmed;
+    this.additionalTags = data.additionalTags;
   }
 
   // aka: context
   // this is the native data model used by the host application
   // or this could be the csv row
-  public subject: Record<string, any>;
+  public subject: Record<string, unknown>;
   public url: string;
-  public tag!: Tag;
-  public confirmed!: boolean;
-  public additionalTags!: Tag[];
+  public tag: Tag;
+  public confirmed: boolean;
+  public additionalTags: Tag[];
 
   // other metadata e.g. verificationDate
 }

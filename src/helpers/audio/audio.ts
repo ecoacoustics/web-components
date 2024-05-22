@@ -76,6 +76,7 @@ export class AudioHelper {
     }
 
     const newGeneration = await this.abort();
+    this.spectrogramWorker.postMessage(["clear-canvas"]);
 
     const info = await this.render(options, newGeneration, src);
 

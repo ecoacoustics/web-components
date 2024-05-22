@@ -156,6 +156,10 @@ function regenerate(data: GenerationMetadata): void {
   work(data.generation);
 }
 
+function clearCanvas(): void {
+  destinationSurface.clearRect(0, 0, destinationCanvas.width, destinationCanvas.height);
+}
+
 function resizeCanvas(data: Size): void {
   destinationCanvas.width = data.width;
   destinationCanvas.height = data.height;
@@ -184,6 +188,9 @@ function handleMessage(event: WorkerMessage) {
       break;
     case "regenerate-spectrogram":
       regenerate(event.data[1]);
+      break;
+    case "clear-canvas":
+      clearCanvas();
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

@@ -31,9 +31,6 @@ importers:
       music-metadata-browser:
         specifier: ^2.5.10
         version: 2.5.10
-      webfft:
-        specifier: ^1.0.3
-        version: 1.0.3
     devDependencies:
       "@11ty/eleventy":
         specifier: 3.0.0-alpha.10
@@ -5495,8 +5492,6 @@ snapshots:
       "@vue/shared": 3.4.27
     optionalDependencies:
       typescript: 5.4.5
-
-  webfft@1.0.3: {}
 
   which-typed-array@1.1.15:
     dependencies:

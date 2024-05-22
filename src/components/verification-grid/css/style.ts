@@ -1,6 +1,10 @@
 import { css } from "lit";
 
 export const verificationGridStyles = css`
+  :host {
+    --secondary-color: black;
+  }
+
   .verification-grid {
     position: relative;
     display: flex;
@@ -13,9 +17,8 @@ export const verificationGridStyles = css`
     }
   }
 
-  .sub-selection-checkbox {
-    position: absolute;
-    z-index: 2;
+  .selected {
+    filter: drop-shadow(var(--secondary-color) 0.5rem 0.5rem);
   }
 
   .no-items-message {

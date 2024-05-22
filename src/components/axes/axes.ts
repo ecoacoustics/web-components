@@ -122,7 +122,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const labelX = isYAxis ? -(this.fontSize * 7) : canvasSize / 2;
     const labelY = isYAxis ? canvasSize / 2 : canvasSize + this.fontSize * 5;
 
-    const labelRotation = isYAxis ? 90 : 0;
+    const labelRotation = isYAxis ? 270 : 0;
 
     // const gridLine = svg`
     //   <line
