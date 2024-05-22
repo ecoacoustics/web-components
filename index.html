@@ -9,12 +9,13 @@
 </head>
 
 <body>
-  <div>
+  <div style="position: relative; width: 70%; left: 15%;">
     <oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="8">
       <template>
-        <oe-axes>
-          <oe-spectrogram color-map="raven"></oe-spectrogram>
-        </oe-axes>
+        <oe-indicator>
+          <oe-spectrogram id="spectrogram" color-map="raven"></oe-spectrogram>
+        </oe-indicator>
+        <oe-media-controls for="spectrogram"></oe-media-controls>
       </template>
 
       <div>

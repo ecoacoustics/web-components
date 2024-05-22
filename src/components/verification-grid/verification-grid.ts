@@ -1,11 +1,12 @@
 import { customElement, property, queryAll, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, PropertyValueMap } from "lit";
+import { html, LitElement, PropertyValueMap, TemplateResult } from "lit";
 import { verificationGridStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
 import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 
-type PageFetcher = (pageNumber: number) => Promise<any[]>;
+type PageFetcher = (elapsedItems: number) => Promise<VerificationModel[]>;
+type VerificationModel = any;
 
 /**
  * A verification grid component that can be used to validate and verify audio events
@@ -41,41 +42,60 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @property({ type: String })
   public src: string | undefined;
 
+  // TODO: we probably won't need this when we create a formal spec for the
+  // expected data structure
   @property({ type: String })
-  public key!: string;
+  public key!: keyof unknown;
 
   @property({ attribute: "get-page", type: String })
   public getPage!: PageFetcher;
 
   @queryDeeplyAssignedElements({ selector: "template" })
-  public spectrogramTemplate!: HTMLTemplateElement;
+  public gridItemTemplate!: HTMLTemplateElement;
 
   @queryAll("oe-spectrogram")
-  public spectrograms: Spectrogram[] | undefined;
+  public spectrograms: NodeListOf<Spectrogram> | undefined;
 
   @queryAll(".sub-selection-checkbox")
-  public subSelectionCheckboxes!: HTMLInputElement[];
+  public subSelectionCheckboxes!: NodeListOf<HTMLInputElement>;
 
   @state()
-  private spectrogramElements: any;
+  private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
 
-  private totalItems = 0;
+  protected willUpdate(changedProperties: PropertyValueMap<this>): void {
+    const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "src"];
 
-  protected willUpdate(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    const invalidationKeys: (keyof this)[] = ["gridSize", "src", "getPage", "key"];
-
-    if (invalidationKeys.some((key) => changedProperties.has(key))) {
+    // TODO: figure out if there is a better way to do this invalidation
+    if (sourceInvalidationKeys.some((key) => changedProperties.has(key))) {
       if (!this.getPage) {
         if (!this.src) {
-          throw new Error("Neither getPage or src is defined on oe-verification-grid element");
+          throw new Error("getPage or src is required for verification-grid");
         }
 
-        this.getPage = this.computedCallback(this.src);
+        this.getPage = this.computedPageCallback(this.src);
       }
 
-      this.gridSize = this.calculateGridSize(this.gridSize);
-      this.renderSpectrograms();
+      this.pagedItems = 0;
+      this.renderVirtualPage();
     }
+
+    if (reRenderKeys.some((key) => changedProperties.has(key))) {
+      this.gridSize = this.calculateGridSize(this.gridSize);
+      this.createSpectrogramElements();
+    }
+  }
+
+  private computedPageCallback(src: string): PageFetcher {
+    return async () => {
+      const response = await fetch(src);
+      const data = await response.json();
+
+      const startIndex = this.pagedItems;
+      const endIndex = startIndex + this.gridSize;
+
+      return data.slice(startIndex, endIndex);
+    };
   }
 
   private calculateGridSize(target: number): number {
@@ -83,14 +103,23 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     return target;
   }
 
-  private catchDecision(event: CustomEvent) {
-    const decision = event.detail.value;
-    const selectedItems = Array.from(this.subSelectionCheckboxes)
-      .filter((checkbox) => checkbox.checked)
-      .map((element) => element.value);
+  // TODO: This function exists that that when we create a formal object spec
+  // we either change the key, or add some conditions to use a user defined key
+  private urlSource(item: VerificationModel): string {
+    return item[this.key];
+  }
 
-    const value =
-      selectedItems.length > 0 ? selectedItems : Array.from(this.subSelectionCheckboxes).map((item) => item.value);
+  private catchDecision(event: CustomEvent) {
+    const decision: VerificationModel[] = event.detail.value;
+    const hasSelectedSubset = decision.length > 0;
+
+    // TODO: work out if there is a better way than Array.from()
+    const selectedItems = Array.from(this.subSelectionCheckboxes);
+    if (hasSelectedSubset) {
+      selectedItems.filter((checkbox) => checkbox.checked);
+    }
+
+    const value = selectedItems.map((checkbox) => checkbox.value);
 
     this.dispatchEvent(
       new CustomEvent("decision-made", {
@@ -101,37 +130,27 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       }),
     );
 
-    this.pagedItems += this.gridSize;
+    console.log("decision made", value);
+
     this.removeSubSelection();
 
-    this.virtualPage();
-  }
-
-  private computedCallback(src: string): PageFetcher {
-    return async () => {
-      const response = await fetch(src);
-      const data = await response.json();
-      this.totalItems = data.length;
-
-      const startIndex = this.pagedItems;
-      const endIndex = startIndex + this.gridSize;
-
-      return data.slice(startIndex, endIndex);
-    };
+    this.pagedItems += this.gridSize;
+    this.renderVirtualPage();
   }
 
   private removeSubSelection(): void {
-    this.subSelectionCheckboxes.forEach((element) => {
+    for (const element of this.subSelectionCheckboxes) {
       element.checked = false;
-    });
+    }
   }
 
-  private async virtualPage(): Promise<void> {
+  private async renderVirtualPage(): Promise<void> {
     this.removeSubSelection();
 
     const elements = this.spectrograms;
 
-    if (!elements?.length) {
+    //? HN asking AT: `!elements?.length` or `elements === undefined || elements.length === 0`
+    if (elements === undefined || elements.length === 0) {
       throw new Error("Could not find instantiated spectrogram elements");
     }
 
@@ -141,52 +160,52 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       this.spectrogramElements = this.noItemsTemplate();
     }
 
-    nextPage.forEach((url: any, i: number) => {
+    nextPage.forEach((item: VerificationModel, i: number) => {
       const target = elements[i];
-      const source = url[this.key];
+      const source = this.urlSource(item);
       target.src = source;
     });
 
-    // if we are on the last page, we should hide some elements
+    // if we are on the last page, we hide some elements
     const pagedDelta = elements.length - nextPage.length;
-
     if (pagedDelta > 0) {
-      // TODO: do something here
+      // TODO: improve this code quality
+      const elementsToHide = Array.from(elements).slice(elements.length - pagedDelta, elements.length);
+
+      for (const element of elementsToHide) {
+        element.style.display = "none";
+      }
     }
   }
 
-  // we have to use the template provided in the slot
-  // an change the src of all oe-spectrogram elements to the src attribute
-  // then we return the instantiated templates as a Lit HTML template
-  private async renderSpectrograms() {
+  private async createSpectrogramElements() {
     const page = await this.getPage(this.pagedItems);
 
-    if (!page.length) {
+    if (page.length === 0) {
       this.spectrogramElements = this.noItemsTemplate();
     }
 
+    // TODO: we might be able to do partial rendering or removal if some of the
+    // needed spectrogram elements already exist
     this.spectrogramElements = page.map((source) => {
-      const derivedSource = source[this.key];
-      const template = this.spectrogramTemplate.content.cloneNode(true) as HTMLElement;
-      const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram")!;
+      const derivedSource = this.urlSource(source);
+      // TODO: see if we can get rid of the type override here
+      const template = this.gridItemTemplate.content.cloneNode(true) as HTMLElement;
+      const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
 
       if (spectrogram && derivedSource) {
         spectrogram.src = derivedSource;
       }
 
-      return this.spectrogramElement(template);
+      return this.spectrogramTemplate(template);
     });
   }
 
-  private spectrogramElement(spectrogram: HTMLElement) {
+  private spectrogramTemplate(spectrogram: HTMLElement) {
+    // TODO: We shouldn't be using toString() for the value here
     return html`
       <div>
-        <input
-          type="checkbox"
-          class="sub-selection-checkbox"
-          value="${spectrogram.toString()}"
-          part="sub-selection-checkbox"
-        />
+        <input type="checkbox" class="sub-selection-checkbox" value="${spectrogram}" part="sub-selection-checkbox" />
         ${spectrogram}
       </div>
     `;
@@ -198,14 +217,14 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         <p>
           <strong>No un-validated results found</strong>
         </p>
-        <p>All ${this.totalItems} annotations are validated</p>
+        <p>All ${this.pagedItems} annotations are validated</p>
       </div>
     `;
   }
 
   public render() {
     return html`
-      <div class="grid">${this.spectrogramElements}</div>
+      <div class="verification-grid">${this.spectrogramElements}</div>
       <slot @decision="${this.catchDecision}"></slot>
     `;
   }

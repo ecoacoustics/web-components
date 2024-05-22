@@ -22,6 +22,10 @@ export function queryDeeplyAssignedElements(options: QueryDeeplyAssignedElements
         for (const slot of slotElements) {
           const assignedElements = slot.assignedElements();
 
+          // because doing a query selector on a the slot element queries the
+          // slot elements children, not the assigned elements
+          // have to use a for loop over all the assigned elements
+          // rather than directly querying the slot element itself
           for (const assignedElement of assignedElements) {
             if (assignedElement.matches(options.selector)) {
               return assignedElement;

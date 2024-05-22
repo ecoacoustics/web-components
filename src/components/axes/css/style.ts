@@ -1,6 +1,10 @@
 import { css } from "lit";
 
 export const axesStyles = css`
+  :host {
+    display: inline-block !important;
+  }
+
   #wrapped-element {
     position: relative;
     display: inline-block;

@@ -100,6 +100,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public unitConverters?: UnitConverter;
   private doneFirstRender = false;
   private audioHelper = new AudioHelper();
+  private useMelScale: Signal<boolean> = signal(this.melScale);
 
   public firstUpdated(): void {
     // todo: retrieve size data from even callback
@@ -112,7 +113,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     });
 
     this.renderSpectrogram();
-    this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio);
+    this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
   }
 
   // todo: this should be part of a mixin
@@ -125,6 +126,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
         this.audioHelper.regenerateSpectrogram(this.spectrogramOptions());
+        this.useMelScale.value = this.melScale;
       } else if (this.invalidateSpectrogramSource(change)) {
         this.currentTime.value = 0;
         this.regenerateSpectrogram();

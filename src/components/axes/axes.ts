@@ -153,8 +153,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       <text
         class="axis-label axis-label-${orientation}"
         part="legend ${orientation}-legend"
-        x="${labelX}"
-        y="${labelY}"
+        x="${isYAxis ? labelX : "50%"}"
+        y="${isYAxis ? "50%" : labelY}"
         text-anchor="middle"
         transform="rotate(${labelRotation}, ${labelX}, ${labelY})"
         font-family="sans-serif"
@@ -163,12 +163,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       </text>
     `;
 
+    // we do not want to show grid lines on the first and last label
+    // otherwise, there will be a border around the element
+    const shouldShowGridLine = (i: number) => i > 0 && i < values.length - 1;
+
     return svg`
       <g>
         ${values.map(
-          (i) => svg`
-          <g transform="translate(${x(i)}, ${y(i)})">
-            ${gridLine}
+          (value, i) => svg`
+          <g transform="translate(${x(value)}, ${y(value)})">
+            ${shouldShowGridLine(i) && gridLine}
             ${tickLine}
             <text
               text-anchor="end"
@@ -176,7 +180,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
               part="label ${orientation}-label"
               transform="translate(0, ${this.fontSize + this.labelOffset})"
             >
-              ${formatter(i)}
+              ${formatter(value)}
             </text>
           </g>
         `,
@@ -283,8 +287,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const proposedLastLabelPosition = scale(proposedLastLabel);
     const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
 
-    const areLabelsOverlapping = proposedPositionDelta < this.fontSize + this.labelPadding;
-    if (areLabelsOverlapping) {
+    const areLastLabelsOverlapping = proposedPositionDelta < this.fontSize + this.labelPadding;
+    if (areLastLabelsOverlapping) {
       values.pop();
     }
 
