@@ -11,6 +11,8 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 
+export type AspectRatio = "stretch" | "fit-width" | "fit-height" | "natural";
+
 // TODO: fix
 const defaultAudioModel = new AudioModel({
   duration: 0,
@@ -35,7 +37,6 @@ const defaultAudioModel = new AudioModel({
  * @property brightness - The brightness of the spectrogram
  * @property contrast - The contrast of the spectrogram
  *
- * TODO
  * @property aspect-ratio (stretch | fit-width | fit-height | natural) - The aspect ratio of the spectrogram
  * stretch - fills parent and distorts image
  * fit-width - fits the width of the container and scales the height (fills its parent in the x direction) (maintaining the correct aspect ratio)
@@ -51,15 +52,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: Boolean, reflect: true })
   public paused = true;
 
-  @property({ type: String })
-  public src = "";
+  @property({ type: String, attribute: "aspect-ratio", reflect: true })
+  public aspectRatio: AspectRatio = "stretch";
 
   // must be in the format startOffset, lowFrequency, endOffset, highFrequency
-  @property({ type: String, attribute: "window" })
+  @property({ type: String, attribute: "window", reflect: true })
   public domRenderWindow?: string;
-
-  @property({ type: Number })
-  public offset = 0;
 
   @property({ type: Number, attribute: "window-size" })
   public windowSize = 512;
@@ -77,6 +75,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public colorMap = "";
 
   @property({ type: Number })
+  public offset = 0;
+
+  @property({ type: String })
+  public src = "";
+
+  @property({ type: Number })
   public brightness = 0;
 
   @property({ type: Number })
@@ -91,34 +95,29 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
-  public fftSlice?: TwoDSlice<Pixel, Hertz>;
-
   public audio: Signal<AudioModel> = signal(defaultAudioModel);
   public currentTime: Signal<Seconds> = signal(this.offset);
-  public renderCanvasSize: Signal<RenderCanvasSize> = signal(this.canvasSize());
+  // TODO: remove this temp value
+  public renderCanvasSize: Signal<RenderCanvasSize> = signal({ width: 0, height: 0 });
   public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow());
+  public useMelScale: Signal<boolean> = signal(this.melScale);
+  public fftSlice?: TwoDSlice<Pixel, Hertz>;
   public unitConverters?: UnitConverter;
-  private doneFirstRender = false;
   private audioHelper = new AudioHelper();
-  private useMelScale: Signal<boolean> = signal(this.melScale);
+  // TODO: remove this
+  private doneFirstRender = false;
 
   public firstUpdated(): void {
-    // todo: retrieve size data from even callback
-    OeResizeObserver.observe(this.canvas, () => {
-      this.renderCanvasSize.value = this.canvasSize();
-      this.updateCurrentTime();
-      this.resizeCanvasViewport();
-
-      this.doneFirstRender = true;
-    });
-
+    OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.renderSpectrogram();
+
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
   }
 
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
     OeResizeObserver.instance.unobserve(this.canvas);
+    super.disconnectedCallback();
   }
 
   public updated(change: PropertyValues<this>) {
@@ -131,6 +130,10 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.currentTime.value = 0;
         this.regenerateSpectrogram();
       }
+    }
+
+    if (change.has("aspectRatio")) {
+      this.updateAspectRatio();
     }
   }
 
@@ -170,6 +173,28 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.setPlaying();
   }
 
+  private handleResize(entries: ResizeObserverEntry[]): void {
+    // TODO: make this better
+    const targetEntry = entries?.at(0);
+
+    if (!targetEntry) return;
+
+    const newSize = new RenderCanvasSize({
+      width: targetEntry.contentRect.width,
+      height: targetEntry.contentRect.height,
+    });
+
+    this.renderCanvasSize.value = newSize;
+
+    if (this.audioHelper.canvasTransferred) {
+      this.canvas.width = this.canvas.clientWidth;
+      this.canvas.height = this.canvas.clientHeight;
+    }
+
+    // TODO: remove
+    this.doneFirstRender = true;
+  }
+
   /**
    * Specifies if the spectrogram is invalidated with the new parameters
    * This method can be used to check if the spectrogram needs to be re-rendered
@@ -204,22 +229,31 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     }
   }
 
-  // TODO: we shouldn't query the element for this size - it can cause a repaint every time we ask
-  // instead use the resize observer's data and cache the size
-  private canvasSize(): RenderCanvasSize {
-    return new RenderCanvasSize({
-      width: this.canvas?.clientWidth ?? 0,
-      height: this.canvas?.clientHeight ?? 0,
-    });
-  }
+  // TODO: This is really hacky
+  private updateAspectRatio(): void {
+    // TODO: it might be better to cache these css values so we don't have to recompute them
+    const stretchStyles = "width: 100%; height: 100%;";
+    const fitWidthStyles = "height: 100%;";
+    const fitHeightStyles = "width: 100%;";
+    const naturalStyles = "";
 
-  private resizeCanvasViewport(): void {
-    if (this.audioHelper.canvasTransferred) {
-      this.audioHelper.resizeCanvas(this.canvasSize());
-    } else {
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
+    let selectedStyles = stretchStyles;
+    switch (this.aspectRatio) {
+      case "fit-width":
+        selectedStyles = fitWidthStyles;
+        break;
+      case "fit-height":
+        selectedStyles = fitHeightStyles;
+        break;
+      case "natural":
+        selectedStyles = naturalStyles;
+        break;
+      default:
+        selectedStyles = stretchStyles;
+        break;
     }
+
+    this.canvas.setAttribute("style", selectedStyles);
   }
 
   private spectrogramOptions(): SpectrogramOptions {

@@ -9,7 +9,6 @@ import {
   BUFFER_PROCESSOR_NAME,
   ProcessorSetupMessage,
   WorkerRegenerateSpectrogramMessage,
-  WorkerResizeCanvasMessage,
   WorkerSetupMessage,
 } from "./messages";
 
@@ -76,7 +75,7 @@ export class AudioHelper {
     }
 
     const newGeneration = await this.abort();
-    this.spectrogramWorker.postMessage(["clear-canvas"]);
+    this.clearCanvas();
 
     const info = await this.render(options, newGeneration, src);
 
@@ -95,14 +94,6 @@ export class AudioHelper {
     await this.render(options, newGeneration);
 
     console.log("audio: regenerate complete", performance.now() - now);
-  }
-
-  public resizeCanvas(size: Size) {
-    if (!this.spectrogramWorker) {
-      throw new Error("Worker is not initialized");
-    }
-    const message: WorkerResizeCanvasMessage = ["resize-canvas", size];
-    this.spectrogramWorker.postMessage(message);
   }
 
   private async abort() {
@@ -372,6 +363,10 @@ export class AudioHelper {
     processor.port.postMessage(message);
 
     return await this.state.waitForProcessorReady(generation);
+  }
+
+  private clearCanvas(): void {
+    this.spectrogramWorker?.postMessage(["clear-canvas"]);
   }
 
   private regenerateWorker(options: SpectrogramOptions, audioInformation: IAudioInformation, generation: number) {

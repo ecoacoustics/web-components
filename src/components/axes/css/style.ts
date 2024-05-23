@@ -2,12 +2,14 @@ import { css } from "lit";
 
 export const axesStyles = css`
   :host {
+    position: relative;
     display: inline-block !important;
+    width: 100%;
   }
 
   #wrapped-element {
     position: relative;
-    display: inline-block;
+    display: flex;
     margin: 4rem;
   }
 

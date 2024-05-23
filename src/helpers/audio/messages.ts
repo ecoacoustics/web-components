@@ -1,4 +1,3 @@
-import { Size } from "../../models/rendering";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
 export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor";
@@ -20,10 +19,9 @@ export type GenerationMetadata = Generation & { audioInformation: IAudioInformat
 export type SharedBuffersWithCanvas = SharedBuffers & { canvas: OffscreenCanvas };
 
 export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanvas>;
-export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
 export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
 
 export type WorkerMessage = MessageEvent<
-  WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
+  WorkerSetupMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
 >;

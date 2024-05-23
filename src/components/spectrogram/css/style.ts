@@ -13,7 +13,5 @@ export const spectrogramStyles = css`
 
   #spectrogram-container > canvas {
     position: relative;
-    width: 100%;
-    height: 100%;
   }
 `;

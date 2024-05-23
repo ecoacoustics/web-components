@@ -58,7 +58,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener("play", this.playHandler);
 
-      this.spectrogramElement = document.querySelector<Spectrogram>(`#${this.for}`);
+      this.spectrogramElement = this.parentElement?.querySelector<Spectrogram>(`#${this.for}`);
       this.spectrogramElement?.addEventListener("play", this.playHandler);
     }
   }

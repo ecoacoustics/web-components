@@ -11,6 +11,7 @@ export const verificationGridStyles = css`
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    max-height: 100vh;
 
     & > * {
       margin: 0.5rem;

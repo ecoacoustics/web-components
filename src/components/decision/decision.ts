@@ -80,6 +80,7 @@ export class Decision extends AbstractComponent(LitElement) {
         title="Shortcut: ${this.shortcut}"
       >
         <slot></slot>
+        <kbd>(${this.shortcut})</kbd>
       </button>
     `;
   }

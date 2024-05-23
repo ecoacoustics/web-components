@@ -10,6 +10,18 @@ import { VerificationGridTile } from "../../../playwright";
 type PageFetcher = (elapsedItems: number) => Promise<VerificationModel[]>;
 type VerificationModel = any;
 
+// TODO: Move this to a different file
+interface CacheOptions {
+  level: "client" | "server";
+  pages: number;
+  maxAge?: number;
+}
+
+const defaultCacheOptions: CacheOptions = {
+  level: "client",
+  pages: 20,
+};
+
 /**
  * A verification grid component that can be used to validate and verify audio events
  *
@@ -62,6 +74,26 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
 
   private model!: Verification;
+  private intersectionHandler = this.handleIntersection.bind(this);
+  private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
+  private cacheOptions = defaultCacheOptions;
+  private cacheHead = this.gridSize;
+
+  public disconnectedCallback(): void {
+    this.intersectionObserver.disconnect();
+  }
+
+  protected updated(): void {
+    const elementsToObserve = this.gridTiles;
+
+    if (!elementsToObserve) {
+      throw new Error("Fatal error: No grid tiles found");
+    }
+
+    for (const element of elementsToObserve) {
+      this.intersectionObserver.observe(element);
+    }
+  }
 
   protected willUpdate(changedProperties: PropertyValueMap<this>): void {
     const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
@@ -78,19 +110,29 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       }
 
       this.pagedItems = 0;
-      this.renderVirtualPage();
+
+      if (this.gridTiles?.length) {
+        this.renderVirtualPage();
+      }
     }
 
     if (reRenderKeys.some((key) => changedProperties.has(key))) {
-      this.gridSize = this.calculateGridSize(this.gridSize);
       this.createSpectrogramElements();
     }
 
     this.model = this.verificationModel();
   }
 
+  private handleIntersection(entries: IntersectionObserverEntry[]): void {
+    for (const entry of entries) {
+      if (entry.intersectionRatio < 1) {
+        // this.gridSize--;
+      }
+    }
+  }
+
   private verificationModel(): Verification {
-          return new Verification({});
+    return new Verification({});
   }
 
   private computedPageCallback(src: string): PageFetcher {
@@ -103,11 +145,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
       return data.slice(startIndex, endIndex);
     };
-  }
-
-  private calculateGridSize(target: number): number {
-    // TODO: We might want to use the window size here
-    return target;
   }
 
   // TODO: This function exists that that when we create a formal object spec
@@ -138,8 +175,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     this.renderVirtualPage();
   }
 
-  private removeSubSelection(): void {
-  }
+  private removeSubSelection(): void {}
 
   private async renderVirtualPage(): Promise<void> {
     this.removeSubSelection();
@@ -159,19 +195,38 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     nextPage.forEach((item: VerificationModel, i: number) => {
       const target = elements[i];
+
       const source = this.urlSource(item);
       target.src = source;
+      target.order = i;
     });
 
-    // if we are on the last page, we hide some elements
+    // if we are on the last page, we hide the remaining elements
     const pagedDelta = elements.length - nextPage.length;
-    if (pagedDelta > 0) {
-      // TODO: improve this code quality
-      const elementsToHide = Array.from(elements).slice(elements.length - pagedDelta, elements.length);
+    this.gridSize -= pagedDelta;
 
-      for (const element of elementsToHide) {
-        element.style.display = "none";
+    this.cacheNext();
+  }
+
+  private async cacheNext() {
+    const current = this.cacheHead;
+    const target = this.gridSize * this.cacheOptions.pages;
+
+    const httpMethod = this.cacheOptions.level === "client" ? "GET" : "HEAD";
+
+    while (this.cacheHead < target) {
+      const page = await this.getPage(this.cacheHead);
+
+      if (page.length === 0) {
+        break;
       }
+
+      for (const item of page) {
+        const source = this.urlSource(item);
+        fetch(source, { method: httpMethod });
+      }
+
+      this.cacheHead += current;
     }
   }
 
@@ -199,11 +254,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private spectrogramTemplate(spectrogram: HTMLElement) {
-    return html`
-      <oe-verification-grid-tile>
-        ${spectrogram}
-      </oe-verification-grid-tile>
-    `;
+    return html` <oe-verification-grid-tile> ${spectrogram} </oe-verification-grid-tile> `;
   }
 
   private noItemsTemplate() {
