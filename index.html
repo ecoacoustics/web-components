@@ -9,7 +9,7 @@
 </head>
 
 <body>
-  <!-- <div id="grid-host">
+  <div id="grid-host">
     <oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="8">
       <template>
         <oe-indicator>
@@ -26,7 +26,7 @@
         </div>
       </div>
     </oe-verification-grid>
-  </div> -->
+  </div>
 
   <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
   <button onclick="changeVerificationKey();">Create Key Error</button>
@@ -64,7 +64,7 @@
     }
 
     verificationGridElement.addEventListener("decision-made", (event) => {
-      console.log(event);
+      console.log("new decision", event);
     })
   </script>
 
@@ -73,7 +73,7 @@
   <oe-axes>
     <oe-indicator>
       <oe-spectrogram style="width: 100%; height: 600px" id="playing-spectrogram" class="large" src="/example.flac"
-        aspect-ratio="fit-stretch" window-size="1024" window-overlap="128" color-map="audacity"></oe-spectrogram>
+        window-size="1024" window-overlap="128" color-map="audacity" scale="stretch"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
   <oe-media-controls for="playing-spectrogram"></oe-media-controls>
@@ -83,8 +83,8 @@
   <button onclick="changeSize();">Change Size</button>
   <button onclick="changeWindowSize();">Change Window Size</button>
   <button onclick="changeOffset();">Change Offset</button>
-  <button onclick="changeScale();">Change Scale</button>
-  <button onclick="changeAspectRatio();">Change Aspect Ratio</button>
+  <button onclick="changeScale();">Change Mel-Scale</button>
+  <button onclick="changeAspectRatio();">Change Scale</button>
   <input type="text" readonly value="0" id="generation" autocomplete="off" />
 
   <script>
@@ -100,16 +100,14 @@
 
     function changeAspectRatio() {
       const element = document.getElementById("playing-spectrogram");
-      const currentAspectRatio = element.getAttribute("aspect-ratio");
+      const currentAspectRatio = element.getAttribute("scale");
 
       if (currentAspectRatio === "stretch") {
-        element.setAttribute("aspect-ratio", "fit-width");
-      } else if (currentAspectRatio === "fit-width") {
-        element.setAttribute("aspect-ratio", "fit-height");
-      } else if (currentAspectRatio === "fit-height") {
-        element.setAttribute("aspect-ratio", "natural");
-      } else {
-        element.setAttribute("aspect-ratio", "stretch");
+        element.setAttribute("scale", "natural");
+      } else if (currentAspectRatio === "natural") {
+        element.setAttribute("scale", "original");
+      } else if (currentAspectRatio === "original") {
+        element.setAttribute("scale", "stretch");
       }
     }
 
@@ -208,7 +206,20 @@
 
     .large {
       height: 300px;
-      width: 300px;
+      width: 100%;
+    }
+
+    .stretch {
+      width: 100%;
+      height: 100%;
+    }
+
+    .fit-height {
+      width: 100%;
+    }
+
+    .fit-height {
+      height: 100%;
     }
   </style>
 </body>

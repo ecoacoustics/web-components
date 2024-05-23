@@ -3,6 +3,9 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement } from "lit";
 import { Spectrogram } from "../../../playwright";
 import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { classMap } from "lit/directives/class-map.js";
+import { verificationGridTileStyles } from "./css/style";
+import { Verification } from "../../models/verification";
 
 /**
  * A component to scope ids to a template inside a shadow DOM
@@ -18,8 +21,10 @@ import { queryDeeplyAssignedElements } from "../../helpers/decorators";
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTile extends AbstractComponent(LitElement) {
+  public static styles = verificationGridTileStyles;
+
   @state()
-  public src: string | undefined;
+  public model: Verification | undefined;
 
   @state()
   public selected = false;
@@ -31,16 +36,20 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   private spectrogram: Spectrogram | undefined;
 
   protected willUpdate(): void {
-    if (this.spectrogram && this.src) {
-      this.spectrogram.src = this.src;
+    if (this.spectrogram && this.model?.url) {
+      this.spectrogram.src = this.model.url;
     }
   }
 
-  protected handleClick() {
+  private handleClick() {
     this.selected = !this.selected;
   }
 
   public render() {
-    return html`<slot @click="${this.handleClick}"></slot>`;
+    return html`
+      <div class="tile-container ${classMap({ selected: this.selected })}">
+        <slot @click="${this.handleClick}"></slot>
+      </div>
+    `;
   }
 }

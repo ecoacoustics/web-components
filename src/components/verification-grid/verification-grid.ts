@@ -7,8 +7,7 @@ import { queryDeeplyAssignedElements } from "../../helpers/decorators";
 import { Verification } from "../../models/verification";
 import { VerificationGridTile } from "../../../playwright";
 
-type PageFetcher = (elapsedItems: number) => Promise<VerificationModel[]>;
-type VerificationModel = any;
+type PageFetcher = (elapsedItems: number) => Promise<any[]>;
 
 // TODO: Move this to a different file
 interface CacheOptions {
@@ -41,6 +40,7 @@ const defaultCacheOptions: CacheOptions = {
  *
  * @slot - A template to display the audio event to be verified
  */
+//! Please don't look at this component yet until it is finalized, it has a lot of bad code
 @customElement("oe-verification-grid")
 export class VerificationGrid extends AbstractComponent(LitElement) {
   public static styles = verificationGridStyles;
@@ -59,7 +59,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // TODO: we probably won't need this when we create a formal spec for the
   // expected data structure
   @property({ type: String })
-  public key!: keyof unknown;
+  public key!: string;
 
   @property({ attribute: "get-page", type: String })
   public getPage!: PageFetcher;
@@ -73,10 +73,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @state()
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
 
-  private model!: Verification;
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
   private cacheOptions = defaultCacheOptions;
+  // TODO: fix this
   private cacheHead = this.gridSize;
 
   public disconnectedCallback(): void {
@@ -106,7 +106,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
           throw new Error("getPage or src is required for verification-grid");
         }
 
-        this.getPage = this.computedPageCallback(this.src);
+        this.getPage = this.srcPageCallback(this.src);
       }
 
       this.pagedItems = 0;
@@ -118,9 +118,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     if (reRenderKeys.some((key) => changedProperties.has(key))) {
       this.createSpectrogramElements();
+      this.cacheNext();
     }
-
-    this.model = this.verificationModel();
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
@@ -131,32 +130,49 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
-  private verificationModel(): Verification {
-    return new Verification({});
+  // this function can be used in a map function over the getPage results to convert
+  // OE Verification data model
+  private convertJsonToVerification(original: Record<string, any>): Verification {
+    const possibleSrcKeys = ["src", "url"];
+    const possibleTagKeys = ["tag", "tags"];
+    const possibleSubjectKeys = ["subject", "context"];
+
+    this.key ??= possibleSrcKeys.find((key) => key in original) ?? "";
+    const tag = possibleTagKeys.find((key) => key in original) ?? "";
+    const subject = possibleSubjectKeys.find((key) => key in original) ?? "";
+
+    return new Verification({
+      subject: original[subject],
+      url: original[this.key],
+      tag: { id: 0, text: original[tag] },
+      confirmed: false,
+      additionalTags: [],
+    });
   }
 
-  private computedPageCallback(src: string): PageFetcher {
-    return async () => {
+  private srcPageCallback(src: string): PageFetcher {
+    return async (elapsedItems: number) => {
       const response = await fetch(src);
       const data = await response.json();
 
-      const startIndex = this.pagedItems;
+      const startIndex = elapsedItems;
       const endIndex = startIndex + this.gridSize;
 
-      return data.slice(startIndex, endIndex);
+      return data.slice(startIndex, endIndex) ?? [];
     };
   }
 
-  // TODO: This function exists that that when we create a formal object spec
-  // we either change the key, or add some conditions to use a user defined key
-  private urlSource(item: VerificationModel): string {
-    return item[this.key];
-  }
-
   private catchDecision(event: CustomEvent) {
-    const decision: VerificationModel[] = event.detail.value;
+    const decision: string[] = event.detail.value;
 
-    const value: any[] = [];
+    // TODO: Fix this
+    const gridTiles = Array.from(this.gridTiles ?? []);
+    const subSelection = gridTiles.filter((tile) => tile.selected);
+    const hasSubSelection = subSelection.length > 0;
+
+    const value: (Verification | undefined)[] = hasSubSelection
+      ? subSelection.map((tile) => tile.model)
+      : gridTiles.map((tile) => tile.model);
 
     this.dispatchEvent(
       new CustomEvent("decision-made", {
@@ -167,15 +183,23 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       }),
     );
 
-    console.log("decision made", value);
-
     this.removeSubSelection();
 
     this.pagedItems += this.gridSize;
     this.renderVirtualPage();
   }
 
-  private removeSubSelection(): void {}
+  private removeSubSelection(): void {
+    const elements = this.gridTiles;
+
+    if (!elements) {
+      throw new Error("Fatal error: No grid tiles found");
+    }
+
+    for (const element of elements) {
+      element.selected = false;
+    }
+  }
 
   private async renderVirtualPage(): Promise<void> {
     this.removeSubSelection();
@@ -187,17 +211,17 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       throw new Error("Could not find instantiated spectrogram elements");
     }
 
-    const nextPage = await this.getPage(this.pagedItems);
+    let nextPage = await this.getPage(this.pagedItems);
+    nextPage = nextPage.map((item) => this.convertJsonToVerification(item));
 
     if (nextPage.length === 0) {
       this.spectrogramElements = this.noItemsTemplate();
     }
 
-    nextPage.forEach((item: VerificationModel, i: number) => {
+    nextPage.forEach((item: Verification, i: number) => {
       const target = elements[i];
 
-      const source = this.urlSource(item);
-      target.src = source;
+      target.model = item;
       target.order = i;
     });
 
@@ -209,29 +233,29 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private async cacheNext() {
-    const current = this.cacheHead;
-    const target = this.gridSize * this.cacheOptions.pages;
-
     const httpMethod = this.cacheOptions.level === "client" ? "GET" : "HEAD";
+    const target = this.pagedItems + this.cacheOptions.pages * this.gridSize;
 
     while (this.cacheHead < target) {
-      const page = await this.getPage(this.cacheHead);
+      let page = await this.getPage(this.cacheHead);
+      page = page.map((item) => this.convertJsonToVerification(item));
 
       if (page.length === 0) {
         break;
       }
 
       for (const item of page) {
-        const source = this.urlSource(item);
-        fetch(source, { method: httpMethod });
+        const source = item.url;
+        await fetch(source, { method: httpMethod });
       }
 
-      this.cacheHead += current;
+      this.cacheHead += page.length;
     }
   }
 
   private async createSpectrogramElements() {
-    const page = await this.getPage(this.pagedItems);
+    let page = await this.getPage(this.pagedItems);
+    page = page.map((item) => this.convertJsonToVerification(item));
 
     if (page.length === 0) {
       this.spectrogramElements = this.noItemsTemplate();
@@ -239,14 +263,13 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     // TODO: we might be able to do partial rendering or removal if some of the
     // needed spectrogram elements already exist
-    this.spectrogramElements = page.map((source) => {
-      const derivedSource = this.urlSource(source);
+    this.spectrogramElements = page.map((item) => {
       // TODO: see if we can get rid of the type override here
       const template = this.gridItemTemplate.content.cloneNode(true) as HTMLElement;
       const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
 
-      if (spectrogram && derivedSource) {
-        spectrogram.src = derivedSource;
+      if (spectrogram) {
+        spectrogram.src = item.url;
       }
 
       return this.spectrogramTemplate(template);

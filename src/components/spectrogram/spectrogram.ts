@@ -11,7 +11,7 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 
-export type AspectRatio = "stretch" | "fit-width" | "fit-height" | "natural";
+export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
 // TODO: fix
 const defaultAudioModel = new AudioModel({
@@ -37,11 +37,10 @@ const defaultAudioModel = new AudioModel({
  * @property brightness - The brightness of the spectrogram
  * @property contrast - The contrast of the spectrogram
  *
- * @property aspect-ratio (stretch | fit-width | fit-height | natural) - The aspect ratio of the spectrogram
- * stretch - fills parent and distorts image
- * fit-width - fits the width of the container and scales the height (fills its parent in the x direction) (maintaining the correct aspect ratio)
- * fit-height - fits the height of the container and scales the width (fills its parent in the y direction) (maintaining the correct aspect ratio)
- * natural - a 1:1 mapping to the natural FFT height
+ * @property scale - (stretch | natural | original) - The aspect ratio of the spectrogram
+ * stretch should scale without aspect ratio
+ * natural should scale 1/1 until one of the dimensions overflows (probably set a max height of the natural fft window)
+ * original should scale 1/1 with a max height of the spectrogram set to the fft window
  *
  * @slot - A `<source>` element to provide the audio source
  */
@@ -52,8 +51,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: Boolean, reflect: true })
   public paused = true;
 
-  @property({ type: String, attribute: "aspect-ratio", reflect: true })
-  public aspectRatio: AspectRatio = "stretch";
+  @property({ type: String, attribute: "scale", reflect: true })
+  public scale: SpectrogramCanvasScale = "stretch";
 
   // must be in the format startOffset, lowFrequency, endOffset, highFrequency
   @property({ type: String, attribute: "window", reflect: true })
@@ -108,7 +107,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   private doneFirstRender = false;
 
   public firstUpdated(): void {
-    OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
+    OeResizeObserver.observe(this, (e) => this.handleResize(e));
     this.renderSpectrogram();
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
@@ -116,7 +115,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
-    OeResizeObserver.instance.unobserve(this.canvas);
+    OeResizeObserver.instance.unobserve(this);
     super.disconnectedCallback();
   }
 
@@ -127,13 +126,10 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.audioHelper.regenerateSpectrogram(this.spectrogramOptions());
         this.useMelScale.value = this.melScale;
       } else if (this.invalidateSpectrogramSource(change)) {
+        this.pause();
         this.currentTime.value = 0;
         this.regenerateSpectrogram();
       }
-    }
-
-    if (change.has("aspectRatio")) {
-      this.updateAspectRatio();
     }
   }
 
@@ -187,6 +183,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.renderCanvasSize.value = newSize;
 
     if (this.audioHelper.canvasTransferred) {
+      this.audioHelper.resizeCanvas(newSize, this.scale);
+    } else {
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;
     }
@@ -227,33 +225,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.currentTime.value = this.mediaElement.currentTime;
       requestAnimationFrame(() => this.updateCurrentTime());
     }
-  }
-
-  // TODO: This is really hacky
-  private updateAspectRatio(): void {
-    // TODO: it might be better to cache these css values so we don't have to recompute them
-    const stretchStyles = "width: 100%; height: 100%;";
-    const fitWidthStyles = "height: 100%;";
-    const fitHeightStyles = "width: 100%;";
-    const naturalStyles = "";
-
-    let selectedStyles = stretchStyles;
-    switch (this.aspectRatio) {
-      case "fit-width":
-        selectedStyles = fitWidthStyles;
-        break;
-      case "fit-height":
-        selectedStyles = fitHeightStyles;
-        break;
-      case "natural":
-        selectedStyles = naturalStyles;
-        break;
-      default:
-        selectedStyles = stretchStyles;
-        break;
-    }
-
-    this.canvas.setAttribute("style", selectedStyles);
   }
 
   private spectrogramOptions(): SpectrogramOptions {

@@ -9,8 +9,10 @@ import {
   BUFFER_PROCESSOR_NAME,
   ProcessorSetupMessage,
   WorkerRegenerateSpectrogramMessage,
+  WorkerResizeCanvasMessage,
   WorkerSetupMessage,
 } from "./messages";
+import { SpectrogramCanvasScale } from "../../../playwright";
 
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
@@ -94,6 +96,15 @@ export class AudioHelper {
     await this.render(options, newGeneration);
 
     console.log("audio: regenerate complete", performance.now() - now);
+  }
+
+  public resizeCanvas(size: Size, scale: SpectrogramCanvasScale) {
+    if (!this.spectrogramWorker) {
+      throw new Error("Worker is not initialized");
+    }
+
+    const message: WorkerResizeCanvasMessage = ["resize-canvas", { size, scale }];
+    this.spectrogramWorker.postMessage(message);
   }
 
   private async abort() {

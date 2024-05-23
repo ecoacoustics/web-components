@@ -18,10 +18,6 @@ export const verificationGridStyles = css`
     }
   }
 
-  .selected {
-    filter: drop-shadow(var(--secondary-color) 0.5rem 0.5rem);
-  }
-
   .no-items-message {
     font-size: 1.2rem;
   }
