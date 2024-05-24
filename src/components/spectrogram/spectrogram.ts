@@ -2,7 +2,7 @@ import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
-import { RenderCanvasSize, RenderWindow, TwoDSlice } from "../../models/rendering";
+import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Hertz, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
@@ -107,7 +107,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   private doneFirstRender = false;
 
   public firstUpdated(): void {
-    OeResizeObserver.observe(this, (e) => this.handleResize(e));
+    OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.renderSpectrogram();
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
@@ -169,24 +169,64 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.setPlaying();
   }
 
+  private originalFftSize(): Size {
+    const options = this.spectrogramOptions();
+    const step = options.windowSize - options.windowOverlap;
+    const duration = this.audio.value.duration;
+    const sampleRate = this.audio.value.sampleRate;
+    const totalSamples = duration * sampleRate;
+
+    const width = Math.ceil(totalSamples / step);
+    const height = options.windowSize / 2;
+
+    return { width, height };
+  }
+
+  private naturalSize(originalSize: Size, target: ResizeObserverEntry): Size {
+    // the natural size is where we scale the width and height up
+    // until one of the dimensions overflows the targetEntry.contentRect
+    // while keeping the aspect ratio
+    const scale = Math.min(
+      target.contentRect.width / originalSize.width,
+      target.contentRect.height / originalSize.height,
+    );
+
+    return {
+      width: originalSize.width * scale,
+      height: originalSize.height * scale,
+    };
+  }
+
+  private stretchSize(entry: ResizeObserverEntry): Size {
+    return { width: entry.contentRect.width, height: entry.contentRect.height };
+  }
+
   private handleResize(entries: ResizeObserverEntry[]): void {
     // TODO: make this better
     const targetEntry = entries?.at(0);
 
     if (!targetEntry) return;
 
-    const newSize = new RenderCanvasSize({
-      width: targetEntry.contentRect.width,
-      height: targetEntry.contentRect.height,
-    });
+    let size: Size | undefined;
 
-    this.renderCanvasSize.value = newSize;
+    if (this.scaling === "original") {
+      size = this.originalFftSize();
+    } else if (this.scaling === "natural") {
+      const originalSize = this.originalFftSize();
+      size = this.naturalSize(originalSize, targetEntry);
+    } else {
+      size = this.stretchSize(targetEntry);
+    }
+
+    console.log("resize to", size);
+
+    this.renderCanvasSize.value = size;
 
     if (this.audioHelper.canvasTransferred) {
-      this.audioHelper.resizeCanvas(newSize, this.scaling);
+      this.audioHelper.resizeCanvas(size);
     } else {
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
+      this.canvas.width = size.width;
+      this.canvas.height = size.height;
     }
 
     // TODO: remove

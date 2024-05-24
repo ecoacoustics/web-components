@@ -86,7 +86,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   // while the labelOffset is the distance between the label and the edge of the canvas
   private fontSize = 8; // px
   private labelPadding = 3; // px
-  private labelOffset = 8; // px
+  private tickSize = 8; // px
 
   private handleSlotchange(): void {
     this.unitConverter = this.spectrogram.unitConverters!;
@@ -137,27 +137,52 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // label assuming at a fixed amount away from the largest theoretical axis label
     // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
     //       label, and get the number of digits that the proposed title will have to clear
-    const xTitleOffset = this.fontSize + this.labelPadding + this.labelOffset * 3;
-    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.labelOffset;
+    const xTitleOffset = this.fontSize + this.labelPadding + this.tickSize * 3;
+    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.tickSize;
 
-    const xLabel = (value: Seconds) => svg`<text
-      text-anchor="end"
-      font-family="sans-serif"
-      x="${scale.temporal(value)}"
-      y="${canvasSize.height + this.fontSize + this.labelOffset}"
-    >
-      ${value.toFixed(1)}
-    </text>`;
+    const xLabel = (value: Seconds) => {
+      const xPos = scale.temporal(value) + value.toFixed(1).length * (this.fontSize / 2);
+      const yPos = canvasSize.height + this.fontSize + this.tickSize;
 
-    const yLabel = (value: Hertz) =>
-      svg`<text
-        text-anchor="end"
-        font-family="sans-serif"
-        x="-${this.labelOffset}"
-        y="${scale.frequency(value)}"
-      >
-        ${value.toFixed(0)}
-      </text>`;
+      return svg`<g>
+        <line
+          x1="${scale.temporal(value)}"
+          x2="${scale.temporal(value)}"
+          y1="${canvasSize.height}"
+          y2="${canvasSize.height + this.tickSize}"
+        ></line>
+        <text
+          text-anchor="end"
+          font-family="sans-serif"
+          x="${xPos}"
+          y="${yPos}"
+        >
+          ${value.toFixed(1)}
+        </text>
+      </g>`;
+    };
+
+    const yLabel = (value: Hertz) => {
+      const xPos = -this.tickSize;
+      const yPos = scale.frequency(value) + this.fontSize;
+
+      return svg`<g>
+        <line
+          x1="${xPos}"
+          x2="${xPos + this.tickSize}"
+          y1="${scale.frequency(value)}"
+          y2="${scale.frequency(value)}"
+        ></line>
+        <text
+          text-anchor="end"
+          font-family="sans-serif"
+          x="${xPos}"
+          y="${yPos}"
+        >
+          ${value.toFixed(0)}
+        </text>
+      </g>`;
+    };
 
     const xAxisLabels = svg`${xValues.map((value) => xLabel(value))}`;
     const yAxisLabels = svg`${yValues.map((value) => yLabel(value))}`;

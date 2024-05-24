@@ -12,7 +12,6 @@ import {
   WorkerResizeCanvasMessage,
   WorkerSetupMessage,
 } from "./messages";
-import { SpectrogramCanvasScale } from "../../../playwright";
 
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
@@ -98,12 +97,12 @@ export class AudioHelper {
     console.log("audio: regenerate complete", performance.now() - now);
   }
 
-  public resizeCanvas(size: Size, scale: SpectrogramCanvasScale) {
+  public resizeCanvas(size: Size) {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized");
     }
 
-    const message: WorkerResizeCanvasMessage = ["resize-canvas", { size, scale }];
+    const message: WorkerResizeCanvasMessage = ["resize-canvas", size];
     this.spectrogramWorker.postMessage(message);
   }
 

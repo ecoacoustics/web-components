@@ -1,7 +1,8 @@
 import { SpectrogramGenerator } from "./spectrogram";
-import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata, ResizeData } from "./messages";
+import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
 import { SpectrogramOptions, IAudioInformation } from "./models";
 import { WorkerState } from "./state";
+import { Size } from "../../models/rendering";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -159,32 +160,14 @@ function clearCanvas(): void {
   destinationSurface.clearRect(0, 0, destinationCanvas.width, destinationCanvas.height);
 }
 
-function resizeCanvas(data: ResizeData): void {
-  const { size, scale } = data;
-
-  let width = scale === "original" ? spectrogramCanvas.width : size.width;
-  let height = scale === "original" ? spectrogramCanvas.height : size.height;
-
-  const aspectRatio = spectrogramCanvas.width / spectrogramCanvas.height;
-
-  if (scale === "natural") {
-    height = width / aspectRatio;
-
-    // if the height is greater than the spectrogramCanvas height, then we chop both
-    // values to fit the spectrogramCanvas height
-    if (height > spectrogramCanvas.height) {
-      height = spectrogramCanvas.height;
-      width = height * aspectRatio;
-    }
-  }
-
-  // destinationCanvas.width = width;
-  // destinationCanvas.height = height;
+function resizeCanvas(data: Size): void {
+  destinationCanvas.width = data.width;
+  destinationCanvas.height = data.height;
 
   // redraw the spectrogram from the 1:1 spectrogram canvas
   // onto the destination
   drawSpectrogramOntoDestinationCanvas(state.generation);
-  //console.log("worker: resized canvas", data);
+  //console.log("resized canvas", data);
 }
 
 // runs when the processor is first created

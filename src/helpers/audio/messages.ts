@@ -1,4 +1,3 @@
-import { SpectrogramCanvasScale } from "../../../playwright";
 import { Size } from "../../models/rendering";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
@@ -20,10 +19,8 @@ export type ProcessorMessage = MessageEvent<ProcessorSetupMessage>;
 export type GenerationMetadata = Generation & { audioInformation: IAudioInformation; options: SpectrogramOptions };
 export type SharedBuffersWithCanvas = SharedBuffers & { canvas: OffscreenCanvas };
 
-export type ResizeData = { size: Size; scale: SpectrogramCanvasScale };
-
 export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanvas>;
-export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", ResizeData>;
+export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
 export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
 

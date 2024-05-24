@@ -19,7 +19,6 @@ export const indicatorStyles = css`
 
   #wrapped-element {
     position: relative;
-    /* display: flex; */
   }
 
   #indicator-svg {
