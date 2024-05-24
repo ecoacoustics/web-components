@@ -2,7 +2,6 @@ import { RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { computed, Signal } from "@lit-labs/preact-signals";
-import { hertzToMels } from "../helpers/audio/mel";
 
 export type Seconds = number;
 export type Hertz = number;
@@ -48,13 +47,13 @@ export class UnitConverter {
       frequency: scaleLinear(),
     };
 
-    const freqInterpolatorFactory = (low: number, high: number) => {
-      return (value: number) => {
-        const domainHigh = this.renderWindow.value.highFrequency;
-        const domainLow = this.renderWindow.value.lowFrequency;
-        return hertzToMels(value);
-      };
-    };
+    // const freqInterpolatorFactory = (low: number, high: number) => {
+    //   return (value: number) => {
+    //     const domainHigh = this.renderWindow.value.highFrequency;
+    //     const domainLow = this.renderWindow.value.lowFrequency;
+    //     return hertzToMels(value);
+    //   };
+    // };
 
     scales.temporal = scales.temporal
       .domain([this.renderWindow.value.startOffset, this.renderWindow.value.endOffset])

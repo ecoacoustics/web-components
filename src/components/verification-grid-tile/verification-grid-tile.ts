@@ -24,7 +24,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   public static styles = verificationGridTileStyles;
 
   @state()
-  public model: Verification | undefined;
+  public model!: Verification;
 
   @state()
   public selected = false;
@@ -41,14 +41,24 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
     }
   }
 
-  private handleClick() {
+  private handleClick(event: MouseEvent | TouchEvent) {
     this.selected = !this.selected;
+
+    this.dispatchEvent(
+      new CustomEvent("selected", {
+        bubbles: true,
+        detail: {
+          index: this.index,
+          shiftKey: event.shiftKey,
+        },
+      }),
+    );
   }
 
   public render() {
     return html`
-      <div class="tile-container ${classMap({ selected: this.selected })}">
-        <slot @click="${this.handleClick}"></slot>
+      <div @click="${this.handleClick}" class="tile-container ${classMap({ selected: this.selected })}">
+        <slot></slot>
       </div>
     `;
   }

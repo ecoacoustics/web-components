@@ -137,8 +137,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // label assuming at a fixed amount away from the largest theoretical axis label
     // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
     //       label, and get the number of digits that the proposed title will have to clear
-    const xTitleOffset = this.fontSize + this.labelPadding + this.labelOffset * 4;
-    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.labelOffset * 4;
+    const xTitleOffset = this.fontSize + this.labelPadding + this.labelOffset * 3;
+    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.labelOffset;
 
     const xLabel = (value: Seconds) => svg`<text
       text-anchor="end"
@@ -165,7 +165,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const xAxisTitle = svg`
       <text
         part="title x-title"
-        x="50%"
+        x="${canvasSize.width / 2}"
         y="${canvasSize.height + xTitleOffset}"
         text-anchor="middle"
         font-family="sans-serif"

@@ -64,7 +64,9 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
-  // stores where the component thinks the server has recalled / cached up to
+  private multiSelectHead: number | null = null;
+  private multiSelectTail: number | null = null;
+
   private serverCacheHead = this.gridSize;
   private serverCacheExhausted = false;
 
@@ -119,6 +121,29 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
+  private handleSubSelection(selectionEvent: CustomEvent<{ shiftKey: boolean; index: number }>): void {
+    if (selectionEvent.detail.shiftKey) {
+      this.multiSelectTail = selectionEvent.detail.index;
+    } else {
+      this.multiSelectHead = selectionEvent.detail.index;
+      this.multiSelectTail = null;
+    }
+
+    console.log("select from", this.multiSelectHead, "to", this.multiSelectTail);
+
+    if (this.multiSelectHead && this.multiSelectTail) {
+      this.createSubSelection(this.multiSelectHead, this.multiSelectTail);
+    }
+  }
+
+  private createSubSelection(start: number, end: number): void {
+    const gridItems = Array.from(this.gridTiles ?? []);
+
+    for (let i = start; i < end; i++) {
+      gridItems[i].selected = true;
+    }
+  }
+
   // this function can be used in a map function over the getPage results to convert
   // OE Verification data model
   private convertJsonToVerification(original: Record<string, any>): Verification {
@@ -152,25 +177,27 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private catchDecision(event: CustomEvent) {
-    const decision: string[] = event.detail.value;
+    const decision: boolean = event.detail.value;
+    const additionalTags: any[] = event.detail.additionalTags;
 
     // TODO: Fix this
     const gridTiles = Array.from(this.gridTiles ?? []);
     const subSelection = gridTiles.filter((tile) => tile.selected);
     const hasSubSelection = subSelection.length > 0;
 
-    const value: (Verification | undefined)[] = hasSubSelection
+    const value: Verification[] = hasSubSelection
       ? subSelection.map((tile) => tile.model)
       : gridTiles.map((tile) => tile.model);
 
-    this.dispatchEvent(
-      new CustomEvent("decision-made", {
-        detail: {
-          decision,
-          value,
-        },
-      }),
-    );
+    value.map((model: Verification) => {
+      // TODO: remove this
+      if (!model) return;
+
+      model.additionalTags = additionalTags;
+      model.confirmed = decision;
+    });
+
+    this.dispatchEvent(new CustomEvent("decision-made", { detail: value }));
 
     this.removeSubSelection();
 
@@ -260,7 +287,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const targetServerCacheHead = pagesToClientCache + (this.gridSize * PagesToCacheServerSide);
 
     this.cacheClient(pagesToClientCache);
-
     if (!this.serverCacheExhausted) {
       this.cacheServer(targetServerCacheHead);
     }
@@ -306,7 +332,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   public render() {
     return html`
-      <div class="verification-grid">${this.spectrogramElements}</div>
+      <div @selected="${this.handleSubSelection}" class="verification-grid">${this.spectrogramElements}</div>
       <slot @decision="${this.catchDecision}"></slot>
     `;
   }

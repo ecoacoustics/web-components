@@ -3,16 +3,16 @@ import { css } from "lit";
 export const verificationGridTileStyles = css`
   :host {
     --secondary-color: black;
+    --selection-width: 6px;
   }
 
   .tile-container {
-    margin: 2px;
+    margin: var(--selection-width);
   }
 
   .selected {
-    border: 2px solid var(--secondary-color);
+    border: var(--selection-width) solid var(--secondary-color);
     background-color: var(--secondary-color);
-    /* filter: opacity(0.8); */
     border-radius: 8px;
     margin: 0;
   }

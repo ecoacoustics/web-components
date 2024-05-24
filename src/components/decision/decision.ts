@@ -19,8 +19,11 @@ import { decisionStyles } from "./css/style";
 export class Decision extends AbstractComponent(LitElement) {
   public static styles = decisionStyles;
 
+  @property({ type: Boolean, reflect: true, converter: (x) => x !== "false" })
+  public value: boolean | undefined;
+
   @property({ type: String, reflect: true })
-  public value: string | undefined;
+  public tag: string | undefined;
 
   @property({ type: String, reflect: true })
   public shortcut: string | undefined;
@@ -39,8 +42,8 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   public disconnectedCallback(): void {
-    super.disconnectedCallback();
     document.removeEventListener("keyup", this.shortcutHandler);
+    super.disconnectedCallback();
   }
 
   private handleKeyDown(event: KeyboardEvent): void {

@@ -12,17 +12,22 @@
   <div id="grid-host">
     <oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="8">
       <template>
-        <oe-indicator>
-          <oe-spectrogram id="spectrogram" color-map="raven"></oe-spectrogram>
-        </oe-indicator>
-        <oe-media-controls for="spectrogram"></oe-media-controls>
+        <div style="position: relative;">
+          <oe-axes style="padding: 2rem;">
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram" color-map="raven"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+          <oe-media-controls class="media-controls" for="spectrogram"
+            style="position: absolute; top: 3rem; right: 3rem; border-radius: 9999em; z-index: 99; padding: 0px; zoom: 0.75;"></oe-media-controls>
+        </div>
       </template>
 
       <div>
         <h3 style="text-align: center;">Are all of these a Koala?</h3>
         <div style="display: flex; justify-content: center; align-items: center;">
-          <oe-decision value="verified" tag="koala" shortcut="J">Koala</oe-decision>
-          <oe-decision value="not-verified" tag="koala" shortcut="K">Not a Koala</oe-decision>
+          <oe-decision value="true" tag="koala" shortcut="J">Koala</oe-decision>
+          <oe-decision value="false" tag="koala" shortcut="K">Not a Koala</oe-decision>
         </div>
       </div>
     </oe-verification-grid>
@@ -31,6 +36,18 @@
   <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
   <button onclick="changeVerificationKey();">Create Key Error</button>
   <button onclick="changeGridSize();">Change verification grid host size</button>
+
+  <style>
+    .media-controls {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      border-radius: 9999em;
+      border-color: var(--primary-color);
+      padding: 0px;
+      zoom: 0.75;
+    }
+  </style>
 
   <script>
     const verificationGridElement = document.getElementById("verification-grid");
