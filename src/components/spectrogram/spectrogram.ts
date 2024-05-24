@@ -37,7 +37,7 @@ const defaultAudioModel = new AudioModel({
  * @property brightness - The brightness of the spectrogram
  * @property contrast - The contrast of the spectrogram
  *
- * @property scale - (stretch | natural | original) - The aspect ratio of the spectrogram
+ * @property scaling - (stretch | natural | original) - The aspect ratio of the spectrogram
  * stretch should scale without aspect ratio
  * natural should scale 1/1 until one of the dimensions overflows (probably set a max height of the natural fft window)
  * original should scale 1/1 with a max height of the spectrogram set to the fft window
@@ -51,8 +51,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: Boolean, reflect: true })
   public paused = true;
 
-  @property({ type: String, attribute: "scale", reflect: true })
-  public scale: SpectrogramCanvasScale = "stretch";
+  @property({ type: String, attribute: "scaling", reflect: true })
+  public scaling: SpectrogramCanvasScale = "stretch";
 
   // must be in the format startOffset, lowFrequency, endOffset, highFrequency
   @property({ type: String, attribute: "window", reflect: true })
@@ -183,7 +183,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.renderCanvasSize.value = newSize;
 
     if (this.audioHelper.canvasTransferred) {
-      this.audioHelper.resizeCanvas(newSize, this.scale);
+      this.audioHelper.resizeCanvas(newSize, this.scaling);
     } else {
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;

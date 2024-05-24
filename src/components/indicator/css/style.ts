@@ -19,7 +19,7 @@ export const indicatorStyles = css`
 
   #wrapped-element {
     position: relative;
-    display: flex;
+    /* display: flex; */
   }
 
   #indicator-svg {
@@ -35,5 +35,10 @@ export const indicatorStyles = css`
     stroke: currentColor;
     shape-rendering: crispEdges;
     will-change: transform;
+  }
+
+  ::part(seek-icon) {
+    stroke: gray;
+    fill: white;
   }
 `;

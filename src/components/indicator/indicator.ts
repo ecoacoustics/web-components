@@ -11,6 +11,7 @@ import { queryDeeplyAssignedElements } from "../../helpers/decorators";
  * A red line that displays the playback position on a spectrogram
  *
  * @csspart indicator-line - A css target to style the indicator line
+ * @csspart seek-circle - A css target to style the seek icon underneath the indicator line
  *
  * @slot - A spectrogram component to add an indicator to
  */
@@ -30,8 +31,8 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   private unitConverter!: UnitConverter;
 
   public handleSlotChange(): void {
-    this.offset = this.spectrogram.offset;
     this.unitConverter = this.spectrogram.unitConverters!;
+    this.offset = this.unitConverter.audioModel.value.originalAudioRecording?.startOffset ?? 0;
 
     this.spectrogram.currentTime.subscribe((elapsedTime: number) => {
       this.updateIndicator(elapsedTime);
@@ -51,7 +52,10 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
     return html`
       <div id="wrapped-element">
         <svg id="indicator-svg">
-          <line id="indicator-line" part="indicator-line" y1="0" y2="100%"></line>
+          <g id="indicator-line">
+            <line part="indicator-line" y1="0" y2="100%"></line>
+            <circle part="seek-icon" cy="100%" r="5" />
+          </g>
         </svg>
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </div>

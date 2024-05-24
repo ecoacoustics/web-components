@@ -1,14 +1,13 @@
-import { html, LitElement, svg, TemplateResult } from "lit";
+import { html, LitElement, svg } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { axesStyles } from "./css/style";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { Spectrogram } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Hertz, TemporalScale, FrequencyScale, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
+import { Hertz, TemporalScale, FrequencyScale, Seconds, UnitConverter, IScale } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElements } from "../../helpers/decorators";
-
-type Orientation = "x" | "y";
+import { Size } from "../../models/rendering";
 
 type Orientation = "x" | "y";
 
@@ -87,140 +86,153 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   // while the labelOffset is the distance between the label and the edge of the canvas
   private fontSize = 8; // px
   private labelPadding = 3; // px
-  private labelOffset = this.fontSize;
+  private labelOffset = 8; // px
 
-  // TODO: We should only extract the UC out of the spectrogram element
   private handleSlotchange(): void {
     this.unitConverter = this.spectrogram.unitConverters!;
   }
 
-  private createAxis(
-    orientation: Orientation,
-    values: Seconds[],
-    scale: TemporalScale | FrequencyScale,
-    formatter: (value: number) => string,
-    label: string,
-    canvasSize: Pixel,
-  ) {
-    const isYAxis = orientation === "y";
+  private createGridLines(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
+    // we don't want to show the first and last grid lines because it would
+    // draw a border around the element
+    const shouldShowGridLine = (i: number, values: any[]) => i > 0 && i < values.length - 1;
 
-    const xAxisStep = isYAxis ? 0 : 1;
-    const yAxisStep = isYAxis ? 1 : 0;
+    // TODO: don't recompute the x position twice
+    const xGridLine = (value: Seconds) =>
+      svg`<line
+        x1="${scale.temporal(value)}"
+        x2="${scale.temporal(value)}"
+        y1="0"
+        y2="${canvasSize.height}"
+      ></line>`;
 
-    const yOffset = isYAxis ? 0 : canvasSize;
+    const yGridLine = (value: Hertz) =>
+      svg`<line
+        x1="0"
+        x2="${canvasSize.width}"
+        y1="${scale.frequency(value)}"
+        y2="${scale.frequency(value)}"
+      ></line>`;
 
-    const x = (i: number) => scale(i) * xAxisStep;
-    const y = (i: number) => scale(i) * yAxisStep + yOffset;
+    const xAxisGridLines = svg`${xValues.map(
+      (value, i) => svg`${shouldShowGridLine(i, xValues) && xGridLine(value)}`,
+    )}`;
 
-    const labelX = isYAxis ? -(this.fontSize * 7) : canvasSize / 2;
-    const labelY = isYAxis ? canvasSize / 2 : canvasSize + this.fontSize * 5;
+    const yAxisGridLines = svg`${yValues.map(
+      (value, i) => svg`${shouldShowGridLine(i, yValues) && yGridLine(value)}`,
+    )}`;
 
-    const labelRotation = isYAxis ? 270 : 0;
-
-    // const gridLine = svg`
-    //   <line
-    //     class="grid-line"
-    //     ${orientation}1="0%"
-    //     ${orientation}="50%"
-    //     ${orientation}2="-100%"
-    //   ></line>
-    // `;
-
-    const gridLine = svg`
-      ${
-        isYAxis
-          ? svg`<line class="grid-line y-grid" part="grid y-grid" x1="0%" x2="100%"></line>`
-          : svg`<line class="grid-line x-grid" part="grid x-grid" y1="0%" y2="-100%"></line>`
-      }
+    return svg`
+      <g part="grid">
+        <g part="x-grid">${xAxisGridLines}</g>
+        <g part="y-grid">${yAxisGridLines}<g>
+      </g>
     `;
+  }
 
-    const tickLine = svg`
-      ${
-        isYAxis
-          ? svg`<line class="axis-tick y-tick" part="tick y-tick" x1="0" x2="${-this.fontSize}"></line>`
-          : svg`<line class="axis-tick x-tick" part="tick x-tick" y1="0" y2="${this.fontSize}"></line>`
-      }
-    `;
+  private createAxisLabels(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
+    // Because the y-axis labels can be a variable length, we can't just offset the y-axis title by a fixed amount
+    // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
+    // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
+    // label assuming at a fixed amount away from the largest theoretical axis label
+    // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
+    //       label, and get the number of digits that the proposed title will have to clear
+    const xTitleOffset = this.fontSize + this.labelPadding + this.labelOffset * 4;
+    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.labelOffset * 4;
 
-    const axisTitle = svg`
+    const xLabel = (value: Seconds) => svg`<text
+      text-anchor="end"
+      font-family="sans-serif"
+      x="${scale.temporal(value)}"
+      y="${canvasSize.height + this.fontSize + this.labelOffset}"
+    >
+      ${value.toFixed(1)}
+    </text>`;
+
+    const yLabel = (value: Hertz) =>
+      svg`<text
+        text-anchor="end"
+        font-family="sans-serif"
+        x="-${this.labelOffset}"
+        y="${scale.frequency(value)}"
+      >
+        ${value.toFixed(0)}
+      </text>`;
+
+    const xAxisLabels = svg`${xValues.map((value) => xLabel(value))}`;
+    const yAxisLabels = svg`${yValues.map((value) => yLabel(value))}`;
+
+    const xAxisTitle = svg`
       <text
-        class="axis-label axis-label-${orientation}"
-        part="legend ${orientation}-legend"
-        x="${isYAxis ? labelX : "50%"}"
-        y="${isYAxis ? "50%" : labelY}"
+        part="title x-title"
+        x="50%"
+        y="${canvasSize.height + xTitleOffset}"
         text-anchor="middle"
-        transform="rotate(${labelRotation}, ${labelX}, ${labelY})"
         font-family="sans-serif"
       >
-        ${label}
+        Time (seconds)
       </text>
     `;
 
-    // we do not want to show grid lines on the first and last label
-    // otherwise, there will be a border around the element
-    const shouldShowGridLine = (i: number) => i > 0 && i < values.length - 1;
+    const yAxisTitle = svg`
+      <text
+        part="title y-title"
+        x="-${yTitleOffset}"
+        y="${canvasSize.height / 2}"
+        transform="rotate(270, -${yTitleOffset}, ${canvasSize.height / 2})"
+        text-anchor="middle"
+        font-family="sans-serif"
+      >
+        Frequency (hz)
+      </text>
+    `;
 
     return svg`
-      <g>
-        ${values.map(
-          (value, i) => svg`
-          <g transform="translate(${x(value)}, ${y(value)})">
-            ${shouldShowGridLine(i) && gridLine}
-            ${tickLine}
-            <text
-              text-anchor="end"
-              font-family="sans-serif"
-              part="label ${orientation}-label"
-              transform="translate(0, ${this.fontSize + this.labelOffset})"
-            >
-              ${formatter(value)}
-            </text>
-          </g>
-        `,
-        )}
-      ${axisTitle}
-    </g>
-  `;
+      <g part="tick">
+        <g part="x-tick">
+          ${xAxisLabels}
+          ${xAxisTitle}
+        </g>
+
+        <g part="y-tick">
+          ${yAxisLabels}
+          ${yAxisTitle}
+        </g>
+      </g>
+    `;
   }
 
-  private xAxis() {
+  private createAxes() {
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const scale = this.unitConverter.renderWindowScale.value;
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    const gridLines = this.createGridLines(xValues, yValues, scale, canvasSize);
+    const labels = this.createAxisLabels(xValues, yValues, scale, canvasSize);
+
+    return html` <svg>${gridLines} ${labels}</svg> `;
+  }
+
+  private xValues() {
     const step = this.xStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.temporal);
 
-    const values = this.generateAxisValues(
+    return this.generateAxisValues(
       this.unitConverter.renderWindow.value.startOffset,
       this.unitConverter.renderWindow.value.endOffset,
       step,
       this.unitConverter.renderWindowScale.value.temporal,
     );
-
-    return this.createAxis(
-      "x",
-      values,
-      this.unitConverter.renderWindowScale.value.temporal,
-      (x) => x.toFixed(1),
-      this.xLabel,
-      // TODO: This is incorrect, but it works for the demo
-      this.unitConverter.canvasSize.value.height,
-    );
   }
 
-  private yAxis() {
+  private yValues() {
     const step = this.yStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.frequency);
 
-    const values = this.generateAxisValues(
+    return this.generateAxisValues(
       this.unitConverter.renderWindow.value.lowFrequency,
       this.unitConverter.renderWindow.value.highFrequency,
       step,
       this.unitConverter.renderWindowScale.value.frequency,
-    );
-
-    return this.createAxis(
-      "y",
-      values,
-      this.unitConverter.renderWindowScale.value.frequency,
-      (x) => x.toFixed(0),
-      this.yLabel,
-      this.unitConverter.canvasSize.value.height,
     );
   }
 
@@ -317,15 +329,9 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public render() {
-    let axes: TemplateResult<1> | undefined;
-
-    if (this.spectrogram) {
-      axes = html`<svg id="axes-svg">${this.showXAxis && this.xAxis()} ${this.showYAxis && this.yAxis()}</svg>`;
-    }
-
     return html`
       <div id="wrapped-element">
-        ${axes}
+        ${this.unitConverter && this.createAxes()}
         <slot @slotchange="${this.handleSlotchange}"></slot>
       </div>
     `;

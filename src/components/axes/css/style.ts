@@ -9,8 +9,6 @@ export const axesStyles = css`
 
   #wrapped-element {
     position: relative;
-    display: flex;
-    margin: 4rem;
   }
 
   svg {
@@ -34,9 +32,6 @@ export const axesStyles = css`
   }
 
   .grid-line {
-    stroke-width: 1;
-    stroke: currentColor;
-    opacity: 0.6;
   }
 
   /*
@@ -45,6 +40,8 @@ export const axesStyles = css`
   */
   ::part(grid) {
     color: lightblue;
+    stroke: currentColor;
+    stroke-width: 1;
     opacity: 0.6;
   }
 

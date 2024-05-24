@@ -9,18 +9,6 @@ import { VerificationGridTile } from "../../../playwright";
 
 type PageFetcher = (elapsedItems: number) => Promise<any[]>;
 
-// TODO: Move this to a different file
-interface CacheOptions {
-  level: "client" | "server";
-  pages: number;
-  maxAge?: number;
-}
-
-const defaultCacheOptions: CacheOptions = {
-  level: "client",
-  pages: 20,
-};
-
 /**
  * A verification grid component that can be used to validate and verify audio events
  *
@@ -75,9 +63,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
-  private cacheOptions = defaultCacheOptions;
-  // TODO: fix this
-  private cacheHead = this.gridSize;
+
+  // stores where the component thinks the server has recalled / cached up to
+  private serverCacheHead = this.gridSize;
+  private serverCacheExhausted = false;
 
   public disconnectedCallback(): void {
     this.intersectionObserver.disconnect();
@@ -212,17 +201,18 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
 
     let nextPage = await this.getPage(this.pagedItems);
-    nextPage = nextPage.map((item) => this.convertJsonToVerification(item));
 
     if (nextPage.length === 0) {
       this.spectrogramElements = this.noItemsTemplate();
     }
 
+    nextPage = nextPage.map((item) => this.convertJsonToVerification(item));
+
     nextPage.forEach((item: Verification, i: number) => {
       const target = elements[i];
 
       target.model = item;
-      target.order = i;
+      target.index = i;
     });
 
     // if we are on the last page, we hide the remaining elements
@@ -232,24 +222,47 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     this.cacheNext();
   }
 
-  private async cacheNext() {
-    const httpMethod = this.cacheOptions.level === "client" ? "GET" : "HEAD";
-    const target = this.pagedItems + this.cacheOptions.pages * this.gridSize;
+  private async cacheClient(elapsedItems: number) {
+    let page = await this.getPage(elapsedItems);
 
-    while (this.cacheHead < target) {
-      let page = await this.getPage(this.cacheHead);
-      page = page.map((item) => this.convertJsonToVerification(item));
+    if (page.length === 0) {
+      return;
+    }
+
+    page = page.map((item) => this.convertJsonToVerification(item));
+
+    await Promise.all(page.map((item) => fetch(item.url, { method: "GET" })));
+  }
+
+  private async cacheServer(targetElapsedItems: number) {
+    while (this.serverCacheHead < targetElapsedItems) {
+      let page = await this.getPage(this.serverCacheHead);
 
       if (page.length === 0) {
-        break;
+        this.serverCacheExhausted = true;
+        return;
       }
 
-      for (const item of page) {
-        const source = item.url;
-        await fetch(source, { method: httpMethod });
-      }
+      page = page.map((item) => this.convertJsonToVerification(item));
 
-      this.cacheHead += page.length;
+      Promise.all(page.map((item) => fetch(item.url, { method: "HEAD" })));
+
+      this.serverCacheHead += page.length;
+    }
+  }
+
+  private cacheNext() {
+    // start caching client side from the start of the next page
+    const pagesToClientCache = this.pagedItems + this.gridSize;
+
+    const PagesToCacheServerSide = 10;
+    // prettier-ignore
+    const targetServerCacheHead = pagesToClientCache + (this.gridSize * PagesToCacheServerSide);
+
+    this.cacheClient(pagesToClientCache);
+
+    if (!this.serverCacheExhausted) {
+      this.cacheServer(targetServerCacheHead);
     }
   }
 

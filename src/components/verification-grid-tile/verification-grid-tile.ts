@@ -30,7 +30,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   public selected = false;
 
   @state()
-  public order = 0;
+  public index = 0;
 
   @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
   private spectrogram: Spectrogram | undefined;
