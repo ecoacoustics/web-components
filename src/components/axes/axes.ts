@@ -6,7 +6,7 @@ import { Spectrogram } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Hertz, TemporalScale, FrequencyScale, Seconds, UnitConverter, IScale } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
-import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 
 type Orientation = "x" | "y";
@@ -76,7 +76,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
 
-  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
+  @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: Spectrogram;
 
   private unitConverter!: UnitConverter;

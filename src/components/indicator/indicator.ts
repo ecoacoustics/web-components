@@ -5,7 +5,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { indicatorStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
-import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 
 /**
  * A red line that displays the playback position on a spectrogram
@@ -22,7 +22,7 @@ export class Indicator extends SignalWatcher(AbstractComponent(LitElement)) {
   @query("#indicator-line")
   private indicatorLine!: SVGLineElement;
 
-  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
+  @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: Spectrogram;
 
   public xPos = 0;

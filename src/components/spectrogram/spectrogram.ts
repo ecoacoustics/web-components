@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, TemplateResult, html } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
@@ -42,21 +42,24 @@ const defaultAudioModel = new AudioModel({
  * natural should scale 1/1 until one of the dimensions overflows (probably set a max height of the natural fft window)
  * original should scale 1/1 with a max height of the spectrogram set to the fft window
  *
+ * @fires Loading
+ * @fires Finished
+ *
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
 export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = spectrogramStyles;
 
-  @property({ type: Boolean, reflect: true })
-  public paused = true;
-
-  @property({ type: String, attribute: "scaling", reflect: true })
-  public scaling: SpectrogramCanvasScale = "stretch";
-
   // must be in the format startOffset, lowFrequency, endOffset, highFrequency
   @property({ type: String, attribute: "window", reflect: true })
   public domRenderWindow?: string;
+
+  @property({ type: Boolean, reflect: true })
+  public paused = true;
+
+  @property({ type: String, reflect: true })
+  public scaling: SpectrogramCanvasScale = "stretch";
 
   @property({ type: Number, attribute: "window-size" })
   public windowSize = 512;
@@ -106,24 +109,25 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // TODO: remove this
   private doneFirstRender = false;
 
+  // todo: this should be part of a mixin
+  public disconnectedCallback(): void {
+    OeResizeObserver.instance.unobserve(this.canvas);
+    super.disconnectedCallback();
+  }
+
   public firstUpdated(): void {
     OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
+    this.resizeCanvas(this.canvas);
     this.renderSpectrogram();
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
-  }
-
-  // todo: this should be part of a mixin
-  public disconnectedCallback(): void {
-    OeResizeObserver.instance.unobserve(this);
-    super.disconnectedCallback();
   }
 
   public updated(change: PropertyValues<this>) {
     if (this.doneFirstRender) {
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
-        this.audioHelper.regenerateSpectrogram(this.spectrogramOptions());
+        this.regenerateSpectrogramOptions();
         this.useMelScale.value = this.melScale;
       } else if (this.invalidateSpectrogramSource(change)) {
         this.pause();
@@ -134,6 +138,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public renderSpectrogram(): void {
+    this.dispatchEvent(
+      new CustomEvent("loading", {
+        bubbles: true,
+      }),
+    );
+
     this.audioHelper
       .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
       .then((info: IAudioInformation) => {
@@ -144,10 +154,22 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
           sampleRate: info.sampleRate!,
           originalAudioRecording: originalRecording,
         });
+
+        this.dispatchEvent(
+          new CustomEvent("loaded", {
+            bubbles: true,
+          }),
+        );
       });
   }
 
   public regenerateSpectrogram(): void {
+    this.dispatchEvent(
+      new CustomEvent("loading", {
+        bubbles: true,
+      }),
+    );
+
     this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((info: IAudioInformation) => {
       const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
@@ -156,6 +178,22 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         sampleRate: info.sampleRate!,
         originalAudioRecording: originalRecording,
       });
+
+      this.dispatchEvent(
+        new CustomEvent("loaded", {
+          bubbles: true,
+        }),
+      );
+    });
+  }
+
+  public regenerateSpectrogramOptions(): void {
+    this.audioHelper.regenerateSpectrogram(this.spectrogramOptions()).then(() => {
+      this.dispatchEvent(
+        new CustomEvent("loaded", {
+          bubbles: true,
+        }),
+      );
     });
   }
 
@@ -182,14 +220,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     return { width, height };
   }
 
-  private naturalSize(originalSize: Size, target: ResizeObserverEntry): Size {
+  private naturalSize(originalSize: Size, target: HTMLElement): Size {
     // the natural size is where we scale the width and height up
     // until one of the dimensions overflows the targetEntry.contentRect
     // while keeping the aspect ratio
-    const scale = Math.min(
-      target.contentRect.width / originalSize.width,
-      target.contentRect.height / originalSize.height,
-    );
+    const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
 
     return {
       width: originalSize.width * scale,
@@ -197,16 +232,19 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     };
   }
 
-  private stretchSize(entry: ResizeObserverEntry): Size {
-    return { width: entry.contentRect.width, height: entry.contentRect.height };
+  private stretchSize(entry: HTMLElement): Size {
+    return { width: entry.clientWidth, height: entry.clientHeight };
   }
 
   private handleResize(entries: ResizeObserverEntry[]): void {
-    // TODO: make this better
-    const targetEntry = entries?.at(0);
+    if (entries.length === 0) return;
 
-    if (!targetEntry) return;
+    const targetEntry = entries[0].target as HTMLElement;
 
+    this.resizeCanvas(targetEntry);
+  }
+
+  private resizeCanvas(targetEntry: HTMLElement): void {
     let size: Size | undefined;
 
     if (this.scaling === "original") {
@@ -227,6 +265,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     } else {
       this.canvas.width = size.width;
       this.canvas.height = size.height;
+    }
+
+    if (this.scaling === "stretch") {
+      this.canvas.style.width = "100%";
+    } else {
+      this.canvas.style.width = "auto";
     }
 
     // TODO: remove
@@ -314,6 +358,24 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public render() {
+    // TODO: I'm sure there's a way to do this in the lit html template
+    // let mediaElement: TemplateResult<1> | undefined;
+    // if (this.src) {
+    //   mediaElement = html`
+    //     <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
+    //       <slot></slot>
+    //     </audio>
+    //   `;
+    // } else if (this.slotElements.length > 0) {
+    //   mediaElement = html`
+    //     <audio id="media-element" @ended="${this.pause}" preload crossorigin>
+    //       <slot></slot>
+    //     </audio>
+    //   `;
+    // } else {
+    //   mediaElement = html`<audio id="media-element" @ended="${this.pause}" preload crossorigin></audio>`;
+    // }
+
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>

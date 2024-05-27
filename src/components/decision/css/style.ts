@@ -11,6 +11,11 @@ export const decisionStyles = css`
     position: relative;
   }
 
+  .disabled {
+    filter: grayscale(100%);
+    opacity: 0.5;
+  }
+
   ::part(decision-button) {
     padding: 0.5rem;
     border: solid 1px var(--primary-color);

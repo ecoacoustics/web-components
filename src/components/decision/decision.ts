@@ -2,6 +2,7 @@ import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
+import { classMap } from "lit/directives/class-map.js";
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -31,6 +32,9 @@ export class Decision extends AbstractComponent(LitElement) {
   @property({ attribute: "additional-tags", type: String, reflect: true })
   public additionalTags: string | undefined;
 
+  @property({ attribute: "disabled", type: Boolean, reflect: true })
+  public disabled: boolean | undefined;
+
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
@@ -47,7 +51,7 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
-    if (this.shortcut === undefined) {
+    if (this.disabled || this.shortcut === undefined) {
       return;
     }
 
@@ -78,12 +82,14 @@ export class Decision extends AbstractComponent(LitElement) {
     return html`
       <button
         id="decision-button"
-        @click="${this.emitDecision}"
+        class="${classMap({ disabled: !!this.disabled })}"
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
+        ?disabled=${this.disabled}
+        @click="${this.emitDecision}"
       >
         <slot></slot>
-        <kbd>(${this.shortcut})</kbd>
+        (<kbd>${this.shortcut}</kbd>)
       </button>
     `;
   }

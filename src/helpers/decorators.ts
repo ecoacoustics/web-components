@@ -9,11 +9,12 @@ export interface QueryDeeplyAssignedElementsOptions {
  * @example
  * ```ts
  * @queryDeeplyAssignedElements("#element-id", "slot-name")
- * public element: HTMLElement;
+ * public element: Element;
  * ```
  */
-export function queryDeeplyAssignedElements(options: QueryDeeplyAssignedElementsOptions) {
-  return (target: any, propertyKey: string) => {
+export function queryDeeplyAssignedElement(options: QueryDeeplyAssignedElementsOptions) {
+  // TODO: see if we can abstract away common functionality of these decorators
+  return (target: unknown, propertyKey: string) => {
     const descriptor = {
       get(this: LitElement) {
         const slotSelector = `slot${options.slot ?? ""}`;
@@ -36,6 +37,50 @@ export function queryDeeplyAssignedElements(options: QueryDeeplyAssignedElements
               return queriedElement;
             }
           }
+        }
+
+        return null;
+      },
+    };
+
+    Object.defineProperty(target, propertyKey, descriptor);
+  };
+}
+
+// TODO: should probably return NodeListOf<Element> instead of Element[] to keep
+// consistent with Lit @queryAll and querySelectorAll
+/**
+ * @example
+ * ```ts
+ * @queryDeeplyAssignedElements(".element-id", "slot-name")
+ * public elements: Element[];
+ * ```
+ */
+export function queryAllDeeplyAssignedElements(options: QueryDeeplyAssignedElementsOptions) {
+  return (target: unknown, propertyKey: string) => {
+    const descriptor = {
+      get(this: LitElement) {
+        const slotSelector = `slot${options.slot ?? ""}`;
+        const slotElements = this.renderRoot?.querySelectorAll<HTMLSlotElement>(slotSelector);
+        const returnedElements: Element[] = [];
+
+        for (const slot of slotElements) {
+          const assignedElements = slot.assignedElements();
+
+          for (const assignedElement of assignedElements) {
+            if (assignedElement.matches(options.selector)) {
+              returnedElements.push(assignedElement);
+            }
+
+            const queriedElements = assignedElement.querySelectorAll(options.selector);
+            if (queriedElements.length > 0) {
+              returnedElements.push(...queriedElements);
+            }
+          }
+        }
+
+        if (returnedElements.length > 0) {
+          return returnedElements;
         }
 
         return null;

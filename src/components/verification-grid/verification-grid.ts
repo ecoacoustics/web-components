@@ -3,9 +3,10 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, PropertyValueMap, TemplateResult } from "lit";
 import { verificationGridStyles } from "./css/style";
 import { Spectrogram } from "../spectrogram/spectrogram";
-import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Verification } from "../../models/verification";
-import { VerificationGridTile } from "../../../playwright";
+import { VerificationGridTile } from "../verification-grid-tile/verification-grid-tile";
+import { Decision } from "../decision/decision";
 
 type PageFetcher = (elapsedItems: number) => Promise<any[]>;
 
@@ -39,7 +40,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // we use pagedItems instead of page here so that if the grid size changes
   // half way through, we can continue verifying from where it left off
   @property({ attribute: "paged-items", type: Number, reflect: true })
-  private pagedItems = 0;
+  public pagedItems = 0;
 
   @property({ type: String })
   public src: string | undefined;
@@ -52,14 +53,24 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @property({ attribute: "get-page", type: String })
   public getPage!: PageFetcher;
 
-  @queryDeeplyAssignedElements({ selector: "template" })
+  @queryDeeplyAssignedElement({ selector: "template" })
   public gridItemTemplate!: HTMLTemplateElement;
+
+  @queryAllDeeplyAssignedElements({ selector: "oe-decision" })
+  public decisionElements!: Decision[];
 
   @queryAll("oe-verification-grid-tile")
   public gridTiles: NodeListOf<VerificationGridTile> | undefined;
 
   @state()
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
+
+  @state()
+  public loading = false;
+
+  public decisions: Verification[] = [];
+  private spectrogramsLoaded = 0;
+  private hiddenTiles = 0;
 
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
@@ -199,6 +210,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     this.dispatchEvent(new CustomEvent("decision-made", { detail: value }));
 
+    this.decisions.push(...value);
+
     this.removeSubSelection();
 
     this.pagedItems += this.gridSize;
@@ -218,8 +231,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private async renderVirtualPage(): Promise<void> {
-    this.removeSubSelection();
-
     const elements = this.gridTiles;
 
     //? HN asking AT: `!elements?.length` or `elements === undefined || elements.length === 0`
@@ -244,9 +255,23 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     // if we are on the last page, we hide the remaining elements
     const pagedDelta = elements.length - nextPage.length;
-    this.gridSize -= pagedDelta;
+    if (pagedDelta > 0) {
+      this.hideGridItems(pagedDelta);
+    } else {
+      this.hiddenTiles = 0;
+    }
 
     this.cacheNext();
+  }
+
+  private hideGridItems(numberOfTiles: number): void {
+    const elementsToHide = Array.from(this.gridTiles ?? []).slice(-numberOfTiles);
+
+    elementsToHide.forEach((element) => {
+      element.style.display = "none";
+    });
+
+    this.hiddenTiles = numberOfTiles;
   }
 
   private async cacheClient(elapsedItems: number) {
@@ -292,6 +317,34 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
+  private handleSpectrogramLoaded(): void {
+    this.spectrogramsLoaded++;
+
+    if (this.spectrogramsLoaded >= this.gridSize - this.hiddenTiles) {
+      this.loading = false;
+      this.spectrogramsLoaded = 0;
+
+      this.decisionElements.forEach((element) => {
+        element.disabled = false;
+      });
+    } else {
+      this.loading = true;
+    }
+  }
+
+  private handleLoading(): void {
+    if (!this.loading) {
+      this.spectrogramsLoaded = 0;
+
+      console.log("loading");
+      this.decisionElements.forEach((element) => {
+        element.disabled = true;
+      });
+    }
+
+    this.loading = true;
+  }
+
   private async createSpectrogramElements() {
     let page = await this.getPage(this.pagedItems);
     page = page.map((item) => this.convertJsonToVerification(item));
@@ -301,18 +354,22 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
 
     // TODO: we might be able to do partial rendering or removal if some of the
+    // TODO: we might be able to set the OE verification model when creating the elements
     // needed spectrogram elements already exist
-    this.spectrogramElements = page.map((item) => {
+    this.spectrogramElements = page.map(() => {
       // TODO: see if we can get rid of the type override here
       const template = this.gridItemTemplate.content.cloneNode(true) as HTMLElement;
       const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
 
       if (spectrogram) {
-        spectrogram.src = item.url;
+        spectrogram.addEventListener("loading", () => this.handleLoading());
+        spectrogram.addEventListener("loaded", () => this.handleSpectrogramLoaded());
       }
 
       return this.spectrogramTemplate(template);
     });
+
+    this.requestUpdate();
   }
 
   private spectrogramTemplate(spectrogram: HTMLElement) {

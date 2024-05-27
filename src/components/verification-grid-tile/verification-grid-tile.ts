@@ -2,7 +2,7 @@ import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement } from "lit";
 import { Spectrogram } from "../../../playwright";
-import { queryDeeplyAssignedElements } from "../../helpers/decorators";
+import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
 import { verificationGridTileStyles } from "./css/style";
 import { Verification } from "../../models/verification";
@@ -32,7 +32,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   @state()
   public index = 0;
 
-  @queryDeeplyAssignedElements({ selector: "oe-spectrogram" })
+  @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram: Spectrogram | undefined;
 
   protected willUpdate(): void {
@@ -42,6 +42,13 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   }
 
   private handleClick(event: MouseEvent | TouchEvent) {
+    const ignoreTargets = ["oe-media-controls", "button"];
+    const targetTag = (event.target as HTMLElement).tagName;
+
+    if (ignoreTargets.includes(targetTag.toLocaleLowerCase())) {
+      return;
+    }
+
     this.selected = !this.selected;
 
     this.dispatchEvent(
