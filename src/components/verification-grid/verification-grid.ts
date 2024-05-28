@@ -9,6 +9,8 @@ import { VerificationGridTile } from "../verification-grid-tile/verification-gri
 import { Decision } from "../decision/decision";
 
 type PageFetcher = (elapsedItems: number) => Promise<any[]>;
+type SelectionObserverType = "desktop" | "tablet";
+type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: number }>;
 
 /**
  * A verification grid component that can be used to validate and verify audio events
@@ -24,6 +26,7 @@ type PageFetcher = (elapsedItems: number) => Promise<any[]>;
  * @property get-page - A callback function that returns a page from a page number
  * @property grid-size - The number of items to display in a single grid
  * @property key - An object key to use as the audio source
+ * @property selection-behavior {desktop | tablet}
  *
  * @csspart sub-selection-checkbox - A css target for the sub-selection checkbox
  *
@@ -41,6 +44,9 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // half way through, we can continue verifying from where it left off
   @property({ attribute: "paged-items", type: Number, reflect: true })
   public pagedItems = 0;
+
+  @property({ attribute: "selection-behavior", type: String, reflect: true })
+  public selectionBehavior: SelectionObserverType = "desktop";
 
   @property({ type: String })
   public src: string | undefined;
@@ -80,29 +86,21 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private serverCacheHead = this.gridSize;
   private serverCacheExhausted = false;
+  private highlighting = false;
+  private dragStartPos = { x: 0, y: 0 };
 
   public disconnectedCallback(): void {
     this.intersectionObserver.disconnect();
   }
 
-  protected updated(): void {
+  protected updated(change: PropertyValueMap<this>): void {
+    const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
     const elementsToObserve = this.gridTiles;
 
-    if (!elementsToObserve) {
-      throw new Error("Fatal error: No grid tiles found");
-    }
-
-    for (const element of elementsToObserve) {
-      this.intersectionObserver.observe(element);
-    }
-  }
-
-  protected willUpdate(changedProperties: PropertyValueMap<this>): void {
-    const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
     const sourceInvalidationKeys: (keyof this)[] = ["getPage", "src"];
 
     // TODO: figure out if there is a better way to do this invalidation
-    if (sourceInvalidationKeys.some((key) => changedProperties.has(key))) {
+    if (sourceInvalidationKeys.some((key) => change.has(key))) {
       if (!this.getPage) {
         if (!this.src) {
           throw new Error("getPage or src is required for verification-grid");
@@ -118,9 +116,16 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       }
     }
 
-    if (reRenderKeys.some((key) => changedProperties.has(key))) {
+    if (!elementsToObserve) {
+      throw new Error("Fatal error: No grid tiles found");
+    }
+
+    for (const element of elementsToObserve) {
+      this.intersectionObserver.observe(element);
+    }
+
+    if (reRenderKeys.some((key) => change.has(key))) {
       this.createSpectrogramElements();
-      this.cacheNext();
     }
   }
 
@@ -132,7 +137,38 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
-  private handleSubSelection(selectionEvent: CustomEvent<{ shiftKey: boolean; index: number }>): void {
+  private handleSubSelection(selectionEvent: SelectionEvent): void {
+    switch (this.selectionBehavior) {
+      case "desktop": {
+        this.handleDesktopSelection(selectionEvent);
+        break;
+      }
+      case "tablet": {
+        this.handleTabletSelection(selectionEvent);
+        break;
+      }
+      default: {
+        console.error(`could not find selection behavior ${this.selectionBehavior}`);
+        this.handleDesktopSelection(selectionEvent);
+        break;
+      }
+    }
+
+    // TODO: remove
+    this.requestUpdate();
+  }
+
+  private handleDesktopSelection(selectionEvent: SelectionEvent): void {
+    if (!selectionEvent.detail.ctrlKey && !selectionEvent.detail.shiftKey) {
+      this.createSingleSelection(selectionEvent.detail.index);
+      this.multiSelectHead = selectionEvent.detail.index;
+      this.multiSelectTail = null;
+
+      // TODO: remove
+      this.requestUpdate();
+      return;
+    }
+
     if (selectionEvent.detail.shiftKey) {
       this.multiSelectTail = selectionEvent.detail.index;
     } else {
@@ -147,6 +183,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
+  private handleTabletSelection(selectionEvent: SelectionEvent): void {
+    this.createSubSelection(selectionEvent.detail.index, selectionEvent.detail.index + 1);
+  }
+
   private createSubSelection(start: number, end: number): void {
     const gridItems = Array.from(this.gridTiles ?? []);
 
@@ -155,21 +195,32 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
+  private createSingleSelection(index: number): void {
+    const gridItems = Array.from(this.gridTiles ?? []);
+
+    for (let i = 0; i < gridItems.length; i++) {
+      if (i === index) {
+        gridItems[i].selected = true;
+        continue;
+      }
+
+      gridItems[i].selected = false;
+    }
+  }
+
   // this function can be used in a map function over the getPage results to convert
   // OE Verification data model
   private convertJsonToVerification(original: Record<string, any>): Verification {
-    const possibleSrcKeys = ["src", "url"];
-    const possibleTagKeys = ["tag", "tags"];
+    const possibleSrcKeys = ["src", "url", "AudioLink"];
     const possibleSubjectKeys = ["subject", "context"];
 
     this.key ??= possibleSrcKeys.find((key) => key in original) ?? "";
-    const tag = possibleTagKeys.find((key) => key in original) ?? "";
     const subject = possibleSubjectKeys.find((key) => key in original) ?? "";
 
     return new Verification({
       subject: original[subject],
       url: original[this.key],
-      tag: { id: 0, text: original[tag] },
+      tag: null,
       confirmed: false,
       additionalTags: [],
     });
@@ -187,8 +238,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     };
   }
 
+  // TODO: add stricter typing here
   private catchDecision(event: CustomEvent) {
     const decision: boolean = event.detail.value;
+    const tag: any = event.detail.tag;
     const additionalTags: any[] = event.detail.additionalTags;
 
     // TODO: Fix this
@@ -206,6 +259,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
       model.additionalTags = additionalTags;
       model.confirmed = decision;
+      model.tag = { id: undefined, text: tag };
     });
 
     this.dispatchEvent(new CustomEvent("decision-made", { detail: value }));
@@ -265,6 +319,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   }
 
   private hideGridItems(numberOfTiles: number): void {
+    // TODO: improve this
     const elementsToHide = Array.from(this.gridTiles ?? []).slice(-numberOfTiles);
 
     elementsToHide.forEach((element) => {
@@ -345,18 +400,15 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     this.loading = true;
   }
 
-  private async createSpectrogramElements() {
-    let page = await this.getPage(this.pagedItems);
-    page = page.map((item) => this.convertJsonToVerification(item));
-
-    if (page.length === 0) {
-      this.spectrogramElements = this.noItemsTemplate();
-    }
+  private createSpectrogramElements() {
+    // we use a buffer so that the entire component doesn't re-render
+    // every time that we add a spectrogram element
+    const verificationGridBuffer = [];
 
     // TODO: we might be able to do partial rendering or removal if some of the
     // TODO: we might be able to set the OE verification model when creating the elements
     // needed spectrogram elements already exist
-    this.spectrogramElements = page.map(() => {
+    for (let i = 0; i < this.gridSize; i++) {
       // TODO: see if we can get rid of the type override here
       const template = this.gridItemTemplate.content.cloneNode(true) as HTMLElement;
       const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
@@ -366,17 +418,122 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         spectrogram.addEventListener("loaded", () => this.handleSpectrogramLoaded());
       }
 
-      return this.spectrogramTemplate(template);
-    });
+      verificationGridBuffer.push(html`<oe-verification-grid-tile>${template}</oe-verification-grid-tile>`);
+    }
 
-    this.requestUpdate();
+    this.spectrogramElements = verificationGridBuffer;
   }
 
-  private spectrogramTemplate(spectrogram: HTMLElement) {
-    return html` <oe-verification-grid-tile> ${spectrogram} </oe-verification-grid-tile> `;
+  // TODO: improve this function
+  private decisionPrompt(): string {
+    const tags = this.decisionElements?.map((item: Decision) => item.tag);
+    const uniqueTags = Array.from(new Set(tags));
+
+    // TODO: finish
+    const tiles = Array.from(this.gridTiles ?? []);
+    const numberOfSelectedItems = tiles.filter((item: VerificationGridTile) => item.selected);
+    const subSelectionText = numberOfSelectedItems.length === 0 ? "all" : `all ${numberOfSelectedItems.length}`;
+
+    return `Are ${subSelectionText} of these a ${uniqueTags.join(" or ")}?`;
   }
 
-  private noItemsTemplate() {
+  private doneRenderBoxInit = false;
+  private renderHighlightBox(event: MouseEvent) {
+    if (event.button === 0) {
+      this.highlighting = true;
+
+      const element = this.shadowRoot!.getElementById("highlight-box");
+      if (!element) {
+        return;
+      }
+
+      if (!this.doneRenderBoxInit) {
+        const intersectionObserver = new IntersectionObserver((event) => this.highlightIntersectionHandler(event));
+        intersectionObserver.observe(element);
+        this.doneRenderBoxInit = true;
+      }
+
+      element.style.display = "block";
+      element.style.left = `${event.clientX}px`;
+      element.style.top = `${event.clientY}px`;
+
+      this.dragStartPos = { x: event.clientX, y: event.clientY };
+    }
+  }
+
+  private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
+    console.log("intersecting", entries);
+  }
+
+  private resizeHighlightBox(event: MouseEvent) {
+    if (!this.highlighting) {
+      return;
+    }
+
+    const element = this.shadowRoot!.getElementById("highlight-box");
+    if (!element) {
+      return;
+    }
+
+    const { clientX, clientY } = event;
+
+    const highlightWidth = clientX - this.dragStartPos.x;
+    const highlightHeight = clientY - this.dragStartPos.y;
+
+    element.style.width = `${Math.abs(highlightWidth)}px`;
+    element.style.height = `${Math.abs(highlightHeight)}px`;
+
+    if (highlightWidth < 0) {
+      element.style.left = `${clientX}px`;
+    }
+
+    if (highlightHeight < 0) {
+      element.style.top = `${clientY}px`;
+    }
+  }
+
+  private hideHighlightBox(): void {
+    this.highlighting = false;
+    const element = this.shadowRoot!.getElementById("highlight-box");
+    if (!element) {
+      return;
+    }
+
+    console.log("stop highlight");
+
+    // TODO: make this better
+    element.style.width = "0px";
+    element.style.height = "0px";
+    element.style.top = "0px";
+    element.style.left = "0px";
+    element.style.display = "none";
+  }
+
+  private highlightBoxTemplate(): TemplateResult<1> {
+    return html`<div
+      id="highlight-box"
+      @mouseup="${this.hideHighlightBox}"
+      @mousemove="${this.resizeHighlightBox}"
+    ></div>`;
+  }
+
+  private shortcutLegendTemplate(): TemplateResult<1> {
+    return html`
+      <div class="shortcut-legend">
+        <p class="shortcut-legend-title">Keyboard Shortcuts</p>
+        ${this.decisionElements?.map((element: Decision) => {
+          return html`
+            <span class="shortcut-legend-item">
+              <span class="shortcut-legend-item-label">${element.innerText}</span>
+              <kbd class="shortcut-legend-value">${element.shortcut}</kbd>
+            </span>
+          `;
+        })}
+      </div>
+    `;
+  }
+
+  private noItemsTemplate(): TemplateResult<1> {
     return html`
       <div class="no-items-message">
         <p>
@@ -389,8 +546,20 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   public render() {
     return html`
-      <div @selected="${this.handleSubSelection}" class="verification-grid">${this.spectrogramElements}</div>
-      <slot @decision="${this.catchDecision}"></slot>
+      <div
+        @selected="${this.handleSubSelection}"
+        @mousedown="${this.renderHighlightBox}"
+        @mouseup="${this.hideHighlightBox}"
+        @mousemove="${this.resizeHighlightBox}"
+        class="verification-grid"
+      >
+        ${this.spectrogramElements}
+      </div>
+      <h2 class="verification-controls-title">${this.decisionPrompt()}</h2>
+      <div class="verification-controls">
+        <slot @decision="${this.catchDecision}"></slot>
+      </div>
+      ${this.shortcutLegendTemplate()} ${this.highlightBoxTemplate()}
     `;
   }
 }

@@ -24,6 +24,10 @@ export const axesStyles = css`
 
     text {
       stroke: none;
+      font-size: 0.8rem;
+      stroke: darkgray;
+      /* TODO: Find out why we have to do this */
+      stroke-width: 0.5;
     }
 
     g {

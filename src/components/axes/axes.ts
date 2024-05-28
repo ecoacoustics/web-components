@@ -62,7 +62,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public xLabel = "Time (seconds)";
 
   @property({ attribute: "y-label", type: String, reflect: true })
-  public yLabel = "Frequency (Hertz)";
+  public yLabel = "Frequency (KHz)";
 
   @property({ attribute: "x-axis", converter: booleanConverter })
   public showXAxis = true;
@@ -84,8 +84,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   // font size is the size of the font
   // while label padding is the minimum additional distance between the labels
   // while the labelOffset is the distance between the label and the edge of the canvas
-  private fontSize = 8; // px
-  private labelPadding = 3; // px
+  private fontSize = 6; // px
+  private labelPadding = 4; // px
   private tickSize = 8; // px
 
   private handleSlotchange(): void {
@@ -138,7 +138,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
     //       label, and get the number of digits that the proposed title will have to clear
     const xTitleOffset = this.fontSize + this.labelPadding + this.tickSize * 3;
-    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.fontSize + this.tickSize;
+    const yTitleOffset = Math.max(...yValues).toString().length * this.fontSize + this.tickSize;
 
     const xLabel = (value: Seconds) => {
       const xPos = scale.temporal(value) + value.toFixed(1).length * (this.fontSize / 2);
@@ -179,7 +179,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           x="${xPos}"
           y="${yPos}"
         >
-          ${value.toFixed(0)}
+          ${(value / 1_000).toFixed(1)}
         </text>
       </g>`;
     };
@@ -195,7 +195,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         text-anchor="middle"
         font-family="sans-serif"
       >
-        Time (seconds)
+        ${this.xLabel}
       </text>
     `;
 
@@ -208,7 +208,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         text-anchor="middle"
         font-family="sans-serif"
       >
-        Frequency (hz)
+        ${this.yLabel}
       </text>
     `;
 
@@ -239,7 +239,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return html` <svg>${gridLines} ${labels}</svg> `;
   }
 
-  private xValues() {
+  private xValues(): Seconds[] {
     const step = this.xStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.temporal);
 
     return this.generateAxisValues(
@@ -250,7 +250,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     );
   }
 
-  private yValues() {
+  private yValues(): Hertz[] {
     const step = this.yStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.frequency);
 
     return this.generateAxisValues(

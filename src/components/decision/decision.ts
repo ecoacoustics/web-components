@@ -8,7 +8,7 @@ import { classMap } from "lit/directives/class-map.js";
  * A decision that can be made either with keyboard shortcuts or by clicking
  * on the element
  *
- * @property value - The value of the decision
+ * @property verified - The value of the decision
  * @property shortcut - The keyboard shortcut to trigger the decision
  * @property additional-tags - Additional tags to add to the decision
  *
@@ -21,7 +21,7 @@ export class Decision extends AbstractComponent(LitElement) {
   public static styles = decisionStyles;
 
   @property({ type: Boolean, reflect: true, converter: (x) => x !== "false" })
-  public value: boolean | undefined;
+  public verified: boolean | undefined;
 
   @property({ type: String, reflect: true })
   public tag: string | undefined;
@@ -51,7 +51,7 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
-    if (this.disabled || this.shortcut === undefined) {
+    if (this.shortcut === undefined) {
       return;
     }
 
@@ -61,6 +61,12 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   private emitDecision(): void {
+    if (this.disabled) {
+      return;
+    }
+
+    const additionalTags = this.additionalTags?.split(",").map((tag) => tag.trim());
+
     // I focus on the button clicked with keyboard shortcuts
     // so that the user gets some visual feedback on what button they clicked
     // it also mimics the user clicking on the button where it would be focused
@@ -70,8 +76,9 @@ export class Decision extends AbstractComponent(LitElement) {
     this.dispatchEvent(
       new CustomEvent("decision", {
         detail: {
-          value: this.value,
-          additionalTags: this.additionalTags,
+          value: this.verified,
+          tag: this.tag,
+          additionalTags,
         },
         bubbles: true,
       }),

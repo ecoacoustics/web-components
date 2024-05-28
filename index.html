@@ -9,27 +9,22 @@
 </head>
 
 <body>
-  <!-- <div id="grid-host">
-    <oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="8">
+  <div id="grid-host">
+    <oe-verification-grid id="verification-grid" src="/grid-items.json" grid-size="8" selection-behavior="desktop">
       <template>
         <div style="position: relative;">
-          <oe-axes style="padding: 2rem;">
+          <oe-axes style="padding-left: 3rem; padding-bottom: 1.5rem;">
             <oe-indicator>
               <oe-spectrogram id="spectrogram" color-map="raven"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
           <oe-media-controls class="media-controls" for="spectrogram"
-            style="position: absolute; top: 3rem; right: 3rem; border-radius: 9999em; z-index: 99; padding: 0px; zoom: 0.75;"></oe-media-controls>
+            style="position: absolute; background-color: #f8f2f6; top: 1rem; right: 1rem; border-radius: 9999px; z-index: 99; padding: 0px; zoom: 0.65;"></oe-media-controls>
         </div>
       </template>
 
-      <div>
-        <h3 style="text-align: center;">Are all of these a Koala?</h3>
-        <div style="display: flex; justify-content: center; align-items: center;">
-          <oe-decision value="true" tag="koala" shortcut="J">Koala</oe-decision>
-          <oe-decision value="false" tag="koala" shortcut="K">Not a Koala</oe-decision>
-        </div>
-      </div>
+      <oe-decision verified="true" tag="koala" additional-tags="bird, cow" shortcut="J">Koala</oe-decision>
+      <oe-decision verified="false" tag="koala" shortcut="K">Not a Koala</oe-decision>
     </oe-verification-grid>
   </div>
 
@@ -85,12 +80,12 @@
     })
   </script>
 
-  <hr> -->
-
+  <hr>
+  <!-- 
   <oe-axes style="padding: 6rem;">
     <oe-indicator>
       <oe-spectrogram id="playing-spectrogram" class="large" src="/example.flac" window-size="1024" color-map="audacity"
-        scaling="stretch"></oe-spectrogram>
+        scaling="natural"></oe-spectrogram>
     </oe-indicator>
   </oe-axes>
   <oe-media-controls for="playing-spectrogram"></oe-media-controls>
@@ -238,7 +233,7 @@
     .fit-height {
       height: 100%;
     }
-  </style>
+  </style> -->
 </body>
 
 </html>

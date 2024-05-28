@@ -70,7 +70,7 @@ export class AudioHelper {
   }
 
   public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
-    //console.log("audio: change source");
+    console.log("audio: change source");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }

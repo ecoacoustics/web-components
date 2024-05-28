@@ -109,6 +109,17 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // TODO: remove this
   private doneFirstRender = false;
 
+  // due to fingerprinting protection in Firefox, querying the currentTime from the HTMLAudioElement
+  // will not return an accurate representation of the time
+  // therefore, we keep track of the time ourselves so that if we see the same value multiple times
+  // we can fill in the blanks and move the indicator
+  private lastHighResTime: DOMHighResTimeStamp = 0;
+  private lastObservedTime = 0;
+
+  public hasSource(): boolean {
+    return !!this.src || this.slotElements.length > 0;
+  }
+
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
     OeResizeObserver.instance.unobserve(this.canvas);
@@ -118,7 +129,10 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public firstUpdated(): void {
     OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.resizeCanvas(this.canvas);
-    this.renderSpectrogram();
+
+    if (this.hasSource()) {
+      this.renderSpectrogram();
+    }
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
   }
@@ -134,15 +148,23 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.currentTime.value = 0;
         this.regenerateSpectrogram();
       }
+    } else if (this.invalidateSpectrogramSource(change)) {
+      if (this.hasSource()) {
+        this.renderSpectrogram();
+      }
     }
   }
 
   public renderSpectrogram(): void {
+    console.log("rendering spectrogram");
     this.dispatchEvent(
       new CustomEvent("loading", {
         bubbles: true,
       }),
     );
+
+    // TODO: find out if this is the best place for this
+    this.lastObservedTime = 0;
 
     this.audioHelper
       .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
@@ -160,10 +182,13 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
             bubbles: true,
           }),
         );
+
+        this.doneFirstRender = true;
       });
   }
 
   public regenerateSpectrogram(): void {
+    console.log("regenerating spectrogram");
     this.dispatchEvent(
       new CustomEvent("loading", {
         bubbles: true,
@@ -244,6 +269,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.resizeCanvas(targetEntry);
   }
 
+  // TODO: refactor this procedure
   private resizeCanvas(targetEntry: HTMLElement): void {
     let size: Size | undefined;
 
@@ -272,9 +298,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     } else {
       this.canvas.style.width = "auto";
     }
-
-    // TODO: remove
-    this.doneFirstRender = true;
   }
 
   /**
@@ -300,13 +323,30 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
     const invalidationKeys: (keyof Spectrogram)[] = ["src", "slotElements"];
-
     return invalidationKeys.some((key) => change.has(key));
   }
 
   private updateCurrentTime(): void {
     if (!this.paused) {
-      this.currentTime.value = this.mediaElement.currentTime;
+      let exactTimeDelta = 0;
+
+      const mediaElementTime = this.mediaElement.currentTime;
+
+      const highResTime = performance.now();
+      if (mediaElementTime !== 0 && mediaElementTime === this.lastObservedTime) {
+        const exactCurrentTime = (highResTime - this.lastHighResTime) / 10_000;
+
+        exactTimeDelta = exactCurrentTime - this.lastObservedTime;
+
+        if (exactTimeDelta < 0) {
+          exactTimeDelta = 0;
+        }
+      } else {
+        this.lastHighResTime = highResTime;
+      }
+
+      this.lastObservedTime = mediaElementTime;
+      this.currentTime.value = mediaElementTime + exactTimeDelta;
       requestAnimationFrame(() => this.updateCurrentTime());
     }
   }
@@ -359,30 +399,28 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   public render() {
     // TODO: I'm sure there's a way to do this in the lit html template
-    // let mediaElement: TemplateResult<1> | undefined;
-    // if (this.src) {
-    //   mediaElement = html`
-    //     <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
-    //       <slot></slot>
-    //     </audio>
-    //   `;
-    // } else if (this.slotElements.length > 0) {
-    //   mediaElement = html`
-    //     <audio id="media-element" @ended="${this.pause}" preload crossorigin>
-    //       <slot></slot>
-    //     </audio>
-    //   `;
-    // } else {
-    //   mediaElement = html`<audio id="media-element" @ended="${this.pause}" preload crossorigin></audio>`;
-    // }
+    let derivedMediaElement: TemplateResult<1> | undefined;
+    if (this.src) {
+      derivedMediaElement = html`
+        <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
+          <slot></slot>
+        </audio>
+      `;
+    } else if (this.slotElements.length > 0) {
+      derivedMediaElement = html`
+        <audio id="media-element" @ended="${this.pause}" preload crossorigin>
+          <slot></slot>
+        </audio>
+      `;
+    } else {
+      derivedMediaElement = html`<audio id="media-element" @ended="${this.pause}" preload crossorigin></audio>`;
+    }
 
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
-        <slot></slot>
-      </audio>
+      ${derivedMediaElement}
     `;
   }
 }

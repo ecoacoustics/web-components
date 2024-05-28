@@ -1,5 +1,5 @@
 interface Tag {
-  id: number;
+  id: number | undefined;
   text: string;
 }
 
@@ -18,7 +18,7 @@ export class Verification {
   // or this could be the csv row
   public subject: Record<string, unknown>;
   public url: string;
-  public tag: Tag;
+  public tag: Tag | null;
   public confirmed: boolean;
   public additionalTags: Tag[];
 

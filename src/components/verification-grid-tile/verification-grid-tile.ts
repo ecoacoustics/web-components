@@ -42,7 +42,9 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   }
 
   private handleClick(event: MouseEvent | TouchEvent) {
+    // TODO: passing through client events should be handled by the oe-media-controls component
     const ignoreTargets = ["oe-media-controls", "button"];
+    // TODO: remove type override
     const targetTag = (event.target as HTMLElement).tagName;
 
     if (ignoreTargets.includes(targetTag.toLocaleLowerCase())) {
@@ -57,6 +59,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
         detail: {
           index: this.index,
           shiftKey: event.shiftKey,
+          ctrlKey: event.ctrlKey,
         },
       }),
     );

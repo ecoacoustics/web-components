@@ -14,6 +14,7 @@ export const decisionStyles = css`
   .disabled {
     filter: grayscale(100%);
     opacity: 0.5;
+    cursor: not-allowed;
   }
 
   ::part(decision-button) {
