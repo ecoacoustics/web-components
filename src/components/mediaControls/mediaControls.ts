@@ -8,6 +8,7 @@ import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Spectrogram } from "spectrogram/spectrogram";
+import { theming } from "../../helpers/themes/theming";
 
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.
@@ -22,7 +23,7 @@ import { Spectrogram } from "spectrogram/spectrogram";
  */
 @customElement("oe-media-controls")
 export class MediaControls extends AbstractComponent(LitElement) {
-  public static styles = mediaControlsStyles;
+  public static styles = [mediaControlsStyles, theming];
 
   @provide({ context: rootContext })
   public logger: ILogger = {

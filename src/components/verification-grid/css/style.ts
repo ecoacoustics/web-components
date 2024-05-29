@@ -2,7 +2,7 @@ import { css } from "lit";
 
 export const verificationGridStyles = css`
   :host {
-    --secondary-color: black;
+    --text-color: #1c1c1e;
   }
 
   #highlight-box {
@@ -12,10 +12,18 @@ export const verificationGridStyles = css`
     width: 0px;
     height: 0px;
     position: absolute;
-    background-color: #00bbff;
-    border: solid medium #00bbff;
-    border-radius: 0.5rem;
+    /* background-color: #00bbff; */
+    background-color: #0099ee;
+    border: solid 2px #002299;
+    border-radius: 1rem;
     opacity: 0.3;
+  }
+
+  .verification-container {
+    background-color: var(--oe-background-color);
+
+    /* TODO: see if this is the correct solution */
+    user-select: none;
   }
 
   .verification-grid {
@@ -35,28 +43,13 @@ export const verificationGridStyles = css`
     font-size: 1.2rem;
   }
 
-  .shortcut-legend {
-    & > .shortcut-legend-title {
-      font-weight: bold;
-    }
-
-    /*
-     Copied from MDN
-     https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd
-    */
-    kbd {
-      background-color: #eee;
-      border-radius: 3px;
-      border: 1px solid #b4b4b4;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
-      color: #333;
-      display: inline-block;
-      font-size: 0.85em;
-      font-weight: 700;
-      line-height: 1;
-      padding: 2px 4px;
-      white-space: nowrap;
-    }
+  .verification-controls-title {
+    text-align: center;
+    font-family: sans-serif;
+    font-weight: normal;
+    font-size: 1.4rem;
+    letter-spacing: 0em;
+    color: var(--text-color);
   }
 
   .verification-controls {
@@ -64,14 +57,6 @@ export const verificationGridStyles = css`
     justify-content: center;
     align-items: center;
     gap: 1rem;
-  }
-
-  .verification-controls-title {
-    text-align: center;
-    font-family: sans-serif;
-    font-weight: normal;
-  }
-
-  ::part(sub-selection-checkbox) {
+    color: var(--text-color);
   }
 `;

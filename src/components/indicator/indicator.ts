@@ -50,7 +50,7 @@ export class Indicator extends AbstractComponent(LitElement) {
         <svg id="indicator-svg">
           <g id="indicator-line" style="transform: translateX(${watch(this.computedTimePx)}px)">
             <line part="indicator-line" y1="0" y2="100%"></line>
-            <circle part="seek-icon" cy="100%" r="5" />
+            <circle id="seek-icon" part="seek-icon" cy="100%" r="5" />
           </g>
         </svg>
         <slot @slotchange="${this.handleSlotChange}"></slot>

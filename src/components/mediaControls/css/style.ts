@@ -10,7 +10,7 @@ export const mediaControlsStyles = css`
     width: 2.8rem;
     height: 2.3rem;
     background-color: white;
-    border: solid thin hsl(206.93deg, 100%, 24.9%);
+    border: solid 1px hsl(206.93deg, 100%, 24.9%);
     border-radius: 8px;
     padding: 0.1rem 0.5rem;
   }

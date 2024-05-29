@@ -6,7 +6,7 @@
   "main": "components.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "build:components && build:docs",
     "dev:docs": "concurrently \"eleventy --config eleventy.config.js --watch --incremental\" \"pnpm start:docs\"",
     "start:docs": "vite ./dist/docs/ --config ./vite.config.ts",

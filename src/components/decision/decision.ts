@@ -1,8 +1,10 @@
-import { html, LitElement } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { html, LitElement, nothing } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
 import { classMap } from "lit/directives/class-map.js";
+import { theming } from "../../helpers/themes/theming";
+import { SelectionObserverType } from "../verification-grid/verification-grid";
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -18,7 +20,7 @@ import { classMap } from "lit/directives/class-map.js";
  */
 @customElement("oe-decision")
 export class Decision extends AbstractComponent(LitElement) {
-  public static styles = decisionStyles;
+  public static styles = [decisionStyles, theming];
 
   @property({ type: Boolean, reflect: true, converter: (x) => x !== "false" })
   public verified: boolean | undefined;
@@ -37,6 +39,9 @@ export class Decision extends AbstractComponent(LitElement) {
 
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
+
+  @state()
+  public selectionMode: SelectionObserverType = "desktop";
 
   private shortcutHandler = this.handleKeyDown.bind(this);
 
@@ -86,17 +91,23 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   public render() {
+    const additionalTagsTemplate = this.additionalTags ? html`<br />(${this.additionalTags})` : nothing;
+    const keyboardLegend =
+      this.shortcut && this.selectionMode === "desktop"
+        ? html`<br /><kbd class="keyboard-legend" part="keyboard-legend">${this.shortcut.toUpperCase()}</kbd>`
+        : nothing;
+
     return html`
       <button
         id="decision-button"
-        class="${classMap({ disabled: !!this.disabled })}"
+        class="oe-btn-secondary ${classMap({ disabled: !!this.disabled })}"
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
         ?disabled=${this.disabled}
         @click="${this.emitDecision}"
       >
         <slot></slot>
-        (<kbd>${this.shortcut}</kbd>)
+        ${additionalTagsTemplate} ${keyboardLegend}
       </button>
     `;
   }

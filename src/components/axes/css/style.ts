@@ -23,9 +23,9 @@ export const axesStyles = css`
     }
 
     text {
-      stroke: none;
       font-size: 0.8rem;
       stroke: darkgray;
+      font-family: var(--oe-font-family);
       /* TODO: Find out why we have to do this */
       stroke-width: 0.5;
     }
@@ -36,20 +36,8 @@ export const axesStyles = css`
   }
 
   .grid-line {
-  }
-
-  /*
-    I style these with css parts so that if the user uses css parts
-    These styles will be overwritten
-  */
-  ::part(grid) {
     color: lightblue;
-    stroke: currentColor;
     stroke-width: 1;
     opacity: 0.6;
-  }
-
-  ::part(tick) {
-    color: black;
   }
 `;

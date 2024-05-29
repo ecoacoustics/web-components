@@ -6,6 +6,7 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
 import { verificationGridTileStyles } from "./css/style";
 import { Verification } from "../../models/verification";
+import { theming } from "../../helpers/themes/theming";
 
 /**
  * A component to scope ids to a template inside a shadow DOM
@@ -21,7 +22,7 @@ import { Verification } from "../../models/verification";
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTile extends AbstractComponent(LitElement) {
-  public static styles = verificationGridTileStyles;
+  public static styles = [verificationGridTileStyles, theming];
 
   @state()
   public model!: Verification;
@@ -50,8 +51,6 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
     if (ignoreTargets.includes(targetTag.toLocaleLowerCase())) {
       return;
     }
-
-    this.selected = !this.selected;
 
     this.dispatchEvent(
       new CustomEvent("selected", {

@@ -7,9 +7,10 @@ import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../.
 import { Verification } from "../../models/verification";
 import { VerificationGridTile } from "../verification-grid-tile/verification-grid-tile";
 import { Decision } from "../decision/decision";
+import { theming } from "../../helpers/themes/theming";
 
+export type SelectionObserverType = "desktop" | "tablet";
 type PageFetcher = (elapsedItems: number) => Promise<any[]>;
-type SelectionObserverType = "desktop" | "tablet";
 type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: number }>;
 
 /**
@@ -35,7 +36,7 @@ type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: 
 //! Please don't look at this component yet until it is finalized, it has a lot of bad code
 @customElement("oe-verification-grid")
 export class VerificationGrid extends AbstractComponent(LitElement) {
-  public static styles = verificationGridStyles;
+  public static styles = [verificationGridStyles, theming];
 
   @property({ attribute: "grid-size", type: Number, reflect: true })
   public gridSize = 8;
@@ -66,7 +67,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   public decisionElements!: Decision[];
 
   @queryAll("oe-verification-grid-tile")
-  public gridTiles: NodeListOf<VerificationGridTile> | undefined;
+  public gridTiles!: NodeListOf<VerificationGridTile>;
 
   @state()
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
@@ -82,7 +83,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
   private multiSelectHead: number | null = null;
-  private multiSelectTail: number | null = null;
 
   private serverCacheHead = this.gridSize;
   private serverCacheExhausted = false;
@@ -98,6 +98,14 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const elementsToObserve = this.gridTiles;
 
     const sourceInvalidationKeys: (keyof this)[] = ["getPage", "src"];
+
+    if (change.has("selectionBehavior")) {
+      this.multiSelectHead = null;
+
+      this.decisionElements.forEach((element: Decision) => {
+        element.selectionMode = this.selectionBehavior;
+      });
+    }
 
     // TODO: figure out if there is a better way to do this invalidation
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
@@ -137,74 +145,96 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
-  private handleSubSelection(selectionEvent: SelectionEvent): void {
+  // we could improve the performance here by creating a "selectionHandler" component property
+  // which is set to handleDesktopSelection.bind(this) or handleTabletSelection.bind(this)
+  // when the selection-behavior attribute is updated
+  // (meaning that we don't have to evaluate the switch statement every selection event)
+  // however, I deemed that it hurt readability and the perf hit is negligible
+  private selectionHandler(selectionEvent: SelectionEvent): void {
     switch (this.selectionBehavior) {
-      case "desktop": {
+      case "desktop":
         this.handleDesktopSelection(selectionEvent);
         break;
-      }
-      case "tablet": {
+      case "tablet":
         this.handleTabletSelection(selectionEvent);
         break;
-      }
-      default: {
+      default:
         console.error(`could not find selection behavior ${this.selectionBehavior}`);
         this.handleDesktopSelection(selectionEvent);
         break;
-      }
     }
-
-    // TODO: remove
-    this.requestUpdate();
   }
 
+  /**
+   * @description
+   * Click                  Select a single tile (de-selecting any other items)
+   * Shift + click          Select a range of tiles (de-selecting any other items)
+   * Ctrl + click           Toggles the selection state of a single tile (not effecting other tiles)
+   * Ctrl + Shift + click   Select a range of tiles (not effecting other tiles)
+   */
   private handleDesktopSelection(selectionEvent: SelectionEvent): void {
-    if (!selectionEvent.detail.ctrlKey && !selectionEvent.detail.shiftKey) {
-      this.createSingleSelection(selectionEvent.detail.index);
-      this.multiSelectHead = selectionEvent.detail.index;
-      this.multiSelectTail = null;
+    const index = selectionEvent.detail.index;
 
-      // TODO: remove
-      this.requestUpdate();
+    // in desktop mode, unless the ctrl key is held down, clicking an element
+    // removes all other selected items
+    if (!selectionEvent.detail.ctrlKey) {
+      this.removeSubSelection();
+    }
+
+    // there are two different types of selections, range selection and single selection
+    // if the shift key is held down, then we perform a "range" selection, if not
+    // then we should perform a single selection
+    if (selectionEvent.detail.shiftKey) {
+      // if the user has never selected an item before, the multiSelectHead will be "null"
+      // in this case, we want to start selecting from the clicked tile
+      this.multiSelectHead ??= index;
+      const selectionTail = index;
+
+      this.addSubSelectionRange(this.multiSelectHead, selectionTail);
       return;
     }
 
-    if (selectionEvent.detail.shiftKey) {
-      this.multiSelectTail = selectionEvent.detail.index;
-    } else {
-      this.multiSelectHead = selectionEvent.detail.index;
-      this.multiSelectTail = null;
-    }
-
-    console.log("select from", this.multiSelectHead, "to", this.multiSelectTail);
-
-    if (this.multiSelectHead && this.multiSelectTail) {
-      this.createSubSelection(this.multiSelectHead, this.multiSelectTail);
-    }
+    this.toggleSubSelection(index);
+    this.multiSelectHead = index;
   }
 
+  /**
+   * @description
+   * _Click_ Toggle the selection of a single tile (not effecting other tiles)
+   */
   private handleTabletSelection(selectionEvent: SelectionEvent): void {
-    this.createSubSelection(selectionEvent.detail.index, selectionEvent.detail.index + 1);
+    this.toggleSubSelection(selectionEvent.detail.index);
   }
 
-  private createSubSelection(start: number, end: number): void {
-    const gridItems = Array.from(this.gridTiles ?? []);
+  private toggleSubSelection(index: number): void {
+    const gridItems = Array.from(this.gridTiles);
+    gridItems[index].selected = !gridItems[index].selected;
+  }
 
-    for (let i = start; i < end; i++) {
+  private addSubSelectionRange(start: number, end: number): void {
+    const gridItems = Array.from(this.gridTiles);
+
+    // if the user shift + clicks in a negative direction
+    // e.g. select item 5 and then shift click item 2
+    // we want to select all items from 2 to 5. Therefore, we swap the start and end values
+    if (end < start) {
+      [start, end] = [end, start];
+    }
+
+    // TODO: end should probably be exclusive when it calls this function
+    for (let i = start; i <= end; i++) {
       gridItems[i].selected = true;
     }
   }
 
-  private createSingleSelection(index: number): void {
-    const gridItems = Array.from(this.gridTiles ?? []);
+  private removeSubSelection(): void {
+    // we set elements as a variable because this.gridTiles uses a query selector
+    // therefore, if we put it inside the for loop, we would be doing a DOM query
+    // every cycle
+    const elements = this.gridTiles;
 
-    for (let i = 0; i < gridItems.length; i++) {
-      if (i === index) {
-        gridItems[i].selected = true;
-        continue;
-      }
-
-      gridItems[i].selected = false;
+    for (const element of elements) {
+      element.selected = false;
     }
   }
 
@@ -245,7 +275,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const additionalTags: any[] = event.detail.additionalTags;
 
     // TODO: Fix this
-    const gridTiles = Array.from(this.gridTiles ?? []);
+    const gridTiles = Array.from(this.gridTiles);
     const subSelection = gridTiles.filter((tile) => tile.selected);
     const hasSubSelection = subSelection.length > 0;
 
@@ -270,18 +300,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     this.pagedItems += this.gridSize;
     this.renderVirtualPage();
-  }
-
-  private removeSubSelection(): void {
-    const elements = this.gridTiles;
-
-    if (!elements) {
-      throw new Error("Fatal error: No grid tiles found");
-    }
-
-    for (const element of elements) {
-      element.selected = false;
-    }
   }
 
   private async renderVirtualPage(): Promise<void> {
@@ -320,7 +338,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private hideGridItems(numberOfTiles: number): void {
     // TODO: improve this
-    const elementsToHide = Array.from(this.gridTiles ?? []).slice(-numberOfTiles);
+    const elementsToHide = Array.from(this.gridTiles).slice(-numberOfTiles);
 
     elementsToHide.forEach((element) => {
       element.style.display = "none";
@@ -430,16 +448,24 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const uniqueTags = Array.from(new Set(tags));
 
     // TODO: finish
-    const tiles = Array.from(this.gridTiles ?? []);
-    const numberOfSelectedItems = tiles.filter((item: VerificationGridTile) => item.selected);
-    const subSelectionText = numberOfSelectedItems.length === 0 ? "all" : `all ${numberOfSelectedItems.length}`;
+    const tiles = Array.from(this.gridTiles);
+    const selectedItems = tiles.filter((item: VerificationGridTile) => item.selected);
+    const possibleItems = uniqueTags.join(", or ");
 
-    return `Are ${subSelectionText} of these a ${uniqueTags.join(" or ")}?`;
+    if (selectedItems.length === 0) {
+      return `Are all of these a ${possibleItems}?`;
+    }
+
+    return `Are the selected ${selectedItems.length} a ${possibleItems}?`;
+  }
+
+  private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
+    console.log("intersecting", entries);
   }
 
   private doneRenderBoxInit = false;
-  private renderHighlightBox(event: MouseEvent) {
-    if (event.button === 0) {
+  private renderHighlightBox(event: PointerEvent) {
+    if (event.isPrimary) {
       this.highlighting = true;
 
       const element = this.shadowRoot!.getElementById("highlight-box");
@@ -461,11 +487,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
-  private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
-    console.log("intersecting", entries);
-  }
-
-  private resizeHighlightBox(event: MouseEvent) {
+  private resizeHighlightBox(event: PointerEvent) {
     if (!this.highlighting) {
       return;
     }
@@ -517,22 +539,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     ></div>`;
   }
 
-  private shortcutLegendTemplate(): TemplateResult<1> {
-    return html`
-      <div class="shortcut-legend">
-        <p class="shortcut-legend-title">Keyboard Shortcuts</p>
-        ${this.decisionElements?.map((element: Decision) => {
-          return html`
-            <span class="shortcut-legend-item">
-              <span class="shortcut-legend-item-label">${element.innerText}</span>
-              <kbd class="shortcut-legend-value">${element.shortcut}</kbd>
-            </span>
-          `;
-        })}
-      </div>
-    `;
-  }
-
   private noItemsTemplate(): TemplateResult<1> {
     return html`
       <div class="no-items-message">
@@ -546,20 +552,27 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   public render() {
     return html`
-      <div
-        @selected="${this.handleSubSelection}"
-        @mousedown="${this.renderHighlightBox}"
-        @mouseup="${this.hideHighlightBox}"
-        @mousemove="${this.resizeHighlightBox}"
-        class="verification-grid"
-      >
-        ${this.spectrogramElements}
+      <div class="verification-container">
+        <div
+          @selected="${this.selectionHandler}"
+          @pointerdown="${this.renderHighlightBox}"
+          @pointerup="${this.hideHighlightBox}"
+          @pointermove="${this.resizeHighlightBox}"
+          class="verification-grid"
+        >
+          ${this.spectrogramElements}
+        </div>
+        <h2 class="verification-controls-title">${this.decisionPrompt()}</h2>
+        <div class="verification-controls">
+          <slot @decision="${this.catchDecision}"></slot>
+        </div>
+
+        <div class="paging-options">
+          <button class="oe-btn-secondary">Skip</button>
+          <button class="oe-btn-secondary">Previous</button>
+        </div>
       </div>
-      <h2 class="verification-controls-title">${this.decisionPrompt()}</h2>
-      <div class="verification-controls">
-        <slot @decision="${this.catchDecision}"></slot>
-      </div>
-      ${this.shortcutLegendTemplate()} ${this.highlightBoxTemplate()}
+      ${this.highlightBoxTemplate()}
     `;
   }
 }

@@ -1,20 +1,16 @@
 import { css } from "lit";
 
 export const verificationGridTileStyles = css`
-  :host {
-    --secondary-color: rgba(0, 0, 0, 0.7);
-    --selection-width: 2px;
-    --background-color: #f8f2f6;
-  }
-
   .tile-container {
     border-radius: 12px;
-    border: solid 1px rgba(0, 0, 0, 0.2);
-    background-color: var(--background-color);
-    box-shadow: 0 2px 4px var(--background-color);
+    border: solid 1px var(--oe-secondary-background-color);
+    background-color: var(--oe-panel-color);
+    box-shadow: 4px 4px 8px var(--oe-panel-color);
     padding: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
     cursor: pointer;
-    margin: calc(0.5rem + var(--selection-width));
+    margin: calc(0.5rem + 2px);
 
     &:hover {
       box-shadow: 0 2px 4px #e8e2e6;
@@ -22,7 +18,7 @@ export const verificationGridTileStyles = css`
   }
 
   .selected {
-    border: var(--selection-width) solid var(--secondary-color);
-    margin: calc(0.5rem + 1px);
+    border: 2px solid var(--oe-selected-color);
+    background-color: var(--oe-selected-background-color);
   }
 `;

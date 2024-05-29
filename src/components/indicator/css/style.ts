@@ -36,7 +36,7 @@ export const indicatorStyles = css`
     will-change: transform;
   }
 
-  ::part(seek-icon) {
+  #seek-icon {
     stroke: gray;
     fill: white;
   }

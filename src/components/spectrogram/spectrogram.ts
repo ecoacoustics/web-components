@@ -109,13 +109,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // TODO: remove this
   private doneFirstRender = false;
 
-  // due to fingerprinting protection in Firefox, querying the currentTime from the HTMLAudioElement
-  // will not return an accurate representation of the time
-  // therefore, we keep track of the time ourselves so that if we see the same value multiple times
-  // we can fill in the blanks and move the indicator
-  private lastHighResTime: DOMHighResTimeStamp = 0;
-  private lastObservedTime = 0;
-
   public hasSource(): boolean {
     return !!this.src || this.slotElements.length > 0;
   }
@@ -145,8 +138,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.useMelScale.value = this.melScale;
       } else if (this.invalidateSpectrogramSource(change)) {
         this.pause();
-        this.currentTime.value = 0;
         this.regenerateSpectrogram();
+        this.updateCurrentTime();
       }
     } else if (this.invalidateSpectrogramSource(change)) {
       if (this.hasSource()) {
@@ -162,9 +155,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         bubbles: true,
       }),
     );
-
-    // TODO: find out if this is the best place for this
-    this.lastObservedTime = 0;
 
     this.audioHelper
       .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
@@ -326,28 +316,50 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     return invalidationKeys.some((key) => change.has(key));
   }
 
-  private updateCurrentTime(): void {
-    if (!this.paused) {
-      let exactTimeDelta = 0;
-
-      const mediaElementTime = this.mediaElement.currentTime;
-
-      const highResTime = performance.now();
-      if (mediaElementTime !== 0 && mediaElementTime === this.lastObservedTime) {
-        const exactCurrentTime = (highResTime - this.lastHighResTime) / 10_000;
-
-        exactTimeDelta = exactCurrentTime - this.lastObservedTime;
-
-        if (exactTimeDelta < 0) {
-          exactTimeDelta = 0;
-        }
-      } else {
-        this.lastHighResTime = highResTime;
+  private updateCurrentTime(poll = false): void {
+    if (poll) {
+      if (this.nextRequestId) {
+        window.cancelAnimationFrame(this.nextRequestId);
+        this.nextRequestId = null;
       }
 
-      this.lastObservedTime = mediaElementTime;
+      this.highFreqUpdateCurrentTime();
+    } else {
+      this.currentTime.value = this.mediaElement.currentTime;
+    }
+  }
+
+  // TODO: move somewhere else
+  private nextRequestId: number | null = null;
+
+  private highFreqUpdateCurrentTime(
+    lastHighResSync: DOMHighResTimeStamp = performance.now(),
+    lastObservedTime: number | null = null,
+  ): void {
+    // this will become a problem if we want to update the time in the future without pausing the media element
+    // e.g. seeking
+    if (!this.paused) {
+      const mediaElementTime = this.mediaElement.currentTime;
+      let exactTimeDelta = 0;
+
+      // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
+      // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
+      // couple of milliseconds to be skipped
+      // to fix this, we use a high resolution timer, and if we see the same value twice, we calculate the difference
+      // that we have seen, so that we can "fill in the gaps"
+      // in browsers which report the real time (e.g. Chrome) this condition should never be true
+      const highResTime = performance.now();
+      if (mediaElementTime === lastObservedTime) {
+        exactTimeDelta = (highResTime - lastHighResSync) / 1_000;
+      } else {
+        lastHighResSync = highResTime;
+      }
+
       this.currentTime.value = mediaElementTime + exactTimeDelta;
-      requestAnimationFrame(() => this.updateCurrentTime());
+
+      this.nextRequestId = requestAnimationFrame(() =>
+        this.highFreqUpdateCurrentTime(lastHighResSync, mediaElementTime),
+      );
     }
   }
 
@@ -370,7 +382,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.mediaElement?.pause();
     } else {
       this.mediaElement?.play();
-      requestAnimationFrame(() => this.updateCurrentTime());
+      this.updateCurrentTime(true);
     }
 
     this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
