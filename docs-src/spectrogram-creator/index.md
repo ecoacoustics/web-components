@@ -24,7 +24,7 @@ Loading...
                     ></oe-spectrogram>
                 </oe-indicator>
             </oe-axes>
-            <oe-media-controls for="playing-spectrogram"></oe-media-controls>
+            <oe-media-controls style="margin-top: 2rem" for="playing-spectrogram"></oe-media-controls>
         </div>
         <div class="col">
             <label>
