@@ -157,104 +157,10 @@ export class AudioHelper {
     //console.log(`audio (${generation}): audio context created, starting spectrogram generation`);
     this.regenerateWorker(options, info, generation);
 
-    this.spectrogramWorker.postMessage([
-      "regenerate-spectrogram",
-      {
-        options,
-        audioInformation,
-      },
-    ]);
-
-    return metadata;
-  }
-
-  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioMetadata> {
-    console.log("CHANGE SOURCE");
-    if (!this.spectrogramWorker || !this.state) {
-      throw new Error("Worker is not initialized. Call connect() first.");
-    }
-
-    this.abort();
-
-    const { response, metadata, audioInformation } = await this.fetchAudio(src);
-    this.context = await this.createAudioContext(metadata, response);
-    this.setupProcessor(this.context);
-
-    this.spectrogramWorker.postMessage([
-      "regenerate-spectrogram",
-      {
-        options,
-        audioInformation,
-      },
-    ]);
-
-    return metadata;
-  }
-
-  private setupProcessor(context: OfflineAudioContext): void {
-    if (this.state === undefined || this.sampleBuffer === undefined || this.processorNode === undefined) {
-      throw new Error("connect must be called before setupProcessor");
-    }
-
-    this.state.reset();
-
-    this.processorNode.port.postMessage(["setup", { state: this.state.buffer, sampleBuffer: this.sampleBuffer }]);
-
-    this.processorNode.port.onmessage = (event: MessageEvent) => {
-      if (event.data == MESSAGE_PROCESSOR_READY) {
-        console.time("rendering");
-        context.startRendering();
-      }
-    };
-  }
-
-  private setupWorker(audioInformation: IAudioInformation, options: SpectrogramOptions): void {
-    if (this.state === undefined || this.sampleBuffer === undefined || this.offscreenCanvas === undefined) {
-      throw new Error("connect must be called before setupWorker");
-    }
-
-    this.spectrogramWorker!.postMessage(
-      [
-        "setup",
-        {
-          state: this.state.buffer,
-          sampleBuffer: this.sampleBuffer,
-          canvas: this.offscreenCanvas,
-          spectrogramOptions: options,
-          audioInformation,
-        },
-      ],
-      [this.offscreenCanvas],
-    );
-  }
-
-  private abort() {
-    console.log("ABORTED");
-    if (!this.state) {
-      throw new Error("Shared state is not defined");
-    }
-
-    if (this.state.isFinished()) {
-      return;
-    }
-
-    // this is multithreaded-async, and we don't wait for results
-    // this means that we can't guarantee that the processor noticed an abort before we reset state
-    // we don't want to deal with the complexity of this now, but this may be the cause
-    // of a race condition in some very unlikely cases
-    this.state.startAbort();
-
-    // there is no way to stop or destroy an OfflineAudioContext
-    // all we can do is set it to null and hope browsers destroy it in garbage collection
-    this.context = null;
-
-    let i = 0;
-    while (this.state.aborting) {
-      // noop
-      i++;
-    }
-
-    console.log("waited n cycles to abort", i);
+    // returns before the worker finishes painting
+    // but abort will wait for the worker to finish
+    // before this method is called again
+    return info;
   }
 
   private createAudioInformation(metadata: IAudioMetadata): IAudioInformation {

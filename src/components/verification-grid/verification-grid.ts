@@ -566,11 +566,11 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         <div class="verification-controls">
           <slot @decision="${this.catchDecision}"></slot>
         </div>
-        <!-- 
+
         <div class="paging-options">
           <button class="oe-btn-secondary">Skip</button>
           <button class="oe-btn-secondary">Previous</button>
-        </div> -->
+        </div>
       </div>
       ${this.highlightBoxTemplate()}
     `;

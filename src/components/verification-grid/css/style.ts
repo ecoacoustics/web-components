@@ -58,10 +58,5 @@ export const verificationGridStyles = css`
     align-items: center;
     gap: 1rem;
     color: var(--text-color);
-
-    & > * {
-      position: relative;
-      height: 100%;
-    }
   }
 `;

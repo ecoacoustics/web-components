@@ -18,8 +18,6 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { theming } from "../../helpers/themes/theming";
 
-type Orientation = "x" | "y";
-
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
  *
@@ -360,32 +358,6 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const areLastLabelsOverlapping = proposedPositionDelta < this.fontWidth! + this.labelPadding;
     if (areLastLabelsOverlapping) {
-      values.pop();
-    }
-
-    values.push(end);
-
-    return values;
-  }
-
-  private generateAxisValues(start: Seconds | Hertz, end: Seconds | Hertz, step: Seconds | Hertz): number[] {
-    const values: number[] = [];
-    for (let i = start; i < end; i += step) {
-      values.push(i);
-    }
-
-    // we always want to show the last value in the axes
-    // however, if appending the largest value would result in the labels overlapping
-    // we want to remove the last "step" label and replace it with the real last value
-    const lastLabel = values.at(-1)!;
-    const proposedLastLabel = end;
-
-    const lastLabelPosition = scale(lastLabel);
-    const proposedLastLabelPosition = scale(proposedLastLabel);
-    const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
-
-    const areLabelsOverlapping = proposedPositionDelta < this.fontSize + this.labelPadding;
-    if (areLabelsOverlapping) {
       values.pop();
     }
 

@@ -129,8 +129,11 @@ function setup(data: SharedBuffersWithCanvas): void {
   spectrogramCanvas = new OffscreenCanvas(512, 512);
   spectrogramSurface = spectrogramCanvas.getContext("2d")!;
 
-  // start polling
-  work();
+  destinationSurface = destinationCanvas.getContext("2d")!;
+  destinationSurface.imageSmoothingEnabled = true;
+  destinationSurface.imageSmoothingQuality = "high";
+
+  state.workerReady();
 }
 
 function regenerate(data: GenerationMetadata): void {
@@ -177,11 +180,7 @@ function handleMessage(event: WorkerMessage) {
 
   switch (eventMessage) {
     case "setup":
-      transferCanvas(event.data[1].canvas);
-      setup(event.data[1] as SharedBuffersWithCanvas);
-      break;
-    case "new-buffers":
-      setup(event.data[1] as SharedBuffersWithCanvas);
+      setup(event.data[1]);
       break;
     case "resize-canvas":
       resizeCanvas(event.data[1]);
