@@ -120,6 +120,7 @@ function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
+  //console.log("worker:setup:", data);
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
   destinationCanvas = data.canvas;

@@ -74,7 +74,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
       return false;
     } else {
       this.aborted = true;
-      console.log(this.tag, "Processor aborted");
+      //console.log(this.tag, "Processor aborted", this.generation, this.state.generation);
       return true;
     }
   }

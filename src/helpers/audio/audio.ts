@@ -58,11 +58,14 @@ export class AudioHelper {
       throw new Error("Connect can only be called once. Use regenerateSpectrogram to update the spectrogram.");
     }
 
+    const now = performance.now();
+
     this.offscreenCanvas = canvas.transferControlToOffscreen();
     this.setupWorker();
 
     await this.render(true, src, options, this.generation);
 
+    console.log("audio: connect complete", performance.now() - now);
     return this.cachedMetadata();
   }
 
@@ -109,7 +112,7 @@ export class AudioHelper {
 
     if (metadata) {
       const source = metadata;
-      // there is no way to stop or destroy an OfflineAudioContext
+      // There is no way to stop or destroy an OfflineAudioContext
       //
       // Chrome and firefox have different implementations of the audio worklet.
       // (Returning `false` from the `process` method may not stop the processor)
@@ -120,9 +123,9 @@ export class AudioHelper {
       this.generationData.delete(abortedGeneration);
     }
 
-    // this is multithreaded-async
-    // we use generations to trigger old processors to discard their writes
-    // the worker should also stop processing even partway through it's work loop
+    // This is multithreaded-async.
+    // We use generations to trigger old processors to discard their writes.
+    // The worker should also stop processing even partway through it's work loop.
     const generation = this.state.reset();
     this.generation = generation;
 
@@ -143,7 +146,7 @@ export class AudioHelper {
 
     // recreate the processor every time!
     await this.createAudioContext(this.cachedMetadata(), downloadedBuffer, generation);
-
+    //console.log(`audio (${generation}): audio context created, starting spectrogram generation`);
     this.regenerateWorker(options, this.cachedAudioInformation(), generation);
 
     this.spectrogramWorker.postMessage([
@@ -257,7 +260,7 @@ export class AudioHelper {
   private async fetchAudio(src: string): Promise<ArrayBuffer> {
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
-    const tag = `fetch and decode audio (${this.generation})`;
+    const tag = `audio (${this.generation}): fetch and decode audio`;
     console.time(tag);
     const response = await fetch(src);
 
