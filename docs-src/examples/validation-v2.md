@@ -9,7 +9,7 @@ This example uses a real `oe-verification-grid` component to show how to use the
 web components to validate events in an audio recording.
 
 ```html
-<oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="6">
+<oe-verification-grid id="verification-grid" src="/public/grid-items.json" key="AudioLink" grid-size="6">
   <template>
     <div style="position: relative;">
       <oe-axes style="padding: 2rem;">
@@ -35,7 +35,7 @@ web components to validate events in an audio recording.
 </oe-verification-grid>
 ```
 
-<oe-verification-grid id="verification-grid" src="/grid-items.json" key="AudioLink" grid-size="6">
+<oe-verification-grid id="verification-grid" src="/public/grid-items.json" key="AudioLink" grid-size="6">
   <template>
     <div style="position: relative;">
       <oe-axes style="padding: 2rem;">
