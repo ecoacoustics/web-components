@@ -2,6 +2,7 @@ import { css } from "lit";
 
 export const verificationGridTileStyles = css`
   .tile-container {
+    position: relative;
     border-radius: 12px;
     border: solid 1px var(--oe-secondary-background-color);
     background-color: var(--oe-panel-color);
@@ -20,5 +21,14 @@ export const verificationGridTileStyles = css`
   .selected {
     border: 2px solid var(--oe-selected-color);
     background-color: var(--oe-selected-background-color);
+  }
+
+  .keyboard-hint {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(0%, calc(-50% - 1rem));
+    z-index: 2;
+    font-size: 2rem;
   }
 `;

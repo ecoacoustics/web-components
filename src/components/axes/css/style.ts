@@ -23,11 +23,10 @@ export const axesStyles = css`
     }
 
     text {
-      font-size: 0.8rem;
-      stroke: darkgray;
+      fill: var(--oe-text-color);
+      stroke: none;
       font-family: var(--oe-font-family);
-      /* TODO: Find out why we have to do this */
-      stroke-width: 0.5;
+      font-size: 0.8rem;
     }
 
     g {

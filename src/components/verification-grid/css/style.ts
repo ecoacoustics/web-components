@@ -7,6 +7,7 @@ export const verificationGridStyles = css`
 
   #highlight-box {
     position: absolute;
+    display: none;
     top: 0px;
     left: 0px;
     width: 0px;
@@ -17,12 +18,15 @@ export const verificationGridStyles = css`
     border: solid 2px #002299;
     border-radius: 1rem;
     opacity: 0.3;
+    z-index: 5;
   }
 
   .verification-container {
     background-color: var(--oe-background-color);
+    height: 100%;
+  }
 
-    /* TODO: see if this is the correct solution */
+  .verification-grid {
     user-select: none;
   }
 
@@ -58,5 +62,6 @@ export const verificationGridStyles = css`
     align-items: center;
     gap: 1rem;
     color: var(--text-color);
+    align-items: stretch;
   }
 `;

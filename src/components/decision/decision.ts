@@ -91,11 +91,9 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   public render() {
-    const additionalTagsTemplate = this.additionalTags ? html`<br />(${this.additionalTags})` : nothing;
+    const additionalTagsTemplate = this.additionalTags ? html`(${this.additionalTags})` : nothing;
     const keyboardLegend =
-      this.shortcut && this.selectionMode === "desktop"
-        ? html`<br /><kbd class="keyboard-legend" part="keyboard-legend">${this.shortcut.toUpperCase()}</kbd>`
-        : nothing;
+      this.shortcut && this.selectionMode === "desktop" ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>` : nothing;
 
     return html`
       <button
@@ -106,8 +104,9 @@ export class Decision extends AbstractComponent(LitElement) {
         ?disabled=${this.disabled}
         @click="${this.emitDecision}"
       >
-        <slot></slot>
-        ${additionalTagsTemplate} ${keyboardLegend}
+        <div class="tag-text"><slot></slot></div>
+        <div class="additional-tags">${additionalTagsTemplate}</div>
+        <div class="keyboard-legend">${keyboardLegend}</div>
       </button>
     `;
   }

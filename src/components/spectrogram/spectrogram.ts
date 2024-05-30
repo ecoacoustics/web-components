@@ -146,6 +146,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.renderSpectrogram();
       }
     }
+
+    this.resizeCanvas(this.canvas);
   }
 
   public renderSpectrogram(): void {
@@ -295,6 +297,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       this.canvas.height = size.height;
     }
 
+    if (this.scaling === "original") {
+      this.style.height = `${size.height}px`;
+      this.style.width = `${size.width}px`;
+    }
+
     if (this.scaling === "stretch") {
       this.canvas.style.width = "100%";
     } else {
@@ -354,6 +361,10 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       const mediaElementTime = this.mediaElement.currentTime;
       let exactTimeDelta = 0;
 
+      // there can be a time between pressing the play button, and when the audio starts playing
+      // e.g. when the audio is still downloading
+      const startedPlaying = !this.mediaElement.paused;
+
       // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
       // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
       // couple of milliseconds to be skipped
@@ -361,7 +372,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // that we have seen, so that we can "fill in the gaps"
       // in browsers which report the real time (e.g. Chrome) this condition should never be true
       const highResTime = performance.now();
-      if (mediaElementTime === lastObservedTime) {
+      if (mediaElementTime === lastObservedTime && startedPlaying) {
         exactTimeDelta = (highResTime - lastHighResSync) / 1_000;
       } else {
         lastHighResSync = highResTime;

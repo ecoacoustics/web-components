@@ -57,7 +57,7 @@ import { theming } from "../../helpers/themes/theming";
  */
 @customElement("oe-axes")
 export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
-  public static styles = [axesStyles, theming];
+  public static styles = [theming, axesStyles];
 
   @property({ attribute: "x-step", type: Number, reflect: true })
   public xStepOverride: Seconds | undefined;
@@ -66,7 +66,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public yStepOverride: Hertz | undefined;
 
   @property({ attribute: "x-label", type: String, reflect: true })
-  public xLabel = "Time (seconds)";
+  public xLabel = "Time (Seconds)";
 
   @property({ attribute: "y-label", type: String, reflect: true })
   public yLabel = "Frequency (KHz)";
@@ -88,18 +88,11 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private unitConverter!: UnitConverter;
 
-  // font size is the size of the font
-  // while label padding is the minimum additional distance between the labels
+  // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
-  private fontWidth: number | undefined;
-  private fontHeight: number | undefined;
   private labelPadding: Pixel = 4;
   private tickSize: Pixel = 8;
   private titleOffset: Pixel = 6;
-
-  protected firstUpdated(): void {
-    [this.fontWidth, this.fontHeight] = this.calculateFontSize();
-  }
 
   private handleSlotchange(): void {
     this.unitConverter = this.spectrogram.unitConverters!;
@@ -107,16 +100,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // because querying the DOM for the font size will cause a repaint and reflow
   // we calculate the value once using a canvas
-  private calculateFontSize(): [width: number, height: number] {
+  private calculateFontSize(text = "0"): Size {
     const element = document.createElement("canvas");
     const context = element.getContext("2d")!;
     context.font = "16px sans-serif";
 
-    const text = "0";
-    const width = context.measureText(text).width;
-    const height = context.measureText(text).width;
+    const metrics = context.measureText(text);
+    const width = metrics.width;
+    const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
 
-    return [width, height];
+    return { width, height };
   }
 
   private createGridLines(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
@@ -160,22 +153,24 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private createAxisLabels(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
+    const xTitleFontSize = this.calculateFontSize(this.xLabel);
+    // const yTitleFontSize = this.calculateFontSize(this.yLabel);
+    const largestYValue = Math.max(...yValues.map((x) => x / 1000)).toFixed(1);
+    const fontSize = this.calculateFontSize(largestYValue);
+
     // Because the y-axis labels can be a variable length, we can't just offset the y-axis title by a fixed amount
     // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
     // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
     //       label, and get the number of digits that the proposed title will have to clear
-    const xTitleOffset = this.fontHeight! + this.tickSize + this.fontHeight! + this.titleOffset + this.labelPadding;
-    const yTitleOffset =
-      Math.max(...yValues.map((x) => x / 1000)).toString().length * this.fontWidth! +
-      this.tickSize +
-      this.titleOffset +
-      this.labelPadding;
+    const xTitleOffset = xTitleFontSize.height + this.tickSize + this.titleOffset + this.labelPadding;
+    const yTitleOffset = fontSize.width + this.tickSize + this.titleOffset + this.labelPadding;
 
     const xLabel = (value: Seconds) => {
-      const xPos = scale.temporal(value) + (value.toFixed(1).length * this.fontWidth!) / 2;
-      const yPos = canvasSize.height + this.fontWidth! + this.tickSize;
+      const labelSize = this.calculateFontSize(value.toFixed(1));
+      const xPos = scale.temporal(value) + labelSize.width / 2;
+      const yPos = canvasSize.height + this.labelPadding + this.tickSize;
 
       return svg`<g>
         <line
@@ -196,8 +191,9 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     };
 
     const yLabel = (value: Hertz) => {
+      const labelSize = this.calculateFontSize(value.toString());
       const xPos = -this.tickSize;
-      const yPos = scale.frequency(value) + this.fontHeight! / 2;
+      const yPos = scale.frequency(value) + labelSize.height / 2;
 
       return svg`<g>
         <line
@@ -212,7 +208,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           x="${xPos - this.labelPadding}"
           y="${yPos}"
         >
-          ${value / 1_000}
+          ${(value / 1_000).toFixed(1)}
         </text>
       </g>`;
     };
@@ -310,7 +306,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // if they do, we should use them instead
     // higher in the list takes higher priority
     const niceFactors = [5, 2];
-    const totalLabelSize = this.fontWidth! * (this.labelPadding * 2);
+    const fontSize = this.calculateFontSize();
+    const totalLabelSize = fontSize.width * (this.labelPadding * 2);
 
     for (const factor of niceFactors) {
       const proposedStep = baseTenStep / factor;
@@ -356,7 +353,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const proposedLastLabelPosition = scale(proposedLastLabel);
     const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
 
-    const areLastLabelsOverlapping = proposedPositionDelta < this.fontWidth! + this.labelPadding;
+    const fontSize = this.calculateFontSize();
+    const areLastLabelsOverlapping = proposedPositionDelta < fontSize.width + this.labelPadding;
     if (areLastLabelsOverlapping) {
       values.pop();
     }

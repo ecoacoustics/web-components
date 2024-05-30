@@ -55,7 +55,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // TODO: we probably won't need this when we create a formal spec for the
   // expected data structure
   @property({ type: String })
-  public key!: string;
+  public audioKey!: string;
 
   @property({ attribute: "get-page", type: String })
   public getPage!: PageFetcher;
@@ -79,6 +79,11 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private spectrogramsLoaded = 0;
   private hiddenTiles = 0;
 
+  // TODO: find a better way to do this
+  private showingSelectionShortcuts = false;
+
+  private shortcutHandler = this.handleKeyDown.bind(this);
+  private keyupHandler = this.handleKeyUp.bind(this);
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
@@ -89,12 +94,21 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private highlighting = false;
   private dragStartPos = { x: 0, y: 0 };
 
+  public connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener("keydown", this.shortcutHandler);
+    document.addEventListener("keyup", this.keyupHandler);
+  }
+
   public disconnectedCallback(): void {
     this.intersectionObserver.disconnect();
+    document.removeEventListener("keydown", this.shortcutHandler);
+    document.removeEventListener("keyup", this.keyupHandler);
+    super.disconnectedCallback();
   }
 
   protected updated(change: PropertyValueMap<this>): void {
-    const reRenderKeys: (keyof this)[] = ["gridSize", "key"];
+    const reRenderKeys: (keyof this)[] = ["gridSize", "audioKey"];
     const elementsToObserve = this.gridTiles;
 
     const sourceInvalidationKeys: (keyof this)[] = ["getPage", "src"];
@@ -135,6 +149,40 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     if (reRenderKeys.some((key) => change.has(key))) {
       this.createSpectrogramElements();
     }
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (!this.showingSelectionShortcuts && event.altKey) {
+      const elements = this.gridTiles;
+
+      for (const element of elements) {
+        element.showKeyboardShortcuts = true;
+      }
+
+      this.showingSelectionShortcuts = true;
+    }
+
+    if (event.ctrlKey && event.key === "a") {
+      this.subSelectAll();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      this.removeSubSelection();
+    }
+  }
+
+  private handleKeyUp(event: KeyboardEvent): void {
+    event.preventDefault();
+
+    if (event.altKey) return;
+
+    const elements = this.gridTiles;
+    for (const element of elements) {
+      element.showKeyboardShortcuts = false;
+    }
+
+    this.showingSelectionShortcuts = false;
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
@@ -227,6 +275,14 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
+  private subSelectAll(): void {
+    const elements = this.gridTiles;
+
+    for (const element of elements) {
+      element.selected = true;
+    }
+  }
+
   private removeSubSelection(): void {
     // we set elements as a variable because this.gridTiles uses a query selector
     // therefore, if we put it inside the for loop, we would be doing a DOM query
@@ -242,15 +298,15 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // OE Verification data model
   private convertJsonToVerification(original: Record<string, any>): Verification {
     const possibleSrcKeys = ["src", "url", "AudioLink"];
-    const possibleSubjectKeys = ["subject", "context"];
+    const possibleTagKeys = ["tags", "tag", "label", "classification"];
 
-    this.key ??= possibleSrcKeys.find((key) => key in original) ?? "";
-    const subject = possibleSubjectKeys.find((key) => key in original) ?? "";
+    this.audioKey ??= possibleSrcKeys.find((key) => key in original) ?? "";
+    const tagKey = possibleTagKeys.find((key) => key in original) ?? "";
 
     return new Verification({
-      subject: original[subject],
-      url: original[this.key],
-      tag: null,
+      subject: original,
+      url: original[this.audioKey],
+      tag: original[tagKey],
       confirmed: false,
       additionalTags: [],
     });
@@ -566,11 +622,11 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         <div class="verification-controls">
           <slot @decision="${this.catchDecision}"></slot>
         </div>
-
+        <!-- 
         <div class="paging-options">
           <button class="oe-btn-secondary">Skip</button>
           <button class="oe-btn-secondary">Previous</button>
-        </div>
+        </div> -->
       </div>
       ${this.highlightBoxTemplate()}
     `;
