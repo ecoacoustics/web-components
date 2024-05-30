@@ -1,6 +1,5 @@
 import { LitElement } from "lit";
 import { ReactiveController } from "./reactiveController";
-import { theming } from "../helpers/themes/theming";
 
 type ImplementsConstructor<T> = new (...args: any[]) => T;
 type Component = ImplementsConstructor<LitElement>;
