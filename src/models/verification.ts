@@ -1,4 +1,6 @@
-interface Tag {
+export type VerificationSubject = Record<string, unknown>;
+
+export interface Tag {
   id: number | undefined;
   text: string;
 }
@@ -16,7 +18,7 @@ export class Verification {
   // aka: context
   // this is the native data model used by the host application
   // or this could be the csv row
-  public subject: Record<string, unknown>;
+  public subject: VerificationSubject;
   public url: string;
   public tag: Tag | null;
   public confirmed: boolean;

@@ -12,7 +12,7 @@
     <oe-axes style="padding: 6rem;">
         <oe-indicator>
             <oe-spectrogram id="playing-spectrogram" class="large" src="/example.flac" window-size="1024"
-                color-map="audacity" scaling="natural"></oe-spectrogram>
+                color-map="audacity" scaling="original"></oe-spectrogram>
         </oe-indicator>
     </oe-axes>
     <oe-media-controls for="playing-spectrogram"></oe-media-controls>
@@ -138,27 +138,9 @@
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .small {
-            height: 200px;
-            width: 200px;
-        }
-
         .large {
             height: 300px;
             width: 100%;
-        }
-
-        .stretch {
-            width: 100%;
-            height: 100%;
-        }
-
-        .fit-height {
-            width: 100%;
-        }
-
-        .fit-height {
-            height: 100%;
         }
     </style>
 </body>
