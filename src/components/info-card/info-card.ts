@@ -2,7 +2,6 @@ import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing } from "lit";
 import { infoCardStyle } from "./css/style";
-import { theming } from "../../helpers/themes/theming";
 import { consume } from "@lit/context";
 import { gridTileContext } from "../verification-grid-tile/verification-grid-tile";
 import { Verification, VerificationSubject } from "../../models/verification";
@@ -10,7 +9,7 @@ import { classMap } from "lit/directives/class-map.js";
 
 @customElement("oe-info-card")
 export class InfoCard extends AbstractComponent(LitElement) {
-  public static styles = [infoCardStyle, theming];
+  public static styles = infoCardStyle;
 
   @consume({ context: gridTileContext })
   @property({ attribute: false })

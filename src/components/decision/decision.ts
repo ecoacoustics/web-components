@@ -3,7 +3,6 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
 import { classMap } from "lit/directives/class-map.js";
-import { theming } from "../../helpers/themes/theming";
 import { SelectionObserverType } from "../verification-grid/verification-grid";
 
 /**
@@ -20,7 +19,7 @@ import { SelectionObserverType } from "../verification-grid/verification-grid";
  */
 @customElement("oe-decision")
 export class Decision extends AbstractComponent(LitElement) {
-  public static styles = [decisionStyles, theming];
+  public static styles = decisionStyles;
 
   @property({ type: Boolean, reflect: true, converter: (x) => x !== "false" })
   public verified: boolean | undefined;
@@ -98,7 +97,7 @@ export class Decision extends AbstractComponent(LitElement) {
     return html`
       <button
         id="decision-button"
-        class="oe-btn-secondary ${classMap({ disabled: !!this.disabled })}"
+        class="btn oe-btn-secondary ${classMap({ disabled: !!this.disabled })}"
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
         ?disabled=${this.disabled}

@@ -7,7 +7,6 @@ import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../.
 import { Verification } from "../../models/verification";
 import { VerificationGridTile } from "../verification-grid-tile/verification-grid-tile";
 import { Decision } from "../decision/decision";
-import { theming } from "../../helpers/themes/theming";
 
 export type SelectionObserverType = "desktop" | "tablet";
 type PageFetcher = (elapsedItems: number) => Promise<any[]>;
@@ -36,7 +35,7 @@ type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: 
 //! Please don't look at this component yet until it is finalized, it has a lot of bad code
 @customElement("oe-verification-grid")
 export class VerificationGrid extends AbstractComponent(LitElement) {
-  public static styles = [verificationGridStyles, theming];
+  public static styles = verificationGridStyles;
 
   @property({ attribute: "grid-size", type: Number, reflect: true })
   public gridSize = 8;
@@ -49,11 +48,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "desktop";
 
+  // src can point to a JSON, CSV, or TSV file
   @property({ type: String })
   public src: string | undefined;
 
-  // TODO: we probably won't need this when we create a formal spec for the
-  // expected data structure
   @property({ type: String })
   public audioKey!: string;
 
@@ -82,8 +80,9 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // TODO: find a better way to do this
   private showingSelectionShortcuts = false;
 
-  private shortcutHandler = this.handleKeyDown.bind(this);
+  private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
+  private blurHandler = this.handleWindowBlur.bind(this);
   private intersectionHandler = this.handleIntersection.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
@@ -96,14 +95,16 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener("keydown", this.shortcutHandler);
+    document.addEventListener("keydown", this.keydownHandler);
     document.addEventListener("keyup", this.keyupHandler);
+    window.addEventListener("blur", this.blurHandler);
   }
 
   public disconnectedCallback(): void {
     this.intersectionObserver.disconnect();
-    document.removeEventListener("keydown", this.shortcutHandler);
+    document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
+    window.removeEventListener("blur", this.blurHandler);
     super.disconnectedCallback();
   }
 
@@ -153,13 +154,10 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private handleKeyDown(event: KeyboardEvent): void {
     if (!this.showingSelectionShortcuts && event.altKey) {
-      const elements = this.gridTiles;
-
-      for (const element of elements) {
-        element.showKeyboardShortcuts = true;
-      }
-
-      this.showingSelectionShortcuts = true;
+      this.showSelectionShortcuts();
+      // return early here because otherwise ctrl + alt + a would select all items
+      // when the expected behavior is to add item a to the sub selection
+      return;
     }
 
     if (event.ctrlKey && event.key === "a") {
@@ -175,8 +173,25 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private handleKeyUp(event: KeyboardEvent): void {
     event.preventDefault();
 
-    if (event.altKey) return;
+    if (!event.altKey) {
+      this.hideSelectionShortcuts();
+    }
+  }
 
+  private handleWindowBlur(): void {
+    this.hideSelectionShortcuts();
+  }
+
+  private showSelectionShortcuts(): void {
+    const elements = this.gridTiles;
+    for (const element of elements) {
+      element.showKeyboardShortcuts = true;
+    }
+
+    this.showingSelectionShortcuts = true;
+  }
+
+  private hideSelectionShortcuts(): void {
     const elements = this.gridTiles;
     for (const element of elements) {
       element.showKeyboardShortcuts = false;
@@ -315,6 +330,11 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private srcPageCallback(src: string): PageFetcher {
     return async (elapsedItems: number) => {
       const response = await fetch(src);
+
+      if (!response.ok) {
+        throw new Error("Could not fetch page");
+      }
+
       const data = await response.json();
 
       const startIndex = elapsedItems;
@@ -322,6 +342,16 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
       return data.slice(startIndex, endIndex) ?? [];
     };
+  }
+
+  // if the user does not explicitly specify a file format that their data is in
+  // we can use some simple heuristics to determine the file format
+  // this should not be a replacement for the user explicitly specifying the file
+  // format, but it is better than throwing an error
+  // TODO: The contents should probably be a pointer because otherwise we are copying the entire file!
+  private fileFormat(contents: string): "json" | "csv" | "tsv" {
+    // TODO: Add support for tsv files
+    return contents.startsWith("{") ? "json" : "csv";
   }
 
   // TODO: add stricter typing here

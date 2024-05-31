@@ -3,7 +3,7 @@ import { css } from "lit";
 export const verificationGridTileStyles = css`
   .tile-container {
     position: relative;
-    border-radius: 12px;
+    border-radius: var(--oe-border-rounding);
     border: solid 1px var(--oe-secondary-background-color);
     background-color: var(--oe-panel-color);
     box-shadow: 4px 4px 8px var(--oe-panel-color);
@@ -11,7 +11,7 @@ export const verificationGridTileStyles = css`
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
     cursor: pointer;
-    margin: calc(0.5rem + 2px);
+    margin: calc(0.5rem + 1px);
 
     &:hover {
       box-shadow: 0 2px 4px #e8e2e6;
@@ -21,6 +21,7 @@ export const verificationGridTileStyles = css`
   .selected {
     border: 2px solid var(--oe-selected-color);
     background-color: var(--oe-selected-background-color);
+    margin: 0.5rem;
   }
 
   .keyboard-hint {

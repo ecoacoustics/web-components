@@ -57,8 +57,14 @@ web components to validate events in an audio recording.
   </div>
 </oe-verification-grid>
 
-<output id="decision-output">
-</output>
+<details>
+  <summary>
+    Results
+  </summary>
+
+  <output id="decision-output">
+  </output>
+</details>
 
 <script>
 (() => {

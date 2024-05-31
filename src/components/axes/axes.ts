@@ -120,8 +120,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // TODO: don't recompute the x position twice
     const xGridLine = (value: Seconds) =>
       svg`<line
-        x1="${scale.temporal(value)}"
-        x2="${scale.temporal(value)}"
+        x1="${scale.temporal.scale(value)}"
+        x2="${scale.temporal.scale(value)}"
         y1="0"
         y2="${canvasSize.height}"
         class="grid-line"
@@ -131,8 +131,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       svg`<line
         x1="0"
         x2="${canvasSize.width}"
-        y1="${scale.frequency(value)}"
-        y2="${scale.frequency(value)}"
+        y1="${scale.frequency.scale(value)}"
+        y2="${scale.frequency.scale(value)}"
         class="grid-line"
       ></line>`;
 
@@ -152,6 +152,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     `;
   }
 
+  // TODO: We should probably refactor this so that we only calculate the font size
+  // once per each unique length of strings
   private createAxisLabels(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
     const xTitleFontSize = this.calculateFontSize(this.xLabel);
     // const yTitleFontSize = this.calculateFontSize(this.yLabel);
@@ -162,20 +164,18 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
-    // TODO: We could probably do this more clever with an intersection observer or measuring the width of the proposed
-    //       label, and get the number of digits that the proposed title will have to clear
     const xTitleOffset = xTitleFontSize.height + this.tickSize + this.titleOffset + this.labelPadding;
     const yTitleOffset = fontSize.width + this.tickSize + this.titleOffset + this.labelPadding;
 
     const xLabel = (value: Seconds) => {
       const labelSize = this.calculateFontSize(value.toFixed(1));
-      const xPos = scale.temporal(value) + labelSize.width / 2;
+      const xPos = scale.temporal.scale(value) + labelSize.width / 2;
       const yPos = canvasSize.height + this.labelPadding + this.tickSize;
 
       return svg`<g>
         <line
-          x1="${scale.temporal(value)}"
-          x2="${scale.temporal(value)}"
+          x1="${scale.temporal.scale(value)}"
+          x2="${scale.temporal.scale(value)}"
           y1="${canvasSize.height}"
           y2="${canvasSize.height + this.tickSize}"
         ></line>
@@ -183,7 +183,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
           part="label x-label"
           text-anchor="end"
           x="${xPos}"
-          y="${yPos + this.labelPadding}"
+          y="${yPos + this.tickSize}"
         >
           ${value.toFixed(1)}
         </text>
@@ -193,14 +193,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const yLabel = (value: Hertz) => {
       const labelSize = this.calculateFontSize(value.toString());
       const xPos = -this.tickSize;
-      const yPos = scale.frequency(value) + labelSize.height / 2;
+      const yPos = scale.frequency.scale(value) + labelSize.height / 2;
+
+      console.log("ypos for", yPos, value);
 
       return svg`<g>
         <line
           x1="${xPos}"
           x2="${xPos + this.tickSize}"
-          y1="${scale.frequency(value)}"
-          y2="${scale.frequency(value)}"
+          y1="${scale.frequency.scale(value)}"
+          y2="${scale.frequency.scale(value)}"
         ></line>
         <text
           part="label y-label"
@@ -292,11 +294,11 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private calculateStep(scale: TemporalScale | FrequencyScale): number {
-    const smallestValue = scale.domain()[0];
-    const largestValue = scale.domain()[1];
+    const smallestValue = scale.domain[0];
+    const largestValue = scale.domain[1];
     const valueDelta = largestValue - smallestValue;
 
-    const canvasSize = Math.abs(scale.range()[1] - scale.range()[0]);
+    const canvasSize = Math.abs(scale.range[1] - scale.range[0]);
 
     const midpoint = (smallestValue + largestValue) / 2;
 
@@ -349,8 +351,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const lastLabel = values.at(-1)!;
     const proposedLastLabel = end;
 
-    const lastLabelPosition = scale(lastLabel);
-    const proposedLastLabelPosition = scale(proposedLastLabel);
+    const lastLabelPosition = scale.scale(lastLabel);
+    const proposedLastLabelPosition = scale.scale(proposedLastLabel);
     const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
 
     const fontSize = this.calculateFontSize();
@@ -372,4 +374,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       </div>
     `;
   }
+
+  // TODO: the canvas that we use to calculate the font width/height should be
+  // cached as a static field
+  public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
 }

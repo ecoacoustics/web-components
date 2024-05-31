@@ -89,6 +89,12 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Dev Server",
+        "command": "pnpm dev",
+        "request": "launch",
+        "type": "node-terminal"
+      },
+      {
         "name": "Lint",
         "command": "pnpm lint",
         "request": "launch",
@@ -97,12 +103,6 @@
       {
         "name": "Build Components",
         "command": "pnpm build:components",
-        "request": "launch",
-        "type": "node-terminal"
-      },
-      {
-        "name": "Components Development Server",
-        "command": "pnpm dev",
         "request": "launch",
         "type": "node-terminal"
       }

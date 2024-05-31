@@ -10,7 +10,7 @@
 
 <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" src="/grid-items.json" grid-size="4" selection-behavior="desktop">
+        <oe-verification-grid id="verification-grid" src="/grid-items.json" grid-size="6" selection-behavior="desktop">
             <template>
                 <oe-axes style="padding-left: 3rem; padding-bottom: 1.5rem;">
                     <oe-indicator>
@@ -19,7 +19,7 @@
                 </oe-axes>
                 <oe-info-card></oe-info-card>
                 <oe-media-controls class="media-controls" for="spectrogram"
-                    style="position: absolute; top: 3rem; right: 3rem; border-radius: 9999px; z-index: 1; padding: 0px; zoom: 0.65;"></oe-media-controls>
+                    style="position: absolute; top: 4rem; right: 5rem; border-radius: 9999px; z-index: 1; padding: 0px; zoom: 0.5;"></oe-media-controls>
             </template>
 
             <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
@@ -44,7 +44,7 @@
             left: 0px;
             top: 0px;
             width: 100vw;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .media-controls {

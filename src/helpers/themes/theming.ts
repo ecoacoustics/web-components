@@ -2,36 +2,106 @@ import { css } from "lit";
 
 // TODO: these should use computed values
 export const theming = css`
-  :host {
-    --oe-primary-color: hsl(206.93deg, 100%, 24.9%);
-    --oe-primary-background-color: #f7f7fa;
+  /*
+    The theme is derived from the theme color, hue, chrome, and tone
+    therefore, if you want to change the theme of the components, it is
+    recommended that you modify these variables so that the theme auto adjusts
+    and maintains a good colour ratio and contrast.
 
-    --oe-secondary-color: rgb(221, 218, 245);
-    --oe-secondary-background-color: #f6f0f4;
+    If you want to set the other variables manually e.g. --oe-primary-color
+    you can, but changing these colors can lead to accessability and contrast
+    issues
+  */
+  @media (prefers-color-scheme: dark) {
+    :host,
+    :root {
+      --oe-theme-hue: 0deg;
+      --oe-theme-saturation: 0%;
+      --oe-theme-lightness: 12%;
 
-    --oe-disabled-color: #f7f7fa;
-    --oe-disabled-background-color: #f6f0f4;
+      /* TODO: get rid of this hack */
+      --oe-text-color: white !important;
+    }
+  }
 
-    --oe-accent-color: #f7f7fa;
-    --oe-accent-background-color: #f6f0f4;
+  /* Light mode (and any other themes besides dark mode) */
+  @media not (prefers-color-scheme: dark) {
+    :host,
+    :root {
+      --oe-theme-hue: 247deg;
+      --oe-theme-saturation: 57%;
+      --oe-theme-lightness: 91%;
+    }
+  }
+
+  /* TODO: we probably only need :host here */
+  :host,
+  :root {
+    --oe-font-color: white;
+    --oe-background-color: black;
+
+    /* Modify these variables below if you are an expert user */
+    --oe-primary-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) - 50%),
+      calc(var(--oe-theme-lightness) - 30%)
+    );
+    --oe-primary-background-color: hsl(
+      var(--oe-theme-hue),
+      var(--oe-theme-saturation),
+      calc(var(--oe-theme-lightness) - 40%)
+    );
+
+    --oe-secondary-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) - 70%),
+      calc(var(--oe-theme-lightness) - 80%)
+    );
+    --oe-secondary-background-color: hsl(
+      var(--oe-theme-hue),
+      var(--oe-theme-saturation),
+      calc(var(--oe-theme-lightness))
+    );
+
+    --oe-accent-color: white;
+    --oe-accent-background-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) + 10%),
+      calc(var(--oe-theme-lightness) - 20%)
+    );
 
     --oe-info-color: var(--oe-text-color);
-    --oe-info-background-color: #e7def7;
+    --oe-info-background-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) + 10%),
+      calc(var(--oe-theme-lightness) + 20%)
+    );
 
-    --oe-hover-color: #f6f0f4;
-    --oe-hover-background-color: #f7f7fa;
+    --oe-selected-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 40%));
+    --oe-selected-background-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) + 10%),
+      calc(var(--oe-theme-lightness) + 10%)
+    );
 
-    --oe-selected-color: #a7a7da;
-    --oe-selected-background-color: #d6d0f4;
+    /* --oe-panel-color: #eaeaf4; */
+    --oe-panel-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 5%));
+    --oe-panel-background-color: hsl(
+      var(--oe-theme-hue),
+      var(--oe-theme-saturation),
+      calc(var(--oe-theme-lightness) - 10%)
+    );
 
-    --oe-panel-color: #eaeaf4;
-    --oe-panel-background-color: #f6f0f4;
+    --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 10%));
+    --oe-text-color: hsl(
+      var(--oe-theme-hue),
+      calc(var(--oe-theme-saturation) - 50%),
+      calc(var(--oe-theme-lightness) - 90%)
+    );
 
-    --oe-background-color: #f7f7fa;
-    --oe-text-color: #1c1c1e;
-    --oe-border-rounding: 8px;
-
+    --oe-border-rounding: 12px;
     --oe-font-family: sans-serif;
+    /* --oe-box-shadow: 4px 4px 8px var(--oe-primary-background-color); */
   }
 
   * {
@@ -108,17 +178,21 @@ export const theming = css`
     display: none;
   }
 
-  .oe-btn-primary {
-    color: var(--oe-primary-color);
-    background-color: var(--oe-primary-background-color);
+  .btn {
     border: none;
     border-radius: var(--oe-border-rounding);
     margin: 0.1rem;
     font-size: 0.9rem;
-    box-shadow: 4px 4px 8px var(--oe-primary-background-color);
-    padding: 1rem;
+    max-width: max-content;
+    box-shadow: var(--oe-box-shadow);
+    padding: 1em;
     padding-left: 2rem;
     padding-right: 2rem;
+  }
+
+  .oe-btn-primary {
+    color: var(--oe-primary-color);
+    background-color: var(--oe-primary-background-color);
 
     &:hover {
       background-color: var(--oe-secondary-color);
@@ -129,20 +203,12 @@ export const theming = css`
   }
 
   .oe-btn-secondary {
-    color: var(--oe-text-color);
-    background-color: var(--oe-secondary-color);
-    border: none;
-    border-radius: var(--oe-border-rounding);
-    margin: 0.1rem;
-    font-size: 0.9rem;
-    box-shadow: 4px 4px 8px var(--oe-secondary-background-color);
-    padding: 1rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    color: var(--oe-secondary-color);
+    background-color: var(--oe-secondary-background-color);
 
     &:hover {
-      background-color: var(--oe-primary-color);
-      color: var(--oe-secondary-color);
+      color: var(--oe-primary-color);
+      background-color: var(--oe-primary-background-color);
       cursor: pointer;
       animation: ripple-animation 0.6s linear;
     }
