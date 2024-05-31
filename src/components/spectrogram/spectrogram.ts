@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, TemplateResult, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { spectrogramStyles } from "./css/style";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
@@ -10,6 +10,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
+import { booleanConverter } from "../../helpers/attributes";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
@@ -51,7 +52,7 @@ const defaultAudioModel = new AudioModel({
 export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = spectrogramStyles;
 
-  // must be in the format startOffset, lowFrequency, endOffset, highFrequency
+  // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ type: String, attribute: "window", reflect: true })
   public domRenderWindow?: string;
 
@@ -70,7 +71,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   @property({ type: Number, attribute: "window-overlap" })
   public windowOverlap = 0;
 
-  @property({ type: Boolean, attribute: "mel-scale" })
+  @property({ type: Boolean, attribute: "mel-scale", converter: booleanConverter })
   public melScale = false;
 
   @property({ type: String, attribute: "color-map" })
@@ -109,6 +110,10 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // TODO: remove this
   private doneFirstRender = false;
 
+  public get renderedSource(): string {
+    return this.src || this.slotElements[0]?.getAttribute("src") || "";
+  }
+
   public hasSource(): boolean {
     return !!this.src || this.slotElements.length > 0;
   }
@@ -126,6 +131,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     if (this.hasSource()) {
       this.renderSpectrogram();
     }
+
+    // TODO: this is a hack
+    this.useMelScale.value = this.melScale;
 
     this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
   }
@@ -159,7 +167,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     );
 
     this.audioHelper
-      .connect(this.mediaElement.src, this.canvas, this.spectrogramOptions())
+      .connect(this.renderedSource, this.canvas, this.spectrogramOptions())
       .then((info: IAudioInformation) => {
         const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
@@ -187,7 +195,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       }),
     );
 
-    this.audioHelper.changeSource(this.mediaElement.src, this.spectrogramOptions()).then((info: IAudioInformation) => {
+    this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions()).then((info: IAudioInformation) => {
       const originalRecording = { duration: info.duration!, startOffset: this.offset };
 
       this.audio.value = new AudioModel({
@@ -234,6 +242,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   public pause(): void {
     this.paused = true;
     this.setPlaying();
+  }
+
+  private handleSlotChange(): void {
+    if (this.hasSource()) {
+      this.renderSpectrogram();
+    }
   }
 
   private originalFftSize(): Size {
@@ -350,9 +364,14 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // TODO: move somewhere else
   private nextRequestId: number | null = null;
+  private playStartedAt: DOMHighResTimeStamp | null = null;
 
+  // we used to set lastHighResSync to performance.now(), but this caused some
+  // visual artifacts when the audio was paused and then played again
+  // this was because the time between calling function and fetching the highResTime
+  // later on led to a time difference of a couple of milliseconds
   private highFreqUpdateCurrentTime(
-    lastHighResSync: DOMHighResTimeStamp = performance.now(),
+    lastHighResSync: DOMHighResTimeStamp | null = null,
     lastObservedTime: number | null = null,
   ): void {
     // this will become a problem if we want to update the time in the future without pausing the media element
@@ -361,10 +380,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       const mediaElementTime = this.mediaElement.currentTime;
       let exactTimeDelta = 0;
 
-      // there can be a time between pressing the play button, and when the audio starts playing
-      // e.g. when the audio is still downloading
-      const startedPlaying = !this.mediaElement.paused;
-
       // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
       // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
       // couple of milliseconds to be skipped
@@ -372,10 +387,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // that we have seen, so that we can "fill in the gaps"
       // in browsers which report the real time (e.g. Chrome) this condition should never be true
       const highResTime = performance.now();
-      if (mediaElementTime === lastObservedTime && startedPlaying) {
+      if (mediaElementTime === lastObservedTime && lastHighResSync !== null) {
         exactTimeDelta = (highResTime - lastHighResSync) / 1_000;
       } else {
-        lastHighResSync = highResTime;
+        if (this.playStartedAt !== null) {
+          lastHighResSync = highResTime;
+        }
       }
 
       this.currentTime.value = mediaElementTime + exactTimeDelta;
@@ -433,29 +450,20 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public render() {
-    // TODO: I'm sure there's a way to do this in the lit html template
-    let derivedMediaElement: TemplateResult<1> | undefined;
-    if (this.src) {
-      derivedMediaElement = html`
-        <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload crossorigin>
-          <slot></slot>
-        </audio>
-      `;
-    } else if (this.slotElements.length > 0) {
-      derivedMediaElement = html`
-        <audio id="media-element" @ended="${this.pause}" preload crossorigin>
-          <slot></slot>
-        </audio>
-      `;
-    } else {
-      derivedMediaElement = html`<audio id="media-element" @ended="${this.pause}" preload crossorigin></audio>`;
-    }
-
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      ${derivedMediaElement}
+      <audio
+        id="media-element"
+        src="${this.src}"
+        @ended="${this.pause}"
+        @play="${() => (this.playStartedAt = performance.now())}"
+        preload
+        crossorigin
+      >
+        <slot @slotchange="${this.handleSlotChange}"></slot>
+      </audio>
     `;
   }
 }

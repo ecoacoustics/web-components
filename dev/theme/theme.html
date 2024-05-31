@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Components - Theme Creator</title>
+    <script type="module" src="./theme.ts"></script>
+</head>
+
+<body>
+    <label>
+        Source color
+        <input id="color-picker" type="color" />
+    </label>
+
+    <div id="grid-host"></div>
+
+    <script>
+        function ColorGridRow(variable) {
+            const element = document.createElement("div");
+
+            element.innerHTML = `
+                <div class="grid-row">
+                    <div class="grid-item">
+                        <div class="grid-item-heading">${variable}-color</div>
+                        <div class="grid-item-content" style="background-color: var(--oe-${variable}-color); width: 2rem; height: 2rem;"></div>
+                    </div>
+
+                    <div class="grid-item">
+                        <div class="grid-item-heading">${variable}-background-color</div>
+                        <div class="grid-item-content" style="background-color: var(--oe-${variable}-background-color); width: 2rem; height: 2rem;"></div>
+                    </div>
+                </div>
+            `;
+
+            return element;
+        }
+
+        function ColorGrid(variables) {
+            const element = document.createElement("div");
+
+            for (const variable of variables) {
+                const row = ColorGridRow(variable);
+                element.appendChild(row);
+            }
+
+            return element;
+        }
+
+        // thank god for copilot
+        function changeSourceColor(value) {
+            const { h, s, l } = hexToHSL(value);
+
+            console.log("update to", `hsl${h}deg, ${s}%, ${l}%`);
+
+            document.documentElement.style.setProperty("--oe-source-hue", `${h}deg`);
+            document.documentElement.style.setProperty("--oe-source-saturation", `${s}%`);
+            document.documentElement.style.setProperty("--oe-source-lightness", `${l}%`);
+        }
+
+        window.onload = () => {
+            const rootHost = document.getElementById("grid-host");
+            const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel"];
+
+            const colorGrid = ColorGrid(variablesToDisplay);
+            rootHost.appendChild(colorGrid);
+
+            const colorPicker = document.getElementById("color-picker");
+            colorPicker.addEventListener("change", (event) => changeSourceColor(event.target.value));
+        };
+
+        // created and copied from AJ_ (https://stackoverflow.com/a/62390801)
+        function hexToHSL(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+
+            let r = parseInt(result[1], 16);
+            let g = parseInt(result[2], 16);
+            let b = parseInt(result[3], 16);
+
+            r /= 255, g /= 255, b /= 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max == min) {
+                h = s = 0; // achromatic
+            } else {
+                var d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+
+                h /= 6;
+            }
+
+            h = Math.round(h * 360);
+            s = Math.round(s * 100);
+            l = Math.round(l * 100);
+
+            return { h, s, l };
+        }
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: var(--oe-background-color);
+            color: var(--oe-text-color);
+        }
+
+        #grid-host {
+            position: relative;
+            min-height: 100vh;
+            padding: 5%;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            padding: 0.5rem;
+        }
+
+        .grid-item {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            border: 1px solid black;
+        }
+
+        .grid-item-heading {
+            font-weight: bold;
+        }
+
+        .grid-item-content {
+            position: relative;
+        }
+    </style>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Components - Adding Audio</title>
+    <script type="module" src="/src/components/index.ts"></script>
+</head>
+
+<body>
+    <p>
+        This dev page is intended to test creating a spectrogram without an audio source, then adding a source after
+        creation.
+    </p>
+
+    <oe-spectrogram></oe-spectrogram>
+
+    <button onclick="addSrcAttribute();">Add src attribute</button>
+    <button onclick="addSourceElement();">Add source element</button>
+
+    <script>
+        const spectrogram = document.querySelector("oe-spectrogram");
+        const testAudio = "/example.flac";
+
+        function addSrcAttribute() {
+            spectrogram.src = testAudio;
+        }
+
+        function addSourceElement() {
+            const source = document.createElement('source');
+            source.src = testAudio;
+            spectrogram.appendChild(source);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,10 +1,6 @@
 import { css } from "lit";
 
 export const verificationGridStyles = css`
-  :host {
-    --text-color: #1c1c1e;
-  }
-
   #highlight-box {
     position: absolute;
     display: none;
@@ -31,16 +27,12 @@ export const verificationGridStyles = css`
   }
 
   .verification-grid {
-    position: relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    max-height: 100vh;
-
-    & > * {
-      margin: 0.5rem;
-    }
+    align-items: stretch;
+    gap: 0.5rem;
   }
 
   .no-items-message {
@@ -53,15 +45,16 @@ export const verificationGridStyles = css`
     font-weight: normal;
     font-size: 1.4rem;
     letter-spacing: 0em;
-    color: var(--text-color);
+    color: var(--oe-text-color);
   }
 
   .verification-controls {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem;
     gap: 1rem;
-    color: var(--text-color);
+    color: var(--oe-text-color);
     align-items: stretch;
   }
 `;

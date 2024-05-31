@@ -1,12 +1,11 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, TemplateResult } from "lit";
-import { Spectrogram } from "../../../playwright";
+import { Spectrogram } from "../spectrogram/spectrogram";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
 import { verificationGridTileStyles } from "./css/style";
 import { Verification } from "../../models/verification";
-import { theming } from "../../helpers/themes/theming";
 import { createContext, provide } from "@lit/context";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
@@ -40,7 +39,7 @@ export const gridTileContext = createContext<Verification>("grid-tile-context");
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTile extends AbstractComponent(LitElement) {
-  public static styles = [verificationGridTileStyles, theming];
+  public static styles = verificationGridTileStyles;
 
   // there is a difference between @state and @property({ attribute: false })
   // see more here: https://stackoverflow.com/a/70343809
