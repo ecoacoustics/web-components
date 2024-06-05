@@ -11,7 +11,7 @@ import { classMap } from "lit/directives/class-map.js";
 export class InfoCard extends AbstractComponent(LitElement) {
   public static styles = infoCardStyle;
 
-  @consume({ context: gridTileContext })
+  @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
   public model!: Verification;
 
@@ -65,6 +65,8 @@ export class InfoCard extends AbstractComponent(LitElement) {
 
   public render() {
     const subject: VerificationSubject | undefined = this.model?.subject;
+
+    console.log("new model");
 
     return html`
       <div class="card-container ${classMap({ expanded: this.showExpanded })}">

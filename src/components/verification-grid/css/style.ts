@@ -45,16 +45,16 @@ export const verificationGridStyles = css`
     font-weight: normal;
     font-size: 1.4rem;
     letter-spacing: 0em;
-    color: var(--oe-text-color);
+    color: var(--oe-font-color);
   }
 
   .verification-controls {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
     padding: 1rem;
     gap: 1rem;
-    color: var(--oe-text-color);
-    align-items: stretch;
+    color: var(--oe-font-color);
   }
 `;

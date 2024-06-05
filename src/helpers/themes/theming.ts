@@ -1,99 +1,15 @@
 import { css } from "lit";
 
-// TODO: these should use computed values
 export const theming = css`
-  /*
-    The theme is derived from the theme color, hue, chrome, and tone
-    therefore, if you want to change the theme of the components, it is
-    recommended that you modify these variables so that the theme auto adjusts
-    and maintains a good colour ratio and contrast.
-
-    If you want to set the other variables manually e.g. --oe-primary-color
-    you can, but changing these colors can lead to accessability and contrast
-    issues
-  */
-  @media (prefers-color-scheme: dark) {
-    :host,
-    :root {
-      --oe-theme-hue: 0deg;
-      --oe-theme-saturation: 0%;
-      --oe-theme-lightness: 12%;
-
-      /* TODO: get rid of this hack */
-      --oe-text-color: white !important;
-    }
-  }
-
-  /* Light mode (and any other themes besides dark mode) */
-  @media not (prefers-color-scheme: dark) {
-    :host,
-    :root {
-      --oe-theme-hue: 247deg;
-      --oe-theme-saturation: 57%;
-      --oe-theme-lightness: 91%;
-    }
-  }
-
   /* TODO: we probably only need :host here */
   :host,
   :root {
-    --oe-font-color: white;
-    --oe-background-color: black;
+    --oe-theme-hue: 247deg;
+    --oe-theme-saturation: 57%;
+    --oe-theme-lightness: 91%;
 
-    /* Modify these variables below if you are an expert user */
-    --oe-primary-color: hsl(
-      var(--oe-theme-hue),
-      calc(var(--oe-theme-saturation) - 50%),
-      calc(var(--oe-theme-lightness) - 30%)
-    );
-    --oe-primary-background-color: hsl(
-      var(--oe-theme-hue),
-      var(--oe-theme-saturation),
-      calc(var(--oe-theme-lightness) - 40%)
-    );
-
-    --oe-secondary-color: hsl(
-      var(--oe-theme-hue),
-      calc(var(--oe-theme-saturation) - 70%),
-      calc(var(--oe-theme-lightness) - 80%)
-    );
-    --oe-secondary-background-color: hsl(
-      var(--oe-theme-hue),
-      var(--oe-theme-saturation),
-      calc(var(--oe-theme-lightness))
-    );
-
-    --oe-accent-color: white;
-    --oe-accent-background-color: hsl(
-      var(--oe-theme-hue),
-      calc(var(--oe-theme-saturation) + 10%),
-      calc(var(--oe-theme-lightness) - 20%)
-    );
-
-    --oe-info-color: var(--oe-text-color);
-    --oe-info-background-color: hsl(
-      var(--oe-theme-hue),
-      calc(var(--oe-theme-saturation) + 10%),
-      calc(var(--oe-theme-lightness) + 20%)
-    );
-
-    --oe-selected-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 40%));
-    --oe-selected-background-color: hsl(
-      var(--oe-theme-hue),
-      calc(var(--oe-theme-saturation) + 10%),
-      calc(var(--oe-theme-lightness) + 10%)
-    );
-
-    /* --oe-panel-color: #eaeaf4; */
-    --oe-panel-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 5%));
-    --oe-panel-background-color: hsl(
-      var(--oe-theme-hue),
-      var(--oe-theme-saturation),
-      calc(var(--oe-theme-lightness) - 10%)
-    );
-
-    --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 10%));
-    --oe-text-color: hsl(
+    --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 20%));
+    --oe-font-color: hsl(
       var(--oe-theme-hue),
       calc(var(--oe-theme-saturation) - 50%),
       calc(var(--oe-theme-lightness) - 90%)
@@ -101,7 +17,14 @@ export const theming = css`
 
     --oe-border-rounding: 12px;
     --oe-font-family: sans-serif;
-    /* --oe-box-shadow: 4px 4px 8px var(--oe-primary-background-color); */
+    /* --oe-box-shadow: 4px 4px 8px var(--oe-primary-color); */
+
+    --oe-primary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 38%));
+    --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 10%));
+    --oe-accent-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 20%));
+    --oe-info-color: hsl(207deg, var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 15%));
+    --oe-selected-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 5%));
+    --oe-panel-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 5%));
   }
 
   * {
@@ -118,7 +41,7 @@ export const theming = css`
   kbd {
     position: relative;
     display: inline-block;
-    color: var(--oe-text-color);
+    color: var(--oe-font-color);
     font-family: "Courier New", Courier, monospace;
     text-align: center;
     font-weight: bold;
@@ -157,7 +80,7 @@ export const theming = css`
 
   a {
     text-decoration: underline;
-    color: var(--oe-primary-color);
+    color: var(--oe-font-color);
 
     &:hover {
       text-decoration: none;
@@ -170,7 +93,7 @@ export const theming = css`
   hr {
     border: 0;
     height: 1px;
-    background-color: var(--oe-text-color);
+    background-color: var(--oe-font-color);
     opacity: 0.2;
   }
 
@@ -178,7 +101,7 @@ export const theming = css`
     display: none;
   }
 
-  .btn {
+  .oe-btn {
     border: none;
     border-radius: var(--oe-border-rounding);
     margin: 0.1rem;
@@ -188,29 +111,18 @@ export const theming = css`
     padding: 1em;
     padding-left: 2rem;
     padding-right: 2rem;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.1);
+      cursor: pointer;
+    }
   }
 
   .oe-btn-primary {
-    color: var(--oe-primary-color);
-    background-color: var(--oe-primary-background-color);
-
-    &:hover {
-      background-color: var(--oe-secondary-color);
-      color: var(--oe-primary-color);
-      cursor: pointer;
-      animation: ripple-animation 0.6s linear;
-    }
+    background-color: var(--oe-primary-color);
   }
 
   .oe-btn-secondary {
-    color: var(--oe-secondary-color);
-    background-color: var(--oe-secondary-background-color);
-
-    &:hover {
-      color: var(--oe-primary-color);
-      background-color: var(--oe-primary-background-color);
-      cursor: pointer;
-      animation: ripple-animation 0.6s linear;
-    }
+    background-color: var(--oe-secondary-color);
   }
 `;

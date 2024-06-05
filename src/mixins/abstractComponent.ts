@@ -20,6 +20,8 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
         newStyles = [styles, theming];
       }
 
+      // eslint-disable-next-line
+      // @ts-ignore
       return super.finalizeStyles(newStyles);
     }
 

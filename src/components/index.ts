@@ -8,3 +8,4 @@ export * from "./verification-grid/verification-grid";
 export * from "./decision/decision";
 export * from "./verification-grid-tile/verification-grid-tile";
 export * from "./info-card/info-card";
+export * from "./data-source/data-source";

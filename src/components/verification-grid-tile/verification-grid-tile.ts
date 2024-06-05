@@ -43,8 +43,8 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
 
   // there is a difference between @state and @property({ attribute: false })
   // see more here: https://stackoverflow.com/a/70343809
-  @property({ attribute: false })
   @provide({ context: gridTileContext })
+  @property({ attribute: false })
   public model!: Verification;
 
   @state()
@@ -75,6 +75,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   protected willUpdate(): void {
     if (this.spectrogram && this.model?.url) {
       this.spectrogram.src = this.model.url;
+      console.log("setting to", this.model.url);
     }
 
     const shortcutKey = shortcutOrder[this.index];

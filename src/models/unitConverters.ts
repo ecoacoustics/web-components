@@ -8,23 +8,18 @@ export type Hertz = number;
 export type Pixel = number;
 export type Sample = number;
 
-export type ScaleDomain<T> = [T, T];
-export type ScaleRange<T> = [T, T];
+export type ScaleDomain<T extends number> = [min: T, min: T];
+export type ScaleRange<T extends number> = [min: T, max: T];
 
-export type TemporalScale = CustomScale<Seconds>;
-export type FrequencyScale = CustomScale<Hertz>;
+export type LinearScale<T extends number> = (value: T) => Pixel;
+export type InverseLinearScale<T extends number> = (value: Pixel) => T;
 
-export interface IScale {
-  temporal: TemporalScale;
-  frequency: FrequencyScale;
-}
+export type TemporalScale = LinearScale<Seconds>;
+export type FrequencyScale = LinearScale<Hertz>;
+export type InvertTemporalScale = InverseLinearScale<Seconds>;
+export type InvertFrequencyScale = InverseLinearScale<Hertz>;
 
-export interface CustomScale<T> {
-  scale: (value: T) => Pixel;
-  invert: (value: Pixel) => T;
-  domain: ScaleDomain<T>;
-  range: ScaleRange<T>;
-}
+const identityFunction = (value: number) => value;
 
 // use we signals in the stateful unit converters so that when one value updates
 // all the computed values also update
@@ -45,99 +40,102 @@ export class UnitConverter {
   public canvasSize: Signal<RenderCanvasSize>;
   public audioModel: Signal<AudioModel>;
   public melScale: Signal<boolean>;
-
   public nyquist = computed(() => this.audioModel.value.sampleRate / 2);
+  private frequencyInterpolator = computed(() => (this.melScale.value ? hertzToMels : (value: Hertz): Hertz => value));
 
-  public scaleX: Signal<TemporalScale> = computed(() => {});
+  // by using computed signals for the temporalDomain and frequencyDomain
+  // the scale functions will automatically update when the renderWindow size changes
+  public temporalDomain: Signal<ScaleDomain<Seconds>> = computed(() => [
+    this.renderWindow.value.startOffset,
+    this.renderWindow.value.endOffset,
+  ]);
 
-  public scaleXInvert: Signal<InvertScale<Seconds>> = computed(() => {});
+  // the scale functions such as scaleY() take in hertz values (not mel-scale values)
+  // but when melScale is set, we want the hz values to be in their mel scale canvas
+  // position (and vice versa)
+  // this behavior is implemented by setting the domain to mel scale when melScale is set
+  // this will automatically update the scales to convert to/from mel scale values
+  public frequencyDomain: Signal<ScaleDomain<Hertz>> = computed(() => [
+    this.frequencyInterpolator.value(0),
+    this.frequencyInterpolator.value(this.nyquist.value),
+  ]);
 
-  public scaleY: Signal<FrequencyScale> = computed(() => {});
+  // the frequency axis/hertz/y-axis is special because we want the highest frequency to occupy the smallest pixel value
+  // so that it is at the top of the canvas
+  public temporalRange: Signal<ScaleRange<Seconds>> = computed(() => [0, this.canvasSize.value.width]);
+  public frequencyRange: Signal<ScaleRange<Hertz>> = computed(() => [this.canvasSize.value.height, 0]);
 
-  public scaleYInvert: Signal<InvertScale<Hertz>> = computed(() => {});
+  /**
+   * Convert Seconds into a Pixel value on the canvas
+   *
+   * @param value the value in seconds
+   * @returns the x-offset that the seconds value should be drawn
+   */
+  public scaleX: Signal<TemporalScale> = computed(() =>
+    this.linearScale<Seconds>(this.temporalDomain.value, this.temporalRange.value),
+  );
 
-  // TODO: The scales constant should be a class property so that when preact
-  // diffs the computed signal, it will compare against a value (not a property)
-  public renderWindowScale = computed<IScale>(() => {
-    const frequencyInterpolator = this.melScale.value ? hertzToMels : (value: Hertz): Hertz => value;
+  /**
+   * Convert a Pixel value on a canvas value into a number of Seconds
+   *
+   * @param value the x-offset on the canvas
+   * @returns what seconds value the x-offset represents
+   */
+  public scaleXInverse: Signal<InvertTemporalScale> = computed(() =>
+    this.inverseLinearScale(this.temporalDomain.value, this.temporalRange.value),
+  );
 
-    const temporalMin = this.renderWindow.value.startOffset;
-    const temporalMax = this.renderWindow.value.endOffset;
-    const frequencyMin = frequencyInterpolator(0);
-    const frequencyMax = frequencyInterpolator(this.nyquist.value);
+  /**
+   * Convert Hertz into a Pixel value on the canvas
+   *
+   * @param value the value in Hertz
+   * @returns the y-offset that the Hertz value should be drawn
+   */
+  public scaleY: Signal<FrequencyScale> = computed(() =>
+    this.linearScale<Hertz>(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
+  );
 
-    const temporalDomain: ScaleDomain<Seconds> = [temporalMin, temporalMax];
-    const temporalRange: ScaleRange<Seconds> = [0, this.canvasSize.value.width];
+  /**
+   * Convert a Pixel value on a canvas into a number of Hertz
+   *
+   * @param value the y-offset on the canvas
+   * @returns what Hertz value the y-offset represents
+   */
+  public scaleYInverse: Signal<InvertFrequencyScale> = computed(() =>
+    this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
+  );
 
-    const frequencyDomain: ScaleDomain<Hertz> = [frequencyMin, frequencyMax];
-    const frequencyRange: ScaleRange<Hertz> = [this.canvasSize.value.height, 0];
-
-    // calculate the magnitude of a linear function using
-    // (y_2 - y_1) / (x_2 - x_1)
-    const temporalMagnitude = (temporalRange[1] - temporalRange[0]) / (temporalDomain[1] - temporalDomain[0]);
-    const frequencyMagnitude = (frequencyRange[1] - frequencyRange[0]) / (frequencyDomain[1] - frequencyDomain[0]);
-
-    // using a scale function will convert from units -> pixels
-    // therefore, inverting the scale function will convert from pixels -> units
-    // TODO: we should probably find a programmatic way to calculate the invert function from a linear function
-    const temporalScale = (value: Seconds): Pixel => value * temporalMagnitude + temporalMin;
-    const temporalInvert = (value: Pixel): Seconds => (value - temporalMin) / temporalMagnitude;
-
-    // const { scale: temporalScale, invert: temporalInvert } = this.createMathematicalFunction(
-    //   temporalMagnitude,
-    //   temporalMin,
-    // );
-
-    // TODO: the reason why I have canvasSize.height in these scale functions is because my math is incorrect
-    // the largest frequency value should correspond to the smallest pixel value
-    // while the smallest frequency value should correspond to the largest pixel value
-    // using a negative magnitude does not work because we end up with a negative pixel value (the current implementation)
-    // therefore, to fix this, I've implemented a hack where I add the canvasSize.height to the pixel value
-    const frequencyScale = (value: Hertz): Pixel =>
-      frequencyInterpolator(value) * frequencyMagnitude + frequencyMin + this.canvasSize.value.height;
-    const frequencyInvert = (value: Pixel): Hertz =>
-      (frequencyInterpolator(value) - frequencyMin) / frequencyMagnitude - this.canvasSize.value.height;
-
-    // const { scale: frequencyScale, invert: frequencyInvert } = this.createMathematicalFunction(
-    //   frequencyMagnitude,
-    //   frequencyMin,
-    // );
-
-    const temporal: TemporalScale = {
-      scale: temporalScale,
-      invert: temporalInvert,
-      domain: temporalDomain,
-      range: temporalRange,
-    };
-
-    const frequency: FrequencyScale = {
-      scale: frequencyScale,
-      invert: frequencyInvert,
-      domain: frequencyDomain,
-      range: frequencyRange,
-    };
-
-    return {
-      temporal,
-      frequency,
-    };
-  });
-
-  private createMathematicalFunction(
-    magnitude: number,
-    c: number,
-  ): { scale: (...x: any[]) => any; invert: (...x: any[]) => any } {
-    const scale = (value: number): Pixel => (value as number) * magnitude + c;
-    const invert = (value: Pixel): number => (value - c) / magnitude;
-
-    return {
-      scale,
-      invert,
-    };
+  // TODO: I think passing in a scaleConverter here is a hack
+  /**
+   * @returns a function that converts a value to a pixel value
+   */
+  private linearScale<T extends number>(
+    domain: ScaleDomain<T>,
+    range: ScaleRange<T>,
+    scaleConverter = identityFunction,
+  ): LinearScale<T> {
+    const magnitude = this.calculateMagnitude<T>(domain, range);
+    return (value: T) => scaleConverter(value) * magnitude + range[0];
   }
 
-  // calculate the magnitude of a linear function using
-  // (y_2 - y_1) / (x_2 - x_1)
+  /**
+   * @returns a function that converts a pixel value to a value
+   */
+  private inverseLinearScale<T extends number>(
+    domain: ScaleDomain<T>,
+    range: ScaleRange<T>,
+    scaleConverter = identityFunction,
+  ): InverseLinearScale<T> {
+    const magnitude = this.calculateMagnitude<T>(domain, range);
+    return ((value: T) => (scaleConverter(value) - range[0]) / magnitude) as any;
+  }
+
+  /**
+   * calculate the magnitude of a linear function using
+   * (y_2 - y_1) / (x_2 - x_1)
+   *
+   * @returns the magnitude of the mathematical function
+   */
   private calculateMagnitude<T extends number>(domain: ScaleDomain<T>, range: ScaleRange<T>): number {
     return (range[1] - range[0]) / (domain[1] - domain[0]);
   }
