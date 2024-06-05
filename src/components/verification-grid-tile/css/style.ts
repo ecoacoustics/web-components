@@ -4,7 +4,6 @@ export const verificationGridTileStyles = css`
   .tile-container {
     position: relative;
     border-radius: var(--oe-border-rounding);
-    border: solid 1px var(--oe-secondary-background-color);
     background-color: var(--oe-panel-color);
     box-shadow: 4px 4px 8px var(--oe-panel-color);
     padding: 1rem;
@@ -19,8 +18,8 @@ export const verificationGridTileStyles = css`
   }
 
   .selected {
-    border: 2px solid var(--oe-selected-color);
-    background-color: var(--oe-selected-background-color);
+    border: 1px solid var(--oe-accent-color);
+    background-color: var(--oe-selected-color);
     margin: 0.5rem;
   }
 

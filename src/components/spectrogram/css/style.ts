@@ -2,7 +2,7 @@ import { css } from "lit";
 
 export const spectrogramStyles = css`
   :host {
-    display: inline-block;
+    display: block;
   }
 
   #spectrogram-container {

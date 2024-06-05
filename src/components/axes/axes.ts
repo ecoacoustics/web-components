@@ -10,8 +10,9 @@ import {
   FrequencyScale,
   Seconds,
   UnitConverter,
-  IScale,
   Pixel,
+  ScaleDomain,
+  ScaleRange,
 } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -92,7 +93,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   // while the titleOffset is the distance between the axis title and the axis labels
   private labelPadding: Pixel = 4;
   private tickSize: Pixel = 8;
-  private titleOffset: Pixel = 6;
+  private titleOffset: Pixel = 4;
 
   private handleSlotchange(): void {
     this.unitConverter = this.spectrogram.unitConverters!;
@@ -100,10 +101,10 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // because querying the DOM for the font size will cause a repaint and reflow
   // we calculate the value once using a canvas
-  private calculateFontSize(text = "0"): Size {
+  private calculateFontSize(text = "M"): Size {
     const element = document.createElement("canvas");
     const context = element.getContext("2d")!;
-    context.font = "16px sans-serif";
+    context.font = "11px monospace";
 
     const metrics = context.measureText(text);
     const width = metrics.width;
@@ -112,29 +113,35 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return { width, height };
   }
 
-  private createGridLines(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
+  private createGridLines(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
     // we don't want to show the first and last grid lines because it would
     // draw a border around the element
     const shouldShowGridLine = (i: number, values: any[]) => i > 0 && i < values.length - 1;
 
-    // TODO: don't recompute the x position twice
-    const xGridLine = (value: Seconds) =>
-      svg`<line
-        x1="${scale.temporal.scale(value)}"
-        x2="${scale.temporal.scale(value)}"
+    const xGridLine = (value: Seconds) => {
+      // we pull out xPos to a variable because we use it twice (without modification)
+      // for the lines x1 and x2 position
+      // by pulling it out to a separate variable, we can avoid recalculating the value twice
+      const xPos = this.unitConverter.scaleX.value(value);
+      return svg`<line
+        x1="${xPos}"
+        x2="${xPos}"
         y1="0"
         y2="${canvasSize.height}"
         class="grid-line"
       ></line>`;
+    };
 
-    const yGridLine = (value: Hertz) =>
-      svg`<line
+    const yGridLine = (value: Hertz) => {
+      const yPos = this.unitConverter.scaleY.value(value);
+      return svg`<line
         x1="0"
         x2="${canvasSize.width}"
-        y1="${scale.frequency.scale(value)}"
-        y2="${scale.frequency.scale(value)}"
+        y1="${yPos}"
+        y2="${yPos}"
         class="grid-line"
       ></line>`;
+    };
 
     const xAxisGridLines = svg`${xValues.map(
       (value, i) => svg`${shouldShowGridLine(i, xValues) && xGridLine(value)}`,
@@ -154,9 +161,9 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabels(xValues: Seconds[], yValues: Hertz[], scale: IScale, canvasSize: Size) {
+  private createAxisLabels(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
     const xTitleFontSize = this.calculateFontSize(this.xLabel);
-    // const yTitleFontSize = this.calculateFontSize(this.yLabel);
+    const yTitleFontSize = this.calculateFontSize(this.yLabel);
     const largestYValue = Math.max(...yValues.map((x) => x / 1000)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
@@ -164,24 +171,24 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
-    const xTitleOffset = xTitleFontSize.height + this.tickSize + this.titleOffset + this.labelPadding;
-    const yTitleOffset = fontSize.width + this.tickSize + this.titleOffset + this.labelPadding;
+    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize + this.titleOffset;
+    const yTitleOffset = yTitleFontSize.height + fontSize.width + this.tickSize;
 
     const xLabel = (value: Seconds) => {
-      const labelSize = this.calculateFontSize(value.toFixed(1));
-      const xPos = scale.temporal.scale(value) + labelSize.width / 2;
-      const yPos = canvasSize.height + this.labelPadding + this.tickSize;
+      const xPos = this.unitConverter.scaleX.value(value);
+      const yPos = canvasSize.height + this.tickSize;
 
       return svg`<g>
         <line
-          x1="${scale.temporal.scale(value)}"
-          x2="${scale.temporal.scale(value)}"
+          x1="${this.unitConverter.scaleX.value(value)}"
+          x2="${this.unitConverter.scaleX.value(value)}"
           y1="${canvasSize.height}"
           y2="${canvasSize.height + this.tickSize}"
         ></line>
         <text
           part="label x-label"
-          text-anchor="end"
+          text-anchor="middle"
+          dominant-baseline="end"
           x="${xPos}"
           y="${yPos + this.tickSize}"
         >
@@ -191,9 +198,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     };
 
     const yLabel = (value: Hertz) => {
-      const labelSize = this.calculateFontSize(value.toString());
       const xPos = -this.tickSize;
-      const yPos = scale.frequency.scale(value) + labelSize.height / 2;
+      const yPos = this.unitConverter.scaleY.value(value);
 
       console.log("ypos for", yPos, value);
 
@@ -201,12 +207,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
         <line
           x1="${xPos}"
           x2="${xPos + this.tickSize}"
-          y1="${scale.frequency.scale(value)}"
-          y2="${scale.frequency.scale(value)}"
+          y1="${this.unitConverter.scaleY.value(value)}"
+          y2="${this.unitConverter.scaleY.value(value)}"
         ></line>
         <text
           part="label y-label"
           text-anchor="end"
+          dominant-baseline="middle"
           x="${xPos - this.labelPadding}"
           y="${yPos}"
         >
@@ -261,68 +268,90 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private createAxes() {
     const xValues = this.xValues();
     const yValues = this.yValues();
-    const scale = this.unitConverter.renderWindowScale.value;
     const canvasSize = this.unitConverter.canvasSize.value;
 
-    const gridLines = this.createGridLines(xValues, yValues, scale, canvasSize);
-    const labels = this.createAxisLabels(xValues, yValues, scale, canvasSize);
+    const gridLines = this.createGridLines(xValues, yValues, canvasSize);
+    const labels = this.createAxisLabels(xValues, yValues, canvasSize);
 
     return html`<svg>${gridLines} ${labels}</svg>`;
   }
 
   private xValues(): Seconds[] {
-    const step = this.xStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.temporal);
+    const step =
+      this.xStepOverride ||
+      this.calculateStep(this.unitConverter.temporalDomain.value, this.unitConverter.temporalRange.value, "x");
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.startOffset,
       this.unitConverter.renderWindow.value.endOffset,
       step,
-      this.unitConverter.renderWindowScale.value.temporal,
+      this.unitConverter.scaleX.value,
     );
   }
 
   private yValues(): Hertz[] {
-    const step = this.yStepOverride || this.calculateStep(this.unitConverter.renderWindowScale.value.frequency);
+    const step =
+      this.yStepOverride ||
+      this.calculateStep(this.unitConverter.frequencyDomain.value, this.unitConverter.frequencyRange.value, "y");
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.lowFrequency,
       this.unitConverter.renderWindow.value.highFrequency,
       step,
-      this.unitConverter.renderWindowScale.value.frequency,
+      this.unitConverter.scaleY.value,
       false,
     );
   }
 
-  private calculateStep(scale: TemporalScale | FrequencyScale): number {
-    const smallestValue = scale.domain[0];
-    const largestValue = scale.domain[1];
-    const valueDelta = largestValue - smallestValue;
+  private willFitStep(proposedStep: number, canvasSize: number, domainDelta: number, fontSize: number): boolean {
+    const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
+    const proposedSize = numberOfProposedLabels * fontSize;
+    return proposedSize < canvasSize;
+  }
 
-    const canvasSize = Math.abs(scale.range[1] - scale.range[0]);
+  // TODO: Instead of using a mono-width font, we should probably just use a sans-serif font
+  // and measure the letter M
+  // to get around the label centering issue, we should just use svg align-text: center
+  private calculateStep(
+    domain: ScaleDomain<Seconds | Hertz>,
+    range: ScaleRange<Seconds | Hertz>,
+    orientation: "x" | "y",
+  ): number {
+    const smallestValue = domain[0];
+    const largestValue = domain[1];
+    const domainDelta = largestValue - smallestValue;
+    const fontSize = this.calculateFontSize();
+    const importantFontSize = orientation === "x" ? fontSize.width : fontSize.height;
 
+    const canvasSize = range[1] - range[0];
     const midpoint = (smallestValue + largestValue) / 2;
-
     const baseTenStep = Math.pow(10, Math.floor(Math.log10(midpoint)));
 
     // we try to divide the base ten step by some nice factors and see if they still fit
     // if they do, we should use them instead
     // higher in the list takes higher priority
     const niceFactors = [5, 2];
-    const fontSize = this.calculateFontSize();
-    const totalLabelSize = fontSize.width * (this.labelPadding * 2);
+    const totalLabelSize = importantFontSize * (this.labelPadding * 2);
 
+    // TODO: this can probably be combined into a single loop
+    // if we get past this guard, then the axis labels are overlapping
+    if (!this.willFitStep(baseTenStep, canvasSize, domainDelta, totalLabelSize)) {
+      for (const factor of niceFactors) {
+        const niceProposedStep = baseTenStep * factor;
+
+        if (this.willFitStep(niceProposedStep, canvasSize, domainDelta, totalLabelSize)) {
+          return niceProposedStep;
+        }
+      }
+    }
+
+    // if the labels are not overlapping, then we try to decrease the step
+    // by some "nice" factors
     for (const factor of niceFactors) {
-      const proposedStep = baseTenStep / factor;
+      const niceProposedStep = baseTenStep / factor;
 
-      // the total label size includes the labels font size and the padding at
-      // the start and end (which is why we multiply this.fontPadding by two)
-      const numberOfLabels = Math.ceil(valueDelta / proposedStep);
-      const proposedSize = numberOfLabels * totalLabelSize;
-
-      const willFitStep = proposedSize < canvasSize;
-
-      if (willFitStep) {
-        return proposedStep;
+      if (this.willFitStep(niceProposedStep, canvasSize, domainDelta, totalLabelSize)) {
+        return niceProposedStep;
       }
     }
 
@@ -351,8 +380,8 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     const lastLabel = values.at(-1)!;
     const proposedLastLabel = end;
 
-    const lastLabelPosition = scale.scale(lastLabel);
-    const proposedLastLabelPosition = scale.scale(proposedLastLabel);
+    const lastLabelPosition = scale(lastLabel);
+    const proposedLastLabelPosition = scale(proposedLastLabel);
     const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
 
     const fontSize = this.calculateFontSize();

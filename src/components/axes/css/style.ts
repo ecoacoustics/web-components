@@ -9,6 +9,8 @@ export const axesStyles = css`
 
   #wrapped-element {
     position: relative;
+    padding-left: 3rem;
+    padding-bottom: 1.5rem;
   }
 
   svg {
@@ -23,10 +25,9 @@ export const axesStyles = css`
     }
 
     text {
-      fill: var(--oe-text-color);
+      fill: var(--oe-font-color);
       stroke: none;
-      font-family: var(--oe-font-family);
-      font-size: 0.8rem;
+      font: 11px sans-serif;
     }
 
     g {

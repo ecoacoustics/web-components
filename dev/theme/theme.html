@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Components - Theme Creator</title>
     <script type="module" src="./theme.ts"></script>
+    <script type="module" src="../../src/components/index.ts"></script>
 </head>
 
 <body>
@@ -25,11 +26,6 @@
                     <div class="grid-item">
                         <div class="grid-item-heading">${variable}-color</div>
                         <div class="grid-item-content" style="background-color: var(--oe-${variable}-color); width: 2rem; height: 2rem;"></div>
-                    </div>
-
-                    <div class="grid-item">
-                        <div class="grid-item-heading">${variable}-background-color</div>
-                        <div class="grid-item-content" style="background-color: var(--oe-${variable}-background-color); width: 2rem; height: 2rem;"></div>
                     </div>
                 </div>
             `;
@@ -54,9 +50,9 @@
 
             console.log("update to", `hsl${h}deg, ${s}%, ${l}%`);
 
-            document.documentElement.style.setProperty("--oe-source-hue", `${h}deg`);
-            document.documentElement.style.setProperty("--oe-source-saturation", `${s}%`);
-            document.documentElement.style.setProperty("--oe-source-lightness", `${l}%`);
+            document.documentElement.style.setProperty("--oe-theme-hue", `${h}deg`);
+            document.documentElement.style.setProperty("--oe-theme-saturation", `${s}%`);
+            document.documentElement.style.setProperty("--oe-theme-lightness", `${l}%`);
         }
 
         window.onload = () => {
@@ -108,7 +104,7 @@
         body {
             margin: 0;
             background-color: var(--oe-background-color);
-            color: var(--oe-text-color);
+            color: var(--oe-font-color);
         }
 
         #grid-host {

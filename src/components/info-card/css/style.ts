@@ -8,8 +8,7 @@ export const infoCardStyle = css`
     padding: 0.5rem;
     padding-top: 1rem;
     padding-bottom: 1rem;
-    color: var(--oe-info-color);
-    background-color: var(--oe-info-background-color);
+    background-color: var(--oe-info-color);
     border-radius: var(--oe-border-rounding);
     font-size: 0.8rem;
 
@@ -20,6 +19,7 @@ export const infoCardStyle = css`
   .subject-row {
     display: grid;
     grid-template-columns: 1fr 2fr;
+    gap: 0.5rem;
     padding-bottom: 0.5rem;
 
     .subject-key {
@@ -27,7 +27,8 @@ export const infoCardStyle = css`
     }
 
     .subject-value {
-      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
   }
 

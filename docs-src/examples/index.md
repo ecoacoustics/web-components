@@ -9,6 +9,12 @@ title: Open Ecoacoustics | Examples
 
 [Validation Grid (Fake)](./validation/index.html)
 
-[Validation Grid (Real)](./validation-v2/index.html)
+[Validation Grid (Single Class)](./verification/single/index.html)
+
+[Validation Grid (Single Class - Additional Tags)](./verification/single-additional/index.html)
+
+[Validation Grid (Multiple Classes)](./verification/multi/index.html)
+
+[Validation Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
 
 [Presets](./presets/index.html)

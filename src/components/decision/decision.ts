@@ -69,6 +69,10 @@ export class Decision extends AbstractComponent(LitElement) {
       return;
     }
 
+    // when we are making decisions for with multiple classes, we emit
+    // the OE Verification model for every tag option
+    // the same logic should be used for a single tag, but it should only emit
+    // one tag (because there is only one tag)
     const additionalTags = this.additionalTags?.split(",").map((tag) => tag.trim());
 
     // I focus on the button clicked with keyboard shortcuts
@@ -97,7 +101,7 @@ export class Decision extends AbstractComponent(LitElement) {
     return html`
       <button
         id="decision-button"
-        class="btn oe-btn-secondary ${classMap({ disabled: !!this.disabled })}"
+        class="oe-btn oe-btn-secondary ${classMap({ disabled: !!this.disabled })}"
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
         ?disabled=${this.disabled}

@@ -7,10 +7,13 @@ import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../.
 import { Verification } from "../../models/verification";
 import { VerificationGridTile } from "../verification-grid-tile/verification-grid-tile";
 import { Decision } from "../decision/decision";
+import { Parser } from "@json2csv/plainjs";
+import { VerificationParser } from "../../services/verificationParser";
 
 export type SelectionObserverType = "desktop" | "tablet";
-type PageFetcher = (elapsedItems: number) => Promise<any[]>;
+export type PageFetcher = (elapsedItems: number) => Promise<any[]>;
 type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: number }>;
+type DecisionEvent = CustomEvent<{ value: boolean; tag: string; additionalTags: string[] }>;
 
 /**
  * A verification grid component that can be used to validate and verify audio events
@@ -48,10 +51,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "desktop";
 
-  // src can point to a JSON, CSV, or TSV file
-  @property({ type: String })
-  public src: string | undefined;
-
   @property({ type: String })
   public audioKey!: string;
 
@@ -76,6 +75,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   public decisions: Verification[] = [];
   private spectrogramsLoaded = 0;
   private hiddenTiles = 0;
+  private fileType: "json" | "csv" = "json";
 
   // TODO: find a better way to do this
   private showingSelectionShortcuts = false;
@@ -112,7 +112,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const reRenderKeys: (keyof this)[] = ["gridSize", "audioKey"];
     const elementsToObserve = this.gridTiles;
 
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "src"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage"];
 
     if (change.has("selectionBehavior")) {
       this.multiSelectHead = null;
@@ -124,14 +124,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     // TODO: figure out if there is a better way to do this invalidation
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
-      if (!this.getPage) {
-        if (!this.src) {
-          throw new Error("getPage or src is required for verification-grid");
-        }
-
-        this.getPage = this.srcPageCallback(this.src);
-      }
-
       this.pagedItems = 0;
 
       if (this.gridTiles?.length) {
@@ -203,7 +195,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     for (const entry of entries) {
       if (entry.intersectionRatio < 1) {
-        // this.gridSize--;
+        // this.hideGridItems(this.hiddenTiles + 1);
       }
     }
   }
@@ -309,78 +301,37 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     }
   }
 
-  // this function can be used in a map function over the getPage results to convert
-  // OE Verification data model
-  private convertJsonToVerification(original: Record<string, any>): Verification {
-    const possibleSrcKeys = ["src", "url", "AudioLink"];
-    const possibleTagKeys = ["tags", "tag", "label", "classification"];
-
-    this.audioKey ??= possibleSrcKeys.find((key) => key in original) ?? "";
-    const tagKey = possibleTagKeys.find((key) => key in original) ?? "";
-
-    return new Verification({
-      subject: original,
-      url: original[this.audioKey],
-      tag: original[tagKey],
-      confirmed: false,
-      additionalTags: [],
-    });
-  }
-
-  private srcPageCallback(src: string): PageFetcher {
-    return async (elapsedItems: number) => {
-      const response = await fetch(src);
-
-      if (!response.ok) {
-        throw new Error("Could not fetch page");
-      }
-
-      const data = await response.json();
-
-      const startIndex = elapsedItems;
-      const endIndex = startIndex + this.gridSize;
-
-      return data.slice(startIndex, endIndex) ?? [];
-    };
-  }
-
-  // if the user does not explicitly specify a file format that their data is in
-  // we can use some simple heuristics to determine the file format
-  // this should not be a replacement for the user explicitly specifying the file
-  // format, but it is better than throwing an error
-  // TODO: The contents should probably be a pointer because otherwise we are copying the entire file!
-  private fileFormat(contents: string): "json" | "csv" | "tsv" {
-    // TODO: Add support for tsv files
-    return contents.startsWith("{") ? "json" : "csv";
-  }
-
-  // TODO: add stricter typing here
-  private catchDecision(event: CustomEvent) {
+  private catchDecision(event: DecisionEvent) {
     const decision: boolean = event.detail.value;
-    const tag: any = event.detail.tag;
+    const tags: any[] =
+      event.detail.tag === "*"
+        ? this.decisionElements.map((model: Decision) => model.tag).filter((tag: any) => tag !== "*")
+        : [event.detail.tag];
     const additionalTags: any[] = event.detail.additionalTags;
 
-    // TODO: Fix this
     const gridTiles = Array.from(this.gridTiles);
     const subSelection = gridTiles.filter((tile) => tile.selected);
     const hasSubSelection = subSelection.length > 0;
 
-    const value: Verification[] = hasSubSelection
-      ? subSelection.map((tile) => tile.model)
-      : gridTiles.map((tile) => tile.model);
+    const selectedItems = hasSubSelection ? subSelection : gridTiles;
+    const selectedTiles = selectedItems.map((tile) => tile.model);
+    const value: Verification[] = [];
 
-    value.map((model: Verification) => {
-      // TODO: remove this
-      if (!model) return;
-
-      model.additionalTags = additionalTags;
-      model.confirmed = decision;
-      model.tag = { id: undefined, text: tag };
-    });
-
-    this.dispatchEvent(new CustomEvent("decision-made", { detail: value }));
+    for (const tag of tags) {
+      for (const tile of selectedTiles) {
+        value.push(
+          new Verification({
+            ...tile,
+            tag: { id: undefined, text: tag },
+            confirmed: decision,
+            additionalTags: additionalTags ?? [],
+          }),
+        );
+      }
+    }
 
     this.decisions.push(...value);
+    this.dispatchEvent(new CustomEvent("decision-made", { detail: value }));
 
     this.removeSubSelection();
 
@@ -402,7 +353,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       this.spectrogramElements = this.noItemsTemplate();
     }
 
-    nextPage = nextPage.map((item) => this.convertJsonToVerification(item));
+    nextPage = nextPage.map(VerificationParser.parse);
 
     nextPage.forEach((item: Verification, i: number) => {
       const target = elements[i];
@@ -440,7 +391,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       return;
     }
 
-    page = page.map((item) => this.convertJsonToVerification(item));
+    page = page.map(VerificationParser.parse);
 
     await Promise.all(page.map((item) => fetch(item.url, { method: "GET" })));
   }
@@ -454,7 +405,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         return;
       }
 
-      page = page.map((item) => this.convertJsonToVerification(item));
+      page = page.map(VerificationParser.parse);
 
       Promise.all(page.map((item) => fetch(item.url, { method: "HEAD" })));
 
@@ -531,18 +482,11 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   // TODO: improve this function
   private decisionPrompt(): string {
     const tags = this.decisionElements?.map((item: Decision) => item.tag);
-    const uniqueTags = Array.from(new Set(tags));
-
-    // TODO: finish
-    const tiles = Array.from(this.gridTiles);
-    const selectedItems = tiles.filter((item: VerificationGridTile) => item.selected);
+    let uniqueTags = Array.from(new Set(tags));
+    uniqueTags = uniqueTags.filter((tag) => !!tag && tag !== "*");
     const possibleItems = uniqueTags.join(", or ");
 
-    if (selectedItems.length === 0) {
-      return `Are all of these a ${possibleItems}?`;
-    }
-
-    return `Are the selected ${selectedItems.length} a ${possibleItems}?`;
+    return `Are all of these a ${possibleItems}?`;
   }
 
   private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
@@ -617,6 +561,38 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     element.style.display = "none";
   }
 
+  // TODO: clean up this function
+  // TODO: there is a "null" in additional tags (if none)
+  private downloadResults(): void {
+    let formattedResults = "";
+    const fileFormat = this.fileType;
+    const results = this.decisions.map((decision: Verification) => {
+      const subject = decision.subject;
+      const tag = decision.tag?.text;
+      const confirmed = decision.confirmed;
+      const additionalTags = decision.additionalTags?.map((tag) => tag.text);
+
+      return { ...subject, tag, confirmed, additionalTags };
+    });
+
+    if (fileFormat === "json") {
+      formattedResults = JSON.stringify(results);
+    } else if (fileFormat === "csv") {
+      formattedResults = new Parser().parse(results);
+    }
+
+    const blob = new Blob([formattedResults], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    // TODO: we should just be able to use the file download API
+    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns as item delimiters)
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "verification-results";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   private highlightBoxTemplate(): TemplateResult<1> {
     return html`<div
       id="highlight-box"
@@ -639,6 +615,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div class="verification-container">
+        <button @click="${this.downloadResults}" class="oe-btn oe-btn-secondary">Download Results</button>
+
         <div
           @selected="${this.selectionHandler}"
           @pointerdown="${this.renderHighlightBox}"

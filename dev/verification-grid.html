@@ -10,16 +10,16 @@
 
 <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" src="/grid-items.json" grid-size="6" selection-behavior="desktop">
+        <oe-verification-grid id="verification-grid" grid-size="6" selection-behavior="desktop">
             <template>
-                <oe-axes style="padding-left: 3rem; padding-bottom: 1.5rem;">
+                <oe-axes>
                     <oe-indicator>
                         <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
                     </oe-indicator>
                 </oe-axes>
                 <oe-info-card></oe-info-card>
-                <oe-media-controls class="media-controls" for="spectrogram"
-                    style="position: absolute; top: 4rem; right: 5rem; border-radius: 9999px; z-index: 1; padding: 0px; zoom: 0.5;"></oe-media-controls>
+                <oe-media-controls for="spectrogram"
+                    style="position: absolute; top: 4rem; right: 4rem; border-radius: 9999px; z-index: 1; padding: 0px; zoom: 0.5;"></oe-media-controls>
             </template>
 
             <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
@@ -27,12 +27,20 @@
             <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
             <oe-decision verified="false" tag="*" shortcut="L">Negative</oe-decision>
         </oe-verification-grid>
+
+        <!--
+            local would use a file picker UI, while src would allow a remote file
+            This should probably use a data service.
+            This service would
+        -->
+        <oe-data-source for="verification-grid" src="/grid-items.csv"></oe-data-source>
     </div>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
     <button onclick="changeVerificationKey();">Create Key Error</button>
     <button onclick="changeGridSize();">Change verification grid host size</button>
     <button onclick="changeSelectionBehavior();">Change selection behavior</button>
+    <button onclick="changeCallback();">Use custom callback</button>
 
     <style>
         body {
@@ -40,21 +48,11 @@
         }
 
         #grid-host {
-            position: absolute;
+            position: relative;
             left: 0px;
             top: 0px;
             width: 100vw;
             min-height: 100vh;
-        }
-
-        .media-controls {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            border-radius: 9999em;
-            border-color: var(--primary-color);
-            padding: 0px;
-            zoom: 0.75;
         }
     </style>
 
@@ -71,6 +69,27 @@
                 hostElement.style.width = "70%";
                 hostElement.style.left = "15%";
             }
+        }
+
+        function changeCallback() {
+            const dataSourceElement = document.querySelector("oe-data-source");
+
+            if (dataSourceElement) {
+                dataSourceElement.outerHTML = "";
+            }
+
+            verificationGridElement.getPage = () => {
+                return new Promise((resolve) => {
+                    resolve([
+                        { url: "/example.flac" },
+                        { url: "/example.flac" },
+                        { url: "/example.flac" },
+                        { url: "/example.flac" },
+                        { url: "/example.flac" },
+                        { url: "/example.flac" },
+                    ]);
+                });
+            };
         }
 
         function changeSelectionBehavior() {
