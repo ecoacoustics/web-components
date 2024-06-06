@@ -1,34 +1,81 @@
 import { css } from "lit";
 
 export const theming = css`
+  @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
   /* TODO: we probably only need :host here */
   :host,
   :root {
     --oe-theme-hue: 247deg;
-    --oe-theme-saturation: 57%;
-    --oe-theme-lightness: 91%;
+    --oe-theme-saturation: 87%;
+    --oe-theme-lightness: 54%;
 
-    --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 20%));
+    /* A2O Colours */
+    --oe-theme-hue: 142deg;
+    --oe-theme-saturation: 25%;
+    --oe-theme-lightness: 35%;
+
+    /* Ecosounds Colours */
+    /* --oe-theme-hue: 207;
+    --oe-theme-saturation: 100%;
+    --oe-theme-lightness: 25%; */
+
+    --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), 100%);
     --oe-font-color: hsl(
       var(--oe-theme-hue),
       calc(var(--oe-theme-saturation) - 50%),
       calc(var(--oe-theme-lightness) - 90%)
     );
 
-    --oe-border-rounding: 12px;
-    --oe-font-family: sans-serif;
-    /* --oe-box-shadow: 4px 4px 8px var(--oe-primary-color); */
+    --oe-border-rounding: 6px;
+    --oe-border-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 10%));
+    --oe-border-width: 2px;
 
-    --oe-primary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 38%));
-    --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 10%));
-    --oe-accent-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 20%));
-    --oe-info-color: hsl(207deg, var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 15%));
-    --oe-selected-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 5%));
-    --oe-panel-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 5%));
+    --oe-box-shadow: 1px 1px 1px currentcolor;
+    --oe-font-family: "Roboto", sans-serif;
+    --oe-font-size: 11px;
+
+    --oe-animation-time: 0.3s;
+    --oe-spacing: 0.6em;
+
+    --oe-primary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), var(--oe-theme-lightness));
+    --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 25%));
+    --oe-accent-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 20%));
+    --oe-info-color: hsl(207deg, calc(var(--oe-theme-saturation) + 45%), calc(var(--oe-theme-lightness) + 15%));
+    --oe-danger-color: color-mix(in srgb, hsl(0deg, 80%, 46%) 85%, var(--oe-background-color));
+    --oe-selected-color: hsl(
+      var(--oe-theme-hue),
+      var(--oe-theme-saturation),
+      max(calc(var(--oe-theme-lightness) + 25%), 90%)
+    );
+    --oe-panel-color: hsl(
+      var(--oe-theme-hue),
+      var(--oe-theme-saturation),
+      max(calc(var(--oe-theme-lightness) + 43%), 96%)
+    );
+
+    --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
+    --oe-panel-color-lighter: color-mix(in srgb, var(--oe-panel-color) 1%, var(--oe-background-color));
   }
 
   * {
     font-family: var(--oe-font-family);
+
+    /* CSS Resets */
+    font-weight: normal;
+  }
+
+  :has(> svg.lucide) {
+    padding: var(--oe-spacing);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* All icons should be the same size as the font */
+    svg.lucide {
+      width: calc(var(--oe-font-size) + var(--oe-spacing));
+      height: calc(var(--oe-font-size) + var(--oe-spacing));
+    }
   }
 
   button:disabled,
@@ -45,11 +92,13 @@ export const theming = css`
     font-family: "Courier New", Courier, monospace;
     text-align: center;
     font-weight: bold;
+    padding: 0.2rem;
     padding-left: 0.5em;
     padding-right: 0.5em;
     z-index: 0;
     margin-top: 0.2rem;
     margin: 0.5rem;
+    width: max-content;
 
     &::before {
       content: "";
@@ -60,7 +109,7 @@ export const theming = css`
       height: 100%;
       border-radius: 0.13em;
       background: radial-gradient(circle farthest-corner at top right, #ededed, #c8c8c8);
-      box-shadow: 0px 0px 0.13em 0.1em rgba(0, 0, 0, 0.2);
+      box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0.2);
       z-index: -1;
     }
 
@@ -94,53 +143,201 @@ export const theming = css`
   hr {
     border: 0;
     height: 1px;
-    background-color: var(--oe-font-color);
-    opacity: 0.2;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    background-color: var(--oe-font-color-lighter);
   }
 
-  label:has(> input[type="checkbox"]) {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-bottom: 0.5rem;
+  dialog {
+    position: relative;
+    box-shadow: var(--oe-box-shadow);
+    border: var(--oe-border-width) solid var(--oe-selected-color);
+    min-width: 70%;
+    max-width: 80%;
+    max-height: 100%;
+    background-color: var(--oe-background-color);
+    border-radius: var(--oe-border-rounding);
+    padding: 2rem;
+
+    animation: fade-in 600ms forwards;
+
+    dialog[open] {
+      animation: fade-in 600ms forwards;
+    }
+
+    /* Styles applied to mobile devices */
+    @media (max-width: 600px) {
+      max-width: 100%;
+      padding: 1rem;
+    }
   }
 
-  input[type="checkbox"] {
+  p {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    color: var(--oe-font-color);
+  }
+
+  input:not([type="checkbox"], [type="radio"]),
+  textarea,
+  select {
+    box-shadow: 0 0 0 1px var(--oe-secondary-color);
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--oe-selected-color);
+    }
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 1rem;
+    padding: var(--oe-spacing);
+    border: none;
+    border-radius: var(--oe-border-rounding);
+    background-color: var(--oe-panel-color-lighter);
+    color: var(--oe-font-color);
+
+    &:focus {
+      outline: none;
+      border-color: var(--oe-selected-color);
+      background-color: var(--oe-background-color);
+    }
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    appearance: textfield;
+  }
+
+  input[type="range"] {
+    padding: 0;
+
+    /* &::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+      background: var(--oe-primary-color);
+      border-radius: var(--oe-border-rounding);
+    }
+
+    &::-webkit-slider-runnable-track,
+    &::-moz-range-track {
+      background-color: var(--oe-panel-color);
+    } */
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
     position: relative;
     accent-color: var(--oe-primary-color);
     width: 1.2rem;
     height: 1.2rem;
   }
 
+  label:has(> input) {
+    display: flex;
+    align-items: center;
+    gap: var(--oe-spacing);
+  }
+
+  input[type="file"] {
+    position: relative;
+    padding: 0.5rem;
+    border: none;
+
+    &::file-selector-button {
+      border: none;
+      border-radius: var(--oe-border-rounding);
+      color: var(--oe-font-color);
+      font-weight: bold;
+      background-color: var(--oe-panel-color);
+      padding: 0.5rem;
+    }
+  }
+
+  /*
+    Ripple effect is modified from a CSS-Tricks article
+    https://css-tricks.com/how-to-recreate-the-ripple-effect-of-material-design-buttons/#aa-css-only
+  */
+  button {
+    --background-color: var(--oe-panel-color);
+    --border: none;
+    --ripple-color: color-mix(in srgb, var(--background-color) 90%, black);
+
+    border: var(--border);
+    border-radius: var(--oe-border-rounding);
+    margin: 0.1rem;
+    font-size: 1em;
+    max-width: max-content;
+    padding: var(--oe-spacing);
+    background-color: var(--background-color);
+    transition: background var(--oe-animation-time), border var(--oe-animation-time);
+
+    /*
+      Box shadows make a button look raised and clickable.
+      Therefore, if the button is disabled, we do not want to show the box shadow.
+    */
+    &:not(:disabled, :has(.disabled)) {
+      box-shadow: var(--oe-box-shadow);
+    }
+
+    &:hover:not(:disabled, :has(.disabled)) {
+      background: var(--background-color) radial-gradient(circle, transparent 1%, var(--background-color) 1%)
+        center/15000%;
+      cursor: pointer;
+    }
+
+    &:active:not(:disabled, :has(.disabled)) {
+      background-color: var(--ripple-color);
+      background-size: 100%;
+      transition: background 0s;
+    }
+
+    /*
+      User agents create an outline around an element that has explicit focus
+      (focus set through .focus)
+      However, this is not the behavior that we want. Therefore, we use a CSS
+      reset to disable this behavior
+    */
+    &:focus {
+      outline: none;
+    }
+  }
+
   .hidden {
     display: none;
   }
 
-  .oe-btn {
-    border: none;
-    border-radius: var(--oe-border-rounding);
-    margin: 0.1rem;
-    font-size: 0.9rem;
-    max-width: max-content;
-    box-shadow: var(--oe-box-shadow);
-    padding: 1em;
-    padding-left: 2rem;
-    padding-right: 2rem;
-
-    &:hover:not(:disabled) {
-      filter: brightness(1.1);
-      cursor: pointer;
-    }
+  .disabled {
+    filter: grayscale(100%);
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .oe-btn-primary {
-    border: solid 2px var(--oe-primary-color);
-    background-color: var(--oe-background-color);
+    --background-color: var(--oe-background-color);
+    border: var(--oe-border-width) solid var(--oe-primary-color);
   }
 
   .oe-btn-secondary {
-    background-color: var(--oe-secondary-color);
+    --background-color: var(--oe-background-color);
+    border: var(--oe-border-width) solid var(--oe-secondary-color);
+    /* --background-color: var(--oe-secondary-color); */
+  }
+
+  .oe-btn-info {
+    --border: var(--oe-border-width) solid var(--oe-info-color);
+  }
+
+  .oe-btn-danger {
+    --background-color: var(--oe-danger-color);
+    color: white;
+  }
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 `;

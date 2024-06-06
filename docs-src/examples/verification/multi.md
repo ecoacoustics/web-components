@@ -1,5 +1,5 @@
 ---
-layout: verification.11ty.js
+layout: layouts/verification.11ty.js
 title: Open Ecoacoustics | Examples | Verification | Multiple Class
 ---
 

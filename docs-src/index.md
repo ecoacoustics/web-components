@@ -35,3 +35,7 @@ the source code, you will have to enable the following headers on your web sever
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
+
+## How to Create a Verification Grid
+
+Follow the steps in [here](/examples/create-verification-grid/index.html) to create a verification grid.

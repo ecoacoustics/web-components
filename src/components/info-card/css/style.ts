@@ -3,24 +3,23 @@ import { css } from "lit";
 export const infoCardStyle = css`
   .card-container {
     position: relative;
-    width: calc(100% - 0.5rem);
-    max-width: 345px;
-    padding: 0.5rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    background-color: var(--oe-info-color);
+    padding: var(--oe-spacing);
+    color: var(--oe-font-color);
+    background-color: var(--oe-background-color);
     border-radius: var(--oe-border-rounding);
-    font-size: 0.8rem;
+    font-size: var(--oe-font-size);
 
-    /* TODO: This is a hack to get around the axes component being incorrectly sized */
-    margin-top: 1rem;
+    /*
+      We multiply the spacing by two here because the spacing
+      is applied to both padding left and right
+    */
+    width: calc(100% - calc(var(--oe-spacing) * 2));
   }
 
   .subject-row {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 0.5rem;
-    padding-bottom: 0.5rem;
 
     .subject-key {
       font-weight: bold;
@@ -35,10 +34,5 @@ export const infoCardStyle = css`
   .static-actions {
     display: flex;
     justify-content: space-between;
-    padding-top: 0.5rem;
-  }
-
-  .download-link {
-    padding-top: 1rem;
   }
 `;

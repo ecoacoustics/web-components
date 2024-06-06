@@ -25,8 +25,17 @@
     <button onclick="changeScale();">Change Mel-Scale</button>
     <button onclick="changeAspectRatio();">Change Scale</button>
     <input type="text" readonly value="0" id="generation" autocomplete="off" />
+    <label>
+        Change height
+        <input id="height-input" type="range" value="800" min="0" max="1000">
+    </label>
 
     <script>
+        window.onload = () => {
+            const heightInputElem = document.getElementById("height-input");
+            heightInputElem.addEventListener("input", changeHeight);
+        };
+
         function changeSource() {
             const element = document.getElementById("playing-spectrogram");
 
@@ -35,6 +44,12 @@
             } else {
                 element.setAttribute("src", "/example.flac");
             }
+        }
+
+        function changeHeight(event) {
+            const newHeight = event.target.value;
+            const element = document.getElementById("playing-spectrogram");
+            element.style.height = `${newHeight}px`;
         }
 
         function changeAspectRatio() {
@@ -139,7 +154,7 @@
         }
 
         .large {
-            height: 300px;
+            height: 800px;
             width: 100%;
         }
     </style>

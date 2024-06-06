@@ -14,34 +14,25 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
     protected static finalizeStyles(styles: CSSResultGroup) {
       let newStyles = [theming] as any[];
 
+      // it is important that the theming is the first style
+      // this is because all the styles in the styles array get combined into
+      // one big computed.ts file, with the items at the start of the array
+      // being at the top of the file
+      // by putting the theming first, this means that the theme styles will be
+      // first, and can be overridden by component styles which will be declared
+      // later in the file
+      // if the theming is not the first style, then the component styles will
+      // be overridden by the theming styles
       if (Array.isArray(styles)) {
-        newStyles = [...styles, theming];
+        newStyles = [theming, ...styles];
       } else if (styles !== undefined) {
-        newStyles = [styles, theming];
+        newStyles = [theming, styles];
       }
 
       // eslint-disable-next-line
       // @ts-ignore
       return super.finalizeStyles(newStyles);
     }
-
-    // protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
-    //   const elementStyles = [getCompatibleStyle(theming)];
-    //   if (Array.isArray(styles)) {
-    //     // Dedupe the flattened array in reverse order to preserve the last items.
-    //     // Casting to Array<unknown> works around TS error that
-    //     // appears to come from trying to flatten a type CSSResultArray.
-    //     const set = new Set((styles as Array<unknown>).flat(Infinity).reverse());
-    //     // Then preserve original order by adding the set items in reverse order.
-    //     for (const s of set) {
-    //       elementStyles.unshift(getCompatibleStyle(s as CSSResultOrNative));
-    //     }
-    //   } else if (styles !== undefined) {
-    //     elementStyles.push(getCompatibleStyle(styles));
-    //   }
-
-    //   return elementStyles;
-    // }
 
     private reactiveController = new ReactiveController(this);
 

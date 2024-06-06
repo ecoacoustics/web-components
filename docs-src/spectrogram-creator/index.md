@@ -1,5 +1,5 @@
 ---
-layout: example.11ty.js
+layout: layouts/default.11ty.js
 title: Open Ecoacoustics Web Components | Spectrogram Creator
 ---
 
@@ -137,7 +137,7 @@ window.onload = () => {
 function updateCodeExample() {
     // update the code that can be copied
     const codeInputElement = document.getElementById("spectrogram-output");
-    const codeOutputElement = document.getElementsByTagName("pre").at(0);
+    const codeOutputElement = document.getElementsByTagName("pre")[0];
 
     codeOutputElement.innerText = codeInputElement.innerHTML.trim().replace(/^[\s]*/gm, "");
 }
