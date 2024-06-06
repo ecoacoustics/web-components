@@ -4,6 +4,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { decisionStyles } from "./css/style";
 import { classMap } from "lit/directives/class-map.js";
 import { SelectionObserverType } from "../verification-grid/verification-grid";
+import { booleanConverter } from "../../helpers/attributes";
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -35,6 +36,12 @@ export class Decision extends AbstractComponent(LitElement) {
 
   @property({ attribute: "disabled", type: Boolean, reflect: true })
   public disabled: boolean | undefined;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public all: boolean | undefined;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public skip: boolean | undefined;
 
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;

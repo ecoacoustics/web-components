@@ -1,9 +1,10 @@
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, PropertyValues } from "lit";
+import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { PageFetcher, VerificationGrid } from "../verification-grid/verification-grid";
 import { dataSourceStyles } from "./css/style";
 import csv from "csvtojson";
+import { booleanConverter } from "../../helpers/attributes";
 
 type SupportedFileTypes = "json" | "csv";
 type Char = string;
@@ -18,6 +19,9 @@ export class DataSource extends AbstractComponent(LitElement) {
 
   @property({ type: String })
   public for: string | undefined;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public local!: boolean;
 
   private verificationGrid: VerificationGrid | undefined;
   private fileType: SupportedFileTypes = "json";
@@ -35,9 +39,9 @@ export class DataSource extends AbstractComponent(LitElement) {
     }
   }
 
-  private async buildSrcCallback(): Promise<PageFetcher | undefined> {
+  private async getJsonData(): Promise<unknown[]> {
     if (!this.src || !this.for) {
-      return;
+      throw new Error("src and for attribute must be set on a data source");
     }
 
     const response = await fetch(this.src);
@@ -62,9 +66,7 @@ export class DataSource extends AbstractComponent(LitElement) {
     // TODO: we should be using the headers to inspect the file type
     // if the file type cannot be determined by the header, then we should only
     // use the first byte as a fallback heuristic
-    const jsonData = this.fileType === "json" ? JSON.parse(data) : await csv().fromString(data);
-
-    return this.buildCallback(jsonData);
+    return this.fileType === "json" ? JSON.parse(data) : await csv().fromString(data);
   }
 
   private buildCallback(content: any[]): PageFetcher | undefined {
@@ -140,8 +142,12 @@ export class DataSource extends AbstractComponent(LitElement) {
       return;
     }
 
-    const fetcher = await this.buildSrcCallback();
+    const data = await this.getJsonData();
+    if (!data) {
+      return;
+    }
 
+    const fetcher = this.buildCallback(data);
     if (!fetcher) {
       return;
     }
@@ -149,7 +155,11 @@ export class DataSource extends AbstractComponent(LitElement) {
     this.verificationGrid.getPage = fetcher;
   }
 
-  public render() {
+  private fileInputTemplate(): TemplateResult<1> {
     return html`<input @change="${this.handleFileChange}" type="file" accept=".csv,.json" />`;
+  }
+
+  public render() {
+    return this.local ? this.fileInputTemplate() : nothing;
   }
 }
