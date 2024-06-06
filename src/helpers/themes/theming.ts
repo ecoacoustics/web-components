@@ -49,6 +49,7 @@ export const theming = css`
     padding-right: 0.5em;
     z-index: 0;
     margin-top: 0.2rem;
+    margin: 0.5rem;
 
     &::before {
       content: "";
@@ -95,6 +96,22 @@ export const theming = css`
     height: 1px;
     background-color: var(--oe-font-color);
     opacity: 0.2;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  label:has(> input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  input[type="checkbox"] {
+    position: relative;
+    accent-color: var(--oe-primary-color);
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .hidden {
@@ -119,7 +136,8 @@ export const theming = css`
   }
 
   .oe-btn-primary {
-    background-color: var(--oe-primary-color);
+    border: solid 2px var(--oe-primary-color);
+    background-color: var(--oe-background-color);
   }
 
   .oe-btn-secondary {

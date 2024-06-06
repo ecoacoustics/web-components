@@ -17,6 +17,62 @@ export const verificationGridStyles = css`
     z-index: 5;
   }
 
+  #help-dialog {
+    position: relative;
+    min-width: 70%;
+    min-height: 70%;
+    background-color: var(--oe-panel-color);
+    border: 3px solid var(--oe-selected-color);
+    border-radius: var(--oe-border-rounding);
+    padding: 0px;
+
+    &::backdrop {
+    }
+
+    h2,
+    h3 {
+      font-weight: normal;
+    }
+
+    .dialog-container {
+      position: relative;
+      margin: 2rem;
+    }
+
+    .dialog-controls {
+      display: block;
+      position: relative;
+
+      .close-btn {
+        display: block;
+        cursor: pointer;
+      }
+
+      .show-again {
+      }
+    }
+  }
+
+  .keyboard-shortcuts {
+    display: grid;
+    position: relative;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    .row {
+      width: 100%;
+      .key {
+      }
+
+      .description {
+        padding-left: 2rem;
+      }
+    }
+  }
+
   .verification-container {
     background-color: var(--oe-background-color);
     height: 100%;

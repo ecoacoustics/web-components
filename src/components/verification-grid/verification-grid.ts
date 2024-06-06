@@ -1,4 +1,4 @@
-import { customElement, property, queryAll, state } from "lit/decorators.js";
+import { customElement, property, query, queryAll, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, PropertyValueMap, TemplateResult } from "lit";
 import { verificationGridStyles } from "./css/style";
@@ -14,6 +14,13 @@ export type SelectionObserverType = "desktop" | "tablet";
 export type PageFetcher = (elapsedItems: number) => Promise<any[]>;
 type SelectionEvent = CustomEvent<{ shiftKey: boolean; ctrlKey: boolean; index: number }>;
 type DecisionEvent = CustomEvent<{ value: boolean; tag: string; additionalTags: string[] }>;
+
+interface KeyboardShortcut {
+  key: string;
+  description: string;
+}
+
+const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
 
 /**
  * A verification grid component that can be used to validate and verify audio events
@@ -66,6 +73,9 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   @queryAll("oe-verification-grid-tile")
   public gridTiles!: NodeListOf<VerificationGridTile>;
 
+  @query("#help-dialog")
+  private helpDialogElement!: HTMLDialogElement;
+
   @state()
   private spectrogramElements: TemplateResult<1> | TemplateResult<1>[] | undefined;
 
@@ -106,6 +116,14 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     document.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
     super.disconnectedCallback();
+  }
+
+  public firstUpdated(): void {
+    const shouldShowHelpDialog = localStorage.getItem(helpPreferenceLocalStorageKey) === null;
+
+    if (shouldShowHelpDialog) {
+      this.helpDialogElement.showModal();
+    }
   }
 
   protected updated(change: PropertyValueMap<this>): void {
@@ -479,16 +497,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     this.spectrogramElements = verificationGridBuffer;
   }
 
-  // TODO: improve this function
-  private decisionPrompt(): string {
-    const tags = this.decisionElements?.map((item: Decision) => item.tag);
-    let uniqueTags = Array.from(new Set(tags));
-    uniqueTags = uniqueTags.filter((tag) => !!tag && tag !== "*");
-    const possibleItems = uniqueTags.join(", or ");
-
-    return `Are all of these a ${possibleItems}?`;
-  }
-
   private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
     console.log("intersecting", entries);
   }
@@ -593,6 +601,18 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     URL.revokeObjectURL(url);
   }
 
+  // TODO: narrow the typing here
+  private closeHelpDialog(): void {
+    const dialogPreference = this.shadowRoot!.getElementById("dialog-preference") as HTMLInputElement;
+    const shouldShowDialog = !dialogPreference.checked;
+
+    if (!shouldShowDialog) {
+      localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    } else {
+      localStorage.removeItem(helpPreferenceLocalStorageKey);
+    }
+  }
+
   private highlightBoxTemplate(): TemplateResult<1> {
     return html`<div
       id="highlight-box"
@@ -612,10 +632,100 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     `;
   }
 
+  private keyboardShortcutTemplate(shortcuts: KeyboardShortcut[]): TemplateResult<1> {
+    return html`
+      <div class="keyboard-shortcuts">
+        ${shortcuts.map(
+          (shortcut) => html`<div class="row">
+            <kbd class="key">${shortcut.key}</kbd>
+            <span class="description">${shortcut.description}</span>
+          </div>`,
+        )}
+      </div>
+    `;
+  }
+
+  private helpDialogTemplate(): TemplateResult<1> {
+    const selectionKeyboardShortcuts: KeyboardShortcut[] = [
+      { key: "Ctrl + A", description: "Select all items" },
+      { key: "Ctrl + Shift + A", description: "Select all items" },
+      { key: "Shift + Click", description: "Select a range of items" },
+      { key: "Ctrl + Click", description: "Toggle the selection of a single item" },
+      { key: "Ctrl + Shift + Click", description: "Select a range of items" },
+      { key: "Escape", description: "Deselect all items" },
+    ];
+
+    // decision shortcuts are fetched from the decision elements
+    // TODO: fix this
+    const decisionShortcuts: KeyboardShortcut[] = [
+      ...(this.decisionElements?.map((element) => {
+        return { key: element.shortcut, description: element.innerText };
+      }) ?? []),
+    ] as any;
+
+    // TODO: there are some hacks in here to handle closing the modal when the user clicks off
+    return html`
+      <dialog id="help-dialog" @click="${() => this.helpDialogElement.close()}" @close="${this.closeHelpDialog}">
+        <div class="dialog-container" @click="${(event: PointerEvent) => event.stopPropagation()}">
+          <h1>Information</h1>
+
+          <section>
+            <h2>Overview</h2>
+            <p>
+              The Verification grid is a tool to help you validate and verify audio events either generated by a machine
+              learning model or by a human annotator.
+            </p>
+          </section>
+
+          <section>
+            <h2>Decisions</h2>
+
+            <h3>Keyboard Shortcuts</h3>
+            ${this.keyboardShortcutTemplate(decisionShortcuts)}
+          </section>
+
+          <section>
+            <h2>Sub-Selection</h2>
+            <p>
+              You can apply a decision to only a few items in the grid by clicking on them, or using one of the keyboard
+              shortcuts below.
+            </p>
+
+            <p>
+              You can also use <kbd>Alt + number</kbd> to select a tile using you keyboard. It is possible to see the
+              possible keyboard shortcuts for selection by holding down the <kbd>Alt</kbd> key.
+            </p>
+
+            <h3>Keyboard Shortcuts</h3>
+            ${this.keyboardShortcutTemplate(selectionKeyboardShortcuts)}
+          </section>
+
+          <hr />
+
+          <form class="dialog-controls" method="dialog">
+            <label class="show-again">
+              <input
+                id="dialog-preference"
+                name="dialog-preference"
+                type="checkbox"
+                ?checked="${localStorage.getItem(helpPreferenceLocalStorageKey) !== null}"
+              />
+              Do not show this dialog again
+            </label>
+            <button class="oe-btn oe-btn-primary close-btn" type="submit" autofocus>Close</button>
+          </form>
+        </div>
+      </dialog>
+    `;
+  }
+
   public render() {
     return html`
+      ${this.helpDialogTemplate()}
+
       <div class="verification-container">
         <button @click="${this.downloadResults}" class="oe-btn oe-btn-secondary">Download Results</button>
+        <button @click="${() => this.helpDialogElement.showModal()}" class="oe-btn oe-btn-secondary">Help</button>
 
         <div
           @selected="${this.selectionHandler}"
@@ -626,15 +736,14 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
         >
           ${this.spectrogramElements}
         </div>
-        <h2 class="verification-controls-title">${this.decisionPrompt()}</h2>
+        <h2 class="verification-controls-title">Are all of these a</h2>
         <div class="verification-controls">
           <slot @decision="${this.catchDecision}"></slot>
         </div>
-        <!-- 
+
         <div class="paging-options">
-          <button class="oe-btn-secondary">Skip</button>
-          <button class="oe-btn-secondary">Previous</button>
-        </div> -->
+          <button class="oe-btn oe-btn-secondary">Previous</button>
+        </div>
       </div>
       ${this.highlightBoxTemplate()}
     `;

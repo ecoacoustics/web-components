@@ -17,15 +17,15 @@
                         <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
                     </oe-indicator>
                 </oe-axes>
+                <oe-media-controls for="spectrogram"></oe-media-controls>
                 <oe-info-card></oe-info-card>
-                <oe-media-controls for="spectrogram"
-                    style="position: absolute; top: 4rem; right: 4rem; border-radius: 9999px; z-index: 1; padding: 0px; zoom: 0.5;"></oe-media-controls>
             </template>
 
             <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
             <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Koala</oe-decision>
             <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
             <oe-decision verified="false" tag="*" shortcut="L">Negative</oe-decision>
+            <oe-decision verified="false" shortcut="S" skip>Skip</oe-decision>
         </oe-verification-grid>
 
         <!--
@@ -33,7 +33,7 @@
             This should probably use a data service.
             This service would
         -->
-        <oe-data-source for="verification-grid" src="/grid-items.csv"></oe-data-source>
+        <oe-data-source for="verification-grid" src="/grid-items.json" local></oe-data-source>
     </div>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
