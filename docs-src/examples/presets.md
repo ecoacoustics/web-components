@@ -1,5 +1,5 @@
 ---
-layout: example.11ty.js
+layout: layouts/default.11ty.js
 title: Open Ecoacoustics Web Components | Spectrogram Presets
 ---
 

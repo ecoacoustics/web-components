@@ -1,5 +1,5 @@
 ---
-layout: example.11ty.js
+layout: layouts/default.11ty.js
 title: Open Ecoacoustics | Examples
 ---
 
@@ -16,5 +16,7 @@ title: Open Ecoacoustics | Examples
 [Validation Grid (Multiple Classes)](./verification/multi/index.html)
 
 [Validation Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
+
+[How to Create a Verification grid](./create-verification-grid/index.html)
 
 [Presets](./presets/index.html)

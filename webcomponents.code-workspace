@@ -46,8 +46,19 @@
       "webcomponents",
       "webcomponents-workspace",
       "webfft",
-      "worklet"
+      "worklet",
+      "lucide",
+      "roboto",
+      "colorbrewer",
+      "ecosounds",
+
+      // windowing functions
+      "tukey",
+      "lanczos",
+      "blackman",
+      "nuttall"
     ],
+    "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
     "markdownlint.config": {
       // disable no Inline HTML because we use inline HTML for the 11ty pages
@@ -82,7 +93,10 @@
       "ecmel.vscode-html-css",
       "pushqrdx.inline-html",
       "hediet.vscode-drawio",
-      "htmlhint.vscode-htmlhint"
+      "htmlhint.vscode-htmlhint",
+
+      // toml is used for netlify configs
+      "tamasfe.even-better-toml"
     ]
   },
   "launch": {

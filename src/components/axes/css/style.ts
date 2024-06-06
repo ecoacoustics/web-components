@@ -38,6 +38,6 @@ export const axesStyles = css`
   .grid-line {
     color: lightblue;
     stroke-width: 1;
-    opacity: 0.6;
+    opacity: 0.4;
   }
 `;

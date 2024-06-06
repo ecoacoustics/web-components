@@ -1,6 +1,6 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing } from "lit";
+import { html, LitElement, nothing, TemplateResult } from "lit";
 import { infoCardStyle } from "./css/style";
 import { consume } from "@lit/context";
 import { gridTileContext } from "../verification-grid-tile/verification-grid-tile";
@@ -18,17 +18,27 @@ export class InfoCard extends AbstractComponent(LitElement) {
   @state()
   private showExpanded = false;
 
-  private urlTemplate = (value: string) => html`<a href="${value}" target="_blank">${value}</a>`;
   private dateTemplate = (value: string) => new Date(value).toISOString();
   private numberTemplate = (value: number | string) => Number(value).toLocaleString();
   private identityTemplate = (value: unknown) => value;
+
+  // because urls can be unreasonably long, we want to truncate them
+  // we do this by using the format https://.../last-path?first-parameter...
+  private urlTemplate(url: string): TemplateResult<1> {
+    const protocol = url.split(":/")[0];
+    const pathFragment = url.split("/").at(-1)?.split("&")[0] ?? "";
+    const hasAdditionalParameters = url.split("&").length > 1;
+    const formattedValue = `${protocol}…${pathFragment}${hasAdditionalParameters ? "…" : ""}`;
+
+    return html`<a href="${url}" target="_blank">${formattedValue}</a>`;
+  }
 
   private subjectRowTemplate(subject: [key: string, value: unknown]) {
     const [key, value] = subject;
 
     let valueTemplate: any = this.identityTemplate;
 
-    if (typeof value === "string" && value.startsWith("http")) {
+    if (typeof value === "string" && value.includes(":/")) {
       valueTemplate = this.urlTemplate;
     }
 
@@ -84,11 +94,3 @@ export class InfoCard extends AbstractComponent(LitElement) {
     `;
   }
 }
-
-// use ISO8601 for date format
-// don't use comma for sample rate, use a half space
-// should use key-value pairs from object
-// and show a maximum of 4 items until there is a "show more" label
-// we don't expect this to be perfect, because it's really hard to know the underlying data structures
-// from a user provided csv/json file
-// we expect implementors to make their own component

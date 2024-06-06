@@ -7,12 +7,14 @@ export const spectrogramStyles = css`
 
   #spectrogram-container {
     position: relative;
+    background-color: var(--oe-panel-color-lighter);
     width: 100%;
     height: 100%;
   }
 
   #spectrogram-container > canvas {
     position: relative;
+    display: inherit;
     height: 100%;
 
     /*

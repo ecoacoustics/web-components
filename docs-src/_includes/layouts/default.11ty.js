@@ -1,5 +1,5 @@
-import page from "./page.11ty.js";
-import relative from "./relative-path.js";
+import page from "../page.11ty.js";
+import relative from "../relative-path.js";
 
 export default function (data) {
   return page({

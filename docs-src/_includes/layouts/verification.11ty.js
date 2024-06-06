@@ -1,4 +1,4 @@
-import example from "./example.11ty.js";
+import example from "./default.11ty.js";
 
 export default function (data) {
   return example({

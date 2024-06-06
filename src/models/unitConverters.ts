@@ -21,6 +21,7 @@ export type InvertFrequencyScale = InverseLinearScale<Hertz>;
 
 const identityFunction = (value: number) => value;
 
+// TODO: we might want to use batch signals here to increase performance
 // use we signals in the stateful unit converters so that when one value updates
 // all the computed values also update
 export class UnitConverter {
@@ -81,7 +82,7 @@ export class UnitConverter {
    * @param value the x-offset on the canvas
    * @returns what seconds value the x-offset represents
    */
-  public scaleXInverse: Signal<InvertTemporalScale> = computed(() =>
+  public scaleXInverse = computed<InvertTemporalScale>(() =>
     this.inverseLinearScale(this.temporalDomain.value, this.temporalRange.value),
   );
 
@@ -91,7 +92,7 @@ export class UnitConverter {
    * @param value the value in Hertz
    * @returns the y-offset that the Hertz value should be drawn
    */
-  public scaleY: Signal<FrequencyScale> = computed(() =>
+  public scaleY = computed<FrequencyScale>(() =>
     this.linearScale<Hertz>(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 
@@ -101,7 +102,7 @@ export class UnitConverter {
    * @param value the y-offset on the canvas
    * @returns what Hertz value the y-offset represents
    */
-  public scaleYInverse: Signal<InvertFrequencyScale> = computed(() =>
+  public scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 

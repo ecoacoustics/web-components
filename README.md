@@ -1,24 +1,22 @@
 # Ecoacoustics Web Components
 
-## Online deployment of example components
-
-Using this workspace, the [`src/components`](/src/components/) directory has been automatically deployed to the following locations
+## Component Deployments
 
 - Documentation: [oe-web-components.netlify.app](https://oe-web-components.netlify.app)
 - NPM: [npmjs.com/package/@ecoacoustics/web-components](https://www.npmjs.com/package/@ecoacoustics/web-components)
 - CDN: [jsdelivr.com/package/npm/@ecoacoustics/web-components](https://www.jsdelivr.com/package/npm/@ecoacoustics/web-components)
 - GitHub Releases: [github.com/ecoacoustics/web-components/releases](https://github.com/ecoacoustics/web-components/releases)
 
-## How to use
+## How to Use
 
 ### CDN
 
-You can import web components through the CDN
+You can import all the web components through the CDN
 
 Script tag snippet:
 
 ```html
-<script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/components.js"></script>
 ```
 
 Full page example:
@@ -30,11 +28,23 @@ Full page example:
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Component CDN Example</title>
-    <script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/components.js"></script>
   </head>
 
   <body>
-    <my-todo-list></my-todo-list>
+    <oe-axes>
+      <oe-indicator>
+        <oe-spectrogram
+          id="playing-spectrogram"
+          class="large"
+          src="/example.flac"
+          window-size="1024"
+          color-map="audacity"
+          scaling="stretch"
+        ></oe-spectrogram>
+      </oe-indicator>
+    </oe-axes>
+    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
   </body>
 </html>
 ```

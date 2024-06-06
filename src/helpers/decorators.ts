@@ -12,11 +12,11 @@ export interface QueryDeeplyAssignedElementsOptions {
  * public element: Element;
  * ```
  */
-export function queryDeeplyAssignedElement(options: QueryDeeplyAssignedElementsOptions) {
+export function queryDeeplyAssignedElement<T extends Element = Element>(options: QueryDeeplyAssignedElementsOptions) {
   // TODO: see if we can abstract away common functionality of these decorators
   return (target: unknown, propertyKey: string) => {
     const descriptor = {
-      get(this: LitElement) {
+      get(this: LitElement): T | null {
         const slotSelector = `slot${options.slot ?? ""}`;
         const slotElements = this.renderRoot?.querySelectorAll<HTMLSlotElement>(slotSelector);
 
@@ -29,10 +29,11 @@ export function queryDeeplyAssignedElement(options: QueryDeeplyAssignedElementsO
           // rather than directly querying the slot element itself
           for (const assignedElement of assignedElements) {
             if (assignedElement.matches(options.selector)) {
-              return assignedElement;
+              // TODO: remove this type casting
+              return assignedElement as T;
             }
 
-            const queriedElement = assignedElement.querySelector(options.selector);
+            const queriedElement = assignedElement.querySelector<T>(options.selector);
             if (queriedElement !== null) {
               return queriedElement;
             }

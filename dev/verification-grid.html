@@ -10,7 +10,7 @@
 
 <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" grid-size="6" selection-behavior="desktop">
+        <oe-verification-grid id="verification-grid" grid-size="3">
             <template>
                 <oe-axes>
                     <oe-indicator>
@@ -26,14 +26,16 @@
             <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
             <oe-decision verified="false" tag="*" shortcut="L">Negative</oe-decision>
             <oe-decision verified="false" shortcut="S" skip>Skip</oe-decision>
-        </oe-verification-grid>
 
-        <!--
-            local would use a file picker UI, while src would allow a remote file
-            This should probably use a data service.
-            This service would
-        -->
-        <oe-data-source for="verification-grid" src="/grid-items.json" local></oe-data-source>
+            <!--
+                local would use a file picker UI, while src would allow a remote file
+                This should probably use a data service.
+                This service would
+            -->
+            <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
+            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
+            </oe-data-source>
+        </oe-verification-grid>
     </div>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>

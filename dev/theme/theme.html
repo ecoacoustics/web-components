@@ -10,12 +10,78 @@
 </head>
 
 <body>
-    <label>
+    <label id="source-color-picker">
         Source color
         <input id="color-picker" type="color" />
     </label>
 
-    <div id="grid-host"></div>
+    <section>
+        <h2>Colours</h2>
+        <div id="grid-host"></div>
+    </section>
+
+    <section class="elements-section">
+        <h2>Elements</h2>
+
+        <span>
+            <button>Default</button>
+            <button disabled>Default (disabled)</button>
+        </span>
+
+        <span>
+            <button class="oe-btn-primary">Primary</button>
+            <button class="oe-btn-primary" disabled>Primary (disabled)</button>
+        </span>
+
+        <span>
+            <button class="oe-btn-secondary">Secondary</button>
+            <button class="oe-btn-secondary" disabled>Secondary (disabled)</button>
+        </span>
+
+        <span>
+            <button class="oe-btn-info">Info</button>
+            <button class="oe-btn-info" disabled>Info (disabled)</button>
+        </span>
+
+        <span>
+            <button class="oe-btn-danger">Danger</button>
+            <button class="oe-btn-danger" disabled>Danger (disabled)</button>
+        </span>
+
+        <span class="group">
+            <label>
+                <input type="checkbox">
+                Checkbox
+            </label>
+        </span>
+
+        <label>
+            <input type="radio">
+            Radio
+        </label>
+
+        <label>
+            <input type="range">
+        </label>
+
+        <input type="number" placeholder="Number input">
+
+        <input type="text" placeholder="Text input" required />
+
+        <textarea placeholder="Text area" required></textarea>
+
+        <input type="file">
+
+        <select required>
+            <option>Option 1</option>
+            <option>Option 2</option>
+            <option>Option 3</option>
+        </select>
+
+        <span>
+            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Del</kbd>
+        </span>
+    </section>
 
     <script>
         function ColorGridRow(variable) {
@@ -24,8 +90,8 @@
             element.innerHTML = `
                 <div class="grid-row">
                     <div class="grid-item">
-                        <div class="grid-item-heading">${variable}-color</div>
                         <div class="grid-item-content" style="background-color: var(--oe-${variable}-color); width: 2rem; height: 2rem;"></div>
+                        <div class="grid-item-heading">${variable}-color</div>
                     </div>
                 </div>
             `;
@@ -57,7 +123,7 @@
 
         window.onload = () => {
             const rootHost = document.getElementById("grid-host");
-            const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel"];
+            const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel", "danger"];
 
             const colorGrid = ColorGrid(variablesToDisplay);
             rootHost.appendChild(colorGrid);
@@ -105,24 +171,44 @@
             margin: 0;
             background-color: var(--oe-background-color);
             color: var(--oe-font-color);
+            max-height: 100vh;
+            display: flex;
+        }
+
+        section {
+            margin: 2rem;
+            margin-top: 1rem;
+        }
+
+        h2 {
+            margin-top: 0px;
+        }
+
+        #source-color-picker {
+            position: absolute;
+            right: 2rem;
+            top: 1rem;
         }
 
         #grid-host {
             position: relative;
-            min-height: 100vh;
-            padding: 5%;
         }
 
         .grid-row {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            padding: 0.5rem;
+            padding-top: 0.5rem;
         }
 
         .grid-item {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            border: 1px solid black;
+            box-shadow: var(--oe-box-shadow);
+            border: 1px solid var(--oe-border-color);
+            border-radius: var(--oe-border-rounding);
+            padding: 1rem;
+            text-align: center;
+            align-items: center;
         }
 
         .grid-item-heading {
@@ -131,6 +217,13 @@
 
         .grid-item-content {
             position: relative;
+        }
+
+        .elements-section {
+            &>* {
+                display: block;
+                margin: 1rem;
+            }
         }
     </style>
 </body>

@@ -13,6 +13,10 @@
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-inferrable-types": "error"
+        // "max-len": ["warn", { "code": 80, "ignoreComments": true }]
+      },
+      "settings": {
+        "polyfills": ["navigator.userAgentData"]
       }
     }
   ]

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Components - Special</title>
+    <script type="module" src="/src/components/index.ts"></script>
+</head>
+
+<body>
+    <div id="grid-host">
+        <oe-verification-grid id="verification-grid" grid-size="4">
+            <template>
+                <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
+                <oe-media-controls for="spectrogram"></oe-media-controls>
+                <oe-info-card></oe-info-card>
+            </template>
+
+            <oe-decision verified="true" tag="koala" additional-tags="adult" shortcut="H">Koala</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="baby" shortcut="J">Koala</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="adult" shortcut="K">Noisy Miner</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="fledgling" shortcut="L">Noisy Miner</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="adult" shortcut="A">Abbots Barber</oe-decision>
+            <oe-decision verified="true" tag="koala" additional-tags="fledgling" shortcut="S">Abbots
+                Barber</oe-decision>
+            <oe-decision verified="true" tag="koala" shortcut="D">Car</oe-decision>
+            <oe-decision verified="false" tag="*" shortcut="N">Negative</oe-decision>
+
+            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv">
+            </oe-data-source>
+        </oe-verification-grid>
+    </div>
+
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        #grid-host {
+            position: relative;
+            left: 0px;
+            top: 0px;
+            width: 100vw;
+            min-height: 100vh;
+        }
+    </style>
+</body>
+
+</html>

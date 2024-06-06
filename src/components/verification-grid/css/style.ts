@@ -17,60 +17,22 @@ export const verificationGridStyles = css`
     z-index: 5;
   }
 
-  #help-dialog {
-    position: relative;
-    min-width: 70%;
-    min-height: 70%;
-    background-color: var(--oe-panel-color);
-    border: 3px solid var(--oe-selected-color);
-    border-radius: var(--oe-border-rounding);
-    padding: 0px;
-
-    &::backdrop {
-    }
-
-    h2,
-    h3 {
-      font-weight: normal;
-    }
-
-    .dialog-container {
-      position: relative;
-      margin: 2rem;
-    }
-
-    .dialog-controls {
-      display: block;
-      position: relative;
-
-      .close-btn {
-        display: block;
-        cursor: pointer;
-      }
-
-      .show-again {
-      }
-    }
-  }
-
   .keyboard-shortcuts {
     display: grid;
     position: relative;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: var(--oe-spacing);
     width: 100%;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+  }
 
-    .row {
-      width: 100%;
-      .key {
-      }
-
-      .description {
-        padding-left: 2rem;
-      }
-    }
+  /* TODO: fix placement */
+  .statistics-section {
+    position: absolute;
+    display: inline-block;
+    width: fit-content;
+    padding: var(--oe-spacing);
   }
 
   .verification-container {
@@ -86,9 +48,8 @@ export const verificationGridStyles = css`
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: var(--oe-spacing);
   }
 
   .no-items-message {
@@ -107,10 +68,41 @@ export const verificationGridStyles = css`
   .verification-controls {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    align-items: stretch;
-    padding: 1rem;
-    gap: 1rem;
+    justify-content: space-around;
+    align-items: end;
+    padding: var(--oe-spacing);
+    gap: var(--oe-spacing);
     color: var(--oe-font-color);
+  }
+
+  .decision-controls {
+    h2 {
+      display: block;
+    }
+
+    .decision-control-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+
+  .decision-controls-left,
+  .decision-controls-right {
+    display: flex;
+  }
+
+  /*
+    We apply styles to the <template> elements here because we can access them
+    through light dom selectors.
+    We cannot target the template elements inside the verification-grid-tile
+    because they are reflected into the shadow dom, but not actually rendered
+    in the tile dom (meaning that we can't style them in the tile component).
+  */
+  oe-spectrogram {
+    @media (max-width: 600px) {
+      /* TODO: do this better. This is a hacky solution for now */
+      height: 380px;
+    }
   }
 `;
