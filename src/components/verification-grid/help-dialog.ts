@@ -46,8 +46,12 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
   // TODO: narrow the typing here
   private closeHelpDialog(): void {
     const dialogPreference = this.shadowRoot!.getElementById("dialog-preference") as HTMLInputElement;
-    const shouldShowDialog = !dialogPreference.checked;
 
+    if (!dialogPreference) {
+      return;
+    }
+
+    const shouldShowDialog = dialogPreference.checked;
     if (!shouldShowDialog) {
       localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     } else {
@@ -156,5 +160,11 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
         </div>
       </dialog>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-verification-help-dialog": VerificationHelpDialog;
   }
 }

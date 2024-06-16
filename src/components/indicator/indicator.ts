@@ -54,3 +54,9 @@ export class Indicator extends AbstractComponent(LitElement) {
     `;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-indicator": Indicator;
+  }
+}

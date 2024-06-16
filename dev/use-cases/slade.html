@@ -21,19 +21,21 @@
                 <oe-info-card></oe-info-card>
             </template>
 
-            <oe-decision verified="true" tag="koala" shortcut="Y">Koala</oe-decision>
-            <oe-decision verified="false" tag="koala" shortcut="N">Not Koala</oe-decision>
+            <oe-decision verified="true" tag="blue winged kookaburra" shortcut="Y">Blue Winged Kookaburra</oe-decision>
+            <oe-decision verified="false" tag="blue winged kookaburra" shortcut="N">
+                Not Blue Winged Kookaburra
+            </oe-decision>
+            <oe-decision tag="blue winged kookaburra" additional-tags="unsure" shortcut="U">
+                Blue Winged Kookaburra
+            </oe-decision>
+            <oe-decision shortcut="S" skip>Skip</oe-decision>
 
-            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv">
+            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
             </oe-data-source>
         </oe-verification-grid>
     </div>
 
     <style>
-        body {
-            margin: 0px;
-        }
-
         #grid-host {
             position: relative;
             left: 0px;

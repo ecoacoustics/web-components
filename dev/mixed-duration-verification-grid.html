@@ -9,13 +9,14 @@
 </head>
 
 <body>
-    <oe-verification-grid id="verification-grid" grid-size="4" selection-behavior="desktop">
+    <oe-verification-grid id="verification-grid" grid-size="4">
         <template>
             <oe-axes>
                 <oe-indicator>
                     <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
                 </oe-indicator>
             </oe-axes>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
             <oe-info-card></oe-info-card>
         </template>
 
@@ -24,10 +25,22 @@
         <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
         <oe-decision verified="false" tag="*" shortcut="L">Negative</oe-decision>
         <oe-decision verified="false" shortcut="S" skip>Skip</oe-decision>
-
-        <oe-data-source slot="data-source" for="verification-grid" local>
-        </oe-data-source>
     </oe-verification-grid>
+
+    <oe-data-source for="verification-grid" src="/public/mixed-duration-grid-items.csv"></oe-data-source>
+
+    <div>
+        <p>
+            The last tile in this verification grid is five seconds, while the
+            other two grid tiles are of seven second recordings.
+        </p>
+
+        <p>
+            We should see that the grid tiles are the same size if using
+            "stretch" spectrogram scaling, but different sizes when using
+            "natural" scaling.
+        </p>
+    </div>
 </body>
 
 </html>

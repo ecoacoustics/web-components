@@ -11,9 +11,9 @@ export const theming = css`
     --oe-theme-lightness: 54%;
 
     /* A2O Colours */
-    --oe-theme-hue: 142deg;
+    /* --oe-theme-hue: 142deg;
     --oe-theme-saturation: 25%;
-    --oe-theme-lightness: 35%;
+    --oe-theme-lightness: 35%; */
 
     /* Ecosounds Colours */
     /* --oe-theme-hue: 207;
@@ -135,9 +135,6 @@ export const theming = css`
     &:hover {
       text-decoration: none;
     }
-
-    &:visited {
-    }
   }
 
   hr {
@@ -232,7 +229,7 @@ export const theming = css`
     height: 1.2rem;
   }
 
-  label:has(> input) {
+  label:has(input) {
     display: flex;
     align-items: center;
     gap: var(--oe-spacing);
@@ -270,22 +267,22 @@ export const theming = css`
     padding: var(--oe-spacing);
     background-color: var(--background-color);
     transition: background var(--oe-animation-time), border var(--oe-animation-time);
+    cursor: pointer;
 
     /*
       Box shadows make a button look raised and clickable.
       Therefore, if the button is disabled, we do not want to show the box shadow.
     */
-    &:not(:disabled, :has(.disabled)) {
+    &:not(:disabled, .disabled) {
       box-shadow: var(--oe-box-shadow);
     }
 
-    &:hover:not(:disabled, :has(.disabled)) {
+    &:hover:not(:disabled, .disabled) {
       background: var(--background-color) radial-gradient(circle, transparent 1%, var(--background-color) 1%)
         center/15000%;
-      cursor: pointer;
     }
 
-    &:active:not(:disabled, :has(.disabled)) {
+    &:active:not(:disabled, .disabled) {
       background-color: var(--ripple-color);
       background-size: 100%;
       transition: background 0s;
@@ -313,14 +310,11 @@ export const theming = css`
   }
 
   .oe-btn-primary {
-    --background-color: var(--oe-background-color);
     border: var(--oe-border-width) solid var(--oe-primary-color);
   }
 
   .oe-btn-secondary {
-    --background-color: var(--oe-background-color);
     border: var(--oe-border-width) solid var(--oe-secondary-color);
-    /* --background-color: var(--oe-secondary-color); */
   }
 
   .oe-btn-info {

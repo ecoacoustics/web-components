@@ -7,15 +7,15 @@ title: Open Ecoacoustics | Examples
 
 [A2O Search](./search/index.html)
 
-[Validation Grid (Fake)](./validation/index.html)
+[Verification Grid (Fake)](./verification/index.html)
 
-[Validation Grid (Single Class)](./verification/single/index.html)
+[Verification Grid (Single Class)](./verification/single/index.html)
 
-[Validation Grid (Single Class - Additional Tags)](./verification/single-additional/index.html)
+[Verification Grid (Single Class - Additional Tags)](./verification/single-additional/index.html)
 
-[Validation Grid (Multiple Classes)](./verification/multi/index.html)
+[Verification Grid (Multiple Classes)](./verification/multi/index.html)
 
-[Validation Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
+[Verification Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
 
 [How to Create a Verification grid](./create-verification-grid/index.html)
 

@@ -2,7 +2,7 @@ import { css } from "lit";
 
 export const verificationGridTileStyles = css`
   :host {
-    --selected-border-size: 2px;
+    --selected-border-size: 3px;
   }
 
   .tile-container {
@@ -16,14 +16,10 @@ export const verificationGridTileStyles = css`
     cursor: pointer;
     margin: var(--oe-spacing);
     margin-bottom: 0;
-
-    /*
-      TODO: find out why we don't need this.
-      I think we do need something like this
-    */
-    /* max-width: 350px; */
+    min-width: 350px;
 
     border: var(--selected-border-size) solid var(--decision-color);
+    transition: border-color var(--oe-animation-time) ease-out;
 
     &:hover {
       box-shadow: 0 2px 4px #e8e2e6;

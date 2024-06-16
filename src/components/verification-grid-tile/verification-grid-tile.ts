@@ -62,17 +62,38 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   public spectrogram: Spectrogram | undefined;
 
+  public loaded = false;
   private shortcuts: string[] = [];
-  private shortcutHandler = this.handleKeyDown.bind(this);
+  private keyDownHandler = this.handleKeyDown.bind(this);
+  private keyUpHandler = this.handleKeyUp.bind(this);
+  private loadingHandler = this.handleLoading.bind(this);
+  private loadedHandler = this.handleLoaded.bind(this);
 
   public connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener("keydown", this.shortcutHandler);
+    document.addEventListener("keydown", this.keyDownHandler);
+    document.addEventListener("keyup", this.keyUpHandler);
   }
 
   public disconnectedCallback(): void {
-    document.removeEventListener("keydown", this.shortcutHandler);
+    document.removeEventListener("keydown", this.keyDownHandler);
+    document.removeEventListener("keyup", this.keyUpHandler);
+
+    if (this.spectrogram) {
+      this.spectrogram.removeEventListener("loading", this.loadingHandler);
+      this.spectrogram.removeEventListener("loaded", this.loadedHandler);
+    }
+
     super.disconnectedCallback();
+  }
+
+  public firstUpdated(): void {
+    if (!this.spectrogram) {
+      throw new Error("Could not find spectrogram component");
+    }
+
+    this.spectrogram.addEventListener("loading", this.loadingHandler);
+    this.spectrogram.addEventListener("loaded", this.loadedHandler);
   }
 
   public willUpdate(): void {
@@ -84,7 +105,24 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
     this.shortcuts = [shortcutKey, shortcutTranslation[shortcutKey] ?? ""];
   }
 
+  // this method is called when the spectrogram starts rendering
+  private handleLoading(): void {
+    this.loaded = false;
+  }
+
+  // this method is called when the spectrogram finishes rendering
+  private handleLoaded(): void {
+    this.loaded = true;
+  }
+
   private handleKeyDown(event: KeyboardEvent): void {
+    // most browsers scroll a page width when the user presses the spacebar
+    // however, since spacebar can also be used to play spectrograms, we don't
+    // want to scroll when the spacebar is pressed
+    if (event.key === " ") {
+      event.preventDefault();
+    }
+
     if (event.altKey && this.shortcuts.includes(event.key.toLowerCase())) {
       this.dispatchEvent(
         new CustomEvent("selected", {
@@ -96,6 +134,23 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
           },
         }),
       );
+    }
+  }
+
+  private handleKeyUp(event: KeyboardEvent): void {
+    if (!this.spectrogram) {
+      throw new Error("Could not find spectrogram element");
+    }
+
+    const spaceKey = " " as const;
+    if (event.key === spaceKey && this.selected) {
+      const spectrogram = this.spectrogram;
+
+      if (spectrogram.paused) {
+        spectrogram.play();
+      } else {
+        spectrogram.pause();
+      }
     }
   }
 
@@ -140,5 +195,11 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
         <slot></slot>
       </div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-verification-grid-tile": VerificationGridTile;
   }
 }

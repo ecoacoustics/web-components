@@ -5,7 +5,8 @@ import { infoCardStyle } from "./css/style";
 import { consume } from "@lit/context";
 import { gridTileContext } from "../verification-grid-tile/verification-grid-tile";
 import { Verification, VerificationSubject } from "../../models/verification";
-import { classMap } from "lit/directives/class-map.js";
+
+type InfoCardTemplate = (value: any) => any;
 
 @customElement("oe-info-card")
 export class InfoCard extends AbstractComponent(LitElement) {
@@ -13,22 +14,25 @@ export class InfoCard extends AbstractComponent(LitElement) {
 
   @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
-  public model!: Verification;
+  public model?: Verification;
 
   @state()
   private showExpanded = false;
 
-  private dateTemplate = (value: string) => new Date(value).toISOString();
-  private numberTemplate = (value: number | string) => Number(value).toLocaleString();
-  private identityTemplate = (value: unknown) => value;
+  private shortLength = 3 as const;
+  private numberTemplate: InfoCardTemplate = (value: number | string) => Number(value).toLocaleString();
+  private identityTemplate: InfoCardTemplate = (value: unknown) => value;
 
   // because urls can be unreasonably long, we want to truncate them
   // we do this by using the format https://.../last-path?first-parameter...
   private urlTemplate(url: string): TemplateResult<1> {
+    const ellipsis = "…";
+
     const protocol = url.split(":/")[0];
     const pathFragment = url.split("/").at(-1)?.split("&")[0] ?? "";
     const hasAdditionalParameters = url.split("&").length > 1;
-    const formattedValue = `${protocol}…${pathFragment}${hasAdditionalParameters ? "…" : ""}`;
+    const additionalParametersFragment = hasAdditionalParameters ? ellipsis : "";
+    const formattedValue = protocol + ellipsis + pathFragment + additionalParametersFragment;
 
     return html`<a href="${url}" target="_blank">${formattedValue}</a>`;
   }
@@ -36,21 +40,14 @@ export class InfoCard extends AbstractComponent(LitElement) {
   private subjectRowTemplate(subject: [key: string, value: unknown]) {
     const [key, value] = subject;
 
-    let valueTemplate: any = this.identityTemplate;
+    let valueTemplate: InfoCardTemplate = this.identityTemplate;
 
     if (typeof value === "string" && value.includes(":/")) {
       valueTemplate = this.urlTemplate;
-    }
-
-    if (typeof value === "number" || !isNaN(Number(value))) {
+    } else if (typeof value === "number" || !isNaN(Number(value))) {
       valueTemplate = this.numberTemplate;
     }
 
-    if (value instanceof Date) {
-      valueTemplate = this.dateTemplate;
-    }
-
-    // default template if we don't know the data type
     return html`
       <div class="subject-row">
         <div class="subject-key">${key}</div>
@@ -65,32 +62,33 @@ export class InfoCard extends AbstractComponent(LitElement) {
     }
 
     const subjectEntries = Object.entries(subject);
-
     if (!this.showExpanded) {
-      subjectEntries.splice(3);
+      subjectEntries.splice(this.shortLength);
     }
 
-    return html`${subjectEntries.map((value) => this.subjectRowTemplate(value))}`;
+    return subjectEntries.map((value) => this.subjectRowTemplate(value));
   }
 
   public render() {
-    const subject: VerificationSubject | undefined = this.model?.subject;
-
-    console.log("new model");
-
     return html`
-      <div class="card-container ${classMap({ expanded: this.showExpanded })}">
-        ${this.subjectTemplate(subject)}
+      <div class="card-container">
+        ${this.subjectTemplate(this.model?.subject)}
 
         <hr />
 
         <div class="static-actions">
-          <a href="${this.model?.url}" target="_blank" download>Download Recording</a>
-          <a target="_blank" @click="${() => (this.showExpanded = !this.showExpanded)}">
+          <a href="${this.model?.url ?? ""}" target="_blank" download>Download Recording</a>
+          <a @click="${() => (this.showExpanded = !this.showExpanded)}">
             ${this.showExpanded ? "Show Less" : "Show More"}
           </a>
         </div>
       </div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-info-card": InfoCard;
   }
 }

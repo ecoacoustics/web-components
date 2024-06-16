@@ -1,6 +1,11 @@
 import { css } from "lit";
 
 export const mediaControlsStyles = css`
+  sl-menu-item[checked]::part(base) {
+    background-color: var(--oe-selected-color);
+    color: var(--oe-font-color);
+  }
+
   .container {
     display: flex;
     position: relative;

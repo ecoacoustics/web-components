@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import svgLoader from "vite-svg-loader";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // vite config for the dev server and documentation
 export default defineConfig({

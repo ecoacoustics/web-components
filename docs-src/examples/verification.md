@@ -1,14 +1,14 @@
 ---
 layout: layouts/default.11ty.js
-title: Open Ecoacoustics | Examples | Validation Interface (fake)
+title: Open Ecoacoustics | Examples | Verification Interface (fake)
 ---
 
-## Validation Interface (fake)
+## Verification Interface (fake)
 
-This example tried to mimic what a minimal implementation of a validation interface could look like using the web components.
+This example tried to mimic what a minimal implementation of a verification interface could look like using the web components.
 
 <div>
-  <div id="validation-grid"></div>
+  <div id="verification-grid"></div>
 
   <div class="action-group">
     <div class="action-group-description">Do all of these recordings contain a
@@ -58,15 +58,15 @@ function initGridItems() {
       )
     })
     .then(() => {
-      createValidationGrid(0)
+      createverificationGrid(0)
     });
 }
 
 /**
  * @param {Number} page
  */
-function createValidationGrid(page) {
-  const validationGridElement = document.getElementById("validation-grid");
+function createverificationGrid(page) {
+  const verificationGridElement = document.getElementById("verification-grid");
 
   const startIndex = page * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -75,15 +75,15 @@ function createValidationGrid(page) {
 
   for (const item of pageItems) {
     const spectrogramElement = Spectrogram(item);
-    validationGridElement.appendChild(spectrogramElement);
+    verificationGridElement.appendChild(spectrogramElement);
   }
 }
 
 nextPage = () => {
-  const validationGridElement = document.getElementById("validation-grid");
-  validationGridElement.replaceChildren();
+  const verificationGridElement = document.getElementById("verification-grid");
+  verificationGridElement.replaceChildren();
 
-  createValidationGrid(++page);
+  createverificationGrid(++page);
 }
 
 /**
@@ -92,7 +92,7 @@ nextPage = () => {
  */
 function Spectrogram(item) {
   const element = document.createElement("oe-spectrogram");
-  element.className = "validation-grid-item";
+  element.className = "verification-grid-item";
   element.setAttribute("src", item.AudioLink);
 
   return element;
@@ -103,12 +103,12 @@ window.addEventListener("load", () => initGridItems());
 </script>
 
 <style>
-.validation-grid {
+.verification-grid {
   display: flex;
   flex-wrap: wrap;
 }
 
-.validation-grid-item {
+.verification-grid-item {
   padding: 0.5rem;
 }
 

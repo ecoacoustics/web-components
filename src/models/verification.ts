@@ -22,7 +22,7 @@ export class Verification {
   public url: string;
   public tag: Tag | null;
   public confirmed: boolean;
-  public additionalTags: Tag[];
+  public additionalTags: string[];
 
   // other metadata e.g. verificationDate
 }
