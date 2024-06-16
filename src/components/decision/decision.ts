@@ -55,8 +55,9 @@ export class Decision extends AbstractComponent(LitElement) {
   @state()
   public selectionMode: SelectionObserverType = "desktop";
 
-  private keyUpHandler = this.shortcutHandler.bind(this);
+  private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
+  private shouldHandleKeyUp = true;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -70,10 +71,21 @@ export class Decision extends AbstractComponent(LitElement) {
     super.disconnectedCallback();
   }
 
-  private shortcutHandler(event: KeyboardEvent): void {
-    this.showDecisionColor = false;
-    if (this.shortcut === undefined) {
+  private handleKeyUp(event: KeyboardEvent): void {
+    if (event.key.toLocaleLowerCase() === "escape") {
       return;
+    }
+
+    if (this.isShortcutKey(event) && this.shouldHandleKeyUp) {
+      this.emitDecision();
+    }
+
+    this.shouldHandleKeyUp = true;
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (this.isShortcutKey(event)) {
+      this.showDecisionColor = true;
     }
 
     // if the user is holding down escape while pressing a shortcut, we should
@@ -83,19 +95,17 @@ export class Decision extends AbstractComponent(LitElement) {
     // and then release the trigger key while holding down the escape key
     // to cancel creating the decision
     if (event.key.toLocaleLowerCase() === "escape") {
-      // TODO: I haven't implemented this functionality, but since it is a composite
-      // keypress, we might have to create another event listener for this in the
-      // keydown event
-      return;
-    }
-
-    if (event.key.toLocaleLowerCase() === this.shortcut.toLocaleLowerCase()) {
-      this.emitDecision();
+      this.shouldHandleKeyUp = false;
+      this.showDecisionColor = false;
     }
   }
 
-  private handleKeyDown(): void {
-    this.showDecisionColor = true;
+  private isShortcutKey(event: KeyboardEvent): boolean {
+    if (this.shortcut === undefined) {
+      return false;
+    }
+
+    return event.key.toLowerCase() === this.shortcut.toLowerCase();
   }
 
   private emitDecision(): void {
@@ -103,6 +113,7 @@ export class Decision extends AbstractComponent(LitElement) {
       return;
     }
 
+    // TODO: The additional tags are broken
     // when we are making decisions for with multiple classes, we emit
     // the OE Verification model for every tag option
     // the same logic should be used for a single tag, but it should only emit
@@ -120,8 +131,9 @@ export class Decision extends AbstractComponent(LitElement) {
         detail: {
           value: this.verified,
           tag: this.tag,
-          color: this.color,
           additionalTags,
+          color: this.color,
+          target: this,
         },
         bubbles: true,
       }),
@@ -151,5 +163,11 @@ export class Decision extends AbstractComponent(LitElement) {
         ${this.selectionMode !== "tablet" ? html`<div class="keyboard-legend">${keyboardLegend}</div>` : nothing}
       </button>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-decision": Decision;
   }
 }

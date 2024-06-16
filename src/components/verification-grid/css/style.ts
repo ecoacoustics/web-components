@@ -29,7 +29,7 @@ export const verificationGridStyles = css`
 
   /* TODO: fix placement */
   .statistics-section {
-    position: absolute;
+    position: relative;
     display: inline-block;
     width: fit-content;
     padding: var(--oe-spacing);

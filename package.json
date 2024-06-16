@@ -3,8 +3,8 @@
   "description": "Ecoacoustic web components",
   "version": "0.1.1-alpha.4",
   "types": "@types/",
-  "main": "components.js",
   "type": "module",
+  "main": "components.js",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "build:components && build:docs",
@@ -70,6 +70,7 @@
     "rollup-plugin-summary": "^2.0.0",
     "rollup-plugin-web-worker-loader": "^1.6.1",
     "terser": "^5.31.0",
+    "ts-lit-plugin": "^2.0.2",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.7.1",
     "user-agent-data-types": "^0.4.2",

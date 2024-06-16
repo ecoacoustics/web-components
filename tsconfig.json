@@ -2,7 +2,7 @@
   "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "**/*.d.ts", "vite.config.ts"],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "target": "ES2017",
+    "target": "ES2021",
     "newLine": "lf",
     "module": "ESNext",
     // I have to import @types/audioworklet from the TS DOM lib generator
@@ -34,6 +34,8 @@
     "forceConsistentCasingInFileNames": true,
 
     "experimentalDecorators": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+
+    "plugins": [{ "name": "ts-lit-plugin" }]
   }
 }

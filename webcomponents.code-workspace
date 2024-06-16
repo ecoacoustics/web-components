@@ -51,6 +51,8 @@
       "roboto",
       "colorbrewer",
       "ecosounds",
+      "currentcolor",
+      "spacebar",
 
       // windowing functions
       "tukey",
@@ -89,7 +91,7 @@
       "visualstudioexptteam.intellicode-api-usage-examples",
       "ms-playwright.playwright",
       "ms-vscode.vscode-typescript-next",
-      "bierner.lit-html",
+      "runem.lit-plugin",
       "ecmel.vscode-html-css",
       "pushqrdx.inline-html",
       "hediet.vscode-drawio",

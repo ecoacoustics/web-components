@@ -35,5 +35,6 @@ export const decisionStyles = css`
   .show-decision-color,
   :active {
     border: var(--oe-border-width) solid var(--decision-color);
+    --background-color: var(--decision-color);
   }
 `;

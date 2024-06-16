@@ -15,7 +15,7 @@ Started - assigned to Hudson
 
 ## Outcomes
 
-1. a prototype web interface for sub-sampling playback, annotation, and possibly validation
+1. a prototype web interface for sub-sampling playback, annotation, and possibly verification
 2. an beta integrated with the Acoustic Workbench
 
 ## Description
@@ -377,7 +377,7 @@ Because we have pre-fetched the next page, we can use this to test if the next p
 This means that the component does not depend on a data structure for pagination.
 
 All the `oe-verification-grid` component takes as a callback that can be used to instantiate
-an array of validation items.
+an array of verification items.
 
 - Single-class (verify a single existing tag)
 - Multi-class (verify multiple existing tags)

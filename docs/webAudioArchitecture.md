@@ -43,7 +43,7 @@
 
 Until the web codec project is stable and available, we are going to be limited to rendering short spectrograms of audio.
 We don't know how large yet but we are guessing no more than a minute or no more than 5 seconds for multiple spectrograms on a page.
-We don't need to render more than that to fulfil the validation interface use case, so we'll progress using `decodeAudioData` + `fetch()` for now.
+We don't need to render more than that to fulfil the verification interface use case, so we'll progress using `decodeAudioData` + `fetch()` for now.
 
 Fetch will still result in a double download, but since we constrained to short audio recordings, the overhead should be minimal.
 We could use `OfflineAudioContext` piped to an `AudioContext` which is connected to a `HTMLAudioElement` to avoid this double download.

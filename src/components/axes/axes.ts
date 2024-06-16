@@ -287,7 +287,12 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private xValues(): Seconds[] {
     const step =
       this.xStepOverride ||
-      this.calculateStep(this.unitConverter.temporalDomain.value, this.unitConverter.temporalRange.value, "width");
+      this.calculateStep(
+        this.unitConverter.temporalDomain.value,
+        this.unitConverter.temporalRange.value,
+        this.unitConverter.scaleX.value,
+        "width",
+      );
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.startOffset,
@@ -300,7 +305,12 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private yValues(): Hertz[] {
     const step =
       this.yStepOverride ||
-      this.calculateStep(this.unitConverter.frequencyDomain.value, this.unitConverter.frequencyRange.value, "height");
+      this.calculateStep(
+        this.unitConverter.frequencyDomain.value,
+        this.unitConverter.frequencyRange.value,
+        this.unitConverter.scaleY.value,
+        "height",
+      );
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.lowFrequency,
@@ -311,18 +321,43 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     );
   }
 
-  private willFitStep(proposedStep: number, canvasSize: number, domainDelta: number, fontSize: number): boolean {
-    const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
-    const proposedSize = numberOfProposedLabels * fontSize;
-    return proposedSize < canvasSize;
+  private willFitStep(
+    proposedStep: number,
+    canvasSize: number,
+    domain: ScaleDomain<Seconds | Hertz>,
+    fontSize: number,
+    scale: FrequencyScale | TemporalScale,
+    melScale: boolean,
+  ): boolean {
+    // if we are rendering in a linear scale, we can easily virtually measure
+    // if the axis will fit. However, if we are using mel scale, then we have to
+    // do some more complex calculations to check that the labels will fit
+    if (!melScale) {
+      const domainDelta = domain[1] - domain[0];
+      const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
+      const proposedSize = numberOfProposedLabels * (fontSize + this.labelPadding);
+      return proposedSize < canvasSize;
+    }
+
+    // to check if the mel scale will fit, we can calculate the canvas position
+    // of the last two labels and check if they overlap
+    // TODO: we shouldn't re-compute all the positions
+    const proposedValues = this.generateAxisValues(domain[0], domain[1], proposedStep, scale, false);
+    const lastTwoValues = proposedValues.slice(-2);
+    const lastTwoPositions = lastTwoValues.map((value) => scale(value));
+    const positionDelta = lastTwoPositions[0] - lastTwoPositions[1];
+    return positionDelta > fontSize + this.labelPadding;
   }
 
+  // the calculate step function will use a binary search to find the largest
+  // "nice" factor that will fit the axis
   private calculateStep(
     domain: ScaleDomain<Seconds | Hertz>,
     range: ScaleRange<Seconds | Hertz>,
+    scale: FrequencyScale | TemporalScale,
     sizeKey: keyof Size,
   ): number {
-    const niceFactors = [10, 5, 2, 1, 0.5, 0.2, 0.1];
+    const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02];
     const fontSize = this.calculateFontSize("0.0");
     const totalLabelSize = fontSize[sizeKey] + this.labelPadding;
 
@@ -346,7 +381,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     for (const factor of niceFactors) {
       const proposedStep = initialProposedStep / factor;
 
-      if (this.willFitStep(proposedStep, canvasSize, domainDelta, totalLabelSize)) {
+      if (
+        this.willFitStep(
+          proposedStep,
+          canvasSize,
+          domain,
+          totalLabelSize,
+          scale,
+          sizeKey === "height" ? this.unitConverter.melScale.value : false,
+        )
+      ) {
         return proposedStep;
       }
     }
@@ -403,4 +447,10 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   // TODO: the canvas that we use to calculate the font width/height should be
   // cached as a static field
   public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-axes": Axes;
+  }
 }

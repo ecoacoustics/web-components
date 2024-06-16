@@ -1,6 +1,6 @@
 ---
 layout: layouts/default.11ty.js
-title: Open Ecoacoustics | Examples | Validation Interface (fake)
+title: Open Ecoacoustics | Examples | Verification Interface (fake)
 ---
 
 ## How to Create a Verification Grid

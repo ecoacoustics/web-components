@@ -365,15 +365,25 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
   private updateCurrentTime(poll = false): void {
     if (poll) {
+      // if the user starts playing the audio, stops playing it, then starts playing it again within the same frame
+      // we would have two animation requests, and both would continue polling the time
+      // in all subsequent frames, we would have two time updates per frame
       if (this.nextRequestId) {
         window.cancelAnimationFrame(this.nextRequestId);
         this.nextRequestId = null;
       }
 
-      this.highFreqUpdateCurrentTime();
-    } else {
-      this.currentTime.value = this.mediaElement.currentTime;
+      // we use request animation frame here because otherwise we could have two time
+      // updates in the same frame
+      // this could happen if we process the first time update before the next frame is requested
+      // meaning that it queues a time update for the next frame
+      // when the next frame is requested, the time will be updated again, meaning there was
+      // two time updates in the same frame
+      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighFreqCurrentTime());
+      return;
     }
+
+    this.currentTime.value = this.mediaElement.currentTime;
   }
 
   // TODO: move somewhere else
@@ -384,7 +394,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   // visual artifacts when the audio was paused and then played again
   // this was because the time between calling function and fetching the highResTime
   // later on led to a time difference of a couple of milliseconds
-  private highFreqUpdateCurrentTime(
+  private pollUpdateHighFreqCurrentTime(
     lastHighResSync: DOMHighResTimeStamp | null = null,
     lastObservedTime: number | null = null,
   ): void {
@@ -392,7 +402,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     // e.g. seeking
     if (!this.paused) {
       const mediaElementTime = this.mediaElement.currentTime;
-      let exactTimeDelta = 0;
+      let highResolutionDelta = 0;
 
       // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
       // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
@@ -402,24 +412,33 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // in browsers which report the real time (e.g. Chrome) this condition should never be true
       const highResTime = performance.now();
       if (mediaElementTime === lastObservedTime && lastHighResSync !== null) {
-        exactTimeDelta = (highResTime - lastHighResSync) / 1_000;
+        highResolutionDelta = (highResTime - lastHighResSync) / 1_000;
       } else {
         if (this.playStartedAt !== null) {
           lastHighResSync = highResTime;
         }
       }
 
-      const newProposedTime = mediaElementTime + exactTimeDelta;
+      // on some browsers, the media elements paused event doesn't emit the exact
+      // millisecond that the audio is paused/the duration is reached
+      // this can cause the high-resolution time to exceed the duration of the audio
+      // by a few milliseconds
+      // to fix this, we check if the new proposed time is greater than the duration
+      // if it is, we set the current time to the duration and set the paused state
+      const newProposedTime = mediaElementTime + highResolutionDelta;
       if (newProposedTime >= this.audio.value.duration) {
         this.currentTime.value = this.audio.value.duration;
         this.pause();
+
+        // by returning early, we should never trigger the next requestAnimationFrame
         return;
       }
 
-      this.currentTime.value = mediaElementTime + exactTimeDelta;
+      console.log("high res delta", highResolutionDelta, mediaElementTime, newProposedTime);
+      this.currentTime.value = mediaElementTime + highResolutionDelta;
 
       this.nextRequestId = requestAnimationFrame(() =>
-        this.highFreqUpdateCurrentTime(lastHighResSync, mediaElementTime),
+        this.pollUpdateHighFreqCurrentTime(lastHighResSync, mediaElementTime),
       );
     }
   }
@@ -431,6 +450,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // TODO: find out if we actually need this
       if (this.nextRequestId) {
         window.cancelAnimationFrame(this.nextRequestId);
+        this.nextRequestId = null;
       }
 
       this.mediaElement?.pause();
@@ -479,5 +499,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-spectrogram": Spectrogram;
   }
 }

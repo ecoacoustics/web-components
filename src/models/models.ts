@@ -49,7 +49,7 @@ export interface RenderWindow {
 //   highFrequency: number;
 //   tags: Tag[];
 //   reference: object;
-//   validations: Validation[];
+//   verifications: Verification[];
 // }
 
 // interface Tag {
@@ -57,7 +57,7 @@ export interface RenderWindow {
 //   reference: object;
 // }
 
-// interface Validation {
+// interface Verification {
 //   target: Tag;
 //   confirmed: boolean;
 

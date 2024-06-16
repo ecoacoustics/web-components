@@ -3,8 +3,8 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { PageFetcher, VerificationGrid } from "../verification-grid/verification-grid";
 import { dataSourceStyles } from "./css/style";
-import csv from "csvtojson";
 import { booleanConverter } from "../../helpers/attributes";
+import csv from "csvtojson";
 
 type SupportedFileTypes = "json" | "csv";
 type Char = string;
@@ -24,7 +24,7 @@ export class DataSource extends AbstractComponent(LitElement) {
   public local!: boolean;
 
   @state()
-  private fileName: string | null = null;
+  public fileName: string | null = null;
 
   @query("input[type=file]")
   private fileInput!: HTMLInputElement;
@@ -78,7 +78,7 @@ export class DataSource extends AbstractComponent(LitElement) {
     // TODO: we should be using the headers to inspect the file type
     // if the file type cannot be determined by the header, then we should only
     // use the first byte as a fallback heuristic
-    return this.fileType === "json" ? JSON.parse(data) : await csv().fromString(data);
+    return this.fileType === "json" ? JSON.parse(data) : await csv({ flatKeys: true }).fromString(data);
   }
 
   private buildCallback(content: any[]): PageFetcher | undefined {
@@ -147,6 +147,7 @@ export class DataSource extends AbstractComponent(LitElement) {
       return;
     }
 
+    this.fileName = this.src?.split("/").pop() ?? null;
     this.verificationGrid.getPage = fetcher;
     this.verificationGrid.dataSource = this;
   }
@@ -169,5 +170,11 @@ export class DataSource extends AbstractComponent(LitElement) {
 
   public render() {
     return this.local ? this.fileInputTemplate() : nothing;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-data-source": DataSource;
   }
 }

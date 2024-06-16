@@ -5,7 +5,6 @@ style.css
 @types/
 js/
 
-# TODO: remove when in pushing
 # I have excluded csv files because they are from real projects where I'm not sure about the copyright
 public/*.csv
 
