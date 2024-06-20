@@ -40,8 +40,8 @@ export class Decision extends AbstractComponent(LitElement) {
   @property({ attribute: "additional-tags", type: String, reflect: true })
   public additionalTags: string | undefined;
 
-  @property({ attribute: "disabled", type: Boolean, reflect: true })
-  public disabled: boolean | undefined;
+  @property({ attribute: "disabled", type: Boolean, converter: booleanConverter, reflect: true })
+  public disabled = false;
 
   @property({ type: Boolean, converter: booleanConverter })
   public all: boolean | undefined;
@@ -57,7 +57,7 @@ export class Decision extends AbstractComponent(LitElement) {
 
   private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
-  private shouldHandleKeyUp = true;
+  private shouldEmitNext = true;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -76,11 +76,9 @@ export class Decision extends AbstractComponent(LitElement) {
       return;
     }
 
-    if (this.isShortcutKey(event) && this.shouldHandleKeyUp) {
+    if (this.isShortcutKey(event)) {
       this.emitDecision();
     }
-
-    this.shouldHandleKeyUp = true;
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -95,8 +93,7 @@ export class Decision extends AbstractComponent(LitElement) {
     // and then release the trigger key while holding down the escape key
     // to cancel creating the decision
     if (event.key.toLocaleLowerCase() === "escape") {
-      this.shouldHandleKeyUp = false;
-      this.showDecisionColor = false;
+      this.shouldEmitNext = false;
     }
   }
 
@@ -109,9 +106,11 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   private emitDecision(): void {
-    if (this.disabled) {
+    if (this.disabled || !this.shouldEmitNext) {
+      this.shouldEmitNext = true;
       return;
     }
+    this.shouldEmitNext = true;
 
     // TODO: The additional tags are broken
     // when we are making decisions for with multiple classes, we emit

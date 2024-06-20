@@ -76,6 +76,12 @@ export class AudioHelper {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
 
+    // if the spectrogram options are updated, but there is no source
+    // we should not attempt to regenerate the spectrogram
+    if (!this.cachedResponse) {
+      throw new Error("No source to regenerate spectrogram");
+    }
+
     const newGeneration = await this.abort();
     this.clearCanvas();
 
@@ -86,12 +92,17 @@ export class AudioHelper {
 
   public async regenerateSpectrogram(options: SpectrogramOptions) {
     const now = performance.now();
-    //console.log("audio: regenerate");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
 
     const newGeneration = await this.abort();
+
+    // if the spectrogram options are updated, but there is no source
+    // we should not attempt to regenerate the spectrogram
+    if (!this.cachedResponse) {
+      throw new Error("No spectrogram options to regenerate");
+    }
 
     await this.render(options, newGeneration);
 
@@ -233,8 +244,6 @@ export class AudioHelper {
     //   ? bufferBuilderProcessorPath.slice(1)
     //   : bufferBuilderProcessorPath;
     const processorUrl = new URL(bufferBuilderProcessorPath, import.meta.url);
-
-    console.log("processor url", processorUrl);
 
     await context.audioWorklet.addModule(processorUrl);
     const processor = new AudioWorkletNode(context, BUFFER_PROCESSOR_NAME);

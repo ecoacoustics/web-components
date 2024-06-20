@@ -8,13 +8,13 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Spectrogram } from "spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
 import { SpectrogramOptions } from "../../helpers/audio/models";
+import { Axes } from "../axes/axes";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import lucideSettingsIcon from "lucide-static/icons/settings.svg?raw";
 import lucidePalletteIcon from "lucide-static/icons/palette.svg?raw";
 import lucideSunIcon from "lucide-static/icons/sun.svg?raw";
 import lucideContrastIcon from "lucide-static/icons/contrast.svg?raw";
-import { Axes } from "../axes/axes";
 
 /**
  * Specifies where you should be able to find a preference setting in the media
@@ -307,6 +307,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
               </sl-menu-item>
             </sl-menu>
           </sl-menu-item>
+        </sl-menu>
       </sl-dropdown>
     `;
   }
@@ -342,25 +343,38 @@ export class MediaControls extends AbstractComponent(LitElement) {
       } as any;
     };
 
+    const colorValues = [
+      "grayscale",
+      "audacity",
+      "raven",
+      "cubeHelix",
+      "viridis",
+      "turbo",
+      "plasma",
+      "inferno",
+      "magma",
+      "gammaII",
+      "blue",
+      "green",
+      "orange",
+      "purple",
+      "red",
+    ];
+
     return html`
       <sl-dropdown title="Colour" hoist>
         <a slot="trigger">${unsafeSVG(lucidePalletteIcon)}</a>
         <sl-menu @sl-select="${changeColorHandler}">
-          <sl-menu-item type="checkbox" value="grayscale">Grayscale</sl-menu-item>
-          <sl-menu-item type="checkbox" value="audacity">Audacity</sl-menu-item>
-          <sl-menu-item type="checkbox" value="raven">Raven</sl-menu-item>
-          <sl-menu-item type="checkbox" value="cubeHelix">Cube Helix</sl-menu-item>
-          <sl-menu-item type="checkbox" value="viridis">Viridis</sl-menu-item>
-          <sl-menu-item type="checkbox" value="turbo">Turbo</sl-menu-item>
-          <sl-menu-item type="checkbox" value="plasma">Plasma</sl-menu-item>
-          <sl-menu-item type="checkbox" value="inferno">Inferno</sl-menu-item>
-          <sl-menu-item type="checkbox" value="magma">Magma</sl-menu-item>
-          <sl-menu-item type="checkbox" value="gammaII">Gamma II</sl-menu-item>
-          <sl-menu-item type="checkbox" value="blue">Blue</sl-menu-item>
-          <sl-menu-item type="checkbox" value="green">Green</sl-menu-item>
-          <sl-menu-item type="checkbox" value="orange">Orange</sl-menu-item>
-          <sl-menu-item type="checkbox" value="purple">Purple</sl-menu-item>
-          <sl-menu-item type="checkbox" value="red">Red</sl-menu-item>
+          ${colorValues.map(
+            (value) =>
+              html`<sl-menu-item
+                type="checkbox"
+                value="${value}"
+                ?checked="${this.spectrogramElement?.spectrogramOptions.colorMap === value}"
+              >
+                ${value}
+              </sl-menu-item>`,
+          )}
         </sl-menu>
       </sl-dropdown>
 

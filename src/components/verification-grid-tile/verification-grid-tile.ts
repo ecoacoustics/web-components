@@ -34,6 +34,8 @@ export const gridTileContext = createContext<Verification>("grid-tile-context");
  * @property src - The source of the spectrogram
  * @property selected - If the item is selected as part of a sub-selection
  * @property order - Used for shift selection
+ * 
+ * @fires Loaded
  *
  * @slot
  */
@@ -113,6 +115,7 @@ export class VerificationGridTile extends AbstractComponent(LitElement) {
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
     this.loaded = true;
+    this.dispatchEvent(new CustomEvent("loaded", { bubbles: true }));
   }
 
   private handleKeyDown(event: KeyboardEvent): void {

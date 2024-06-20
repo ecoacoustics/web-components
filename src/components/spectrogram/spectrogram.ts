@@ -133,7 +133,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public get renderedSource(): string {
-    return this.src || this.slotElements[0]?.getAttribute("src") || "";
+    if (this.src) {
+      return this.src;
+    }
+
+    const slotElement = this.slotElements[0];
+    if (slotElement instanceof HTMLSourceElement) {
+      return slotElement.src;
+    }
+
+    return "";
   }
 
   public hasSource(): boolean {
@@ -181,7 +190,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public renderSpectrogram(): void {
-    console.log("rendering spectrogram");
     this.dispatchEvent(
       new CustomEvent("loading", {
         bubbles: true,
@@ -204,12 +212,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
             bubbles: true,
           }),
         );
-      });
 
-    this.doneFirstRender = true;
+        this.doneFirstRender = true;
+      });
   }
 
   public regenerateSpectrogram(): void {
+    if (!this.doneFirstRender || !this.renderedSource) {
+      return;
+    }
+
     console.log("regenerating spectrogram");
     this.dispatchEvent(
       new CustomEvent("loading", {
@@ -235,6 +247,12 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   public regenerateSpectrogramOptions(): void {
+    // if the spectrogram options are updated, but there is no source
+    // we should not attempt to regenerate the spectrogram
+    if (!this.doneFirstRender || !this.renderedSource) {
+      return;
+    }
+
     this.audioHelper.regenerateSpectrogram(this.spectrogramOptions).then(() => {
       this.dispatchEvent(
         new CustomEvent("loaded", {
@@ -313,8 +331,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     } else {
       size = this.stretchSize(targetEntry);
     }
-
-    console.log("resize to", size);
 
     this.renderCanvasSize.value = size;
 
@@ -411,8 +427,14 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // that we have seen, so that we can "fill in the gaps"
       // in browsers which report the real time (e.g. Chrome) this condition should never be true
       const highResTime = performance.now();
-      if (mediaElementTime === lastObservedTime && lastHighResSync !== null) {
-        highResolutionDelta = (highResTime - lastHighResSync) / 1_000;
+      if (mediaElementTime === lastObservedTime) {
+        // TODO: I don't think defaulting to the highResTime is correct
+        // however, this fixed the indicator jumping back at the start of the recording
+        highResolutionDelta = (highResTime - (lastHighResSync ?? highResTime)) / 1_000;
+
+        if (this.playStartedAt === null) {
+          this.playStartedAt = highResTime;
+        }
       } else {
         if (this.playStartedAt !== null) {
           lastHighResSync = highResTime;
@@ -453,6 +475,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         this.nextRequestId = null;
       }
 
+      // we set playStartedAt to null so that when we start playing again the
+      // high resolution time will not update until the first low resolution time
+      // is updated
+      this.playStartedAt = null;
+
       this.mediaElement?.pause();
     } else {
       this.mediaElement?.play();
@@ -492,9 +519,8 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         id="media-element"
         src="${this.src}"
         @ended="${this.pause}"
-        @play="${() => (this.playStartedAt = performance.now())}"
-        preload
-        crossorigin
+        preload="metadata"
+        crossorigin="use-credentials"
       >
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
