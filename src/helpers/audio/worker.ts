@@ -141,17 +141,17 @@ function regenerate(data: GenerationMetadata): void {
 
   spectrogram = new SpectrogramGenerator(audioInformation, options);
 
-  console.log(
-    `worker (${data.generation}): regenerate`,
-    {
-      samples: spectrogram.totalSamples,
-      naturalWidth: spectrogram.width,
-      naturalHeight: spectrogram.height,
-      windowSize: spectrogram.size,
-      windowStep: spectrogram.step,
-    },
-    options,
-  );
+  // console.log(
+  //   `worker (${data.generation}): regenerate`,
+  //   {
+  //     samples: spectrogram.totalSamples,
+  //     naturalWidth: spectrogram.width,
+  //     naturalHeight: spectrogram.height,
+  //     windowSize: spectrogram.size,
+  //     windowStep: spectrogram.step,
+  //   },
+  //   options,
+  // );
 
   spectrogramCanvas.width = spectrogram.width;
   spectrogramCanvas.height = spectrogram.height;

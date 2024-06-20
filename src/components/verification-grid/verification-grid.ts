@@ -2,7 +2,6 @@ import { customElement, property, query, queryAll, state } from "lit/decorators.
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, PropertyValueMap, TemplateResult } from "lit";
 import { verificationGridStyles } from "./css/style";
-import { Spectrogram } from "../spectrogram/spectrogram";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Verification, VerificationSubject } from "../../models/verification";
 import { VerificationGridTile } from "../verification-grid-tile/verification-grid-tile";
@@ -33,6 +32,26 @@ type SelectionEvent = CustomEvent<{
   ctrlKey: boolean;
   index: number;
 }>;
+
+interface MousePosition {
+  x: number;
+  y: number;
+}
+
+// by keeping the elements position in a separate object, we can
+// avoid doing DOM queries every time we need to check if the element
+// is intersecting with the highlight box
+interface IntersectionElement {
+  position: DOMRectReadOnly;
+  element: HTMLElement;
+}
+
+interface HighlightSelection {
+  start: MousePosition;
+  current: MousePosition;
+  highlighting: boolean;
+  elements: IntersectionElement[];
+}
 
 /**
  * A verification grid component that can be used to validate and verify audio events
@@ -117,7 +136,12 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private serverCacheHead = this.gridSize;
   private serverCacheExhausted = false;
   private highlighting = false;
-  private dragStartPos = { x: 0, y: 0 };
+  private highlight: HighlightSelection = {
+    start: { x: 0, y: 0 },
+    current: { x: 0, y: 0 },
+    highlighting: false,
+    elements: [],
+  };
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -169,6 +193,12 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     // TODO: figure out if there is a better way to do this invalidation
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
       this.pagedItems = 0;
+      this.decisions = [];
+
+      // if the user is in the middle of viewing history when they load a new
+      // verification file, we want to change back to the default verification
+      // interface don't show any decision highlights, etc...
+      this.verificationView();
 
       if (this.gridTiles?.length) {
         await this.renderCurrentPage();
@@ -211,6 +241,20 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
     if (event.key === "Escape") {
       this.removeSubSelection();
+
+      if (!this.isViewingHistory()) {
+        this.removeDecisionButtonHighlight();
+      }
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      this.previousPage();
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      this.pageForwardHistory();
     }
   }
 
@@ -464,17 +508,27 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       this.gridTiles[i].color = color;
     });
 
+    this.historyView();
+  }
+
+  // changes the verification grid to the "history mode" layout
+  private historyView(): void {
     this.showDecisionButtonHighlight();
   }
 
-  /** Returns the user from viewing/verifying history back to seeing new results */
-  private resumeVerification(): void {
+  // changes the verification grid to the "normal mode" layout
+  private verificationView(): void {
     this.historyHead = 0;
-    this.renderCurrentPage();
 
     this.removeSubSelection();
     this.removeDecisionHighlight();
     this.removeDecisionButtonHighlight();
+  }
+
+  /** Returns the user from viewing/verifying history back to seeing new results */
+  private resumeVerification(): void {
+    this.renderCurrentPage();
+    this.verificationView();
   }
 
   private async nextPage(pagedItems: number = this.gridSize): Promise<void> {
@@ -690,7 +744,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     const elementsToHide = Array.from(this.gridTiles).slice(-numberOfTiles);
 
     elementsToHide.forEach((element) => {
-      element.style.display = "none";
+      element.style.position = "absolute";
+      element.style.opacity = "0";
     });
 
     this.hiddenTiles = numberOfTiles;
@@ -698,7 +753,8 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
 
   private showAllGridItems(): void {
     for (const element of this.gridTiles) {
-      element.style.display = "initial";
+      element.style.position = "inherit";
+      element.style.opacity = "1";
     }
   }
 
@@ -773,28 +829,25 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
     for (let i = 0; i < this.gridSize; i++) {
       // TODO: see if we can get rid of the type override here
       const template = this.gridItemTemplate.content.cloneNode(true) as HTMLElement;
-      const spectrogram = template.querySelector<Spectrogram>("oe-spectrogram");
-
-      if (spectrogram) {
-        spectrogram.addEventListener("loading", () => this.handleSpectrogramLoaded());
-        spectrogram.addEventListener("loaded", () => this.handleSpectrogramLoaded());
-      }
-
-      verificationGridBuffer.push(html`<oe-verification-grid-tile>${template}</oe-verification-grid-tile>`);
+      verificationGridBuffer.push(
+        html`<oe-verification-grid-tile @loaded="${this.handleSpectrogramLoaded}">
+          ${template}
+        </oe-verification-grid-tile>`,
+      );
     }
 
     this.spectrogramElements = verificationGridBuffer;
   }
 
-  private highlightIntersectionHandler(entries: IntersectionObserverEntry[]) {
-    console.log("intersecting", entries);
-  }
-
   private doneRenderBoxInit = false;
   private renderHighlightBox(event: PointerEvent) {
+    if (!this.canSubSelect()) {
+      return;
+    }
+
     if (event.isPrimary) {
       // TODO: enable this once I want highlighting again
-      // this.highlighting = true;
+      this.highlighting = true;
 
       const element = this.shadowRoot!.getElementById("highlight-box");
       if (!element) {
@@ -802,16 +855,24 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       }
 
       if (!this.doneRenderBoxInit) {
-        const intersectionObserver = new IntersectionObserver((event) => this.highlightIntersectionHandler(event));
-        intersectionObserver.observe(element);
+        // const intersectionObserver = new IntersectionObserver((event) => this.highlightIntersectionHandler(event));
+        // intersectionObserver.observe(element);
+
+        this.gridTiles.forEach((tile) => {
+          this.highlight.elements.push({
+            position: tile.getBoundingClientRect(),
+            element: tile,
+          });
+        });
+
         this.doneRenderBoxInit = true;
       }
 
       element.style.display = "block";
-      element.style.left = `${event.clientX}px`;
-      element.style.top = `${event.clientY}px`;
+      element.style.left = `${event.pageX}px`;
+      element.style.top = `${event.pageY}px`;
 
-      this.dragStartPos = { x: event.clientX, y: event.clientY };
+      this.highlight.start = { x: event.pageX, y: event.pageY };
     }
   }
 
@@ -825,21 +886,44 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       return;
     }
 
-    const { clientX, clientY } = event;
+    const { pageX, pageY } = event;
+    this.highlight.current = { x: pageX, y: pageY };
 
-    const highlightWidth = clientX - this.dragStartPos.x;
-    const highlightHeight = clientY - this.dragStartPos.y;
+    const highlightWidth = this.highlight.current.x - this.highlight.start.x;
+    const highlightHeight = this.highlight.current.y - this.highlight.start.y;
 
     element.style.width = `${Math.abs(highlightWidth)}px`;
     element.style.height = `${Math.abs(highlightHeight)}px`;
 
     if (highlightWidth < 0) {
-      element.style.left = `${clientX}px`;
+      element.style.left = `${pageX}px`;
     }
 
     if (highlightHeight < 0) {
-      element.style.top = `${clientY}px`;
+      element.style.top = `${pageY}px`;
     }
+
+    this.calculateHighlightIntersection();
+  }
+
+  private calculateHighlightIntersection(): void {
+    const xMin = Math.min(this.highlight.start.x, this.highlight.current.x);
+    const xMax = Math.max(this.highlight.start.x, this.highlight.current.x);
+    const yMin = Math.min(this.highlight.start.y, this.highlight.current.y);
+    const yMax = Math.max(this.highlight.start.y, this.highlight.current.y);
+
+    for (const element of this.highlight.elements) {
+      const { top, bottom, left, right } = element.position;
+
+      const selectedElement = element.element as VerificationGridTile;
+      if (left <= xMax && right >= xMin && top <= yMax && bottom >= yMin) {
+        selectedElement.selected = true;
+      } else {
+        selectedElement.selected = false;
+      }
+    }
+
+    this.requestUpdate();
   }
 
   private hideHighlightBox(): void {
@@ -920,20 +1004,13 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   private decisionPrompt(): TemplateResult<1> {
     const subSelection = this.currentSubSelection();
     const subSelectionCount = subSelection.length;
+    const hasMultipleTiles = this.gridSize > 1;
 
     if (subSelectionCount > 0) {
       return html`<p>Are all of the selected ${subSelectionCount} a</p>`;
     }
 
-    return html`<p>Are all of these a</p>`;
-  }
-
-  private highlightBoxTemplate(): TemplateResult<1> {
-    return html`<div
-      id="highlight-box"
-      @mouseup="${this.hideHighlightBox}"
-      @mousemove="${this.resizeHighlightBox}"
-    ></div>`;
+    return html`<p>${hasMultipleTiles ? "Are all of these a" : "Is the shown spectrogram a"}</p>`;
   }
 
   private statisticsTemplate(): TemplateResult<1> {
@@ -959,6 +1036,7 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <oe-verification-help-dialog></oe-verification-help-dialog>
+      <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
         <div
@@ -1019,8 +1097,6 @@ export class VerificationGrid extends AbstractComponent(LitElement) {
       </div>
 
       <div>${this.statisticsTemplate()}</div>
-
-      ${this.highlightBoxTemplate()}
     `;
   }
 }

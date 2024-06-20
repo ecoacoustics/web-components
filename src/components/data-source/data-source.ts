@@ -147,7 +147,10 @@ export class DataSource extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.fileName = this.src?.split("/").pop() ?? null;
+    if (!this.fileName) {
+      this.fileName = this.src?.split("/").pop() ?? null;
+    }
+
     this.verificationGrid.getPage = fetcher;
     this.verificationGrid.dataSource = this;
   }
