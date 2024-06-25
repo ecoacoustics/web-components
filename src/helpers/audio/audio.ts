@@ -1,7 +1,7 @@
 import { State } from "./state";
 import { IAudioMetadata, parseBlob } from "music-metadata-browser";
 // import bufferBuilderProcessorConstructor from "./buffer-builder-processor.ts?worker&inline";
-import bufferBuilderProcessorPath from "./buffer-builder-processor.ts?worker&url";
+import BufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
 // import workerPath from "./worker.ts?worker&url";
 import WorkerConstructor from "./worker.ts?worker&inline";
 import { Size } from "../../models/rendering";
@@ -161,7 +161,7 @@ export class AudioHelper {
     src: string | null = null,
   ): Promise<IAudioInformation> {
     const downloadedBuffer = src ? await this.fetchAudio(src) : await this.cachedBuffer();
-    const info = this.cachedAudioInformation!;
+    const info = this.cachedAudioInformation as IAudioInformation;
 
     // recreate the processor every time!
     await this.createAudioContext(info, downloadedBuffer, generation);
@@ -234,16 +234,11 @@ export class AudioHelper {
     const decodedBuffer = await context.decodeAudioData(buffer);
     const source = new AudioBufferSourceNode(context, { buffer: decodedBuffer });
 
-    // TODO: this is a very dirty hack to get around Vite + CDN support
-    // the problem is that Vite builds import statements as an absolute path
-    // however, since we publish to the cdn under a subpath (/@ecoacoustics/web-components)
-    // we want module imports to use a relative path. Therefore, we convert an absolute path
-    // to a relative path here
     //* I think this was fixed by setting the base to an empty string in vite.config.ts
     // const processorPath = bufferBuilderProcessorPath.startsWith("/")
     //   ? bufferBuilderProcessorPath.slice(1)
     //   : bufferBuilderProcessorPath;
-    const processorUrl = new URL(bufferBuilderProcessorPath, import.meta.url);
+    const processorUrl = new URL(BufferBuilderProcessor, import.meta.url);
 
     await context.audioWorklet.addModule(processorUrl);
     const processor = new AudioWorkletNode(context, BUFFER_PROCESSOR_NAME);
@@ -277,16 +272,24 @@ export class AudioHelper {
   // messages
 
   private async setupWorker() {
+    if (!this.offscreenCanvas) {
+      throw new Error("Canvas is not initialized");
+    }
+
+    if (!this.spectrogramWorker) {
+      throw new Error("Worker is not initialized");
+    }
+
     const message: WorkerSetupMessage = [
       "setup",
       {
         state: this.state.stateBuffer,
         sampleBuffer: this.sampleBuffer,
-        canvas: this.offscreenCanvas!,
+        canvas: this.offscreenCanvas,
       },
     ];
 
-    this.spectrogramWorker!.postMessage(message, [this.offscreenCanvas!]);
+    this.spectrogramWorker.postMessage(message, [this.offscreenCanvas]);
 
     await this.state.waitForWorkerReady();
   }
@@ -309,6 +312,10 @@ export class AudioHelper {
   }
 
   private regenerateWorker(options: SpectrogramOptions, audioInformation: IAudioInformation, generation: number) {
+    if (!this.spectrogramWorker) {
+      throw new Error("Worker is not initialized");
+    }
+
     const message: WorkerRegenerateSpectrogramMessage = [
       "regenerate-spectrogram",
       {
@@ -318,6 +325,6 @@ export class AudioHelper {
       },
     ];
 
-    this.spectrogramWorker!.postMessage(message);
+    this.spectrogramWorker.postMessage(message);
   }
 }

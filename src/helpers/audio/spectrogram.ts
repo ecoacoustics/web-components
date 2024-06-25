@@ -8,7 +8,7 @@ import FFT_indutny from "./fft";
 
 const bytesPerPixel = 4 as const;
 
-const FftSizeCAche = new Map<number, typeof FFT_indutny>();
+const FftSizeCache = new Map<number, typeof FFT_indutny>();
 
 /**
  * A class to generate a spectrogram from an sample buffer.
@@ -54,11 +54,13 @@ export class SpectrogramGenerator {
 
     this.lastFrameIndex = 0;
 
-    if (FftSizeCAche.has(options.windowSize)) {
-      this.fft = FftSizeCAche.get(options.windowSize)!;
+    if (FftSizeCache.has(options.windowSize)) {
+      // we know that the fftCache.get() will not return undefined because we
+      // have checked in the guard clause above that the key exists
+      this.fft = FftSizeCache.get(options.windowSize) as typeof FFT_indutny;
     } else {
       this.fft = new (FFT_indutny as any)(options.windowSize);
-      FftSizeCAche.set(options.windowSize, this.fft);
+      FftSizeCache.set(options.windowSize, this.fft);
     }
 
     this.#totalSamples = audio.endSample - audio.startSample;

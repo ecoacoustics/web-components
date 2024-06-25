@@ -1,9 +1,9 @@
 import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
-import { html, LitElement } from "lit";
+import { html, LitElement, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { indicatorStyles } from "./css/style";
-import { Spectrogram } from "../spectrogram/spectrogram";
+import indicatorStyles from "./css/style.css?inline";
+import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 
@@ -16,11 +16,11 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
  * @slot - A spectrogram component to add an indicator to
  */
 @customElement("oe-indicator")
-export class Indicator extends AbstractComponent(LitElement) {
-  public static styles = indicatorStyles;
+export class IndicatorComponent extends AbstractComponent(LitElement) {
+  public static styles = unsafeCSS(indicatorStyles);
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram: Spectrogram | undefined;
+  private spectrogram?: SpectrogramComponent;
 
   public xPos = 0;
   private unitConverter!: UnitConverter;
@@ -28,13 +28,16 @@ export class Indicator extends AbstractComponent(LitElement) {
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
 
   public handleSlotChange(): void {
-    if (this.spectrogram) {
-      this.unitConverter = this.spectrogram.unitConverters!;
+    if (this.spectrogram && this.spectrogram.unitConverters) {
+      this.unitConverter = this.spectrogram.unitConverters;
 
       this.computedTimePx = computed(() => {
-        const time = this.spectrogram!.currentTime;
+        if (!this.spectrogram) {
+          return 0;
+        }
+
+        const time = this.spectrogram.currentTime;
         const scale = this.unitConverter.scaleX.value;
-        console.log("new time", time.value);
         return scale(time.value);
       });
     }
@@ -57,6 +60,6 @@ export class Indicator extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-indicator": Indicator;
+    "oe-indicator": IndicatorComponent;
   }
 }

@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import svgLoader from "vite-svg-loader";
+import postcssNested from "postcss-nested";
+import autoprefixer from "autoprefixer";
 
 // vite config for the dev server and documentation
 export default defineConfig({
@@ -13,6 +15,11 @@ export default defineConfig({
     nodePolyfills(),
     svgLoader(),
   ],
+  css: {
+    postcss: {
+      plugins: [postcssNested, autoprefixer],
+    },
+  },
   // we set the base to an empty string because Vite's default base is "/" which converts all module imports into
   // absolute paths. This works for a Vite server, but will fail when the components.js (the root file) is not at the
   // top level path (when it is in a sub-directory of the project).

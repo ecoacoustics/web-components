@@ -127,9 +127,9 @@ function setup(data: SharedBuffersWithCanvas): void {
 
   // just use a default size - regenerate will resize it in a second
   spectrogramCanvas = new OffscreenCanvas(512, 512);
-  spectrogramSurface = spectrogramCanvas.getContext("2d")!;
+  spectrogramSurface = spectrogramCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
 
-  destinationSurface = destinationCanvas.getContext("2d")!;
+  destinationSurface = destinationCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   destinationSurface.imageSmoothingEnabled = true;
   destinationSurface.imageSmoothingQuality = "high";
 

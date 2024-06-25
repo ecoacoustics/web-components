@@ -1,10 +1,5 @@
 :host {
-  --selected-border-size: 3px;
-}
-
-#highlight-box {
-  position: absolute;
-  pointer-events: none;
+  --selected-border-size: 4px;
 }
 
 .tile-container {
@@ -26,6 +21,14 @@
   &:hover {
     box-shadow: 0 2px 4px #e8e2e6;
   }
+}
+
+.tag-label {
+  position: flex;
+  padding: var(--oe-spacing);
+  padding-top: 0px;
+  text-align: center;
+  width: 100%;
 }
 
 /* TODO: maybe add a border here */

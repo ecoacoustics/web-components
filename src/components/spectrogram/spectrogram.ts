@@ -1,6 +1,6 @@
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import { spectrogramStyles } from "./css/style";
+import spectrogramStyles from "./css/style.css?inline";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
@@ -49,8 +49,8 @@ const defaultAudioModel = new AudioModel({
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
-export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
-  public static styles = spectrogramStyles;
+export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+  public static styles = unsafeCSS(spectrogramStyles);
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ type: String, attribute: "window", reflect: true })
@@ -199,11 +199,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     this.audioHelper
       .connect(this.renderedSource, this.canvas, this.spectrogramOptions)
       .then((info: IAudioInformation) => {
-        const originalRecording = { duration: info.duration!, startOffset: this.offset };
+        const originalRecording = { duration: info.duration, startOffset: this.offset };
 
         this.audio.value = new AudioModel({
-          duration: info.duration!,
-          sampleRate: info.sampleRate!,
+          duration: info.duration,
+          sampleRate: info.sampleRate,
           originalAudioRecording: originalRecording,
         });
 
@@ -230,11 +230,11 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
     );
 
     this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions).then((info: IAudioInformation) => {
-      const originalRecording = { duration: info.duration!, startOffset: this.offset };
+      const originalRecording = { duration: info.duration, startOffset: this.offset };
 
       this.audio.value = new AudioModel({
-        duration: info.duration!,
-        sampleRate: info.sampleRate!,
+        duration: info.duration,
+        sampleRate: info.sampleRate,
         originalAudioRecording: originalRecording,
       });
 
@@ -307,7 +307,16 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private stretchSize(entry: HTMLElement): Size {
-    return { width: entry.clientWidth, height: entry.clientHeight };
+    const elementToScaleTo = entry;
+
+    // in any correctly structured HTML document, a parent element should always
+    // exist (at the very minimum a html tag should be present) however, we
+    // cannot enforce this, so we have to check that a parent element exists
+    if (elementToScaleTo) {
+      return { width: elementToScaleTo.clientWidth, height: elementToScaleTo.clientHeight };
+    }
+
+    throw new Error("Spectrogram element does not have a parent to scale to");
   }
 
   // TODO: parents should not contribute to the size of the canvas
@@ -359,7 +368,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
    */
   private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
-    const invalidationKeys: (keyof Spectrogram)[] = [
+    const invalidationKeys: (keyof SpectrogramComponent)[] = [
       "domRenderWindow",
       "brightness",
       "contrast",
@@ -375,7 +384,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
-    const invalidationKeys: (keyof Spectrogram)[] = ["src", "slotElements"];
+    const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slotElements"];
     return invalidationKeys.some((key) => change.has(key));
   }
 
@@ -456,7 +465,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
         return;
       }
 
-      console.log("high res delta", highResolutionDelta, mediaElementTime, newProposedTime);
       this.currentTime.value = mediaElementTime + highResolutionDelta;
 
       this.nextRequestId = requestAnimationFrame(() =>
@@ -466,7 +474,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
   }
 
   private setPlaying(): void {
-    if (this.paused == this.mediaElement?.paused) return;
+    if (this.paused == this.mediaElement.paused) return;
 
     if (this.paused) {
       // TODO: find out if we actually need this
@@ -480,9 +488,9 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       // is updated
       this.playStartedAt = null;
 
-      this.mediaElement?.pause();
+      this.mediaElement.pause();
     } else {
-      this.mediaElement?.play();
+      this.mediaElement.play();
       this.updateCurrentTime(true);
     }
 
@@ -515,13 +523,7 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio
-        id="media-element"
-        src="${this.src}"
-        @ended="${this.pause}"
-        preload="metadata"
-        crossorigin="use-credentials"
-      >
+      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload="metadata" crossorigin="anonymous">
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
     `;
@@ -530,6 +532,6 @@ export class Spectrogram extends SignalWatcher(AbstractComponent(LitElement)) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-spectrogram": Spectrogram;
+    "oe-spectrogram": SpectrogramComponent;
   }
 }

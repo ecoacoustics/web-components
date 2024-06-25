@@ -1,5 +1,7 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { getBrowserValue } from "../helpers";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
@@ -10,7 +12,7 @@ class TestPage {
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
   public mediaControlsComponent = () => this.page.locator("oe-media-controls").first();
   public actionButton = () => this.page.locator("oe-media-controls #action-button").first();
-  private audioSource = "/example.flac";
+  private audioSource = "http://localhost:3000/example.flac";
 
   public async create() {
     await this.page.setContent(`
@@ -29,14 +31,14 @@ class TestPage {
     await this.page.waitForLoadState("networkidle");
   }
 
-  public async addElement(template: string) {
-    await this.page.setContent(template);
-    await this.page.waitForLoadState("networkidle");
-  }
-
   public async removeElement(selector: string) {
     const element = this.page.locator(selector).first();
     await element.evaluate((element) => element.remove());
+  }
+
+  public async pressSpaceBar() {
+    const target = this.spectrogramComponent();
+    await target.press(" ");
   }
 
   public async playAudio() {
@@ -49,7 +51,10 @@ class TestPage {
     await actionButtonElement.click();
   }
 
-  public async isAudioPlaying() {}
+  public async isAudioPlaying(): Promise<boolean> {
+    const value = await getBrowserValue<SpectrogramComponent>(this.spectrogramComponent(), "paused");
+    return !value as boolean;
+  }
 }
 
 export const fullFixture = test.extend<{ fixture: TestPage }>({

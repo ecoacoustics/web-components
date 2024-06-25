@@ -15,7 +15,7 @@ import {
   WindowFunctionName,
 } from "fft-windowing-ts";
 
-type WindowFunction = (array: number[], alpha?: number | undefined) => number[];
+type WindowFunction = (array: number[], alpha?: number) => number[];
 
 export const windowFunctions: Map<WindowFunctionName, WindowFunction> = new Map([
   ["hann", hann as WindowFunction],
@@ -42,7 +42,12 @@ export function resolveSmoother(windowType: WindowFunctionName = "hann"): Smooth
 
 export function estimateSmootherAttenuation(windowType: WindowFunctionName = "hann", windowSize: number): number {
   const windowFunction = windowFunctions.get(windowType) ?? hann;
-  const window = windowFunction(new Array(windowSize).fill(1));
+
+  // use Array.from instead of the array constructor to make this code clearer
+  // https://google.github.io/styleguide/tsguide.html#array-constructor
+  const initialWindow = Array.from<number>({ length: windowSize }).fill(1);
+  const window = windowFunction(initialWindow);
+
   const sum = window.reduce((acc, val) => acc + val, 0);
   return sum / window.length;
 }

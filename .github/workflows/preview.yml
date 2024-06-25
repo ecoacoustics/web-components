@@ -4,6 +4,7 @@ on: pull_request
 
 jobs:
   Documentation-Preview:
+    if: github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER'
     uses: ./.github/workflows/docs-publish.yml
     with:
       production: false

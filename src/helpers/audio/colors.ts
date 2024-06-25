@@ -11,6 +11,7 @@ import { jetColorScheme } from "./colors/jet";
 export type RgbTuple = [r: number, g: number, b: number];
 export type IntensityTuple = [ri: number, gi: number, bi: number];
 export type ColorScaler = (intensity: number) => RgbTuple;
+export type Color = string;
 
 const rgbMaxValue = 255 as const;
 
@@ -75,7 +76,7 @@ export function getColorScale(name: ColorMapName): ColorScaler {
   let scaler = translationTable[name];
 
   if (scaler === undefined) {
-    console.warn("Could not find color scale", name);
+    console.warn("Could not find color scale", name, ". Defaulting to grayscale");
     scaler = translationTable.grayscale;
   }
 

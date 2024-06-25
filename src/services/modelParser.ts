@@ -5,6 +5,7 @@ export type Transformer = Record<string, CandidateKey[]>;
 
 // you can create parsers from this abstract service by extending it and
 // implementing the parse method
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export abstract class ModelParser<T> {
   protected constructor() {}
 

@@ -7,6 +7,11 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("components.js");
   eleventyConfig.addPassthroughCopy("assets/");
 
+  eleventyConfig.addPassthroughCopy("node_modules/prismjs/themes/prism-okaidia.min.css");
+  eleventyConfig.addPassthroughCopy("node_modules/prismjs/components/prism-core.min.js");
+  eleventyConfig.addPassthroughCopy("node_modules/prismjs/components/prism-markup.min.js");
+  eleventyConfig.addPassthroughCopy("node_modules/prismjs/plugins/autoloader/prism-autoloader.min.js");
+
   return {
     dir: {
       input: "docs-src",
