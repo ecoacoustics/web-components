@@ -15,7 +15,10 @@
                 color-map="magma" brightness="-0.5" contrast="2" scaling="stretch"></oe-spectrogram>
         </oe-indicator>
     </oe-axes>
-    <oe-media-controls for="playing-spectrogram"></oe-media-controls>
+    <oe-media-controls for="playing-spectrogram">
+        <span slot="play-icon">Play</span>
+        <span slot="pause-icon">Pause</span>
+    </oe-media-controls>
 
     <button onclick="changeSource();">Change source</button>
     <button onclick="changeColorMap();">Change colour map</button>

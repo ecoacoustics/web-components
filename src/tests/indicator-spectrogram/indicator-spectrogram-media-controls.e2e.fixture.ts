@@ -1,13 +1,13 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserValue, setBrowserAttribute } from "../helpers";
-import { Indicator } from "indicator/indicator";
-import { Spectrogram } from "../../components/spectrogram/spectrogram";
+import { setBrowserAttribute } from "../helpers";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
   public indicatorComponent = () => this.page.locator("oe-indicator").first();
+  public indicatorLine = () => this.page.locator("oe-indicator #indicator-line").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
 
@@ -17,12 +17,13 @@ class TestPage {
         <oe-spectrogram
           id="spectrogram"
           style="width: 200px; height: 200px;"
-          src="/example.flac"
+          src="http://localhost:3000/example.flac"
         ></oe-spectrogram>
       </oe-indicator>
       <oe-media-controls for="spectrogram"></oe-media-controls>
    `);
     await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("oe-indicator");
   }
 
   public async removeSpectrogramElement() {
@@ -32,11 +33,17 @@ class TestPage {
 
   public async changeSpectrogramAudioSource(newSource: string) {
     const element = this.spectrogramComponent();
-    await setBrowserAttribute<Spectrogram>(element, "src", newSource);
+    await setBrowserAttribute<SpectrogramComponent>(element, "src", newSource);
   }
 
   public async indicatorPosition(): Promise<number> {
-    return (await getBrowserValue<Indicator>(this.indicatorComponent(), "xPos")) as number;
+    return await this.indicatorLine().evaluate((element: SVGLineElement) => {
+      const styles = window.getComputedStyle(element);
+
+      const domMatrixTranslateXKey: keyof DOMMatrix = "m41";
+      const domMatrix = new DOMMatrix(styles.transform);
+      return domMatrix[domMatrixTranslateXKey];
+    });
   }
 
   public async toggleAudio() {

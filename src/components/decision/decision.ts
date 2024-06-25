@@ -1,10 +1,19 @@
-import { html, LitElement, nothing } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { html, LitElement, nothing, unsafeCSS } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { decisionStyles } from "./css/style";
+import decisionStyles from "./css/style.css?inline";
 import { classMap } from "lit/directives/class-map.js";
 import { SelectionObserverType } from "../verification-grid/verification-grid";
 import { booleanConverter } from "../../helpers/attributes";
+import { Classification, VerificationDecision } from "../../models/verification";
+import { Color } from "../../helpers/audio/colors";
+
+interface DecisionContent {
+  value: Classification[];
+  target: DecisionComponent;
+}
+
+export type DecisionEvent = CustomEvent<DecisionContent>;
 
 /**
  * A decision that can be made either with keyboard shortcuts or by clicking
@@ -16,44 +25,110 @@ import { booleanConverter } from "../../helpers/attributes";
  *
  * @csspart decision-button - The button that triggers the decision
  *
+ * @fires Decision
+ *
  * @slot - The content of the decision
  */
 @customElement("oe-decision")
-export class Decision extends AbstractComponent(LitElement) {
-  public static styles = decisionStyles;
-
-  @property({ type: Boolean, reflect: true, converter: booleanConverter })
-  public verified: boolean | undefined;
-
-  @property({ type: String, reflect: true })
-  public tag: string | undefined;
-
-  @property({ type: String, reflect: true })
-  public shortcut: string | undefined;
-
-  @property({ type: String })
-  public color = "var(--oe-primary-color)";
-
-  @property({ type: Boolean })
-  public showDecisionColor = false;
+export class DecisionComponent extends AbstractComponent(LitElement) {
+  public static styles = unsafeCSS(decisionStyles);
+  public static decisionEventName = "decision" as const;
 
   @property({ attribute: "additional-tags", type: String, reflect: true })
-  public additionalTags: string | undefined;
+  public _additionalTags?: string;
 
   @property({ attribute: "disabled", type: Boolean, converter: booleanConverter, reflect: true })
   public disabled = false;
 
-  @property({ type: Boolean, converter: booleanConverter })
-  public all: boolean | undefined;
+  @property({ type: String, reflect: true })
+  public tag?: string;
+
+  @property({ type: String, reflect: true })
+  public shortcut?: string;
+
+  @property({ type: String })
+  public color: Color = "var(--oe-primary-color)";
 
   @property({ type: Boolean, converter: booleanConverter })
-  public skip: boolean | undefined;
+  public verified?: boolean;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public all?: boolean;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public skip?: boolean;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public unsure?: boolean;
+
+  // we use a property with no attribute because we expect the value to be updated
+  // from outside the component
+  // in Lit, the state decorator is used for internal state, while the property
+  // decorator is used for state that other components can interact with
+  @property({ attribute: false })
+  public selectionMode: SelectionObserverType = "desktop";
+
+  @property({ type: Boolean })
+  public get showDecisionColor(): boolean {
+    return this._showDecisionColor && !this.disabled;
+  }
+  public set showDecisionColor(value: boolean) {
+    if (this.disabled) {
+      return;
+    }
+
+    const oldValue = this._showDecisionColor;
+    this._showDecisionColor = value;
+    this.requestUpdate("showDecisionColor", oldValue);
+  }
 
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
-  @state()
-  public selectionMode: SelectionObserverType = "desktop";
+  private _showDecisionColor = false;
+
+  public get verificationDecision(): VerificationDecision {
+    switch (true) {
+      case this.verified === true:
+        return VerificationDecision.TRUE;
+      case this.verified === false:
+        return VerificationDecision.FALSE;
+      case this.skip === true:
+        return VerificationDecision.SKIP;
+      case this.unsure === true:
+        return VerificationDecision.UNSURE;
+      default:
+        return VerificationDecision.FALSE;
+    }
+  }
+
+  public get additionalTags(): string[] {
+    if (!this._additionalTags) {
+      return [];
+    }
+
+    return this._additionalTags.split(",").map((tag) => tag.trim());
+  }
+
+  public classificationModels(): Classification[] {
+    const decision = this.verificationDecision;
+
+    const baseModel = new Classification({
+      type: "classification",
+      tag: { id: undefined, text: this.tag ?? "" },
+      confirmed: decision,
+    });
+
+    const additionalTagModels = this.additionalTags.map((tag) => {
+      return new Classification({
+        type: "classification",
+        tag: { id: undefined, text: tag },
+        confirmed: decision,
+      });
+    });
+
+    return [baseModel, ...additionalTagModels];
+  }
 
   private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
@@ -83,7 +158,7 @@ export class Decision extends AbstractComponent(LitElement) {
 
   private handleKeyDown(event: KeyboardEvent): void {
     if (this.isShortcutKey(event)) {
-      this.showDecisionColor = true;
+      this.setShowDecisionColor(true);
     }
 
     // if the user is holding down escape while pressing a shortcut, we should
@@ -97,6 +172,14 @@ export class Decision extends AbstractComponent(LitElement) {
     }
   }
 
+  private setShowDecisionColor(value: boolean): void {
+    if (this.disabled) {
+      return;
+    }
+
+    this.showDecisionColor = value;
+  }
+
   private isShortcutKey(event: KeyboardEvent): boolean {
     if (this.shortcut === undefined) {
       return false;
@@ -106,18 +189,17 @@ export class Decision extends AbstractComponent(LitElement) {
   }
 
   private emitDecision(): void {
-    if (this.disabled || !this.shouldEmitNext) {
-      this.shouldEmitNext = true;
+    this.setShowDecisionColor(false);
+
+    if (this.disabled) {
       return;
     }
-    this.shouldEmitNext = true;
 
-    // TODO: The additional tags are broken
-    // when we are making decisions for with multiple classes, we emit
-    // the OE Verification model for every tag option
-    // the same logic should be used for a single tag, but it should only emit
-    // one tag (because there is only one tag)
-    const additionalTags = this.additionalTags?.split(",").map((tag) => tag.trim()) ?? [];
+    const emitNext = this.shouldEmitNext;
+    this.shouldEmitNext = true;
+    if (!emitNext) {
+      return;
+    }
 
     // I focus on the button clicked with keyboard shortcuts
     // so that the user gets some visual feedback on what button they clicked
@@ -125,22 +207,20 @@ export class Decision extends AbstractComponent(LitElement) {
     // after clicking
     this.decisionButton.focus();
 
-    this.dispatchEvent(
-      new CustomEvent("decision", {
-        detail: {
-          value: this.verified,
-          tag: this.tag,
-          additionalTags,
-          color: this.color,
-          target: this,
-        },
-        bubbles: true,
-      }),
-    );
+    const classification = this.classificationModels();
+    const event: DecisionEvent = new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
+      detail: {
+        value: classification,
+        target: this,
+      },
+      bubbles: true,
+    });
+
+    this.dispatchEvent(event);
   }
 
   public render() {
-    const additionalTagsTemplate = this.additionalTags ? html`(${this.additionalTags})` : nothing;
+    const additionalTagsTemplate = this._additionalTags ? html`(${this._additionalTags})` : nothing;
     const keyboardLegend =
       this.shortcut && this.selectionMode !== "tablet" ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>` : nothing;
 
@@ -155,7 +235,8 @@ export class Decision extends AbstractComponent(LitElement) {
         part="decision-button"
         title="Shortcut: ${this.shortcut}"
         aria-disabled="${this.disabled}"
-        @click="${this.emitDecision}"
+        @pointerdown="${() => this.setShowDecisionColor(true)}"
+        @pointerup="${this.emitDecision}"
       >
         <div class="tag-text"><slot></slot></div>
         <div class="additional-tags">${additionalTagsTemplate}</div>
@@ -167,6 +248,6 @@ export class Decision extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-decision": Decision;
+    "oe-decision": DecisionComponent;
   }
 }

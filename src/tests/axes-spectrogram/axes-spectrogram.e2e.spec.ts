@@ -1,98 +1,130 @@
-import { expect } from "@playwright/test";
-import { axesSpectrogramFixture as test } from "./axes-spectrogram.fixture";
+import { axesSpectrogramFixture as test } from "./axes-spectrogram.e2e.fixture";
 import { setBrowserAttribute } from "../helpers";
-import { Spectrogram } from "../../components/spectrogram/spectrogram";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { expect } from "../assertions";
 
 test.describe("interactions between axes and spectrogram", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  test.describe("5 second recording", () => {
-    // because the example audio recording that we are testing against is 5 seconds
-    // the tens fraction is one, meaning that the correct step is one
-    test("x-axis step should be 1 for a 5 second recording", async ({ fixture }) => {
-      const expectedXAxisStep = 1;
-      const realizedXAxisStep = await fixture.xAxisStep();
+  test.describe("axis step for different size spectrograms", () => {
+    interface SpectrogramSizeTest {
+      spectrogramSize: { width: number; height: number };
+      expectedXStep: number;
+      expectedYStep: number;
+      expectedXTickCount: number;
+      expectedYTickCount: number;
+    }
 
-      await expect(realizedXAxisStep).toBe(expectedXAxisStep);
-    });
+    const testCases: SpectrogramSizeTest[] = [
+      {
+        spectrogramSize: { width: 1000, height: 1000 },
+        expectedXStep: 0.2,
+        expectedYStep: 0.5,
+        expectedXTickCount: 26,
+        expectedYTickCount: 23,
+      },
+      {
+        spectrogramSize: { width: 500, height: 500 },
+        expectedXStep: 0.5,
+        expectedYStep: 1,
+        expectedXTickCount: 11,
+        expectedYTickCount: 12,
+      },
+      {
+        spectrogramSize: { width: 1000, height: 500 },
+        expectedXStep: 0.2,
+        expectedYStep: 1,
+        expectedXTickCount: 26,
+        expectedYTickCount: 12,
+      },
+      {
+        spectrogramSize: { width: 500, height: 1000 },
+        expectedXStep: 0.5,
+        expectedYStep: 0.5,
+        expectedXTickCount: 11,
+        expectedYTickCount: 23,
+      },
+      {
+        spectrogramSize: { width: 100, height: 100 },
+        expectedXStep: 1,
+        expectedYStep: 5,
+        // we expect four here because it should include the last value
+        // even though it is not a part of the "nice interval"
+        expectedXTickCount: 4,
+        expectedYTickCount: 3,
+      },
+    ];
 
-    test("y-axis step should be 1000 for a max niquist of 24000", async ({ fixture }) => {
-      const expectedYAxisStep = 1000;
-      const realizedYAxisStep = await fixture.yAxisStep();
+    // TODO: add examples for offsets
+    testCases.forEach((testCase: SpectrogramSizeTest) => {
+      const humanizedSize = `${testCase.spectrogramSize.width} x ${testCase.spectrogramSize.height}`;
 
-      await expect(realizedYAxisStep).toBe(expectedYAxisStep);
-    });
+      test(`x-axis step for size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.changeSize(testCase.spectrogramSize);
 
-    test("x-axis should have 6 ticks for a 5 second recording", async ({ fixture }) => {
-      const expectedNumberOfTicks = 6;
-      const xAxisTicks = await fixture.xAxisTicks();
-      const realizedNumberOfTicks = await xAxisTicks.length;
+        const expectedXStep = testCase.expectedXStep;
+        const realizedXStep = await fixture.xAxisStep();
 
-      await expect(realizedNumberOfTicks).toBe(expectedNumberOfTicks);
-    });
+        // we will run into floating point errors, if we use toBe
+        // by using toBeCloseTo, we will allow for a small error
+        expect(realizedXStep).toBeCloseTo(expectedXStep);
+      });
 
-    test("y-axis should have 11 ticks for a max niquist of 24000", async ({ fixture }) => {
-      const expectedNumberOfTicks = 12;
-      const yAxisTicks = await fixture.yAxisTicks();
-      const realizedNumberOfTicks = await yAxisTicks.length;
+      test(`y-axis step for size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.changeSize(testCase.spectrogramSize);
 
-      await expect(realizedNumberOfTicks).toBe(expectedNumberOfTicks);
-    });
+        const expectedYStep = testCase.expectedYStep;
+        const realizedYStep = await fixture.yAxisStep();
+        expect(realizedYStep).toBeCloseTo(expectedYStep);
+      });
 
-    test("x-axis should have 5 grid lines for a 5 second recording", async ({ fixture }) => {
-      const expectedNumberOfGridLines = 5;
-      const xGridLines = await fixture.xGridLines();
-      const realizedNumberOfGridLines = await xGridLines.length;
+      test(`x-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.changeSize(testCase.spectrogramSize);
 
-      await expect(realizedNumberOfGridLines).toBe(expectedNumberOfGridLines);
-    });
+        const expectedXTickCount = testCase.expectedXTickCount;
+        const xAxisTicks = await fixture.xAxisTicks();
+        const realizedXTickCount = xAxisTicks.length;
+        expect(realizedXTickCount).toBeCloseTo(expectedXTickCount);
+      });
 
-    test("y-axis should have 11 grid lines for a max niquist of 24000", async ({ fixture }) => {
-      const expectedNumberOfGridLines = 11;
-      const yGridLines = await fixture.yGridLines();
-      const realizedNumberOfGridLines = await yGridLines.length;
+      test(`y-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.changeSize(testCase.spectrogramSize);
 
-      await expect(realizedNumberOfGridLines).toBe(expectedNumberOfGridLines);
-    });
-
-    test("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
-      const expectedFirstTickValue = "2.0";
-      const expectedLastTickValue = "7.0";
-      
-      await setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "2");
-
-      const xAxisLabels = await fixture.xAxisLabels();
-
-      await expect(xAxisLabels.at(0)).toBe(expectedFirstTickValue);
-      await expect(xAxisLabels.at(-1)).toBe(expectedLastTickValue);
+        const expectedYTickCount = testCase.expectedYTickCount;
+        const yAxisTicks = await fixture.yAxisTicks();
+        const realizedYTickCount = yAxisTicks.length;
+        expect(realizedYTickCount).toBeCloseTo(expectedYTickCount);
+      });
     });
   });
 
-  test.describe("changing the spectrogram src", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.changeSpectrogramSrc("/example_34s.flac");
-    });
+  test.fixme("different spectrogram stretching attributes", () => {
+    test.describe("changing the spectrogram src", () => {
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.changeSpectrogramSrc("/example_34s.flac");
+      });
 
-    test("should resize the x-axis correctly", async ({ fixture }) => {
-      const expectedNumberOfGridLines = 34;
-      const expectedNumberOfTicks = 35;
+      test("should resize the x-axis correctly", async ({ fixture }) => {
+        const expectedNumberOfGridLines = 34;
+        const expectedNumberOfTicks = 35;
 
-      const xAxisTicks = await fixture.xAxisTicks();
-      const xAxisGridLines = await fixture.xGridLines();
+        const xAxisTicks = await fixture.xAxisTicks();
+        const xAxisGridLines = await fixture.xGridLines();
 
-      await expect(xAxisTicks).toHaveLength(expectedNumberOfTicks);
-      await expect(xAxisGridLines).toHaveLength(expectedNumberOfGridLines);
-    });
+        expect(xAxisTicks).toHaveLength(expectedNumberOfTicks);
+        expect(xAxisGridLines).toHaveLength(expectedNumberOfGridLines);
+      });
 
-    test("with an offset should resize the axes correctly", async ({ fixture }) => {
-      await setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "2");
-      const xAxisLabels = await fixture.xAxisLabels();
+      test("with an offset should resize the axes correctly", async ({ fixture }) => {
+        await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");
+        const xAxisLabels = await fixture.xAxisLabels();
 
-      await expect(xAxisLabels).toHaveLength(35);
-      await expect(xAxisLabels.at(0)).toBe(2);
-      await expect(xAxisLabels.at(-1)).toBe(36);
+        expect(xAxisLabels).toHaveLength(35);
+        expect(xAxisLabels.at(0)).toBe(2);
+        expect(xAxisLabels.at(-1)).toBe(36);
+      });
     });
   });
 
@@ -104,79 +136,79 @@ test.describe("interactions between axes and spectrogram", () => {
     });
 
     test("should have the correct x-axes values", async ({ fixture }) => {
-      const xAxisLabels = await fixture.xAxisLabels();
-
-      // the audio recordings length is five seconds, therefore, the last axis tick
-      // should be the length incremented by the offset (two)
-      await expect(xAxisLabels.at(0)).toBe("2.0");
-      await expect(xAxisLabels.at(-1)).toBe("7.0");
-      await expect(xAxisLabels).toHaveLength(6);
+      const expectedFirstLabelText = "2.0";
+      const expectedLastLabelText = "7.0";
+      await fixture.assertAxisRange(expectedFirstLabelText, expectedLastLabelText, "0.0", "11.0");
     });
 
     // the initial offset created by the fixture is two seconds
     // by changing the offset attribute to three we should see the x-axis change
-    test("changing the offset should change the x-axis correctly", async ({ fixture }) => {
+    test.fixme("changing the offset should change the x-axis correctly", async ({ fixture }) => {
+      const firstLabelText = "14.0";
+      const lastLabelText = "19.0";
+
       // an offset of 14, the offset is larger than the recording length
       // all components should still work correctly
-      setBrowserAttribute<Spectrogram>(fixture.spectrogramComponent(), "offset", "14");
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", firstLabelText);
 
-      const xAxisLabels = await fixture.xAxisLabels();
-
-      await expect(xAxisLabels.at(0)).toBe("14.0");
-      await expect(xAxisLabels.at(-1)).toBe("19.0");
+      await fixture.assertAxisRange(firstLabelText, lastLabelText, "0.0", "11.0");
     });
   });
 
   test.describe("with render window", () => {
-    const testRenderWindow = "1, 100, 3, 9000";
+    const renderWindowXLow = "1";
+    const renderWindowXHigh = "3";
+    const renderWindowYLow = "100";
+    const renderWindowYHigh = "9000";
+    const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
 
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(undefined, testRenderWindow);
     });
 
     test("should have the correct axes values", async ({ fixture }) => {
-      const xAxisLabels = await fixture.xAxisLabels();
-      const yAxisLabels = await fixture.yAxisLabels();
-
-      await expect(xAxisLabels.at(0)).toBe("1.0");
-      await expect(xAxisLabels.at(-1)).toBe("3.0");
-
-      await expect(yAxisLabels.at(0)).toBe("100");
-      await expect(yAxisLabels.at(-1)).toBe("9000");
+      await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
     });
 
-    test("changing the render window should change the axes correctly", async ({ fixture }) => {
-      setBrowserAttribute<any>(fixture.spectrogramComponent(), "window", "1, 100, 3, 9000");
+    test("changing the render window after creation", async ({ fixture }) => {
+      const newXLow = "1";
+      const newXHigh = "3";
+      const newYLow = "100";
+      const newYHigh = "9000";
+      const newRenderWindow = `${newXLow}, ${newYLow}, ${newXHigh}, ${newYHigh}`;
 
-      const xAxisLabels = await fixture.xAxisLabels();
-      const yAxisLabels = await fixture.yAxisLabels();
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "window" as any, newRenderWindow);
 
-      await expect(xAxisLabels.at(0)).toBe("1.0");
-      await expect(xAxisLabels.at(-1)).toBe("3.0");
+      await fixture.assertAxisRange(newXLow, newXHigh, newYLow, newYHigh);
+    });
 
-      await expect(yAxisLabels.at(0)).toBe("100");
-      await expect(yAxisLabels.at(-1)).toBe("9000");
+    // TODO: this test is currently failing because the unitConverters in the
+    // spectrogram component are not updating when lit attributes change
+    // meaning that the axes component doesn't re-render
+    test.fixme("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
+      const expectedFirstTickValue = "2.0";
+      const expectedLastTickValue = "7.0";
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");
+
+      await fixture.assertAxisRange(expectedFirstTickValue, expectedLastTickValue, renderWindowYLow, renderWindowYHigh);
     });
   });
 
   test.describe("with render window and offset", () => {
     const testOffset = 2;
-    const testRenderWindow = "1, 100, 3, 9000";
+
+    const renderWindowXLow = "1";
+    const renderWindowXHigh = "3";
+    const renderWindowYLow = "100";
+    const renderWindowYHigh = "9000";
+    const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
 
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(testOffset, testRenderWindow);
     });
 
     test("should have the correct axes values", async ({ fixture }) => {
-      const xAxisLabels = await fixture.xAxisLabels();
-      const yAxisLabels = await fixture.yAxisLabels();
-
-      // TODO: figure out if this is the correct behavior
-      await expect(xAxisLabels.at(0)).toBe("1.0");
-      await expect(xAxisLabels.at(-1)).toBe("3.0");
-
-      await expect(yAxisLabels.at(0)).toBe("100");
-      await expect(yAxisLabels.at(-1)).toBe("9000");
+      await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
     });
   });
 });

@@ -1,30 +1,68 @@
 export type VerificationSubject = Record<string, unknown>;
 
 export interface Tag {
-  id: number | undefined;
+  id?: number;
   text: string;
 }
 
+export interface IDecisionWrapper {
+  subject: VerificationSubject;
+  url: string;
+  decisions: Classification[];
+  tag: string;
+}
+
+export enum VerificationDecision {
+  FALSE = "false",
+  TRUE = "true",
+  UNSURE = "unsure",
+  SKIP = "skip",
+}
+
 // the Verification model is emitted by the oe-verification-grid as a CustomEvent
-export class Verification {
-  public constructor(data: Verification) {
+export class DecisionWrapper {
+  public constructor(data: IDecisionWrapper) {
     this.subject = data.subject;
+    this.decisions = data.decisions;
     this.url = data.url;
     this.tag = data.tag;
-    this.confirmed = data.confirmed;
-    this.additionalTags = data.additionalTags;
   }
 
   // aka: context
   // this is the native data model used by the host application
   // or this could be the csv row
   public subject: VerificationSubject;
+  public decisions: Classification[];
   public url: string;
-  public tag: Tag | null;
-  public confirmed: boolean;
-  public additionalTags: string[];
+  public tag: string;
 
   // other metadata e.g. verificationDate
+
+  public get additionalTags(): string[] {
+    // prettier-ignore
+    return this.decisions
+      .filter((decision) => decision.type === "classification")
+      .map((decision) => decision.tag.text);
+  }
+}
+
+export class Classification {
+  public constructor(data: Classification) {
+    this.tag = data.tag;
+    this.confirmed = data.confirmed;
+  }
+
+  public type = "classification";
+  public tag: Tag;
+  public confirmed: VerificationDecision;
+}
+
+export class Verification extends Classification {
+  public constructor(data: Verification) {
+    super(data);
+  }
+
+  public type = "verification";
 }
 
 // page function will return subjects that will be appended to the verification

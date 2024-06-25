@@ -10,16 +10,9 @@
   border-radius: 1rem;
   opacity: 0.3;
   z-index: 5;
-}
 
-.keyboard-shortcuts {
-  display: grid;
-  position: relative;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--oe-spacing);
-  width: 100%;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  /* TODO: this isn't working, we should probably bubble events */
+  pointer-events: none;
 }
 
 /* TODO: fix placement */
@@ -36,15 +29,13 @@
 }
 
 .verification-grid {
-  user-select: none;
-}
-
-.verification-grid {
   display: flex;
   flex-wrap: wrap;
+  user-select: none;
   justify-content: center;
   align-items: stretch;
   gap: var(--oe-spacing);
+  margin: var(--oe-spacing);
 }
 
 .no-items-message {

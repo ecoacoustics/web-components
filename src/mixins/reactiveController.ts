@@ -11,11 +11,19 @@ export class ReactiveController implements ReactiveController {
   protected host: OeComponent;
 
   public hostConnected(): void {
-    this.host.shadowRoot!.addEventListener("slotchange", ($event) => this.handleSlotChange($event));
+    if (!this.host.shadowRoot) {
+      throw new Error("Shadow root not found");
+    }
+
+    this.host.shadowRoot.addEventListener("slotchange", ($event) => this.handleSlotChange($event));
   }
 
   public hostDisconnected(): void {
-    this.host.shadowRoot!.removeEventListener("slotchange", ($event) => this.handleSlotChange($event));
+    if (!this.host.shadowRoot) {
+      throw new Error("Shadow root not found");
+    }
+
+    this.host.shadowRoot.removeEventListener("slotchange", ($event) => this.handleSlotChange($event));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

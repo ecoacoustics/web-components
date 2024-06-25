@@ -1,8 +1,8 @@
-import { html, LitElement, nothing, svg } from "lit";
+import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { axesStyles } from "./css/style";
+import axesStyles from "./css/style.css?inline";
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { Spectrogram } from "../../../playwright";
+import { SpectrogramComponent } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import {
   Hertz,
@@ -17,7 +17,12 @@ import {
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
-import { theming } from "../../helpers/themes/theming";
+
+// TODO: this component should have optimized rendering so that it doesn't
+// attempt to re-render an axes that will result in the same template
+// this is not currently the result as it will re-render the axes every time
+// the spectrogram slot changes or the unit converter updates any values
+// which are used in the axes rendering
 
 /**
  * X and Y axis grid lines showing duration and frequency of a spectrogram
@@ -57,14 +62,14 @@ import { theming } from "../../helpers/themes/theming";
  * @slot - A spectrogram element to add axes to
  */
 @customElement("oe-axes")
-export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
-  public static styles = [theming, axesStyles];
+export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+  public static styles = unsafeCSS(axesStyles);
 
   @property({ attribute: "x-step", type: Number, reflect: true })
-  public xStepOverride: Seconds | undefined;
+  public xStepOverride?: Seconds;
 
   @property({ attribute: "y-step", type: Number, reflect: true })
-  public yStepOverride: Hertz | undefined;
+  public yStepOverride?: Hertz;
 
   @property({ attribute: "x-label", type: String, reflect: true })
   public xLabel = "Time (Seconds)";
@@ -91,7 +96,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   public showYGrid = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram!: Spectrogram;
+  private spectrogram!: SpectrogramComponent;
 
   private unitConverter!: UnitConverter;
 
@@ -102,14 +107,16 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
   private titleOffset: Pixel = 4;
 
   private handleSlotchange(): void {
-    this.unitConverter = this.spectrogram.unitConverters!;
+    if (this.spectrogram.unitConverters) {
+      this.unitConverter = this.spectrogram.unitConverters;
+    }
   }
 
   // because querying the DOM for the font size will cause a repaint and reflow
   // we calculate the value once using a canvas
   private calculateFontSize(text = "M"): Size {
     const element = document.createElement("canvas");
-    const context = element.getContext("2d")!;
+    const context = element.getContext("2d") as CanvasRenderingContext2D;
     context.font = "var(--oe-font-size) var(--oe-font-family)";
 
     const measurements = context.measureText(text);
@@ -130,8 +137,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       // by pulling it out to a separate variable, we can avoid recalculating the value twice
       const xPos = this.unitConverter.scaleX.value(value);
       return svg`<line
-        x1="${xPos}"
-        x2="${xPos}"
+        x="${xPos}"
         y1="0"
         y2="${canvasSize.height}"
         class="grid-line"
@@ -143,8 +149,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
       return svg`<line
         x1="0"
         x2="${canvasSize.width}"
-        y1="${yPos}"
-        y2="${yPos}"
+        y="${yPos}"
         class="grid-line"
       ></line>`;
     };
@@ -182,21 +187,22 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     const xLabel = (value: Seconds) => {
       const xPos = this.unitConverter.scaleX.value(value);
-      const yPos = canvasSize.height + this.tickSize;
+      const labelYPos = canvasSize.height + this.tickSize;
+      const tickYPos = canvasSize.height;
 
       return svg`<g>
         <line
-          x1="${this.unitConverter.scaleX.value(value)}"
-          x2="${this.unitConverter.scaleX.value(value)}"
-          y1="${canvasSize.height}"
-          y2="${canvasSize.height + this.tickSize}"
+          part="x-tick"
+          x="${xPos}"
+          y1="${tickYPos}"
+          y2="${tickYPos + this.tickSize}"
         ></line>
         <text
-          part="label x-label"
+          part="x-label"
           text-anchor="middle"
           dominant-baseline="end"
           x="${xPos}"
-          y="${yPos + this.tickSize}"
+          y="${labelYPos + this.tickSize}"
         >
           ${value.toFixed(1)}
         </text>
@@ -209,13 +215,13 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
       return svg`<g>
         <line
+          part="y-tick"
           x1="${xPos}"
           x2="${xPos + this.tickSize}"
-          y1="${this.unitConverter.scaleY.value(value)}"
-          y2="${this.unitConverter.scaleY.value(value)}"
+          y="${yPos}"
         ></line>
         <text
-          part="label y-label"
+          part="y-label"
           text-anchor="end"
           dominant-baseline="middle"
           x="${xPos - this.labelPadding}"
@@ -260,28 +266,17 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
     return svg`
       <g part="tick">
-        <g part="x-tick">
+        <g part="x-ticks">
           ${xAxisLabels}
           ${xAxisTitle}
         </g>
 
-        <g part="y-tick">
+        <g part="y-ticks">
           ${yAxisLabels}
           ${yAxisTitle}
         </g>
       </g>
     `;
-  }
-
-  private createAxes() {
-    const xValues = this.xValues();
-    const yValues = this.yValues();
-    const canvasSize = this.unitConverter.canvasSize.value;
-
-    const gridLines = this.createGridLines(xValues, yValues, canvasSize);
-    const labels = this.createAxisLabels(xValues, yValues, canvasSize);
-
-    return html`<svg>${gridLines} ${labels}</svg>`;
   }
 
   private xValues(): Seconds[] {
@@ -417,7 +412,7 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     // if include end is set, we always want to show the last value in the axes
     // however, if appending the largest value would result in the labels overlapping
     // we want to remove the last "step" label and replace it with the real last value
-    const lastLabel = values.at(-1)!;
+    const lastLabel = values.at(-1) ?? 0;
     const proposedLastLabel = end;
 
     const lastLabelPosition = scale(lastLabel);
@@ -435,10 +430,21 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
     return values;
   }
 
+  private axesTemplate() {
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    const gridLines = this.createGridLines(xValues, yValues, canvasSize);
+    const labels = this.createAxisLabels(xValues, yValues, canvasSize);
+
+    return html`<svg>${gridLines} ${labels}</svg>`;
+  }
+
   public render() {
     return html`
       <div id="wrapped-element">
-        ${this.unitConverter && this.createAxes()}
+        ${this.unitConverter && this.axesTemplate()}
         <slot @slotchange="${this.handleSlotchange}"></slot>
       </div>
     `;
@@ -451,6 +457,6 @@ export class Axes extends SignalWatcher(AbstractComponent(LitElement)) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-axes": Axes;
+    "oe-axes": AxesComponent;
   }
 }

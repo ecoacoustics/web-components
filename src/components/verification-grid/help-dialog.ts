@@ -1,8 +1,8 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, TemplateResult } from "lit";
-import { Decision } from "../decision/decision";
-import { helpDialogStyles } from "./css/help-dialog-styles";
+import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
+import { DecisionComponent } from "../decision/decision";
+import helpDialogStyles from "./css/help-dialog-styles.css?inline";
 import { SelectionObserverType } from "./verification-grid";
 
 interface KeyboardShortcut {
@@ -13,11 +13,11 @@ interface KeyboardShortcut {
 const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
 
 @customElement("oe-verification-help-dialog")
-export class VerificationHelpDialog extends AbstractComponent(LitElement) {
-  static styles = helpDialogStyles;
+export class VerificationHelpDialogComponent extends AbstractComponent(LitElement) {
+  static styles = unsafeCSS(helpDialogStyles);
 
   @property({ type: Array })
-  public decisionElements!: Decision[];
+  public decisionElements!: DecisionComponent[];
 
   @property({ type: String })
   public selectionBehavior!: SelectionObserverType;
@@ -27,6 +27,10 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
 
   @query("#help-dialog")
   private helpDialogElement!: HTMLDialogElement;
+
+  public get open(): boolean {
+    return this.helpDialogElement.open;
+  }
 
   public firstUpdated(): void {
     const shouldShowHelpDialog = localStorage.getItem(helpPreferenceLocalStorageKey) === null;
@@ -43,7 +47,11 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
 
   // TODO: narrow the typing here
   private closeHelpDialog(): void {
-    const dialogPreference = this.shadowRoot!.getElementById("dialog-preference") as HTMLInputElement;
+    if (!this.shadowRoot) {
+      throw new Error("Shadow root not found");
+    }
+
+    const dialogPreference = this.shadowRoot.getElementById("dialog-preference") as HTMLInputElement;
 
     if (!dialogPreference) {
       return;
@@ -91,15 +99,15 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
       ...(this.decisionElements?.map((element) => {
         return {
           key: element.shortcut,
-          description: `${element.innerText} ${element.additionalTags ? `(${element.additionalTags})` : ""}`,
+          description: `${element.innerText} ${element._additionalTags ? `(${element._additionalTags})` : ""}`,
         };
       }) ?? []),
     ] as any;
 
     // TODO: there are some hacks in here to handle closing the modal when the user clicks off
     return html`
-      <dialog id="help-dialog" @click="${() => this.helpDialogElement.close()}" @close="${this.closeHelpDialog}">
-        <div class="dialog-container" @click="${(event: PointerEvent) => event.stopPropagation()}">
+      <dialog id="help-dialog" @pointerdown="${() => this.helpDialogElement.close()}" @close="${this.closeHelpDialog}">
+        <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <div class="dialog-content">
             <section>
               <h1>Information</h1>
@@ -156,7 +164,14 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
                   `
                 : nothing}
             </label>
-            <button class="oe-btn oe-btn-primary close-btn" type="submit" autofocus>Close</button>
+            <button
+              data-testid="dismiss-help-dialog-btn"
+              class="oe-btn oe-btn-primary close-btn"
+              type="submit"
+              autofocus
+            >
+              Close
+            </button>
           </form>
         </div>
       </dialog>
@@ -166,6 +181,6 @@ export class VerificationHelpDialog extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-verification-help-dialog": VerificationHelpDialog;
+    "oe-verification-help-dialog": VerificationHelpDialogComponent;
   }
 }

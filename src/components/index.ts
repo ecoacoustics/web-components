@@ -3,7 +3,7 @@
 import "../polyfills/polyfills";
 
 // oe web components barrel file
-export * from "./mediaControls/mediaControls";
+export * from "./media-controls/media-controls";
 export * from "./spectrogram/spectrogram";
 export * from "./indicator/indicator";
 export * from "./logger/logger";
@@ -20,4 +20,3 @@ export * from "./verification-grid/help-dialog";
 // import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
 // import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace";
-import "@shoelace-style/shoelace/dist/themes/light.css";

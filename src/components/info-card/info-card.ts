@@ -1,25 +1,27 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, TemplateResult } from "lit";
-import { infoCardStyle } from "./css/style";
+import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
+import infoCardStyle from "./css/style.css?inline";
 import { consume } from "@lit/context";
 import { gridTileContext } from "../verification-grid-tile/verification-grid-tile";
-import { Verification, VerificationSubject } from "../../models/verification";
+import { DecisionWrapper, VerificationSubject } from "../../models/verification";
 
 type InfoCardTemplate = (value: any) => any;
 
 @customElement("oe-info-card")
-export class InfoCard extends AbstractComponent(LitElement) {
-  public static styles = infoCardStyle;
+export class InfoCardComponent extends AbstractComponent(LitElement) {
+  public static styles = unsafeCSS(infoCardStyle);
+
+  @property({ type: Number, reflect: true })
+  public shortLength = 3;
 
   @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
-  public model?: Verification;
+  public model?: DecisionWrapper;
 
   @state()
   private showExpanded = false;
 
-  private shortLength = 3 as const;
   private numberTemplate: InfoCardTemplate = (value: number | string) => Number(value).toLocaleString();
   private identityTemplate: InfoCardTemplate = (value: unknown) => value;
 
@@ -37,6 +39,14 @@ export class InfoCard extends AbstractComponent(LitElement) {
     return html`<a href="${url}" target="_blank">${formattedValue}</a>`;
   }
 
+  private subjectRowCount(): number {
+    if (!this.model) {
+      return 0;
+    }
+
+    return Object.keys(this.model.subject).length;
+  }
+
   private subjectRowTemplate(subject: [key: string, value: unknown]) {
     const [key, value] = subject;
 
@@ -44,7 +54,10 @@ export class InfoCard extends AbstractComponent(LitElement) {
 
     if (typeof value === "string" && value.includes(":/")) {
       valueTemplate = this.urlTemplate;
-    } else if (typeof value === "number" || !isNaN(Number(value))) {
+    } else if (typeof value === "number" || (!isNaN(Number(value)) && value !== "")) {
+      // we have to make a special case for an empty string becaue when an
+      // empty string is put through the Number() constructor, it will in
+      // a result of zero, when we should really be dispalying an empty string
       valueTemplate = this.numberTemplate;
     }
 
@@ -56,7 +69,7 @@ export class InfoCard extends AbstractComponent(LitElement) {
     `;
   }
 
-  private subjectTemplate(subject: VerificationSubject | undefined) {
+  private subjectTemplate(subject?: VerificationSubject) {
     if (subject === undefined) {
       return nothing;
     }
@@ -69,18 +82,30 @@ export class InfoCard extends AbstractComponent(LitElement) {
     return subjectEntries.map((value) => this.subjectRowTemplate(value));
   }
 
+  private showMoreButtonTemplate() {
+    const shouldBeVisible = this.subjectRowCount() > this.shortLength;
+
+    if (!shouldBeVisible) {
+      return nothing;
+    }
+
+    return html`
+      <a id="show-more" @pointerdown="${() => (this.showExpanded = !this.showExpanded)}">
+        ${this.showExpanded ? "Show Less" : "Show More"}
+      </a>
+    `;
+  }
+
   public render() {
     return html`
       <div class="card-container">
-        ${this.subjectTemplate(this.model?.subject)}
+        <div class="subject-content">${this.subjectTemplate(this.model?.subject)}</div>
 
         <hr />
 
         <div class="static-actions">
-          <a href="${this.model?.url ?? ""}" target="_blank" download>Download Recording</a>
-          <a @click="${() => (this.showExpanded = !this.showExpanded)}">
-            ${this.showExpanded ? "Show Less" : "Show More"}
-          </a>
+          <a id="download-recording" href="${this.model?.url ?? ""}" target="_blank" download>Download Recording</a>
+          ${this.showMoreButtonTemplate()}
         </div>
       </div>
     `;
@@ -89,6 +114,6 @@ export class InfoCard extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-info-card": InfoCard;
+    "oe-info-card": InfoCardComponent;
   }
 }

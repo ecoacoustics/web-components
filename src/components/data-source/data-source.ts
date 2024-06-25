@@ -1,27 +1,30 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
-import { PageFetcher, VerificationGrid } from "../verification-grid/verification-grid";
-import { dataSourceStyles } from "./css/style";
+import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import { PageFetcher, VerificationGridComponent } from "../verification-grid/verification-grid";
+import dataSourceStyles from "./css/style.css?inline";
 import { booleanConverter } from "../../helpers/attributes";
 import csv from "csvtojson";
 
-type SupportedFileTypes = "json" | "csv";
+type SupportedFileTypes = "json" | "csv" | "tsv";
 type Char = string;
 
 // TODO: this entire component needs to be refactored
 @customElement("oe-data-source")
-export class DataSource extends AbstractComponent(LitElement) {
-  public static styles = dataSourceStyles;
+export class DataSourceComponent extends AbstractComponent(LitElement) {
+  public static styles = unsafeCSS(dataSourceStyles);
 
   @property({ type: String })
-  public src: string | undefined;
+  public src?: string;
 
   @property({ type: String })
-  public for: string | undefined;
+  public for?: string;
 
   @property({ type: Boolean, converter: booleanConverter })
   public local!: boolean;
+
+  @property({ type: Boolean, converter: booleanConverter })
+  public random = false;
 
   @state()
   public fileName: string | null = null;
@@ -30,18 +33,20 @@ export class DataSource extends AbstractComponent(LitElement) {
   private fileInput!: HTMLInputElement;
 
   public fileType: SupportedFileTypes = "json";
-  private verificationGrid: VerificationGrid | undefined;
+  private verificationGrid?: VerificationGridComponent;
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
     if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
-      const verificationElement = document.querySelector<VerificationGrid>(`#${this.for}`);
+      const verificationElement = document.querySelector<VerificationGridComponent>(`#${this.for}`);
 
-      if (!verificationElement) {
-        return;
+      if (verificationElement) {
+        this.verificationGrid = verificationElement;
+        this.updateVerificationGrid();
       }
+    }
 
-      this.verificationGrid = verificationElement;
-      this.updateVerificationGrid();
+    if (this.random && !this.local) {
+      console.warn("Random sorting is only supported for local data sources");
     }
   }
 
@@ -62,8 +67,6 @@ export class DataSource extends AbstractComponent(LitElement) {
       throw new Error("Could not fetch page");
     }
 
-    // TODO: add support for local files maybe through a new file picker component
-    // called oe-local-data with a `for` attribute
     const data: string = await response.text();
     const contentType = response.headers.get("Content-Type");
 
@@ -75,24 +78,23 @@ export class DataSource extends AbstractComponent(LitElement) {
       this.fileType = this.fileFormat(data[0]);
     }
 
-    // TODO: we should be using the headers to inspect the file type
-    // if the file type cannot be determined by the header, then we should only
-    // use the first byte as a fallback heuristic
     return this.fileType === "json" ? JSON.parse(data) : await csv({ flatKeys: true }).fromString(data);
   }
 
-  private buildCallback(content: any[]): PageFetcher | undefined {
-    // TODO: Check if this is the correct solution
+  private buildCallback(content: any[]): PageFetcher {
     if (!Array.isArray(content)) {
       throw new Error("Response is not an array");
     }
 
     return async (elapsedItems: number) => {
-      // TODO: this is a hard coded grid size
-      const startIndex = elapsedItems;
-      const endIndex = startIndex + this.verificationGrid!.gridSize;
+      if (!this.verificationGrid) {
+        return [];
+      }
 
-      return content.slice(startIndex, endIndex) ?? [];
+      const startIndex = elapsedItems;
+      const endIndex = startIndex + this.verificationGrid.gridSize;
+
+      return content.slice(startIndex, endIndex);
     };
   }
 
@@ -128,17 +130,37 @@ export class DataSource extends AbstractComponent(LitElement) {
   // TODO: The contents should probably be a pointer because otherwise we are copying the entire file!
   private fileFormat(contents: Char): SupportedFileTypes {
     const isJson = contents === "{" || contents === "[";
-    this.fileType = isJson ? "json" : "csv";
-    return this.fileType;
+
+    // to check if the input file is a csv or tsv file, we can count the number
+    // of commas and tabs in the first line of the file
+    // if the number of commas is greater than the number of tabs, then it is a
+    // csv file, otherwise it is a tsv file
+    const commaCount = contents.split(",").length;
+    const tabCount = contents.split("\t").length;
+
+    if (isJson) {
+      this.fileType = "json";
+      return "json";
+    } else if (commaCount > tabCount) {
+      this.fileType = "csv";
+      return "csv";
+    } else if (tabCount > commaCount) {
+      this.fileType = "tsv";
+      return "tsv";
+    }
+
+    console.warn("Could not determine file format, defaulting to JSON.");
+    this.fileType = "json";
+    return "json";
   }
 
-  private async updateVerificationGrid() {
+  private async updateVerificationGrid(): Promise<void> {
     if (!this.verificationGrid) {
       return;
     }
 
     const data = await this.getJsonData();
-    if (!data) {
+    if (data.length === 0) {
       return;
     }
 
@@ -163,10 +185,10 @@ export class DataSource extends AbstractComponent(LitElement) {
 
     return html`
       <div class="file-picker">
-        <button @pointerdown="${handleClick}" class="oe-btn-secondary">
+        <button class="file-input oe-btn-secondary" @pointerdown="${handleClick}">
           ${this.src ? `File: ${this.fileName ?? this.src}` : "Browse files"}
         </button>
-        <input @change="${this.handleFileChange}" type="file" accept=".csv,.json" class="hidden" />
+        <input class="browser-file-input hidden" @change="${this.handleFileChange}" type="file" accept=".csv,.json" />
       </div>
     `;
   }
@@ -178,6 +200,6 @@ export class DataSource extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-data-source": DataSource;
+    "oe-data-source": DataSourceComponent;
   }
 }

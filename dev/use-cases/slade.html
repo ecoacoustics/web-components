@@ -14,7 +14,8 @@
             <template>
                 <oe-axes>
                     <oe-indicator>
-                        <oe-spectrogram id="spectrogram" color-map="audacity" style="width: 800px"></oe-spectrogram>
+                        <oe-spectrogram id="spectrogram" color-map="audacity" style="width: 800px"
+                            scaling="stretch"></oe-spectrogram>
                     </oe-indicator>
                 </oe-axes>
                 <oe-media-controls for="spectrogram"></oe-media-controls>
@@ -25,12 +26,12 @@
             <oe-decision verified="false" tag="blue winged kookaburra" shortcut="N">
                 Not Blue Winged Kookaburra
             </oe-decision>
-            <oe-decision tag="blue winged kookaburra" additional-tags="unsure" shortcut="U">
+            <oe-decision tag="blue winged kookaburra" shortcut="U" unsure>
                 Blue Winged Kookaburra
             </oe-decision>
             <oe-decision shortcut="S" skip>Skip</oe-decision>
 
-            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
+            <oe-data-source slot="data-source" for="verification-grid" local>
             </oe-data-source>
         </oe-verification-grid>
     </div>

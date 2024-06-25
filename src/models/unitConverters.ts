@@ -138,6 +138,12 @@ export class UnitConverter {
    * @returns the magnitude of the mathematical function
    */
   private calculateMagnitude<T extends number>(domain: ScaleDomain<T>, range: ScaleRange<T>): number {
+    // if the domain is zero, then the magnitude is zero
+    // we cannot rely on the magnitude formula because we would divide by zero
+    if (domain[1] === domain[0]) {
+      return 0;
+    }
+
     return (range[1] - range[0]) / (domain[1] - domain[0]);
   }
 }

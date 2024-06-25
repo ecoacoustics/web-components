@@ -1,7 +1,8 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import { getBrowserValue } from "../../tests/helpers";
-import { Indicator } from "./indicator";
+import { IndicatorComponent } from "./indicator";
+import { Size } from "../../models/rendering";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -14,14 +15,21 @@ class TestPage {
     // wrap around. (notice that the element is not a spectrogram element)
     await this.page.setContent(`
         <oe-indicator>
-          <div style="position: absolute; width: 200px; height: 200px;"></div>
+          <div style="width: 200px; height: 200px;"></div>
         </oe-indicator>
     `);
     await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("oe-indicator");
   }
 
   public async indicatorPosition(): Promise<number> {
-    return (await getBrowserValue<Indicator>(this.indicatorLineElement(), "xPos")) as number;
+    return (await getBrowserValue<IndicatorComponent>(this.indicatorLineElement(), "xPos")) as number;
+  }
+
+  public async indicatorSize(): Promise<Size> {
+    const width = (await getBrowserValue<IndicatorComponent>(this.component(), "clientWidth")) as number;
+    const height = (await getBrowserValue<IndicatorComponent>(this.component(), "clientHeight")) as number;
+    return { width, height };
   }
 }
 

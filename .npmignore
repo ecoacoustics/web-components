@@ -1,2 +1,3 @@
 # to minimise bundle size, we don't publish tests to npm
-**/*.spec.ts
+**/*.spec.*
+**/*.fixture.*

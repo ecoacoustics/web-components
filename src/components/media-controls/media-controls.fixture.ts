@@ -1,27 +1,33 @@
+import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import type { Page } from "@playwright/test";
+import { MediaControlsComponent } from "./media-controls";
+import { SpectrogramComponent } from "../spectrogram/spectrogram";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-media-controls").first();
-  public actionButton = this.page.locator("oe-media-controls button").first();
-  public actionButtonSlot = () => this.page.locator("oe-media-controls button > slot").first();
-  public audioOutlet = () => this.page.locator("audio").first();
+  public actionButton = this.page.locator("oe-media-controls #action-button").first();
+  public actionButtonSlot = () => this.page.locator("oe-media-controls #action-button > slot").first();
+  public spectrogram = () => this.page.locator("oe-spectrogram").first();
 
   public async create(slotTemplate = "") {
     await this.page.setContent(`
-        <oe-media-controls for="media">
+        <oe-spectrogram
+          id="spectrogram"
+          src="http://localhost:3000/example.flac"
+          style="display: relative; width: 100px; height: 100px;"
+        ></oe-spectrogram>
+        <oe-media-controls for="spectrogram">
             ${slotTemplate ?? ""}
         </oe-media-controls>
-        <audio id="media" src="/example.flac"></audio>
     `);
     await this.page.waitForLoadState("networkidle");
   }
 
   public async updateSlot(content: string) {
     const componentElement = this.component();
-    await componentElement.evaluate((element: HTMLElement, content: string) => {
+    await componentElement.evaluate((element: MediaControlsComponent, content: string) => {
       element.innerHTML = content;
     }, content);
   }
@@ -32,12 +38,12 @@ class TestPage {
   }
 
   public async isPlayingAudio() {
-    const audioElement = this.audioOutlet();
-    return await audioElement.evaluate((element: HTMLAudioElement) => !element.paused);
+    const audioElement = this.spectrogram();
+    return await audioElement.evaluate((element: SpectrogramComponent) => !element.paused);
   }
 
   public async actionButtonSlotText(): Promise<(string | null)[]> {
-    const actionButtonSlotElement = this.page.locator("oe-media-controls button > slot").first();
+    const actionButtonSlotElement = this.actionButtonSlot();
     return await actionButtonSlotElement.evaluate((element: HTMLSlotElement) =>
       element.assignedElements().map((element) => element.textContent),
     );

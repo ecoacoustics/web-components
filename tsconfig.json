@@ -1,5 +1,5 @@
 {
-  "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "**/*.d.ts", "vite.config.ts"],
+  "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "*.config.*", "@types/"],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ES2021",
@@ -32,6 +32,7 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
 
     "experimentalDecorators": true,
     "useDefineForClassFields": false,

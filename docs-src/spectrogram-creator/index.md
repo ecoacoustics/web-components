@@ -3,6 +3,10 @@ layout: layouts/default.11ty.js
 title: Open Ecoacoustics Web Components | Spectrogram Creator
 ---
 
+<script src="/node_modules/prismjs/components/prism-core.min.js"></script>
+<script src="/node_modules/prismjs/components/prism-markup.min.js"></script>
+<script src="/node_modules/prismjs/plugins/autoloader/prism-autoloader.min.js"></script>
+
 ## Spectrogram Creator
 
 ```html
@@ -39,7 +43,7 @@ Loading...
                     <option value="blackman">Blackman</option>
                     <option value="exact-blackman">Exact Blackman</option>
                     <option value="blackman-harris">Blackman Harris</option>
-                    <option value="backman-nuttall">Blackman Nuttall</option>
+                    <option value="blackman-nuttall">Blackman Nuttall</option>
                     <option value="kaiser">Kaiser</option>
                     <option value="flat-top">Flat Top</option>
                 </select>
@@ -138,8 +142,10 @@ function updateCodeExample() {
     // update the code that can be copied
     const codeInputElement = document.getElementById("spectrogram-output");
     const codeOutputElement = document.getElementsByTagName("pre")[0];
+    const code = codeInputElement.innerHTML.trim().replace(/^[\s]*/gm, "");
 
-    codeOutputElement.innerText = codeInputElement.innerHTML.trim().replace(/^[\s]*/gm, "");
+    const highlightedCode = Prism.highlight(code, Prism.languages.html);
+    codeOutputElement.innerHTML = highlightedCode;
 }
 
 function updateAttribute(attribute, value) {

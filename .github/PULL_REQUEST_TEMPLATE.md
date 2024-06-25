@@ -1,0 +1,52 @@
+# Title
+
+A short description of the pull request
+
+## Changes
+
+### Features
+
+- Example feature
+- Example feature
+- Example feature
+
+### Bug Fixes
+
+- Example Bug Fix
+- Example Bug Fix
+- Example Bug Fix
+
+### Code Quality
+
+- Example Code Quality Change
+- Example Code Quality Change
+- Example Code Quality Change
+
+### Remaining Bugs / Unresolved Problems
+
+## Visual Changes
+
+<!--
+    If applicable, add screenshots/image of any visual changes you have made
+    Add a caption in italics to describe the screenshot/image.
+-->
+
+## Related Issues
+
+Fixes: #xyz
+
+## Additional Notes:
+
+## Final Checklist
+
+- [ ] All commits have follow the semver
+- [ ] Added relevant unit tests for new functionality
+- [ ] Updated existing unit tests to reflect changes
+- [ ] Code style is consistent with the project guidelines
+- [ ] Documentation is updated to reflect the changes (if applicable)
+- [ ] Link issues related to the PR
+- [ ] Assign labels if you have permission
+- [ ] Assign reviewers if you have permission
+- [ ] Ensure that CI is passing
+- [ ] Ensure that `pnpm lint` runs without any errors
+- [ ] Ensure that `pnpm test` runs without any errors

@@ -1,14 +1,14 @@
-import { LitElement, PropertyValues, TemplateResult, html } from "lit";
+import { LitElement, PropertyValues, TemplateResult, html, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { mediaControlsStyles } from "./css/style";
+import mediaControlsStyles from "./css/style.css?inline";
 import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Spectrogram } from "spectrogram/spectrogram";
+import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
 import { SpectrogramOptions } from "../../helpers/audio/models";
-import { Axes } from "../axes/axes";
+import { AxesComponent } from "../axes/axes";
 import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
 import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
 import lucideSettingsIcon from "lucide-static/icons/settings.svg?raw";
@@ -48,8 +48,8 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
  * @slot pause-icon - The icon to display when the media is playing
  */
 @customElement("oe-media-controls")
-export class MediaControls extends AbstractComponent(LitElement) {
-  public static styles = mediaControlsStyles;
+export class MediaControlsComponent extends AbstractComponent(LitElement) {
+  public static styles = unsafeCSS(mediaControlsStyles);
 
   @property({ type: String })
   public for = "";
@@ -64,8 +64,8 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
   // the media controls component has access to the axes element because it is
   // possible to enable/disable certain axes features from within the media controls
-  private axesElement: Axes | null | undefined;
-  private spectrogramElement: Spectrogram | null | undefined;
+  private axesElement?: AxesComponent | null;
+  private spectrogramElement?: SpectrogramComponent | null;
   private playHandler = this.handleUpdatePlaying.bind(this);
 
   public disconnectedCallback(): void {
@@ -76,7 +76,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   public toggleAudio(): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
     if (!this.spectrogramElement) {
-      return;
+      throw new Error("No spectrogram element found");
     }
 
     if (this.isSpectrogramPlaying()) {
@@ -86,14 +86,25 @@ export class MediaControls extends AbstractComponent(LitElement) {
     }
   }
 
+  public isSpectrogramPlaying(): boolean {
+    if (!this.spectrogramElement) {
+      return false;
+    }
+
+    return !this.spectrogramElement?.paused;
+  }
+
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
-      if (!this.for) return;
-
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener("play", this.playHandler);
 
-      this.spectrogramElement = this.parentElement?.querySelector<Spectrogram>(`#${this.for}`);
+      if (!this.for) {
+        this.spectrogramElement = null;
+        return;
+      }
+
+      this.spectrogramElement = this.parentElement?.querySelector<SpectrogramComponent>(`#${this.for}`);
       this.spectrogramElement?.addEventListener("play", this.playHandler);
 
       if (!this.spectrogramElement) {
@@ -103,8 +114,8 @@ export class MediaControls extends AbstractComponent(LitElement) {
       // using the spectrogram element as the base
       // go up the DOM tree (by getting parent) and check if the element is an axes element
       // if it is, set the axes element to the axes element
-      const recursiveAxesSearch = (element: HTMLElement): Axes | null => {
-        if (element instanceof Axes) {
+      const recursiveAxesSearch = (element: HTMLElement): AxesComponent | null => {
+        if (element instanceof AxesComponent) {
           return element;
         }
 
@@ -122,14 +133,6 @@ export class MediaControls extends AbstractComponent(LitElement) {
   private handleUpdatePlaying(): void {
     this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"} `);
     this.requestUpdate();
-  }
-
-  private isSpectrogramPlaying(): boolean {
-    if (!this.spectrogramElement) {
-      return false;
-    }
-
-    return !this.spectrogramElement?.paused;
   }
 
   private playIcon() {
@@ -151,10 +154,13 @@ export class MediaControls extends AbstractComponent(LitElement) {
         ${text}
         <sl-menu @sl-select="${changeHandler}" slot="submenu">
           ${values.map(
-            (value) =>
-              html`<sl-menu-item type="checkbox" value="${value}" ?checked=${value == currentValue}>
-                ${value}
-              </sl-menu-item>`,
+            (value) => html`<sl-menu-item
+              type="${value == currentValue ? "checkbox" : "normal"}"
+              value="${value}"
+              ?checked=${value == currentValue}
+            >
+              ${value}
+            </sl-menu-item>`,
           )}
         </sl-menu>
       </sl-menu-item>
@@ -175,6 +181,10 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
     const changeHandler = (key: keyof SpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
+        if (!this.spectrogramElement) {
+          throw new Error("No spectrogram element found");
+        }
+
         // TODO: remove this after demo
         let newValue: string | number | boolean = ["windowSize", "windowOverlap"].includes(key)
           ? Number(event.detail.item.value)
@@ -184,14 +194,14 @@ export class MediaControls extends AbstractComponent(LitElement) {
           newValue = newValue === "mel";
         }
 
-        const oldOptions = this.spectrogramElement!.spectrogramOptions;
+        const oldOptions = this.spectrogramElement.spectrogramOptions;
         if (key === "windowSize" && this.spectrogramElement) {
           if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
             oldOptions.windowOverlap = (newValue as number) / 2;
           }
         }
 
-        this.spectrogramElement!.spectrogramOptions = {
+        this.spectrogramElement.spectrogramOptions = {
           ...oldOptions,
           [key]: newValue,
         } as any;
@@ -212,7 +222,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
         throw new Error("No checkbox element found");
       }
 
-      const key = checkboxElement.name as keyof Axes;
+      const key = checkboxElement.name as keyof AxesComponent;
       const value = checkboxElement.checked;
 
       (this.axesElement as any)[key] = value;
@@ -314,30 +324,44 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
   private spectrogramSettingsTemplate(): TemplateResult<1> {
     const changeColorHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
+      if (!this.spectrogramElement) {
+        throw new Error("No spectrogram element found");
+      }
+
       const newValue = event.detail.item.value;
 
-      const oldOptions = this.spectrogramElement!.spectrogramOptions;
-      this.spectrogramElement!.spectrogramOptions = {
+      const oldOptions = this.spectrogramElement.spectrogramOptions;
+      this.spectrogramElement.spectrogramOptions = {
         ...oldOptions,
         colorMap: newValue,
       } as any;
+
+      this.requestUpdate();
     };
 
     const changeBrightnessHandler = (event: CustomEvent) => {
+      if (!this.spectrogramElement) {
+        throw new Error("No spectrogram element found");
+      }
+
       const newValue = (event.target as HTMLInputElement).value;
 
-      const oldOptions = this.spectrogramElement!.spectrogramOptions;
-      this.spectrogramElement!.spectrogramOptions = {
+      const oldOptions = this.spectrogramElement.spectrogramOptions;
+      this.spectrogramElement.spectrogramOptions = {
         ...oldOptions,
         brightness: Number(newValue),
       } as any;
     };
 
     const changeContrastHandler = (event: CustomEvent) => {
+      if (!this.spectrogramElement) {
+        throw new Error("No spectrogram element found");
+      }
+
       const newValue = (event.target as HTMLInputElement).value;
 
-      const oldOptions = this.spectrogramElement!.spectrogramOptions;
-      this.spectrogramElement!.spectrogramOptions = {
+      const oldOptions = this.spectrogramElement.spectrogramOptions;
+      this.spectrogramElement.spectrogramOptions = {
         ...oldOptions,
         contrast: Number(newValue),
       } as any;
@@ -361,6 +385,8 @@ export class MediaControls extends AbstractComponent(LitElement) {
       "red",
     ];
 
+    const currentColor = this.spectrogramElement?.spectrogramOptions.colorMap ?? "grayscale";
+
     return html`
       <sl-dropdown title="Colour" hoist>
         <a slot="trigger">${unsafeSVG(lucidePalletteIcon)}</a>
@@ -368,9 +394,9 @@ export class MediaControls extends AbstractComponent(LitElement) {
           ${colorValues.map(
             (value) =>
               html`<sl-menu-item
-                type="checkbox"
                 value="${value}"
-                ?checked="${this.spectrogramElement?.spectrogramOptions.colorMap === value}"
+                type="${value == currentColor ? "checkbox" : "normal"}"
+                ?checked="${value == currentColor}"
               >
                 ${value}
               </sl-menu-item>`,
@@ -399,7 +425,7 @@ export class MediaControls extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div class="container">
-        <a id="action-button" @click="${this.toggleAudio}">
+        <a id="action-button" @pointerdown="${this.toggleAudio}">
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>
 
@@ -411,6 +437,6 @@ export class MediaControls extends AbstractComponent(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-media-controls": MediaControls;
+    "oe-media-controls": MediaControlsComponent;
   }
 }

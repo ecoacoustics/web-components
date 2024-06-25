@@ -1,5 +1,5 @@
-import { expect } from "@sand4rt/experimental-ct-web";
-import { mediaControlsFixture as test } from "./mediaControls.fixture";
+import { expect } from "../../tests/assertions";
+import { mediaControlsFixture as test } from "./media-controls.fixture";
 
 test.describe("audio element communication", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -37,6 +37,16 @@ test.describe("audio element communication", () => {
 
     await expect(isPlaying).toBe(false);
   });
+});
+
+test.describe("changing options", () => {
+  test.fixme("should change the spectrogram colours through the media controls should change the grid tile", () => {});
+
+  test.fixme("should change the spectrograms axes through the media controls should change the grid tile", () => {});
+
+  test.fixme("should remove spectrogram modifications when changing to the next page", () => {});
+
+  test.fixme("should show what options are currently selected in the media controls", () => {});
 });
 
 test.describe("slots", () => {
