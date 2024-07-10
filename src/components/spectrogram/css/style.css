@@ -19,5 +19,5 @@
     we support is 64 samples. Therefore, if the user does not specify a container
     with a minimum height, we should at least show 64px in height (the width will auto-scale)
   */
-  min-height: 64px;
+  min-height: 128px;
 }

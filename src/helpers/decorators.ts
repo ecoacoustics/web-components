@@ -5,6 +5,11 @@ export interface QueryDeeplyAssignedElementsOptions {
   slot?: string;
 }
 
+export interface QueryParentElementsOptions {
+  selector: string;
+  root?: HTMLElement;
+}
+
 /**
  * @example
  * ```ts
@@ -16,7 +21,7 @@ export function queryDeeplyAssignedElement<T extends Element = Element>(options:
   // TODO: see if we can abstract away common functionality of these decorators
   return (target: unknown, propertyKey: string) => {
     const descriptor = {
-      get(this: LitElement): T | null {
+      get(this: LitElement): Readonly<T | null> {
         const slotSelector = `slot${options.slot ?? ""}`;
         const slotElements = this.renderRoot?.querySelectorAll<HTMLSlotElement>(slotSelector);
 
@@ -57,23 +62,23 @@ export function queryDeeplyAssignedElement<T extends Element = Element>(options:
  * public elements: Element[];
  * ```
  */
-export function queryAllDeeplyAssignedElements(options: QueryDeeplyAssignedElementsOptions) {
+export function queryAllDeeplyAssignedElements<T extends Element = Element>(options: QueryDeeplyAssignedElementsOptions) {
   return (target: unknown, propertyKey: string) => {
     const descriptor = {
-      get(this: LitElement) {
+      get(this: LitElement): Readonly<T[] | null> {
         const slotSelector = `slot${options.slot ?? ""}`;
         const slotElements = this.renderRoot?.querySelectorAll<HTMLSlotElement>(slotSelector);
-        const returnedElements: Element[] = [];
+        const returnedElements: T[] = [];
 
         for (const slot of slotElements) {
           const assignedElements = slot.assignedElements();
 
           for (const assignedElement of assignedElements) {
             if (assignedElement.matches(options.selector)) {
-              returnedElements.push(assignedElement);
+              returnedElements.push(assignedElement as T);
             }
 
-            const queriedElements = assignedElement.querySelectorAll(options.selector);
+            const queriedElements = assignedElement.querySelectorAll<T>(options.selector);
             if (queriedElements.length > 0) {
               returnedElements.push(...queriedElements);
             }
@@ -85,6 +90,35 @@ export function queryAllDeeplyAssignedElements(options: QueryDeeplyAssignedEleme
         }
 
         return null;
+      },
+    };
+
+    Object.defineProperty(target, propertyKey, descriptor);
+  };
+}
+
+/**
+ * @description
+ * Recursively queries the parent element of the current element until it
+ * reaches the selector that matches the query.
+ * If no element is found, null will be returned.
+ */
+export function queryParentElement(options: QueryParentElementsOptions) {
+  const recursiveParentElementSearch = (element: HTMLElement) => {
+    if (element.matches(options.selector)) {
+      return element;
+    } else if (element.parentElement) {
+      return recursiveParentElementSearch(element.parentElement);
+    }
+
+    return null;
+  };
+
+  return (target: unknown, propertyKey: string) => {
+    const descriptor = {
+      get(this: LitElement) {
+        const rootElement = options.root ?? this;
+        return recursiveParentElementSearch(rootElement);
       },
     };
 

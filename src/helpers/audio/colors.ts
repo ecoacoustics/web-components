@@ -50,7 +50,7 @@ const jetScale = makeScaler(
   chroma.scale(jetColorScheme.map((a) => chroma.rgb(a[0] * 255, a[1] * 255, a[2] * 255))).mode("lrgb"),
 );
 
-export const translationTable: Record<string, string | ColorScaler> = {
+export const colorScales: Record<Color, string | ColorScaler> = {
   grayscale: "Greys",
   blue: "Blues",
   green: "Greens",
@@ -70,14 +70,14 @@ export const translationTable: Record<string, string | ColorScaler> = {
   raven: jetScale,
 };
 
-export type ColorMapName = keyof typeof translationTable;
+export type ColorMapName = keyof typeof colorScales;
 
 export function getColorScale(name: ColorMapName): ColorScaler {
-  let scaler = translationTable[name];
+  let scaler = colorScales[name];
 
   if (scaler === undefined) {
     console.warn("Could not find color scale", name, ". Defaulting to grayscale");
-    scaler = translationTable.grayscale;
+    scaler = colorScales.grayscale;
   }
 
   // if scaler is a string, it's a chroma scale

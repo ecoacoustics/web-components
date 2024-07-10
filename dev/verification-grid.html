@@ -9,35 +9,33 @@
 </head>
 
 <body>
-    <div id="grid-host">
-        <oe-verification-grid id="verification-grid" grid-size="3">
-            <template>
-                <oe-axes>
-                    <oe-indicator>
-                        <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
-                    </oe-indicator>
-                </oe-axes>
-                <oe-media-controls for="spectrogram"></oe-media-controls>
-                <oe-info-card></oe-info-card>
-            </template>
+    <oe-verification-grid id="verification-grid" grid-size="8">
+        <template>
+            <oe-axes>
+                <oe-indicator>
+                    <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
+                </oe-indicator>
+            </oe-axes>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+            <oe-info-card></oe-info-card>
+        </template>
 
-            <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
-            <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Koala</oe-decision>
-            <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
-            <oe-decision verified="false" tag="*" shortcut="L" all>Negative</oe-decision>
-            <oe-decision shortcut="S" skip>Skip</oe-decision>
-            <oe-decision shortcut="S" unsure>Unsure</oe-decision>
+        <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
+        <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Koala</oe-decision>
+        <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
+        <oe-decision verified="false" tag="*" shortcut="L" all>Negative</oe-decision>
+        <oe-decision shortcut="S" skip>Skip</oe-decision>
+        <oe-decision shortcut="S" unsure>Unsure</oe-decision>
 
-            <!--
-                local would use a file picker UI, while src would allow a remote file
-                This should probably use a data service.
-                This service would
-            -->
-            <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
-            </oe-data-source>
-        </oe-verification-grid>
-    </div>
+        <!--
+            local would use a file picker UI, while src would allow a remote file
+            This should probably use a data service.
+            This service would
+        -->
+        <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
+        <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local>
+        </oe-data-source>
+    </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
     <button onclick="changeVerificationKey();">Create Key Error</button>
@@ -48,14 +46,6 @@
     <style>
         body {
             margin: 0px;
-        }
-
-        #grid-host {
-            position: relative;
-            left: 0px;
-            top: 0px;
-            width: 100vw;
-            min-height: 100vh;
         }
     </style>
 
@@ -118,10 +108,6 @@
                 verificationGridElement.setAttribute("key", "AudioLink");
             }
         }
-
-        verificationGridElement.addEventListener("decision-made", (event) => {
-            console.log("new decision", event);
-        })
     </script>
 </body>
 

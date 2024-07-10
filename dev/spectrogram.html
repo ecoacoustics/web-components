@@ -44,6 +44,8 @@
 
             if (element.src === "/example.flac") {
                 element.setAttribute("src", "/example_34s.flac");
+            } else if (element.src === "/example_34s.flac") {
+                element.setAttribute("src", "/404-file.flac");
             } else {
                 element.setAttribute("src", "/example.flac");
             }
@@ -127,18 +129,18 @@
     </script>
 
     <style>
-        #axes {
+        oe-axes {
             color: blue;
 
             &::part(tick) {
                 color: lime;
             }
 
-            &::part(x-ticks) {
+            &::part(x-tick) {
                 color: red;
             }
 
-            &::part(y-ticks) {
+            &::part(y-tick) {
                 color: green;
             }
 

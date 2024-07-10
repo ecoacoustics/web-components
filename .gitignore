@@ -1,13 +1,9 @@
 assets/
 components.js
-./style.css
 
 @types/
 js/
 **/*custom-elements.json
-
-# I have excluded csv files because they are from real projects where I'm not sure about the copyright
-public/*.csv
 
 # playwright
 test-results/

@@ -166,7 +166,7 @@ class TestPage {
     const highlightedButtons: Locator[] = [];
 
     for (const button of decisionButtons) {
-      const isHighlighted = await getBrowserValue<DecisionComponent>(button, "showDecisionColor");
+      const isHighlighted = await getBrowserValue<DecisionComponent>(button, "highlighted");
       if (isHighlighted) {
         highlightedButtons.push(button);
       }

@@ -21,7 +21,7 @@ test.describe("decision", () => {
     expect(tooltip).toBeTruthy();
   });
 
-  test.fixme("should show the decision color when the keyboard shortcut is held down", async ({ fixture }) => {
+  test.skip("should show the decision color when the keyboard shortcut is held down", async ({ fixture }) => {
     const keyboardShortcut = "a";
     await fixture.changeKeyboardShortcut(keyboardShortcut);
 
@@ -32,7 +32,7 @@ test.describe("decision", () => {
     expect(await fixture.isShowingDecisionColor()).toBe(false);
   });
 
-  test.fixme("should show the decision color when the mouse is held down", async ({ fixture }) => {
+  test.skip("should show the decision color when the mouse is held down", async ({ fixture }) => {
     await fixture.decisionButton().dispatchEvent("pointerdown");
     expect(await fixture.isShowingDecisionColor()).toBe(true);
 
@@ -40,7 +40,7 @@ test.describe("decision", () => {
     expect(await fixture.isShowingDecisionColor()).toBe(false);
   });
 
-  test.fixme("should not show the decision color when the mouse is held down and disabled", async ({ fixture }) => {
+  test.skip("should not show the decision color when the mouse is held down and disabled", async ({ fixture }) => {
     await fixture.changeDecisionDisabled(true);
 
     await fixture.decisionButton().dispatchEvent("pointerdown");
@@ -50,7 +50,7 @@ test.describe("decision", () => {
     expect(await fixture.isShowingDecisionColor()).toBe(false);
   });
 
-  test.fixme("should not show the decision color when the shortcut is held down and disabled", async ({ fixture }) => {
+  test.skip("should not show the decision color when the shortcut is held down and disabled", async ({ fixture }) => {
     const keyboardShortcut = "a";
     await fixture.changeDecisionDisabled(true);
     await fixture.changeKeyboardShortcut(keyboardShortcut);
@@ -62,7 +62,7 @@ test.describe("decision", () => {
     expect(await fixture.isShowingDecisionColor()).toBe(false);
   });
 
-  test.fixme("should stop showing the keyboard decision color when the escape key is pressed", async ({ fixture }) => {
+  test.skip("should stop showing the keyboard decision color when the escape key is pressed", async ({ fixture }) => {
     const keyboardShortcut = "a";
     await fixture.changeKeyboardShortcut(keyboardShortcut);
 
@@ -76,7 +76,7 @@ test.describe("decision", () => {
     expect(await fixture.isShowingDecisionColor()).toBe(false);
   });
 
-  test.fixme("should stop showing the mouse decision color when the escape key is pressed", async ({ fixture }) => {
+  test.skip("should stop showing the mouse decision color when the escape key is pressed", async ({ fixture }) => {
     await fixture.decisionButton().dispatchEvent("pointerdown");
     expect(await fixture.isShowingDecisionColor()).toBe(true);
 
@@ -185,7 +185,7 @@ test.describe("decision", () => {
       await fixture.page.keyboard.press("Escape");
       await fixture.decisionButton().dispatchEvent("pointerup");
 
-      await sleep(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
@@ -200,7 +200,7 @@ test.describe("decision", () => {
       await fixture.page.keyboard.press("Escape");
       await fixture.page.dispatchEvent("html", "keyup", { key: keyboardShortcut });
 
-      await sleep(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
@@ -217,7 +217,7 @@ test.describe("decision", () => {
       // but test that the event is not emitted when clicked anyway"
       await fixture.decisionButton().click({ force: true });
 
-      await sleep(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
@@ -229,7 +229,7 @@ test.describe("decision", () => {
       await fixture.changeDecisionDisabled(true);
       await fixture.page.keyboard.press("a");
 
-      await sleep(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);

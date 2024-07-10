@@ -1,5 +1,6 @@
 // we import the polyfills first so that they are available when the components
 // are imported
+import { setBasePath } from "@shoelace-style/shoelace";
 import "../polyfills/polyfills";
 
 // oe web components barrel file
@@ -16,7 +17,9 @@ export * from "./data-source/data-source";
 export * from "./verification-grid/help-dialog";
 
 // TODO: cherry pick shoelace components
+// see: https://github.com/ecoacoustics/web-components/issues/83
 // import "@shoelace-style/shoelace/dist/components/menu/menu.js";
 // import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
 // import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace";
+setBasePath("/node_modules/@shoelace-style/shoelace/dist");

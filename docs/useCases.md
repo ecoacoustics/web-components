@@ -1,6 +1,6 @@
-# USe cases
+# Use cases
 
-# Auto advancing?
+## Auto advancing?
 
 We should advance to the next page when: all subjects have all necessary decisions made.
 
@@ -8,7 +8,16 @@ If a sub-selection decision does not result in a decision being made about all g
 
 We don't have an auto advance rule for multi class classification; we must have a next page button to advance.
 
-# questions
+## Verification vs Classification
+
+During verification tasks, the tag is already known, therefore, the `tag`
+attribute can be omitted on `oe-decision` elements.
+
+During classification tasks, the user is applying additional tags to a subject.
+Therefore, the `tag` attribute must be emitted, while the `verified` attribute
+must be omitted.
+
+## questions
 
 1. Are you classifying the data? Or Verifying?
 2. Mixed dataset: Are you verifying/classifying one or multiple tags? The mix of tags in the dataset
@@ -125,7 +134,7 @@ Additional tags: should be thought of as additional classifications. Does not ma
 <oe-decision shortcut="S" skip>Skip</oe-decision>
 ```
 
-## Use case 3: Slade
+## Use case 3: Slade (Single Class Verification)
 
 ### Data
 
@@ -172,18 +181,18 @@ Additional tags: should be thought of as additional classifications. Does not ma
 
 ```html
 <!-- This the default case -->
-<oe-decision verified="true" tag="*" shortcut="Y">Positive</oe-decision>
-<oe-decision verified="false" tag="*" shortcut="N">Negative</oe-decision>
+<oe-decision verified="true" shortcut="Y">Positive</oe-decision>
+<oe-decision verified="false" shortcut="N">Negative</oe-decision>
 
 <!-- This still has meaning -->
 <oe-decision shortcut="S" skip>Skip</oe-decision>
 
 <!-- We're not sure what this is used for, but we have to code for the case, even if it is an error -->
-<oe-decision verified="true" tag="koala" shortcut="K">Koala</oe-decision>
-<oe-decision verified="false" tag="koala" shortcut="L">Noisy Miner</oe-decision>
+<oe-decision verified="true" shortcut="K">Koala</oe-decision>
+<oe-decision verified="false" shortcut="L">Noisy Miner</oe-decision>
 ```
 
-## Use case 5: Dani
+## Use case 5: Dani (Single class verification - Additional Classification)
 
 ### Data
 
@@ -225,14 +234,14 @@ Additional tags: should be thought of as additional classifications. Does not ma
 ### HTML
 
 ```html
-<oe-decision verified="true" tag="noisy-miner" additional-tags="female" shortcut="H">Noisy Miner</oe-decision>
-<oe-decision verified="true" tag="noisy-miner" additional-tags="male" shortcut="J">Noisy Miner</oe-decision>
-<oe-decision verified="true" tag="noisy-miner" additional-tags="fledgling" shortcut="K">Noisy Miner</oe-decision>
-<oe-decision verified="true" tag="noisy-miner" additional-tags="in-flight" shortcut="L">Noisy Miner</oe-decision>
-<oe-decision verified="false" tag="noisy-miner" shortcut="N">Negative</oe-decision>
+<oe-decision verified="true" additional-tags="female" shortcut="H">Noisy Miner</oe-decision>
+<oe-decision verified="true" additional-tags="male" shortcut="J">Noisy Miner</oe-decision>
+<oe-decision verified="true" additional-tags="fledgling" shortcut="K">Noisy Miner</oe-decision>
+<oe-decision verified="true" additional-tags="in-flight" shortcut="L">Noisy Miner</oe-decision>
+<oe-decision verified="false" shortcut="N">Negative</oe-decision>
 
 <!-- What does this mean? -->
-<oe-decision verified="false" tag="*" shortcut="N" all>Negative</oe-decision>
+<oe-decision verified="false" shortcut="N" all>Negative</oe-decision>
 ```
 
 ## Use case 6: BirdNet verification with additional labelling task
@@ -269,11 +278,11 @@ Additional tags: should be thought of as additional classifications. Does not ma
 
 ```html
 <!-- This the default case -->
-<oe-decision verified="true" tag="*" shortcut="Y">Positive</oe-decision>
-<oe-decision verified="false" tag="*" shortcut="N">Negative</oe-decision>
+<oe-decision verified="true" shortcut="Y">Positive</oe-decision>
+<oe-decision verified="false" shortcut="N">Negative</oe-decision>
 
-<oe-decision verified="true" tag="*" shortcut="U" additional-tags="rain">Positive</oe-decision>
-<oe-decision verified="false" tag="*" shortcut="M" additional-tags="rain">Negative</oe-decision>
+<oe-decision verified="true" shortcut="U" additional-tags="rain">Positive</oe-decision>
+<oe-decision verified="false" shortcut="M" additional-tags="rain">Negative</oe-decision>
 
 <!-- This still has meaning -->
 <oe-decision shortcut="S" skip>Skip</oe-decision>

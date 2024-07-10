@@ -45,7 +45,7 @@ test.describe("interactions between all components", () => {
     expect(realizedPlayingState).toEqual(expectedPlayingState);
   });
 
-  test.fixme("playing audio with the space bar", async ({ fixture }) => {
+  test.skip("playing audio with the space bar", async ({ fixture }) => {
     await fixture.pressSpaceBar();
 
     const expectedPlayingState = true;

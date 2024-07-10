@@ -1,4 +1,6 @@
 import { expect } from "../../tests/assertions";
+import { getElementSize } from "../../tests/helpers";
+import { AxesComponent } from "./axes";
 import { axesFixture as test } from "./axes.fixture";
 
 test.describe("axes", () => {
@@ -6,9 +8,9 @@ test.describe("axes", () => {
     await fixture.create();
   });
 
-  test.fixme("should be the exact size as its largest direct descendant", async ({ fixture }) => {
+  test.skip("should be the exact size as its largest direct descendant", async ({ fixture }) => {
     const expectedSize = { width: 200, height: 200 };
-    const realizedSize = await fixture.indicatorSize();
+    const realizedSize = await getElementSize<AxesComponent>(fixture.component());
     expect(realizedSize).toEqual(expectedSize);
   });
 });

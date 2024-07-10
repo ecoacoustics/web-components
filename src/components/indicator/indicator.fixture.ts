@@ -2,7 +2,6 @@ import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import { getBrowserValue } from "../../tests/helpers";
 import { IndicatorComponent } from "./indicator";
-import { Size } from "../../models/rendering";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -24,12 +23,6 @@ class TestPage {
 
   public async indicatorPosition(): Promise<number> {
     return (await getBrowserValue<IndicatorComponent>(this.indicatorLineElement(), "xPos")) as number;
-  }
-
-  public async indicatorSize(): Promise<Size> {
-    const width = (await getBrowserValue<IndicatorComponent>(this.component(), "clientWidth")) as number;
-    const height = (await getBrowserValue<IndicatorComponent>(this.component(), "clientHeight")) as number;
-    return { width, height };
   }
 }
 

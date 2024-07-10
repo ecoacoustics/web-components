@@ -1,20 +1,16 @@
-import { LitElement, PropertyValues, TemplateResult, html, unsafeCSS } from "lit";
+import { LitElement, PropertyValues, TemplateResult, html, nothing, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import mediaControlsStyles from "./css/style.css?inline";
 import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
-import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
 import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
-import lucidPlayIcon from "lucide-static/icons/play.svg?raw";
-import lucidPauseIcon from "lucide-static/icons/pause.svg?raw";
-import lucideSettingsIcon from "lucide-static/icons/settings.svg?raw";
-import lucidePalletteIcon from "lucide-static/icons/palette.svg?raw";
-import lucideSunIcon from "lucide-static/icons/sun.svg?raw";
-import lucideContrastIcon from "lucide-static/icons/contrast.svg?raw";
+import mediaControlsStyles from "./css/style.css?inline";
+import { windowFunctions } from "../../helpers/audio/window";
+import { colorScales } from "../../helpers/audio/colors";
+import { SPACE_KEY } from "../../helpers/keyboard";
 
 /**
  * Specifies where you should be able to find a preference setting in the media
@@ -39,8 +35,6 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
 /**
  * A simple media player with play/pause and seek functionality that can be used with the open ecoacoustics spectrograms and components.
  *
- * @property for - The id of the audio element to control
- *
  * @csspart play-icon - Styling applied to the play icon (including default)
  * @csspart pause-icon - Styling applied to the pause icon (including default)
  *
@@ -51,6 +45,17 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
 export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(mediaControlsStyles);
 
+  private static recursiveAxesSearch = (element: HTMLElement): AxesComponent | null => {
+    if (element instanceof AxesComponent) {
+      return element;
+    } else if (element.parentElement) {
+      return MediaControlsComponent.recursiveAxesSearch(element.parentElement);
+    }
+
+    return null;
+  };
+
+  /** A DOM selector to target the spectrogram element */
   @property({ type: String })
   public for = "";
 
@@ -58,7 +63,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public playIconPosition: PreferenceLocation = "default";
 
   @provide({ context: rootContext })
-  public logger: ILogger = {
+  private logger: ILogger = {
     log: console.log,
   };
 
@@ -67,22 +72,24 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private axesElement?: AxesComponent | null;
   private spectrogramElement?: SpectrogramComponent | null;
   private playHandler = this.handleUpdatePlaying.bind(this);
+  private keyDownHandler = this.handleKeyDown.bind(this);
 
   public disconnectedCallback(): void {
     this.spectrogramElement?.removeEventListener("play", this.playHandler);
+    document.removeEventListener("keydown", this.keyDownHandler);
     super.disconnectedCallback();
   }
 
-  public toggleAudio(): void {
+  public toggleAudio(keyboardShortcut = false): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
     if (!this.spectrogramElement) {
       throw new Error("No spectrogram element found");
     }
 
     if (this.isSpectrogramPlaying()) {
-      this.spectrogramElement.pause();
+      this.spectrogramElement.pause(keyboardShortcut);
     } else {
-      this.spectrogramElement.play();
+      this.spectrogramElement.play(keyboardShortcut);
     }
   }
 
@@ -104,6 +111,10 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         return;
       }
 
+      // use add a keydown event listener so that we can bind space bar to play
+      document.addEventListener("keydown", this.keyDownHandler);
+
+      // TODO: this doesn't seem like the best way to select a spectrogram element
       this.spectrogramElement = this.parentElement?.querySelector<SpectrogramComponent>(`#${this.for}`);
       this.spectrogramElement?.addEventListener("play", this.playHandler);
 
@@ -111,22 +122,13 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         return;
       }
 
-      // using the spectrogram element as the base
-      // go up the DOM tree (by getting parent) and check if the element is an axes element
-      // if it is, set the axes element to the axes element
-      const recursiveAxesSearch = (element: HTMLElement): AxesComponent | null => {
-        if (element instanceof AxesComponent) {
-          return element;
-        }
+      this.axesElement = MediaControlsComponent.recursiveAxesSearch(this.spectrogramElement);
+    }
+  }
 
-        if (element.parentElement) {
-          return recursiveAxesSearch(element.parentElement);
-        }
-
-        return null;
-      };
-
-      this.axesElement = recursiveAxesSearch(this.spectrogramElement);
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === SPACE_KEY) {
+      this.toggleAudio(true);
     }
   }
 
@@ -136,16 +138,24 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   }
 
   private playIcon() {
-    return html`<slot name="play-icon" part="play-icon">${unsafeSVG(lucidPlayIcon)}</slot>`;
+    return html`
+      <slot name="play-icon" part="play-icon">
+        <sl-icon name="play"></sl-icon>
+      </slot>
+    `;
   }
 
   private pauseIcon() {
-    return html`<slot name="pause-icon" part="pause-icon">${unsafeSVG(lucidPauseIcon)}</slot>`;
+    return html`
+      <slot name="pause-icon" part="pause-icon">
+        <sl-icon name="pause"></sl-icon>
+      </slot>
+    `;
   }
 
   private selectSettingsTemplate(
     text: any,
-    values: string[] | number[],
+    values: string[] | number[] | ReadonlyArray<number | string>,
     currentValue: string | number | boolean,
     changeHandler: (event: CustomEvent<{ item: SlMenuItem }>) => void,
   ): TemplateResult<1> {
@@ -154,29 +164,26 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         ${text}
         <sl-menu @sl-select="${changeHandler}" slot="submenu">
           ${values.map(
-            (value) => html`<sl-menu-item
+      (value) => html`<sl-menu-item
               type="${value == currentValue ? "checkbox" : "normal"}"
               value="${value}"
               ?checked=${value == currentValue}
             >
               ${value}
             </sl-menu-item>`,
-          )}
+    )}
         </sl-menu>
       </sl-menu-item>
     `;
   }
 
-  private additionalSettingsTemplate(): TemplateResult<1> {
-    const possibleWindowSizes = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
-    const possibleWindowOverlaps = possibleWindowSizes.filter(
-      (value: number) => value < (this.spectrogramElement?.spectrogramOptions?.windowSize ?? 0),
-    );
-
+  private additionalSettingsTemplate() {
     if (!this.spectrogramElement) {
-      return html``;
+      return nothing;
     }
 
+    const possibleWindowSizes = this.spectrogramElement.possibleWindowSizes;
+    const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
     const currentOptions = this.spectrogramElement.spectrogramOptions;
 
     const changeHandler = (key: keyof SpectrogramOptions) => {
@@ -230,49 +237,36 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
     return html`
       <sl-dropdown title="Additional Settings" hoist>
-        <a slot="trigger">${unsafeSVG(lucideSettingsIcon)}</a>
+        <a slot="trigger">
+          <sl-icon name="gear"></sl-icon>
+        </a>
         <sl-menu>
           ${this.selectSettingsTemplate(
-            "Window Function",
-            [
-              "hann",
-              "hamming",
-              "cosine",
-              "lanczos",
-              "gaussian",
-              "tukey",
-              "blackman",
-              "exact_blackman",
-              "kaiser",
-              "nuttall",
-              "blackman_harris",
-              "blackman_nuttall",
-              "flat_top",
-            ],
-            currentOptions.windowFunction,
-            changeHandler("windowFunction"),
-          )}
+      "Window Function",
+      Array.from(windowFunctions.keys()),
+      currentOptions.windowFunction,
+      changeHandler("windowFunction"),
+    )}
           ${this.selectSettingsTemplate(
-            "Window Size",
-            possibleWindowSizes,
-            currentOptions.windowSize,
-            changeHandler("windowSize"),
-          )}
+      "Window Size",
+      possibleWindowSizes,
+      currentOptions.windowSize,
+      changeHandler("windowSize"),
+    )}
           ${this.selectSettingsTemplate(
-            "Window Overlap",
-            [0, ...possibleWindowOverlaps],
-            currentOptions.windowOverlap,
-            changeHandler("windowOverlap"),
-          )}
+      "Window Overlap",
+      [0, ...possibleWindowOverlaps],
+      currentOptions.windowOverlap,
+      changeHandler("windowOverlap"),
+    )}
           ${this.selectSettingsTemplate(
-            "Scale",
-            ["linear", "mel"],
-            currentOptions.melScale ? "mel" : "linear",
-            changeHandler("melScale"),
-          )}
-
+      "Scale",
+      ["linear", "mel"],
+      currentOptions.melScale ? "mel" : "linear",
+      changeHandler("melScale"),
+    )}
           <sl-menu-item>
-            Axes
+          Axes
             <sl-menu @sl-select="${axesChangeHandler}" slot="submenu">
               <sl-menu-item>
                 <label>
@@ -339,82 +333,74 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       this.requestUpdate();
     };
 
-    const changeBrightnessHandler = (event: CustomEvent) => {
+    const changeNumberHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
       if (!this.spectrogramElement) {
         throw new Error("No spectrogram element found");
       }
 
       const newValue = (event.target as HTMLInputElement).value;
-
+      const key = (event.target as HTMLInputElement).name as keyof SpectrogramOptions;
       const oldOptions = this.spectrogramElement.spectrogramOptions;
+
       this.spectrogramElement.spectrogramOptions = {
         ...oldOptions,
-        brightness: Number(newValue),
+        [key]: Number(newValue),
       } as any;
     };
 
-    const changeContrastHandler = (event: CustomEvent) => {
-      if (!this.spectrogramElement) {
-        throw new Error("No spectrogram element found");
-      }
-
-      const newValue = (event.target as HTMLInputElement).value;
-
-      const oldOptions = this.spectrogramElement.spectrogramOptions;
-      this.spectrogramElement.spectrogramOptions = {
-        ...oldOptions,
-        contrast: Number(newValue),
-      } as any;
-    };
-
-    const colorValues = [
-      "grayscale",
-      "audacity",
-      "raven",
-      "cubeHelix",
-      "viridis",
-      "turbo",
-      "plasma",
-      "inferno",
-      "magma",
-      "gammaII",
-      "blue",
-      "green",
-      "orange",
-      "purple",
-      "red",
-    ];
-
+    const colorValues = Object.keys(colorScales);
     const currentColor = this.spectrogramElement?.spectrogramOptions.colorMap ?? "grayscale";
 
     return html`
       <sl-dropdown title="Colour" hoist>
-        <a slot="trigger">${unsafeSVG(lucidePalletteIcon)}</a>
+        <a slot="trigger">
+          <sl-icon name="palette"></sl-icon>
+        </a>
         <sl-menu @sl-select="${changeColorHandler}">
           ${colorValues.map(
-            (value) =>
-              html`<sl-menu-item
+      (value) =>
+        html`<sl-menu-item
                 value="${value}"
                 type="${value == currentColor ? "checkbox" : "normal"}"
                 ?checked="${value == currentColor}"
               >
                 ${value}
               </sl-menu-item>`,
-          )}
+    )}
         </sl-menu>
       </sl-dropdown>
 
       <sl-dropdown title="Brightness" hoist>
-        <a slot="trigger">${unsafeSVG(lucideSunIcon)}</a>
+        <a slot="trigger">
+          <sl-icon name="brightness-high"></sl-icon>
+        </a>
         <label>
-          <input @change="${changeBrightnessHandler}" type="range" min="-0.5" max="0.5" step="0.1" value="0" />
+          <input
+            @change="${changeNumberHandler}"
+            name="brightness"
+            type="range"
+            min="-0.5"
+            max="0.5"
+            step="0.1"
+            value="0"
+          />
         </label>
       </sl-dropdown>
 
       <sl-dropdown title="Contrast" hoist>
-        <a slot="trigger">${unsafeSVG(lucideContrastIcon)}</a>
+        <a slot="trigger">
+          <sl-icon name="circle-half"></sl-icon>
+        </a>
         <label>
-          <input @change="${changeContrastHandler}" type="range" min="0" max="2" step="0.1" value="1" />
+          <input
+            @change="${changeNumberHandler}"
+            name="contrast"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value="1"
+          />
         </label>
       </sl-dropdown>
 
@@ -425,7 +411,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div class="container">
-        <a id="action-button" @pointerdown="${this.toggleAudio}">
+        <a id="action-button" @click="${() => this.toggleAudio(false)}">
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>
 

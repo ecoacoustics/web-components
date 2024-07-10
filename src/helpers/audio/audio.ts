@@ -194,7 +194,11 @@ export class AudioHelper {
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
     const tag = `audio (${this.generation}): fetch and decode audio`;
     console.time(tag);
+
     const response = await fetch(src);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audio: ${response.statusText}`);
+    }
 
     const cachedResponse = response.clone();
     const responseBuffer = await response.arrayBuffer();
@@ -234,12 +238,7 @@ export class AudioHelper {
     const decodedBuffer = await context.decodeAudioData(buffer);
     const source = new AudioBufferSourceNode(context, { buffer: decodedBuffer });
 
-    //* I think this was fixed by setting the base to an empty string in vite.config.ts
-    // const processorPath = bufferBuilderProcessorPath.startsWith("/")
-    //   ? bufferBuilderProcessorPath.slice(1)
-    //   : bufferBuilderProcessorPath;
     const processorUrl = new URL(BufferBuilderProcessor, import.meta.url);
-
     await context.audioWorklet.addModule(processorUrl);
     const processor = new AudioWorkletNode(context, BUFFER_PROCESSOR_NAME);
 

@@ -1,4 +1,4 @@
-import { camelCase, dotCase, pascalCase, snakeCase } from "change-case";
+import { camelCase, dotCase, pascalCase, snakeCase, kebabCase } from "change-case";
 
 export type CandidateKey = string;
 export type Transformer = Record<string, CandidateKey[]>;
@@ -7,7 +7,7 @@ export type Transformer = Record<string, CandidateKey[]>;
 // implementing the parse method
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export abstract class ModelParser<T> {
-  protected constructor() {}
+  protected constructor() { }
 
   public abstract parse(model: Record<string, any>): T;
 
@@ -29,7 +29,7 @@ export abstract class ModelParser<T> {
   }
 
   private static getKeyPermutations(key: string): string[] {
-    const supportedCasings = [camelCase, snakeCase, dotCase, pascalCase];
+    const supportedCasings = [camelCase, snakeCase, dotCase, pascalCase, kebabCase];
     return supportedCasings.map((casing) => casing(key));
   }
 

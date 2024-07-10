@@ -5,18 +5,22 @@ export interface Tag {
   text: string;
 }
 
-export interface IDecisionWrapper {
-  subject: VerificationSubject;
-  url: string;
-  decisions: Classification[];
-  tag: string;
-}
-
 export enum VerificationDecision {
   FALSE = "false",
   TRUE = "true",
   UNSURE = "unsure",
   SKIP = "skip",
+}
+
+export interface IDecisionWrapper {
+  subject: VerificationSubject;
+  url: string;
+  decisions: Classification[];
+  tag: string;
+
+  // a target can be used to identify where the decision came from
+  // e.g. a specific decision or classification button
+  origin?: number;
 }
 
 // the Verification model is emitted by the oe-verification-grid as a CustomEvent
@@ -26,6 +30,7 @@ export class DecisionWrapper {
     this.decisions = data.decisions;
     this.url = data.url;
     this.tag = data.tag;
+    this.origin = data.origin;
   }
 
   // aka: context
@@ -35,6 +40,7 @@ export class DecisionWrapper {
   public decisions: Classification[];
   public url: string;
   public tag: string;
+  public origin?: number;
 
   // other metadata e.g. verificationDate
 
@@ -65,9 +71,22 @@ export class Verification extends Classification {
   public type = "verification";
 }
 
-// page function will return subjects that will be appended to the verification
-// by default, we will search for the url and tag fields in the subject
-// if we cannot find these fields, then we allow the names of these fields to
-// be overwritten by element attributes (or a function callback)
-// e.g. if tag/tags is an array then we can use the function callback to decide
-// on what tag to use
+export class Annotation {
+  public constructor(data: Annotation) {
+    this.startOffset = data.startOffset;
+    this.endOffset = data.endOffset;
+    this.lowFrequency = data.lowFrequency;
+    this.highFrequency = data.highFrequency;
+    this.tags = data.tags;
+    this.reference = data.reference;
+    this.verifications = data.verifications;
+  }
+
+  startOffset: number;
+  endOffset: number;
+  lowFrequency: number;
+  highFrequency: number;
+  tags: Tag[];
+  reference: object;
+  verifications: Verification[];
+}

@@ -20,24 +20,24 @@ test.describe("data source", () => {
         await fixture.setRemoteFile("http://localhost:3000/example.flac");
       });
 
-      test.fixme(`should handle removing the source correctly with ${loadFileText}`, () => {});
+      test.skip(`should handle removing the source correctly with ${loadFileText}`, () => { });
 
-      test.fixme(`should show the correct file name with ${loadFileText}`, () => {});
+      test.skip(`should show the correct file name with ${loadFileText}`, () => { });
 
-      test.fixme(`should have the correct file type for a json ${loadFileText}`, () => {});
+      test.skip(`should have the correct file type for a json ${loadFileText}`, () => { });
 
-      test.fixme(`should have the correct file type for a csv file ${loadFileText}`, () => {});
+      test.skip(`should have the correct file type for a csv file ${loadFileText}`, () => { });
     });
   });
 
   // TODO: finish these tests
   ["json", "csv", "tsv"].forEach((fileType) => {
     test.describe(`detecting file type ${fileType}`, () => {
-      test.beforeEach(async () => {});
+      test.beforeEach(async () => { });
 
-      test.fixme(`should correctly identify a ${fileType} file type from media type headers`, () => {});
+      test.skip(`should correctly identify a ${fileType} file type from media type headers`, () => { });
 
-      test.fixme(`should correctly identify a ${fileType} file type from file extensions`, () => {});
+      test.skip(`should correctly identify a ${fileType} file type from file extensions`, () => { });
     });
   });
 
@@ -67,9 +67,9 @@ test.describe("data source", () => {
   });
 
   // TODO: this functionality is a stretch goal
-  test.fixme("should allow dragging and dropping a file onto local file inputs", () => {});
+  test.skip("should allow dragging and dropping a file onto local file inputs", () => { });
 
-  test.fixme("should not allow dragging and dropping a file onto local file inputs", () => {});
+  test.skip("should not allow dragging and dropping a file onto local file inputs", () => { });
 
   test("should handle changing from local to remote files", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
@@ -87,7 +87,7 @@ test.describe("data source", () => {
     expect(fixture.filePicker()).toBeAttached();
   });
 
-  test.fixme("should invalidate local file source when switching to a remote file", async ({ fixture }) => {
+  test.skip("should invalidate local file source when switching to a remote file", async ({ fixture }) => {
     await fixture.setLocalAttribute(false);
     expect(await fixture.getFileName()).toBe("example.flac");
 
@@ -95,7 +95,7 @@ test.describe("data source", () => {
     expect(await fixture.getFileName()).toBe("");
   });
 
-  test.fixme("should invalidate remote source when switching to a local file", async ({ fixture }) => {
+  test.skip("should invalidate remote source when switching to a local file", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
     expect(await fixture.getFileName()).toBe("");
 

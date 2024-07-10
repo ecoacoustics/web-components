@@ -1,6 +1,6 @@
 :host {
   position: relative;
-  display: inline-block !important;
+  display: inline-block;
 
   /*
     By setting the width to 100%, the indicator component will take up the full
@@ -11,15 +11,15 @@
   */
   width: 100%;
 
-  /*
-    By setting the color on the host element, it means that users can customize
-    the color with plain css
+  &::part(indicator-line) {
+    stroke: red;
+    stroke-width: 2;
+  }
 
-    eg.
-      oe-indicator { color: blue; } or <oe-indicator style="color: blue"></oe-indicator>
-  */
-  color: red;
-  stroke-width: 2;
+  &::part(seek-icon) {
+    stroke: gray;
+    fill: white;
+  }
 }
 
 #wrapped-element {
@@ -34,14 +34,8 @@
   overflow: visible;
 }
 
-/* This element can be targeted through CSS parts */
 #indicator-line {
   stroke: currentColor;
   shape-rendering: crispEdges;
   will-change: transform;
-}
-
-#seek-icon {
-  stroke: gray;
-  fill: white;
 }

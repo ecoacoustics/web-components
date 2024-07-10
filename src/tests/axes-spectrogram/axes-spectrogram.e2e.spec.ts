@@ -100,7 +100,7 @@ test.describe("interactions between axes and spectrogram", () => {
     });
   });
 
-  test.fixme("different spectrogram stretching attributes", () => {
+  test.skip("different spectrogram stretching attributes", () => {
     test.describe("changing the spectrogram src", () => {
       test.beforeEach(async ({ fixture }) => {
         await fixture.changeSpectrogramSrc("/example_34s.flac");
@@ -143,7 +143,7 @@ test.describe("interactions between axes and spectrogram", () => {
 
     // the initial offset created by the fixture is two seconds
     // by changing the offset attribute to three we should see the x-axis change
-    test.fixme("changing the offset should change the x-axis correctly", async ({ fixture }) => {
+    test.skip("changing the offset should change the x-axis correctly", async ({ fixture }) => {
       const firstLabelText = "14.0";
       const lastLabelText = "19.0";
 
@@ -185,7 +185,7 @@ test.describe("interactions between axes and spectrogram", () => {
     // TODO: this test is currently failing because the unitConverters in the
     // spectrogram component are not updating when lit attributes change
     // meaning that the axes component doesn't re-render
-    test.fixme("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
+    test.skip("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
       const expectedFirstTickValue = "2.0";
       const expectedLastTickValue = "7.0";
       await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");

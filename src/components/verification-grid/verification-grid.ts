@@ -3,23 +3,17 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
 import verificationGridStyles from "./css/style.css?inline";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
-import { Classification, DecisionWrapper, VerificationSubject } from "../../models/verification";
+import { Classification, DecisionWrapper } from "../../models/verification";
 import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionEvent } from "../decision/decision";
-import { Parser } from "@json2csv/plainjs";
-import { VerificationParser } from "../../services/verificationParser";
-import { unsafeSVG } from "lit/directives/unsafe-svg.js";
-import lucideCircleHelp from "lucide-static/icons/circle-help.svg?raw";
 import { VerificationHelpDialogComponent } from "./help-dialog";
-import colorBrewer from "colorbrewer";
 import { booleanConverter, callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
-import { DataSourceComponent } from "data-source/data-source";
-import { Color } from "../../helpers/audio/colors";
+import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
+import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY } from "../../helpers/keyboard";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
-export type PageFetcher = (elapsedItems: number) => Promise<VerificationSubject[]>;
 
 type SelectionEvent = CustomEvent<{
   shiftKey: boolean;
@@ -48,6 +42,7 @@ interface HighlightSelection {
 }
 
 /**
+ * @description
  * A verification grid component that can be used to verify audio events
  *
  * @example
@@ -60,23 +55,24 @@ interface HighlightSelection {
  *        </oe-indicator>
  *     </oe-axes>
  *   </template>
+ * 
+ *   <oe-decision verified="true" additional-tags="female" shortcut="H">Koala</oe-decision>
+ *   <oe-decision verified="true" additional-tags="male" shortcut="J">Koala</oe-decision>
+ *   <oe-decision shortcut="S" skip>Skip</oe-decision>
+ *   <oe-decision shortcut="S" unsure>Unsure</oe-decision>
  *
  *   <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
  *   </oe-data-source>
  * </oe-verification-grid>
  * ```
  *
- * @property paged-items - The number of items that have been paged
- * @property grid-size - The number of items to display in a single grid
- * @property selection-behavior {desktop | tablet}
- * @property get-page - A callback function that returns a page of recordings
- * @property auto-page - Automatically page forward when a decision is made
- * @property pre-fetch - Pre-fetch the next page of recordings
+ * @dependency oe-verification-grid-tile
  *
  * @slot - A template element that will be used to create each grid tile
+ * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
  *
- * @fires decision-made - Emits information about the decision that was made
+ * @fires decision - Emits information about the decision that was made
  * @fires loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
@@ -85,28 +81,29 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private static loadedEventName = "loaded" as const;
   private static decisionMadeEventName = "decision-made" as const;
 
-  // we use pagedItems instead of page here so that if the grid size changes
-  // half way through, we can continue verifying from where it left off
-  @property({ attribute: "paged-items", type: Number, reflect: true })
-  public pagedItems = 0;
-
+  /** The number of items to display in a single grid */
   @property({ attribute: "grid-size", type: Number, reflect: true })
   public gridSize = 8;
 
+  /**
+   * The selection behavior of the verification grid
+   * @values "desktop" | "tablet" | "default"
+   * @default "default"
+   */
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "default";
 
+  /** A callback function that returns a page of recordings */
   @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
   public getPage?: PageFetcher;
 
+  /** Automatically advance to the next page after a decision is made */
   @property({ attribute: "auto-page", type: Boolean, converter: booleanConverter })
   public autoPage = true;
 
+  /** Pre-fetch the next page of recordings */
   @property({ attribute: "pre-fetch", type: Boolean, converter: booleanConverter })
   public preFetch = true;
-
-  @property({ attribute: false })
-  public dataSource?: DataSourceComponent;
 
   @state()
   private spectrogramElements?: TemplateResult<1> | TemplateResult<1>[];
@@ -126,19 +123,33 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @query("oe-verification-help-dialog")
   private helpDialog!: VerificationHelpDialogComponent;
 
+  @query("#grid-container")
+  private gridContainer!: HTMLDivElement;
+
+  @query("#decisions-container")
+  private decisionsContainer!: HTMLSlotElement;
+
+  @state()
+  private currentSubSelection: DecisionWrapper[] = [];
+
+  public get pagedItems(): number {
+    return this.paginationFetcher?.pagedItems ?? 0;
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
   private intersectionHandler = this.handleIntersection.bind(this);
+  private selectionHandler = this.handleSelection.bind(this);
+  private decisionHandler = this.handleDecision.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
-  private decisions: DecisionWrapper[] = [];
+  public decisions: DecisionWrapper[] = [];
   private undecidedTiles: DecisionWrapper[] = [];
   private hiddenTiles = 0;
+  private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
-  private serverCacheHead = this.gridSize;
-  private serverCacheExhausted = false;
   private doneRenderBoxInit = false;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
@@ -146,6 +157,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     highlighting: false,
     elements: [],
   };
+
+  private paginationFetcher?: GridPageFetcher;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -159,12 +172,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
-    super.disconnectedCallback();
-  }
 
-  public currentSubSelection(): DecisionWrapper[] {
-    const gridTiles = Array.from(this.gridTiles);
-    return gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+
+    super.disconnectedCallback();
   }
 
   public isViewingHistory(): boolean {
@@ -185,19 +197,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   //#region Updates
 
   public firstUpdated(): void {
-    // this is a warning and not an error because while creating a verification
-    // grid without any decisions is not useful, it should be supported and
-    // possible to view without any errors being thrown
-    if (this.decisionElements) {
-      this.helpDialog.decisionElements = this.decisionElements;
-    } else {
-      console.warn("No decision elements found! Please add oe-decision elements to the verification grid");
-    }
+    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     const renderInvalidationKeys: (keyof this)[] = ["gridSize"];
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "dataSource"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage"];
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
 
     // tile invalidations cause the functionality of the tiles to change
@@ -225,7 +231,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // then we will infer the selection behavior based on the device type
     let selectionBehavior = this.selectionBehavior;
     if (selectionBehavior === "default") {
-      selectionBehavior = this.isTouchDevice() ? "tablet" : "desktop";
+      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
     }
 
     // I store the decision elements inside a variable so that we don't have
@@ -236,6 +242,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     this.helpDialog.selectionBehavior = selectionBehavior;
+    this.helpDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
@@ -249,26 +256,17 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (!this.isViewingHistory()) {
       this.verificationMode();
     }
-    this.pagedItems = 0;
     this.decisions = [];
 
     if (this.getPage) {
-      await this.renderCurrentPage();
+      this.paginationFetcher = new GridPageFetcher(this.getPage);
+      await this.renderNextPage();
     }
 
     const decisionElements = this.decisionElements;
     if (decisionElements) {
-      const colorLength = 12;
-      const colors = colorBrewer.Paired[colorLength];
-
       decisionElements.forEach((element: DecisionComponent, i: number) => {
-        // because colorBrewer only provides twelve colors, it is possible to
-        // have more decisions than colors
-        // to get around this, we modulo the index by the number of colors
-        // so that the colors will repeat from the beginning if there are more
-        // than eight colors
-        const color = colors[i % colorLength];
-        element.color = color;
+        element.decisionIndex = i;
       });
     }
   }
@@ -307,20 +305,29 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     switch (event.key) {
-      case "Escape": {
+      case ESCAPE_KEY: {
         this.removeSubSelection();
+
+        if (!this.isViewingHistory()) {
+          this.removeDecisionButtonHighlight();
+        }
         break;
       }
 
-      case "ArrowLeft": {
+      case LEFT_ARROW_KEY: {
         event.preventDefault();
         this.previousPage();
         break;
       }
 
-      case "ArrowRight": {
+      case RIGHT_ARROW_KEY: {
         event.preventDefault();
         this.pageForwardHistory();
+        break;
+      }
+
+      case "?": {
+        this.helpDialog.showModal(false);
         break;
       }
     }
@@ -352,6 +359,17 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   // loses focus, we hide the additional information
   private handleWindowBlur(): void {
     this.hideSelectionShortcuts();
+    this.hideHighlightBox();
+  }
+
+  private handleHelpDialogOpen(): void {
+    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+  }
+
+  private handleHelpDialogClose(): void {
+    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
   }
 
   //#endregion
@@ -389,18 +407,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         // even if this will cause some items to go off the screen
         const newProposedHiddenTiles = this.hiddenTiles + 1;
         if (newProposedHiddenTiles < this.gridSize) {
-          // this.hideGridItems(newProposedHiddenTiles);
+          this.hideGridItems(newProposedHiddenTiles);
         }
       }
     }
   }
 
-  // we could improve the performance here by creating a "selectionHandler" component property
-  // which is set to handleDesktopSelection.bind(this) or handleTabletSelection.bind(this)
-  // when the selection-behavior attribute is updated
-  // (meaning that we don't have to evaluate the switch statement every selection event)
-  // however, I deemed that it hurt readability and the perf hit is negligible
-  private selectionHandler(selectionEvent: SelectionEvent): void {
+  private handleSelection(selectionEvent: SelectionEvent): void {
     if (!this.canSubSelect()) {
       return;
     }
@@ -421,8 +434,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         break;
     }
 
-    // TODO: this should probably be replaced with some sort of @state decorator
-    this.requestUpdate();
+    this.updateSubSelection();
   }
 
   // TODO: this should be refactored out to a getter. The getter should return
@@ -434,7 +446,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    * to "desktop"
    */
   private handleDefaultSelection(selectionEvent: SelectionEvent): void {
-    if (this.isTouchDevice()) {
+    if (this.isMobileDevice()) {
       this.handleTabletSelection(selectionEvent);
     } else {
       this.handleDesktopSelection(selectionEvent);
@@ -449,6 +461,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    * Ctrl + Shift + click   Select a range of tiles (not effecting other tiles)
    */
   private handleDesktopSelection(selectionEvent: SelectionEvent): void {
+    if (this.selectionBehavior === "tablet") {
+      throw new Error("Attempted desktop selection when explicit tablet selection is specified");
+    }
+
     const selectionIndex = selectionEvent.detail.index;
 
     // in desktop mode, unless the ctrl key is held down, clicking an element
@@ -457,7 +473,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // still overwrite the selection behavior using the selection-behavior
     // attribute. Therefore, we have to check that we are not on explicitly
     // using tablet selection mode.
-    if (!selectionEvent.detail.ctrlKey && this.selectionBehavior !== "tablet") {
+    if (!selectionEvent.detail.ctrlKey) {
       this.removeSubSelection();
     }
 
@@ -511,7 +527,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       element.selected = true;
     }
 
-    this.requestUpdate();
+    this.updateSubSelection();
   }
 
   private removeSubSelection(): void {
@@ -527,7 +543,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // by setting the subSelection head to null, it means that if the user
     // shift clicks, it will be the start of a shift selection range
     // this.selectionHead = null;
-    this.requestUpdate();
+    this.updateSubSelection();
   }
 
   private canSubSelect(): boolean {
@@ -537,7 +553,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return this.gridSize > 1 && !this.isHelpDialogOpen();
   }
 
-  private isTouchDevice(): boolean {
+  private isMobileDevice(): boolean {
     // userAgentData is not shipped on all browsers. However, since we have
     // polyfilled the userAgentData object, this condition should always be true
     if (navigator.userAgentData) {
@@ -549,6 +565,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     throw new Error("Could not determine if the device is a touch device");
   }
 
+  private updateSubSelection(): void {
+    const gridTiles = Array.from(this.gridTiles);
+    this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+  }
+
   //#endregion
 
   // TODO: The selection bounding box isn't currently complete
@@ -556,12 +577,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   // TODO: Clean this up
   private renderHighlightBox(event: PointerEvent) {
-    if (!this.canSubSelect()) {
+    if (!this.canSubSelect() || this.isMobileDevice()) {
       return;
     }
 
     if (event.isPrimary) {
-      // TODO: enable this once I want highlighting again
       this.highlight.highlighting = true;
 
       if (!this.shadowRoot) {
@@ -646,11 +666,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
     }
 
-    this.requestUpdate();
+    this.updateSubSelection();
   }
 
   private hideHighlightBox(): void {
-    if (!this.shadowRoot) {
+    if (!this.shadowRoot || this.isMobileDevice()) {
       return;
     }
 
@@ -692,10 +712,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.decisions.length - historyOffset);
     const decisionEnd = Math.min(this.decisions.length, decisionStart + this.gridSize);
-
     const decisionHistory = this.decisions.slice(decisionStart, decisionEnd);
-    this.renderVirtualPage(decisionHistory);
+
     this.historyMode(decisionHistory);
+    this.renderVirtualPage(decisionHistory);
   }
 
   /**
@@ -705,16 +725,24 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    *       responsible for changing the layout of the verification grid.
    */
   private historyMode(decisions: DecisionWrapper[]): void {
-    // TODO: move this into the decision highlight code region
-    decisions.forEach((decision: DecisionWrapper, i: number) => {
-      const color = this.decisionColor(decision);
-      this.gridTiles[i].borderColor = color;
-    });
+    if (this.decisions.length === 0) {
+      throw new Error("No decisions to show in history");
+    }
 
-    // TODO: this should only show the touched decision elements for the
-    // grid tiles shown on the current page
+    // if the user has completed all their verifications, then all the grid
+    // items would have been removed
+    // therefore, we have to recreate these grid tiles before we can start
+    // rendering history (if they are not present)
+    if (!this.gridTiles || this.gridTiles.length === 0) {
+      this.createSpectrogramElements();
+
+      // TODO: forcing a synchronous update is hacky, and we should definitely remove it
+      this.performUpdate();
+    }
+
     const touchedDecisionElements = this.touchedDecisionElements();
     this.showDecisionButtonHighlight(touchedDecisionElements);
+    this.createDecisionHighlight(decisions);
   }
 
   /**
@@ -743,43 +771,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (this.isViewingHistory()) {
       this.pageForwardHistory();
     } else {
-      this.nextPage();
+      this.nextPage(this.gridSize);
     }
   }
 
-  private async nextPage(pagedItems: number = this.gridSize): Promise<void> {
+  private async nextPage(count: number): Promise<void> {
     this.removeSubSelection();
     this.removeDecisionHighlight();
     this.resetSpectrogramSettings();
 
-    if (!this.getPage) {
-      throw new Error("No getPage method found.");
+    if (!this.paginationFetcher) {
+      throw new Error("No paginator found.");
     }
 
-    const nextPageIndex = this.pagedItems + pagedItems;
-    const nextPage = await this.getPage(nextPageIndex);
-    const nextVerificationModels = nextPage.map(VerificationParser.parse);
-
-    // get all verification models that are not in the undecided tiles
-    const undecidedSubjects = this.undecidedTiles.map((tile: DecisionWrapper) => tile.subject);
-    const decisionSubjects = this.decisions.map((decision: DecisionWrapper) => decision.subject);
-
-    const newVerificationModels = nextVerificationModels.filter(
-      (model: DecisionWrapper) =>
-        !undecidedSubjects.some((subject) => JSON.stringify(model.subject) === JSON.stringify(subject)) &&
-        !decisionSubjects.some((subject) => JSON.stringify(model.subject) === JSON.stringify(subject)),
-    );
-
-    const pageToRender = [...this.undecidedTiles, ...newVerificationModels];
+    const nextPage = await this.paginationFetcher.popNextItems(count);
+    const pageToRender = [...this.undecidedTiles, ...nextPage];
     this.renderVirtualPage(pageToRender);
-
-    // we update the paged-items attribute last for two reasons
-    // 1. Any external applications that are watching this attribute won't
-    //    incorrectly think that the next page has been rendered before it has
-    // 2. If we fail to render the next page (e.g. the render function errors)
-    //    we want to retry rendering the page if the user presses clicks the
-    //    next page button
-    this.pagedItems = nextPageIndex;
   }
 
   private canNavigatePrevious(): boolean {
@@ -798,7 +805,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#region Decisions
 
-  private async catchDecision(event: DecisionEvent) {
+  private async handleDecision(event: DecisionEvent) {
+    // if the user is spamming a decision keyboard shortcut, it is possible for
+    // them to create two decisions for one grid tile
+    // this is a hack to prevent that
+    // TODO: this is not guaranteed to work. We should find a better solution
+    if (!this.isViewingHistory()) {
+      this.setDecisionDisabled(true);
+    }
+
     // if the dialog box is open, we don't want to catch events
     // because the user could accidentally create a decision by using the
     // decision keyboard shortcuts while the help dialog is open
@@ -806,26 +821,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    // even though making a decision will cause the spectrograms to load and
-    // emit the "loading" event (causing the decision buttons to be disabled)
-    // there can be some input lag between the decision being made and when the
-    // spectrograms begin to start rendering
-    // I also do this first so that if the functionality below fails then the
-    // user can't continue making decisions that won't be saved when downloaded
-    // however, because the spectrogram won't reload when viewing history
-    // we should not disable the decision buttons when viewing history
-    if (!this.isViewingHistory()) {
-      this.setDecisionDisabled(true);
-    }
-
     const classifications: Classification[] = event.detail.value;
-    const decisionColor: Color = event.detail.target.color;
+    const decisionIndex = event.detail.target.decisionIndex;
 
     const gridTiles = Array.from(this.gridTiles);
     const subSelection = gridTiles.filter((tile) => tile.selected);
     const hasSubSelection = subSelection.length > 0;
+    const trueSubSelection = hasSubSelection ? subSelection : gridTiles;
 
-    const selectedTiles = hasSubSelection ? subSelection : gridTiles;
+    const selectedTiles = trueSubSelection.filter((tile) => !tile.hidden);
     const selectedItems = selectedTiles.map((tile) => tile.model);
 
     const decisions: DecisionWrapper[] = selectedTiles.map(
@@ -833,6 +837,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         new DecisionWrapper({
           ...tile.model,
           decisions: classifications,
+          origin: decisionIndex,
         }),
     );
 
@@ -861,7 +866,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // we have updated the decision about a tiles while viewing history
       // therefore, there will be an already existing outline around the
       // grid tile that we need to update
-      this.createDecisionHighlight(selectedTiles, decisionColor);
+      this.createSelectionHighlight(selectedTiles, decisionIndex);
 
       this.removeDecisionButtonHighlight();
       this.showDecisionButtonHighlight([event.detail.target]);
@@ -878,14 +883,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.autoPage) {
       this.showDecisionButtonHighlight([event.target as any]);
-      this.createDecisionHighlight(selectedTiles, decisionColor);
+      this.createSelectionHighlight(selectedTiles, decisionIndex);
 
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
-      await sleep(300);
-      this.removeDecisionHighlight(selectedTiles);
-
+      await sleep(0.3);
       this.nextPage(decisions.length);
     }
   }
@@ -895,69 +898,57 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
     }
+
+    this.decisionsDisabled = disabled;
   }
 
   //#endregion
 
   //#region DecisionHighlights
 
-  private decisionColor(verification: DecisionWrapper): string {
-    // TODO: this is really slow, we should probably optimize it
-    const decisionElements = this.decisionElements ?? [];
-    const decisionButton = decisionElements.find((element: DecisionComponent) => {
-      const verificationDecisions = verification.decisions;
-      const elementModels = element.classificationModels();
-      return JSON.stringify(verificationDecisions) === JSON.stringify(elementModels);
-    });
-
-    if (!decisionButton) {
-      throw new Error("Could not find color to match decision");
-    }
-
-    return decisionButton.color;
-  }
-
-  private createDecisionHighlight(selectedTiles: VerificationGridTileComponent[], color: string | string[]): void {
+  private createSelectionHighlight(selectedTiles: VerificationGridTileComponent[], color: number): void {
     selectedTiles.forEach((tile: VerificationGridTileComponent, i: number) => {
       const derivedColor = Array.isArray(color) ? color[i] : color;
-      tile.borderColor = derivedColor;
+      tile.decisionIndex = derivedColor;
+    });
+  }
+
+  private createDecisionHighlight(decisions: DecisionWrapper[]): void {
+    decisions.forEach((decision: DecisionWrapper, i: number) => {
+      const gridTile = this.gridTiles[i];
+      gridTile.decisionIndex = decision.origin;
     });
   }
 
   private removeDecisionHighlight(selectedTiles: VerificationGridTileComponent[] = Array.from(this.gridTiles)): void {
     for (const tile of selectedTiles) {
-      tile.borderColor = "var(--oe-panel-color)";
+      tile.decisionIndex = undefined;
     }
 
     this.removeDecisionButtonHighlight();
   }
 
   private touchedDecisionElements(): DecisionComponent[] {
-    // TODO: this is really inefficient. We should improve the perf and quality
-    const decisionElements = this.decisionElements ?? [];
-    return decisionElements.filter((element: DecisionComponent) => {
-      const possibleDecisions = element.classificationModels();
-      return this.decisions.some((decision: DecisionWrapper) => {
-        return JSON.stringify(decision.decisions) === JSON.stringify(possibleDecisions);
-      });
-    });
-  }
+    const decisionElements = this.decisionElements;
+    if (!decisionElements) {
+      throw new Error("No decision elements found");
+    }
 
-  private areDecisionsDisabled(): boolean {
-    const decisionElements = this.decisionElements ?? [];
-    return decisionElements[0].disabled;
+    return decisionElements.filter((element: DecisionComponent) =>
+      this.decisions.some((decision) => decision.origin === element.decisionIndex),
+    );
   }
 
   private showDecisionButtonHighlight(elements: DecisionComponent[]): void {
     for (const decision of elements) {
-      decision.showDecisionColor = true;
+      decision.highlighted = true;
     }
   }
 
   private removeDecisionButtonHighlight(): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decision of decisionElements) {
-      decision.showDecisionColor = false;
+      decision.highlighted = false;
     }
   }
 
@@ -966,13 +957,21 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   //#region Rendering
 
   private async renderCurrentPage(): Promise<void> {
-    if (!this.getPage) {
-      throw new Error("No getPage method found");
+    if (!this.paginationFetcher) {
+      throw new Error("Pagination fetcher not found");
     }
 
-    const firstPage = await this.getPage(this.pagedItems);
-    const verificationModels = firstPage.map(VerificationParser.parse);
-    this.renderVirtualPage(verificationModels);
+    const pageItems = await this.paginationFetcher.currentPage();
+    this.renderVirtualPage(pageItems);
+  }
+
+  private async renderNextPage(): Promise<void> {
+    if (!this.paginationFetcher) {
+      throw new Error("Pagination fetcher not found");
+    }
+
+    const pageItems = await this.paginationFetcher.popNextItems(this.gridSize);
+    this.renderVirtualPage(pageItems);
   }
 
   private async renderVirtualPage(nextPage: DecisionWrapper[]): Promise<void> {
@@ -981,11 +980,19 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       throw new Error("Could not find instantiated spectrogram elements");
     }
 
+    // even though making a decision will cause the spectrograms to load and
+    // emit the "loading" event (causing the decision buttons to be disabled)
+    // there can be some input lag between when we request to change the src
+    // and when the spectrograms begin to start rendering
+    // I also do this first so that if the functionality below fails then the
+    // user can't continue making decisions that won't be saved when downloaded
+    this.setDecisionDisabled(true);
+
     // if this guard condition is true, it means that we have exhausted the
     // entire data source provided by the getPage callback
     if (nextPage.length === 0) {
       this.spectrogramElements = this.noItemsTemplate();
-      this.setDecisionDisabled(true);
+      return;
     }
 
     nextPage.forEach((item: DecisionWrapper, i: number) => {
@@ -1013,16 +1020,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       this.showAllGridItems();
       this.hiddenTiles = 0;
     }
-
-    this.cacheNext();
   }
 
   private hideGridItems(numberOfTiles: number): void {
     Array.from(this.gridTiles)
       .slice(-numberOfTiles)
       .forEach((element) => {
-        element.style.position = "absolute";
-        element.style.opacity = "0";
+        element.hidden = true;
       });
 
     this.hiddenTiles = numberOfTiles;
@@ -1031,9 +1035,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showAllGridItems(): void {
     const gridTiles = this.gridTiles ?? [];
     for (const element of gridTiles) {
-      element.style.position = "inherit";
-      element.style.opacity = "1";
+      element.hidden = false;
     }
+  }
+
+  private hasDecisionElements(): boolean {
+    return Array.from(this.decisionElements ?? []).length > 0;
   }
 
   private createSpectrogramElements(): void {
@@ -1069,7 +1076,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleSpectrogramLoaded(): void {
-    const decisionsDisabled = this.areDecisionsDisabled();
+    const decisionsDisabled = this.decisionsDisabled;
     const loading = !this.areSpectrogramsLoaded();
 
     if (decisionsDisabled !== loading) {
@@ -1083,140 +1090,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#endregion
 
-  //#region Caching
-
-  private async cacheClient(elapsedItems: number): Promise<void> {
-    if (!this.preFetch || !this.getPage) {
-      return;
-    }
-
-    const page = await this.getPage(elapsedItems);
-    if (page.length === 0) {
-      return;
-    }
-
-    const verificationModels = page.map(VerificationParser.parse);
-
-    // we don't await the fetch requests because we want caching to be an
-    // asynchronous operation that runs in the background while the spectrograms
-    // are rendered
-    for (const item of verificationModels) {
-      fetch(item.url, { method: "GET" });
-    }
-    // await Promise.all(verificationModels.map((item) => fetch(item.url, { method: "GET" })));
-  }
-
-  private async cacheServer(targetElapsedItems: number) {
-    if (!this.preFetch || !this.getPage) {
-      return;
-    }
-
-    while (this.serverCacheHead < targetElapsedItems) {
-      const page = await this.getPage(this.serverCacheHead);
-
-      if (page.length === 0) {
-        this.serverCacheExhausted = true;
-        return;
-      }
-
-      const verificationModels = page.map(VerificationParser.parse);
-
-      // the same as the client cache, we don't await the fetch requests
-      // we do this so that caching requests don't block rendering
-      for (const item of verificationModels) {
-        fetch(item.url, { method: "HEAD" });
-      }
-
-      this.serverCacheHead += page.length;
-    }
-  }
-
-  private cacheNext() {
-    // start caching client side from the start of the next page
-    const pagesToClientCache = this.pagedItems + this.gridSize;
-
-    const PagesToCacheServerSide = 10;
-    const targetServerCacheHead = pagesToClientCache + this.gridSize * PagesToCacheServerSide;
-
-    this.cacheClient(pagesToClientCache);
-    if (!this.serverCacheExhausted) {
-      this.cacheServer(targetServerCacheHead);
-    }
-  }
-
-  //#endregion
-
-  //#region DownloadingResults
-
-  private canDownloadResults(): boolean {
-    return this.decisions.length > 0;
-  }
-
-  // TODO: clean up this function
-  // TODO: there is a "null" in additional tags (if none)
-  private downloadResults(): void {
-    if (!this.dataSource?.fileName) {
-      throw new Error("No input data source found");
-    }
-
-    // since we do not know the input format of the provided csv or json files
-    // it is possible for users to input a csv file that already has a column
-    // header of "confirmed" or "additional-tags"
-    // to prevent column name collision, we prepend all the fields that we add
-    // to the original data input with "oe"
-    const columnNamespace = "oe";
-
-    let formattedResults = "";
-    const fileFormat = this.dataSource?.fileType ?? "json";
-
-    const results = this.decisions.map((wrapper: DecisionWrapper) => {
-      // because we have expended the verification models before, we know that
-      // each decision will only have one item
-      const decision = wrapper.decisions.at(0) as Classification;
-
-      const subject = wrapper.subject;
-      const tag = decision.tag?.text ?? "";
-      const confirmed = decision.confirmed;
-      const additionalTags = wrapper.additionalTags;
-
-      return {
-        ...subject,
-        [`${columnNamespace}-tag`]: tag,
-        [`${columnNamespace}-confirmed`]: confirmed,
-        [`${columnNamespace}-additional-tags`]: additionalTags,
-      };
-    });
-
-    if (fileFormat === "json") {
-      formattedResults = JSON.stringify(results);
-    } else if (fileFormat === "csv") {
-      formattedResults = new Parser().parse(results);
-    } else if (fileFormat === "tsv") {
-      formattedResults = new Parser({ delimiter: "\t" }).parse(results);
-    }
-
-    // create a media type as defined by e.g. application/json, text/csv, etc.
-    // https://www.iana.org/assignments/media-types/media-types.xhtml
-    const topLevelType = fileFormat === "json" ? "application" : "text";
-    const mediaType = `${topLevelType}/${fileFormat}`;
-    const blob = new Blob([formattedResults], { type: mediaType });
-    const url = URL.createObjectURL(blob);
-
-    // TODO: we should just be able to use the file download API
-    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns as item delimiters)
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `verified-${this.dataSource.fileName}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  //#endregion
-
   //#region Templates
 
   private decisionPromptTemplate(): TemplateResult<1> {
-    const subSelection = this.currentSubSelection();
+    const subSelection = this.currentSubSelection;
     const subSelectionCount = subSelection.length;
     const hasMultipleTiles = this.gridSize > 1;
 
@@ -1247,14 +1124,25 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     `;
   }
 
+  private noDecisionsTemplate(): TemplateResult<1> {
+    return html`
+      <strong class="no-decisions-warning">
+        No decisions available.
+      </strong>
+    `;
+  }
+
   public render() {
     return html`
-      <oe-verification-help-dialog></oe-verification-help-dialog>
+      <oe-verification-help-dialog
+        @open="${this.handleHelpDialogOpen}"
+        @close="${this.handleHelpDialogClose}"
+      ></oe-verification-help-dialog>
       <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
         <div
-          @selected="${this.selectionHandler}"
+          id="grid-container"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
@@ -1271,7 +1159,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               class="oe-btn-info"
               rel="help"
             >
-              ${unsafeSVG(lucideCircleHelp)}
+              <sl-icon name="question-circle" class="large-icon"></sl-icon>
             </button>
 
             <button
@@ -1303,22 +1191,16 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           </span>
 
           <span class="decision-controls">
-            <h2 class="verification-controls-title">${this.decisionPromptTemplate()}</h2>
+            <h2 class="verification-controls-title">
+              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+            </h2>
             <div class="decision-control-actions">
-              <slot @decision="${this.catchDecision}"></slot>
+              <slot id="decisions-container"></slot>
             </div>
           </span>
 
           <span class="decision-controls-right">
             <slot name="data-source"></slot>
-            <button
-              data-testid="download-results-button"
-              class="oe-btn-secondary"
-              @pointerdown="${this.downloadResults}"
-              ?disabled="${!this.canDownloadResults()}"
-            >
-              Download Results
-            </button>
           </span>
         </div>
       </div>
