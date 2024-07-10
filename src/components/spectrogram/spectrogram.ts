@@ -14,6 +14,11 @@ import { booleanConverter } from "../../helpers/attributes";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
+export interface IPlayEvent {
+  play: boolean;
+  keyboardShortcut: boolean;
+}
+
 // TODO: fix
 const defaultAudioModel = new AudioModel({
   duration: 0,
@@ -24,24 +29,24 @@ const defaultAudioModel = new AudioModel({
   },
 });
 
+// TODO: move this to a different place
+const domRenderWindowConverter = (value: string | null): RenderWindow | undefined => {
+  if (!value) {
+    return;
+  }
+
+  const [startOffset, lowFrequency, endOffset, highFrequency] = value.split(",").map(parseFloat);
+  return new RenderWindow({
+    startOffset,
+    endOffset,
+    lowFrequency,
+    highFrequency,
+  });
+};
+
 /**
+ * @description
  * A spectrogram component that can be used with the open ecoacoustics components
- *
- * @property paused - Whether the spectrogram is paused
- * @property src - The source of the audio file to play
- * @property offset - What should second 0 be shown as in the spectrogram
- * @property window - What part of the spectrogram is currently visible
- * @property window-size - The size of the fft window
- * @property window-overlap - The amount of overlap between fft windows
- * @property window-function - The window function to use for the spectrogram
- * @property color-map - The color map to use for the spectrogram
- * @property brightness - The brightness of the spectrogram
- * @property contrast - The contrast of the spectrogram
- *
- * @property scaling - (stretch | natural | original) - The aspect ratio of the spectrogram
- * stretch should scale without aspect ratio
- * natural should scale 1/1 until one of the dimensions overflows (probably set a max height of the natural fft window)
- * original should scale 1/1 with a max height of the spectrogram set to the fft window
  *
  * @fires Loading
  * @fires Finished
@@ -51,41 +56,63 @@ const defaultAudioModel = new AudioModel({
 @customElement("oe-spectrogram")
 export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
+  public static playEventName = "play" as const;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
-  @property({ type: String, attribute: "window", reflect: true })
-  public domRenderWindow?: string;
+  @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
+  public domRenderWindow?: RenderWindow;
 
+  /** Whether the spectrogram is paused */
   @property({ type: Boolean, reflect: true })
   public paused = true;
 
+  /** The source of the audio file */
+  @property({ type: String, reflect: true })
+  public src = "";
+
+  /**
+   * The aspect ratio of the spectrogram
+   * stretch should scale without aspect ratio
+   * natural should scale with the correct aspect ratio to fill the container it
+   * is in. One dimension will be constrained by the container, the other by the
+   * aspect ratio.
+   * original will set the spectrogram to the native resolution of the FFT output.
+   * It will not scale the image at all.
+   * 
+   * @values stretch | natural | original
+   */
   @property({ type: String, reflect: true })
   public scaling: SpectrogramCanvasScale = "stretch";
 
+  /** The size of the fft window */
   @property({ type: Number, attribute: "window-size" })
   public windowSize = 512;
 
+  /** The window function to use for the spectrogram */
   @property({ type: String, attribute: "window-function" })
   public windowFunction: WindowFunctionName = "hann";
 
+  /** The amount of overlap between fft windows */
   @property({ type: Number, attribute: "window-overlap" })
   public windowOverlap = 0;
 
+  /** A boolean attribute representing if the spectrogram should be shown in mel-scale */
   @property({ type: Boolean, attribute: "mel-scale", converter: booleanConverter })
   public melScale = false;
 
+  /** A color map to use for the spectrogram */
   @property({ type: String, attribute: "color-map" })
   public colorMap = "";
 
+  /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number })
   public offset = 0;
 
-  @property({ type: String })
-  public src = "";
-
+  /** An increase in brightness */
   @property({ type: Number })
   public brightness = 0;
 
+  /** A scalar multiplier that should be applied to fft values */
   @property({ type: Number })
   public contrast = 1;
 
@@ -101,11 +128,10 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public audio: Signal<AudioModel> = signal(defaultAudioModel);
   public currentTime: Signal<Seconds> = signal(this.offset);
   // TODO: remove this temp value
-  public renderCanvasSize: Signal<RenderCanvasSize> = signal({ width: 0, height: 0 });
+  public renderCanvasSize: Signal<RenderCanvasSize> = signal({ width: 128, height: 0 });
   public renderWindow: Signal<RenderWindow> = computed(() => this.parseRenderWindow());
-  public useMelScale: Signal<boolean> = signal(this.melScale);
   public fftSlice?: TwoDSlice<Pixel, Hertz>;
-  public unitConverters?: UnitConverter;
+  public unitConverters: Signal<UnitConverter | undefined> = signal(undefined);
   private audioHelper = new AudioHelper();
   // TODO: remove this
   private doneFirstRender = false;
@@ -130,6 +156,18 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     this.brightness = options.brightness;
     this.contrast = options.contrast;
     this.colorMap = options.colorMap;
+  }
+
+  public get possibleWindowSizes(): ReadonlyArray<number> {
+    return [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
+  }
+
+  public get possibleWindowOverlaps(): ReadonlyArray<number> {
+    // we assign windowSizes to a variable so that we don't have to re-create
+    // the possible window sizes array every iteration in the filter callback
+    const windowSizes = this.possibleWindowSizes;
+    const currentWindowSize = this.spectrogramOptions.windowSize;
+    return windowSizes.filter((value: number) => value < currentWindowSize);
   }
 
   public get renderedSource(): string {
@@ -163,10 +201,8 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.renderSpectrogram();
     }
 
-    // TODO: this is a hack
-    this.useMelScale.value = this.melScale;
-
-    this.unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, this.useMelScale);
+    const unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, signal(this.melScale));
+    this.unitConverters = signal(unitConverters);
   }
 
   public updated(change: PropertyValues<this>) {
@@ -174,7 +210,10 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       // spectrogram regeneration functionality
       if (this.invalidateSpectrogramOptions(change)) {
         this.regenerateSpectrogramOptions();
-        this.useMelScale.value = this.melScale;
+
+        if (this.unitConverters.value) {
+          this.unitConverters.value.melScale.value = this.melScale;
+        }
       } else if (this.invalidateSpectrogramSource(change)) {
         this.pause();
         this.regenerateSpectrogram();
@@ -263,16 +302,14 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   // TODO: finish this method
-  public resetSettings(): void {}
+  public resetSettings(): void { }
 
-  public play(): void {
-    this.paused = false;
-    this.setPlaying();
+  public play(keyboardShortcut = false): void {
+    this.setPaused(false, keyboardShortcut);
   }
 
-  public pause(): void {
-    this.paused = true;
-    this.setPlaying();
+  public pause(keyboardShortcut = false): void {
+    this.setPaused(true, keyboardShortcut);
   }
 
   private handleSlotChange(): void {
@@ -473,10 +510,31 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     }
   }
 
-  private setPlaying(): void {
-    if (this.paused == this.mediaElement.paused) return;
+  private setPaused(paused: boolean, keyboardShortcut = false): void {
+    // if the state doesn't change, we can short circuit exit and not update the
+    // media controls DOM node or emit a play event
+    if (paused == this.mediaElement.paused) return;
 
-    if (this.paused) {
+    const detail: IPlayEvent = {
+      play: !paused,
+      keyboardShortcut,
+    };
+
+    // if this event is canceled, the spectrogram will not play
+    const eventSuccess = this.dispatchEvent(
+      new CustomEvent<IPlayEvent>(
+        SpectrogramComponent.playEventName,
+        { detail, cancelable: true, bubbles: true }
+      )
+    );
+
+    // if the event is canceled (through event.preventDefault), it means that
+    // some element didn't want the spectrogram to start playing
+    if (!eventSuccess) {
+      return;
+    }
+
+    if (paused) {
       // TODO: find out if we actually need this
       if (this.nextRequestId) {
         window.cancelAnimationFrame(this.nextRequestId);
@@ -494,28 +552,22 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.updateCurrentTime(true);
     }
 
-    this.dispatchEvent(new CustomEvent("play", { detail: !this.paused }));
+    this.paused = paused;
   }
 
-  // creates a render window from an audio segment
+  // creates a render window from an audio segment if no explicit render window
+  // is provided
   private parseRenderWindow(): RenderWindow {
     if (!this.domRenderWindow) {
       return new RenderWindow({
         startOffset: this.offset,
         endOffset: this.offset + this.audio.value.duration,
         lowFrequency: 0,
-        highFrequency: this.unitConverters?.nyquist.value ?? 0,
+        highFrequency: this.unitConverters.value?.nyquist.value ?? 0,
       });
     }
 
-    const [startOffset, lowFrequency, endOffset, highFrequency] = this.domRenderWindow.split(",").map(parseFloat);
-
-    return new RenderWindow({
-      startOffset,
-      endOffset,
-      lowFrequency,
-      highFrequency,
-    });
+    return this.domRenderWindow;
   }
 
   public render() {

@@ -1,6 +1,12 @@
 import type { Locator, Page } from "@playwright/test";
 import { Size } from "../models/rendering";
 
+export async function getElementSize<T extends HTMLElement>(element: T | Locator): Promise<Size> {
+  const width = (await getBrowserValue<T>(element, "clientWidth")) as number;
+  const height = (await getBrowserValue<T>(element, "clientHeight")) as number;
+  return { width, height };
+}
+
 export async function changeToMobile(page: Page) {
   const mobileSize: Size = { width: 320, height: 568 };
   await page.setViewportSize(mobileSize);

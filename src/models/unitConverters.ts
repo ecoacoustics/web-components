@@ -5,8 +5,10 @@ import { hertzToMels } from "../helpers/audio/mel";
 
 export type Seconds = number;
 export type Hertz = number;
-export type Pixel = number;
+export type MHertz = number;
 export type Sample = number;
+export type Pixel = number;
+export type EmUnit = number;
 
 export type ScaleDomain<T extends number> = [min: T, min: T];
 export type ScaleRange<T extends number> = [min: T, max: T];

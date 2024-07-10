@@ -27,4 +27,5 @@ export default defineConfig({
     // this can be useful for seeing why a test has failed in CI
     ["line"],
   ],
+  snapshotPathTemplate: "./src/tests/__snapshots__/{testName}/{arg}{ext}",
 });

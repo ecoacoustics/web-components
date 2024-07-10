@@ -8,12 +8,17 @@ import { DecisionWrapper, VerificationSubject } from "../../models/verification"
 
 type InfoCardTemplate = (value: any) => any;
 
+/**
+ * @description
+ * Displays information about a verification tile subject
+ */
 @customElement("oe-info-card")
 export class InfoCardComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(infoCardStyle);
 
-  @property({ type: Number, reflect: true })
-  public shortLength = 3;
+  /** Number of subject key/values pairs to show before the "Show More" button is clicked */
+  @property({ attribute: "default-lines", type: Number, reflect: true })
+  public defaultLines = 3;
 
   @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
@@ -22,22 +27,10 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
   @state()
   private showExpanded = false;
 
-  private numberTemplate: InfoCardTemplate = (value: number | string) => Number(value).toLocaleString();
-  private identityTemplate: InfoCardTemplate = (value: unknown) => value;
-
-  // because urls can be unreasonably long, we want to truncate them
-  // we do this by using the format https://.../last-path?first-parameter...
-  private urlTemplate(url: string): TemplateResult<1> {
-    const ellipsis = "…";
-
-    const protocol = url.split(":/")[0];
-    const pathFragment = url.split("/").at(-1)?.split("&")[0] ?? "";
-    const hasAdditionalParameters = url.split("&").length > 1;
-    const additionalParametersFragment = hasAdditionalParameters ? ellipsis : "";
-    const formattedValue = protocol + ellipsis + pathFragment + additionalParametersFragment;
-
-    return html`<a href="${url}" target="_blank">${formattedValue}</a>`;
-  }
+  private identityStrategy: InfoCardTemplate = (value: unknown): typeof value => value;
+  private numberStrategy: InfoCardTemplate = (value: number | string): string => Number(value).toLocaleString();
+  private urlStrategy = (value: string): TemplateResult<1> =>
+    html`<a href="${value}" target="_blank">${this.formatUrl(value)}</a>`;
 
   private subjectRowCount(): number {
     if (!this.model) {
@@ -47,24 +40,38 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     return Object.keys(this.model.subject).length;
   }
 
+  /**
+   * Converts a url into a human readable format
+   * by using the format https://.../last-path?first-parameter...
+   */
+  private formatUrl(url: string): string {
+    const ellipsis = "…";
+
+    const protocol = url.split(":/")[0];
+    const pathFragment = url.split("/").at(-1)?.split("&")[0] ?? "";
+    const hasAdditionalParameters = url.split("&").length > 1;
+    const additionalParametersFragment = hasAdditionalParameters ? ellipsis : "";
+    return protocol + ellipsis + pathFragment + additionalParametersFragment;
+  }
+
   private subjectRowTemplate(subject: [key: string, value: unknown]) {
     const [key, value] = subject;
 
-    let valueTemplate: InfoCardTemplate = this.identityTemplate;
+    let valueStrategy: InfoCardTemplate = this.identityStrategy;
 
     if (typeof value === "string" && value.includes(":/")) {
-      valueTemplate = this.urlTemplate;
+      valueStrategy = this.urlStrategy;
     } else if (typeof value === "number" || (!isNaN(Number(value)) && value !== "")) {
       // we have to make a special case for an empty string becaue when an
       // empty string is put through the Number() constructor, it will in
       // a result of zero, when we should really be dispalying an empty string
-      valueTemplate = this.numberTemplate;
+      valueStrategy = this.numberStrategy;
     }
 
     return html`
       <div class="subject-row">
         <div class="subject-key">${key}</div>
-        <div class="subject-value">${valueTemplate(value)}</div>
+        <div class="subject-value">${valueStrategy(value)}</div>
       </div>
     `;
   }
@@ -76,21 +83,21 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
 
     const subjectEntries = Object.entries(subject);
     if (!this.showExpanded) {
-      subjectEntries.splice(this.shortLength);
+      subjectEntries.splice(this.defaultLines);
     }
 
     return subjectEntries.map((value) => this.subjectRowTemplate(value));
   }
 
   private showMoreButtonTemplate() {
-    const shouldBeVisible = this.subjectRowCount() > this.shortLength;
+    const shouldBeVisible = this.subjectRowCount() > this.defaultLines;
 
     if (!shouldBeVisible) {
       return nothing;
     }
 
     return html`
-      <a id="show-more" @pointerdown="${() => (this.showExpanded = !this.showExpanded)}">
+      <a id="show-more" href="javascript:void 0" @click="${() => (this.showExpanded = !this.showExpanded)}">
         ${this.showExpanded ? "Show Less" : "Show More"}
       </a>
     `;

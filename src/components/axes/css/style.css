@@ -6,16 +6,21 @@
 
 #wrapped-element {
   position: relative;
-  padding-left: 3rem;
+  padding-left: 2rem;
   padding-bottom: 1.5rem;
 }
 
 svg {
   position: absolute;
-  /* width: 100%; */
+  width: 100%;
   height: 100%;
-  z-index: 1;
   overflow: visible;
+
+  /*
+    The axes lines will be hidden behind the spectrogram if we do not set
+    z-index to one
+  */
+  z-index: 1;
 
   line {
     shape-rendering: crispEdges;
@@ -33,7 +38,13 @@ svg {
 }
 
 .grid-line {
-  color: lightblue;
   stroke-width: 1;
   opacity: 0.4;
+}
+
+:host {
+  &::part(tick),
+  &::part(grid) {
+    color: lightblue;
+  }
 }

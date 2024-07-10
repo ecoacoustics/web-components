@@ -86,7 +86,7 @@ test.describe("single verification grid", () => {
         expect(gridSize).toEqual(expectedGridSize);
       });
 
-      test.fixme("should not use a grid size that is larger than the screen size", async ({ fixture, page }) => {
+      test.skip("should not use a grid size that is larger than the screen size", async ({ fixture, page }) => {
         const requestedGridSize = 100;
         const expectedGridSize = 8;
 
@@ -97,14 +97,14 @@ test.describe("single verification grid", () => {
         expect(gridSize).toEqual(expectedGridSize);
       });
 
-      test.fixme("should scale up grid tiles if the grid size doesn't fill up the screen", async ({ fixture }) => {
+      test.skip("should scale up grid tiles if the grid size doesn't fill up the screen", async ({ fixture }) => {
         await fixture.changeGridSize(1);
         const expectedTileSize: Size = { width: 0, height: 0 };
         const realizedTileSize = (await fixture.tileSizes())[0];
         expect(realizedTileSize).toEqual(expectedTileSize);
       });
 
-      test.fixme("should not scale up grid tiles if the grid size fills up the screen", async ({ fixture }) => {
+      test.skip("should not scale up grid tiles if the grid size fills up the screen", async ({ fixture }) => {
         await fixture.changeGridSize(8);
 
         const expectedTileSize: Size = { width: 0, height: 0 };
@@ -113,9 +113,9 @@ test.describe("single verification grid", () => {
         expect(realizedTileSize).toEqual(expectedTileSize);
       });
 
-      test.fixme("should decrease the number of grid tiles if the grid size doesn't fit on the screen", () => {});
+      test.skip("should decrease the number of grid tiles if the grid size doesn't fit on the screen", () => { });
 
-      test.fixme("Should have a 1x1 grid size for mobile devices", async ({ fixture, page }) => {
+      test.skip("Should have a 1x1 grid size for mobile devices", async ({ fixture, page }) => {
         await changeToMobile(page);
         const expectedGridSize = 1;
         const realizedGridSize = await fixture.getGridSize();
@@ -233,11 +233,11 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("changing the tile template after creation", () => {
-    test("should allow removing the info card", () => {});
+    test.skip("should allow removing the info card", () => { });
 
-    test("should allow removing the playback indicator", () => {});
+    test.skip("should allow removing the playback indicator", () => { });
 
-    test("should allow removing the axes component", () => {});
+    test.skip("should allow removing the axes component", () => { });
   });
 
   test.describe("data sources", () => {
@@ -288,7 +288,7 @@ test.describe("single verification grid", () => {
       expect(fixture.downloadResultsButton()).toBeEnabled();
     });
 
-    test.fixme("should download the correct decisions when viewing history", async ({ fixture }) => {
+    test.skip("should download the correct decisions when viewing history", async ({ fixture }) => {
       // we fill two pages of decisions so that we can go back multiple pages in
       // the history view. This makes sure that when we view items from far
       // back in history, items are not removed from the decisions array
@@ -299,14 +299,14 @@ test.describe("single verification grid", () => {
       await fixture.downloadResults();
     });
 
-    test.fixme("should download the correct decisions after changing a decision in history", async ({ fixture }) => {
+    test.skip("should download the correct decisions after changing a decision in history", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
       await fixture.createSubSelection([0]);
       await fixture.makeDecision(1);
     });
 
-    test.fixme("downloading decisions with negative decisions", () => {});
+    test.skip("downloading decisions with negative decisions", () => { });
   });
 
   test.describe("pagination", () => {
@@ -399,48 +399,48 @@ test.describe("single verification grid", () => {
       expect(newViewingHistory).toBe(false);
     });
 
-    test.fixme("should be able to navigate around in history using previous and next", async () => {});
+    test.skip("should be able to navigate around in history using previous and next", async () => { });
   });
 
   test.describe("sub-selection", () => {
     const desktopSelectionTests = () => {
-      test("should select a tile when clicked", () => {});
+      test.skip("should select a tile when clicked", () => { });
 
-      test("should de-select other tiles when a tile is selected", () => {});
+      test.skip("should de-select other tiles when a tile is selected", () => { });
 
-      test("should add a tile to a selection when the ctrl key is held", () => {});
+      test.skip("should add a tile to a selection when the ctrl key is held", () => { });
 
-      test("should deselect other tiles the shift key is held", () => {});
+      test.skip("should deselect other tiles the shift key is held", () => { });
 
-      test("should select one tile if the same tile if shift clicked twice", () => {});
+      test.skip("should select one tile if the same tile if shift clicked twice", () => { });
 
-      test("should select a positive direction of tiles when the shift key is held", () => {});
+      test.skip("should select a positive direction of tiles when the shift key is held", () => { });
 
-      test("should select a negative direction of tiles when the shift key is held", () => {});
+      test.skip("should select a negative direction of tiles when the shift key is held", () => { });
 
-      test("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => {});
+      test.skip("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => { });
 
-      test("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => {});
+      test.skip("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => { });
     };
 
     const tabletSelectionTests = () => {
-      test("should select a tile when clicked", () => {});
+      test.skip("should select a tile when clicked", () => { });
 
-      test("should de-select other tiles when a tile is selected", () => {});
+      test.skip("should de-select other tiles when a tile is selected", () => { });
 
-      test("should add a tile to a selection when the ctrl key is held", () => {});
+      test.skip("should add a tile to a selection when the ctrl key is held", () => { });
 
-      test("should deselect other tiles the shift key is held", () => {});
+      test.skip("should deselect other tiles the shift key is held", () => { });
 
-      test("should select one tile if the same tile if shift clicked twice", () => {});
+      test.skip("should select one tile if the same tile if shift clicked twice", () => { });
 
-      test("should select a positive direction of tiles when the shift key is held", () => {});
+      test.skip("should select a positive direction of tiles when the shift key is held", () => { });
 
-      test("should select a negative direction of tiles when the shift key is held", () => {});
+      test.skip("should select a negative direction of tiles when the shift key is held", () => { });
 
-      test("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => {});
+      test.skip("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => { });
 
-      test("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => {});
+      test.skip("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => { });
     };
 
     test.describe("explicit desktop selection mode", desktopSelectionTests);
@@ -460,7 +460,7 @@ test.describe("single verification grid", () => {
       expect(realizedNumberOfSelected).toHaveLength(expectedNumberOfSelected);
     });
 
-    test("should deselect all tiles if the escape key is pressed", () => {});
+    test("should deselect all tiles if the escape key is pressed", () => { });
   });
 
   test.describe("information cards", () => {
@@ -479,7 +479,7 @@ test.describe("single verification grid", () => {
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.fixme("should update correctly when paging", async ({ fixture }) => {
+    test.skip("should update correctly when paging", async ({ fixture }) => {
       await fixture.makeDecision(0);
 
       // because it can take a while for the next page to load, and the info
@@ -495,7 +495,7 @@ test.describe("single verification grid", () => {
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.fixme("should update correctly when viewing history", async ({ fixture }) => {
+    test.skip("should update correctly when viewing history", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
 
@@ -507,7 +507,7 @@ test.describe("single verification grid", () => {
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.fixme("should update correctly when changing the grid source", async ({ fixture }) => {
+    test.skip("should update correctly when changing the grid source", async ({ fixture }) => {
       const expectedInitialInfoCard = [
         { key: "Title 1", value: "Description 1" },
         { key: "Title 2", value: "Description 2" },
@@ -538,4 +538,8 @@ test.describe("single verification grid", () => {
       });
     });
   });
+
+  // during progressive creation, individual elements will be added to the
+  // document, meaning that the verification grid is in various invalid states
+  test.describe("progressive creation of a verification grid", () => { });
 });

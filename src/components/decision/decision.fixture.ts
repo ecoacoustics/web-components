@@ -85,7 +85,7 @@ class DecisionFixture {
   public async isShowingDecisionColor(): Promise<boolean> {
     // TODO: this type casting is only needed because the return type of this
     // helper is incorrect
-    return (await getBrowserValue<DecisionComponent>(this.component(), "showDecisionColor")) as boolean;
+    return (await getBrowserValue<DecisionComponent>(this.component(), "highlighted")) as boolean;
   }
 
   public async decisionTagText(): Promise<string | null> {

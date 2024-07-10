@@ -7,7 +7,7 @@
   height: 0px;
   background-color: var(--oe-selected-color);
   border: solid 2px var(--oe-border-color);
-  border-radius: 1rem;
+  border-radius: var(--oe-border-rounding);
   opacity: 0.3;
   z-index: 5;
 
@@ -31,11 +31,19 @@
 .verification-grid {
   display: flex;
   flex-wrap: wrap;
+  flex-grow: 1;
   user-select: none;
   justify-content: center;
   align-items: stretch;
+  margin-top: var(--oe-spacing);
+  margin-bottom: var(--oe-spacing);
+
+  /*
+    We use a grid gap property instead of adding margin to the grid tile
+    styles so that on mobile, the grid tiles are flush with the edge of the
+    screen.
+  */
   gap: var(--oe-spacing);
-  margin: var(--oe-spacing);
 }
 
 .no-items-message {
@@ -78,12 +86,16 @@
   display: flex;
 }
 
+.no-decisions-warning {
+  color: var(--oe-danger-color);
+  font-weight: bold;
+}
+
 /*
-  We apply styles to the <template> elements here because we can access them
-  through light dom selectors.
-  We cannot target the template elements inside the verification-grid-tile
-  because they are reflected into the shadow dom, but not actually rendered
-  in the tile dom (meaning that we can't style them in the tile component).
+  We apply styles to the <template> elements here because we cannot target the
+  template elements inside the verification-grid-tile because they are reflected
+  into the shadow dom, but not actually rendered in the tile dom (meaning that
+  we can't style them in the tile component).
 */
 oe-spectrogram {
   @media (max-width: 600px) {

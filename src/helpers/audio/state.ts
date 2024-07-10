@@ -272,8 +272,9 @@ export class ProcessorState extends State {
     }
 
     // A valid call should increment the generation by 1.
-    // Any other case is a signal to abort.
-    return generation === current + 1;
+    // however, if a generation is skipped, e.g. the audio file was corrupted
+    // the most recent generation should still be able to write to the buffer
+    return generation > current;
   }
 
   public busyWaitForWorkerToProcessBuffer(generation: number) {

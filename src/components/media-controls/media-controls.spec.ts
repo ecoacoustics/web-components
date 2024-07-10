@@ -40,13 +40,13 @@ test.describe("audio element communication", () => {
 });
 
 test.describe("changing options", () => {
-  test.fixme("should change the spectrogram colours through the media controls should change the grid tile", () => {});
+  test.skip("should change the spectrogram colours through the media controls should change the grid tile", () => { });
 
-  test.fixme("should change the spectrograms axes through the media controls should change the grid tile", () => {});
+  test.skip("should change the spectrograms axes through the media controls should change the grid tile", () => { });
 
-  test.fixme("should remove spectrogram modifications when changing to the next page", () => {});
+  test.skip("should remove spectrogram modifications when changing to the next page", () => { });
 
-  test.fixme("should show what options are currently selected in the media controls", () => {});
+  test.skip("should show what options are currently selected in the media controls", () => { });
 });
 
 test.describe("slots", () => {

@@ -31,15 +31,19 @@ A short description of the pull request
     Add a caption in italics to describe the screenshot/image.
 -->
 
+## Documentation Examples
+
+<!-- Each feature should be shown in an example on the documentation website -->
+
 ## Related Issues
 
 Fixes: #xyz
 
-## Additional Notes:
+## Additional Notes
 
 ## Final Checklist
 
-- [ ] All commits have follow the semver
+- [ ] All commits messages are semver compliant
 - [ ] Added relevant unit tests for new functionality
 - [ ] Updated existing unit tests to reflect changes
 - [ ] Code style is consistent with the project guidelines

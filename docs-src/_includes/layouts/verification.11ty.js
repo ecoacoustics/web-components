@@ -40,6 +40,16 @@ const renderVerification = ({ name, content, collections, page }) => {
         </details>
 
         <style>
+          main {
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+
+          .grid-title {
+            text-align: center;
+          }
+
           #decision-output {
             position: relative;
             width: 100%;

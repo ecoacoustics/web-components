@@ -30,6 +30,7 @@
   --oe-border-width: 2px;
 
   --oe-box-shadow: 1px 1px 1px currentcolor;
+  --oe-backdrop-shadow: 4px 4px 4px;
   --oe-font-family: "Roboto", sans-serif;
   --oe-font-size: 11px;
 
@@ -54,6 +55,9 @@
 
   --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
   --oe-panel-color-lighter: color-mix(in srgb, var(--oe-panel-color) 1%, var(--oe-background-color));
+
+  /* Breakpoints */
+  --oe-mobile-breakpoint: 600px;
 }
 
 * {
@@ -63,16 +67,16 @@
   font-weight: normal;
 }
 
-:has(> svg.lucide) {
-  padding: var(--oe-spacing);
+sl-icon {
   display: flex;
+  font-size: calc(var(--oe-font-size) * 1.2);
+  justify-items: center;
   align-items: center;
-  justify-content: center;
+  padding: var(--oe-spacing);
 
-  /* All icons should be the same size as the font */
-  svg.lucide {
-    width: calc(var(--oe-font-size) + var(--oe-spacing));
-    height: calc(var(--oe-font-size) + var(--oe-spacing));
+  &.large-icon {
+    font-size: calc(var(--oe-font-size) * 1.5);
+    padding: 0;
   }
 }
 
@@ -293,7 +297,9 @@ button {
     reset to disable this behavior
   */
   &:focus {
-    outline: none;
+    /* TODO: I have currently disabled this so that you can tab-select */
+    /* outline: none; */
+    outline: var(--oe-border-width) solid var(--oe-selected-color);
   }
 }
 

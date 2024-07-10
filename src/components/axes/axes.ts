@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import axesStyles from "./css/style.css?inline";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "../../../playwright";
@@ -10,21 +10,24 @@ import {
   FrequencyScale,
   Seconds,
   UnitConverter,
-  Pixel,
   ScaleDomain,
   ScaleRange,
+  EmUnit,
 } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
+import { hertzToMHertz } from "../../helpers/converters";
 
 // TODO: this component should have optimized rendering so that it doesn't
 // attempt to re-render an axes that will result in the same template
 // this is not currently the result as it will re-render the axes every time
 // the spectrogram slot changes or the unit converter updates any values
 // which are used in the axes rendering
+// see: https://github.com/ecoacoustics/web-components/issues/85
 
 /**
+ * @description
  * X and Y axis grid lines showing duration and frequency of a spectrogram
  *
  * @example
@@ -33,15 +36,6 @@ import { Size } from "../../models/rendering";
  *     <oe-spectrogram src="/example.flac"></oe-spectrogram>
  * </oe-axes>
  * ```
- *
- * @property x-step - The step size for the x-axis
- * @property y-step - The step size for the y-axis
- * @property x-axis - Whether to show or hide the x-axis
- * @property y-axis - Whether to show or hide the x-axis
- * @property x-grid - Whether to show or hide the x-axis grid lines
- * @property y-grid - Whether to show or hide the y-axis grid lines
- * @property x-label - Whether to show or hide the x-axis labels
- * @property y-label - Whether to show or hide the y-axis labels
  *
  * @csspart tick - Apply styles to both x and y tick lines
  * @csspart x-tick - Apply styles to only the x axis tick lines
@@ -65,56 +59,119 @@ import { Size } from "../../models/rendering";
 export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(axesStyles);
 
+  // label padding is the minimum additional distance between the labels
+  // while the titleOffset is the distance between the axis title and the axis labels
+  private static labelPadding: EmUnit = 0.25;
+  private static tickSize: EmUnit = 0.75;
+  private static titleOffset: EmUnit = 0.25;
+
+  /** The step size for the x-axis */
   @property({ attribute: "x-step", type: Number, reflect: true })
   public xStepOverride?: Seconds;
 
+  /** The step size for the y-axis */
   @property({ attribute: "y-step", type: Number, reflect: true })
   public yStepOverride?: Hertz;
 
-  @property({ attribute: "x-label", type: String, reflect: true })
-  public xLabel = "Time (Seconds)";
+  /** The text to show next to the x-axis */
+  @property({ attribute: "x-title", type: String, reflect: true })
+  public xTitle = "Time (Seconds)";
 
-  @property({ attribute: "y-label", type: String, reflect: true })
-  public yLabel = "Frequency (KHz)";
+  /** The text to show next to the y-axis */
+  @property({ attribute: "y-title", type: String, reflect: true })
+  public yTitle = "Frequency (KHz)";
 
-  @property({ attribute: "x-title", converter: booleanConverter })
+  /** Whether to show/hide the x-axis title */
+  @property({ attribute: "x-title-visible", converter: booleanConverter })
   public showXTitle = true;
 
-  @property({ attribute: "y-title", converter: booleanConverter })
+  /** Whether to show/hide the y-axis title */
+  @property({ attribute: "y-title-visible", converter: booleanConverter })
   public showYTitle = true;
 
+  /** Shows/hides x-axis labels and ticks */
   @property({ attribute: "x-axis", converter: booleanConverter })
   public showXAxis = true;
 
+  /** Shows/hides y-axis labels and ticks */
   @property({ attribute: "y-axis", converter: booleanConverter })
   public showYAxis = true;
 
+  /** Shows/hides x-axis labels and grid lines */
   @property({ attribute: "x-grid", converter: booleanConverter })
   public showXGrid = true;
 
+  /** Shows/hides y-axis labels and grid lines */
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: SpectrogramComponent;
 
+  @query("#wrapped-element")
+  private wrappedElement!: Readonly<HTMLDivElement>;
+
+  // if we do not know the text that we want to measure, we use one large
+  // character as an upperbound estimate of the size of characters
+  // using the default case should only ever be used for estimates and measuring
+  // against actual text values is recommended
+  // I have this as a private property so that we don't have to re-calculate the
+  // value every time we need to use it
+  private emUnitFontSize!: Size;
   private unitConverter!: UnitConverter;
 
-  // label padding is the minimum additional distance between the labels
-  // while the titleOffset is the distance between the axis title and the axis labels
-  private labelPadding: Pixel = 8;
-  private tickSize: Pixel = 8;
-  private titleOffset: Pixel = 4;
+  // because label padding is a relative fraction, we need to calculate the
+  // actual pixel value of the padding
+  private get labelPadding(): Size {
+    const fontSize = this.emUnitFontSize;
+    return {
+      width: fontSize.width * AxesComponent.labelPadding,
+      height: fontSize.height * AxesComponent.labelPadding,
+    };
+  }
 
-  private handleSlotchange(): void {
+  private get tickSize(): Size {
+    const fontSize = this.emUnitFontSize;
+    return {
+      width: fontSize.width * AxesComponent.tickSize,
+      height: fontSize.height * AxesComponent.tickSize,
+    };
+  }
+
+  private get titleOffset(): Size {
+    const fontSize = this.emUnitFontSize;
+    return {
+      width: fontSize.width * AxesComponent.titleOffset,
+      height: fontSize.height * AxesComponent.titleOffset,
+    };
+  }
+
+  public firstUpdated(): void {
+    this.emUnitFontSize = this.calculateFontSize("M");
+  }
+
+  private handleSlotChange(): void {
     if (this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters;
+      this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
+
+      // we don't have to use a resize observer to observe when the spectrogram
+      // or slotted elements resize because we will receive a signal from the
+      // unit converter which will trigger a re-render
+      this.unitConverter.canvasSize.subscribe(this.handleCanvasResize);
+    }
+  }
+
+  private handleCanvasResize(canvasSize: Size): void {
+    if (this?.wrappedElement) {
+      const { width, height } = canvasSize;
+      this.wrappedElement.style.width = `${width}px`;
+      this.wrappedElement.style.height = `${height}px`;
     }
   }
 
   // because querying the DOM for the font size will cause a repaint and reflow
   // we calculate the value once using a canvas
-  private calculateFontSize(text = "M"): Size {
+  private calculateFontSize(text: string): Size {
     const element = document.createElement("canvas");
     const context = element.getContext("2d") as CanvasRenderingContext2D;
     context.font = "var(--oe-font-size) var(--oe-font-family)";
@@ -126,116 +183,117 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     return { width, height };
   }
 
-  private createGridLines(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
-    // we don't want to show the first and last grid lines because it would
-    // draw a border around the element
-    const shouldShowGridLine = (i: number, values: any[]) => i > 0 && i < values.length - 1;
-
-    const xGridLine = (value: Seconds) => {
-      // we pull out xPos to a variable because we use it twice (without modification)
+  private createGridLinesTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+    const xGridLineTemplate = (value: Seconds) => {
+      // we pull out xPosition to a variable because we use it twice (without modification)
       // for the lines x1 and x2 position
       // by pulling it out to a separate variable, we can avoid recalculating the value twice
-      const xPos = this.unitConverter.scaleX.value(value);
+      const xPosition = this.unitConverter.scaleX.value(value);
       return svg`<line
-        x="${xPos}"
+        x1="${xPosition}"
+        x2="${xPosition}"
         y1="0"
         y2="${canvasSize.height}"
         class="grid-line"
       ></line>`;
     };
 
-    const yGridLine = (value: Hertz) => {
-      const yPos = this.unitConverter.scaleY.value(value);
+    const yGridLineTemplate = (value: Hertz) => {
+      const yPosition = this.unitConverter.scaleY.value(value);
       return svg`<line
         x1="0"
         x2="${canvasSize.width}"
-        y="${yPos}"
+        y1="${yPosition}"
+        y2="${yPosition}"
         class="grid-line"
       ></line>`;
     };
 
-    const xAxisGridLines = svg`${xValues.map(
-      (value, i) => svg`${shouldShowGridLine(i, xValues) && xGridLine(value)}`,
+    const xAxisGridLinesTemplate = svg`${xValues.map(
+      (value, i) => svg`${(i > 0 && i < xValues.length - 1) ? xGridLineTemplate(value) : nothing}`,
     )}`;
 
-    const yAxisGridLines = svg`${yValues.map(
-      (value, i) => svg`${shouldShowGridLine(i, yValues) && yGridLine(value)}`,
+    const yAxisGridLinesTemplate = svg`${yValues.map(
+      (value, i) => svg`${(i > 0 && i < yValues.length - 1) ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`
-      <g part="grid">
-        ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLines}</g>` : ``}
-        ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLines}</g>` : ``}
+      <g g part = "grid" >
+        ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
+        ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
     `;
   }
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabels(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
-    const xTitleFontSize = this.calculateFontSize(this.xLabel);
-    const yTitleFontSize = this.calculateFontSize(this.yLabel);
-    const largestYValue = Math.max(...yValues.map((x) => x / 1000)).toFixed(1);
+  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+    const xTitleFontSize = this.calculateFontSize(this.xTitle);
+    const yTitleFontSize = this.calculateFontSize(this.yTitle);
+    const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
     // Because the y-axis labels can be a variable length, we can't just offset the y-axis title by a fixed amount
     // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
-    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize + this.titleOffset;
-    const yTitleOffset = yTitleFontSize.height + fontSize.width + this.tickSize;
+    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
+    const yTitleOffset = yTitleFontSize.height + fontSize.width;
 
-    const xLabel = (value: Seconds) => {
-      const xPos = this.unitConverter.scaleX.value(value);
-      const labelYPos = canvasSize.height + this.tickSize;
-      const tickYPos = canvasSize.height;
+    const xLabelTemplate = (value: Seconds) => {
+      const xPosition = this.unitConverter.scaleX.value(value);
+      const labelYPosition = canvasSize.height + this.tickSize.height;
+      const tickYPosition = canvasSize.height;
 
-      return svg`<g>
-        <line
-          part="x-tick"
-          x="${xPos}"
-          y1="${tickYPos}"
-          y2="${tickYPos + this.tickSize}"
-        ></line>
-        <text
-          part="x-label"
-          text-anchor="middle"
-          dominant-baseline="end"
-          x="${xPos}"
-          y="${labelYPos + this.tickSize}"
-        >
-          ${value.toFixed(1)}
-        </text>
-      </g>`;
+      return svg`
+        <g>
+          <line
+            part="x-tick"
+            x = "${xPosition}"
+            y1 = "${tickYPosition}"
+            y2 = "${tickYPosition + this.tickSize.height}"
+          ></line>
+          <text
+            part="x-label"
+            text-anchor="middle"
+            dominant-baseline="end"
+            x="${xPosition}"
+            y="${labelYPosition + this.tickSize.height}"
+          >
+            ${value.toFixed(1)}
+          </text>
+      </g>
+      `;
     };
 
-    const yLabel = (value: Hertz) => {
-      const xPos = -this.tickSize;
-      const yPos = this.unitConverter.scaleY.value(value);
+    const yLabelTemplate = (value: Hertz) => {
+      const xPosition = -this.tickSize;
+      const yPosition = this.unitConverter.scaleY.value(value);
+      const mHertzValue = hertzToMHertz(value);
 
       return svg`<g>
         <line
           part="y-tick"
-          x1="${xPos}"
-          x2="${xPos + this.tickSize}"
-          y="${yPos}"
+          x1="${xPosition}"
+          x2="${xPosition + this.tickSize.width}"
+          y="${yPosition}"
         ></line>
         <text
           part="y-label"
           text-anchor="end"
           dominant-baseline="middle"
-          x="${xPos - this.labelPadding}"
-          y="${yPos}"
+          x="${xPosition - this.labelPadding.width}"
+          y="${yPosition}"
         >
-          ${(value / 1_000).toFixed(1)}
+          ${mHertzValue.toFixed(1)}
         </text>
       </g>`;
     };
 
-    const xAxisLabels = this.showXAxis ? svg`${xValues.map((value) => xLabel(value))}` : nothing;
-    const yAxisLabels = this.showYAxis ? svg`${yValues.map((value) => yLabel(value))}` : nothing;
+    const xAxisLabelsTemplate = this.showXAxis ? svg`${xValues.map((value) => xLabelTemplate(value))}` : nothing;
+    const yAxisLabelsTemplate = this.showYAxis ? svg`${yValues.map((value) => yLabelTemplate(value))}` : nothing;
 
-    const xAxisTitle = this.showXTitle
+    const xAxisTitleTemplate = this.showXTitle
       ? svg`
       <text
         part="title x-title"
@@ -244,12 +302,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         text-anchor="middle"
         font-family="sans-serif"
       >
-        ${this.xLabel}
+        ${this.xTitle}
       </text>
     `
       : nothing;
 
-    const yAxisTitle = this.showYTitle
+    const yAxisTitleTemplate = this.showYTitle
       ? svg`
       <text
         part="title y-title"
@@ -259,7 +317,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         text-anchor="middle"
         font-family="sans-serif"
       >
-        ${this.yLabel}
+        ${this.yTitle}
       </text>
     `
       : nothing;
@@ -267,13 +325,13 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     return svg`
       <g part="tick">
         <g part="x-ticks">
-          ${xAxisLabels}
-          ${xAxisTitle}
+          ${xAxisLabelsTemplate}
+          ${xAxisTitleTemplate}
         </g>
 
         <g part="y-ticks">
-          ${yAxisLabels}
-          ${yAxisTitle}
+          ${yAxisLabelsTemplate}
+          ${yAxisTitleTemplate}
         </g>
       </g>
     `;
@@ -324,13 +382,15 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     scale: FrequencyScale | TemporalScale,
     melScale: boolean,
   ): boolean {
+    const textLabelPadding = fontSize * AxesComponent.labelPadding;
+
     // if we are rendering in a linear scale, we can easily virtually measure
     // if the axis will fit. However, if we are using mel scale, then we have to
     // do some more complex calculations to check that the labels will fit
     if (!melScale) {
       const domainDelta = domain[1] - domain[0];
       const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
-      const proposedSize = numberOfProposedLabels * (fontSize + this.labelPadding);
+      const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding);
       return proposedSize < canvasSize;
     }
 
@@ -341,7 +401,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const lastTwoValues = proposedValues.slice(-2);
     const lastTwoPositions = lastTwoValues.map((value) => scale(value));
     const positionDelta = lastTwoPositions[0] - lastTwoPositions[1];
-    return positionDelta > fontSize + this.labelPadding;
+    return positionDelta > fontSize + textLabelPadding;
   }
 
   // the calculate step function will use a binary search to find the largest
@@ -354,7 +414,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   ): number {
     const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02];
     const fontSize = this.calculateFontSize("0.0");
-    const totalLabelSize = fontSize[sizeKey] + this.labelPadding;
+    const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
 
     // the domain is the lowest and highest values that we want to show on the axis
     // meanwhile the range is the first and last position that we can position elements
@@ -419,8 +479,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const proposedLastLabelPosition = scale(proposedLastLabel);
     const proposedPositionDelta = Math.abs(lastLabelPosition - proposedLastLabelPosition);
 
-    const fontSize = this.calculateFontSize();
-    const areLastLabelsOverlapping = proposedPositionDelta < fontSize.width + this.labelPadding;
+    const fontSize = this.emUnitFontSize;
+    const textLabelPadding = fontSize.width * AxesComponent.labelPadding;
+    const areLastLabelsOverlapping = proposedPositionDelta < fontSize.width + textLabelPadding;
     if (areLastLabelsOverlapping) {
       values.pop();
     }
@@ -435,8 +496,8 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const yValues = this.yValues();
     const canvasSize = this.unitConverter.canvasSize.value;
 
-    const gridLines = this.createGridLines(xValues, yValues, canvasSize);
-    const labels = this.createAxisLabels(xValues, yValues, canvasSize);
+    const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
+    const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
     return html`<svg>${gridLines} ${labels}</svg>`;
   }
@@ -444,8 +505,8 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   public render() {
     return html`
       <div id="wrapped-element">
-        ${this.unitConverter && this.axesTemplate()}
-        <slot @slotchange="${this.handleSlotchange}"></slot>
+        ${this.unitConverter ? this.axesTemplate() : nothing}
+        <slot @slotchange="${this.handleSlotChange}"></slot>
       </div>
     `;
   }

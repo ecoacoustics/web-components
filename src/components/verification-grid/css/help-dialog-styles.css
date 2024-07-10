@@ -1,4 +1,6 @@
 #help-dialog {
+  position: fixed;
+
   h1 {
     font-weight: 600;
   }

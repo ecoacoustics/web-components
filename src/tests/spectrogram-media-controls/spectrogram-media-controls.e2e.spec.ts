@@ -65,39 +65,39 @@ test.describe("multiple spectrograms with the same ids", () => {
 });
 
 test.describe("Changing spectrogram options with media controls", () => {
-  test.fixme("should have the default values checked", () => {});
+  test.skip("should have the default values checked", () => { });
 
-  test.fixme("should have a checkbox next to the selected option", () => {});
+  test.skip("should have a checkbox next to the selected option", () => { });
 
-  test.fixme("should not show window overlaps larger than the window sizes initial size", () => {});
+  test.skip("should not show window overlaps larger than the window sizes initial size", () => { });
 
-  test.fixme("should update window overlaps when changing the window size", () => {});
+  test.skip("should update window overlaps when changing the window size", () => { });
 
-  test.fixme("changing the spectrogram colors", () => {});
+  test.skip("changing the spectrogram colors", () => { });
 
-  test.fixme("changing the spectrograms scale", () => {});
+  test.skip("changing the spectrograms scale", () => { });
 
-  test.fixme("changing brightness", () => {});
+  test.skip("changing brightness", () => { });
 
-  test.fixme("changing contrast", () => {});
+  test.skip("changing contrast", () => { });
 
-  test.fixme("changing the window function", () => {});
+  test.skip("changing the window function", () => { });
 
-  test.fixme("changing the window size", () => {});
+  test.skip("changing the window size", () => { });
 
-  test.fixme("changing the window overlap", () => {});
+  test.skip("changing the window overlap", () => { });
 });
 
 test.describe("Changing an axes without a spectrogram", () => {
-  test.fixme("adding and removing the x-axis title", () => {});
+  test.skip("adding and removing the x-axis title", () => { });
 
-  test.fixme("adding and removing the y-axis title", () => {});
+  test.skip("adding and removing the y-axis title", () => { });
 
-  test.fixme("adding and removing the x-axis labels", () => {});
+  test.skip("adding and removing the x-axis labels", () => { });
 
-  test.fixme("adding and removing the y-axis labels", () => {});
+  test.skip("adding and removing the y-axis labels", () => { });
 
-  test.fixme("adding and removing the x-axis grid lines", () => {});
+  test.skip("adding and removing the x-axis grid lines", () => { });
 
-  test.fixme("adding and removing the y-axis grid lines", () => {});
+  test.skip("adding and removing the y-axis grid lines", () => { });
 });

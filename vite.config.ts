@@ -7,6 +7,10 @@ import autoprefixer from "autoprefixer";
 
 // vite config for the dev server and documentation
 export default defineConfig({
+  // if we use the default "spa" app type, if a page is not found, the server
+  // will return the index.html file. This is annoying for tests and dev
+  // environments that would expect a 404 response if a resource is not found
+  appType: "mpa",
   plugins: [
     VitePluginCustomElementsManifest({
       files: ["./src/components/**/*.ts"],
@@ -42,7 +46,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "./",
+    // TODO: this should not be the root directory
+    outDir: ".",
     copyPublicDir: false,
     lib: {
       name: "components",

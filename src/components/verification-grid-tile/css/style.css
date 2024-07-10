@@ -1,17 +1,19 @@
 :host {
+  --decision-color: var(--oe-panel-color);
   --selected-border-size: 4px;
 }
 
-.tile-container {
-  --decision-color: var(--oe-panel-color);
+.spectrogram-container {
+  margin: 0px;
+}
 
+.tile-container {
   position: relative;
   border-radius: var(--oe-border-rounding);
   background-color: var(--oe-panel-color);
-  box-shadow: 4px 4px 8px var(--oe-panel-color);
+  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   padding: var(--oe-spacing);
   cursor: pointer;
-  margin: var(--oe-spacing);
   margin-bottom: 0;
   min-width: 350px;
 
@@ -36,6 +38,11 @@
   background-color: var(--oe-selected-color);
 }
 
+.hidden {
+  position: absolute;
+  opacity: 0;
+}
+
 .keyboard-hint {
   position: absolute;
   left: 50%;
@@ -55,22 +62,4 @@
 
   background-color: var(--oe-panel-color);
   border-radius: var(--oe-border-rounding);
-}
-
-::slotted(oe-media-controls) {
-  display: flex;
-  justify-content: center;
-}
-
-@media (max-width: 600px) {
-  .tile-container {
-    width: 100%;
-    max-width: 93vw;
-    margin: 0;
-  }
-
-  ::slotted(oe-spectrogram, oe-axes, oe-indicator) {
-    position: relative;
-    height: 460px;
-  }
 }

@@ -4,12 +4,12 @@ import { getBrowserValue, removeBrowserAttribute, setBrowserAttribute } from "..
 import { DataSourceComponent } from "./data-source";
 
 class DataSourceFixture {
-  public constructor(public readonly page: Page) {}
+  public constructor(public readonly page: Page) { }
 
   public component = () => this.page.locator("oe-data-source");
   public filePicker = () => this.page.locator(".file-picker").first();
   public localFileInputButton = () => this.page.locator(".file-input").first();
-  public browserFileInput = () => this.page.locator(".browser-file-input").first();
+  public browserFileInput = () => this.page.locator("#browser-file-input").first();
 
   public async create() {
     await this.page.setContent(`<oe-data-source></oe-data-source>`);
@@ -25,9 +25,9 @@ class DataSourceFixture {
     await removeBrowserAttribute<DataSourceComponent>(this.component(), "local");
   }
 
-  public async setLocalFile() {}
+  public async setLocalFile() { }
 
-  public async removeLocalFile() {}
+  public async removeLocalFile() { }
 
   public async setRemoteFile(value: string) {
     await setBrowserAttribute<DataSourceComponent>(this.component(), "src", value);

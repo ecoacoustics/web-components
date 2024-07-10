@@ -64,7 +64,10 @@ text in between the `<title>` code to the following.
 
 #### Changing the Decisions
 
-Decisions are xyz.
+Decisions can be applied to all grid tiles, or subset through sub-selection.
+Each decision element will display as a button that the user can click and will
+add an `oe-verified`, `oe-tag`, and `oe-additional` tags to each grid tile that
+was selected.
 
 It is possible to change the decisions by adding and deleting the `oe-decision`
 code from above.
@@ -75,6 +78,13 @@ This can be configured through the `shortcut` attribute.
 For example: By changing the `shortcut` attribute to `Y` (`shortcut="Y"`), when
 the <kbd>Y</kbd> key is clicked on the keyboard, the associated decision will be
 clicked.
+
+There is a attribute named `additional-tags` which will create an
+`oe-additional-tags` column when exported.
+This differs from the `tag` attribute, because while the `tag` and `verified`
+attribute confirms or denies the existence of an audio event and not creating
+any new tags, `additional-tags` creates additional information/tags to an audio
+event that did not previously exist.
 
 ### How to Publish Your Verification Grid
 

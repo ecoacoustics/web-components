@@ -7,10 +7,16 @@
   font-size: var(--oe-font-size);
 
   /*
+    We do this so that the card will grow to the width of its parent container
+    but if the subjects content is too long, it will wrap to the next line
+    without overflowing the card.
+    See: https://stackoverflow.com/a/73654975
+
     We multiply the spacing by two here because the spacing
     is applied to both padding left and right
   */
-  width: calc(100% - calc(var(--oe-spacing) * 2));
+  min-width: calc(100% - calc(var(--oe-spacing) * 2));
+  max-width: min-content;
 }
 
 .subject-row {

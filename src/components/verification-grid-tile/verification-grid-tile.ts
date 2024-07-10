@@ -1,15 +1,17 @@
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
-import { SpectrogramComponent } from "../spectrogram/spectrogram";
+import { html, LitElement, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
+import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
 import verificationGridTileStyles from "./css/style.css?inline";
-import { DecisionWrapper, Tag } from "../../models/verification";
+import { DecisionWrapper } from "../../models/verification";
 import { createContext, provide } from "@lit/context";
+import { booleanConverter } from "../../helpers/attributes";
+import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
+import { decisionColors } from "../../helpers/themes/decisionColors";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
-
 const shortcutTranslation: Record<string, string> = {
   1: "!",
   2: "@",
@@ -26,93 +28,105 @@ const shortcutTranslation: Record<string, string> = {
 export const gridTileContext = createContext<DecisionWrapper>("grid-tile-context");
 
 /**
+ * @description
  * A component to scope ids to a template inside a shadow DOM
  * This component will be used by the verification-grid component but will
  * probably not be used by users
  * It can also manage the selection state
  *
- * @property color - The border color of the tile
+ * @slot - The template to be rendered inside the grid tile
+ * 
+ * @cssproperty [--decision-color] - The border color that is applied when a
+ * decision is being shown
+ * @cssproperty [--selected-border-size] - The size of the border when a
+ * decision is being shown
  *
  * @fires Loaded
- *
- * @slot
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTileComponent extends AbstractComponent(LitElement) {
-  public static styles = unsafeCSS(verificationGridTileStyles);
+  public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })
   public model!: DecisionWrapper;
 
-  @property({ type: String })
-  public borderColor = "var(--oe-panel-color)";
+  /**
+   * Hides a grid tile. This is useful for virtual paging so if you have a
+   * grid of tiles where not all have a source, you can hide the ones that
+   * do not have a source instead of destroying them completely as they might
+   * be used in the future when paging back in history or the grid size is
+   * increased.
+   */
+  @property({ type: Boolean, converter: booleanConverter, reflect: true })
+  public hidden = false;
 
-  @property({ attribute: false })
+  @property({ attribute: false, type: Boolean })
   public showKeyboardShortcuts = false;
 
-  @property({ attribute: false })
+  @property({ attribute: false, type: Boolean })
   public selected = false;
 
-  @property({ attribute: false })
+  @property({ attribute: false, type: Number })
   public index = 0;
+
+  @property({ attribute: false, type: Number })
+  public decisionIndex?: number;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
-  public get appliedTags(): Tag[] {
-    const decisionsWithConfirmed = this.model.decisions.filter((decision) => decision.confirmed !== undefined);
-    return decisionsWithConfirmed.map((decision) => decision.tag);
-  }
-
-  public get existingTags(): Tag[] {
-    const verificationsWithoutDecisions = this.model.decisions.filter((decision) => decision.confirmed === undefined);
-    return verificationsWithoutDecisions.map((decision) => decision.tag);
-  }
+  @query("#contents-wrapper")
+  private contentsWrapper!: HTMLDivElement;
 
   private keyDownHandler = this.handleKeyDown.bind(this);
-  private keyUpHandler = this.handleKeyUp.bind(this);
   private loadingHandler = this.handleLoading.bind(this);
   private loadedHandler = this.handleLoaded.bind(this);
+  private playHandler = this.handlePlay.bind(this);
 
   public loaded = false;
   private shortcuts: string[] = [];
 
-  // TODO: make this better
   public get showingHighlight(): boolean {
-    return this.borderColor !== "var(--oe-panel-color)";
+    return this.decisionIndex !== undefined;
   }
 
   public connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("keydown", this.keyDownHandler);
-    document.addEventListener("keyup", this.keyUpHandler);
   }
 
   public disconnectedCallback(): void {
     document.removeEventListener("keydown", this.keyDownHandler);
-    document.removeEventListener("keyup", this.keyUpHandler);
 
     if (this.spectrogram) {
       this.spectrogram.removeEventListener("loading", this.loadingHandler);
       this.spectrogram.removeEventListener("loaded", this.loadedHandler);
     }
 
+    this.contentsWrapper.removeEventListener<any>("play", this.playHandler);
+
     super.disconnectedCallback();
   }
 
   public firstUpdated(): void {
+    this.contentsWrapper.addEventListener<any>("play", this.playHandler);
+
     if (!this.spectrogram) {
       throw new Error("Could not find spectrogram component");
     }
 
     this.spectrogram.addEventListener("loading", this.loadingHandler);
     this.spectrogram.addEventListener("loaded", this.loadedHandler);
+
+    console.log(decisionColors);
   }
 
-  public willUpdate(): void {
+  public willUpdate(change: PropertyValueMap<this>): void {
     if (this.spectrogram && this.model?.url) {
-      this.spectrogram.src = this.model.url;
+      if (change.has("model")) {
+        this.spectrogram.src = this.model.url;
+      }
     }
 
     const shortcutKey = shortcutOrder[this.index];
@@ -122,6 +136,13 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public resetSettings(): void {
     if (this.spectrogram) {
       this.spectrogram.resetSettings();
+    }
+  }
+
+  private handlePlay(event: CustomEvent<IPlayEvent>): void {
+    if (!this.selected && event.detail.keyboardShortcut) {
+      console.log(event);
+      event.preventDefault();
     }
   }
 
@@ -136,11 +157,20 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.dispatchEvent(new CustomEvent("loaded", { bubbles: true }));
   }
 
+  private handleFocusedKeyDown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case ENTER_KEY: {
+        this.dispatchSelectedEvent(event);
+        break;
+      }
+    }
+  }
+
   private handleKeyDown(event: KeyboardEvent): void {
     // most browsers scroll a page width when the user presses the space bar
     // however, since space bar can also be used to play spectrograms, we don't
     // want to scroll when the space bar is pressed
-    if (event.key === " ") {
+    if (event.key === SPACE_KEY) {
       event.preventDefault();
     }
 
@@ -158,29 +188,15 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     }
   }
 
-  private handleKeyUp(event: KeyboardEvent): void {
-    if (!this.spectrogram) {
-      throw new Error("Could not find spectrogram element");
-    }
-
-    // TODO: move this to the spectrogram component
-    const spaceKey = " " as const;
-    if (event.key === spaceKey && this.selected) {
-      const spectrogram = this.spectrogram;
-
-      if (spectrogram.paused) {
-        spectrogram.play();
-      } else {
-        spectrogram.pause();
-      }
-    }
-  }
-
-  private handleClick(event: MouseEvent | TouchEvent) {
+  private dispatchSelectedEvent(event: PointerEvent | KeyboardEvent): void {
     // TODO: passing through client events should be handled by the oe-media-controls component
     const ignoreTargets = ["oe-media-controls", "button", "oe-info-card", "a"];
-    // TODO: remove type override
-    const targetTag = (event.target as HTMLElement).tagName;
+    const eventTarget = event.target;
+    if (!(eventTarget instanceof HTMLElement)) {
+      return;
+    }
+
+    const targetTag = eventTarget.tagName;
 
     if (ignoreTargets.includes(targetTag.toLocaleLowerCase())) {
       return;
@@ -207,15 +223,25 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   public render() {
+    const tileClasses = classMap({
+      selected: this.selected,
+      hidden: this.hidden,
+      [`decision-${this.decisionIndex}`]: this.showingHighlight,
+    });
+
     return html`
       <div
-        @pointerdown="${this.handleClick}"
-        class="tile-container ${classMap({ selected: this.selected })}"
-        style="--decision-color: ${this.borderColor}"
+        id="contents-wrapper"
+        @click="${this.dispatchSelectedEvent}"
+        @keydown="${this.handleFocusedKeyDown}"
+        class="tile-container ${tileClasses}"
+        part="tile-container"
         role="button"
+        tabindex="0"
+        aria-hidden="${this.hidden}"
       >
         ${this.keyboardShortcutTemplate()}
-        <figure>
+        <figure class="spectrogram-container">
           <figcaption class="tag-label">${this.model?.tag}</figcaption>
           <slot></slot>
         </figure>

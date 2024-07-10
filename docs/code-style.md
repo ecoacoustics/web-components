@@ -48,9 +48,52 @@ and [code-workspace](/webcomponents.code-workspace).
    the `@property()` decorator. If you do not wish it to be an attribute,
    use `@property({ attribute: false })`
 4. All `@state` decorators should have the private or protected access modifiers
-5. All query selectors (e.g. `@query()`, `@queryAll()`, etc...) should be
-   private or protected. If the need to be exposed, consider using `[part]`s,
-   `[slot]`s, or creating a memoized property to expose the ElementNode
+5. All query selectors
+   1. Should be private or protected. If the need to be exposed consider using
+      `[part]`s, `[slot]`s, or creating a memoized property to expose the
+      ElementNode.
+   2. Should be ReadOnly.
+      e.g. `@query("#selector") private element!: Readonly<Element>`
 6. Prefer to use internal state
 7. All methods on a web component that returns a HTML, or SVG template must be
    prepended with "Template"(e.g. `private decisionPromptTemplate(): TemplateResult<1>`)
+
+## CSS Parts
+
+Default styles that can be overwritten by css parts should be set in the
+following format:
+
+```css
+:host {
+  &::part {
+    /* The default color should be red, unless overwritten by css parts */
+    color: red;
+  }
+}
+```
+
+This ensure that the user can change the default styles of css part targeted
+elements.
+
+## JsDoc
+
+Each custom element must be decorated with a JsDoc comment that contains a
+description/summary, example, documentation page, dependencies, slots, cssparts,
+cssproperties, and events.
+
+Each property and attribute must be decorated with a JsDoc comment.
+While using the `@property` decorator on the component is supported, we prefer
+to annotate properties and attributes directly.
+
+Docs should follow the order
+
+1. Summary (optional)
+2. Description
+3. Examples
+4. Dependencies
+5. Slots
+6. CSS Parts
+7. CSS Properties
+8. Events
+
+Each section should be separated an empty line

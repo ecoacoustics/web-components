@@ -1,8 +1,5 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { AxesComponent } from "./axes";
-import { getBrowserValue } from "../../tests/helpers";
-import { Size } from "../../models/rendering";
 
 class AxesFixture {
   public constructor(public readonly page: Page) {}
@@ -18,12 +15,6 @@ class AxesFixture {
     `);
     await this.page.waitForLoadState("networkidle");
     await this.page.waitForSelector("oe-axes");
-  }
-
-  public async indicatorSize(): Promise<Size> {
-    const width = (await getBrowserValue<AxesComponent>(this.component(), "clientWidth")) as number;
-    const height = (await getBrowserValue<AxesComponent>(this.component(), "clientHeight")) as number;
-    return { width, height };
   }
 }
 

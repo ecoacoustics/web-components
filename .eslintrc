@@ -6,7 +6,7 @@
   "overrides": [
     {
       "extends": ["eslint:recommended", "plugin:@typescript-eslint/strict", "plugin:lit/recommended"],
-      "files": ["*.ts", "*.js"],
+      "files": ["*.ts"],
       "parserOptions": {
         "createDefaultProgram": true
       },
