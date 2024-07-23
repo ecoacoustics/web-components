@@ -25,7 +25,7 @@
         <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
         <oe-decision verified="false" tag="*" shortcut="L" all>Negative</oe-decision>
         <oe-decision shortcut="S" skip>Skip</oe-decision>
-        <oe-decision shortcut="S" unsure>Unsure</oe-decision>
+        <oe-decision unsure>Unsure</oe-decision>
 
         <!--
             local would use a file picker UI, while src would allow a remote file
@@ -33,7 +33,7 @@
             This service would
         -->
         <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-        <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local>
+        <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
         </oe-data-source>
     </oe-verification-grid>
 

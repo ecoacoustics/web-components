@@ -260,7 +260,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      await this.renderNextPage();
+      await this.renderCurrentPage();
     }
 
     const decisionElements = this.decisionElements;
@@ -962,15 +962,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     const pageItems = await this.paginationFetcher.currentPage();
-    this.renderVirtualPage(pageItems);
-  }
-
-  private async renderNextPage(): Promise<void> {
-    if (!this.paginationFetcher) {
-      throw new Error("Pagination fetcher not found");
-    }
-
-    const pageItems = await this.paginationFetcher.popNextItems(this.gridSize);
     this.renderVirtualPage(pageItems);
   }
 

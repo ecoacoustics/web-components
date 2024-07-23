@@ -81,7 +81,7 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
       return nothing;
     }
 
-    const subjectEntries = Object.entries(subject);
+    const subjectEntries = Object.entries(subject.data);
     if (!this.showExpanded) {
       subjectEntries.splice(this.defaultLines);
     }

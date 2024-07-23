@@ -4,6 +4,8 @@ import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import helpDialogStyles from "./css/help-dialog-styles.css?inline";
 import { SelectionObserverType } from "./verification-grid";
+import { when } from "lit/directives/when.js";
+import { loop } from "../../helpers/directives";
 
 interface KeyboardShortcut {
   key: string;
@@ -71,16 +73,17 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
   }
 
   private keyboardShortcutTemplate(shortcuts: KeyboardShortcut[]): TemplateResult<1> {
-    // TODO: fix this hack for putting plus signs between keys
     return html`
       <div class="keyboard-shortcuts">
-        ${shortcuts.map(
-      (shortcut) => html`<div>
-            ${shortcut.key
-          .split("+")
-          .map((key, i, { length }) => html`<kbd class="key">${key}</kbd> ${i !== length - 1 ? "+" : nothing}`)}
+        ${shortcuts.map((shortcut) => html`
+          <div>
+            ${loop(shortcut.key.split("+"), (key, { last }) => html`
+              <kbd class="key">${key}</kbd>
+              ${when(!last, () => "+")}
+            `)}
+
             <span class="description">${shortcut.description}</span>
-          </div>`,
+          </div>`
     )}
       </div>
     `;
@@ -106,7 +109,7 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
           key: element.shortcut,
           description: `${element.innerText} ${element.additionalTags.length ? `(${element.additionalTags.map((model) => model.text)})` : ""}`,
         };
-      }) ?? []),
+      }) ?? []).filter((element) => element.key),
     ] as any;
 
     // TODO: there are some hacks in here to handle closing the modal when the user clicks off
