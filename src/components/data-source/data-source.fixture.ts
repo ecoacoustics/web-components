@@ -1,7 +1,8 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserValue, removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
+import { invokeBrowserMethod, removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
+import { VerificationSubjectData } from "../../models/verification";
 
 class DataSourceFixture {
   public constructor(public readonly page: Page) { }
@@ -10,10 +11,36 @@ class DataSourceFixture {
   public filePicker = () => this.page.locator(".file-picker").first();
   public localFileInputButton = () => this.page.locator(".file-input").first();
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
+  public decisionButtons = () => this.page.locator(".decision-button").all();
+  public gridTiles = () => this.page.locator(".tile-container").all();
+  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+
+  public testJsonInput = "http://localhost:3000/test-items.json";
 
   public async create() {
-    await this.page.setContent(`<oe-data-source></oe-data-source>`);
+    await this.page.setContent(`
+      <oe-verification-grid id="verification-grid" grid-size="3" pre-fetch="false">
+        <template>
+            <oe-spectrogram></oe-spectrogram>
+        </template>
+
+        <oe-decision verified="true" tag="koala">Koala</oe-decision>
+        <oe-decision verified="false" tag="koala">Not Koala</oe-decision>
+        <oe-decision verified="false" tag="koala" additional-tags="frog">
+          Additional Tags
+        </oe-decision>
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          src="${this.testJsonInput}"
+          local
+        ></oe-data-source>
+      </oe-verification-grid>
+    `);
     await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("oe-data-source");
+    await this.page.waitForSelector("oe-verification-grid");
   }
 
   public async setLocalAttribute(value: boolean) {
@@ -37,12 +64,38 @@ class DataSourceFixture {
     await removeBrowserAttribute<DataSourceComponent>(this.component(), "src");
   }
 
-  public async getFileName() {
-    return await getBrowserValue<DataSourceComponent>(this.component(), "fileName");
+  public async getFileName(): Promise<string> {
+    return await this.component().evaluate((element: DataSourceComponent) =>
+      element.dataFetcher?.file?.name ?? ""
+    );
   }
 
-  public async getFileType() {
-    return await getBrowserValue<DataSourceComponent>(this.component(), "fileType");
+  public async getMediaType(): Promise<string> {
+    return await this.component().evaluate((element: DataSourceComponent) =>
+      element.dataFetcher?.mediaType ?? ""
+    );
+  }
+
+  public async getFileContent(): Promise<ReadonlyArray<VerificationSubjectData>> {
+    return await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows") as ReadonlyArray<VerificationSubjectData>;
+  }
+
+  public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {
+    const gridTiles = await this.gridTiles();
+    for (const index of subSelectionIndicies) {
+      await gridTiles[index].click({ force: true });
+    }
+  }
+
+  public async makeDecisions(decisionButtonIndicies: number[]): Promise<void> {
+    const decisionButtons = await this.decisionButtons();
+    for (const index of decisionButtonIndicies) {
+      await decisionButtons[index].click();
+    }
+  }
+
+  public async dismissHelpDialog(): Promise<void> {
+    await this.dismissHelpDialogButton().click();
   }
 }
 

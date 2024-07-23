@@ -118,8 +118,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
     this.spectrogram.addEventListener("loading", this.loadingHandler);
     this.spectrogram.addEventListener("loaded", this.loadedHandler);
-
-    console.log(decisionColors);
   }
 
   public willUpdate(change: PropertyValueMap<this>): void {
@@ -141,7 +139,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
     if (!this.selected && event.detail.keyboardShortcut) {
-      console.log(event);
       event.preventDefault();
     }
   }

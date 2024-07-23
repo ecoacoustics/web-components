@@ -3,12 +3,13 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { booleanConverter } from "../../helpers/attributes";
-import { DecisionWrapper } from "../../models/verification";
+import { DecisionWrapper, VerificationSubject, VerificationSubjectData } from "../../models/verification";
 import { Parser } from "@json2csv/plainjs";
-import dataSourceStyles from "./css/style.css?inline";
-import { DataSourceFetcherContentTypes, DataSourceFetcher } from "../../services/dataSourceFetcher";
+import { DataSourceFetcher } from "../../services/dataSourceFetcher";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { DecisionComponent } from "../decision/decision";
+import dataSourceStyles from "./css/style.css?inline";
+import { downloadFile } from "../../helpers/files";
 
 /**
  * @description
@@ -21,6 +22,13 @@ import { DecisionComponent } from "../decision/decision";
 export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
 
+  // since we do not know the input format of the provided csv or json files
+  // it is possible for users to input a csv file that already has a column
+  // header of "confirmed" or "additional-tags"
+  // to prevent column name collision, we prepend all the fields that we add
+  // to the original data input with "oe"
+  public static readonly columnNamespace = "oe_" as const;
+
   /** A remote JSON or CSV file to use as the data source */
   @property({ type: String })
   public src?: string;
@@ -31,7 +39,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   /** Whether to allow for local file inputs through a system UI dialog */
   @property({ type: Boolean, converter: booleanConverter })
-  public local!: boolean;
+  public local = false;
 
   /** Randomly sample rows from a local or remote data source */
   @property({ type: Boolean, converter: booleanConverter })
@@ -46,15 +54,13 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   @query("input[type=file]")
   private fileInput!: HTMLInputElement;
 
-  public contentType?: DataSourceFetcherContentTypes;
+  public dataFetcher?: DataSourceFetcher;
   private verificationGrid?: VerificationGridComponent;
   private decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
     if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
       const verificationElement = document.querySelector<VerificationGridComponent>(`#${this.for}`);
-
-      this.fileName ??= this.src?.split("/").pop();
 
       if (verificationElement) {
         // remove event listeners from the current verification grid
@@ -69,70 +75,97 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  // TODO: there is a "null" in additional tags (if none)
-  public downloadResults(): void {
-    if (!this.canDownload || !this.verificationGrid) {
+  public async downloadResults(): Promise<void> {
+    if (!this.canDownload) {
       return;
+    } else if (!this.dataFetcher?.file) {
+      throw new Error("File is not defined");
     }
 
-    const decisions = this.verificationGrid.decisions;
+    const results = await this.resultRows();
+    const fileFormat = this.dataFetcher.mediaType ?? "";
 
-    // since we do not know the input format of the provided csv or json files
-    // it is possible for users to input a csv file that already has a column
-    // header of "confirmed" or "additional-tags"
-    // to prevent column name collision, we prepend all the fields that we add
-    // to the original data input with "oe"
-    const columnNamespace = "oe-";
+    const originalFilePath = this.dataFetcher.file.name;
+    const extensionIndex = originalFilePath.lastIndexOf(".");
+    const basename = originalFilePath.slice(0, extensionIndex).split("/").at(-1);
+    const extension = originalFilePath.slice(extensionIndex);
+
+    const downloadedFileName = `${basename}_verified${extension}`;
 
     let formattedResults = "";
-    const fileFormat = this.contentType ?? "json";
-
-    const results = decisions.map((wrapper: DecisionWrapper) => {
-      // the decisions array is a list of flattened DecisionWrapper's
-      // so that each decision contains only one classification
-      const decision = wrapper.decisions.at(0);
-      if (!decision) {
-        throw new Error("Decision is not defined");
-      }
-
-      const subject = wrapper.subject;
-      const tag = decision.tag?.text ?? "";
-      const confirmed = decision.confirmed;
-      const additionalTags = wrapper.additionalTags.map((model) => model);
-
-      return {
-        ...subject,
-        [`${columnNamespace}tag`]: tag,
-        [`${columnNamespace}confirmed`]: confirmed,
-        [`${columnNamespace}additional-tags`]: additionalTags,
-      };
-    });
-
-    // TODO: "finalFileFormat" is an indication that I've been hacky here
-    let finalFileFormat: string = fileFormat;
-    if (fileFormat === "json") {
+    if (fileFormat === "application/json") {
       formattedResults = JSON.stringify(results);
-    } else if (fileFormat === "csv") {
+    } else if (fileFormat === "text/csv") {
       formattedResults = new Parser().parse(results);
-    } else if (fileFormat === "tsv") {
+    } else if (fileFormat === "text/tab-separated-values") {
       formattedResults = new Parser({ delimiter: "\t" }).parse(results);
-      finalFileFormat = "tab-separated-values";
+    } else {
+      // we should never reach this condition because we checked that the file
+      // format was supported when we loaded the data source
+      // however, we still throw an error here so that we will see the error
+      // in the dev console if we incorrectly reach this condition
+      throw new Error("Unsupported file format");
     }
 
-    // media types defined by
-    // https://www.iana.org/assignments/media-types/media-types.xhtml
-    const topLevelType = fileFormat === "json" ? "application" : "text";
-    const mediaType = `${topLevelType}/${finalFileFormat}`;
-    const blob = new Blob([formattedResults], { type: mediaType });
-    const url = URL.createObjectURL(blob);
+    // I am using a downloadFile helper because the showSaveFilePicker API
+    // is not stable in FireFox
+    // TODO: Inline the functionality once Firefox ESR supports the showSaveFilePicker API
+    // https://caniuse.com/?search=showSaveFilePicker
+    const file = new File([formattedResults], downloadedFileName, { type: this.dataFetcher.file.type });
+    downloadFile(file);
+  }
 
-    // TODO: we should just be able to use the file download API
+  public async resultRows(): Promise<ReadonlyArray<VerificationSubjectData>> {
+    if (!this.dataFetcher) {
+      throw new Error("Data fetcher is not defined");
+    }
+
+    // if there is no verification grid, we want to return the raw data back
+    // to the user without any modification
+    const subjects = await this.dataFetcher.subjects() ?? [];
+    if (!this.verificationGrid) {
+      return subjects.map((subject) => subject.data);
+    }
+
     // TODO: probably apply a transformation to arrays in CSVs (use semi-columns as item delimiters)
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `verified-${this.fileName}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const decisions = this.verificationGrid.decisions;
+    return subjects.map((model) => this.rowDecision(model, decisions));
+  }
+
+  private rowDecision(subject: VerificationSubject, decisions: DecisionWrapper[]): Readonly<VerificationSubjectData> {
+    const decision = decisions.find((decision) =>
+      decision.subject.identifier &&
+      subject.identifier &&
+      decision.subject.identifier === subject.identifier
+    );
+    if (!decision) {
+      // if we hit this condition, it means that the user has not yet made a
+      // decision about the subject. In this case, we should return the
+      // original subject model with empty fields
+      return {
+        ...subject.data,
+        [`${DataSourceComponent.columnNamespace}tag`]: "",
+        [`${DataSourceComponent.columnNamespace}confirmed`]: "",
+        [`${DataSourceComponent.columnNamespace}additional_tags`]: "",
+      };
+    }
+
+    const decisionModel = decision.decisions.at(0);
+    if (!decisionModel) {
+      throw new Error("Decision model is not defined");
+    }
+
+    const tag = decisionModel.tag.text ?? "";
+    const confirmed = decisionModel.confirmed;
+    const additionalTags = decision.additionalTags;
+
+    const namespace = DataSourceComponent.columnNamespace;
+    return {
+      ...subject.data,
+      [`${namespace}tag`]: tag,
+      [`${namespace}confirmed`]: confirmed,
+      [`${namespace}additional-tags`]: additionalTags
+    };
   }
 
   private handleDecision(): void {
@@ -149,7 +182,6 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.fileName = file.name;
     this.src = URL.createObjectURL(file);
   }
 
@@ -179,9 +211,13 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("for attribute must be set on a data source");
     }
 
-    const dataFetcher = new DataSourceFetcher(this.src);
-    const data = await dataFetcher.json();
-    this.contentType = dataFetcher.contentType;
+    this.dataFetcher = await new DataSourceFetcher().updateSrc(this.src);
+    if (!this.dataFetcher.file) {
+      throw new Error("Data fetcher does not have a file.");
+    }
+
+    this.fileName = this.dataFetcher.file.name;
+    const data = await this.dataFetcher.subjects();
 
     if (!Array.isArray(data)) {
       throw new Error("Response is not an array");
@@ -204,7 +240,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     };
 
     return html`
-      <div class="file-picker">
+      <span>
         <button
           class="file-input oe-btn-secondary"
           part="file-picker"
@@ -220,6 +256,16 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           accept=".csv,.json"
           @change="${this.handleFileChange}"
         />
+      </span>
+    `;
+  }
+
+  public render() {
+    const fileInputTemplate = this.local ? this.fileInputTemplate() : nothing;
+
+    return html`
+      <div class="data-source">
+        ${fileInputTemplate}
 
         <button
           data-testid="download-results-button"
@@ -231,10 +277,6 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
         </button>
       </div>
     `;
-  }
-
-  public render() {
-    return this.local ? this.fileInputTemplate() : nothing;
   }
 }
 

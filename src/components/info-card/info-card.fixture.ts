@@ -5,7 +5,7 @@ import { getBrowserValue, setBrowserValue } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
 
 class TestPage {
-  public constructor(public readonly page: Page) {}
+  public constructor(public readonly page: Page) { }
 
   public component = () => this.page.locator("oe-info-card").first();
   public downloadRecordingButton = () => this.page.locator("#download-recording").first();
@@ -24,6 +24,7 @@ class TestPage {
     const model = new DecisionWrapper({
       url: this.testAudioUrl,
       decisions: [],
+      tag: "",
       subject,
     });
 

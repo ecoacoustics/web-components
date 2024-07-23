@@ -1,4 +1,14 @@
-export type VerificationSubject = Record<string, unknown>;
+export type VerificationSubjectData = Record<string, unknown>;
+
+export class VerificationSubject {
+  public constructor(data: Record<string, unknown>) {
+    this.data = data;
+    this.identifier = Symbol("verification-subject");
+  }
+
+  public identifier: symbol;
+  public data: VerificationSubjectData;
+}
 
 export interface Tag {
   id?: number;

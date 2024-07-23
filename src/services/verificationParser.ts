@@ -9,7 +9,7 @@ export abstract class VerificationParser extends ModelParser<DecisionWrapper> {
       tag: VerificationParser.keyTransformer(["tags", "tag", "label", "classification"]),
     };
 
-    const partialModel = VerificationParser.deriveModel(original, transformer);
+    const partialModel = VerificationParser.deriveModel(original.data, transformer);
 
     // TODO: fix this typing
     return new DecisionWrapper({

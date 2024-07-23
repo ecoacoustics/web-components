@@ -1,7 +1,5 @@
+import { VerificationSubject, VerificationSubjectData } from "../models/verification";
 import csv from "csvtojson";
-import { AbstractDataFetcher } from "./dataFetcher";
-
-export type DataSourceFetcherContentTypes = "json" | "csv" | "tsv";
 
 // TODO: this class should use the strategy pattern and perform caching
 /**
@@ -9,63 +7,111 @@ export type DataSourceFetcherContentTypes = "json" | "csv" | "tsv";
  * Fetches a data source of an unknown type/shape and returns it in a standard format.
  * e.g. can fetch a CSV, TSV, JSON file and always return a JSON object.
  */
-export class DataSourceFetcher extends AbstractDataFetcher {
-    public constructor(src: string) {
-        super(src);
-        this.src = src;
-    }
-
-    private static readonly unsupportedFormateError = new Error("Unsupported file format");
+export class DataSourceFetcher {
+    private static readonly unsupportedFormatError = new Error("Unsupported file format");
     private static readonly undeterminedFormatError = new Error("Could not determine file format");
 
-    public readonly src?: string;
-    // TODO: this should be readonly
-    public contentType?: DataSourceFetcherContentTypes;
+    public get src(): string {
+        return this._src;
+    }
 
-    // because json can have an array at the root or an object
-    // we support returning an array or a record
-    public async json(): Promise<Readonly<Record<string, unknown> | unknown[]>> {
-        const response = await this.fetch();
+    public file?: File;
+    private _src!: string;
+    private jsonModels?: ReadonlyArray<VerificationSubject>;
+
+    /**
+     * returns the IANA media type as defined by
+     * https://www.iana.org/assignments/media-types/media-types.xhtml
+     * 
+     * You should always trust this getter over the file objects type because
+     * the file object can be incomplete or incorrect
+    */
+    public get mediaType(): string {
+        if (!this.file) {
+            throw new Error("File is not defined");
+        }
+
+        return this.file.type ?? this.fileExtensionMediaType(this.file.name);
+    }
+
+    public async updateSrc(src: string) {
+        this._src = src;
+
+        const response = await fetch(src);
         if (!response.ok) {
             throw new Error(`Could not fetch data: ${response.statusText} (${response.status})`);
         }
 
-        const data: string = await response.text();
-        const contentType = response.headers.get("Content-Type");
+        const responseData: string = await response.text();
+        const responseContentType = response.headers.get("Content-Type");
 
-        switch (contentType) {
+        // if the response content type is undefined, we set the file objects
+        // file type to an empty string to reflect the default value in the
+        // w3c File constructor spec
+        this.file = new File(
+            [responseData], this.src ?? "data",
+            { type: responseContentType ?? "" }
+        );
+
+        // TODO: we can probably do this in async, but I haven't checked for side effects
+        this.jsonModels = await this.generateSubjects();
+
+        return this;
+    }
+
+    public async subjects(): Promise<ReadonlyArray<VerificationSubject> | undefined> {
+        return this.jsonModels ??= await this.generateSubjects();
+    }
+
+    private async generateSubjects(): Promise<ReadonlyArray<VerificationSubject>> {
+        if (!this.file) {
+            throw new Error("File is not defined");
+        }
+
+        const content = await this.file.text();
+        let models: VerificationSubjectData[];
+        switch (this.mediaType) {
             case "application/json": {
-                this.contentType = "json";
-                return JSON.parse(data);
+                models = JSON.parse(content);
+                break;
             }
-
             case "text/csv": {
-                this.contentType = "csv";
-                return await csv({ flatKeys: true }).fromString(data);
+                models = await csv({ flatKeys: true }).fromString(content);
+                break;
             }
-
             case "text/tab-separated-values": {
-                this.contentType = "tsv";
-                return await csv({ flatKeys: true, delimiter: "\t" }).fromString(data);
+                models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
+                break;
+            }
+            default: {
+                throw DataSourceFetcher.unsupportedFormatError;
             }
         }
 
+        return models.map((model) => new VerificationSubject(model));
+    }
 
-        // if we cannot use the Content-Type header, we default to
-        // fetching the file format from the file extension
-        if (!this.src) {
+    /**
+     * Attempts to extract the MIME media type using the file extension
+     * This should always be used as a last resort for when the browser cannot
+     * determine the correct MIME type.
+     */
+    private fileExtensionMediaType(path: string): string {
+        const extension = path.split(".").at(-1)?.toLowerCase();
+        if (!extension) {
             throw DataSourceFetcher.undeterminedFormatError;
         }
 
-        const extension = (this.src.split(".").at(-1) ?? "").toLowerCase();
-        if (extension === "json") {
-            return JSON.parse(data);
-        } else if (extension === "csv") {
-            return await csv({ flatKeys: true }).fromString(data);
-        } else if (extension === "tsv") {
-            return await csv({ flatKeys: true, delimiter: "\t" }).fromString(data);
+        const translationTable: Record<string, string> = {
+            csv: "text/csv",
+            tsv: "text/tab-separated-values",
+            json: "application/json",
+        };
+
+        if (extension in translationTable) {
+            return translationTable[extension];
         }
 
-        throw DataSourceFetcher.unsupportedFormateError;
+        throw DataSourceFetcher.unsupportedFormatError;
     }
 }
