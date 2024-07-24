@@ -1,4 +1,5 @@
-import { Tag } from "../models/verification";
+import { Tag } from "../models/tag";
+import { Enum } from "./advancedTypes";
 
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 
@@ -46,4 +47,19 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
   }
 
   return value;
+};
+
+export const enumConverter = <T extends Enum>(enumValues: T) => {
+  return (value: string): T[keyof T] | undefined => {
+    // we compare the requested key, and the enums keys as lowercase so that
+    // the attribute that is exposed to the user is case insensitive
+    const lowercaseKey = value.toLowerCase();
+    const enumKey = Object.keys(enumValues).find(
+      (key) => key.toLowerCase() === lowercaseKey,
+    ) as keyof T | undefined;
+
+    if (enumKey) {
+      return enumValues[enumKey];
+    }
+  }
 };

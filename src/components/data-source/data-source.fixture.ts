@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import { invokeBrowserMethod, removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
-import { VerificationSubjectData } from "../../models/verification";
+import { Subject } from "../../models/subject";
 
 class DataSourceFixture {
   public constructor(public readonly page: Page) { }
@@ -76,8 +76,8 @@ class DataSourceFixture {
     );
   }
 
-  public async getFileContent(): Promise<ReadonlyArray<VerificationSubjectData>> {
-    return await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows") as ReadonlyArray<VerificationSubjectData>;
+  public async getFileContent(): Promise<ReadonlyArray<Subject>> {
+    return await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows") as ReadonlyArray<Subject>;
   }
 
   public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {

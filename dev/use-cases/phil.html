@@ -10,20 +10,26 @@
 
 <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" grid-size="12" auto-page="false">
+        <oe-verification-grid id="verification-grid" grid-size="4" auto-page="false">
             <template>
-                <oe-axes x-title="false" y-title="false" x-grid="false" y-grid="false">
+                <oe-axes x-title-visible="false" y-title-visible="false" x-grid="false" y-grid="false">
                     <oe-indicator>
                         <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
                     </oe-indicator>
                 </oe-axes>
+                <oe-info-card></oe-info-card>
                 <oe-media-controls for="spectrogram"></oe-media-controls>
             </template>
 
-            <oe-decision verified="true" tag="*" shortcut="N">Positive</oe-decision>
-            <oe-decision verified="false" tag="*" shortcut="N">Negative</oe-decision>
+            <oe-classification tag="koala" shortcut="H">Koala</oe-classification>
+            <oe-classification tag="car" shortcut="J">Car</oe-classification>
+            <oe-classification tag="crickets" shortcut="K">Crickets</oe-classification>
+            <oe-classification tag="fox" shortcut="L">Fox</oe-classification>
+            <oe-classification tag="dog" shortcut=";">Dog</oe-classification>
+            <oe-classification tag="cat" shortcut="Z">Cat</oe-classification>
+            <oe-classification tag="cat" verified="false" shortcut="N">Not Cat</oe-classification>
 
-            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
+            <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local>
             </oe-data-source>
         </oe-verification-grid>
     </div>

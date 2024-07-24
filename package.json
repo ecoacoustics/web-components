@@ -17,7 +17,8 @@
     "test:unit": "playwright test src/components/",
     "test:e2e": "playwright test tests/",
     "test:report": "playwright show-report test-results",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format": "prettier . --write"
   },
   "files": [
     "components.js",
@@ -58,7 +59,7 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
     "@custom-elements-manifest/analyzer": "^0.9.4",
     "@playwright/test": "^1.43.1",
-    "@sand4rt/experimental-ct-web": "^1.44.2",
+    "@sand4rt/experimental-ct-web": "^1.46.0",
     "@types/audioworklet": "^0.0.55",
     "@types/chroma-js": "^2.4.4",
     "@types/colorbrewer": "^1.0.32",
@@ -78,6 +79,7 @@
     "user-agent-data-types": "^0.4.2",
     "vite": "^5.2.10",
     "vite-plugin-cem": "^0.7.0",
+    "vite-plugin-mkcert": "^1.17.5",
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-svg-loader": "^5.1.0"
   },

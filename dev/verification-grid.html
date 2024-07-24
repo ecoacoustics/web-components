@@ -20,12 +20,17 @@
             <oe-info-card></oe-info-card>
         </template>
 
-        <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Koala</oe-decision>
-        <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Koala</oe-decision>
-        <oe-decision verified="true" tag="cow" shortcut="k">Cow</oe-decision>
-        <oe-decision verified="false" tag="*" shortcut="L" all>Negative</oe-decision>
-        <oe-decision shortcut="S" skip>Skip</oe-decision>
-        <oe-decision unsure>Unsure</oe-decision>
+        <oe-verification verified="TRUE" shortcut="H">Yes</oe-verification>
+        <oe-verification verified="TRUE" additional-tags="hello,world" shortcut="J">Yes</oe-verification>
+        <oe-verification verified="FALSE" shortcut="K">No</oe-verification>
+        <oe-verification verified="SKIP" shortcut="L">Skip</oe-verification>
+        <oe-verification verified="UNSURE" shortcut=";">Unsure</oe-verification>
+
+        <!--
+            We should see an error thrown for this classification component
+            because it does not have a tag attribute
+        -->
+        <oe-classification shortcut="M" tag="Cow">Cow</oe-classification>
 
         <!--
             local would use a file picker UI, while src would allow a remote file
@@ -33,7 +38,7 @@
             This service would
         -->
         <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-        <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
+        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local>
         </oe-data-source>
     </oe-verification-grid>
 

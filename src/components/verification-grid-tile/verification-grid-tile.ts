@@ -1,15 +1,16 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
+import { CSSResult, html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
-import verificationGridTileStyles from "./css/style.css?inline";
-import { DecisionWrapper } from "../../models/verification";
 import { createContext, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
 import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
+import { SubjectWrapper } from "../../models/subject";
+import verificationGridTileStyles from "./css/style.css?inline";
+import { Decision } from "../../models/decisions/decision";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
@@ -25,7 +26,7 @@ const shortcutTranslation: Record<string, string> = {
   0: ")",
 } as const;
 
-export const gridTileContext = createContext<DecisionWrapper>("grid-tile-context");
+export const gridTileContext = createContext<SubjectWrapper>("grid-tile-context");
 
 /**
  * @description
@@ -35,7 +36,7 @@ export const gridTileContext = createContext<DecisionWrapper>("grid-tile-context
  * It can also manage the selection state
  *
  * @slot - The template to be rendered inside the grid tile
- * 
+ *
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
  * @cssproperty [--selected-border-size] - The size of the border when a
@@ -47,9 +48,11 @@ export const gridTileContext = createContext<DecisionWrapper>("grid-tile-context
 export class VerificationGridTileComponent extends AbstractComponent(LitElement) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
+  public static readonly selectedEventName = "selected" as const;
+
   @provide({ context: gridTileContext })
   @property({ attribute: false })
-  public model!: DecisionWrapper;
+  public model!: SubjectWrapper;
 
   /**
    * Hides a grid tile. This is useful for virtual paging so if you have a
@@ -67,11 +70,12 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   @property({ attribute: false, type: Boolean })
   public selected = false;
 
+  /**
+   * The index position of the tile within a verification grid that is used
+   * to determine the selection keyboard shortcut associated with the grid tile
+   */
   @property({ attribute: false, type: Number })
   public index = 0;
-
-  @property({ attribute: false, type: Number })
-  public decisionIndex?: number;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
@@ -87,8 +91,11 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public loaded = false;
   private shortcuts: string[] = [];
 
-  public get showingHighlight(): boolean {
-    return this.decisionIndex !== undefined;
+  public get decisionIndices(): number[] {
+    if (!this.model) {
+      return [];
+    }
+    return this.model.decisionModels.map((decision) => decision.decisionId);
   }
 
   public connectedCallback(): void {
@@ -120,11 +127,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.spectrogram.addEventListener("loaded", this.loadedHandler);
   }
 
-  public willUpdate(change: PropertyValueMap<this>): void {
+  // TODO: check if the model has updated, and conditionally change the spectrograms src
+  public willUpdate(): void {
     if (this.spectrogram && this.model?.url) {
-      if (change.has("model")) {
-        this.spectrogram.src = this.model.url;
-      }
+      this.spectrogram.src = this.model.url;
     }
 
     const shortcutKey = shortcutOrder[this.index];
@@ -135,6 +141,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     if (this.spectrogram) {
       this.spectrogram.resetSettings();
     }
+  }
+
+  public addDecision(decision: Decision) {
+    this.model.addDecision(decision);
+
+    // because the model is an object (not a primitive), modifying a property
+    // does not cause the re-render which is needed to display the new decision
+    // as a border color
+    // to fix this, we call requestUpdate which will re-render the component
+    // TODO: We can probably replace this with a guard directive
+    this.requestUpdate();
   }
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
@@ -219,11 +236,44 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     `;
   }
 
+  private decisionColor(decisionIndices: number[]): CSSResult {
+    // if the user has only made one decision then we want to show a solid color
+    if (decisionIndices.length === 1) {
+      const solidColor = decisionIndices[0];
+      return unsafeCSS(`background-color: var(--decision-color-${solidColor});`);
+    }
+
+    // I sort the decision indices so that no matter what order the user
+    // selects the decisions, the gradient will always be the same
+    // if the indices were not ordered, tiles with the same decisions applied
+    // but in a different order would have different gradients
+    const percentageStep = 100 / decisionIndices.length;
+    const gradientColors = decisionIndices
+      .sort()
+      .map((color: number, index: number) => {
+        const percentage = percentageStep * (index + 1);
+        return `var(--decision-color-${color}) 0 ${percentage}%`
+      });
+
+    return unsafeCSS(`background: conic-gradient(${gradientColors});`);
+  }
+
   public render() {
+    const decisionClasses: Record<string, unknown> = {};
+
+    for (const decisionIndex of this.decisionIndices) {
+      const key = `decision-${decisionIndex}`;
+      decisionClasses[key] = true;
+    }
+
     const tileClasses = classMap({
       selected: this.selected,
       hidden: this.hidden,
-      [`decision-${this.decisionIndex}`]: this.showingHighlight,
+      ...decisionClasses,
+    });
+
+    const figureClasses = classMap({
+      selected: this.selected,
     });
 
     return html`
@@ -236,17 +286,16 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
+        .style="${this.decisionColor(this.decisionIndices)}"
       >
         ${this.keyboardShortcutTemplate()}
-        <figure class="spectrogram-container">
+        <figure class="spectrogram-container ${figureClasses}">
           <figcaption class="tag-label">${this.model?.tag}</figcaption>
           <slot></slot>
         </figure>
       </div>
     `;
   }
-
-  public static selectedEventName = "selected" as const;
 }
 
 declare global {

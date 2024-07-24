@@ -1,21 +1,33 @@
-import { customElement, property, query, state } from "lit/decorators.js";
-import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { VerificationGridComponent } from "../verification-grid/verification-grid";
-import { booleanConverter } from "../../helpers/attributes";
-import { DecisionWrapper, VerificationSubject, VerificationSubjectData } from "../../models/verification";
 import { Parser } from "@json2csv/plainjs";
+import {
+  html,
+  LitElement,
+  nothing,
+  PropertyValues,
+  TemplateResult,
+  unsafeCSS
+} from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
+import { EnumValue } from "../../helpers/advancedTypes";
+import { booleanConverter } from "../../helpers/attributes";
+import { downloadFile } from "../../helpers/files";
+import { AbstractComponent } from "../../mixins/abstractComponent";
+import { DecisionOptions } from "../../models/decisions/decision";
+import { Subject, SubjectWrapper } from "../../models/subject";
 import { DataSourceFetcher } from "../../services/dataSourceFetcher";
 import { PageFetcher } from "../../services/gridPageFetcher";
-import { DecisionComponent } from "../decision/decision";
+import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import dataSourceStyles from "./css/style.css?inline";
-import { downloadFile } from "../../helpers/files";
+
+type PagingContext = {
+  page: number;
+}
 
 /**
  * @description
  * Automatically creates a PageFetcher callback that can be used on a
  * verification grid component
- * 
+ *
  * @csspart file-picker - A css target to style the file picker button
  */
 @customElement("oe-data-source")
@@ -23,17 +35,20 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
 
   // since we do not know the input format of the provided csv or json files
-  // it is possible for users to input a csv file that already has a column
-  // header of "confirmed" or "additional-tags"
+  // it is possible for users to input a csv file that already has a column name
   // to prevent column name collision, we prepend all the fields that we add
   // to the original data input with "oe"
   public static readonly columnNamespace = "oe_" as const;
+  public static readonly pageSize = 10 as const;
 
   /** A remote JSON or CSV file to use as the data source */
   @property({ type: String })
   public src?: string;
 
-  /** A verification grid component that the derived page fetcher callback will be applied to */
+  /**
+   * A verification grid component that the derived page fetcher callback will
+   * be applied to
+   */
   @property({ type: String })
   public for?: string;
 
@@ -59,17 +74,23 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   private decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
-    if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
-      const verificationElement = document.querySelector<VerificationGridComponent>(`#${this.for}`);
+    if ((changedProperties.has("for") && !!this.for) ||
+      (changedProperties.has("src") && !!this.src)) {
+      const verificationElement =
+        document.querySelector<VerificationGridComponent>(`#${this.for}`);
 
       if (verificationElement) {
         // remove event listeners from the current verification grid
         if (this.verificationGrid) {
-          this.verificationGrid.removeEventListener(DecisionComponent.decisionEventName, this.decisionHandler);
+          this.verificationGrid.removeEventListener(
+            VerificationGridComponent.decisionMadeEventName,
+            this.decisionHandler);
         }
 
         this.verificationGrid = verificationElement;
-        this.verificationGrid.addEventListener(DecisionComponent.decisionEventName, this.decisionHandler);
+        this.verificationGrid.addEventListener(
+          VerificationGridComponent.decisionMadeEventName,
+          this.decisionHandler);
         this.updateVerificationGrid();
       }
     }
@@ -109,13 +130,17 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     // I am using a downloadFile helper because the showSaveFilePicker API
     // is not stable in FireFox
-    // TODO: Inline the functionality once Firefox ESR supports the showSaveFilePicker API
-    // https://caniuse.com/?search=showSaveFilePicker
-    const file = new File([formattedResults], downloadedFileName, { type: this.dataFetcher.file.type });
+    // TODO: Inline the functionality once Firefox ESR supports the
+    // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
+    const file = new File(
+      [formattedResults],
+      downloadedFileName,
+      { type: this.dataFetcher.file.type }
+    );
     downloadFile(file);
   }
 
-  public async resultRows(): Promise<ReadonlyArray<VerificationSubjectData>> {
+  public async resultRows(): Promise<ReadonlyArray<Subject>> {
     if (!this.dataFetcher) {
       throw new Error("Data fetcher is not defined");
     }
@@ -124,56 +149,65 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // to the user without any modification
     const subjects = await this.dataFetcher.subjects() ?? [];
     if (!this.verificationGrid) {
-      return subjects.map((subject) => subject.data);
+      return subjects;
     }
 
-    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns as item delimiters)
-    const decisions = this.verificationGrid.decisions;
-    return subjects.map((model) => this.rowDecision(model, decisions));
+    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
+    // as item delimiters)
+    const decisionHistory = this.verificationGrid.subjectHistory;
+    const currentPageDecisions = this.verificationGrid.currentPage;
+    const allDecisions = [...decisionHistory, ...currentPageDecisions];
+
+    return subjects.map((model) => this.rowDecision(model, allDecisions));
   }
 
-  private rowDecision(subject: VerificationSubject, decisions: DecisionWrapper[]): Readonly<VerificationSubjectData> {
-    const decision = decisions.find((decision) =>
-      decision.subject.identifier &&
-      subject.identifier &&
-      decision.subject.identifier === subject.identifier
+  private rowDecision(
+    subject: Subject,
+    subjects: SubjectWrapper[]
+  ): Readonly<Subject> {
+    // because we compare subjects by reference when downloading the results,
+    // we cannot copy the original subject model by value anywhere
+    const decision = subjects.find((decision) =>
+      decision.subject && subject && decision.subject === subject,
     );
+
     if (!decision) {
       // if we hit this condition, it means that the user has not yet made a
       // decision about the subject. In this case, we should return the
       // original subject model with empty fields
-      return {
-        ...subject.data,
-        [`${DataSourceComponent.columnNamespace}tag`]: "",
-        [`${DataSourceComponent.columnNamespace}confirmed`]: "",
-        [`${DataSourceComponent.columnNamespace}additional_tags`]: "",
-      };
+      return subject;
     }
-
-    const decisionModel = decision.decisions.at(0);
-    if (!decisionModel) {
-      throw new Error("Decision model is not defined");
-    }
-
-    const tag = decisionModel.tag.text ?? "";
-    const confirmed = decisionModel.confirmed;
-    const additionalTags = decision.additionalTags;
 
     const namespace = DataSourceComponent.columnNamespace;
+    const verification = decision.verification;
+    const classifications = decision.classifications;
+
+    const classificationColumns:
+      Record<string, EnumValue<DecisionOptions>> = {};
+    const verificationColumns:
+      Record<string, EnumValue<DecisionOptions>> = {};
+
+    if (classifications) {
+      for (const classification of classifications) {
+        const column = `${namespace}${classification.tag.text}`;
+        const value = classification.confirmed;
+        classificationColumns[column] = value;
+      }
+    }
+
+    if (verification) {
+      verificationColumns[`${namespace}tag`] = decision.tag;
+      verificationColumns[`${namespace}confirmed`] = verification.confirmed;
+    }
+
     return {
-      ...subject.data,
-      [`${namespace}tag`]: tag,
-      [`${namespace}confirmed`]: confirmed,
-      [`${namespace}additional-tags`]: additionalTags
+      ...subject,
+      ...verificationColumns,
+      ...classificationColumns,
     };
   }
 
-  private handleDecision(): void {
-    if (!this.verificationGrid) {
-      return;
-    }
-    this.canDownload = this.verificationGrid.decisions.length > 0;
-  }
+  private handleDecision(): void { this.canDownload = true; }
 
   private handleFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -185,24 +219,38 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.src = URL.createObjectURL(file);
   }
 
-  private buildCallback(content: any[]): PageFetcher {
+  private buildCallback(content: SubjectWrapper[]): PageFetcher<PagingContext> {
     if (!Array.isArray(content)) {
       throw new Error("Response is not an array");
     }
 
-    return async (page: number) => {
+    return async (context: PagingContext) => {
       if (!this.verificationGrid) {
-        return [];
+        return {
+          subjects: [],
+          context,
+        };
       }
 
-      const gridSize = this.verificationGrid.gridSize;
-      const startIndex = gridSize * page;
-      const endIndex = startIndex + gridSize;
+      const currentPage = context.page ?? -1;
+      const nextPage = currentPage + 1;
 
-      return content.slice(startIndex, endIndex);
+      const pageSize = DataSourceComponent.pageSize;
+      const startIndex = pageSize * nextPage;
+      const endIndex = startIndex + pageSize;
+
+      // we increment the page number on the context object so that when the
+      // callback is used again, we will know what page we are up to
+      context.page = nextPage;
+
+      const subjects = content.slice(startIndex, endIndex);
+
+      return {
+        subjects,
+        context,
+      };
     };
   }
-
 
   private async updateVerificationGrid(): Promise<void> {
     if (!this.verificationGrid || !this.src) {

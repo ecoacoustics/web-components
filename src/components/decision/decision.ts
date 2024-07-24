@@ -1,25 +1,31 @@
-import { html, LitElement, nothing, unsafeCSS } from "lit";
+import { html, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { AbstractComponent } from "../../mixins/abstractComponent";
-import decisionStyles from "./css/style.css?inline";
 import { classMap } from "lit/directives/class-map.js";
-import { SelectionObserverType } from "../verification-grid/verification-grid";
-import { booleanConverter, tagArrayConverter, tagConverter } from "../../helpers/attributes";
-import { Classification, Tag, VerificationDecision } from "../../models/verification";
-import { decisionColors } from "../../helpers/themes/decisionColors";
+import { booleanConverter, enumConverter, tagArrayConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
+import { decisionColors } from "../../helpers/themes/decisionColors";
+import { AbstractComponent } from "../../mixins/abstractComponent";
+import { Decision, DecisionId, DecisionOptions } from "../../models/decisions/decision";
+import { SelectionObserverType } from "../verification-grid/verification-grid";
+import { ClassificationComponent } from "./classification/classification";
+import { VerificationComponent } from "./verification/verification";
+import { EnumValue } from "../../helpers/advancedTypes";
+import { Tag } from "../../models/tag";
+import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {
-  value: Classification[];
+  value: Decision[];
   target: DecisionComponent;
 }
 
 export type DecisionEvent = CustomEvent<DecisionContent>;
+export type DecisionComponentUnion =
+  DecisionComponent | VerificationComponent | ClassificationComponent;
 
 /**
  * @description
- * A decision that can be made either with keyboard shortcuts or by clicking/touching
- * on the element
+ * A decision that can be made either with keyboard shortcuts or by
+ * clicking/touching on the element.
  *
  * @slot - The text/content of the decision
  *
@@ -28,9 +34,14 @@ export type DecisionEvent = CustomEvent<DecisionContent>;
  * @fires decision
  */
 @customElement("oe-decision")
-export class DecisionComponent extends AbstractComponent(LitElement) {
+export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public static styles = [unsafeCSS(decisionStyles), decisionColors];
-  public static decisionEventName = "decision" as const;
+
+  public static readonly decisionEventName = "decision" as const;
+
+  protected constructor() {
+    super();
+  }
 
   /** Value that will be added to the oe-additional-tags column */
   @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter, reflect: true })
@@ -40,36 +51,25 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
   @property({ attribute: "disabled", type: Boolean, converter: booleanConverter, reflect: true })
   public disabled = false;
 
-  /** A tag which a verification decision is being applied to */
-  @property({ type: String, converter: tagConverter, reflect: true })
-  public tag?: Tag;
+  @property({ type: String, converter: enumConverter(DecisionOptions) as any })
+  public verified: EnumValue<DecisionOptions> = DecisionOptions.TRUE;
 
-  /** A keyboard key that when pressed will act as a click event on the button */
+  /**
+   * A keyboard key that when pressed will act as a click event on the button
+   */
   @property({ type: String, reflect: true })
   public shortcut?: string;
-
-  /** Clicking the button will verify or reject a tags annotation */
-  @property({ type: Boolean, converter: booleanConverter })
-  public verified?: boolean;
-
-  /** Adds "SKIP" to the verification column when */
-  @property({ type: Boolean, converter: booleanConverter })
-  public skip?: boolean;
-
-  /** Adds "UNSURE" to the verification column when downloaded */
-  @property({ type: Boolean, converter: booleanConverter })
-  public unsure?: boolean;
 
   @property({ attribute: false, type: Boolean })
   public highlighted = false;
 
   @property({ attribute: false, type: Number })
-  public decisionIndex = 0;
+  public decisionId: DecisionId = 0;
 
-  // we use a property with no attribute because we expect the value to be updated
-  // from outside the component
-  // in Lit, the state decorator is used for internal state, while the property
-  // decorator is used for state that other components can interact with
+  // we use a property with no attribute because we expect the value to be
+  // updated from outside the component in Lit, the state decorator is used for
+  // internal state, while the property decorator is used for state that other
+  // components can interact with
   /** The selection mode of the verification grid */
   @property({ attribute: false })
   public selectionMode: SelectionObserverType = "desktop";
@@ -83,40 +83,30 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
   @state()
   private shouldEmitNext = true;
 
-  public get verificationDecision(): VerificationDecision {
-    switch (true) {
-      case this.verified === true:
-        return VerificationDecision.TRUE;
-      case this.verified === false:
-        return VerificationDecision.FALSE;
-      case this.skip === true:
-        return VerificationDecision.SKIP;
-      case this.unsure === true:
-        return VerificationDecision.UNSURE;
-      default:
-        return VerificationDecision.FALSE;
+  public decisionModels?: Decision[];
+
+  public willUpdate(change: PropertyValues<this>): void {
+    this.decisionModels ??= this.generateDecisionModels();
+
+    // we mutate the models directly so that we don't have to re-render
+    // and so that we can keep the same models reference and identifiers
+    if (change.has("verified")) {
+      for (const decision of this.decisionModels) {
+        decision.confirmed = this.verified;
+      }
+    }
+    if (change.has("decisionId")) {
+      for (const decision of this.decisionModels) {
+        decision.decisionId = this.decisionId;
+      }
     }
   }
 
-  public classificationModels(): Classification[] {
-    const decision = this.verificationDecision;
-    const baseTag = this.tag ?? { text: "" };
-
-    const baseModel = new Classification({
-      type: "classification",
-      confirmed: decision,
-      tag: baseTag,
-    });
-
-    const additionalTagModels = this.additionalTags.map((tag) => {
-      return new Classification({
-        type: "classification",
-        confirmed: decision,
-        tag,
-      });
-    });
-
-    return [baseModel, ...additionalTagModels];
+  // override in decision components that extend this base abstract decision
+  // component with an implementation that generates decision models that will
+  // be emitted when clicked / the shortcut key is pressed
+  public generateDecisionModels(): Decision[] {
+    return [];
   }
 
   public isShowingDecisionColor(): boolean {
@@ -160,7 +150,7 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
     // meaning that the user can hold down the trigger key, decide against it
     // and then release the trigger key while holding down the escape key
     // to cancel creating the decision
-    if (this.keyboardHeldDown && event.key.toLocaleLowerCase() === "escape") {
+    if (this.keyboardHeldDown && event.key === ESCAPE_KEY) {
       this.shouldEmitNext = false;
       this.keyboardHeldDown = false;
     }
@@ -185,6 +175,8 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
     this.shouldEmitNext = true;
     if (!emitNext) {
       return;
+    } else if (this.decisionModels === undefined) {
+      throw new Error("Decision model is not initialized");
     }
 
     // I focus on the button clicked with keyboard shortcuts
@@ -192,30 +184,33 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
     // e.g. you can press enter to repeat the decision
     this.decisionButton.focus();
 
-    const classification = this.classificationModels();
-    const event: DecisionEvent = new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
-      detail: {
-        value: classification,
-        target: this,
-      },
-      bubbles: true,
-    });
+    const event: DecisionEvent =
+      new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
+        detail: {
+          value: this.decisionModels,
+          target: this,
+        },
+        bubbles: true,
+      });
 
     this.dispatchEvent(event);
   }
 
   public render() {
-    const additionalTagsTemplate = this.additionalTags.length
-      ? html`(${this.additionalTags.map((tag) => tag.text)})`
+    const additionalTagsTemplate =
+      this.additionalTags.length
+        ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})`
+        : nothing;
+
+    const keyboardLegend = this.shortcut && this.selectionMode !== "tablet"
+      ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>`
       : nothing;
-    const keyboardLegend =
-      this.shortcut && this.selectionMode !== "tablet" ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>` : nothing;
 
     const buttonClasses = classMap({
       disabled: !!this.disabled,
       "show-decision-color": this.isShowingDecisionColor(),
       "cancel-next": !this.shouldEmitNext,
-      [`decision-${this.decisionIndex}`]: true,
+      [`decision-${this.decisionId}`]: true,
     });
 
     return html`
@@ -229,7 +224,9 @@ export class DecisionComponent extends AbstractComponent(LitElement) {
       >
         <div class="tag-text"><slot></slot></div>
         <div class="additional-tags">${additionalTagsTemplate}</div>
-        ${this.selectionMode !== "tablet" ? html`<div class="keyboard-legend">${keyboardLegend}</div>` : nothing}
+        ${this.selectionMode !== "tablet"
+        ? html`<div class="keyboard-legend">${keyboardLegend}</div>`
+        : nothing}
       </button>
     `;
   }

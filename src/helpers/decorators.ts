@@ -89,7 +89,7 @@ export function queryAllDeeplyAssignedElements<T extends Element = Element>(opti
           return returnedElements;
         }
 
-        return null;
+        return [];
       },
     };
 
@@ -111,7 +111,7 @@ export function queryParentElement(options: QueryParentElementsOptions) {
       return recursiveParentElementSearch(element.parentElement);
     }
 
-    return null;
+    return [];
   };
 
   return (target: unknown, propertyKey: string) => {
@@ -123,5 +123,36 @@ export function queryParentElement(options: QueryParentElementsOptions) {
     };
 
     Object.defineProperty(target, propertyKey, descriptor);
+  };
+}
+
+// TODO: we probably want to use a reactive controller here instead of monkey patching the updated function
+/**
+ * @description
+ * Makes a property/attribute required, and will throw an error if the property
+ * is not set.
+ * 
+ * @example
+ * ```ts
+ * @required()
+ * @property({ type: String })
+ * public name!: string;
+ * ```
+ * 
+ * @throws {Error} If the property is not set.
+ */
+export function required() {
+  // in the "after" lifecycle hook, check if the property is set
+  return (target: any, propertyKey: string) => {
+    const originalUpdated = target.updated;
+
+
+    target.updated = function (changedProperties: Map<string | number | symbol, unknown>) {
+      if (this[propertyKey] === undefined) {
+        throw new Error(`Property ${propertyKey} is required by ${target.constructor.name} but is not set.`);
+      }
+
+      originalUpdated?.call(this, changedProperties);
+    };
   };
 }

@@ -4,10 +4,10 @@ import { setBrowserAttribute } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 
 class TestPage {
-  public constructor(public readonly page: Page) {}
+  public constructor(public readonly page: Page) { }
 
   public indicatorComponent = () => this.page.locator("oe-indicator").first();
-  public indicatorLine = () => this.page.locator("oe-indicator #indicator-line").first();
+  public indicatorGroup = () => this.page.locator("oe-indicator #indicator-group").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
 
@@ -37,7 +37,7 @@ class TestPage {
   }
 
   public async indicatorPosition(): Promise<number> {
-    return await this.indicatorLine().evaluate((element: SVGLineElement) => {
+    return await this.indicatorGroup().evaluate((element: SVGLineElement) => {
       const styles = window.getComputedStyle(element);
 
       const domMatrixTranslateXKey: keyof DOMMatrix = "m41";

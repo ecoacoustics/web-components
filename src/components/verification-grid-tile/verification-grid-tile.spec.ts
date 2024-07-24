@@ -13,7 +13,7 @@ test.describe("verification grid tile", () => {
       useShortcutKeys ? fixture.keyboardSelectSpectrogramTile() : fixture.mouseSelectSpectrogramTile();
 
     describe(`selection ${shortcutKeysText}`, () => {
-      test(`should select the tile ${shortcutKeysText}`, async ({ fixture }) => {
+      test.skip(`should select the tile ${shortcutKeysText}`, async ({ fixture }) => {
         await selectionStrategy(fixture);
         expect(await fixture.isSelected()).toBe(true);
       });

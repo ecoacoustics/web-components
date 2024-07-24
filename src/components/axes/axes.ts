@@ -482,7 +482,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const fontSize = this.emUnitFontSize;
     const textLabelPadding = fontSize.width * AxesComponent.labelPadding;
     const areLastLabelsOverlapping = proposedPositionDelta < fontSize.width + textLabelPadding;
-    if (areLastLabelsOverlapping) {
+    if (areLastLabelsOverlapping && values.length > 0) {
       values.pop();
     }
 

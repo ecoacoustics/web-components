@@ -1,6 +1,5 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import spectrogramStyles from "./css/style.css?inline";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
@@ -11,6 +10,7 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
+import spectrogramStyles from "./css/style.css?inline";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
@@ -19,15 +19,8 @@ export interface IPlayEvent {
   keyboardShortcut: boolean;
 }
 
-// TODO: fix
-const defaultAudioModel = new AudioModel({
-  duration: 0,
-  sampleRate: 0,
-  originalAudioRecording: {
-    startOffset: 0,
-    duration: 0,
-  },
-});
+// TODO: remove this default model
+const defaultAudioModel = new AudioModel(0, 0, { startOffset: 0, duration: 0 });
 
 // TODO: move this to a different place
 const domRenderWindowConverter = (value: string | null): RenderWindow | undefined => {
@@ -36,12 +29,7 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
   }
 
   const [startOffset, lowFrequency, endOffset, highFrequency] = value.split(",").map(parseFloat);
-  return new RenderWindow({
-    startOffset,
-    endOffset,
-    lowFrequency,
-    highFrequency,
-  });
+  return new RenderWindow(startOffset, endOffset, lowFrequency, highFrequency);
 };
 
 /**
@@ -56,7 +44,8 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
 @customElement("oe-spectrogram")
 export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
-  public static playEventName = "play" as const;
+
+  public static readonly playEventName = "play" as const;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -78,7 +67,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
    * aspect ratio.
    * original will set the spectrogram to the native resolution of the FFT output.
    * It will not scale the image at all.
-   * 
+   *
    * @values stretch | natural | original
    */
   @property({ type: String, reflect: true })
@@ -240,11 +229,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       .then((info: IAudioInformation) => {
         const originalRecording = { duration: info.duration, startOffset: this.offset };
 
-        this.audio.value = new AudioModel({
-          duration: info.duration,
-          sampleRate: info.sampleRate,
-          originalAudioRecording: originalRecording,
-        });
+        this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
         this.dispatchEvent(
           new CustomEvent("loaded", {
@@ -270,12 +255,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
     this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions).then((info: IAudioInformation) => {
       const originalRecording = { duration: info.duration, startOffset: this.offset };
-
-      this.audio.value = new AudioModel({
-        duration: info.duration,
-        sampleRate: info.sampleRate,
-        originalAudioRecording: originalRecording,
-      });
+      this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
       this.dispatchEvent(
         new CustomEvent("loaded", {
@@ -301,8 +281,14 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     });
   }
 
-  // TODO: finish this method
-  public resetSettings(): void { }
+  public resetSettings(): void {
+    this.colorMap = "audacity";
+    this.contrast = 1;
+    this.brightness = 0;
+    this.melScale = false;
+
+    this.stop();
+  }
 
   public play(keyboardShortcut = false): void {
     this.setPaused(false, keyboardShortcut);
@@ -310,6 +296,11 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
   public pause(keyboardShortcut = false): void {
     this.setPaused(true, keyboardShortcut);
+  }
+
+  public stop(): void {
+    this.currentTime.value = 0;
+    this.pause();
   }
 
   private handleSlotChange(): void {
@@ -559,12 +550,13 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   // is provided
   private parseRenderWindow(): RenderWindow {
     if (!this.domRenderWindow) {
-      return new RenderWindow({
-        startOffset: this.offset,
-        endOffset: this.offset + this.audio.value.duration,
-        lowFrequency: 0,
-        highFrequency: this.unitConverters.value?.nyquist.value ?? 0,
-      });
+      const defaultLowFrequency = 0;
+      return new RenderWindow(
+        this.offset,
+        this.offset + this.audio.value.duration,
+        defaultLowFrequency,
+        this.unitConverters.value?.nyquist.value ?? 0,
+      );
     }
 
     return this.domRenderWindow;
