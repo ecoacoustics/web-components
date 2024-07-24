@@ -115,7 +115,7 @@ function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   // }
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
-  // commit doesn't exist on chrome!
+  // commit doesn't exist on chrome
   destinationSurface.commit && destinationSurface.commit();
 }
 

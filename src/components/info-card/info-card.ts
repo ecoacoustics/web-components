@@ -4,7 +4,7 @@ import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
 import infoCardStyle from "./css/style.css?inline";
 import { consume } from "@lit/context";
 import { gridTileContext } from "../verification-grid-tile/verification-grid-tile";
-import { DecisionWrapper, VerificationSubject } from "../../models/verification";
+import { Subject, SubjectWrapper } from "../../models/subject";
 
 type InfoCardTemplate = (value: any) => any;
 
@@ -22,7 +22,7 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
 
   @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
-  public model?: DecisionWrapper;
+  public model?: SubjectWrapper;
 
   @state()
   private showExpanded = false;
@@ -76,12 +76,12 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  private subjectTemplate(subject?: VerificationSubject) {
+  private subjectTemplate(subject?: Subject) {
     if (subject === undefined) {
       return nothing;
     }
 
-    const subjectEntries = Object.entries(subject.data);
+    const subjectEntries = Object.entries(subject);
     if (!this.showExpanded) {
       subjectEntries.splice(this.defaultLines);
     }

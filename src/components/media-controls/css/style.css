@@ -1,11 +1,35 @@
 :host {
   display: flex;
+  position: relative;
   justify-content: center;
+
+  width: fit-content;
+  margin: auto;
 }
 
 sl-menu-item[checked]::part(base) {
   background-color: var(--oe-selected-color);
   color: var(--oe-font-color);
+}
+
+/*
+  The play/pause icons provided by shoelace look smaller than the rest of the
+  icons which are in the media controls.
+  By increasing the size of the play/pause icons, we can make them fit in more.
+*/
+sl-icon[name="play"],
+sl-icon[name="pause"] {
+  --enlargement-factor: 1.5;
+
+  /*
+    If we don't reduce the padding by the same amount that we increase the font
+    size, then when we place the icons next to each other, the play/pause icons
+    will increase the width/height of the containers.
+    By decreasing the padding, we also ensure that the touch targets for the
+    play/pause icons are the same as all other icons.
+  */
+  font-size: calc(var(--oe-font-size) * var(--enlargement-factor));
+  padding: calc(var(--oe-spacing) / var(--enlargement-factor));
 }
 
 .container {

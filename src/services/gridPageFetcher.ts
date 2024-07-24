@@ -1,116 +1,109 @@
-import { DecisionWrapper } from "../models/verification";
-import { VerificationParser } from "./verificationParser";
+import { SubjectWrapper } from "../models/subject";
+import { SubjectParser } from "./verificationParser";
 
-export type PageFetcher = (elapsedItems: number) => Promise<DecisionWrapper[]>;
+export interface IPageFetcherResponse<T> {
+    subjects: SubjectWrapper[];
+    context: T;
+}
 
-// TODO: this should become a part of the abstract data fetcher
+/**
+ * A context object that is passed to the page fetcher function after every call
+ * this can be used to keep track of state such as the current page, where the
+ * page fetcher would increment the page number after every call.
+ */
+export type PageFetcherContext = Record<string, unknown>;
+export type PageFetcher<T extends PageFetcherContext = any> = (context: T) =>
+    Promise<IPageFetcherResponse<T>>;
+
 export class GridPageFetcher {
     public constructor(pagingCallback: PageFetcher) {
         this.pagingCallback = pagingCallback;
-        this.converter = VerificationParser;
+        this.converter = SubjectParser;
     }
 
-    public page = 0;
-    public pagedItems = 0;
+    // by setting the page
     private pagingCallback: PageFetcher;
-    private converter: VerificationParser;
-    private clientCacheHead = 0;
-    private serverCacheHead = 0;
-    private queueBuffer: DecisionWrapper[] = [];
+    private converter: SubjectParser;
+    private subjectQueueBuffer: SubjectWrapper[] = [];
+    private pagingContext: PageFetcherContext = {};
 
-    // by default we want to cache the next page of results in the browser cache
-    // while we want to cache the next ten pages of results in the server cache
-    private clientCacheLength = 1;
-    private serverCacheLength = 10;
-
-    /** Gets items from an offset */
-    public async getItems(offset: number, pageSize: number): Promise<DecisionWrapper[]> {
-        const requiredPage = Math.floor(offset / pageSize);
-        const pageItems = await this.pagingCallback(requiredPage);
-        return pageItems.map(this.converter.parse);
-    }
-
-    public async currentPage(): Promise<DecisionWrapper[]> {
-        const currentPage = await this.pagingCallback(this.page);
-        return currentPage.map(this.converter.parse);
-    }
+    // caches the audio for the next n items in the buffer
+    private clientCacheLength = 10;
+    private serverCacheLength = 50;
 
     /**
      * Removes the next n requestedItems from the queue
      * If this method is called in a predictable manner, it can perform some
      * caching operations to improve performance
      */
-    public async popNextItems(requestedItems: number): Promise<DecisionWrapper[]> {
-        this.pagedItems += requestedItems;
+    public async getItems(requestedItems: number): Promise<SubjectWrapper[]> {
+        const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength, requestedItems);
 
-        const countSatisfiedByQueue = Math.min(requestedItems, this.queueBuffer.length);
-        const queueItems = this.queueBuffer.splice(0, countSatisfiedByQueue);
-
-        // attempt to pull all items from the queue buffer, however, if we can't
-        // we take as many as we can from the buffer, fetch the next page
-        // take as many as we have to fill up the current page, then add the
-        // remaining items to the queue buffer
-        const unsatisfiedCount = requestedItems - countSatisfiedByQueue;
-        if (unsatisfiedCount === 0) {
-            return queueItems.map(this.converter.parse);
-        }
-
-        const nextPage = await this.nextPage();
-        const satisfactionQuota = nextPage.splice(0, unsatisfiedCount);
-
-        // because we used splice on the next page, any remaining items were
-        // not added to the current requested page. Therefore, we add them to
-        // the queueBuffer so that we can use them if the user requests less
-        // than a full page in subsequent requests
-        this.queueBuffer = nextPage;
-
-        const currentPage = [...queueItems, ...satisfactionQuota];
-        return currentPage.map(this.converter.parse);
-    }
-
-    private async nextPage(): Promise<DecisionWrapper[]> {
-        this.page++;
-
-        // the next page must be fetched by the pagingCallback
-        const fetchedPage = await this.pagingCallback(this.page);
-
-        // these are async functions, however, since they are not critical to
-        // user interaction, I do not await them so that they execute
-        // in the event loop when there is free time
-        this.cacheClient(this.page);
-        this.cacheServer(this.page);
-
-        return fetchedPage;
-    }
-
-    private async cacheClient(pageHead: number): Promise<void> {
-        const currentHead = this.clientCacheHead;
-        const cacheTarget = pageHead + this.clientCacheLength;
-
-        if (cacheTarget > currentHead) {
-            await this.cacheRange(currentHead, cacheTarget, "GET");
-            this.clientCacheHead = cacheTarget;
-        }
-    }
-
-    private async cacheServer(pageHead: number): Promise<void> {
-        const currentHead = this.serverCacheHead;
-        const cacheTarget = pageHead + this.serverCacheLength;
-
-        if (cacheTarget > currentHead) {
-            await this.cacheRange(currentHead, cacheTarget, "HEAD");
-            this.serverCacheHead = cacheTarget;
-        }
-    }
-
-    private async cacheRange(start: number, end: number, method: "GET" | "HEAD") {
-        for (let head = start; head < end; head++) {
-            const models: DecisionWrapper[] = await this.pagingCallback(head);
-            const verificationModels = models.map(this.converter.parse);
-
-            for (const model of verificationModels) {
-                fetch(model.url, { method });
+        // continue to fetch items until we have enough items in the queue
+        // or the paging function returns no more items
+        // (we have reached the end of the dataset)
+        while (this.subjectQueueBuffer.length < requiredQueueSize) {
+            const nextPage = await this.fetchNextPage();
+            if (nextPage.length === 0) {
+                break;
             }
         }
+
+        // because the queue buffer may have been expanded by the fetchNextPage
+        // callback, we should update the cache
+        // these async functions are purposely not awaited because we do not
+        // want to block the main thread while doing cache operations
+        // TODO: we should make sure that only the latest cache operation is run
+        // TODO: there might be a race condition here with changing the cache
+        // heads a few lines down
+        this.audioCacheClient();
+        this.audioCacheServer();
+
+        return this.subjectQueueBuffer.splice(0, requestedItems);
+    }
+
+    // during client caching, we do a GET request to the server for the
+    // audio file. Therefore, requests that have already been client cached
+    // have also already been server cached. We therefore, remove these
+    // requests from the calculations
+    private async audioCacheClient(): Promise<void> {
+        const models = this.subjectQueueBuffer
+            .slice(0, this.clientCacheLength)
+            .filter((model) => !model.clientCached);
+
+        for (const model of models) {
+            model.clientCached = true;
+            fetch(model.url);
+        }
+    }
+
+    // during server caching, we do a HEAD request to the server for the
+    // audio file. We do this because some servers have to split a large
+    // audio file using ffmpeg when a file is requested.
+    // by doing a HEAD request, we can warm the ffmpeg split file on the server
+    private async audioCacheServer(): Promise<void> {
+        const models = this.subjectQueueBuffer
+            .slice(0, this.serverCacheLength)
+            .filter((model) => !model.serverCached);
+
+        for (const model of models) {
+            model.serverCached = true;
+            fetch(model.url, { method: "HEAD" });
+        }
+    }
+
+    // because we must support iterable callbacks, we must behave as if the
+    // user supplied callback can only be called once per page
+    // therefore, we add all rows that we have fetched (even during caching)
+    // to a buffer that we can pull from when requesting results for the same
+    // page
+    private async fetchNextPage(): Promise<SubjectWrapper[]> {
+        const { subjects, context } = await this.pagingCallback(this.pagingContext);
+        const models = subjects.map(this.converter.parse);
+
+        this.pagingContext = context;
+        this.subjectQueueBuffer.push(...models);
+
+        return models;
     }
 }

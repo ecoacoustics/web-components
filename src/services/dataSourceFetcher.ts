@@ -1,4 +1,4 @@
-import { VerificationSubject, VerificationSubjectData } from "../models/verification";
+import { Subject } from "../models/subject";
 import csv from "csvtojson";
 
 // TODO: this class should use the strategy pattern and perform caching
@@ -17,7 +17,7 @@ export class DataSourceFetcher {
 
     public file?: File;
     private _src!: string;
-    private jsonModels?: ReadonlyArray<VerificationSubject>;
+    private jsonModels?: ReadonlyArray<Subject>;
 
     /**
      * returns the IANA media type as defined by
@@ -59,17 +59,17 @@ export class DataSourceFetcher {
         return this;
     }
 
-    public async subjects(): Promise<ReadonlyArray<VerificationSubject> | undefined> {
+    public async subjects(): Promise<ReadonlyArray<Subject> | undefined> {
         return this.jsonModels ??= await this.generateSubjects();
     }
 
-    private async generateSubjects(): Promise<ReadonlyArray<VerificationSubject>> {
+    private async generateSubjects(): Promise<ReadonlyArray<Subject>> {
         if (!this.file) {
             throw new Error("File is not defined");
         }
 
         const content = await this.file.text();
-        let models: VerificationSubjectData[];
+        let models: Subject[];
         switch (this.mediaType) {
             case "application/json": {
                 models = JSON.parse(content);
@@ -88,7 +88,7 @@ export class DataSourceFetcher {
             }
         }
 
-        return models.map((model) => new VerificationSubject(model));
+        return models;
     }
 
     /**

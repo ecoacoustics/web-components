@@ -1,8 +1,8 @@
 import { test } from "@sand4rt/experimental-ct-web";
-import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
 import { invokeBrowserMethod, setBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect } from "../../tests/assertions";
+import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
 
 test.describe("unit tests", () => {
   test("play/pause events", async ({ mount }) => {
@@ -19,10 +19,10 @@ test.describe("unit tests", () => {
     });
 
     await invokeBrowserMethod<SpectrogramComponent>(component, "play");
-    expect(outside).toBe(true);
+    expect(outside).toEqual({ keyboardShortcut: false, play: true });
 
     await invokeBrowserMethod<SpectrogramComponent>(component, "pause");
-    expect(outside).toBe(false);
+    expect(outside).toEqual({ keyboardShortcut: false, play: false });
   });
 
   test("loading events", async ({ mount }) => {

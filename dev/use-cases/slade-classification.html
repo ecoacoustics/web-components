@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Components - Slade</title>
+    <title>Web Components - Slade (Classification)</title>
     <script type="module" src="/src/components/index.ts"></script>
 </head>
 
@@ -22,16 +22,14 @@
                 <oe-info-card></oe-info-card>
             </template>
 
-            <oe-decision verified="true" tag="blue winged kookaburra" shortcut="Y">Blue Winged Kookaburra</oe-decision>
-            <oe-decision verified="false" tag="blue winged kookaburra" shortcut="N">
-                Not Blue Winged Kookaburra
-            </oe-decision>
-            <oe-decision tag="blue winged kookaburra" shortcut="U" unsure>
-                Blue Winged Kookaburra
-            </oe-decision>
-            <oe-decision shortcut="S" skip>Skip</oe-decision>
+            <oe-classification verified="true" shortcut="Y" tag="blue winged kookaburra">
+                Blue winged Kookaburra
+            </oe-classification>
+            <oe-classification verified="false" shortcut="N" tag="blue winged kookaburra">
+                Not blue winged kookaburra
+            </oe-classification>
 
-            <oe-data-source slot="data-source" for="verification-grid" local>
+            <oe-data-source slot="data-source" for="verification-grid" src="/slade-classification.csv" local>
             </oe-data-source>
         </oe-verification-grid>
     </div>

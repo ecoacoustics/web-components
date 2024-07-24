@@ -1,5 +1,5 @@
 import { infoCardFixture as test } from "./info-card.fixture";
-import { VerificationSubject } from "../../models/verification";
+import { Subject } from "../../models/subject";
 import { expect } from "../../tests/assertions";
 
 test.describe("Info Card", () => {
@@ -8,7 +8,7 @@ test.describe("Info Card", () => {
   });
 
   test("Download link should be the same as the audio source", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "John Doe",
       age: 52,
       location: "New York",
@@ -23,7 +23,7 @@ test.describe("Info Card", () => {
   });
 
   test("should not have a 'show more' button if there are not more than three subject fields", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "John Doe",
       age: 52,
       hobbies: "Fishing",
@@ -40,7 +40,7 @@ test.describe("Info Card", () => {
   });
 
   test("The show more and show less button should expand and hide information", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "John Doe",
       age: 52,
       location: "New York",
@@ -71,7 +71,7 @@ test.describe("Info Card", () => {
   });
 
   test("The info card should show subject information", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "John Doe",
       age: 52,
       location: "New York",
@@ -104,7 +104,7 @@ test.describe("Info Card", () => {
   });
 
   test("should handle a subject with empty value fields", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "",
       age: 0,
       location: undefined,
@@ -129,11 +129,11 @@ test.describe("Info Card", () => {
   });
 
   test("should handle changing the value of the subject model", async ({ fixture }) => {
-    const subjectModel: VerificationSubject = {
+    const subjectModel: Subject = {
       name: "John Doe",
       age: 52,
     };
-    const newModel: VerificationSubject = {
+    const newModel: Subject = {
       ...subjectModel,
       age: 53,
     };

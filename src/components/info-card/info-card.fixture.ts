@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { DecisionWrapper, VerificationSubject } from "../../models/verification";
 import { getBrowserValue, setBrowserValue } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
+import { Subject, SubjectWrapper } from "../../models/subject";
 
 class TestPage {
   public constructor(public readonly page: Page) { }
@@ -20,19 +20,15 @@ class TestPage {
     await this.page.waitForSelector("oe-info-card");
   }
 
-  public async changeSubject(subject: VerificationSubject) {
-    const model = new DecisionWrapper({
-      url: this.testAudioUrl,
-      decisions: [],
-      tag: "",
-      subject,
-    });
+  public async changeSubject(subject: Subject) {
+    const mockTag = { text: "" };
+    const model = new SubjectWrapper(subject, this.testAudioUrl, mockTag);
 
     await setBrowserValue<InfoCardComponent>(this.component(), "model", model);
   }
 
   public async subjectUrl(): Promise<string> {
-    const model = (await getBrowserValue<InfoCardComponent>(this.component(), "model")) as DecisionWrapper;
+    const model = (await getBrowserValue<InfoCardComponent>(this.component(), "model")) as SubjectWrapper;
     return model.url;
   }
 

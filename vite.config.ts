@@ -4,6 +4,7 @@ import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import svgLoader from "vite-svg-loader";
 import postcssNested from "postcss-nested";
 import autoprefixer from "autoprefixer";
+// import mkcert from "vite-plugin-mkcert";
 
 // vite config for the dev server and documentation
 export default defineConfig({
@@ -18,6 +19,7 @@ export default defineConfig({
     }) as any,
     nodePolyfills(),
     svgLoader(),
+    // mkcert(),
   ],
   css: {
     postcss: {
@@ -44,6 +46,8 @@ export default defineConfig({
       "Cross-Origin-Resource-Policy": "cross-origin",
       "Access-Control-Allow-Origin": "*",
     },
+    host: "development.ecosounds.org",
+    // https: true,
   },
   build: {
     // TODO: this should not be the root directory
@@ -56,4 +60,4 @@ export default defineConfig({
       formats: ["es"],
     },
   },
-});
+} as any);

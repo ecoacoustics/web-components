@@ -10,11 +10,13 @@ export * from "./indicator/indicator";
 export * from "./logger/logger";
 export * from "./axes/axes";
 export * from "./verification-grid/verification-grid";
-export * from "./decision/decision";
 export * from "./verification-grid-tile/verification-grid-tile";
 export * from "./info-card/info-card";
 export * from "./data-source/data-source";
 export * from "./verification-grid/help-dialog";
+export * from "./decision/decision";
+export * from "./decision/classification/classification";
+export * from "./decision/verification/verification";
 
 // TODO: cherry pick shoelace components
 // see: https://github.com/ecoacoustics/web-components/issues/83

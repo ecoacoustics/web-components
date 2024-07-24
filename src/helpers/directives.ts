@@ -1,6 +1,12 @@
 export function* loop<T>(
   items: T[] | undefined,
-  f: (value: T, options: { index: number, first: boolean, last: boolean, odd: boolean, even: boolean }) => unknown,
+  f: (value: T, options: {
+    index: number,
+    first: boolean,
+    last: boolean,
+    odd: boolean,
+    even: boolean
+  }) => unknown,
 ) {
   if (items !== undefined) {
     let i = 0;

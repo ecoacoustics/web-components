@@ -163,10 +163,10 @@ Additional tags: should be thought of as additional classifications. Does not ma
 ### HTML
 
 ```html
-<oe-decision verified="true" tag="blue winged kookaburra" shortcut="Y">Blue Winged Kookaburra</oe-decision>
-<oe-decision verified="false" tag="blue winged kookaburra" shortcut="N"> Not Blue Winged Kookaburra </oe-decision>
-<oe-decision tag="blue winged kookaburra" shortcut="U" unsure> Blue Winged Kookaburra </oe-decision>
-<oe-decision shortcut="S" skip>Skip</oe-decision>
+<oe-verification verified="true" shortcut="Y">Blue Winged Kookaburra</oe-verification>
+<oe-verification verified="false" shortcut="N"> Not Blue Winged Kookaburra </oe-verification>
+<oe-verification verified="unsure" shortcut="U"> Blue Winged Kookaburra </oe-verification>
+<oe-verification verified="ship" shortcut="S">Skip</oe-verification>
 ```
 
 ## Use case 4: BirdNet verification
@@ -181,15 +181,15 @@ Additional tags: should be thought of as additional classifications. Does not ma
 
 ```html
 <!-- This the default case -->
-<oe-decision verified="true" shortcut="Y">Positive</oe-decision>
-<oe-decision verified="false" shortcut="N">Negative</oe-decision>
+<oe-verified verified="true" shortcut="Y">Positive</oe-verified>
+<oe-verified verified="false" shortcut="N">Negative</oe-verified>
 
 <!-- This still has meaning -->
-<oe-decision shortcut="S" skip>Skip</oe-decision>
+<oe-verified verified="skip" shortcut="S">Skip</oe-verified>
 
 <!-- We're not sure what this is used for, but we have to code for the case, even if it is an error -->
-<oe-decision verified="true" shortcut="K">Koala</oe-decision>
-<oe-decision verified="false" shortcut="L">Noisy Miner</oe-decision>
+<oe-verified verified="true" shortcut="K">Koala</oe-verified>
+<oe-verified verified="false" shortcut="L">Noisy Miner</oe-verified>
 ```
 
 ## Use case 5: Dani (Single class verification - Additional Classification)
@@ -234,14 +234,13 @@ Additional tags: should be thought of as additional classifications. Does not ma
 ### HTML
 
 ```html
-<oe-decision verified="true" additional-tags="female" shortcut="H">Noisy Miner</oe-decision>
-<oe-decision verified="true" additional-tags="male" shortcut="J">Noisy Miner</oe-decision>
-<oe-decision verified="true" additional-tags="fledgling" shortcut="K">Noisy Miner</oe-decision>
-<oe-decision verified="true" additional-tags="in-flight" shortcut="L">Noisy Miner</oe-decision>
-<oe-decision verified="false" shortcut="N">Negative</oe-decision>
+<oe-verification verified="true" additional-tags="female" shortcut="H">Noisy Miner</oe-verification>
+<oe-verification verified="true" additional-tags="male" shortcut="J">Noisy Miner</oe-verification>
+<oe-verification verified="true" additional-tags="fledgling" shortcut="K">Noisy Miner</oe-verification>
+<oe-verification verified="true" additional-tags="in-flight" shortcut="L">Noisy Miner</oe-verification>
+<oe-verification verified="false" shortcut="N">Negative</oe-verification>
 
-<!-- What does this mean? -->
-<oe-decision verified="false" shortcut="N" all>Negative</oe-decision>
+<oe-verification verified="false" shortcut="N" all>Negative</oe-verification>
 ```
 
 ## Use case 6: BirdNet verification with additional labelling task
@@ -278,12 +277,30 @@ Additional tags: should be thought of as additional classifications. Does not ma
 
 ```html
 <!-- This the default case -->
-<oe-decision verified="true" shortcut="Y">Positive</oe-decision>
-<oe-decision verified="false" shortcut="N">Negative</oe-decision>
+<oe-verification verified="true" shortcut="Y">Positive</oe-verification>
+<oe-verification verified="false" shortcut="N">Negative</oe-verification>
 
-<oe-decision verified="true" shortcut="U" additional-tags="rain">Positive</oe-decision>
-<oe-decision verified="false" shortcut="M" additional-tags="rain">Negative</oe-decision>
+<oe-verification verified="true" shortcut="U" additional-tags="rain">Positive</oe-verification>
+<oe-verification verified="false" shortcut="M" additional-tags="rain">Negative</oe-verification>
 
 <!-- This still has meaning -->
-<oe-decision shortcut="S" skip>Skip</oe-decision>
+<oe-verification shortcut="S" skip>Skip</oe-verification>
 ```
+
+Auto page whenever one of the verification decisions are made.
+This follows our rule of "auto page when all required decisions have been made"
+
+## use Case 7: Dani (Alternative)
+
+```html
+<oe-verification verified="TRUE" shortcut="Y">Yes</oe-verification>
+<oe-verification verified="FALSE" shortcut="N">No</oe-verification>
+
+<oe-classification tag="male" shortcut="H">Male</oe-classification>
+<oe-classification tag="female" shortcut="J">Female</oe-classification>
+<oe-classification tag="fledgling" shortcut="K">Fledgling</oe-classification>
+<oe-classification tag="in-flight" shortcut="L">In Flight</oe-classification>
+```
+
+You must make a verification decision and a decision about each classification
+tag for the grid to auto page.

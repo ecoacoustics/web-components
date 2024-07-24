@@ -10,23 +10,21 @@
 
 <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" grid-size="12">
+        <oe-verification-grid id="verification-grid" grid-size="4">
             <template>
-                <oe-axes x-title="false" y-title="false" x-grid="false" y-grid="false">
-                    <oe-indicator>
-                        <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
-                    </oe-indicator>
-                </oe-axes>
+                <oe-indicator>
+                    <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
+                </oe-indicator>
                 <oe-media-controls for="spectrogram"></oe-media-controls>
             </template>
 
-            <oe-decision verified="true" tag="koala" additional-tags="female" shortcut="H">Noisy Miner</oe-decision>
-            <oe-decision verified="true" tag="koala" additional-tags="male" shortcut="J">Noisy Miner</oe-decision>
-            <oe-decision verified="true" tag="koala" additional-tags="fledgling" shortcut="K">Noisy Miner</oe-decision>
-            <oe-decision verified="true" tag="koala" additional-tags="in-flight" shortcut="L">Noisy Miner</oe-decision>
-            <oe-decision verified="false" tag="*" shortcut="N">Negative</oe-decision>
+            <oe-verification verified="true" additional-tags="female" shortcut="H">Yes</oe-verification>
+            <oe-verification verified="true" additional-tags="male" shortcut="J">Yes</oe-verification>
+            <oe-verification verified="true" additional-tags="fledgling" shortcut="K">Yes</oe-verification>
+            <oe-verification verified="true" additional-tags="in-flight" shortcut="L">Yes</oe-verification>
+            <oe-verification verified="false" shortcut="N">No</oe-verification>
 
-            <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.csv" local>
+            <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local>
             </oe-data-source>
         </oe-verification-grid>
     </div>

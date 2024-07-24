@@ -5,23 +5,33 @@
 
 .spectrogram-container {
   margin: 0px;
+  background-color: var(--oe-panel-color);
+  padding: var(--oe-spacing);
 }
 
 .tile-container {
   position: relative;
   border-radius: var(--oe-border-rounding);
-  background-color: var(--oe-panel-color);
   box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
-  padding: var(--oe-spacing);
   cursor: pointer;
   margin-bottom: 0;
   min-width: 350px;
+  padding: var(--selected-border-size);
+  background-color: var(--oe-panel-color);
 
-  border: var(--selected-border-size) solid var(--decision-color);
+  /*
+    This is here so that if there is a bug in the verification grid tile
+    scaling, it will not result in a browser crash as a result of it
+    growing indefinitely.
+    I have only observed this in Playwright but I think it might be related
+    to: https://github.com/ecoacoustics/web-components/issues/78
+   */
+  max-height: 100vh;
+
   transition: border-color var(--oe-animation-time) ease-out, border-size var(--oe-animation-time) ease-out;
 
   &:hover {
-    box-shadow: 0 2px 4px #e8e2e6;
+    box-shadow: var(--oe-backdrop-shadow) var(--oe-selected-color);
   }
 }
 
