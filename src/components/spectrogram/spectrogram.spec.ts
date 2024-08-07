@@ -3,6 +3,7 @@ import { invokeBrowserMethod, setBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect } from "../../tests/assertions";
 import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
+import { sleep } from "../../helpers/utilities";
 
 test.describe("unit tests", () => {
   test("play/pause events", async ({ mount }) => {
@@ -66,6 +67,10 @@ test.describe("unit tests", () => {
             src: `http://localhost:3000/${source}`,
           },
         });
+
+        // sleep for 3 seconds to allow the spectrogram to render
+        // TODO: there should probably be a better way to do this
+        await sleep(3);
 
         await expect(component).toHaveScreenshot();
       });
