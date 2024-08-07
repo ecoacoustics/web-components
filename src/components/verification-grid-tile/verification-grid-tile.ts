@@ -154,6 +154,11 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.requestUpdate();
   }
 
+  public removeDecision(decision: Decision) {
+    this.model.removeDecision(decision);
+    this.requestUpdate();
+  }
+
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
     if (!this.selected && event.detail.keyboardShortcut) {
       event.preventDefault();
