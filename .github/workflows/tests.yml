@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Checkout and Setup
         uses: actions/checkout@v4
+        with:
+          # Playwright snapshot tests generate pngs that are uploaded via
+          # git lfs. We therefore have to use git lfs when cloning the repo
+          # for tests so that snapshot tests have a truth to asset against
+          lfs: true
 
       - uses: pnpm/action-setup@v3
         with:
