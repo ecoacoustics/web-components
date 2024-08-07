@@ -848,7 +848,16 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           decision.tag = tile.model.tag;
         }
 
-        tile.addDecision(decision);
+        // for each decision [button] we have a toggling behavior where if the
+        // decision is not present on a tile, then we want to add it and if the
+        // decision is already present on a tile, we want to remove it
+        // TODO: this behavior will be changed in
+        // https://github.com/ecoacoustics/web-components/issues/135
+        if (tile.model.hasDecision(decision)) {
+          tile.removeDecision(decision);
+        } else {
+          tile.addDecision(decision);
+        }
       }
     }
 
