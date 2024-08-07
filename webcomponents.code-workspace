@@ -1,8 +1,8 @@
 {
   "folders": [
     {
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "settings": {
     "files.insertFinalNewline": true,
@@ -14,7 +14,7 @@
     "editor.formatOnSave": true,
     "editor.rulers": [80, 120],
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
+      "source.fixAll.eslint": "explicit",
     },
     "explorer.compactFolders": false,
     "cSpell.caseSensitive": false,
@@ -59,20 +59,20 @@
       "webcomponents",
       "webcomponents-workspace",
       "webfft",
-      "worklet"
+      "worklet",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
     "markdownlint.config": {
       // disable no Inline HTML because we use inline HTML for the 11ty pages
-      "MD033": false
+      "MD033": false,
     },
     "[html]": {
-      "editor.defaultFormatter": "vscode.html-language-features"
+      "editor.defaultFormatter": "vscode.html-language-features",
     },
     "[typescript]": {
-      "editor.defaultFormatter": "vscode.typescript-language-features"
-    }
+      "editor.defaultFormatter": "vscode.typescript-language-features",
+    },
   },
   "extensions": {
     "recommendations": [
@@ -102,8 +102,8 @@
       "firefox-devtools.vscode-firefox-debug",
 
       // toml is used for netlify configs
-      "tamasfe.even-better-toml"
-    ]
+      "tamasfe.even-better-toml",
+    ],
   },
   "launch": {
     "version": "0.2.0",
@@ -112,28 +112,28 @@
         "name": "Dev Server",
         "command": "pnpm dev",
         "request": "launch",
-        "type": "node-terminal"
+        "type": "node-terminal",
       },
       {
         "type": "firefox",
         "request": "launch",
         "name": "Launch Firefox",
         "url": "http://localhost:5173",
-        "webRoot": "${workspaceFolder}"
+        "webRoot": "${workspaceFolder}",
       },
       {
         "name": "Lint",
         "command": "pnpm lint",
         "request": "launch",
-        "type": "node-terminal"
+        "type": "node-terminal",
       },
       {
         "name": "Build Components",
         "command": "pnpm build:components",
         "request": "launch",
-        "type": "node-terminal"
-      }
-    ]
+        "type": "node-terminal",
+      },
+    ],
   },
   "tasks": {
     "version": "2.0.0",
@@ -141,8 +141,8 @@
       {
         "label": "pnpm dlx playwright install",
         "command": "pnpm dlx playwright install",
-        "type": "shell"
-      }
-    ]
-  }
+        "type": "shell",
+      },
+    ],
+  },
 }

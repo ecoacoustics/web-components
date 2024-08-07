@@ -11,7 +11,7 @@ and [code-workspace](/webcomponents.code-workspace).
 
 1. Use `lf` as the end of line terminator
 2. Use utf-8 encoding
-3. Use four spaces of indent
+3. Use two spaces of indent
 4. All files should end in a new line to be POSIX compliant
 5. All quotations should use double quotation marks
 

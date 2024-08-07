@@ -1,4 +1,4 @@
-import {IntensityTuple} from "../colors";
+import { IntensityTuple } from "../colors";
 
 export const plasmaColorScheme: IntensityTuple[] = [
   [0.00397, 0.002307, 0.240854],

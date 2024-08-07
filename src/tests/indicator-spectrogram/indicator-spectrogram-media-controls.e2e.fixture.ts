@@ -4,7 +4,7 @@ import { setBrowserAttribute } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 
 class TestPage {
-  public constructor(public readonly page: Page) { }
+  public constructor(public readonly page: Page) {}
 
   public indicatorComponent = () => this.page.locator("oe-indicator").first();
   public indicatorGroup = () => this.page.locator("oe-indicator #indicator-group").first();

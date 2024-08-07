@@ -1,4 +1,3 @@
-
 # Concepts
 
 ![diagram](./media/concepts.drawio.svg)
@@ -11,7 +10,7 @@ with various transforms applied, each possibly having their own window.
 A recording. We'd like to know as little about this recording as possible.
 
 - duration
-#- sample rate --> nyquist --> max frequency (min will always be 0)
+  #- sample rate --> nyquist --> max frequency (min will always be 0)
 
 ## segment: A segment of a recording
 
@@ -55,7 +54,7 @@ When the window changes, the coordinate system for the spectrogram changes.
 
 These changes need to be reactive. Things be rerendered when the window changes.
 
-The render window is a canvas, which is a dom element. That it's own size which 
+The render window is a canvas, which is a dom element. That it's own size which
 can also change.
 
 So we're essentially maintaining a map between two windows and coordinate systems.
@@ -70,7 +69,3 @@ Other decorations are drawn on top of the render window.
 They will not be drawn on the spectrogram itself.
 
 Likely with svg over the top?
-
-
-
-

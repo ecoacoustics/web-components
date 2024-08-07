@@ -18,11 +18,7 @@ export class AudioSegment {
 }
 
 export class AudioModel {
-  public constructor(
-    duration: number,
-    sampleRate: number,
-    originalAudioRecording?: OriginalAudioRecording,
-  ) {
+  public constructor(duration: number, sampleRate: number, originalAudioRecording?: OriginalAudioRecording) {
     this.duration = duration;
     this.sampleRate = sampleRate;
     this.originalAudioRecording = originalAudioRecording;

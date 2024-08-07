@@ -5,7 +5,7 @@ import { DataSourceComponent } from "./data-source";
 import { Subject } from "../../models/subject";
 
 class DataSourceFixture {
-  public constructor(public readonly page: Page) { }
+  public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-data-source");
   public filePicker = () => this.page.locator(".file-picker").first();
@@ -52,9 +52,9 @@ class DataSourceFixture {
     await removeBrowserAttribute<DataSourceComponent>(this.component(), "local");
   }
 
-  public async setLocalFile() { }
+  public async setLocalFile() {}
 
-  public async removeLocalFile() { }
+  public async removeLocalFile() {}
 
   public async setRemoteFile(value: string) {
     await setBrowserAttribute<DataSourceComponent>(this.component(), "src", value);
@@ -65,19 +65,15 @@ class DataSourceFixture {
   }
 
   public async getFileName(): Promise<string> {
-    return await this.component().evaluate((element: DataSourceComponent) =>
-      element.dataFetcher?.file?.name ?? ""
-    );
+    return await this.component().evaluate((element: DataSourceComponent) => element.dataFetcher?.file?.name ?? "");
   }
 
   public async getMediaType(): Promise<string> {
-    return await this.component().evaluate((element: DataSourceComponent) =>
-      element.dataFetcher?.mediaType ?? ""
-    );
+    return await this.component().evaluate((element: DataSourceComponent) => element.dataFetcher?.mediaType ?? "");
   }
 
   public async getFileContent(): Promise<ReadonlyArray<Subject>> {
-    return await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows") as ReadonlyArray<Subject>;
+    return (await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows")) as ReadonlyArray<Subject>;
   }
 
   public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {

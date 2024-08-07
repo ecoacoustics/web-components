@@ -12,7 +12,7 @@ Along with additional information on how to customize it to your needs.
 
 ```html
 <!-- index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />

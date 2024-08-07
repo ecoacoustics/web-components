@@ -9,10 +9,10 @@ export type DecisionId = Readonly<number>;
 
 /** The decision states that can be applied to a tag */
 export enum DecisionOptions {
-    FALSE = "false",
-    TRUE = "true",
-    UNSURE = "unsure",
-    SKIP = "skip",
+  FALSE = "false",
+  TRUE = "true",
+  UNSURE = "unsure",
+  SKIP = "skip",
 }
 
 /**
@@ -21,22 +21,18 @@ export enum DecisionOptions {
  * that implements the abstract class
  */
 export class Decision {
-    public constructor(
-        confirmed: EnumValue<DecisionOptions>,
-        decisionId: DecisionId,
-        tag?: Tag,
-    ) {
-        this.confirmed = confirmed;
-        this.decisionId = decisionId;
-        this.tag = tag ?? { text: "" };
-    }
+  public constructor(confirmed: EnumValue<DecisionOptions>, decisionId: DecisionId, tag?: Tag) {
+    this.confirmed = confirmed;
+    this.decisionId = decisionId;
+    this.tag = tag ?? { text: "" };
+  }
 
-    /** Stores the decision outcome */
-    public confirmed: EnumValue<DecisionOptions>;
+  /** Stores the decision outcome */
+  public confirmed: EnumValue<DecisionOptions>;
 
-    /** A reference to group the same decisions */
-    public decisionId: DecisionId;
+  /** A reference to group the same decisions */
+  public decisionId: DecisionId;
 
-    /** A tag that the decision was made about */
-    public tag: Tag;
+  /** A tag that the decision was made about */
+  public tag: Tag;
 }

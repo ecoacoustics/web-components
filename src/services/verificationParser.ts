@@ -29,8 +29,8 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const partialModel = SubjectParser.deriveModel(original, transformer);
 
-    const url = partialModel.url as string ?? "";
-    const tag = partialModel.tag as Tag ?? { text: "" };
+    const url = (partialModel.url as string) ?? "";
+    const tag = (partialModel.tag as Tag) ?? { text: "" };
 
     return new SubjectWrapper(original as Subject, url, tag);
   }

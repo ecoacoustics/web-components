@@ -54,12 +54,10 @@ export const enumConverter = <T extends Enum>(enumValues: T) => {
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
     const lowercaseKey = value.toLowerCase();
-    const enumKey = Object.keys(enumValues).find(
-      (key) => key.toLowerCase() === lowercaseKey,
-    ) as keyof T | undefined;
+    const enumKey = Object.keys(enumValues).find((key) => key.toLowerCase() === lowercaseKey) as keyof T | undefined;
 
     if (enumKey) {
       return enumValues[enumKey];
     }
-  }
+  };
 };

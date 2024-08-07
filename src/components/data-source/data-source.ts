@@ -1,12 +1,5 @@
 import { Parser } from "@json2csv/plainjs";
-import {
-  html,
-  LitElement,
-  nothing,
-  PropertyValues,
-  TemplateResult,
-  unsafeCSS
-} from "lit";
+import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { EnumValue } from "../../helpers/advancedTypes";
 import { booleanConverter } from "../../helpers/attributes";
@@ -21,7 +14,7 @@ import dataSourceStyles from "./css/style.css?inline";
 
 type PagingContext = {
   page: number;
-}
+};
 
 /**
  * @description
@@ -74,23 +67,20 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   private decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
-    if ((changedProperties.has("for") && !!this.for) ||
-      (changedProperties.has("src") && !!this.src)) {
-      const verificationElement =
-        document.querySelector<VerificationGridComponent>(`#${this.for}`);
+    if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
+      const verificationElement = document.querySelector<VerificationGridComponent>(`#${this.for}`);
 
       if (verificationElement) {
         // remove event listeners from the current verification grid
         if (this.verificationGrid) {
           this.verificationGrid.removeEventListener(
             VerificationGridComponent.decisionMadeEventName,
-            this.decisionHandler);
+            this.decisionHandler,
+          );
         }
 
         this.verificationGrid = verificationElement;
-        this.verificationGrid.addEventListener(
-          VerificationGridComponent.decisionMadeEventName,
-          this.decisionHandler);
+        this.verificationGrid.addEventListener(VerificationGridComponent.decisionMadeEventName, this.decisionHandler);
         this.updateVerificationGrid();
       }
     }
@@ -132,11 +122,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // is not stable in FireFox
     // TODO: Inline the functionality once Firefox ESR supports the
     // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
-    const file = new File(
-      [formattedResults],
-      downloadedFileName,
-      { type: this.dataFetcher.file.type }
-    );
+    const file = new File([formattedResults], downloadedFileName, { type: this.dataFetcher.file.type });
     downloadFile(file);
   }
 
@@ -147,7 +133,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     // if there is no verification grid, we want to return the raw data back
     // to the user without any modification
-    const subjects = await this.dataFetcher.subjects() ?? [];
+    const subjects = (await this.dataFetcher.subjects()) ?? [];
     if (!this.verificationGrid) {
       return subjects;
     }
@@ -161,15 +147,10 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     return subjects.map((model) => this.rowDecision(model, allDecisions));
   }
 
-  private rowDecision(
-    subject: Subject,
-    subjects: SubjectWrapper[]
-  ): Readonly<Subject> {
+  private rowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
-    const decision = subjects.find((decision) =>
-      decision.subject && subject && decision.subject === subject,
-    );
+    const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
 
     if (!decision) {
       // if we hit this condition, it means that the user has not yet made a
@@ -182,10 +163,8 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const verification = decision.verification;
     const classifications = decision.classifications;
 
-    const classificationColumns:
-      Record<string, EnumValue<DecisionOptions>> = {};
-    const verificationColumns:
-      Record<string, EnumValue<DecisionOptions>> = {};
+    const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
+    const verificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
 
     if (classifications) {
       for (const classification of classifications) {
@@ -207,7 +186,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     };
   }
 
-  private handleDecision(): void { this.canDownload = true; }
+  private handleDecision(): void {
+    this.canDownload = true;
+  }
 
   private handleFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;

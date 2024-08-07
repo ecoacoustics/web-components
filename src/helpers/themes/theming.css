@@ -268,7 +268,9 @@ button {
   max-width: max-content;
   padding: var(--oe-spacing);
   background-color: var(--background-color);
-  transition: background var(--oe-animation-time), border var(--oe-animation-time);
+  transition:
+    background var(--oe-animation-time),
+    border var(--oe-animation-time);
   cursor: pointer;
 
   /*

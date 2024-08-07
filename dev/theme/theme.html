@@ -1,93 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Components - Theme Creator</title>
     <script type="module" src="./theme.ts"></script>
     <script type="module" src="../../src/components/index.ts"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <label id="source-color-picker">
-        Source color
-        <input id="color-picker" type="color" />
+      Source color
+      <input id="color-picker" type="color" />
     </label>
 
     <section>
-        <h2>Colours</h2>
-        <div id="grid-host"></div>
+      <h2>Colours</h2>
+      <div id="grid-host"></div>
     </section>
 
     <section class="elements-section">
-        <h2>Elements</h2>
+      <h2>Elements</h2>
 
-        <span>
-            <button>Default</button>
-            <button disabled>Default (disabled)</button>
-        </span>
+      <span>
+        <button>Default</button>
+        <button disabled>Default (disabled)</button>
+      </span>
 
-        <span>
-            <button class="oe-btn-primary">Primary</button>
-            <button class="oe-btn-primary" disabled>Primary (disabled)</button>
-        </span>
+      <span>
+        <button class="oe-btn-primary">Primary</button>
+        <button class="oe-btn-primary" disabled>Primary (disabled)</button>
+      </span>
 
-        <span>
-            <button class="oe-btn-secondary">Secondary</button>
-            <button class="oe-btn-secondary" disabled>Secondary (disabled)</button>
-        </span>
+      <span>
+        <button class="oe-btn-secondary">Secondary</button>
+        <button class="oe-btn-secondary" disabled>Secondary (disabled)</button>
+      </span>
 
-        <span>
-            <button class="oe-btn-info">Info</button>
-            <button class="oe-btn-info" disabled>Info (disabled)</button>
-        </span>
+      <span>
+        <button class="oe-btn-info">Info</button>
+        <button class="oe-btn-info" disabled>Info (disabled)</button>
+      </span>
 
-        <span>
-            <button class="oe-btn-danger">Danger</button>
-            <button class="oe-btn-danger" disabled>Danger (disabled)</button>
-        </span>
+      <span>
+        <button class="oe-btn-danger">Danger</button>
+        <button class="oe-btn-danger" disabled>Danger (disabled)</button>
+      </span>
 
-        <span class="group">
-            <label>
-                <input type="checkbox">
-                Checkbox
-            </label>
-        </span>
-
+      <span class="group">
         <label>
-            <input type="radio">
-            Radio
+          <input type="checkbox" />
+          Checkbox
         </label>
+      </span>
 
-        <label>
-            <input type="range">
-        </label>
+      <label>
+        <input type="radio" />
+        Radio
+      </label>
 
-        <input type="number" placeholder="Number input">
+      <label>
+        <input type="range" />
+      </label>
 
-        <input type="text" placeholder="Text input" required />
+      <input type="number" placeholder="Number input" />
 
-        <textarea placeholder="Text area" required></textarea>
+      <input type="text" placeholder="Text input" required />
 
-        <input type="file">
+      <textarea placeholder="Text area" required></textarea>
 
-        <select required>
-            <option>Option 1</option>
-            <option>Option 2</option>
-            <option>Option 3</option>
-        </select>
+      <input type="file" />
 
-        <span>
-            <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Del</kbd>
-        </span>
+      <select required>
+        <option>Option 1</option>
+        <option>Option 2</option>
+        <option>Option 3</option>
+      </select>
+
+      <span> <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Del</kbd> </span>
     </section>
 
     <script>
-        function ColorGridRow(variable) {
-            const element = document.createElement("div");
+      function ColorGridRow(variable) {
+        const element = document.createElement("div");
 
-            element.innerHTML = `
+        element.innerHTML = `
                 <div class="grid-row">
                     <div class="grid-item">
                         <div class="grid-item-content" style="background-color: var(--oe-${variable}-color); width: 2rem; height: 2rem;"></div>
@@ -96,136 +93,144 @@
                 </div>
             `;
 
-            return element;
+        return element;
+      }
+
+      function ColorGrid(variables) {
+        const element = document.createElement("div");
+
+        for (const variable of variables) {
+          const row = ColorGridRow(variable);
+          element.appendChild(row);
         }
 
-        function ColorGrid(variables) {
-            const element = document.createElement("div");
+        return element;
+      }
 
-            for (const variable of variables) {
-                const row = ColorGridRow(variable);
-                element.appendChild(row);
-            }
+      // thank god for copilot
+      function changeSourceColor(value) {
+        const { h, s, l } = hexToHSL(value);
 
-            return element;
+        console.log("update to", `hsl${h}deg, ${s}%, ${l}%`);
+
+        document.documentElement.style.setProperty("--oe-theme-hue", `${h}deg`);
+        document.documentElement.style.setProperty("--oe-theme-saturation", `${s}%`);
+        document.documentElement.style.setProperty("--oe-theme-lightness", `${l}%`);
+      }
+
+      window.onload = () => {
+        const rootHost = document.getElementById("grid-host");
+        const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel", "danger"];
+
+        const colorGrid = ColorGrid(variablesToDisplay);
+        rootHost.appendChild(colorGrid);
+
+        const colorPicker = document.getElementById("color-picker");
+        colorPicker.addEventListener("change", (event) => changeSourceColor(event.target.value));
+      };
+
+      // created and copied from AJ_ (https://stackoverflow.com/a/62390801)
+      function hexToHSL(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+
+        let r = parseInt(result[1], 16);
+        let g = parseInt(result[2], 16);
+        let b = parseInt(result[3], 16);
+
+        (r /= 255), (g /= 255), (b /= 255);
+        let max = Math.max(r, g, b),
+          min = Math.min(r, g, b);
+        let h,
+          s,
+          l = (max + min) / 2;
+
+        if (max == min) {
+          h = s = 0; // achromatic
+        } else {
+          var d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r:
+              h = (g - b) / d + (g < b ? 6 : 0);
+              break;
+            case g:
+              h = (b - r) / d + 2;
+              break;
+            case b:
+              h = (r - g) / d + 4;
+              break;
+          }
+
+          h /= 6;
         }
 
-        // thank god for copilot
-        function changeSourceColor(value) {
-            const { h, s, l } = hexToHSL(value);
+        h = Math.round(h * 360);
+        s = Math.round(s * 100);
+        l = Math.round(l * 100);
 
-            console.log("update to", `hsl${h}deg, ${s}%, ${l}%`);
-
-            document.documentElement.style.setProperty("--oe-theme-hue", `${h}deg`);
-            document.documentElement.style.setProperty("--oe-theme-saturation", `${s}%`);
-            document.documentElement.style.setProperty("--oe-theme-lightness", `${l}%`);
-        }
-
-        window.onload = () => {
-            const rootHost = document.getElementById("grid-host");
-            const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel", "danger"];
-
-            const colorGrid = ColorGrid(variablesToDisplay);
-            rootHost.appendChild(colorGrid);
-
-            const colorPicker = document.getElementById("color-picker");
-            colorPicker.addEventListener("change", (event) => changeSourceColor(event.target.value));
-        };
-
-        // created and copied from AJ_ (https://stackoverflow.com/a/62390801)
-        function hexToHSL(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-
-            let r = parseInt(result[1], 16);
-            let g = parseInt(result[2], 16);
-            let b = parseInt(result[3], 16);
-
-            r /= 255, g /= 255, b /= 255;
-            let max = Math.max(r, g, b), min = Math.min(r, g, b);
-            let h, s, l = (max + min) / 2;
-
-            if (max == min) {
-                h = s = 0; // achromatic
-            } else {
-                var d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-
-                h /= 6;
-            }
-
-            h = Math.round(h * 360);
-            s = Math.round(s * 100);
-            l = Math.round(l * 100);
-
-            return { h, s, l };
-        }
+        return { h, s, l };
+      }
     </script>
 
     <style>
-        body {
-            margin: 0;
-            background-color: var(--oe-background-color);
-            color: var(--oe-font-color);
-            max-height: 100vh;
-            display: flex;
-        }
+      body {
+        margin: 0;
+        background-color: var(--oe-background-color);
+        color: var(--oe-font-color);
+        max-height: 100vh;
+        display: flex;
+      }
 
-        section {
-            margin: 2rem;
-            margin-top: 1rem;
-        }
+      section {
+        margin: 2rem;
+        margin-top: 1rem;
+      }
 
-        h2 {
-            margin-top: 0px;
-        }
+      h2 {
+        margin-top: 0px;
+      }
 
-        #source-color-picker {
-            position: absolute;
-            right: 2rem;
-            top: 1rem;
-        }
+      #source-color-picker {
+        position: absolute;
+        right: 2rem;
+        top: 1rem;
+      }
 
-        #grid-host {
-            position: relative;
-        }
+      #grid-host {
+        position: relative;
+      }
 
-        .grid-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            padding-top: 0.5rem;
-        }
+      .grid-row {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        padding-top: 0.5rem;
+      }
 
-        .grid-item {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            box-shadow: var(--oe-box-shadow);
-            border: 1px solid var(--oe-border-color);
-            border-radius: var(--oe-border-rounding);
-            padding: 1rem;
-            text-align: center;
-            align-items: center;
-        }
+      .grid-item {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        box-shadow: var(--oe-box-shadow);
+        border: 1px solid var(--oe-border-color);
+        border-radius: var(--oe-border-rounding);
+        padding: 1rem;
+        text-align: center;
+        align-items: center;
+      }
 
-        .grid-item-heading {
-            font-weight: bold;
-        }
+      .grid-item-heading {
+        font-weight: bold;
+      }
 
-        .grid-item-content {
-            position: relative;
-        }
+      .grid-item-content {
+        position: relative;
+      }
 
-        .elements-section {
-            &>* {
-                display: block;
-                margin: 1rem;
-            }
+      .elements-section {
+        & > * {
+          display: block;
+          margin: 1rem;
         }
+      }
     </style>
-</body>
-
+  </body>
 </html>

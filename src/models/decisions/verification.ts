@@ -10,11 +10,7 @@ import { Decision, DecisionOptions } from "./decision";
  * @extends Decision
  */
 export class Verification extends Decision {
-  public constructor(
-    confirmed: EnumValue<DecisionOptions>,
-    decisionId: number,
-    tag?: Tag,
-  ) {
+  public constructor(confirmed: EnumValue<DecisionOptions>, decisionId: number, tag?: Tag) {
     super(confirmed, decisionId, tag);
   }
 }

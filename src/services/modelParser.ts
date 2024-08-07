@@ -1,12 +1,4 @@
-import {
-  camelCase,
-  dotCase,
-  pascalCase,
-  snakeCase,
-  kebabCase,
-  sentenceCase,
-  noCase
-} from "change-case";
+import { camelCase, dotCase, pascalCase, snakeCase, kebabCase, sentenceCase, noCase } from "change-case";
 
 export type CandidateKey = string;
 export type Transformer = Record<string, CandidateKey[]>;
@@ -18,7 +10,7 @@ const loweCaseTransformer = (value: string): string => value.toLowerCase();
 // implementing the parse method
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export abstract class ModelParser<T> {
-  protected constructor() { }
+  protected constructor() {}
 
   public abstract parse(model: Record<string, any>): T;
 

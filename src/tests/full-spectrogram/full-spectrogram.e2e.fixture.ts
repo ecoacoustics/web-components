@@ -6,7 +6,7 @@ import { getBrowserValue } from "../helpers";
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
 class TestPage {
-  public constructor(public readonly page: Page) { }
+  public constructor(public readonly page: Page) {}
 
   public indicatorComponent = () => this.page.locator("oe-indicator").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();

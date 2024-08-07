@@ -32,12 +32,7 @@ export class SpectrogramModel {
 
 // also consider: SpectrogramRenderSlice
 export class RenderWindow {
-  public constructor(
-    startOffset: number,
-    endOffset: number,
-    lowFrequency: number,
-    highFrequency: number,
-  ) {
+  public constructor(startOffset: number, endOffset: number, lowFrequency: number, highFrequency: number) {
     this.startOffset = startOffset;
     this.endOffset = endOffset;
     this.lowFrequency = lowFrequency;

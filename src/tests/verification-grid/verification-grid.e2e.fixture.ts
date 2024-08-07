@@ -20,7 +20,7 @@ import { SubjectWrapper } from "../../models/subject";
 import { DecisionId } from "../../models/decisions/decision";
 
 class TestPage {
-  public constructor(public readonly page: Page) { }
+  public constructor(public readonly page: Page) {}
 
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
@@ -112,7 +112,7 @@ class TestPage {
     const selectedTiles: Locator[] = [];
 
     for (const tile of tiles) {
-      const isSelected = await getBrowserValue<VerificationGridTileComponent>(tile, "selected") as boolean;
+      const isSelected = (await getBrowserValue<VerificationGridTileComponent>(tile, "selected")) as boolean;
       if (isSelected) {
         selectedTiles.push(tile);
       }
@@ -123,7 +123,7 @@ class TestPage {
 
   public async getDecisionColor(index: number): Promise<number> {
     const decisionButton = (await this.decisionButtons())[index];
-    const color = await getBrowserValue<DecisionComponent>(decisionButton, "decisionId") as DecisionId;
+    const color = (await getBrowserValue<DecisionComponent>(decisionButton, "decisionId")) as DecisionId;
     return color;
   }
 
@@ -144,7 +144,7 @@ class TestPage {
     const tiles = await this.gridTileComponents();
 
     for (const tile of tiles) {
-      const model = await getBrowserValue<VerificationGridTileComponent>(tile, "model") as SubjectWrapper;
+      const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
 
       if (model.decisionModels) {
         const tileColors = model.decisionModels.map((tileModel) => tileModel.decisionId);
@@ -165,7 +165,7 @@ class TestPage {
     const highlightedTiles: Locator[] = [];
 
     for (const tile of gridTiles) {
-      const model = await getBrowserValue<VerificationGridTileComponent>(tile, "model") as SubjectWrapper;
+      const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
       const isHighlighted = model.decisionModels && model.decisionModels.length > 0;
       if (isHighlighted) {
         highlightedTiles.push(tile);
@@ -288,7 +288,10 @@ class TestPage {
   }
 
   public async userDecisions(): Promise<SubjectWrapper[]> {
-    return (await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "subjectHistory")) as SubjectWrapper[];
+    return (await getBrowserValue<VerificationGridComponent>(
+      this.gridComponent(),
+      "subjectHistory",
+    )) as SubjectWrapper[];
   }
 
   // change attributes

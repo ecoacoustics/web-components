@@ -248,12 +248,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // if the indices were not ordered, tiles with the same decisions applied
     // but in a different order would have different gradients
     const percentageStep = 100 / decisionIndices.length;
-    const gradientColors = decisionIndices
-      .sort()
-      .map((color: number, index: number) => {
-        const percentage = percentageStep * (index + 1);
-        return `var(--decision-color-${color}) 0 ${percentage}%`
-      });
+    const gradientColors = decisionIndices.sort().map((color: number, index: number) => {
+      const percentage = percentageStep * (index + 1);
+      return `var(--decision-color-${color}) 0 ${percentage}%`;
+    });
 
     return unsafeCSS(`background: conic-gradient(${gradientColors});`);
   }
