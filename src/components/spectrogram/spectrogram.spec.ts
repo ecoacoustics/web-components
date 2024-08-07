@@ -56,8 +56,13 @@ test.describe("unit tests", () => {
   // which involves getting it past code review
   test.describe("spectrogram rendering", () => {
     const testedSources = [
-      "120hz.wav", "diagnostic.wav", "example.flac", "example.wav",
-      "example2.flac", "example_34s.flac", "merged_diagnostic.wav"
+      "120hz.wav",
+      "diagnostic.wav",
+      "example.flac",
+      "example.wav",
+      "example2.flac",
+      "example_34s.flac",
+      "merged_diagnostic.wav",
     ];
 
     for (const source of testedSources) {

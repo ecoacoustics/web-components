@@ -1,46 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Components - Use Case 6</title>
     <script type="module" src="/src/components/index.ts"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="grid-host">
-        <oe-verification-grid id="verification-grid" grid-size="4">
-            <template>
-                <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
-                <oe-media-controls for="spectrogram"></oe-media-controls>
-                <oe-info-card></oe-info-card>
-            </template>
+      <oe-verification-grid id="verification-grid" grid-size="4">
+        <template>
+          <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+          <oe-info-card></oe-info-card>
+        </template>
 
-            <oe-verification verified="true" shortcut="Y">Positive</oe-verification>
-            <oe-verification verified="false" shortcut="N">Negative</oe-verification>
+        <oe-verification verified="true" shortcut="Y">Positive</oe-verification>
+        <oe-verification verified="false" shortcut="N">Negative</oe-verification>
 
-            <oe-verification verified="true" shortcut="U" additional-tags="rain">Positive</oe-verification>
-            <oe-verification verified="false" shortcut="M" additional-tags="rain">Negative</oe-verification>
+        <oe-verification verified="true" shortcut="U" additional-tags="rain">Positive</oe-verification>
+        <oe-verification verified="false" shortcut="M" additional-tags="rain">Negative</oe-verification>
 
-            <oe-data-source slot="data-source" for="verification-grid" src="/kaledioscope.csv">
-            </oe-data-source>
-        </oe-verification-grid>
+        <oe-data-source slot="data-source" for="verification-grid" src="/kaledioscope.csv"> </oe-data-source>
+      </oe-verification-grid>
     </div>
 
     <style>
-        body {
-            margin: 0px;
-        }
+      body {
+        margin: 0px;
+      }
 
-        #grid-host {
-            position: relative;
-            left: 0px;
-            top: 0px;
-            width: 100vw;
-            min-height: 100vh;
-        }
+      #grid-host {
+        position: relative;
+        left: 0px;
+        top: 0px;
+        width: 100vw;
+        min-height: 100vh;
+      }
     </style>
-</body>
-
+  </body>
 </html>

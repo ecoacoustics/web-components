@@ -71,9 +71,9 @@ Additional tags: should be thought of as additional classifications. Does not ma
       { "type": "classification", "tag": "koala", "confirmed": "FALSE" },
       { "type": "classification", "tag": "blue winged kookaburra", "confirmed": "FALSE" },
       { "type": "classification", "tag": "cockatoo", "confirmed": "FALSE" },
-      { "type": "classification", "tag": "cow", "confirmed": "FALSE" }
-    ]
-  }
+      { "type": "classification", "tag": "cow", "confirmed": "FALSE" },
+    ],
+  },
   // ...
 ]
 ```
@@ -111,13 +111,13 @@ Additional tags: should be thought of as additional classifications. Does not ma
       { "type": "classification", "tag": "koala", "confirmed": "FALSE" },
       { "type": "classification", "tag": "blue winged kookaburra", "confirmed": "FALSE" },
       { "type": "classification", "tag": "cockatoo", "confirmed": "FALSE" },
-      { "type": "classification", "tag": "cow", "confirmed": "FALSE" }
-    ]
+      { "type": "classification", "tag": "cow", "confirmed": "FALSE" },
+    ],
   },
   {
     "subject": "B",
-    "decisions": [{ "tag": "blue winged kookaburra" }]
-  }
+    "decisions": [{ "tag": "blue winged kookaburra" }],
+  },
 ]
 ```
 
@@ -142,21 +142,21 @@ Additional tags: should be thought of as additional classifications. Does not ma
 [
   {
     "subject": "A",
-    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "TRUE" }]
+    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "TRUE" }],
   },
   {
     "subject": "B",
-    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "FALSE" }]
+    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "FALSE" }],
   },
   {
     "subject": "C",
     // SKIP
-    "decisions": []
+    "decisions": [],
   },
   {
     "subject": "D",
-    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "UNSURE" }]
-  }
+    "decisions": [{ "type": "verification", "tag": "blue winged kookaburra", "confirmed": "UNSURE" }],
+  },
 ]
 ```
 
@@ -204,14 +204,14 @@ Additional tags: should be thought of as additional classifications. Does not ma
       {
         "type": "verification",
         "tag": "noisy-miner",
-        "confirmed": "TRUE"
+        "confirmed": "TRUE",
       },
       {
         "type": "classification",
         "tag": "female",
-        "confirmed": "TRUE"
-      }
-    ]
+        "confirmed": "TRUE",
+      },
+    ],
   },
   {
     "subject": "B",
@@ -219,15 +219,15 @@ Additional tags: should be thought of as additional classifications. Does not ma
       {
         "type": "verification",
         "tag": "noisy-miner",
-        "confirmed": "TRUE"
+        "confirmed": "TRUE",
       },
       {
         "type": "classification",
         "tag": "male",
-        "confirmed": "TRUE"
-      }
-    ]
-  }
+        "confirmed": "TRUE",
+      },
+    ],
+  },
 ]
 ```
 
@@ -254,22 +254,22 @@ Additional tags: should be thought of as additional classifications. Does not ma
     "decisions": [
       {
         "tag": "noisy-miner",
-        "confirmed": "TRUE"
-      }
-    ]
+        "confirmed": "TRUE",
+      },
+    ],
   },
   {
     "subject": "B",
     "decisions": [
       {
         "tag": "noisy-miner",
-        "confirmed": "TRUE"
+        "confirmed": "TRUE",
       },
       {
-        "tag": "rain"
-      }
-    ]
-  }
+        "tag": "rain",
+      },
+    ],
+  },
 ]
 ```
 

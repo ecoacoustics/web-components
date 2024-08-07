@@ -164,14 +164,15 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         ${text}
         <sl-menu @sl-select="${changeHandler}" slot="submenu">
           ${values.map(
-      (value) => html`<sl-menu-item
-              type="${value == currentValue ? "checkbox" : "normal"}"
-              value="${value}"
-              ?checked=${value == currentValue}
-            >
-              ${value}
-            </sl-menu-item>`,
-    )}
+            (value) =>
+              html`<sl-menu-item
+                type="${value == currentValue ? "checkbox" : "normal"}"
+                value="${value}"
+                ?checked=${value == currentValue}
+              >
+                ${value}
+              </sl-menu-item>`,
+          )}
         </sl-menu>
       </sl-menu-item>
     `;
@@ -242,31 +243,31 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         </a>
         <sl-menu>
           ${this.selectSettingsTemplate(
-      "Window Function",
-      Array.from(windowFunctions.keys()),
-      currentOptions.windowFunction,
-      changeHandler("windowFunction"),
-    )}
+            "Window Function",
+            Array.from(windowFunctions.keys()),
+            currentOptions.windowFunction,
+            changeHandler("windowFunction"),
+          )}
           ${this.selectSettingsTemplate(
-      "Window Size",
-      possibleWindowSizes,
-      currentOptions.windowSize,
-      changeHandler("windowSize"),
-    )}
+            "Window Size",
+            possibleWindowSizes,
+            currentOptions.windowSize,
+            changeHandler("windowSize"),
+          )}
           ${this.selectSettingsTemplate(
-      "Window Overlap",
-      [0, ...possibleWindowOverlaps],
-      currentOptions.windowOverlap,
-      changeHandler("windowOverlap"),
-    )}
+            "Window Overlap",
+            [0, ...possibleWindowOverlaps],
+            currentOptions.windowOverlap,
+            changeHandler("windowOverlap"),
+          )}
           ${this.selectSettingsTemplate(
-      "Scale",
-      ["linear", "mel"],
-      currentOptions.melScale ? "mel" : "linear",
-      changeHandler("melScale"),
-    )}
+            "Scale",
+            ["linear", "mel"],
+            currentOptions.melScale ? "mel" : "linear",
+            changeHandler("melScale"),
+          )}
           <sl-menu-item>
-          Axes
+            Axes
             <sl-menu @sl-select="${axesChangeHandler}" slot="submenu">
               <sl-menu-item>
                 <label>
@@ -358,15 +359,15 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         </a>
         <sl-menu @sl-select="${changeColorHandler}">
           ${colorValues.map(
-      (value) =>
-        html`<sl-menu-item
+            (value) =>
+              html`<sl-menu-item
                 value="${value}"
                 type="${value == currentColor ? "checkbox" : "normal"}"
                 ?checked="${value == currentColor}"
               >
                 ${value}
               </sl-menu-item>`,
-    )}
+          )}
         </sl-menu>
       </sl-dropdown>
 
@@ -392,15 +393,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
           <sl-icon name="circle-half"></sl-icon>
         </a>
         <label>
-          <input
-            @change="${changeNumberHandler}"
-            name="contrast"
-            type="range"
-            min="0"
-            max="2"
-            step="0.1"
-            value="1"
-          />
+          <input @change="${changeNumberHandler}" name="contrast" type="range" min="0" max="2" step="0.1" value="1" />
         </label>
       </sl-dropdown>
 

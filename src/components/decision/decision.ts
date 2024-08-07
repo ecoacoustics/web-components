@@ -19,8 +19,7 @@ interface DecisionContent {
 }
 
 export type DecisionEvent = CustomEvent<DecisionContent>;
-export type DecisionComponentUnion =
-  DecisionComponent | VerificationComponent | ClassificationComponent;
+export type DecisionComponentUnion = DecisionComponent | VerificationComponent | ClassificationComponent;
 
 /**
  * @description
@@ -184,27 +183,24 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
     // e.g. you can press enter to repeat the decision
     this.decisionButton.focus();
 
-    const event: DecisionEvent =
-      new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
-        detail: {
-          value: this.decisionModels,
-          target: this,
-        },
-        bubbles: true,
-      });
+    const event: DecisionEvent = new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
+      detail: {
+        value: this.decisionModels,
+        target: this,
+      },
+      bubbles: true,
+    });
 
     this.dispatchEvent(event);
   }
 
   public render() {
-    const additionalTagsTemplate =
-      this.additionalTags.length
-        ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})`
-        : nothing;
-
-    const keyboardLegend = this.shortcut && this.selectionMode !== "tablet"
-      ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>`
+    const additionalTagsTemplate = this.additionalTags.length
+      ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})`
       : nothing;
+
+    const keyboardLegend =
+      this.shortcut && this.selectionMode !== "tablet" ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>` : nothing;
 
     const buttonClasses = classMap({
       disabled: !!this.disabled,
@@ -224,9 +220,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
       >
         <div class="tag-text"><slot></slot></div>
         <div class="additional-tags">${additionalTagsTemplate}</div>
-        ${this.selectionMode !== "tablet"
-        ? html`<div class="keyboard-legend">${keyboardLegend}</div>`
-        : nothing}
+        ${this.selectionMode !== "tablet" ? html`<div class="keyboard-legend">${keyboardLegend}</div>` : nothing}
       </button>
     `;
   }

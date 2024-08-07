@@ -190,7 +190,12 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.renderSpectrogram();
     }
 
-    const unitConverters = new UnitConverter(this.renderWindow, this.renderCanvasSize, this.audio, signal(this.melScale));
+    const unitConverters = new UnitConverter(
+      this.renderWindow,
+      this.renderCanvasSize,
+      this.audio,
+      signal(this.melScale),
+    );
     this.unitConverters = signal(unitConverters);
   }
 
@@ -513,10 +518,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
     // if this event is canceled, the spectrogram will not play
     const eventSuccess = this.dispatchEvent(
-      new CustomEvent<IPlayEvent>(
-        SpectrogramComponent.playEventName,
-        { detail, cancelable: true, bubbles: true }
-      )
+      new CustomEvent<IPlayEvent>(SpectrogramComponent.playEventName, { detail, cancelable: true, bubbles: true }),
     );
 
     // if the event is canceled (through event.preventDefault), it means that

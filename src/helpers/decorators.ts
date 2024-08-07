@@ -62,7 +62,9 @@ export function queryDeeplyAssignedElement<T extends Element = Element>(options:
  * public elements: Element[];
  * ```
  */
-export function queryAllDeeplyAssignedElements<T extends Element = Element>(options: QueryDeeplyAssignedElementsOptions) {
+export function queryAllDeeplyAssignedElements<T extends Element = Element>(
+  options: QueryDeeplyAssignedElementsOptions,
+) {
   return (target: unknown, propertyKey: string) => {
     const descriptor = {
       get(this: LitElement): Readonly<T[] | null> {
@@ -131,21 +133,20 @@ export function queryParentElement(options: QueryParentElementsOptions) {
  * @description
  * Makes a property/attribute required, and will throw an error if the property
  * is not set.
- * 
+ *
  * @example
  * ```ts
  * @required()
  * @property({ type: String })
  * public name!: string;
  * ```
- * 
+ *
  * @throws {Error} If the property is not set.
  */
 export function required() {
   // in the "after" lifecycle hook, check if the property is set
   return (target: any, propertyKey: string) => {
     const originalUpdated = target.updated;
-
 
     target.updated = function (changedProperties: Map<string | number | symbol, unknown>) {
       if (this[propertyKey] === undefined) {

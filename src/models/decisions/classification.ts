@@ -9,11 +9,7 @@ import { Decision, DecisionOptions } from "./decision";
  * @extends Decision
  */
 export class Classification extends Decision {
-    public constructor(
-        confirmed: EnumValue<DecisionOptions>,
-        decisionId: number,
-        tag: Tag,
-    ) {
-        super(confirmed, decisionId, tag);
-    }
+  public constructor(confirmed: EnumValue<DecisionOptions>, decisionId: number, tag: Tag) {
+    super(confirmed, decisionId, tag);
+  }
 }

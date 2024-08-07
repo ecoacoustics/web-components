@@ -21,13 +21,13 @@ test.describe("data source", () => {
         await fixture.setRemoteFile("http://localhost:3000/example.flac");
       });
 
-      test.skip(`should handle removing the source correctly with ${loadFileText}`, () => { });
+      test.skip(`should handle removing the source correctly with ${loadFileText}`, () => {});
 
-      test.skip(`should show the correct file name with ${loadFileText}`, () => { });
+      test.skip(`should show the correct file name with ${loadFileText}`, () => {});
 
-      test.skip(`should have the correct file type for a json ${loadFileText}`, () => { });
+      test.skip(`should have the correct file type for a json ${loadFileText}`, () => {});
 
-      test.skip(`should have the correct file type for a csv file ${loadFileText}`, () => { });
+      test.skip(`should have the correct file type for a csv file ${loadFileText}`, () => {});
     });
   });
 
@@ -50,9 +50,9 @@ test.describe("data source", () => {
       });
 
       test.describe("detecting file type", () => {
-        test.skip(`should correctly identify a ${fileType} file type from media type headers`, () => { });
+        test.skip(`should correctly identify a ${fileType} file type from media type headers`, () => {});
 
-        test.skip(`should correctly identify a ${fileType} file type from file extensions`, () => { });
+        test.skip(`should correctly identify a ${fileType} file type from file extensions`, () => {});
       });
 
       // TODO: these tests are currently disabled because they have not been
@@ -148,9 +148,9 @@ test.describe("data source", () => {
   });
 
   // TODO: this functionality is a stretch goal
-  test.skip("should allow dragging and dropping a file onto local file inputs", () => { });
+  test.skip("should allow dragging and dropping a file onto local file inputs", () => {});
 
-  test.skip("should not allow dragging and dropping a file onto local file inputs", () => { });
+  test.skip("should not allow dragging and dropping a file onto local file inputs", () => {});
 
   test.fixme("should handle changing from local to remote files", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);

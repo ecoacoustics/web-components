@@ -210,11 +210,11 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     };
 
     const xAxisGridLinesTemplate = svg`${xValues.map(
-      (value, i) => svg`${(i > 0 && i < xValues.length - 1) ? xGridLineTemplate(value) : nothing}`,
+      (value, i) => svg`${i > 0 && i < xValues.length - 1 ? xGridLineTemplate(value) : nothing}`,
     )}`;
 
     const yAxisGridLinesTemplate = svg`${yValues.map(
-      (value, i) => svg`${(i > 0 && i < yValues.length - 1) ? yGridLineTemplate(value) : nothing}`,
+      (value, i) => svg`${i > 0 && i < yValues.length - 1 ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`

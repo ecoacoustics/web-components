@@ -41,10 +41,10 @@ The `RenderWindow` will be calculated using an algorithm similar to
 import * as UC from "unit-converters";
 
 new RenderWindow({
-    startOffset: UC.pixelsToSeconds(audio, slice.x0),
-    endOffset: UC.pixelsToSeconds(audio, slice.x1),
-    lowFrequency: UC.pixelsToHertz(audio, slice.y0),
-    highFrequency: UC.pixelsToHertz(audio, slice.y1),
+  startOffset: UC.pixelsToSeconds(audio, slice.x0),
+  endOffset: UC.pixelsToSeconds(audio, slice.x1),
+  lowFrequency: UC.pixelsToHertz(audio, slice.y0),
+  highFrequency: UC.pixelsToHertz(audio, slice.y1),
 });
 ```
 

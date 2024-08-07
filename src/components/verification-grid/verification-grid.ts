@@ -147,10 +147,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    * and oe-classification elements
    */
   public get decisionElements(): DecisionComponentUnion[] {
-    return [
-      ...this.verificationDecisionElements,
-      ...this.classificationDecisionElements
-    ];
+    return [...this.verificationDecisionElements, ...this.classificationDecisionElements];
   }
 
   private keydownHandler = this.handleKeyDown.bind(this);
@@ -842,8 +839,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const selectedTiles = trueSubSelection.filter((tile) => !tile.hidden);
 
     const tileDecisions: [VerificationGridTileComponent, Decision[]][] = selectedTiles.map(
-      (tile: VerificationGridTileComponent) =>
-        [tile, userDecisions]
+      (tile: VerificationGridTileComponent) => [tile, userDecisions],
     );
 
     for (const [tile, decisions] of tileDecisions) {
@@ -875,15 +871,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // I have disabled auto paging when viewing history so that the user can see
     // the colors change when they change an applied decision
 
-    return (
-      !this.isViewingHistory() &&
-      !this.hasOutstandingVerification() &&
-      !this.hasOutstandingClassification()
-    );
+    return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
   }
 
   private requiredTags(): Tag[] {
-    return this.classificationDecisionElements.map((element) => element.tag)
+    return this.classificationDecisionElements
+      .map((element) => element.tag)
       .filter((tag, index, self) => self.indexOf(tag) === index);
   }
 
@@ -924,13 +917,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // (instead of the decision identifier) so that negative/positive decisions
     // on the same tag are not counted as two separate decisions
     // meaning that we only have to make a classification about each tag once
-    const requiredTags: Tag[] = this.classificationDecisionElements
-      .map((element: ClassificationComponent) => element.tag);
+    const requiredTags: Tag[] = this.classificationDecisionElements.map(
+      (element: ClassificationComponent) => element.tag,
+    );
 
     const verificationTiles = Array.from(this.gridTiles);
-    return !verificationTiles.every((tile) =>
-      tile.model.hasTags(requiredTags)
-    );
+    return !verificationTiles.every((tile) => tile.model.hasTags(requiredTags));
   }
 
   private setDecisionDisabled(disabled: boolean): void {
@@ -956,9 +948,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const shownGridTiles = gridTiles.filter((tile) => !tile.hidden);
     const tileDecisions = shownGridTiles.flatMap((tile) => Array.from(tile.decisionIndices));
 
-    return this.decisionElements.filter((element) =>
-      tileDecisions.includes(element.decisionId)
-    );
+    return this.decisionElements.filter((element) => tileDecisions.includes(element.decisionId));
   }
 
   private showDecisionButtonHighlight(elements: DecisionComponent[]): void {
@@ -1194,11 +1184,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private noDecisionsTemplate(): TemplateResult<1> {
-    return html`
-      <strong class="no-decisions-warning">
-        No decisions available.
-      </strong>
-    `;
+    return html` <strong class="no-decisions-warning"> No decisions available. </strong> `;
   }
 
   // TODO: this function could definitely be refactored
@@ -1215,12 +1201,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       this.nextPage();
-    }
+    };
 
     return html`
-      <oe-decision id="skip-button" @decision="${doneEventHandler}" verified="SKIP" shortcut="\`">
-        Skip
-      </oe-decision>
+      <oe-decision id="skip-button" @decision="${doneEventHandler}" verified="SKIP" shortcut="\`"> Skip </oe-decision>
     `;
   }
 

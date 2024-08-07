@@ -5,7 +5,7 @@ import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
 
 class TestPage {
-  public constructor(public readonly page: Page) { }
+  public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-info-card").first();
   public downloadRecordingButton = () => this.page.locator("#download-recording").first();

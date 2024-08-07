@@ -53,7 +53,7 @@ export default class Docs {
          .join("")}
      `;
   }
-};
+}
 
 /**
  * Reads a (possibly deep) path off of an object.
@@ -87,8 +87,7 @@ const renderTable = (name, properties, data) => {
          </tr>
        </thead>
        <tbody>
-         ${data
-           .map( (i) => `<tr scope="row">${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}</tr>`).join("")}
+         ${data.map((i) => `<tr scope="row">${properties.map((p) => `<td>${get(i, p)}</td>`).join("")}</tr>`).join("")}
        </tbody>
      </table>
    `;
