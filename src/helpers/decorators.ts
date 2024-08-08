@@ -110,10 +110,19 @@ export function queryParentElement(options: QueryParentElementsOptions) {
     if (element.matches(options.selector)) {
       return element;
     } else if (element.parentElement) {
+      // we check if we can navigate within the current DOM using parentElement
+      // if we cannot, we can conclude that we have reached the end of the
+      // current DOM's scope (e.g. we are at the root of a components shadow
+      // DOM or we are at the top of the document)
       return recursiveParentElementSearch(element.parentElement);
+    } else if ((element.getRootNode() as any)?.host) {
+      // we use getRootNode().host so that if we are in the final node of
+      // a components shadowDom, we we target the components selector.
+      // this allows us to escape the shadow DOM
+      return recursiveParentElementSearch((element.getRootNode() as any).host);
     }
 
-    return [];
+    return null;
   };
 
   return (target: unknown, propertyKey: string) => {

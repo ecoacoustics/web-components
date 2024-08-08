@@ -294,10 +294,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#region EventHandlers
   private handleKeyDown(event: KeyboardEvent): void {
-    if (!this.canSubSelect()) {
-      return;
-    }
-
     if (event.altKey) {
       // showing/hiding selection shortcuts is quite expensive because it
       // requires DOM queries
@@ -308,24 +304,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // return early here because otherwise ctrl + alt + a would select all items
       // when the expected behavior is to add item a to the sub selection
       return;
-    }
-
-    if (event.ctrlKey && event.key === "a") {
-      // we prevent default on the ctrl + A event so that chrome doesn't
-      // select all the text on the page
-      event.preventDefault();
-
-      this.subSelectAll();
-      // we return early after every keyboard shortcut because we know that
-      // we can't trigger multiple keyboard shortcuts at the same time
-      // e.g. You can't press ctrl + A and escape to select and deselect
-      // by returning early we save computing erroneous keyboard shortcuts
-      return;
-    }
-
-    if (event.ctrlKey && event.key === "d") {
-      event.preventDefault();
-      this.removeSubSelection();
     }
 
     switch (event.key) {
@@ -343,6 +321,27 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       case RIGHT_ARROW_KEY: {
         event.preventDefault();
         this.handleNextPageClick();
+        break;
+      }
+
+      // if the user is holding down both ctrl and D, we should remove the
+      // current selection (this is a common behavior in other applications)
+      case "d": {
+        if (event.ctrlKey) {
+          event.preventDefault();
+          this.removeSubSelection();
+        }
+        break;
+      }
+
+      case "a": {
+        if (event.ctrlKey) {
+          // we prevent default on the ctrl + A event so that chrome doesn't
+          // select all the text on the page
+          event.preventDefault();
+        }
+
+        this.subSelectAll();
         break;
       }
 
@@ -408,6 +407,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   // shortcuts fails, the grids internal state representation is not update if
   // we fail to hide all (but is set if we fail to show all)
   private showSelectionShortcuts(): void {
+    // if the user cannot sub-select e.g. in a 1x1 grid, showing selection
+    // shortcuts can become confusing because it will have no effect
+    if (!this.canSubSelect()) {
+      return;
+    }
+
     this.showingSelectionShortcuts = true;
     this.tileSelectionShortcutsShown(true);
   }
@@ -542,6 +547,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private subSelectAll(): void {
+    if (!this.canSubSelect()) {
+      return;
+    }
+
     const elements = this.gridTiles;
     for (const element of elements) {
       element.selected = true;
@@ -1240,9 +1249,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
         <div class="verification-controls">
           <span class="decision-controls-left">
+            <oe-verification-grid-settings></oe-verification-grid-settings>
+
             <button
               data-testid="help-dialog-button"
-              @pointerdown="${() => this.helpDialog.showModal(false)}"
+              @click="${() => this.helpDialog.showModal(false)}"
               class="oe-btn-info"
               rel="help"
             >
@@ -1292,9 +1303,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             <slot name="data-source"></slot>
           </span>
         </div>
-      </div>
 
-      <div>${this.statisticsTemplate()}</div>
+        <div>${this.statisticsTemplate()}</div>
+      </div>
     `;
   }
 
