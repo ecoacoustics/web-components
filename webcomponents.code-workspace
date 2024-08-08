@@ -16,6 +16,8 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit",
     },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
     "explorer.compactFolders": false,
     "cSpell.caseSensitive": false,
     "html.customData": [],
@@ -68,10 +70,10 @@
       "MD033": false,
     },
     "[html]": {
-      "editor.defaultFormatter": "vscode.html-language-features",
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[typescript]": {
-      "editor.defaultFormatter": "vscode.typescript-language-features",
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
   },
   "extensions": {

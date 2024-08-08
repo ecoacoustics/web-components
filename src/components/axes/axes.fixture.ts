@@ -10,7 +10,7 @@ class AxesFixture {
   public async create() {
     await this.page.setContent(`
       <oe-axes>
-          <div data-testid="inner-content"></div>
+        <div data-testid="inner-content"></div>
       </oe-axes>
     `);
     await this.page.waitForLoadState("networkidle");

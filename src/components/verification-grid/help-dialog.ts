@@ -146,6 +146,11 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
       <p>
         Any recordings that you do not apply a decision to will be marked as "SKIP" when the results are downloaded.
       </p>
+
+      <p>
+        We highly recommend that you use the verification grids "Fullscreen Mode" by using the fullscreen icon or by
+        pressing <kbd>F11</kbd> on your keyboard.
+      </p>
     `;
   }
 

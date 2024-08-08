@@ -11,6 +11,7 @@ import { DataSourceFetcher } from "../../services/dataSourceFetcher";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import dataSourceStyles from "./css/style.css?inline";
+import { required } from "../../helpers/decorators";
 
 type PagingContext = {
   page: number;
@@ -42,8 +43,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
    * A verification grid component that the derived page fetcher callback will
    * be applied to
    */
+  @required()
   @property({ type: String })
-  public for?: string;
+  public for!: string;
 
   /** Whether to allow for local file inputs through a system UI dialog */
   @property({ type: Boolean, converter: booleanConverter })
@@ -68,9 +70,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
     if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
-      const verificationElement = document.querySelector<VerificationGridComponent>(`#${this.for}`);
+      const verificationElement = document.getElementById(this.for);
 
-      if (verificationElement) {
+      if (verificationElement && verificationElement instanceof VerificationGridComponent) {
         // remove event listeners from the current verification grid
         if (this.verificationGrid) {
           this.verificationGrid.removeEventListener(

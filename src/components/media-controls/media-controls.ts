@@ -7,10 +7,10 @@ import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
 import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
-import mediaControlsStyles from "./css/style.css?inline";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
+import mediaControlsStyles from "./css/style.css?inline";
 
 /**
  * Specifies where you should be able to find a preference setting in the media

@@ -1,6 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 @import url("@shoelace-style/shoelace/dist/themes/light.css");
 
+/*
+  Because some of our web component support going into fullscreen mode, we
+  theme the backdrop color of the fullscreen mode to our custom background color
+  This means that if the component doesn't fully fill up the screen when in
+  fullscreen mode, the background color will be our themed color, not the
+  default black color
+*/
+:host:fullscreen::backdrop {
+  background-color: var(--oe-background-color);
+}
+
 /* TODO: we probably only need :host here */
 :host,
 :root {

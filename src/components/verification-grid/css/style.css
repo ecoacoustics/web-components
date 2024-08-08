@@ -35,8 +35,14 @@
   user-select: none;
   justify-content: center;
   align-items: stretch;
-  margin-top: var(--oe-spacing);
-  margin-bottom: var(--oe-spacing);
+
+  /*
+    We apply normal padding to the verification grid so that it is consistent
+    with the rest of the client, and so that the interactivity area is extended
+    slightly beyond the edge of the verification grids content
+  */
+  padding-top: var(--oe-spacing);
+  padding-bottom: var(--oe-spacing);
 
   /*
     We use a grid gap property instead of adding margin to the grid tile
