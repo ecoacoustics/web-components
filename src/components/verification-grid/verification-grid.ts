@@ -1,6 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
@@ -174,6 +174,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private paginationFetcher?: GridPageFetcher;
 
+  /** A count of the number of tiles currently visible on the screen */
+  private get effectivePageSize(): number {
+    return this.gridSize - this.hiddenTiles;
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("keydown", this.keydownHandler);
@@ -215,10 +220,40 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
   }
 
+  protected willUpdate(change: PropertyValues<this>): void {
+    // whenever the gridSize property updates, we check that the new value
+    // is a finite, positive number. If it is not, then we cancel the change
+    // and revert to the old value
+    if (change.has("gridSize")) {
+      const oldGridSize = change.get("gridSize") as number;
+      const newGridSize = this.gridSize;
+
+      // we use isFinite here to check that the value is not NaN, and that
+      // values such as Infinity are not considered as a valid grid size
+      if (!isFinite(newGridSize) || newGridSize <= 0) {
+        this.gridSize = oldGridSize;
+        console.error("New grid size value could not be converted to a number");
+      }
+    }
+  }
+
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     const renderInvalidationKeys: (keyof this)[] = ["gridSize"];
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage"];
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
+    // gridSize is a part of source invalidation because if the grid size
+    // increases, there will be verification grid tiles without any source
+    // additionally, if the grid size is decreased, we want the "currentPage"
+    // of sources to update / remove un-needed items
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "gridSize"];
+
+    // a full render invalidation causes all the grid tiles elements to be
+    // destroyed and re-created. This should always be a last resort
+    // we do this first so that if there is a source or tile invalidation
+    // the changes are applied to the newly created grid tile elements
+    // without requiring a double render
+    if (renderInvalidationKeys.some((key) => change.has(key))) {
+      this.handleRenderInvalidation();
+    }
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -231,12 +266,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // they will not be re-created
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
       await this.handleSourceInvalidation();
-    }
-
-    // a full render invalidation causes all the grid tiles elements to be
-    // destroyed and re-created. This should always be a last resort
-    if (renderInvalidationKeys.some((key) => change.has(key))) {
-      this.handleRenderInvalidation();
     }
   }
 
@@ -422,20 +451,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.showingSelectionShortcuts = false;
   }
 
-  // TODO: this functionality is not implemented correctly
-  // I have disabled the intersection observer for now until I find the time
-  // to create a correct solution
-  private handleIntersection(entries: IntersectionObserverEntry[]): void {
-    for (const entry of entries) {
-      if (entry.intersectionRatio < 1) {
-        // at the very minimum, we always want one grid tile showing
-        // even if this will cause some items to go off the screen
-        const newProposedHiddenTiles = this.hiddenTiles + 1;
-        if (newProposedHiddenTiles < this.gridSize) {
-          this.hideGridItems(newProposedHiddenTiles);
-        }
-      }
-    }
+  // TODO: The intersection observer has been disabled because its functionality
+  // is buggy when the verification grid is larger than the screen size
+  // see: https://github.com/ecoacoustics/web-components/issues/146
+  // see: https://github.com/ecoacoustics/web-components/issues/147
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleIntersection(_entries: IntersectionObserverEntry[]): void {
+    // for (const entry of entries) {
+    //   if (entry.intersectionRatio < 1) {
+    //     // at the very minimum, we always want one grid tile showing
+    //     // even if this will cause some items to go off the screen
+    //     const newProposedHiddenTiles = this.hiddenTiles + 1;
+    //     if (newProposedHiddenTiles < this.gridSize) {
+    //       this.hideGridItems(newProposedHiddenTiles);
+    //     }
+    //   }
+    // }
   }
 
   private handleSelection(selectionEvent: SelectionEvent): void {
@@ -802,7 +833,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.verificationMode();
   }
 
-  private async nextPage(count: number = this.gridSize): Promise<void> {
+  // we ue the effective grid size here so that hidden tiles are not counted
+  // when the user pages
+  private async nextPage(count: number = this.effectivePageSize): Promise<void> {
     this.removeSubSelection();
     this.resetSpectrogramSettings();
     this.removeDecisionButtonHighlight();
@@ -1018,18 +1051,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     nextPage.forEach((item: SubjectWrapper, i: number) => {
       const tile = elements[i];
 
-      // on the initial render, the targets model will be undefined
-      const currentTargetUrl = tile.model?.url ?? "";
-      const newTargetUrl = item.url;
-
-      // we can't directly compare the two objects because their strict equality
-      // will always fail because it will be comparing two different memory
-      // addresses. To prevent each tile re-rendering, we can selectively
-      // re-render only he tiles which have changed sources
-      if (currentTargetUrl !== newTargetUrl) {
-        tile.model = item;
-        tile.index = i;
-      }
+      tile.model = item;
+      tile.index = i;
     });
 
     // if we are on the last page, we hide the remaining elements
@@ -1069,8 +1092,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const verificationGridBuffer = [];
 
     // TODO: we might be able to do partial rendering or removal if some of the
-    // TODO: we might be able to set the OE verification model when creating the elements
     // needed spectrogram elements already exist
+    // see: https://github.com/ecoacoustics/web-components/issues/149
+    // TODO: we might be able to set the OE verification model when creating the elements
     for (let i = 0; i < this.gridSize; i++) {
       const template = this.gridItemTemplate.content.cloneNode(true);
       verificationGridBuffer.push(

@@ -33,6 +33,13 @@ export async function getBrowserStyles<T extends HTMLElement>(component: Locator
   });
 }
 
+export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, eventName: string) {
+  return locator.evaluate((element: T, name: string) => {
+    const event = new Event(name, { bubbles: true });
+    element.dispatchEvent(event);
+  }, eventName);
+}
+
 export async function catchEvent(locator: Page, name: string) {
   return locator.evaluate((name: string) => {
     return new Promise((resolve) => {

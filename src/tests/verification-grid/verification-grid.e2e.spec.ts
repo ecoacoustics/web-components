@@ -1,8 +1,9 @@
 import { Size } from "../../models/rendering";
-import { catchLocatorEvent, changeToDesktop, changeToMobile } from "../helpers";
+import { catchLocatorEvent, changeToDesktop, changeToMobile, getBrowserValue, setBrowserAttribute } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
-import { SpectrogramCanvasScale } from "../../components";
+import { SpectrogramCanvasScale, VerificationGridComponent, VerificationGridTileComponent } from "../../components";
+import { SubjectWrapper } from "../../models/subject";
 
 test.describe("while the initial help dialog is open", () => {
   test("should show an initial help dialog", async ({ fixture }) => {
@@ -84,6 +85,62 @@ test.describe("single verification grid", () => {
         await fixture.changeGridSize(expectedGridSize);
         const gridSize = await fixture.getGridSize();
         expect(gridSize).toEqual(expectedGridSize);
+      });
+
+      test("should not allow a grid size that is a string", async ({ fixture }) => {
+        const initialGridSize = await fixture.getGridSize();
+        const testGridSize = "this-is-not-a-number";
+
+        await setBrowserAttribute(
+          fixture.gridComponent(),
+          "grid-size" as keyof VerificationGridComponent,
+          testGridSize,
+        );
+
+        // because we requested an invalid grid size, we should see that the
+        // grid size property does not change
+        const realizedGridSize = await fixture.getGridSize();
+        expect(realizedGridSize).toBe(initialGridSize);
+      });
+
+      test("should not allow a grid size that is a negative number", async ({ fixture }) => {
+        const initialGridSize = await fixture.getGridSize();
+        const testGridSize = -12;
+
+        await fixture.changeGridSize(testGridSize);
+
+        const realizedGridSize = await fixture.getGridSize();
+        expect(realizedGridSize).toBe(initialGridSize);
+      });
+
+      test("should not allow a grid size that is zero", async ({ fixture }) => {
+        const initialGridSize = await fixture.getGridSize();
+        const testGridSize = 0;
+
+        await fixture.changeGridSize(testGridSize);
+
+        const realizedGridSize = await fixture.getGridSize();
+        expect(realizedGridSize).toBe(initialGridSize);
+      });
+
+      test("should not allow a grid size of negative infinity", async ({ fixture }) => {
+        const initialGridSize = await fixture.getGridSize();
+        const testGridSize = -Infinity;
+
+        await fixture.changeGridSize(testGridSize);
+
+        const realizedGridSize = await fixture.getGridSize();
+        expect(realizedGridSize).toBe(initialGridSize);
+      });
+
+      test("should not allow a grid size of Infinity", async ({ fixture }) => {
+        const initialGridSize = await fixture.getGridSize();
+        const testGridSize = Infinity;
+
+        await fixture.changeGridSize(testGridSize);
+
+        const realizedGridSize = await fixture.getGridSize();
+        expect(realizedGridSize).toBe(initialGridSize);
       });
 
       test.skip("should not use a grid size that is larger than the screen size", async ({ fixture, page }) => {
@@ -484,6 +541,75 @@ test.describe("single verification grid", () => {
           await fixture.changeSpectrogramScaling(scale);
         });
       });
+    });
+  });
+
+  test.describe("changing grid size", () => {
+    test("should show new items when increasing the grid size", async ({ fixture }) => {
+      const initialGridSize = await fixture.getGridSize();
+      const newGridSize = initialGridSize + 1;
+
+      const initialModels = await fixture.verificationGridTileModels();
+      const expectedNewModel: SubjectWrapper = new SubjectWrapper(
+        {
+          AudioLink: "http://localhost:3000/example.flac",
+          Datetime: "2019-10-22T04:00:00.000Z",
+          Distance: "4.958763122558594",
+          FileId: 251486,
+          Filename: "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac",
+          Offset: 15,
+          Site: "SEQP-Samford",
+          SiteId: 255,
+          Subsite: "Dry-B",
+        },
+        "http://localhost:3000/example.flac",
+        {
+          text: "",
+        },
+      );
+      expectedNewModel.clientCached = true;
+      expectedNewModel.serverCached = true;
+      expectedNewModel.decisions = {} as any;
+
+      await fixture.changeGridSize(newGridSize);
+
+      // we should see all previous models that were shown before we increased
+      // the grid size plus an additional model that was created when we
+      // increased the grid size by one
+      const expectedModels: SubjectWrapper[] = [...initialModels, expectedNewModel];
+      const newModels = await fixture.verificationGridTileModels();
+
+      expect(newModels).toEqual(expectedModels);
+    });
+
+    // grid indexes are used to create sub-selection shortcut keys. If this test
+    // fails, it is likely that sub-selection keyboard shortcuts do not work
+    test("should have the correct grid index after increasing grid size", async ({ fixture }) => {
+      const initialGridSize = await fixture.getGridSize();
+      const newGridSize = initialGridSize + 1;
+      await fixture.changeGridSize(newGridSize);
+
+      const gridTileOfInterest = (await fixture.gridTileComponents()).at(-1);
+
+      // because the first index of the verification grid (size = 1) is index 0
+      // we subtract one from the grid size to get the expected index of the
+      // last grid tile
+      const expectedNewIndex = newGridSize - 1;
+      const realizedNewIndex = await getBrowserValue<VerificationGridTileComponent>(gridTileOfInterest, "index");
+      expect(realizedNewIndex).toBe(expectedNewIndex);
+    });
+
+    test("should not page any items when increasing and decreasing the grid size", async ({ fixture }) => {
+      // increase the grid size by one item, then remove it
+      // we should see that the
+      const initialGridSize = await fixture.getGridSize();
+      await fixture.changeGridSize(initialGridSize + 1);
+      await fixture.changeGridSize(initialGridSize);
+
+      const expectedPagedItems = 0;
+      const realizedPagedItems = await fixture.getPagedItems();
+
+      expect(realizedPagedItems).toBe(expectedPagedItems);
     });
   });
 

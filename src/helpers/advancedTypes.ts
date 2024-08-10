@@ -19,3 +19,13 @@ export type EnumKeyValue<T extends Enum, key extends keyof T> = Readonly<T[key]>
 // didn't export the type
 /** An attribute converter type alias defined by Lit */
 export type AttributeConverter = PropertyDeclaration["converter"];
+
+// TODO: this type should use a type guard to check that the "target" property
+// on the original event satisfies the generic T
+/**
+ * A type that represents a change event emitted by a HTML element
+ * @template T The type of the events target element
+ */
+export type ChangeEvent<T extends HTMLElement> = Event & {
+  target: T;
+};

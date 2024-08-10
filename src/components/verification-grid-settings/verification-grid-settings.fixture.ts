@@ -1,13 +1,18 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserValue } from "../../tests/helpers";
+import { emitBrowserEvent, getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
+import { VerificationGridComponent } from "../verification-grid/verification-grid";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
-  public component = () => this.page.locator("oe-verification-grid-settings");
+  public settingsComponent = () => this.page.locator("oe-verification-grid-settings");
+  public verificationGrid = () => this.page.locator("oe-verification-grid");
   public fullscreenButton = () => this.page.locator("#fullscreen-button");
+  public gridSizeTriggerButton = () => this.page.locator("#grid-size-trigger");
+  public gridSizeInput = () => this.page.locator("#grid-size-input");
+  public gridSizeLabel = () => this.page.locator("#grid-size-label");
   public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
 
   public async create() {
@@ -29,12 +34,47 @@ class TestPage {
   }
 
   public async isFullscreen(): Promise<boolean> {
-    return (await getBrowserValue<VerificationGridSettingsComponent>(this.component(), "isFullscreen")) as boolean;
+    return (await getBrowserValue<VerificationGridSettingsComponent>(
+      this.settingsComponent(),
+      "isFullscreen",
+    )) as boolean;
   }
 
   public async clickFullscreenButton(): Promise<void> {
     const fullscreenButton = this.fullscreenButton();
     await fullscreenButton.click();
+  }
+
+  /** Changes the verification grids size through the `grid-size` attribute */
+  public async changeVerificationGridSize(newValue: string): Promise<void> {
+    // the setBrowserAttribute helper function takes a property key of the
+    // component as the second parameter
+    // however, because "grid-size" is an attribute, not a property, TypeScript
+    // doesn't recognize it as a property. Therefore, we use a type cast here
+    // TODO: remove this type casting when we correctly type the helper function
+    await setBrowserAttribute<VerificationGridComponent>(
+      this.verificationGrid(),
+      "grid-size" as keyof VerificationGridComponent,
+      newValue,
+    );
+  }
+
+  /** Changes the verification grids size through the settings component */
+  public async changeSettingsGridSize(newGridSize: number): Promise<void> {
+    const inputElement = this.gridSizeInput();
+    await setBrowserValue<HTMLInputElement>(inputElement, "value", newGridSize);
+    await emitBrowserEvent<HTMLInputElement>(inputElement, "change");
+  }
+
+  /** Returns the value of the verification grids `grid-size` attribute */
+  public async verificationGridSize(): Promise<number> {
+    return (await getBrowserValue<VerificationGridComponent>(this.verificationGrid(), "gridSize")) as number;
+  }
+
+  /** Returns the grid size shown by the grid size settings input */
+  public async gridSizeInputValue(): Promise<string> {
+    await this.gridSizeTriggerButton().click();
+    return (await getBrowserValue<HTMLInputElement>(this.gridSizeInput(), "value")) as string;
   }
 }
 
