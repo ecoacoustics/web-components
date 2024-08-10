@@ -334,7 +334,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       this.requestUpdate();
     };
 
-    const changeNumberHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
+    const changeNumberHandler = (event: Event) => {
       if (!this.spectrogramElement) {
         throw new Error("No spectrogram element found");
       }
@@ -375,26 +375,32 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         <a slot="trigger">
           <sl-icon name="brightness-high"></sl-icon>
         </a>
-        <label>
-          <input
-            @change="${changeNumberHandler}"
-            name="brightness"
-            type="range"
-            min="-0.5"
-            max="0.5"
-            step="0.1"
-            value="0"
-          />
-        </label>
+
+        <sl-menu>
+          <label>
+            <input
+              @change="${changeNumberHandler}"
+              name="brightness"
+              type="range"
+              min="-0.5"
+              max="0.5"
+              step="0.1"
+              value="0"
+            />
+          </label>
+        </sl-menu>
       </sl-dropdown>
 
       <sl-dropdown title="Contrast" hoist>
         <a slot="trigger">
           <sl-icon name="circle-half"></sl-icon>
         </a>
-        <label>
-          <input @change="${changeNumberHandler}" name="contrast" type="range" min="0" max="2" step="0.1" value="1" />
-        </label>
+
+        <sl-menu>
+          <label>
+            <input @change="${changeNumberHandler}" name="contrast" type="range" min="0" max="2" step="0.1" value="1" />
+          </label>
+        </sl-menu>
       </sl-dropdown>
 
       ${this.additionalSettingsTemplate()}

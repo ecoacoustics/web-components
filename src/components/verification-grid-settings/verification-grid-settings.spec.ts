@@ -11,28 +11,92 @@ test.describe("Verification Grid Settings Component", () => {
     expect(initialFullscreenState).toBe(false);
   });
 
-  test("should fullscreen the verification grid when the fullscreen button is pressed", async ({ fixture }) => {
-    await fixture.clickFullscreenButton();
+  test.describe("Fullscreen mode", () => {
+    test("should fullscreen the verification grid when the fullscreen button is pressed", async ({ fixture }) => {
+      await fixture.clickFullscreenButton();
 
-    const isFullscreen = await fixture.isFullscreen();
-    expect(isFullscreen).toBe(true);
+      const isFullscreen = await fixture.isFullscreen();
+      expect(isFullscreen).toBe(true);
+    });
+
+    test("should exit fullscreen when the button is pressed when in fullscreen mode", async ({ fixture }) => {
+      await fixture.clickFullscreenButton();
+      await fixture.clickFullscreenButton();
+
+      const isFullscreen = await fixture.isFullscreen();
+      expect(isFullscreen).toBe(false);
+    });
+
+    test("should be able to return to fullscreen after exiting fullscreen using the button", async ({ fixture }) => {
+      await fixture.clickFullscreenButton();
+      await fixture.clickFullscreenButton();
+
+      await fixture.clickFullscreenButton();
+
+      const isFullscreen = await fixture.isFullscreen();
+      expect(isFullscreen).toBe(true);
+    });
   });
 
-  test("should exit fullscreen when the button is pressed when in fullscreen mode", async ({ fixture }) => {
-    await fixture.clickFullscreenButton();
-    await fixture.clickFullscreenButton();
+  test.describe("Changing grid size", () => {
+    // we test that the settings component can change the grid size to one
+    // because it is the smallest value that can be set through the settings
+    // component
+    test("should be able to change the grid size to one", async ({ fixture }) => {
+      const testGridSize = 1;
+      await fixture.changeSettingsGridSize(testGridSize);
 
-    const isFullscreen = await fixture.isFullscreen();
-    expect(isFullscreen).toBe(false);
-  });
+      const realizedGridSize = await fixture.verificationGridSize();
+      expect(realizedGridSize).toBe(testGridSize);
+    });
 
-  test("should be able to return to fullscreen after exiting fullscreen using the button", async ({ fixture }) => {
-    await fixture.clickFullscreenButton();
-    await fixture.clickFullscreenButton();
+    // we test that the settings component can change the grid size to twelve
+    // because it is the largest value that can be set through the settings
+    // component
+    test("should be able to change the grid size to twelve", async ({ fixture }) => {
+      const testGridSize = 12;
+      await fixture.changeSettingsGridSize(testGridSize);
 
-    await fixture.clickFullscreenButton();
+      const realizedGridSize = await fixture.verificationGridSize();
+      expect(realizedGridSize).toBe(testGridSize);
+    });
 
-    const isFullscreen = await fixture.isFullscreen();
-    expect(isFullscreen).toBe(true);
+    // this test asserts that if the verification grids size is updated through
+    // the settings component that the correct grid size is shown in the input
+    test("should have the correct input value after changing the grid size through the input", async ({ fixture }) => {
+      const testValue = 8;
+      await fixture.changeSettingsGridSize(testValue);
+
+      const realizedInputValue = await fixture.gridSizeInputValue();
+      expect(realizedInputValue).toBe(testValue.toString());
+    });
+
+    test("should have the correct label after changing the grid size through the input", async ({ fixture }) => {
+      const expectedLabel = "8";
+      await fixture.changeSettingsGridSize(8);
+      await expect(fixture.gridSizeLabel()).toHaveText(expectedLabel);
+    });
+
+    // this tests asserts that if the verification grids size is updated
+    // not through the settings component (e.g. through an attribute change)
+    // that the correct grid size is shown in the input
+    test("should have the correct input value after changing the grid size through grid", async ({ fixture }) => {
+      const testValue = "4";
+      await fixture.changeVerificationGridSize(testValue);
+
+      const realizedInputValue = await fixture.gridSizeInputValue();
+      expect(realizedInputValue).toBe(testValue);
+    });
+
+    test("should have the correct label after changing the grid size through grid", async ({ fixture }) => {
+      const expectedLabel = "8";
+      await fixture.changeSettingsGridSize(8);
+      await expect(fixture.gridSizeLabel()).toHaveText(expectedLabel);
+    });
+
+    // TODO: these tests are currently disabled because we have not implemented
+    // the functionality ot automatically scale down the verification grid if
+    // it does not fit on the screen
+    test.skip("should not be able to change the grid size to a count that would not fit on the screen", () => {});
   });
 });

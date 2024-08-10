@@ -17,7 +17,7 @@ import {
   VerificationGridTileComponent,
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
-import { DecisionId } from "../../models/decisions/decision";
+import { Decision, DecisionId } from "../../models/decisions/decision";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -139,6 +139,11 @@ class TestPage {
     return values;
   }
 
+  public async appliedDecisions(): Promise<Decision[]> {
+    const tileModels = await this.verificationGridTileModels();
+    return tileModels.flatMap((model) => model.decisionModels);
+  }
+
   public async tileHighlightColors(): Promise<number[]> {
     const values: number[] = [];
     const tiles = await this.gridTileComponents();
@@ -188,6 +193,15 @@ class TestPage {
     }
 
     return highlightedButtons.map((_, i) => i);
+  }
+  public async verificationGridTileModels(): Promise<SubjectWrapper[]> {
+    const gridTiles = await this.gridTileComponents();
+
+    const gridTileModels = gridTiles.map(async (tile) => {
+      return (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+    });
+
+    return await Promise.all(gridTileModels);
   }
 
   public async areMediaControlsPlaying(index: number): Promise<boolean> {
