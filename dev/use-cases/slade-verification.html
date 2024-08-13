@@ -11,17 +11,6 @@
     <div id="grid-host">
       <oe-verification-grid id="verification-grid" grid-size="1">
         <template>
-          <oe-axes>
-            <oe-indicator>
-              <oe-spectrogram
-                id="spectrogram"
-                color-map="audacity"
-                style="width: 800px"
-                scaling="stretch"
-              ></oe-spectrogram>
-            </oe-indicator>
-          </oe-axes>
-          <oe-media-controls for="spectrogram"></oe-media-controls>
           <oe-info-card></oe-info-card>
         </template>
 
@@ -29,7 +18,7 @@
         <oe-verification verified="false" shortcut="N">False</oe-verification>
         <oe-verification verified="unsure" shortcut="U">Unsure</oe-verification>
 
-        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
+        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
       </oe-verification-grid>
     </div>
 

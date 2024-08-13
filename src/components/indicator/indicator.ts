@@ -2,11 +2,11 @@ import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
 import { html, LitElement, unsafeCSS } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import indicatorStyles from "./css/style.css?inline";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
+import indicatorStyles from "./css/style.css?inline";
 
 /**
  * @description

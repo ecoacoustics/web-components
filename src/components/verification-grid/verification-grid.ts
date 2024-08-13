@@ -1,7 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { queryDeeplyAssignedElement } from "../../helpers/decorators";
+import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
@@ -16,9 +15,23 @@ import { VerificationComponent } from "decision/verification/verification";
 import { Decision } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
 import { Verification } from "../../models/decisions/verification";
+import { createContext, provide } from "@lit/context";
+import { signal, Signal } from "@lit-labs/preact-signals";
+import { queryDeeplyAssignedElement } from "../../helpers/decorators";
+import { repeat } from "lit/directives/repeat.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { when } from "lit/directives/when.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
+
+export interface VerificationGridSettings {
+  showAxes: Signal<boolean>;
+  showMediaControls: Signal<boolean>;
+  isFullscreen: Signal<boolean>;
+}
+
+export const verificationGridContext = createContext<VerificationGridSettings>(Symbol("verification-grid-context"));
 
 type SelectionEvent = CustomEvent<{
   shiftKey: boolean;
@@ -54,17 +67,13 @@ interface HighlightSelection {
  * ```html
  * <oe-verification-grid gridSize="10">
  *   <template>
- *     <oe-axes>
- *        <oe-indicator>
- *          <oe-spectrogram id="spectrogram" color-map="audacity" scaling="stretch"></oe-spectrogram>
- *        </oe-indicator>
- *     </oe-axes>
+ *     <oe-info-card></oe-info-card>
  *   </template>
  *
- *   <oe-decision verified="true" additional-tags="female" shortcut="H">Koala</oe-decision>
- *   <oe-decision verified="true" additional-tags="male" shortcut="J">Koala</oe-decision>
- *   <oe-decision shortcut="S" skip>Skip</oe-decision>
- *   <oe-decision shortcut="S" unsure>Unsure</oe-decision>
+ *   <oe-verification verified="true" additional-tags="female" shortcut="H">Koala</oe-verification>
+ *   <oe-verification verified="true" additional-tags="male" shortcut="J">Koala</oe-verification>
+ *   <oe-verification shortcut="S" skip>Skip</oe-verification>
+ *   <oe-verification shortcut="S" unsure>Unsure</oe-verification>
  *
  *   <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
  *   </oe-data-source>
@@ -87,6 +96,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public static readonly decisionMadeEventName = "decision-made" as const;
   private static readonly loadedEventName = "loaded" as const;
 
+  @provide({ context: verificationGridContext })
+  @state()
+  public settings: VerificationGridSettings = {
+    showAxes: signal(true),
+    showMediaControls: signal(true),
+    isFullscreen: signal(false),
+  };
+
   /** The number of items to display in a single grid */
   @property({ attribute: "grid-size", type: Number, reflect: true })
   public gridSize = 8;
@@ -104,9 +121,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public getPage?: PageFetcher;
 
   @state()
-  private spectrogramElements?: TemplateResult<1> | TemplateResult<1>[];
-
-  @state()
   private historyHead = 0;
 
   /** selector for oe-verification elements */
@@ -118,7 +132,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private classificationDecisionElements!: ClassificationComponent[];
 
   @queryDeeplyAssignedElement({ selector: "template" })
-  private gridItemTemplate!: HTMLTemplateElement;
+  private gridItemTemplate?: HTMLTemplateElement;
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -137,6 +151,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   @state()
   private currentSubSelection: SubjectWrapper[] = [];
+
+  /** The array of subjects that are currently displayed in grid tiles */
+  @state()
+  public currentPage: SubjectWrapper[] = [];
 
   public get pagedItems(): number {
     return this.subjectHistory.length;
@@ -158,8 +176,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionHandler = this.handleDecision.bind(this);
   private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
+  // the subject history contains all the subjects that have decisions applied
+  // to them, while the verification buffer contains all the subjects that have
+  // not yet been verified
+  // TODO: these two buffers will be consolidated as part of
+  // https://github.com/ecoacoustics/web-components/issues/139
   public subjectHistory: SubjectWrapper[] = [];
-  public currentPage: SubjectWrapper[] = [];
+  private verificationBuffer: SubjectWrapper[] = [];
   private hiddenTiles = 0;
   private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
@@ -238,22 +261,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
-    const renderInvalidationKeys: (keyof this)[] = ["gridSize"];
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
     // gridSize is a part of source invalidation because if the grid size
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
     const sourceInvalidationKeys: (keyof this)[] = ["getPage", "gridSize"];
-
-    // a full render invalidation causes all the grid tiles elements to be
-    // destroyed and re-created. This should always be a last resort
-    // we do this first so that if there is a source or tile invalidation
-    // the changes are applied to the newly created grid tile elements
-    // without requiring a double render
-    if (renderInvalidationKeys.some((key) => change.has(key))) {
-      this.handleRenderInvalidation();
-    }
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -304,7 +317,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
       this.currentPage = await this.paginationFetcher.getItems(this.gridSize);
-      await this.renderCurrentPage();
     }
 
     const decisionElements = this.decisionElements;
@@ -313,10 +325,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         element.decisionId = i;
       });
     }
-  }
-
-  private handleRenderInvalidation(): void {
-    this.createSpectrogramElements();
   }
 
   //#endregion
@@ -755,10 +763,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#region Navigation
 
-  private handlePreviousPageClick(): void {
+  private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
       this.historyHead += this.gridSize;
-      this.renderHistory(this.historyHead);
+      await this.renderHistory(this.historyHead);
     }
   }
 
@@ -768,20 +776,20 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  private pageForwardHistory(): void {
+  private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
       this.historyHead -= this.gridSize;
-      this.renderHistory(this.historyHead);
+      await this.renderHistory(this.historyHead);
     }
   }
 
-  private renderHistory(historyOffset: number) {
+  private async renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
     const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.gridSize);
     const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
 
     this.historyMode();
-    this.renderVirtualPage(decisionHistory);
+    await this.renderVirtualPage(decisionHistory);
     this.removeDecisionButtonHighlight();
     this.showDecisionButtonHighlight(this.pageTouchedDecisionElements());
   }
@@ -802,8 +810,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have to recreate these grid tiles before we can start
     // rendering history (if they are not present)
     if (!this.gridTiles || this.gridTiles.length === 0) {
-      this.createSpectrogramElements();
-
       // TODO: forcing a synchronous update is hacky, and we should definitely remove it
       this.performUpdate();
     }
@@ -828,8 +834,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    * @description
    * Changes to the "verification mode" and renders the
    */
-  private resumeVerification(): void {
-    this.renderCurrentPage();
+  private async resumeVerification(): Promise<void> {
+    await this.renderVirtualPage(this.verificationBuffer);
     this.verificationMode();
   }
 
@@ -846,7 +852,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     this.subjectHistory.push(...this.currentPage);
     this.currentPage = await this.paginationFetcher.getItems(count);
-    this.renderVirtualPage(this.currentPage);
+    this.verificationBuffer = this.currentPage;
+    await this.renderVirtualPage(this.currentPage);
   }
 
   private canNavigatePrevious(): boolean {
@@ -913,7 +920,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(0.3);
-      this.nextPage();
+      await this.nextPage();
     }
   }
 
@@ -995,11 +1002,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    * on the current page of spectrograms
    */
   private pageTouchedDecisionElements(): DecisionComponent[] {
-    const gridTiles = Array.from(this.gridTiles);
-    const shownGridTiles = gridTiles.filter((tile) => !tile.hidden);
-    const tileDecisions = shownGridTiles.flatMap((tile) => Array.from(tile.decisionIndices));
+    const touchedDecisionIds = this.currentPage.flatMap((subject: SubjectWrapper) =>
+      subject.decisionModels.map((decision) => decision.decisionId),
+    );
 
-    return this.decisionElements.filter((element) => tileDecisions.includes(element.decisionId));
+    return this.decisionElements.filter((element) => touchedDecisionIds.includes(element.decisionId));
   }
 
   private showDecisionButtonHighlight(elements: DecisionComponent[]): void {
@@ -1019,20 +1026,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#region Rendering
 
-  private async renderCurrentPage(): Promise<void> {
-    if (!this.paginationFetcher) {
-      throw new Error("Pagination fetcher not found");
-    }
-
-    this.renderVirtualPage(this.currentPage);
-  }
-
   private async renderVirtualPage(nextPage: SubjectWrapper[]): Promise<void> {
-    const elements = this.gridTiles;
-    if (elements === undefined || elements.length === 0) {
-      throw new Error("Could not find instantiated spectrogram elements");
-    }
-
     // even though making a decision will cause the spectrograms to load and
     // emit the "loading" event (causing the decision buttons to be disabled)
     // there can be some input lag between when we request to change the src
@@ -1041,19 +1035,20 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // user can't continue making decisions that won't be saved when downloaded
     this.setDecisionDisabled(true);
 
-    // if this guard condition is true, it means that we have exhausted the
-    // entire data source provided by the getPage callback
-    if (nextPage.length === 0) {
-      this.spectrogramElements = this.noItemsTemplate();
+    // by setting the current page, we trigger the template to render the
+    // grid tiles with the new subjects
+    this.currentPage = nextPage;
+
+    const elements = this.gridTiles;
+    if (elements === undefined || elements.length === 0) {
       return;
     }
 
-    nextPage.forEach((item: SubjectWrapper, i: number) => {
-      const tile = elements[i];
-
-      tile.model = item;
-      tile.index = i;
-    });
+    // if this guard condition is true, it means that we have exhausted the
+    // entire data source provided by the getPage callback
+    if (nextPage.length === 0) {
+      return;
+    }
 
     // if we are on the last page, we hide the remaining elements
     const pagedDelta = elements.length - nextPage.length;
@@ -1084,34 +1079,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private hasDecisionElements(): boolean {
     return Array.from(this.decisionElements ?? []).length > 0;
-  }
-
-  private createSpectrogramElements(): void {
-    // we use a buffer so that the entire component doesn't re-render
-    // every time that we add a spectrogram element
-    const verificationGridBuffer = [];
-
-    // TODO: we might be able to do partial rendering or removal if some of the
-    // needed spectrogram elements already exist
-    // see: https://github.com/ecoacoustics/web-components/issues/149
-    // TODO: we might be able to set the OE verification model when creating the elements
-    for (let i = 0; i < this.gridSize; i++) {
-      const template = this.gridItemTemplate.content.cloneNode(true);
-      verificationGridBuffer.push(
-        html`<oe-verification-grid-tile @loaded="${this.handleSpectrogramLoaded}">
-          ${template}
-        </oe-verification-grid-tile>`,
-      );
-    }
-
-    this.spectrogramElements = verificationGridBuffer;
-
-    // we store the grid tiles inside a const variable so that we don't have
-    // to do a DOM query in every loop iteration
-    const gridTiles = this.gridTiles ?? [];
-    for (const element of gridTiles) {
-      this.intersectionObserver.observe(element);
-    }
   }
 
   private areSpectrogramsLoaded(): boolean {
@@ -1226,12 +1193,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private noDecisionsTemplate(): TemplateResult<1> {
-    return html` <strong class="no-decisions-warning"> No decisions available. </strong> `;
+    return html`<strong class="no-decisions-warning">No decisions available.</strong>`;
   }
 
   // TODO: this function could definitely be refactored
   private doneDecisionTemplate(): TemplateResult<1> {
-    const doneEventHandler = (event: DecisionEvent) => {
+    const doneEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
       const requiredTags = this.requiredTags();
@@ -1242,7 +1209,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         tile.model.skipUndecided(hasVerificationTask, requiredTags);
       }
 
-      this.nextPage();
+      await this.nextPage();
     };
 
     return html`
@@ -1251,6 +1218,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   public render() {
+    let customTemplate: any = nothing;
+    if (this.gridItemTemplate) {
+      customTemplate = this.gridItemTemplate.cloneNode(true);
+    }
+
     return html`
       <oe-verification-help-dialog
         @open="${this.handleHelpDialogOpen}"
@@ -1268,7 +1240,24 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @pointermove="${this.resizeHighlightBox}"
           class="verification-grid"
         >
-          ${this.spectrogramElements}
+          ${when(
+            this.currentPage.length === 0,
+            () => this.noItemsTemplate(),
+            () => html`
+              ${repeat(
+                this.currentPage,
+                (subject: SubjectWrapper, i: number) => html`
+                  <oe-verification-grid-tile
+                    @loaded="${this.handleSpectrogramLoaded}"
+                    .model="${subject}"
+                    .index="${i}"
+                  >
+                    ${unsafeHTML(customTemplate.innerHTML)}
+                  </oe-verification-grid-tile>
+                `,
+              )}
+            `,
+          )}
         </div>
 
         <div class="verification-controls">

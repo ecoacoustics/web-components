@@ -27,14 +27,6 @@ class DecisionFixture {
   }
 
   // change attributes
-  public async changeDecisionColor(color: string) {
-    await setBrowserAttribute<DecisionComponent>(this.component(), "color", color);
-  }
-
-  public async changeDecisionTag(tag: string) {
-    await setBrowserAttribute<DecisionComponent>(this.component(), "tag", tag);
-  }
-
   public async changeDecisionShortcut(shortcut: string) {
     await setBrowserAttribute<DecisionComponent>(this.component(), "shortcut", shortcut);
   }
@@ -72,13 +64,8 @@ class DecisionFixture {
     await setBrowserAttribute<DecisionComponent>(this.component(), "shortcut", value);
   }
 
-  public async changeDecisionType(value: "skip" | "unsure" | "all") {
-    const possibleValues: (keyof DecisionComponent)[] = ["skip", "unsure", "all"];
-    for (const possibleValue of possibleValues) {
-      await removeBrowserAttribute<DecisionComponent>(this.component(), possibleValue);
-    }
-
-    await setBrowserAttribute<DecisionComponent>(this.component(), value);
+  public async changeDecisionType(value: string) {
+    await setBrowserAttribute<DecisionComponent>(this.component(), "verified", value);
   }
 
   // get page properties

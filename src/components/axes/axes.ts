@@ -1,6 +1,5 @@
 import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import axesStyles from "./css/style.css?inline";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -18,6 +17,7 @@ import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { hertzToMHertz } from "../../helpers/converters";
+import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't
 // attempt to re-render an axes that will result in the same template

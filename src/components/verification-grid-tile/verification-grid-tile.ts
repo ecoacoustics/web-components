@@ -1,16 +1,18 @@
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { CSSResult, html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
-import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { classMap } from "lit/directives/class-map.js";
-import { createContext, provide } from "@lit/context";
+import { consume, createContext, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
 import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
-import verificationGridTileStyles from "./css/style.css?inline";
 import { Decision } from "../../models/decisions/decision";
+import { SignalWatcher, watch } from "@lit-labs/preact-signals";
+import { verificationGridContext, VerificationGridSettings } from "../verification-grid/verification-grid";
+import { when } from "lit/directives/when.js";
+import verificationGridTileStyles from "./css/style.css?inline";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
@@ -26,7 +28,7 @@ const shortcutTranslation: Record<string, string> = {
   0: ")",
 } as const;
 
-export const gridTileContext = createContext<SubjectWrapper>("grid-tile-context");
+export const gridTileContext = createContext<SubjectWrapper>(Symbol("grid-tile-context"));
 
 /**
  * @description
@@ -45,7 +47,7 @@ export const gridTileContext = createContext<SubjectWrapper>("grid-tile-context"
  * @fires Loaded
  */
 @customElement("oe-verification-grid-tile")
-export class VerificationGridTileComponent extends AbstractComponent(LitElement) {
+export class VerificationGridTileComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   public static readonly selectedEventName = "selected" as const;
@@ -53,6 +55,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   @provide({ context: gridTileContext })
   @property({ attribute: false })
   public model!: SubjectWrapper;
+
+  @consume({ context: verificationGridContext, subscribe: true })
+  @state()
+  private settings!: VerificationGridSettings;
 
   /**
    * Hides a grid tile. This is useful for virtual paging so if you have a
@@ -77,7 +83,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   @property({ attribute: false, type: Number })
   public index = 0;
 
-  @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
+  @query("oe-spectrogram")
   private spectrogram?: SpectrogramComponent;
 
   @query("#contents-wrapper")
@@ -95,7 +101,8 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     if (!this.model) {
       return [];
     }
-    return this.model.decisionModels.map((decision) => decision.decisionId);
+
+    return this.model.decisionModels.map((decision) => decision.decisionId).filter((decisionId) => decisionId >= 0);
   }
 
   public connectedCallback(): void {
@@ -294,6 +301,25 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container ${figureClasses}">
           <figcaption class="tag-label">${this.model?.tag}</figcaption>
+
+          <oe-axes
+            ?x-title-visible="${watch(this.settings.showAxes)}"
+            ?y-title-visible="${watch(this.settings.showAxes)}"
+            ?x-axis="${watch(this.settings.showAxes)}"
+            ?y-axis="${watch(this.settings.showAxes)}"
+            ?x-grid="${watch(this.settings.showAxes)}"
+            ?y-grid="${watch(this.settings.showAxes)}"
+          >
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
+          ${when(
+            this.settings.showMediaControls.value,
+            () => html`<oe-media-controls for="spectrogram"></oe-media-controls>`,
+          )}
+
           <slot></slot>
         </figure>
       </div>
