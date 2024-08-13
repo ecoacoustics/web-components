@@ -11,13 +11,15 @@ class VerificationGridFixture {
 
   public async create() {
     await this.page.setContent(`
-      <oe-verification-grid>
+      <oe-verification-grid id="verification-grid">
         <template>
           <div class="template-element"></div>
         </template>
 
-        <oe-data-source src="http://localhost:3000/grid-items.json">
-        </oe-data-source>
+        <oe-data-source
+          src="http://localhost:3000/grid-items.json"
+          for="verification-grid"
+        ></oe-data-source>
       </oe-verification-grid>
     `);
     await this.page.waitForLoadState("networkidle");
@@ -26,7 +28,7 @@ class VerificationGridFixture {
 
   public async createWithDecisionElements() {
     await this.page.setContent(`
-      <oe-verification-grid>
+      <oe-verification-grid id="verification-grid">
         <template>
           <div class="template-element"></div>
         </template>
@@ -34,8 +36,10 @@ class VerificationGridFixture {
         <oe-decision verified="true" tag="koala" shortcut="Y">Koala</oe-decision>
         <oe-decision verified="false" tag="koala" shortcut="N">Not Koala</oe-decision>
 
-        <oe-data-source src="http://localhost:3000/grid-items.json">
-        </oe-data-source>
+        <oe-data-source
+          src="http://localhost:3000/grid-items.json"
+          for="verification-grid"
+        ></oe-data-source>
       </oe-verification-grid>
     `);
     await this.page.waitForLoadState("networkidle");

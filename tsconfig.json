@@ -37,6 +37,15 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
 
-    "plugins": [{ "name": "ts-lit-plugin" }]
+    "plugins": [
+      {
+        "name": "ts-lit-plugin",
+        "rules": {
+          // we have decided to disable this rule because it has many false positives
+          // https://github.com/ecoacoustics/web-components/pull/151#discussion_r1722484754
+          "no-complex-attribute-binding": "off"
+        }
+      }
+    ]
   }
 }

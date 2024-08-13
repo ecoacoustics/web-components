@@ -6,9 +6,13 @@ import { SpectrogramCanvasScale, VerificationGridComponent, VerificationGridTile
 import { SubjectWrapper } from "../../models/subject";
 
 test.describe("while the initial help dialog is open", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should show an initial help dialog", async ({ fixture }) => {
-    const helpDialog = fixture.helpDialog();
-    expect(helpDialog).toBeVisible();
+    const isHelpDialogOpen = await fixture.isHelpDialogOpen();
+    expect(isHelpDialogOpen).toBe(true);
   });
 
   // test("should not be able to sub-select grid tiles with keyboard shortcuts", async ({ fixture }) => {
@@ -49,7 +53,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should have the correct decisions", async ({ fixture }) => {
-      const expectedDecisions = ["Koala", "Not Koala", "Skip"];
+      const expectedDecisions = ["Koala", "Not Koala"];
       const decisions = await fixture.availableDecision();
       expect(decisions).toEqual(expectedDecisions);
     });
@@ -57,6 +61,11 @@ test.describe("single verification grid", () => {
     test("should not show decision highlights", async ({ fixture }) => {
       const initialDecisionHighlights = await fixture.highlightedTiles();
       expect(initialDecisionHighlights).toHaveLength(0);
+    });
+
+    test("should not start in fullscreen mode", async ({ fixture }) => {
+      const fullscreenState = await fixture.isFullscreen();
+      expect(fullscreenState).toBe(false);
     });
   });
 
@@ -69,8 +78,8 @@ test.describe("single verification grid", () => {
     });
 
     test("should open when the help button is clicked", async ({ fixture }) => {
-      const helpDialog = fixture.helpDialog();
-      expect(helpDialog).toBeVisible();
+      const isHelpDialogOpen = await fixture.isHelpDialogOpen();
+      expect(isHelpDialogOpen).toBe(true);
     });
 
     test("should not have an option to now show the help dialog again", async ({ fixture }) => {
@@ -293,23 +302,43 @@ test.describe("single verification grid", () => {
     // });
   });
 
-  test.describe("changing the tile template after creation", () => {
-    test.skip("should allow removing the info card", () => {});
+  test.describe("changing settings", () => {
+    test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
+      // we check the initial state of the axes component visibility to protect
+      // against test state pollution/leakage
+      const initialState = await fixture.areAxesVisible();
+      expect(initialState).toBe(true);
 
-    test.skip("should allow removing the playback indicator", () => {});
+      await fixture.showAxes(false);
 
-    test.skip("should allow removing the axes component", () => {});
+      const realizedState = await fixture.areAxesVisible();
+      expect(realizedState).toBe(false);
+    });
+
+    test("disabling the media controls in the settings should hide the media controls", async ({ fixture }) => {
+      const initialState = await fixture.areMediaControlsVisible();
+      expect(initialState).toBe(true);
+
+      await fixture.showMediaControls(false);
+
+      const realizedState = await fixture.areMediaControlsVisible();
+      expect(realizedState).toBe(false);
+    });
   });
 
   test.describe("data sources", () => {
-    test("should show a local data source in the correct location", async ({ fixture }) => {
+    // TODO: this test is broken/disabled because spectrograms can cover the
+    // file input button, causing visibility checks to fail
+    // I can only reproduce this in Playwright, not in the browser
+    // fix as part of https://github.com/ecoacoustics/web-components/issues/86
+    test.fixme("should show a local data source in the correct location", async ({ fixture }) => {
       await fixture.changeSourceLocal(true);
-      expect(fixture.fileInputButton()).toBeVisible();
+      await expect(fixture.fileInputButton()).toBeVisible();
     });
 
     test("should not show a remote data source", async ({ fixture }) => {
       await fixture.changeSourceLocal(false);
-      expect(fixture.fileInputButton()).toBeHidden();
+      await expect(fixture.fileInputButton()).toBeHidden();
     });
   });
 
@@ -341,32 +370,32 @@ test.describe("single verification grid", () => {
 
   test.describe("pagination", () => {
     test("should disable the previous button when there are no previous pages", async ({ fixture }) => {
-      expect(fixture.previousPageButton()).toBeDisabled();
+      await expect(fixture.previousPageButton()).toBeDisabled();
     });
 
     test("should disable the previous page button when at the start of history", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.makeDecision(0);
-      expect(fixture.previousPageButton()).toBeEnabled();
+      await expect(fixture.previousPageButton()).toBeEnabled();
 
       await fixture.viewPreviousHistoryPage();
-      expect(fixture.previousPageButton()).toBeEnabled();
+      await expect(fixture.previousPageButton()).toBeEnabled();
       await fixture.viewPreviousHistoryPage();
-      expect(fixture.previousPageButton()).toBeDisabled();
+      await expect(fixture.previousPageButton()).toBeDisabled();
     });
 
     test("should show the next page button when viewing history", async ({ fixture }) => {
       await fixture.makeDecision(0);
-      await fixture.makeDecision(0);
+      await fixture.makeDecision(1);
       await fixture.viewPreviousHistoryPage();
-      expect(fixture.nextPageButton()).toBeVisible();
+      await expect(fixture.nextPageButton()).toBeVisible();
     });
 
     test("should disable the next button when there are no next pages", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
-      expect(fixture.nextPageButton()).toBeVisible();
+      await expect(fixture.nextPageButton()).toBeVisible();
     });
 
     test("should hide the 'Continue Verifying' button when not viewing history", async ({ fixture }) => {
@@ -376,8 +405,8 @@ test.describe("single verification grid", () => {
     test("should show the 'Continue Verifying' button when viewing history", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
-      expect(fixture.continueVerifyingButton()).toBeVisible();
-      expect(fixture.continueVerifyingButton()).toBeEnabled();
+      await expect(fixture.continueVerifyingButton()).toBeVisible();
+      await expect(fixture.continueVerifyingButton()).toBeEnabled();
     });
 
     test("should start viewing history when the previous page button is clicked", async ({ fixture }) => {
@@ -468,71 +497,6 @@ test.describe("single verification grid", () => {
     test("should deselect all tiles if the escape key is pressed", () => {});
   });
 
-  test.describe("information cards", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.changeGridSource(fixture.testJsonInput);
-    });
-
-    test("should show the information about the current tile", async ({ fixture }) => {
-      const expectedInfoCard = [
-        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
-        { key: "FileId", value: "643,356" },
-        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
-      ];
-
-      const realizedInfoCard = await fixture.infoCardItem(0);
-      expect(realizedInfoCard).toEqual(expectedInfoCard);
-    });
-
-    test.skip("should update correctly when paging", async ({ fixture }) => {
-      await fixture.makeDecision(0);
-
-      // because it can take a while for the next page to load, and the info
-      // cards to update, we have to wait until we receive the "loaded" event
-      // from the grid component that signals that the next page has been loaded
-      await catchLocatorEvent(fixture.gridComponent(), "loaded");
-
-      const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
-      ];
-      const realizedInfoCard = await fixture.infoCardItem(0);
-      expect(realizedInfoCard).toEqual(expectedInfoCard);
-    });
-
-    test.skip("should update correctly when viewing history", async ({ fixture }) => {
-      await fixture.makeDecision(0);
-      await fixture.viewPreviousHistoryPage();
-
-      const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
-      ];
-      const realizedInfoCard = await fixture.infoCardItem(0);
-      expect(realizedInfoCard).toEqual(expectedInfoCard);
-    });
-
-    test.skip("should update correctly when changing the grid source", async ({ fixture }) => {
-      const expectedInitialInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
-      ];
-      const expectedNewInfoCard = [
-        { key: "Title 3", value: "Description 3" },
-        { key: "Title 4", value: "Description 4" },
-      ];
-
-      await fixture.changeGridSource(fixture.testJsonInput);
-
-      const realizedInitialInfoCard = await fixture.infoCardItem(0);
-      expect(realizedInitialInfoCard).toEqual(expectedInitialInfoCard);
-
-      await fixture.changeGridSource(fixture.secondJsonInput);
-      const realizedNewInfoCard = await fixture.infoCardItem(0);
-      expect(realizedNewInfoCard).toEqual(expectedNewInfoCard);
-    });
-  });
-
   test.describe("spectrogram scaling attributes", () => {
     const testedScales: SpectrogramCanvasScale[] = ["stretch", "natural", "original"];
     testedScales.forEach((scale: SpectrogramCanvasScale) => {
@@ -616,4 +580,78 @@ test.describe("single verification grid", () => {
   // during progressive creation, individual elements will be added to the
   // document, meaning that the verification grid is in various invalid states
   test.describe("progressive creation of a verification grid", () => {});
+});
+
+test.describe("verification grid with custom template", () => {
+  test.describe("information cards", () => {
+    test.beforeEach(async ({ fixture }) => {
+      const customTemplate = `
+        <template>
+          <oe-info-card></oe-info-card>
+        </template>
+      `;
+      await fixture.create(customTemplate);
+
+      await fixture.changeGridSource(fixture.testJsonInput);
+    });
+
+    test("should show the information about the current tile", async ({ fixture }) => {
+      const expectedInfoCard = [
+        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
+        { key: "FileId", value: "643,356" },
+        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
+      ];
+
+      const realizedInfoCard = await fixture.infoCardItem(0);
+      expect(realizedInfoCard).toEqual(expectedInfoCard);
+    });
+
+    test.skip("should update correctly when paging", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+
+      // because it can take a while for the next page to load, and the info
+      // cards to update, we have to wait until we receive the "loaded" event
+      // from the grid component that signals that the next page has been loaded
+      await catchLocatorEvent(fixture.gridComponent(), "loaded");
+
+      const expectedInfoCard = [
+        { key: "Title 1", value: "Description 1" },
+        { key: "Title 2", value: "Description 2" },
+      ];
+      const realizedInfoCard = await fixture.infoCardItem(0);
+      expect(realizedInfoCard).toEqual(expectedInfoCard);
+    });
+
+    test.skip("should update correctly when viewing history", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedInfoCard = [
+        { key: "Title 1", value: "Description 1" },
+        { key: "Title 2", value: "Description 2" },
+      ];
+      const realizedInfoCard = await fixture.infoCardItem(0);
+      expect(realizedInfoCard).toEqual(expectedInfoCard);
+    });
+
+    test.skip("should update correctly when changing the grid source", async ({ fixture }) => {
+      const expectedInitialInfoCard = [
+        { key: "Title 1", value: "Description 1" },
+        { key: "Title 2", value: "Description 2" },
+      ];
+      const expectedNewInfoCard = [
+        { key: "Title 3", value: "Description 3" },
+        { key: "Title 4", value: "Description 4" },
+      ];
+
+      await fixture.changeGridSource(fixture.testJsonInput);
+
+      const realizedInitialInfoCard = await fixture.infoCardItem(0);
+      expect(realizedInitialInfoCard).toEqual(expectedInitialInfoCard);
+
+      await fixture.changeGridSource(fixture.secondJsonInput);
+      const realizedNewInfoCard = await fixture.infoCardItem(0);
+      expect(realizedNewInfoCard).toEqual(expectedNewInfoCard);
+    });
+  });
 });

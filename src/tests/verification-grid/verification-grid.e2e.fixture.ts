@@ -7,14 +7,19 @@ import {
   removeBrowserAttribute,
   setBrowserAttribute,
 } from "../helpers";
-import { VerificationGridComponent } from "../../components/verification-grid/verification-grid";
+import {
+  VerificationGridComponent,
+  VerificationGridSettings,
+} from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
 import {
+  AxesComponent,
   DataSourceComponent,
   DecisionComponent,
   MediaControlsComponent,
   SpectrogramCanvasScale,
   VerificationGridTileComponent,
+  VerificationHelpDialogComponent,
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionId } from "../../models/decisions/decision";
@@ -27,8 +32,9 @@ class TestPage {
   public mediaControlsComponent = () => this.page.locator("oe-media-controls").all();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
+  public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public decisionComponents = () => this.page.locator("oe-decision").all();
+  public decisionComponents = () => this.page.locator("oe-verification").all();
 
   public helpDialog = () => this.page.locator("oe-verification-help-dialog").first();
   public helpDialogContainer = () => this.page.locator("#help-dialog").first();
@@ -37,7 +43,6 @@ class TestPage {
   public openHelpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
 
-  public decisionButtons = () => this.page.locator("oe-decision").all();
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
   public continueVerifyingButton = () => this.page.getByTestId("continue-verifying-button").first();
@@ -51,22 +56,14 @@ class TestPage {
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
 
-  public async create() {
+  public async create(customTemplate = "") {
     // disable pre-fetching so we don't wait for heaps of requests to finish
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="3" pre-fetch="false">
-        <template>
-            <oe-axes>
-                <oe-indicator>
-                    <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
-                </oe-indicator>
-            </oe-axes>
-            <oe-media-controls for="spectrogram"></oe-media-controls>
-            <oe-info-card></oe-info-card>
-        </template>
+      <oe-verification-grid id="verification-grid" grid-size="3">
+        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
 
-        <oe-decision verified="true" tag="koala" shortcut="Y">Koala</oe-decision>
-        <oe-decision verified="false" tag="koala" shortcut="N">Not Koala</oe-decision>
+        ${customTemplate}
 
         <oe-data-source
           slot="data-source"
@@ -122,7 +119,7 @@ class TestPage {
   }
 
   public async getDecisionColor(index: number): Promise<number> {
-    const decisionButton = (await this.decisionButtons())[index];
+    const decisionButton = (await this.decisionComponents())[index];
     const color = (await getBrowserValue<DecisionComponent>(decisionButton, "decisionId")) as DecisionId;
     return color;
   }
@@ -181,11 +178,11 @@ class TestPage {
   }
 
   public async highlightedButtons(): Promise<number[]> {
-    const decisionButtons = await this.decisionButtons();
+    const decisionComponents = await this.decisionComponents();
 
     const highlightedButtons: Locator[] = [];
 
-    for (const button of decisionButtons) {
+    for (const button of decisionComponents) {
       const isHighlighted = await getBrowserValue<DecisionComponent>(button, "highlighted");
       if (isHighlighted) {
         highlightedButtons.push(button);
@@ -246,6 +243,43 @@ class TestPage {
     });
   }
 
+  public async areAxesVisible(): Promise<boolean> {
+    // we don't want to check each axes component individually because it is
+    // slow and does not provide much benefit
+    // therefore, we check if the first axes component is visible
+    const axesComponents = await this.axesComponents();
+    const axesComponentToTest = axesComponents[0];
+
+    // when the axes component is hidden, all of its elements are hidden
+    return await axesComponentToTest.evaluate((element: AxesComponent) => {
+      return (
+        element.showXTitle &&
+        element.showYTitle &&
+        element.showXAxis &&
+        element.showYAxis &&
+        element.showXGrid &&
+        element.showYGrid
+      );
+    });
+  }
+
+  public async areMediaControlsVisible(): Promise<boolean> {
+    // we don't use the mediaControls locator defined at the top of the fixture
+    // because playwright will wait 30 seconds for it to appear and throw an
+    // error if it can't find an element to match the selector
+    return (await this.page.locator("oe-media-controls").count()) > 0;
+  }
+
+  public async isFullscreen(): Promise<boolean> {
+    return await this.gridComponent().evaluate((element: VerificationGridComponent) => {
+      return element.settings.isFullscreen.value;
+    });
+  }
+
+  public async isHelpDialogOpen(): Promise<boolean> {
+    return await this.helpDialog().evaluate((element: VerificationHelpDialogComponent) => element.open);
+  }
+
   // actions
   public async nextPage() {
     await this.nextPageButton().click();
@@ -281,8 +315,8 @@ class TestPage {
   }
 
   public async makeDecision(decision: number) {
-    const decisionButtons = await this.decisionButtons();
-    await decisionButtons[decision].click();
+    const decisionComponents = await this.decisionComponents();
+    await decisionComponents[decision].click();
   }
 
   public async viewPreviousHistoryPage() {
@@ -325,6 +359,27 @@ class TestPage {
 
   public async changeSpectrogramScaling(scale: SpectrogramCanvasScale) {
     console.log(scale);
+  }
+
+  public async showMediaControls(visible: boolean) {
+    await this.changeGridSetting("showMediaControls", visible);
+  }
+
+  public async showAxes(visible: boolean) {
+    await this.changeGridSetting("showAxes", visible);
+  }
+
+  public async toggleFullscreen(state: boolean) {
+    await this.changeGridSetting("isFullscreen", state);
+  }
+
+  private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {
+    await this.gridComponent().evaluate(
+      (element: VerificationGridComponent, { key, value }) => {
+        element.settings[key].value = value;
+      },
+      { key, value },
+    );
   }
 }
 

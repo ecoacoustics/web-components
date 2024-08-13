@@ -7,13 +7,16 @@ import { VerificationGridComponent } from "../verification-grid/verification-gri
 class TestPage {
   public constructor(public readonly page: Page) {}
 
-  public settingsComponent = () => this.page.locator("oe-verification-grid-settings");
-  public verificationGrid = () => this.page.locator("oe-verification-grid");
-  public fullscreenButton = () => this.page.locator("#fullscreen-button");
-  public gridSizeTriggerButton = () => this.page.locator("#grid-size-trigger");
-  public gridSizeInput = () => this.page.locator("#grid-size-input");
-  public gridSizeLabel = () => this.page.locator("#grid-size-label");
+  public settingsComponent = () => this.page.locator("oe-verification-grid-settings").first();
+  public verificationGrid = () => this.page.locator("oe-verification-grid").first();
+  public fullscreenButton = () => this.page.locator("#fullscreen-button").first();
+  public gridSizeTriggerButton = () => this.page.locator("#grid-size-trigger").first();
+  public gridSizeInput = () => this.page.locator("#grid-size-input").first();
+  public gridSizeLabel = () => this.page.locator("#grid-size-label").first();
   public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+  public templateSettingsDropdown = () => this.page.getByTestId("template-dropdown").first();
+  public templateTriggerButton = () => this.page.locator("#settings-template-trigger").first();
+  public templateCheckboxes = () => this.page.locator(".template-change-input").all();
 
   public async create() {
     await this.page.setContent(`
@@ -34,10 +37,11 @@ class TestPage {
   }
 
   public async isFullscreen(): Promise<boolean> {
-    return (await getBrowserValue<VerificationGridSettingsComponent>(
-      this.settingsComponent(),
-      "isFullscreen",
-    )) as boolean;
+    return await this.settingsComponent().evaluate((element: VerificationGridSettingsComponent) => {
+      // we use peek() instead of the value property so that we don't subscribe
+      // to the signal (which can risk a memory leak)
+      return element.settings.isFullscreen.peek();
+    });
   }
 
   public async clickFullscreenButton(): Promise<void> {

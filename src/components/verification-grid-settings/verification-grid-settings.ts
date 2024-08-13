@@ -1,18 +1,25 @@
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, unsafeCSS } from "lit";
-import { VerificationGridComponent } from "verification-grid/verification-grid";
+import {
+  VerificationGridComponent,
+  verificationGridContext,
+  VerificationGridSettings,
+} from "../verification-grid/verification-grid";
 import { queryParentElement } from "../../helpers/decorators";
 import { ChangeEvent } from "../../helpers/advancedTypes";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { consume } from "@lit/context";
+import { SignalWatcher } from "@lit-labs/preact-signals";
 import settingComponentStyles from "./css/style.css?inline";
 
 @customElement("oe-verification-grid-settings")
-export class VerificationGridSettingsComponent extends AbstractComponent(LitElement) {
+export class VerificationGridSettingsComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(settingComponentStyles);
 
-  @property({ attribute: false, type: Boolean })
-  public isFullscreen = false;
+  @consume({ context: verificationGridContext, subscribe: true })
+  @state()
+  public settings!: VerificationGridSettings;
 
   /** An internal representation of the verification grids size */
   @state()
@@ -34,7 +41,7 @@ export class VerificationGridSettingsComponent extends AbstractComponent(LitElem
   }
 
   private toggleFullscreen(state?: boolean) {
-    const shouldBeFullscreen = state ?? !this.isFullscreen;
+    const shouldBeFullscreen = state ?? !this.settings.isFullscreen.value;
     const fullscreenTarget = this.verificationGrid;
 
     if (shouldBeFullscreen) {
@@ -51,7 +58,7 @@ export class VerificationGridSettingsComponent extends AbstractComponent(LitElem
   }
 
   private updateFullscreenState(): void {
-    this.isFullscreen = document.fullscreenElement === this.verificationGrid;
+    this.settings.isFullscreen.value = document.fullscreenElement === this.verificationGrid;
   }
 
   private updateGridSizeState(): void {
@@ -104,7 +111,7 @@ export class VerificationGridSettingsComponent extends AbstractComponent(LitElem
               type="range"
               value="${ifDefined(this.gridSize)}"
               min="1"
-              max="12"
+              max="36"
             />
           </label>
         </sl-menu>
@@ -116,7 +123,7 @@ export class VerificationGridSettingsComponent extends AbstractComponent(LitElem
     // document.fullscreenEnabled is a browser API that checks if the current
     // webpage is allowed to enter fullscreen mode
     const canEnterFullscreen = document.fullscreenEnabled;
-    const buttonLabel = `${this.isFullscreen ? "Exit" : "Enter"} fullscreen mode`;
+    const buttonLabel = `${this.settings.isFullscreen.value ? "Exit" : "Enter"} fullscreen mode`;
 
     return html`
       <sl-tooltip content="${buttonLabel}">
@@ -127,7 +134,10 @@ export class VerificationGridSettingsComponent extends AbstractComponent(LitElem
           ?disabled="${!canEnterFullscreen}"
           aria-label="${buttonLabel}"
         >
-          <sl-icon name="${this.isFullscreen ? "fullscreen-exit" : "arrows-fullscreen"}" class="large-icon"></sl-icon>
+          <sl-icon
+            name="${this.settings.isFullscreen.value ? "fullscreen-exit" : "arrows-fullscreen"}"
+            class="large-icon"
+          ></sl-icon>
         </button>
       </sl-tooltip>
     `;

@@ -23,18 +23,8 @@ Along with additional information on how to customize it to your needs.
 
   <body>
     <oe-verification-grid id="verification-grid" grid-size="3" selection-behavior="desktop">
-      <template>
-        <oe-axes>
-          <oe-indicator>
-            <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
-          </oe-indicator>
-        </oe-axes>
-        <oe-media-controls for="spectrogram"></oe-media-controls>
-        <oe-info-card></oe-info-card>
-      </template>
-
-      <oe-decision verified="true" tag="koala" shortcut="Y">Grey-headed flying fox</oe-decision>
-      <oe-decision verified="false" tag="koala" shortcut="N">Grey-headed flying fox</oe-decision>
+      <oe-verification verified="true" shortcut="Y">Grey-headed flying fox</oe-verification>
+      <oe-verification verified="false" shortcut="N">Grey-headed flying fox</oe-verification>
     </oe-verification-grid>
 
     <oe-data-source for="verification-grid" local></oe-data-source>
