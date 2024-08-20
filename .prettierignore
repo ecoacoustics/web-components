@@ -1,2 +1,5 @@
+pnpm-lock.yaml
+node_modules/
+
 .eslintrc
 @types/

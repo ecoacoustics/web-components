@@ -1,4 +1,6 @@
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
+import { getBrowserValue } from "../helpers";
 import { indicatorSpectrogramMediaControlsFixture as test } from "./indicator-spectrogram-media-controls.e2e.fixture";
 
 test.describe("oe-indicator interaction with spectrogram and media controls", () => {
@@ -9,17 +11,31 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
   test.describe("indicator position", () => {
     test("initial position", async ({ fixture }) => {
       const initialPosition = await fixture.indicatorPosition();
-      await expect(initialPosition).toBe(0);
+      expect(initialPosition).toBe(0);
     });
 
     test("playing audio should cause the indicator to move the correct amount", async ({ fixture, page }) => {
       const initialPosition = await fixture.indicatorPosition();
 
-      await fixture.toggleAudio();
-      await page.waitForTimeout(3000);
+      await fixture.playAudio();
+      await page.waitForTimeout(1000);
+      await fixture.pauseAudio();
 
+      // check that the audio element is playing
+      const mediaElementTime = (await getBrowserValue<HTMLAudioElement>(
+        fixture.audioElement(),
+        "currentTime",
+      )) as number;
+      expect(mediaElementTime).toBeGreaterThan(0);
+
+      // check that the spectrogram component is playing
+      const spectrogramTime = await fixture
+        .spectrogramComponent()
+        .evaluate((element: SpectrogramComponent) => element.currentTime.peek());
+      expect(spectrogramTime).toBeGreaterThan(0);
+
+      // check that the indicator line has moved
       const finalPosition = await fixture.indicatorPosition();
-
       expect(finalPosition).toBeGreaterThan(initialPosition);
     });
 

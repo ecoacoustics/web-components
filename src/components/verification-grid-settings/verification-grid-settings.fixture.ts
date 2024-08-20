@@ -1,6 +1,12 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { emitBrowserEvent, getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import {
+  catchEvent,
+  emitBrowserEvent,
+  getBrowserValue,
+  setBrowserAttribute,
+  setBrowserValue,
+} from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 
@@ -46,7 +52,14 @@ class TestPage {
 
   public async clickFullscreenButton(): Promise<void> {
     const fullscreenButton = this.fullscreenButton();
+
+    // we start listening for the fullscreenchange event before we click the
+    // fullscreen button, but await it after we have clicked the button
+    // this ensures that there is no race condition between the event listener
+    // and the event firing
+    const fullscreenCompleteEvent = catchEvent(this.page, "fullscreenchange");
     await fullscreenButton.click();
+    await fullscreenCompleteEvent;
   }
 
   /** Changes the verification grids size through the `grid-size` attribute */

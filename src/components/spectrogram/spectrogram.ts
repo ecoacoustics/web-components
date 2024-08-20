@@ -196,7 +196,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.audio,
       signal(this.melScale),
     );
-    this.unitConverters = signal(unitConverters);
+    this.unitConverters.value = unitConverters;
   }
 
   public updated(change: PropertyValues<this>) {

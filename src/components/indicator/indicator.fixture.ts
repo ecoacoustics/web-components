@@ -1,7 +1,5 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserValue } from "../../tests/helpers";
-import { IndicatorComponent } from "./indicator";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -19,10 +17,6 @@ class TestPage {
     `);
     await this.page.waitForLoadState("networkidle");
     await this.page.waitForSelector("oe-indicator");
-  }
-
-  public async indicatorPosition(): Promise<number> {
-    return (await getBrowserValue<IndicatorComponent>(this.indicatorLineElement(), "xPos")) as number;
   }
 }
 

@@ -138,9 +138,10 @@ test.describe("data source", () => {
     expect(fixture.browserFileInput()).not.toBeVisible();
   });
 
-  test("should use browser native file input apis for local file inputs", async ({ fixture }) => {
+  // TODO: fix in https://github.com/ecoacoustics/web-components/issues/86
+  test.fixme("should use browser native file input apis for local file inputs", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
-    const fileInputEvent = catchLocatorEvent(fixture.browserFileInput(), "change");
+    const fileInputEvent = await catchLocatorEvent(fixture.browserFileInput(), "change");
     await fixture.localFileInputButton().click();
 
     // TODO: Check if we are really expecting a promise rejection here

@@ -8,6 +8,7 @@ import {
   setBrowserAttribute,
 } from "../helpers";
 import {
+  SelectionObserverType,
   VerificationGridComponent,
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
@@ -23,6 +24,8 @@ import {
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionId } from "../../models/decisions/decision";
+
+type KeyboardModifiers = Array<"Alt" | "Control" | "ControlOrMeta" | "Meta" | "Shift">;
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -102,6 +105,21 @@ class TestPage {
     }
 
     return sizes;
+  }
+
+  public async selectedTileIndexes(): Promise<number[]> {
+    const tiles = await this.gridTileComponents();
+    const indexes: number[] = [];
+
+    for (const tile of tiles) {
+      const isSelected = (await getBrowserValue<VerificationGridTileComponent>(tile, "selected")) as boolean;
+      if (isSelected) {
+        const tileIndex = (await getBrowserValue<VerificationGridTileComponent>(tile, "index")) as number;
+        indexes.push(tileIndex);
+      }
+    }
+
+    return indexes;
   }
 
   public async selectedTiles(): Promise<Locator[]> {
@@ -305,13 +323,20 @@ class TestPage {
     await this.dismissHelpDialogButton().click();
   }
 
-  public async createSubSelection(items: number[], addToSelection = true) {
+  public async createSubSelection(items: number[], modifiers?: KeyboardModifiers) {
     const gridTiles = await this.gridTileContainers();
-    const modifiers = addToSelection ? ["Control"] : [];
 
     for (const index of items) {
-      await gridTiles[index].click({ position: { x: 0, y: 0 }, modifiers: modifiers as any });
+      await gridTiles[index].click({ modifiers });
     }
+  }
+
+  public async subSelectRange(start: number, end: number, modifiers: KeyboardModifiers = []) {
+    // when sub-selecting a range, we want the first item to be selected without
+    // holding down the shift key, then we should hold down the shift key when
+    // selecting the end of the range
+    await this.createSubSelection([start], modifiers);
+    await this.createSubSelection([end], ["Shift", ...modifiers]);
   }
 
   public async makeDecision(decision: number) {
@@ -343,6 +368,13 @@ class TestPage {
   }
 
   // change attributes
+  public async changeSelectionMode(mode: SelectionObserverType) {
+    // we use "as any" here because the setBrowserAttribute helper typing checks
+    // for class properties, but cannot identify attribute aliases
+    // TODO: this type casting should be removed once the helpers typing is corrected
+    await setBrowserAttribute<VerificationGridComponent>(this.gridComponent(), "selection-behavior" as any, mode);
+  }
+
   public async changeGridSize(value: number) {
     await setBrowserAttribute<VerificationGridComponent>(this.gridComponent(), "grid-size" as any, value.toString());
   }

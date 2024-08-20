@@ -21,8 +21,9 @@ class DecisionFixture {
 
   // events
   public decisionEvent() {
-    // for some reason, we can't use the static decisionEventName property from
-    // the Decision class here because
+    // we cannot use use the static decisionEventName property from the Decision
+    // class because the tests that use this fixture will stop being detected
+    // when playwright looks for tests
     return catchEvent(this.page, "decision");
   }
 

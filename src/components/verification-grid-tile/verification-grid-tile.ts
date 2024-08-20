@@ -12,6 +12,7 @@ import { Decision } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { verificationGridContext, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
+import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
@@ -192,6 +193,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     }
   }
 
+  // we use keydown instead of keyup because keyup events are not registered
+  // in MacOS when the command key is held down
+  // https://stackoverflow.com/q/11818637
   private handleKeyDown(event: KeyboardEvent): void {
     // most browsers scroll a page width when the user presses the space bar
     // however, since space bar can also be used to play spectrograms, we don't
@@ -207,7 +211,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
           detail: {
             index: this.index,
             shiftKey: event.shiftKey,
-            ctrlKey: event.ctrlKey,
+            ctrlKey: hasCtrlLikeModifier(event),
           },
         }),
       );
@@ -234,7 +238,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
         detail: {
           index: this.index,
           shiftKey: event.shiftKey,
-          ctrlKey: event.ctrlKey,
+          ctrlKey: hasCtrlLikeModifier(event),
         },
       }),
     );
@@ -286,10 +290,12 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       selected: this.selected,
     });
 
+    // use a pointerdown event instead of a click event because MacOS doesn't
+    // trigger a click event if someone shift clicks on a tile
     return html`
       <div
         id="contents-wrapper"
-        @click="${this.dispatchSelectedEvent}"
+        @pointerdown="${this.dispatchSelectedEvent}"
         @keydown="${this.handleFocusedKeyDown}"
         class="tile-container ${tileClasses}"
         part="tile-container"
