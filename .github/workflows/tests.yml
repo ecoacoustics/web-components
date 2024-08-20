@@ -3,9 +3,15 @@ name: Run Tests
 on: pull_request
 
 jobs:
-  Unit-Tests:
-    timeout-minutes: 5
-    runs-on: ubuntu-latest
+  Run-Tests:
+    timeout-minutes: 30
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
     steps:
       - name: Checkout and Setup
         uses: actions/checkout@v4
@@ -15,6 +21,12 @@ jobs:
           # for tests so that snapshot tests have a truth to asset against
           lfs: true
 
+      - name: Grant Audio Permissions (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
+          sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/opt/off/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
+
       - uses: pnpm/action-setup@v3
         with:
           version: 8
@@ -22,7 +34,18 @@ jobs:
             - recursive: true
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install
+        run: pnpm exec playwright install --with-deps
 
-      - name: Run unit tests
+      - name: Run tests
         run: pnpm test
+
+      - name: Upload Test Report
+        # I use if always to ensure that the artifact is uploaded even if the
+        # tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ matrix.os }}
+          path: ./test-report/
+          retention-days: 30
+          overwrite: true

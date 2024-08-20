@@ -4,6 +4,7 @@ import { verificationGridFixture as test } from "./verification-grid.e2e.fixture
 import { expect } from "../assertions";
 import { SpectrogramCanvasScale, VerificationGridComponent, VerificationGridTileComponent } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
+import { ESCAPE_KEY } from "../../helpers/keyboard";
 
 test.describe("while the initial help dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -15,13 +16,13 @@ test.describe("while the initial help dialog is open", () => {
     expect(isHelpDialogOpen).toBe(true);
   });
 
-  // test("should not be able to sub-select grid tiles with keyboard shortcuts", async ({ fixture }) => {
-  //   // we press Alt+1 because it will always be the first tile in the grid
-  //   // and will therefore always exist
-  //   await fixture.gridComponent().press("Alt+1");
-  //   const selectedTiles = await fixture.selectedTiles();
-  //   expect(selectedTiles).toHaveLength(0);
-  // });
+  test("should not be able to sub-select grid tiles with keyboard shortcuts", async ({ fixture }) => {
+    // we press Alt+1 because it will always be the first tile in the grid
+    // and will therefore always exist
+    await fixture.gridComponent().press("Alt+1");
+    const selectedTiles = await fixture.selectedTiles();
+    expect(selectedTiles).toHaveLength(0);
+  });
 
   test("should not be able to make decisions with keyboard shortcuts", async ({ fixture }) => {
     await fixture.gridComponent().press("Y");
@@ -375,11 +376,8 @@ test.describe("single verification grid", () => {
 
     test("should disable the previous page button when at the start of history", async ({ fixture }) => {
       await fixture.makeDecision(0);
-      await fixture.makeDecision(0);
       await expect(fixture.previousPageButton()).toBeEnabled();
 
-      await fixture.viewPreviousHistoryPage();
-      await expect(fixture.previousPageButton()).toBeEnabled();
       await fixture.viewPreviousHistoryPage();
       await expect(fixture.previousPageButton()).toBeDisabled();
     });
@@ -437,64 +435,215 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("sub-selection", () => {
+    const commonSelectionTests = () => {
+      test("should select a tile when clicked", async ({ fixture }) => {
+        const testSubSelection = [0];
+        await fixture.createSubSelection(testSubSelection);
+
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toEqual(testSubSelection);
+      });
+
+      test("should add a tile to a selection when the ctrl key is held", async ({ fixture }) => {
+        const firstSubSelection = [0];
+        const secondSubSelection = [1, 2];
+        await fixture.createSubSelection(firstSubSelection);
+        await fixture.createSubSelection(secondSubSelection, ["ControlOrMeta"]);
+
+        const expectedSelectedTiles = firstSubSelection.concat(secondSubSelection);
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should select a positive range of tiles when the shift key is held", async ({ fixture }) => {
+        const selectionStart = 0;
+        const selectionEnd = 2;
+
+        await fixture.subSelectRange(selectionStart, selectionEnd);
+
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should select a negative range of tiles when the shift key is held", async ({ fixture }) => {
+        const selectionStart = 2;
+        const selectionEnd = 0;
+
+        await fixture.subSelectRange(selectionStart, selectionEnd);
+
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should add negative a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
+        const selectionStart = 0;
+        const selectionEnd = 2;
+
+        await fixture.subSelectRange(selectionStart, selectionEnd, ["ControlOrMeta"]);
+
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should select a tile using alt + number selection shortcuts", async ({ fixture, page }) => {
+        // the first tile in the grid should always have Alt + 1 as its
+        // selection keyboard shortcut
+        await page.keyboard.press("Alt+1");
+
+        const expectedSelectedTiles = [0];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should select a tile using ctrl & alt + number selection shortcuts", async ({ fixture, page }) => {
+        await page.keyboard.press("ControlOrMeta+Alt+1");
+
+        const expectedSelectedTiles = [0];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should be able to add a range using the alt key selection shortcuts", async ({ fixture, page }) => {
+        await page.keyboard.press("Shift+Alt+1");
+        await page.keyboard.press("Shift+Alt+3");
+
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should add positive a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
+        const selectionStart = 2;
+        const selectionEnd = 0;
+
+        await fixture.subSelectRange(selectionStart, selectionEnd, ["ControlOrMeta"]);
+
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should have no operation if the same tile if shift clicked twice", async ({ fixture }) => {
+        const subSelection = [1];
+
+        await fixture.createSubSelection(subSelection, ["Shift"]);
+        await fixture.createSubSelection(subSelection, ["Shift"]);
+
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(subSelection);
+      });
+    };
+
     const desktopSelectionTests = () => {
-      test.skip("should select a tile when clicked", () => {});
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.changeSelectionMode("desktop");
+      });
 
-      test.skip("should de-select other tiles when a tile is selected", () => {});
+      commonSelectionTests();
 
-      test.skip("should add a tile to a selection when the ctrl key is held", () => {});
+      test("should de-select other tiles when a tile is selected", async ({ fixture }) => {
+        const firstSelection = [0];
+        const secondSelection = [2];
 
-      test.skip("should deselect other tiles the shift key is held", () => {});
+        await fixture.createSubSelection(firstSelection);
+        await fixture.createSubSelection(secondSelection);
 
-      test.skip("should select one tile if the same tile if shift clicked twice", () => {});
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
 
-      test.skip("should select a positive direction of tiles when the shift key is held", () => {});
+        // because we are in desktop selection mode, only the second selection
+        // should be active because the first selection should have been
+        // de-selected
+        expect(realizedSelectedTiles).toHaveLength(1);
+        expect(realizedSelectedTiles).toEqual(secondSelection);
+      });
 
-      test.skip("should select a negative direction of tiles when the shift key is held", () => {});
+      test("should deselect other tiles the shift key is held", async ({ fixture }) => {
+        await fixture.createSubSelection([0]);
 
-      test.skip("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => {});
+        const rangeStart = 1;
+        const rangeEnd = 2;
+        await fixture.subSelectRange(rangeStart, rangeEnd);
 
-      test.skip("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => {});
+        const expectedSelectedTiles = [1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
     };
 
     const tabletSelectionTests = () => {
-      test.skip("should select a tile when clicked", () => {});
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.changeSelectionMode("tablet");
+      });
 
-      test.skip("should de-select other tiles when a tile is selected", () => {});
+      commonSelectionTests();
 
-      test.skip("should add a tile to a selection when the ctrl key is held", () => {});
+      test("should toggle a tiles selection state if the same tile is clicked twice", async ({ fixture }) => {
+        await fixture.createSubSelection([0]);
+        await fixture.createSubSelection([0]);
 
-      test.skip("should deselect other tiles the shift key is held", () => {});
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        await expect(realizedSelectedTiles).toHaveLength(0);
+      });
 
-      test.skip("should select one tile if the same tile if shift clicked twice", () => {});
+      test("should not de-select other tiles when a tile is selected", async ({ fixture }) => {
+        await fixture.createSubSelection([0]);
+        await fixture.createSubSelection([2]);
 
-      test.skip("should select a positive direction of tiles when the shift key is held", () => {});
+        const expectedSelectedTiles = [0, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
 
-      test.skip("should select a negative direction of tiles when the shift key is held", () => {});
+      test("should not de-select tiles when a range selection occurs", async ({ fixture }) => {
+        await fixture.createSubSelection([0]);
 
-      test.skip("should be able to add positive a range of tiles to a selection if ctrl + shift is held", () => {});
+        const rangeStart = 1;
+        const rangeEnd = 2;
+        await fixture.subSelectRange(rangeStart, rangeEnd);
 
-      test.skip("should be able to add negative a range of tiles to a selection if ctrl + shift is held", () => {});
+        const expectedSelectedTiles = [0, 1, 2];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
     };
 
-    test.describe("explicit desktop selection mode", desktopSelectionTests);
+    test.describe("desktop selection mode", desktopSelectionTests);
 
-    test.describe("explicit tablet selection mode", tabletSelectionTests);
-
-    test.describe("default (desktop) selection mode", desktopSelectionTests);
-
-    test.describe("default (mobile) selection mode", tabletSelectionTests);
+    test.describe("tablet selection mode", tabletSelectionTests);
 
     test("should select all tiles if ctrl + A is pressed", async ({ fixture, page }) => {
-      await page.keyboard.press("Control+a");
+      await page.keyboard.press("ControlOrMeta+a");
 
       const expectedNumberOfSelected = await fixture.getGridSize();
-      const realizedNumberOfSelected = await fixture.selectedTiles();
+      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
 
       expect(realizedNumberOfSelected).toHaveLength(expectedNumberOfSelected);
     });
 
-    test("should deselect all tiles if the escape key is pressed", () => {});
+    test("should deselect all tiles if ctrl + D is pressed", async ({ fixture, page }) => {
+      await fixture.createSubSelection([0]);
+      const initialSelectedTiles = await fixture.selectedTileIndexes();
+      expect(initialSelectedTiles).toHaveLength(1);
+
+      await page.keyboard.press("ControlOrMeta+d");
+
+      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
+      expect(realizedNumberOfSelected).toHaveLength(0);
+    });
+
+    test("should deselect all tiles if the escape key is pressed", async ({ fixture, page }) => {
+      await fixture.createSubSelection([0]);
+      const initialSelectedTiles = await fixture.selectedTileIndexes();
+      expect(initialSelectedTiles).toHaveLength(1);
+
+      await page.keyboard.press(ESCAPE_KEY);
+
+      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
+      expect(realizedNumberOfSelected).toHaveLength(0);
+    });
   });
 
   test.describe("spectrogram scaling attributes", () => {

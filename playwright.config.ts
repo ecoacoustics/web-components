@@ -13,19 +13,31 @@ export default defineConfig({
   webServer: {
     command: "pnpm dev --port 3000",
   },
+  // Fail in CI if there is a focused test.only
+  forbidOnly: !!process.env.CI,
   use: {
     bypassCSP: true,
     ctViteConfig: {
       configFile: "vite.config.ts",
     },
+    screenshot: "only-on-failure",
+    trace: "on-first-retry",
   },
   reporter: [
     // create a HTML report of the test results
     // this is the best way to debug why tests are failing locally
-    ["html", { outputFolder: "test-report" }],
+    [
+      "html",
+      {
+        outputFolder: "test-report",
+        open: "never",
+      },
+    ],
     // print the test results out to the console.
     // this can be useful for seeing why a test has failed in CI
-    ["line"],
+    process.env.CI ? ["github"] : ["list"],
   ],
   snapshotPathTemplate: "./src/tests/__snapshots__/{testName}/{arg}{ext}",
+  testMatch: "**/*.spec.ts",
+  projects: [{ name: "chromium" }, { name: "firefox" }, { name: "webkit" }],
 });

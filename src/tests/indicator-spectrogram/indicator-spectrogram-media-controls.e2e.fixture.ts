@@ -9,6 +9,7 @@ class TestPage {
   public indicatorComponent = () => this.page.locator("oe-indicator").first();
   public indicatorGroup = () => this.page.locator("oe-indicator #indicator-group").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
+  public audioElement = () => this.page.locator("audio").first();
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
 
   public async create() {
@@ -22,8 +23,10 @@ class TestPage {
       </oe-indicator>
       <oe-media-controls for="spectrogram"></oe-media-controls>
    `);
-    await this.page.waitForLoadState("networkidle");
+
     await this.page.waitForSelector("oe-indicator");
+    await this.page.waitForSelector("oe-spectrogram");
+    await this.page.waitForLoadState("networkidle");
   }
 
   public async removeSpectrogramElement() {
@@ -40,14 +43,13 @@ class TestPage {
     return await this.indicatorGroup().evaluate((element: SVGLineElement) => {
       const styles = window.getComputedStyle(element);
 
-      const domMatrixTranslateXKey: keyof DOMMatrix = "m41";
+      // we use the 2d DomMatrix key for translateX (e) instead of the
+      // 3d translateX (m41) DomMatrix key because MacOS does not update
+      // the 3d DomMatrix value when using a transform style
+      const domMatrixTranslateXKey: keyof DOMMatrix = "e";
       const domMatrix = new DOMMatrix(styles.transform);
       return domMatrix[domMatrixTranslateXKey];
     });
-  }
-
-  public async toggleAudio() {
-    await this.mediaControlsActionButton().click();
   }
 
   public async playAudio() {
@@ -60,6 +62,14 @@ class TestPage {
 
   public async audioDuration(): Promise<number> {
     return 6_000;
+  }
+
+  private async toggleAudio() {
+    await this.mediaControlsActionButton().click();
+    // clicking the play button might result in the audio file being downloaded
+    // from the testing server. We wait for the network to be idle to ensure
+    // that the audio file has been downloaded before we make any assertions
+    await this.page.waitForLoadState("networkidle");
   }
 }
 

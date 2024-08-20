@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
-import { getBrowserStyles, getBrowserValue, setBrowserValue } from "../../tests/helpers";
+import { getBrowserValue } from "../../tests/helpers";
 import { VerificationGridTileComponent } from "./verification-grid-tile";
 
 class VerificationGridTileFixture {
@@ -28,33 +28,33 @@ class VerificationGridTileFixture {
   }
 
   // TODO: Fix this
-  public async getSelectionShortcut(): Promise<string> {
-    return (
-      ((await getBrowserValue<VerificationGridTileComponent>(this.component(), "shortcuts")) as string[]).at(-1) ?? ""
-    );
-  }
+  // public async getSelectionShortcut(): Promise<string> {
+  //   return (
+  //     ((await getBrowserValue<VerificationGridTileComponent>(this.component(), "shortcuts")) as string[]).at(-1) ?? ""
+  //   );
+  // }
 
-  public async getDecisionColor() {
-    return await getBrowserValue<VerificationGridTileComponent>(this.component(), "color");
-  }
+  // public async getDecisionColor() {
+  //   return await getBrowserValue<VerificationGridTileComponent>(this.component(), "color");
+  // }
 
-  public async getTileStyles() {
-    return await getBrowserStyles<HTMLDivElement>(this.tileContainer());
-  }
+  // public async getTileStyles() {
+  //   return await getBrowserStyles<HTMLDivElement>(this.tileContainer());
+  // }
 
-  // actions
-  public async mouseSelectSpectrogramTile() {
-    await this.tileContainer().click({ force: true });
-  }
+  // // actions
+  // public async mouseSelectSpectrogramTile() {
+  //   await this.tileContainer().click({ force: true });
+  // }
 
-  public async keyboardSelectSpectrogramTile() {
-    const keyboardShortcut = await this.getSelectionShortcut();
-    await this.page.keyboard.press(keyboardShortcut);
-  }
+  // public async keyboardSelectSpectrogramTile() {
+  //   const keyboardShortcut = await this.getSelectionShortcut();
+  //   await this.page.keyboard.press(keyboardShortcut);
+  // }
 
-  public async setDecisionColor(value: string) {
-    await setBrowserValue<VerificationGridTileComponent>(this.tileContainer(), "color", value);
-  }
+  // public async setDecisionColor(value: string) {
+  //   await setBrowserValue<VerificationGridTileComponent>(this.tileContainer(), "color", value);
+  // }
 }
 
 export const verificationGridTileFixture = test.extend<{ fixture: VerificationGridTileFixture }>({

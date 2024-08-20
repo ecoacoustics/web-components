@@ -21,6 +21,7 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { repeat } from "lit/directives/repeat.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
+import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -293,6 +294,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
+    this.skipButton.selectionMode = selectionBehavior;
     for (const element of decisionElements) {
       element.selectionMode = selectionBehavior;
     }
@@ -343,12 +345,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    switch (event.key) {
-      case ESCAPE_KEY: {
-        this.removeSubSelection();
-        break;
-      }
+    // MacOS uses the command key instead of the ctrl key for keyboard shortcuts
+    // e.g. Command + A should select all items
+    // The command key is defined as the "meta" key in the KeyboardEvent object
+    // therefore, we conditionally check if the meta key is pressed instead of
+    // the ctrl key if the user is on a Mac
+    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/metaKey
+    const hasToggleModifier = hasCtrlLikeModifier(event);
 
+    switch (event.key) {
       case LEFT_ARROW_KEY: {
         event.preventDefault();
         this.handlePreviousPageClick();
@@ -364,7 +369,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // if the user is holding down both ctrl and D, we should remove the
       // current selection (this is a common behavior in other applications)
       case "d": {
-        if (event.ctrlKey) {
+        if (hasToggleModifier) {
+          // in Chrome and FireFox, Ctrl + D is a browser shortcut to bookmark
+          // the current page. We prevent default so that the user can use
+          // ctrl + D to remove the current selection
           event.preventDefault();
           this.removeSubSelection();
         }
@@ -372,7 +380,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "a": {
-        if (event.ctrlKey) {
+        if (hasToggleModifier) {
           // we prevent default on the ctrl + A event so that chrome doesn't
           // select all the text on the page
           event.preventDefault();
@@ -390,6 +398,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleKeyUp(event: KeyboardEvent): void {
+    // we bind the escape key to keyUp because MacOS doesn't trigger keydown
+    // events when the escape key is pressed
+    // related to: https://stackoverflow.com/a/78872316
+    if (event.key === ESCAPE_KEY) {
+      this.removeSubSelection();
+      return;
+    }
+
     // use preventDefault() so when the user presses alt because on FireFox
     // the menu bar is not shown and the hamburger menu isn't focused on Chrome
     if (event.altKey) {
@@ -482,51 +498,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    switch (this.selectionBehavior) {
-      case "default":
-        this.handleDefaultSelection(selectionEvent);
-        break;
-      case "desktop":
-        this.handleDesktopSelection(selectionEvent);
-        break;
-      case "tablet":
-        this.handleTabletSelection(selectionEvent);
-        break;
-      default:
-        console.error(`could not find selection behavior ${this.selectionBehavior}`);
-        this.handleDesktopSelection(selectionEvent);
-        break;
-    }
-
-    this.updateSubSelection();
-  }
-
-  // TODO: this should be refactored out to a getter. The getter should return
-  // tablet or desktop based on the device type when default is being used
-  /**
-   * @description
-   * The default selection handler will infer the device type and
-   * the selection behavior will be set to "tablet", otherwise it will be set
-   * to "desktop"
-   */
-  private handleDefaultSelection(selectionEvent: SelectionEvent): void {
-    if (this.isMobileDevice()) {
-      this.handleTabletSelection(selectionEvent);
-    } else {
-      this.handleDesktopSelection(selectionEvent);
-    }
-  }
-
-  /**
-   * @description
-   * Click                  Select a single tile (de-selecting any other items)
-   * Shift + click          Select a range of tiles (de-selecting any other items)
-   * Ctrl + click           Toggles the selection state of a single tile (not effecting other tiles)
-   * Ctrl + Shift + click   Select a range of tiles (not effecting other tiles)
-   */
-  private handleDesktopSelection(selectionEvent: SelectionEvent): void {
-    if (this.selectionBehavior === "tablet") {
-      throw new Error("Attempted desktop selection when explicit tablet selection is specified");
+    let selectionBehavior = this.selectionBehavior;
+    if (selectionBehavior === "default") {
+      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
     }
 
     const selectionIndex = selectionEvent.detail.index;
@@ -537,7 +511,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // still overwrite the selection behavior using the selection-behavior
     // attribute. Therefore, we have to check that we are not on explicitly
     // using tablet selection mode.
-    if (!selectionEvent.detail.ctrlKey) {
+    if (selectionBehavior === "desktop" && !selectionEvent.detail.ctrlKey) {
       this.removeSubSelection();
     }
 
@@ -551,17 +525,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       const selectionTail = selectionIndex;
 
       this.addSubSelectionRange(this.selectionHead, selectionTail);
-      return;
+    } else {
+      // if we reach this point, we know that the user is not performing a
+      // range selection because range selection performs an early return
+      this.toggleTileSelection(selectionIndex);
+      this.selectionHead = selectionIndex;
     }
 
-    // if we reach this point, we know that the user is not performing a
-    // range selection because range selection performs an early return
-    this.toggleTileSelection(selectionIndex);
-    this.selectionHead = selectionIndex;
-  }
-
-  private handleTabletSelection(selectionEvent: SelectionEvent): void {
-    this.toggleTileSelection(selectionEvent.detail.index);
+    this.updateSubSelection();
   }
 
   private toggleTileSelection(index: number): void {

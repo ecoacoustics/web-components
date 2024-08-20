@@ -96,7 +96,7 @@ test.describe("Info Card", () => {
   });
 
   test("should create the correct info card for a subject with no information", async ({ fixture }) => {
-    fixture.changeSubject({});
+    await fixture.changeSubject({});
     const expectedSubjectModel = [];
 
     const realizedSubjectModel = await fixture.infoCardItems();

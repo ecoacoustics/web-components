@@ -66,7 +66,7 @@ test.describe("unit tests", () => {
     ];
 
     for (const source of testedSources) {
-      test.only(`renders ${source} correctly`, async ({ mount }) => {
+      test(`renders ${source} correctly`, async ({ mount }) => {
         const component = await mount(SpectrogramComponent, {
           props: {
             src: `http://localhost:3000/${source}`,

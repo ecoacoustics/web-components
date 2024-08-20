@@ -27,9 +27,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
   @query("#wrapped-element")
   private wrappedElement!: Readonly<HTMLDivElement>;
 
-  public xPos = 0;
   private unitConverter?: UnitConverter;
-
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
 
   public handleSlotChange(): void {
@@ -64,7 +62,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
     return html`
       <div id="wrapped-element">
         <svg id="indicator-svg">
-          <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px)">
+          <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px);">
             <line part="indicator-line" y1="0" y2="100%"></line>
             <circle id="seek-icon" part="seek-icon" cy="100%" r="5" />
           </g>
