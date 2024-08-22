@@ -33,6 +33,12 @@ export async function getBrowserStyles<T extends HTMLElement>(component: Locator
   });
 }
 
+export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: string): Promise<string> {
+  return await locator.evaluate((element: T, variable: string) => {
+    return window.getComputedStyle(element).getPropertyValue(variable);
+  }, name);
+}
+
 export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, eventName: string) {
   return locator.evaluate((element: T, name: string) => {
     const event = new Event(name, { bubbles: true });

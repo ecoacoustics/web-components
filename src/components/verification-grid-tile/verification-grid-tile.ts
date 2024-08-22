@@ -1,6 +1,6 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { CSSResult, html, LitElement, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, createContext, provide } from "@lit/context";
@@ -8,12 +8,15 @@ import { booleanConverter } from "../../helpers/attributes";
 import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
-import { Decision } from "../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { verificationGridContext, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
+import { Tag } from "../../models/tag";
+import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import verificationGridTileStyles from "./css/style.css?inline";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
@@ -83,6 +86,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
    */
   @property({ attribute: false, type: Number })
   public index = 0;
+
+  @property({ attribute: false, type: Array })
+  public requiredTags!: Tag[];
 
   @query("oe-spectrogram")
   private spectrogram?: SpectrogramComponent;
@@ -252,24 +258,24 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     `;
   }
 
-  private decisionColor(decisionIndices: number[]): CSSResult {
-    // if the user has only made one decision then we want to show a solid color
-    if (decisionIndices.length === 1) {
-      const solidColor = decisionIndices[0];
-      return unsafeCSS(`background-color: var(--decision-color-${solidColor});`);
-    }
+  private meterSegmentsTemplate(): TemplateResult<1> {
+    return html`
+      ${repeat(this.requiredTags, (tag: Tag) => {
+        const decision = this.model.decisions.get(tag.text);
+        const decisionText = decision ? decision.confirmed : "no decision";
 
-    // I sort the decision indices so that no matter what order the user
-    // selects the decisions, the gradient will always be the same
-    // if the indices were not ordered, tiles with the same decisions applied
-    // but in a different order would have different gradients
-    const percentageStep = 100 / decisionIndices.length;
-    const gradientColors = decisionIndices.sort().map((color: number, index: number) => {
-      const percentage = percentageStep * (index + 1);
-      return `var(--decision-color-${color}) 0 ${percentage}%`;
-    });
+        let color: string | undefined;
+        if (decision && decision.confirmed !== DecisionOptions.SKIP) {
+          color = `var(--decision-color-${decision.decisionId})`;
+        }
 
-    return unsafeCSS(`background: conic-gradient(${gradientColors});`);
+        return html`
+          <sl-tooltip content="${tag.text ?? tag} (${decisionText})">
+            <span class="progress-meter-segment" style="background-color: ${ifDefined(color)}"></span>
+          </sl-tooltip>
+        `;
+      })}
+    `;
   }
 
   public render() {
@@ -302,11 +308,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
-        .style="${this.decisionColor(this.decisionIndices)}"
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container ${figureClasses}">
-          <figcaption class="tag-label">${this.model?.tag}</figcaption>
+          <figcaption class="tag-label">${this.model?.tag?.text ?? this.model?.tag}</figcaption>
 
           <oe-axes
             ?x-title-visible="${watch(this.settings.showAxes)}"
@@ -320,6 +325,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
               <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
+
+          <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
 
           ${when(
             this.settings.showMediaControls.value,

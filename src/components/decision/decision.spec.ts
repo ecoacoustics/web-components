@@ -145,7 +145,7 @@ test.describe("decision", () => {
     test("should emit an event when clicked", async ({ fixture }) => {
       const decisionEvent = fixture.decisionEvent();
       await fixture.decisionButton().click();
-      expect(decisionEvent).resolves.toBeTruthy();
+      await expect(decisionEvent).resolves.toBeTruthy();
     });
 
     // we should only see the keyboard shortcut trigger on keyup
@@ -157,7 +157,7 @@ test.describe("decision", () => {
 
       await fixture.page.keyboard.press(keyboardShortcut);
 
-      expect(decisionEvent).resolves.toBeTruthy();
+      await expect(decisionEvent).resolves.toBeTruthy();
     });
 
     test("should emit the correct event for a skip decision", async ({ fixture }) => {
@@ -166,7 +166,7 @@ test.describe("decision", () => {
       const decisionEvent = fixture.decisionEvent();
       await fixture.decisionButton().click();
 
-      expect(decisionEvent).resolves.toBeTruthy();
+      await expect(decisionEvent).resolves.toBeTruthy();
     });
 
     test("should emit the correct event for a unsure decision", async ({ fixture }) => {
@@ -175,7 +175,7 @@ test.describe("decision", () => {
       const decisionEvent = fixture.decisionEvent();
       await fixture.decisionButton().click();
 
-      expect(decisionEvent).resolves.toBeTruthy();
+      await expect(decisionEvent).resolves.toBeTruthy();
     });
 
     test("should be able to cancel a pointer decision with the escape key", async ({ fixture }) => {

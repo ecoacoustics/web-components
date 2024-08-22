@@ -24,6 +24,7 @@ import {
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionId } from "../../models/decisions/decision";
+import { expect } from "../assertions";
 
 type KeyboardModifiers = Array<"Alt" | "Control" | "ControlOrMeta" | "Meta" | "Shift">;
 
@@ -37,7 +38,9 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public decisionComponents = () => this.page.locator("oe-verification").all();
+  public verificationDecisions = () => this.page.locator("oe-verification").all();
+  public classificationDecisions = () => this.page.locator("oe-classification").all();
+  public skipDecisionButton = () => this.page.locator("#skip-button").first();
 
   public helpDialog = () => this.page.locator("oe-verification-help-dialog").first();
   public helpDialogContainer = () => this.page.locator("#help-dialog").first();
@@ -53,19 +56,24 @@ class TestPage {
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
   public gridTileContainers = () => this.page.locator(".tile-container").all();
+  public gridTileProgressMeters = () => this.page.locator(".progress-meter").all();
+  public gridTileProgressMeterSegments = async (index = 0) =>
+    (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
+  public gridTileProgressMeterTooltips = async (index = 0) =>
+    (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
+  private defaultTemplate = `
+    <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+    <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+  `;
 
-  public async create(customTemplate = "") {
-    // disable pre-fetching so we don't wait for heaps of requests to finish
+  public async create(customTemplate = this.defaultTemplate) {
     await this.page.setContent(`
       <oe-verification-grid id="verification-grid" grid-size="3">
-        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
-        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
-
         ${customTemplate}
 
         <oe-data-source
@@ -81,6 +89,18 @@ class TestPage {
   }
 
   // getters
+  public async decisionComponents(): Promise<Locator[]> {
+    const verificationDecisions = await this.verificationDecisions();
+    const classificationDecisions = await this.classificationDecisions();
+    return [...verificationDecisions, ...classificationDecisions];
+  }
+
+  public async panelColor(): Promise<string> {
+    // I have hard coded the panel color here because we use HSL for the panel
+    // color css variable, but DOM queries and assertions use RGB
+    return "rgb(242, 241, 254)";
+  }
+
   public async getGridSize(): Promise<number> {
     const gridTiles = await this.gridTileComponents();
     return gridTiles.length;
@@ -136,10 +156,15 @@ class TestPage {
     return selectedTiles;
   }
 
-  public async getDecisionColor(index: number): Promise<number> {
+  public async getDecisionId(index: number): Promise<number> {
     const decisionButton = (await this.decisionComponents())[index];
     const color = (await getBrowserValue<DecisionComponent>(decisionButton, "decisionId")) as DecisionId;
     return color;
+  }
+
+  public async getDecisionColor(id: number): Promise<string> {
+    const colors = ["rgb(166, 206, 227)", "rgb(31, 120, 180)", "rgb(178, 223, 138)", "rgb(51, 160, 44)"];
+    return colors[id];
   }
 
   public async availableDecision(): Promise<string[]> {
@@ -261,6 +286,26 @@ class TestPage {
     });
   }
 
+  public async progressMeterColors(index = 0): Promise<string[]> {
+    const segments = await this.gridTileProgressMeterSegments(index);
+
+    const colors = segments.map(
+      async (item: Locator) =>
+        await item.evaluate((element: HTMLSpanElement) => {
+          const styles = window.getComputedStyle(element);
+          return styles.backgroundColor;
+        }),
+    );
+
+    return await Promise.all(colors);
+  }
+
+  public async progressMeterTooltips(index = 0): Promise<string[]> {
+    const segments = await this.gridTileProgressMeterTooltips(index);
+    const tooltips = segments.map(async (tooltip: Locator) => await getBrowserAttribute(tooltip, "content"));
+    return await Promise.all(tooltips);
+  }
+
   public async areAxesVisible(): Promise<boolean> {
     // we don't want to check each axes component individually because it is
     // slow and does not provide much benefit
@@ -344,16 +389,24 @@ class TestPage {
     await decisionComponents[decision].click();
   }
 
+  public async makeSkipDecision() {
+    await this.skipDecisionButton().click();
+  }
+
   public async viewPreviousHistoryPage() {
     await this.previousPageButton().click();
   }
 
   public async viewNextHistoryPage() {
-    await this.nextPageButton().click();
+    const targetButton = this.nextPageButton();
+    await expect(targetButton).toBeEnabled();
+    await targetButton.dispatchEvent("click");
   }
 
   public async continueVerifying() {
-    await this.continueVerifyingButton().click();
+    const targetButton = this.continueVerifyingButton();
+    await expect(targetButton).toBeEnabled();
+    await targetButton.dispatchEvent("click");
   }
 
   public async selectFile() {

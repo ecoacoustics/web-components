@@ -8,7 +8,8 @@
     "SiteId": 255,
     "Offset": 30,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "4.542739391326904"
+    "Distance": "4.542739391326904",
+    "Tag": "koala"
   },
   {
     "Filename": "20210527T140000+1000_Mt-Barney-Wet-B_515726.flac",
@@ -19,7 +20,8 @@
     "SiteId": 4,
     "Offset": 45,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "4.6433424949646"
+    "Distance": "4.6433424949646",
+    "Tag": "koala"
   },
   {
     "Filename": "20191216T070000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-B_16714.flac",
@@ -30,7 +32,8 @@
     "SiteId": 44,
     "Offset": 5,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "4.846035957336426"
+    "Distance": "4.846035957336426",
+    "Tag": "koala"
   },
   {
     "Filename": "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac",
@@ -41,7 +44,8 @@
     "SiteId": 255,
     "Offset": 15,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "4.958763122558594"
+    "Distance": "4.958763122558594",
+    "Tag": "koala"
   },
   {
     "Filename": "20200413T120000+0800_Boyagin-Nature-Reserve-Wet-A_177657.flac",
@@ -52,7 +56,8 @@
     "SiteId": 219,
     "Offset": 40,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.02945613861084"
+    "Distance": "5.02945613861084",
+    "Tag": "koala"
   },
   {
     "Filename": "20200915T120000+1000_SEQP-Samford-Dry-B_266173.flac",
@@ -63,7 +68,8 @@
     "SiteId": 255,
     "Offset": 45,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.045819282531738"
+    "Distance": "5.045819282531738",
+    "Tag": "koala"
   },
   {
     "Filename": "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac",
@@ -74,7 +80,8 @@
     "SiteId": 255,
     "Offset": 15,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.081274509429932"
+    "Distance": "5.081274509429932",
+    "Tag": "koala"
   },
   {
     "Filename": "20211017T090000+1100_Duval-Wet-A_969189.flac",
@@ -85,7 +92,8 @@
     "SiteId": 90,
     "Offset": 0,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.128411293029785"
+    "Distance": "5.128411293029785",
+    "Tag": "koala"
   },
   {
     "Filename": "20211017T090000+1100_Duval-Wet-A_969189.flac",
@@ -96,7 +104,8 @@
     "SiteId": 90,
     "Offset": 0,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.140925407409668"
+    "Distance": "5.140925407409668",
+    "Tag": "koala"
   },
   {
     "Filename": "20211215T000000Z_Duval-Dry-B_1060970.flac",
@@ -107,7 +116,8 @@
     "SiteId": 91,
     "Offset": 10,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.146507263183594"
+    "Distance": "5.146507263183594",
+    "Tag": "koala"
   },
   {
     "Filename": "20210306T110000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-A_718570.flac",
@@ -118,7 +128,8 @@
     "SiteId": 41,
     "Offset": 30,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.148530006408691"
+    "Distance": "5.148530006408691",
+    "Tag": "koala"
   },
   {
     "Filename": "20210102T150000+1100_Duval-Dry-A_1062175.flac",
@@ -129,7 +140,8 @@
     "SiteId": 89,
     "Offset": 40,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.149863243103027"
+    "Distance": "5.149863243103027",
+    "Tag": "koala"
   },
   {
     "Filename": "20211021T140000+1000_Doonan-Creek-Environmental-Reserve-Dry-B_780158.flac",
@@ -140,7 +152,8 @@
     "SiteId": 87,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.221043586730957"
+    "Distance": "5.221043586730957",
+    "Tag": "koala"
   },
   {
     "Filename": "20211120T160000+1000_SEQP-Samford-Dry-B_649103.flac",
@@ -151,7 +164,8 @@
     "SiteId": 255,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.2308220863342285"
+    "Distance": "5.2308220863342285",
+    "Tag": "koala"
   },
   {
     "Filename": "20210319T150000+1100_Duval-Wet-A_967795.flac",
@@ -162,7 +176,8 @@
     "SiteId": 90,
     "Offset": 30,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.250988006591797"
+    "Distance": "5.250988006591797",
+    "Tag": "koala"
   },
   {
     "Filename": "20200808T180000+1000_Eungella-Dry-B_502031.flac",
@@ -173,7 +188,8 @@
     "SiteId": 112,
     "Offset": 40,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.251277923583984"
+    "Distance": "5.251277923583984",
+    "Tag": "koala"
   },
   {
     "Filename": "20211205T070000+1100_Scottsdale-Dry-B_927139.flac",
@@ -184,7 +200,8 @@
     "SiteId": 55,
     "Offset": 45,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.253893852233887"
+    "Distance": "5.253893852233887",
+    "Tag": "koala"
   },
   {
     "Filename": "20200409T160000+0800_Boyagin-Nature-Reserve-Dry-A_172745.flac",
@@ -195,7 +212,8 @@
     "SiteId": 217,
     "Offset": 55,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.2864179611206055"
+    "Distance": "5.2864179611206055",
+    "Tag": "koala"
   },
   {
     "Filename": "20191111T160000+1000_SEQP-Samford-Dry-A_249561.flac",
@@ -206,7 +224,8 @@
     "SiteId": 253,
     "Offset": 10,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.36638879776001"
+    "Distance": "5.36638879776001",
+    "Tag": "koala"
   },
   {
     "Filename": "20200922T080000+1000_SEQP-Samford-Dry-A_261821.flac",
@@ -217,7 +236,8 @@
     "SiteId": 253,
     "Offset": 5,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.376502990722656"
+    "Distance": "5.376502990722656",
+    "Tag": "koala"
   },
   {
     "Filename": "20201014T170000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-B_719551.flac",
@@ -228,7 +248,8 @@
     "SiteId": 44,
     "Offset": 10,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.378347396850586"
+    "Distance": "5.378347396850586",
+    "Tag": "koala"
   },
   {
     "Filename": "20210115T090000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-B_723161.flac",
@@ -239,7 +260,8 @@
     "SiteId": 44,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.393798828125"
+    "Distance": "5.393798828125",
+    "Tag": "koala"
   },
   {
     "Filename": "20210425T080000+1000_Little-Llangothlin-Reserve-Warra-National-Park-Dry-A_718326.flac",
@@ -250,7 +272,8 @@
     "SiteId": 41,
     "Offset": 15,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.3959245681762695"
+    "Distance": "5.3959245681762695",
+    "Tag": "koala"
   },
   {
     "Filename": "20220416T220000Z_Duval-Wet-B_1057937.flac",
@@ -261,7 +284,8 @@
     "SiteId": 92,
     "Offset": 20,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.3980865478515625"
+    "Distance": "5.3980865478515625",
+    "Tag": "koala"
   },
   {
     "Filename": "20210115T090000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-B_723161.flac",
@@ -272,7 +296,8 @@
     "SiteId": 44,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.399255752563477"
+    "Distance": "5.399255752563477",
+    "Tag": "koala"
   },
   {
     "Filename": "20210316T120000+1000_Mt-Barney-Wet-A_514661.flac",
@@ -283,7 +308,8 @@
     "SiteId": 2,
     "Offset": 55,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.4007062911987305"
+    "Distance": "5.4007062911987305",
+    "Tag": "koala"
   },
   {
     "Filename": "20210129T080000+1000_Mt-Barney-Wet-A_514101.flac",
@@ -294,7 +320,8 @@
     "SiteId": 2,
     "Offset": 0,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.401859283447266"
+    "Distance": "5.401859283447266",
+    "Tag": "koala"
   },
   {
     "Filename": "20200922T040000+1000_Eungella-Wet-B_501256.flac",
@@ -305,7 +332,8 @@
     "SiteId": 111,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.403575897216797"
+    "Distance": "5.403575897216797",
+    "Tag": "koala"
   },
   {
     "Filename": "20200223T090000+1100_Little-Desert-Nature-Lodge-Dry-B_29587.flac",
@@ -316,7 +344,8 @@
     "SiteId": 296,
     "Offset": 35,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.403904914855957"
+    "Distance": "5.403904914855957",
+    "Tag": "koala"
   },
   {
     "Filename": "20190923T160000+1000_SEQP-Samford-Dry-A_248973.flac",
@@ -327,6 +356,7 @@
     "SiteId": 253,
     "Offset": 45,
     "AudioLink": "http://localhost:3000/example.flac",
-    "Distance": "5.410007476806641"
+    "Distance": "5.410007476806641",
+    "Tag": "koala"
   }
 ]

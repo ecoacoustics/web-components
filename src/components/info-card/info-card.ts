@@ -16,13 +16,13 @@ type InfoCardTemplate = (value: any) => any;
 export class InfoCardComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(infoCardStyle);
 
-  /** Number of subject key/values pairs to show before the "Show More" button is clicked */
-  @property({ attribute: "default-lines", type: Number, reflect: true })
-  public defaultLines = 3;
-
   @consume({ context: gridTileContext, subscribe: true })
   @property({ attribute: false })
   public model?: SubjectWrapper;
+
+  /** Number of subject key/values pairs to show before the "Show More" button is clicked */
+  @property({ attribute: "default-lines", type: Number, reflect: true })
+  public defaultLines = 3;
 
   @state()
   private showExpanded = false;
