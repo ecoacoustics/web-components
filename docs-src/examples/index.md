@@ -17,6 +17,8 @@ title: Open Ecoacoustics | Examples
 
 [Verification Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
 
+[Classification Grid](./verification/classification/index.html)
+
 [How to Create a Verification grid](./create-verification-grid/index.html)
 
 [Presets](./presets/index.html)

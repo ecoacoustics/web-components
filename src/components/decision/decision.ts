@@ -206,7 +206,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
       disabled: !!this.disabled,
       "show-decision-color": this.isShowingDecisionColor(),
       "cancel-next": !this.shouldEmitNext,
-      [`decision-${this.decisionId}`]: true,
+      [`decision-${this.decisionId}`]: this.verified !== DecisionOptions.SKIP,
     });
 
     return html`

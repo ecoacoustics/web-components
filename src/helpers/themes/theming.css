@@ -67,6 +67,8 @@
   --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
   --oe-panel-color-lighter: color-mix(in srgb, var(--oe-panel-color) 1%, var(--oe-background-color));
 
+  --oe-undecided-color: var(--oe-panel-color);
+
   /* Breakpoints */
   --oe-mobile-breakpoint: 600px;
 }

@@ -423,7 +423,7 @@ test.describe("single verification grid", () => {
       const initialViewingHistory = await fixture.isViewingHistory();
       expect(initialViewingHistory).toBe(true);
 
-      await fixture.continueVerifyingButton().click();
+      await fixture.continueVerifying();
       const newViewingHistory = await fixture.isViewingHistory();
       expect(newViewingHistory).toBe(false);
     });
@@ -674,11 +674,10 @@ test.describe("single verification grid", () => {
           Site: "SEQP-Samford",
           SiteId: 255,
           Subsite: "Dry-B",
+          Tag: "koala",
         },
         "http://localhost:3000/example.flac",
-        {
-          text: "",
-        },
+        "koala" as any,
       );
       expectedNewModel.clientCached = true;
       expectedNewModel.serverCached = true;
@@ -731,10 +730,231 @@ test.describe("single verification grid", () => {
   test.describe("progressive creation of a verification grid", () => {});
 });
 
+test.describe("decision meter", () => {
+  test.describe("classification task", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(`
+        <oe-classification tag="car" verified="true">Car</oe-classification>
+        <oe-classification tag="car" verified="false">Not Car</oe-classification>
+        <oe-classification tag="koala" verified="true">Koala</oe-classification>
+        <oe-classification tag="koala" verified="false">Not Koala</oe-classification>
+        <oe-classification tag="bird" verified="true">Bird</oe-classification>
+        <oe-classification tag="bird" verified="false">Not Bird</oe-classification>
+      `);
+
+      await fixture.dismissHelpDialog();
+    });
+
+    test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
+      const expectedSegments = 3;
+      const realizedSegments = await fixture.gridTileProgressMeterSegments();
+      expect(realizedSegments).toHaveLength(expectedSegments);
+    });
+
+    test("should have the correct colors without a decision", async ({ fixture }) => {
+      const expectedColors = Array.from({ length: 3 }).fill(await fixture.panelColor());
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips without a decision", async ({ fixture }) => {
+      const expectedTooltips = ["car (no decision)", "koala (no decision)", "bird (no decision)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+
+    test("should change to the correct colors when a decision is made", async ({ fixture }) => {
+      const decision = 0;
+      await fixture.makeDecision(decision);
+
+      const expectedColors = [
+        await fixture.getDecisionColor(decision),
+        await fixture.panelColor(),
+        await fixture.panelColor(),
+      ];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when a decision is made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+
+      const expectedTooltips = ["car (true)", "koala (no decision)", "bird (no decision)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+
+    test("should have the correct colors when multiple decisions are made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(2);
+
+      const expectedColors = [
+        await fixture.getDecisionColor(0),
+        await fixture.getDecisionColor(2),
+        await fixture.panelColor(),
+      ];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when multiple decisions are made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(3);
+
+      const expectedTooltips = ["car (true)", "koala (false)", "bird (no decision)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+
+    test("should change colors when a the decision is changed", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(1);
+
+      const expectedColors = [
+        await fixture.getDecisionColor(1),
+        await fixture.panelColor(),
+        await fixture.panelColor(),
+      ];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when a decision is changed", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(1);
+
+      const expectedTooltips = ["car (false)", "koala (no decision)", "bird (no decision)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+
+    // these skip tests also assert that the progress meter behaves correctly
+    // when navigating in history
+    test("should have the correct colors when a decision is skipped", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeSkipDecision();
+
+      // when the skip button is clicked, the next page rendered
+      // therefore, if we want to see that the correct colors were applied, we
+      // have to navigate back in history
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedColors = [
+        await fixture.getDecisionColor(0),
+        await fixture.panelColor(),
+        await fixture.panelColor(),
+      ];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeSkipDecision();
+
+      // when the skip button is clicked, the next page rendered
+      // therefore, if we want to see that the correct colors were applied, we
+      // have to navigate back in history
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedTooltips = ["car (true)", "koala (skip)", "bird (skip)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+  });
+
+  test.describe("verification task", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(`
+        <oe-verification verified="true">Koala</oe-verification>
+        <oe-verification verified="false">Not Koala</oe-verification>
+      `);
+
+      await fixture.dismissHelpDialog();
+    });
+
+    test("should have the correct number of segments", async ({ fixture }) => {
+      const expectedSegments = 1;
+      const realizedSegments = await fixture.gridTileProgressMeterSegments();
+      expect(realizedSegments).toHaveLength(expectedSegments);
+    });
+
+    test("should have the correct colors when a decision is made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedColors = [await fixture.getDecisionColor(0)];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when a decision is made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedTooltips = ["koala (true)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+  });
+
+  test.describe("mixed classification and verification tasks", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(`
+        <oe-verification verified="true">Positive</oe-verification>
+        <oe-verification verified="false">Negative</oe-verification>
+
+        <oe-classification tag="car" verified="true">Car</oe-classification>
+        <oe-classification tag="car" verified="false">Not Car</oe-classification>
+        <oe-classification tag="bird" verified="true">Bird</oe-classification>
+        <oe-classification tag="bird" verified="false">Not Bird</oe-classification>
+        <oe-classification tag="cat" verified="true">Cat</oe-classification>
+        <oe-classification tag="cat" verified="false">Not Cat</oe-classification>
+      `);
+
+      await fixture.dismissHelpDialog();
+    });
+
+    test("should have the correct number of segments", async ({ fixture }) => {
+      const expectedSegments = 4;
+      const realizedSegments = await fixture.gridTileProgressMeterSegments();
+      expect(realizedSegments).toHaveLength(expectedSegments);
+    });
+
+    // make a verification decision and then make a classification decision
+    // we should see that the progress meter is updated correctly
+    test("should have the correct colors when decisions are made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(3);
+
+      const expectedColors = [
+        await fixture.getDecisionColor(3),
+        await fixture.panelColor(),
+        await fixture.panelColor(),
+        await fixture.getDecisionColor(0),
+      ];
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual(expectedColors);
+    });
+
+    test("should have the correct tooltips when decisions are made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.makeDecision(3);
+
+      const expectedTooltips = ["car (false)", "bird (no decision)", "cat (no decision)", "koala (true)"];
+      const realizedTooltips = await fixture.progressMeterTooltips();
+      expect(realizedTooltips).toEqual(expectedTooltips);
+    });
+  });
+});
+
 test.describe("verification grid with custom template", () => {
   test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       const customTemplate = `
+        <oe-verification verified="true">Koala</oe-verification>
+        <oe-verification verified="false">Not Koala</oe-verification>
+
         <template>
           <oe-info-card></oe-info-card>
         </template>

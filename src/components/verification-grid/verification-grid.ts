@@ -184,6 +184,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   // https://github.com/ecoacoustics/web-components/issues/139
   public subjectHistory: SubjectWrapper[] = [];
   private verificationBuffer: SubjectWrapper[] = [];
+  private requiredClassificationTags: Tag[] = [];
   private hiddenTiles = 0;
   private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
@@ -329,6 +330,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  private updateRequiredClassificationTags(): void {
+    const requiredTags = new Map<string, Tag>();
+
+    // we use a map indexed by the tag text so that we don't get duplicate tags
+    // with the same text property
+    // we do not use a filter condition because we'd have to use an inner
+    // indexOf function to check if a tag with the same text is already present
+    // making the use of a filter condition O(n^2)
+    const classificationTags = this.classificationDecisionElements.map((element) => element.tag);
+    for (const tag of classificationTags) {
+      requiredTags.set(tag.text, tag);
+    }
+
+    this.requiredClassificationTags = Array.from(requiredTags.values());
+  }
+
   //#endregion
 
   //#region EventHandlers
@@ -442,6 +459,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleHelpDialogClose(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+  }
+
+  private handleSlotChange(): void {
+    this.updateRequiredClassificationTags();
   }
 
   //#endregion
@@ -903,10 +924,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
   }
 
-  private requiredTags(): Tag[] {
-    return this.classificationDecisionElements
-      .map((element) => element.tag)
-      .filter((tag, index, self) => self.indexOf(tag) === index);
+  private tilesRequiredTags(subject: SubjectWrapper): Tag[] {
+    const classificationTags = this.requiredClassificationTags;
+
+    if (!this.hasVerificationTask()) {
+      return classificationTags;
+    }
+
+    const verificationTag = subject.tag;
+    return classificationTags.concat(verificationTag);
   }
 
   // for verification tasks, the user will be adding one verification decision
@@ -1172,7 +1198,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const doneEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
-      const requiredTags = this.requiredTags();
+      const requiredTags = this.requiredClassificationTags;
       const hasVerificationTask = this.hasVerificationTask();
 
       const gridTiles = this.gridTiles;
@@ -1199,7 +1225,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
         verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        classificationTasksCount="${this.requiredTags().length}"
+        classificationTasksCount="${this.requiredClassificationTags.length}"
       ></oe-verification-help-dialog>
       <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
 
@@ -1220,6 +1246,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
                     @loaded="${this.handleSpectrogramLoaded}"
+                    .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"
                     .index="${i}"
                   >
@@ -1277,7 +1304,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
             </h2>
             <div id="decisions-container" class="decision-control-actions">
-              <slot></slot>
+              <slot @slotchange="${this.handleSlotChange}"></slot>
 
               ${this.doneDecisionTemplate()}
             </div>
