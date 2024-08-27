@@ -16,7 +16,7 @@ export default defineConfig({
     VitePluginCustomElementsManifest({
       files: ["./src/components/**/*.ts"],
       lit: true,
-    }) as any,
+    }),
     nodePolyfills(),
     svgLoader(),
     // mkcert(),
@@ -60,4 +60,4 @@ export default defineConfig({
       formats: ["es"],
     },
   },
-} as any);
+});

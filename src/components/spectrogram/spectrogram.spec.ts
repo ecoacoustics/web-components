@@ -26,7 +26,7 @@ test.describe("unit tests", () => {
     expect(outside).toEqual({ keyboardShortcut: false, play: false });
   });
 
-  test("loading events", async ({ mount }) => {
+  test("loading events", async ({ mount, page }) => {
     let loadingEvent: CustomEvent | undefined;
     let loadedEvent: CustomEvent | undefined;
 
@@ -45,6 +45,9 @@ test.describe("unit tests", () => {
     });
 
     await setBrowserAttribute<SpectrogramComponent>(component, "src", "/example2.flac");
+
+    // TODO: this is a hacky way to wait for the loading event to fire, there should be a better way
+    await page.waitForTimeout(1000);
 
     expect(loadingEvent).toBeDefined();
     expect(loadedEvent).toBeDefined();

@@ -135,7 +135,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
           aria-label="${buttonLabel}"
         >
           <sl-icon
-            name="${this.settings.isFullscreen.value ? "fullscreen-exit" : "arrows-fullscreen"}"
+            name="${this.settings.isFullscreen.value ? "fullscreen-exit " : "arrows-fullscreen"}"
             class="large-icon"
           ></sl-icon>
         </button>

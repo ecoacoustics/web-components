@@ -1,7 +1,8 @@
 // we import the polyfills first so that they are available when the components
 // are imported
-import { setBasePath } from "@shoelace-style/shoelace";
 import "../polyfills/polyfills";
+import { registerBundledIcons } from "../services/shoelaceLoader";
+registerBundledIcons();
 
 // oe web components barrel file
 export * from "./media-controls/media-controls";
@@ -25,4 +26,3 @@ export * from "./verification-grid-settings/verification-grid-settings";
 // import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
 // import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace";
-setBasePath("/node_modules/@shoelace-style/shoelace/dist");

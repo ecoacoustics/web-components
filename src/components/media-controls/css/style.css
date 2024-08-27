@@ -12,13 +12,7 @@ sl-menu-item[checked]::part(base) {
   color: var(--oe-font-color);
 }
 
-/*
-  The play/pause icons provided by shoelace look smaller than the rest of the
-  icons which are in the media controls.
-  By increasing the size of the play/pause icons, we can make them fit in more.
-*/
-sl-icon[name="play"],
-sl-icon[name="pause"] {
+sl-icon.large-icon {
   --enlargement-factor: 1.5;
 
   /*

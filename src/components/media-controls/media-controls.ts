@@ -140,7 +140,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private playIcon() {
     return html`
       <slot name="play-icon" part="play-icon">
-        <sl-icon name="play"></sl-icon>
+        <sl-icon name="play" class="large-icon"></sl-icon>
       </slot>
     `;
   }
@@ -148,7 +148,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private pauseIcon() {
     return html`
       <slot name="pause-icon" part="pause-icon">
-        <sl-icon name="pause"></sl-icon>
+        <sl-icon name="pause" class="large-icon"></sl-icon>
       </slot>
     `;
   }
