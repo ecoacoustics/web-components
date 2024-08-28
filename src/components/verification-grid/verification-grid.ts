@@ -32,6 +32,11 @@ export interface VerificationGridSettings {
   isFullscreen: Signal<boolean>;
 }
 
+export interface MousePosition {
+  x: number;
+  y: number;
+}
+
 export const verificationGridContext = createContext<VerificationGridSettings>(Symbol("verification-grid-context"));
 
 type SelectionEvent = CustomEvent<{
@@ -39,11 +44,6 @@ type SelectionEvent = CustomEvent<{
   ctrlKey: boolean;
   index: number;
 }>;
-
-interface MousePosition {
-  x: number;
-  y: number;
-}
 
 // by keeping the elements position in a separate object, we can
 // avoid doing DOM queries every time we need to check if the element
@@ -667,7 +667,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         this.doneRenderBoxInit = true;
       }
 
-      element.style.display = "block";
       element.style.left = `${event.pageX}px`;
       element.style.top = `${event.pageY}px`;
 
@@ -694,6 +693,16 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     const highlightWidth = this.highlight.current.x - this.highlight.start.x;
     const highlightHeight = this.highlight.current.y - this.highlight.start.y;
+
+    const highlightXDelta = Math.abs(highlightWidth);
+    const highlightYDelta = Math.abs(highlightHeight);
+    const highlightThreshold = 15 as const;
+    const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
+    if (meetsHighlightThreshold) {
+      element.style.display = "block";
+    } else {
+      return;
+    }
 
     element.style.width = `${Math.abs(highlightWidth)}px`;
     element.style.height = `${Math.abs(highlightHeight)}px`;

@@ -1,5 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { Size } from "../models/rendering";
+import { MousePosition } from "../components";
+import { KeyboardModifiers } from "../helpers/types/playwright";
+import { expect } from "./assertions";
+import { Pixel } from "../models/unitConverters";
 
 export async function getElementSize<T extends HTMLElement>(element: T | Locator): Promise<Size> {
   const width = (await getBrowserValue<T>(element, "clientWidth")) as number;
@@ -37,6 +41,96 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   return await locator.evaluate((element: T, variable: string) => {
     return window.getComputedStyle(element).getPropertyValue(variable);
   }, name);
+}
+
+/**
+ * @description
+ * Simulates the user dragging the mouse from the start position to an end
+ * position.
+ *
+ * @param start - The starting position of the drag
+ * @param end - The ending position of the drag
+ * @param modifiers - An array of keyboard modifiers to hold down during the drag
+ */
+export async function dragSelection(
+  page: Page,
+  start: MousePosition,
+  end: MousePosition,
+  modifiers: KeyboardModifiers = [],
+) {
+  await page.mouse.move(start.x, start.y);
+
+  for (const modifier of modifiers) {
+    await page.keyboard.down(modifier);
+  }
+  await page.mouse.down();
+
+  // by using step 10, there will be 10 intermediate points between the start
+  // and end destination. Better simulating a user drag action because users
+  // can usually not instantly move their mouse across the screen
+  await page.mouse.move(end.x, end.y, { steps: 10 });
+
+  await page.mouse.up();
+  for (const modifier of modifiers) {
+    await page.keyboard.up(modifier);
+  }
+}
+
+/**
+ * @description
+ * Simulates the user dragging a slider to a location
+ * You should use this instead of setting a sliders value directly because it
+ * better simulates a user interaction.
+ * Additionally, it simulates dragging the slider instead of teleporting the
+ * mouse to the correct location in the range input.
+ */
+export async function dragSlider(page: Page, locator: Locator, value: number) {
+  await locator.scrollIntoViewIfNeeded();
+
+  const currentValue = (await getBrowserValue<HTMLInputElement>(locator, "value")) as number;
+  const elementBoundingBox = await locator.boundingBox();
+  if (!elementBoundingBox) {
+    throw new Error("Could not find the bounding box of the element");
+  }
+
+  /**
+   * @returns
+   * A pixel amount that the slider thumb should be dragged to reach the
+   * desired value.
+   */
+  const relativeOffset = async (value: number): Promise<Pixel> => {
+    const minimumValue = (await getBrowserValue<HTMLInputElement>(locator, "min")) as number;
+    const maximumValue = (await getBrowserValue<HTMLInputElement>(locator, "max")) as number;
+    const valueDelta = Math.abs(maximumValue - minimumValue);
+
+    // the magnitude represents how many pixels the slider thumb should be
+    // dragged for each unit of value change
+    const magnitude = elementBoundingBox.width / valueDelta;
+
+    return (value - minimumValue) * magnitude;
+  };
+
+  const relativeCurrentTrackLocation = await relativeOffset(currentValue);
+  const relativeTargetTrackLocation = await relativeOffset(value);
+
+  // because mouse movements are relative to the position in the viewport, we
+  // get the current location of the slider thumb and the target location of the
+  // slider thumb relative to the viewport
+  const absoluteCurrentTrackLocation = elementBoundingBox.x + relativeCurrentTrackLocation;
+  const absoluteTargetTrackLocation = elementBoundingBox.x + relativeTargetTrackLocation;
+
+  // we drag from the middle of the range input so that the mouse position is
+  // directly over the thumb of the slider
+  const yPosition = elementBoundingBox.y + elementBoundingBox.height / 2;
+
+  const start = { x: absoluteCurrentTrackLocation, y: yPosition };
+  const end = { x: absoluteTargetTrackLocation, y: yPosition };
+
+  await locator.hover();
+  await dragSelection(page, start, end);
+
+  // assert that the sliders value was updated correctly
+  await expect(locator).toHaveJSProperty("value", value.toString());
 }
 
 export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, eventName: string) {

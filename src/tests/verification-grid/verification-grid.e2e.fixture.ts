@@ -1,6 +1,8 @@
 import { Locator, Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import {
+  dragSelection,
+  dragSlider,
   getBrowserAttribute,
   getBrowserValue,
   invokeBrowserMethod,
@@ -8,6 +10,7 @@ import {
   setBrowserAttribute,
 } from "../helpers";
 import {
+  MousePosition,
   SelectionObserverType,
   VerificationGridComponent,
   VerificationGridSettings,
@@ -25,15 +28,13 @@ import {
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionId } from "../../models/decisions/decision";
 import { expect } from "../assertions";
-
-type KeyboardModifiers = Array<"Alt" | "Control" | "ControlOrMeta" | "Meta" | "Shift">;
+import { KeyboardModifiers } from "../../helpers/types/playwright";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
-  public mediaControlsComponent = () => this.page.locator("oe-media-controls").all();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
@@ -61,6 +62,13 @@ class TestPage {
     (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
   public gridTileProgressMeterTooltips = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
+
+  public mediaControlsComponent = async (index = 0) =>
+    (await this.gridTileContainers())[index].locator("oe-media-controls").first();
+  public brightnessControlsDropdown = async (index = 0) =>
+    (await this.gridTileComponents())[index].locator("sl-dropdown[title='Brightness']").first();
+  public brightnessControlsInput = async (index = 0) =>
+    (await this.gridTileComponents())[index].locator("input[name='brightness']").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
@@ -351,6 +359,8 @@ class TestPage {
   public async playSpectrogram(index: number) {
     const gridTiles = await this.gridTileComponents();
     const playButton = gridTiles[index].locator("[part='play-icon']").first();
+
+    await playButton.scrollIntoViewIfNeeded();
     await playButton.click();
   }
 
@@ -358,6 +368,18 @@ class TestPage {
     const gridTiles = await this.gridTileComponents();
     const pauseButton = gridTiles[index].locator("[part='pause-icon']").first();
     await pauseButton.click();
+  }
+
+  /**
+   * Changes the brightness of the grid tile through the media controls
+   * brightness slider by dragging the slider to the specified value.
+   */
+  public async changeBrightness(index: number, value: number) {
+    const dropdown = await this.brightnessControlsDropdown(index);
+    await dropdown.click();
+
+    const input = await this.brightnessControlsInput(index);
+    await dragSlider(this.page, input, value);
   }
 
   public async openHelpDialog() {
@@ -382,6 +404,10 @@ class TestPage {
     // selecting the end of the range
     await this.createSubSelection([start], modifiers);
     await this.createSubSelection([end], ["Shift", ...modifiers]);
+  }
+
+  public async createSelectionBox(start: MousePosition, end: MousePosition, modifiers: KeyboardModifiers = []) {
+    await dragSelection(this.page, start, end, modifiers);
   }
 
   public async makeDecision(decision: number) {
@@ -439,7 +465,7 @@ class TestPage {
   public async changeSourceLocal(local: boolean) {
     const targetedBrowserAttribute = "local";
     const strategy = local ? setBrowserAttribute : removeBrowserAttribute;
-    strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
+    await strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
   }
 
   public async changeSpectrogramScaling(scale: SpectrogramCanvasScale) {

@@ -1,7 +1,7 @@
 import { Parser } from "@json2csv/plainjs";
 import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { EnumValue } from "../../helpers/advancedTypes";
+import { EnumValue } from "../../helpers/types/advancedTypes";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";

@@ -2,9 +2,15 @@ import { Size } from "../../models/rendering";
 import { catchLocatorEvent, changeToDesktop, changeToMobile, getBrowserValue, setBrowserAttribute } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
-import { SpectrogramCanvasScale, VerificationGridComponent, VerificationGridTileComponent } from "../../components";
+import {
+  MousePosition,
+  SpectrogramCanvasScale,
+  VerificationGridComponent,
+  VerificationGridTileComponent,
+} from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
+import { Pixel } from "../../models/unitConverters";
 
 test.describe("while the initial help dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -534,6 +540,93 @@ test.describe("single verification grid", () => {
 
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(subSelection);
+      });
+
+      // there is a human tendency to move the mouse by a very small amount when
+      // clicking the primary mouse button
+      // to prevent this, there should be a minimum move amount until we start
+      // creating a selection box
+      // we start the selection slightly outside the tile so that the grid tile
+      // does not register the client event
+      test("should not create a selection box if the user drags a small px amount", async ({ fixture }) => {
+        const dragAmount: Pixel = 10;
+
+        const targetTile = (await fixture.gridTileComponents())[0];
+        const targetLocation = await targetTile.boundingBox();
+        if (!targetLocation) {
+          throw new Error("Could not get the bounding box of the target tile");
+        }
+
+        const selectionBoxSize = { width: dragAmount, height: dragAmount };
+        const start: MousePosition = { x: targetLocation.x - dragAmount / 2, y: targetLocation.y - dragAmount / 2 };
+        const end: MousePosition = {
+          x: targetLocation.x + selectionBoxSize.width,
+          y: targetLocation.y + selectionBoxSize.height,
+        };
+
+        await fixture.createSelectionBox(start, end);
+
+        const expectedSelectedTiles = [];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should be able to select a tile using the selection box", async ({ fixture }) => {
+        const targetTile = (await fixture.gridTileComponents())[0];
+        const targetLocation = await targetTile.boundingBox();
+        if (!targetLocation) {
+          throw new Error("Could not get the bounding box of the target tile");
+        }
+
+        const selectionBoxSize = { width: 100, height: 100 };
+        const start: MousePosition = { x: targetLocation.x, y: targetLocation.y };
+        const end: MousePosition = {
+          x: targetLocation.x + selectionBoxSize.width,
+          y: targetLocation.y + selectionBoxSize.height,
+        };
+
+        await fixture.createSelectionBox(start, end);
+
+        const expectedSelectedTiles = [0];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      test("should be able to select multiple tiles using the selection box", async ({ fixture }) => {
+        const targetStartTile = (await fixture.gridTileComponents())[0];
+        const targetEndTile = (await fixture.gridTileComponents())[1];
+
+        const targetStartLocation = await targetStartTile.boundingBox();
+        if (!targetStartLocation) {
+          throw new Error("Could not get the bounding box of the start tile");
+        }
+
+        const targetEndLocation = await targetEndTile.boundingBox();
+        if (!targetEndLocation) {
+          throw new Error("Could not get the bounding box of the end tile");
+        }
+
+        const start: MousePosition = { x: targetStartLocation.x, y: targetStartLocation.y };
+        const end: MousePosition = {
+          x: targetEndLocation.x + targetEndLocation.width,
+          y: targetEndLocation.y + targetEndLocation.height,
+        };
+
+        await fixture.createSelectionBox(start, end);
+
+        const expectedSelectedTiles = [0, 1];
+        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      // if this test is failing, it might be because the selection box is
+      // triggering when dragging the brightness range input
+      test("should not select when using the media controls brightness range input", async ({ fixture }) => {
+        const targetTile = 2;
+        await fixture.changeBrightness(targetTile, 0.5);
+
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(0);
       });
     };
 
