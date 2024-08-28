@@ -15,8 +15,8 @@ import { when } from "lit/directives/when.js";
 import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
-import verificationGridTileStyles from "./css/style.css?inline";
 import { ifDefined } from "lit/directives/if-defined.js";
+import verificationGridTileStyles from "./css/style.css?inline";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
@@ -225,8 +225,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   private dispatchSelectedEvent(event: PointerEvent | KeyboardEvent): void {
-    // TODO: passing through client events should be handled by the oe-media-controls component
-    const ignoreTargets = ["oe-media-controls", "button", "oe-info-card", "a"];
+    const ignoreTargets = ["button", "oe-info-card", "a"];
     const eventTarget = event.target;
     if (!(eventTarget instanceof HTMLElement)) {
       return;

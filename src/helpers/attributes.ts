@@ -1,5 +1,5 @@
 import { Tag } from "../models/tag";
-import { Enum } from "./advancedTypes";
+import { Enum } from "./types/advancedTypes";
 
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 

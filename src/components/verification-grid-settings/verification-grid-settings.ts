@@ -7,7 +7,7 @@ import {
   VerificationGridSettings,
 } from "../verification-grid/verification-grid";
 import { queryParentElement } from "../../helpers/decorators";
-import { ChangeEvent } from "../../helpers/advancedTypes";
+import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";

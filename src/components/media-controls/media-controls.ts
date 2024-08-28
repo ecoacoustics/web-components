@@ -126,6 +126,21 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  // the handlePointerDown method is attached to the top-most container of this
+  // component. Meaning that all pointer events that occur within the media
+  // controls component can be handled by this component, but will not propagate
+  // outside to parent elements.
+  // we do this because if the user clicks on a media control e.g. the play
+  // button, we do not want other parent elements such as the verification grid
+  // tile to receive the pointer event and think that we clicked on that element
+  // and want to perform selection.
+  // if you want to explicitly listen for a pointer event on this media controls
+  // you can assign an event listener to the root element.
+  // e.g. <oe-media-controls @pointerdown="${this.handlePointerDown}">
+  private handlePointerDown(event: PointerEvent) {
+    event.stopPropagation();
+  }
+
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.key === SPACE_KEY) {
       this.toggleAudio(true);
@@ -409,7 +424,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
   public render() {
     return html`
-      <div class="container">
+      <div class="container" @pointerdown="${this.handlePointerDown}">
         <a id="action-button" @click="${() => this.toggleAudio(false)}">
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>

@@ -1,4 +1,4 @@
-import { EnumValue } from "../../helpers/advancedTypes";
+import { EnumValue } from "../../helpers/types/advancedTypes";
 import { Tag } from "../tag";
 import { Decision, DecisionOptions } from "./decision";
 

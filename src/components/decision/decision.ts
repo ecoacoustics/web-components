@@ -9,7 +9,7 @@ import { Decision, DecisionId, DecisionOptions } from "../../models/decisions/de
 import { SelectionObserverType } from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
-import { EnumValue } from "../../helpers/advancedTypes";
+import { EnumValue } from "../../helpers/types/advancedTypes";
 import { Tag } from "../../models/tag";
 import decisionStyles from "./css/style.css?inline";
 
