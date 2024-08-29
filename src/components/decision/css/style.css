@@ -1,6 +1,7 @@
-#decision-button {
+.decision-button {
   position: relative;
   height: 100%;
+  padding: 0.3em;
 
   > div {
     display: block;
@@ -27,24 +28,9 @@
     */
     pointer-events: none;
   }
-
-  &:active:not(.cancel-next),
-  &.show-decision-color {
-    &:not(.disabled, :disabled) {
-      outline: none;
-      border: none;
-
-      border: var(--oe-border-width) solid var(--decision-color);
-      --background-color: var(--decision-color);
-    }
-  }
 }
 
-/*
-  I declare the --decision-color variable on the decision button class not
-  on the id selector because I need the specificity to be 0,1,0 so that I can
-  override the variable with a decision class
- */
-.decision-button {
-  --decision-color: none;
+.decision-color-pill {
+  height: 0.5em;
+  width: 1.5em;
 }

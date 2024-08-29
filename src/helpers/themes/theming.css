@@ -105,10 +105,11 @@ input:disabled {
 
 kbd {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
   color: var(--oe-font-color);
   font-family: "Courier New", Courier, monospace;
   text-align: center;
+  align-items: center;
   font-weight: bold;
   padding: 0.2rem;
   padding-left: 0.5em;
@@ -117,6 +118,13 @@ kbd {
   margin-top: 0.2rem;
   margin: 0.5rem;
   width: max-content;
+
+  /*
+    Even though we are using a monospaced font, some utf8 symbols such as the
+    shift key icon are taller than other characters
+    To fix this, I make each keyboard element the same height.
+  */
+  height: 1rem;
 
   &::before {
     content: "";
@@ -273,15 +281,14 @@ input[type="file"] {
   https://css-tricks.com/how-to-recreate-the-ripple-effect-of-material-design-buttons/#aa-css-only
 */
 button {
+  --ripple-color: color-mix(in srgb, var(--background-color) 90%, black);
   --background-color: var(--oe-panel-color);
   --border: none;
-  --ripple-color: color-mix(in srgb, var(--background-color) 90%, black);
 
   border: var(--border);
   border-radius: var(--oe-border-rounding);
   margin: 0.1rem;
   font-size: 1em;
-  max-width: max-content;
   padding: var(--oe-spacing) var(--oe-spacing-large);
   background-color: var(--background-color);
   transition:
@@ -344,6 +351,11 @@ button {
 .oe-btn-danger {
   --background-color: var(--oe-danger-color);
   color: white;
+}
+
+.oe-pill {
+  display: inline-block;
+  border-radius: var(--oe-border-rounding);
 }
 
 @keyframes fade-in {

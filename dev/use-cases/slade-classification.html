@@ -14,15 +14,9 @@
           <oe-info-card></oe-info-card>
         </template>
 
-        <oe-classification verified="true" shortcut="Y" tag="blue winged kookaburra">
-          Blue winged Kookaburra
-        </oe-classification>
-        <oe-classification verified="false" shortcut="N" tag="blue winged kookaburra">
-          Not blue winged kookaburra
-        </oe-classification>
+        <oe-classification true-shortcut="y" false-shortcut="n" tag="blue winged kookaburra"></oe-classification>
 
-        <oe-data-source slot="data-source" for="verification-grid" src="/slade-classification.csv" local>
-        </oe-data-source>
+        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
       </oe-verification-grid>
     </div>
 

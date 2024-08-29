@@ -4,6 +4,7 @@ import { MousePosition } from "../components";
 import { KeyboardModifiers } from "../helpers/types/playwright";
 import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
+import { CssVariable } from "../helpers/types/advancedTypes";
 
 export async function getElementSize<T extends HTMLElement>(element: T | Locator): Promise<Size> {
   const width = (await getBrowserValue<T>(element, "clientWidth")) as number;
@@ -37,9 +38,37 @@ export async function getBrowserStyles<T extends HTMLElement>(component: Locator
   });
 }
 
-export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: string): Promise<string> {
+export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
     return window.getComputedStyle(element).getPropertyValue(variable);
+  }, name);
+}
+
+export async function getCssColorVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
+  return await locator.evaluate((element: T, variable: string) => {
+    // using window.getComputedStyle().getPropertyValue() will return the value
+    // of the css variable as a string, not as a color
+    // because this test helper is used to assert against background colors
+    // we need to convert the css color variable into the same format that
+    // will be used during assertions (rgb)
+    // this is done by creating a temporary div, setting the color to the
+    // variable, and then getting the computed color
+    // by creating a temporary div, we can ensure that the color is in the same
+    // format that the test is asserting against
+    const cssColorToRgb = (color: string) => {
+      const temp = document.createElement("div");
+      temp.style.display = "none";
+      temp.style.color = color;
+      document.body.appendChild(temp);
+
+      const rgb = window.getComputedStyle(temp).color;
+      document.body.removeChild(temp);
+
+      return rgb;
+    };
+
+    const variableValue = window.getComputedStyle(element).getPropertyValue(variable);
+    return cssColorToRgb(variableValue);
   }, name);
 }
 
@@ -140,9 +169,9 @@ export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, 
   }, eventName);
 }
 
-export async function catchEvent(locator: Page, name: string) {
+export async function catchEvent<T extends Event>(locator: Page, name: string) {
   return locator.evaluate((name: string) => {
-    return new Promise((resolve) => {
+    return new Promise<T>((resolve) => {
       document.addEventListener(name, (data) => resolve(data));
     });
   }, name);

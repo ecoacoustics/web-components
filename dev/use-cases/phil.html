@@ -10,16 +10,9 @@
   <body>
     <div id="grid-host">
       <oe-verification-grid id="verification-grid" grid-size="4">
-        <template>
-          <oe-info-card></oe-info-card>
-        </template>
-
-        <oe-classification tag="koala" verified="true" shortcut="H">Koala</oe-classification>
-        <oe-classification tag="koala" verified="false" shortcut="J">Not Koala</oe-classification>
-        <oe-classification tag="car" shortcut="K">Car</oe-classification>
-        <oe-classification tag="car" verified="false" shortcut="L">Not Car</oe-classification>
-        <oe-classification tag="crickets" shortcut="Q">Crickets</oe-classification>
-        <oe-classification tag="crickets" verified="false" shortcut="W">Not Crickets</oe-classification>
+        <oe-classification tag="koala" true-shortcut="h"></oe-classification>
+        <oe-classification tag="car" true-shortcut="j"></oe-classification>
+        <oe-classification tag="crickets" true-shortcut="k"></oe-classification>
 
         <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
       </oe-verification-grid>

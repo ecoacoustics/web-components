@@ -15,6 +15,11 @@
   pointer-events: none;
 }
 
+#skip-button {
+  height: min-content;
+  align-self: center;
+}
+
 /* TODO: fix placement */
 .statistics-section {
   position: relative;

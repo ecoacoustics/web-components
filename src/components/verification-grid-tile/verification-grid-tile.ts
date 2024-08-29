@@ -10,7 +10,12 @@ import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
-import { verificationGridContext, VerificationGridSettings } from "../verification-grid/verification-grid";
+import {
+  injectionContext,
+  verificationGridContext,
+  VerificationGridInjector,
+  VerificationGridSettings,
+} from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
@@ -64,6 +69,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   @state()
   private settings!: VerificationGridSettings;
 
+  @consume({ context: injectionContext, subscribe: true })
+  @state()
+  private injector!: VerificationGridInjector;
+
   /**
    * Hides a grid tile. This is useful for virtual paging so if you have a
    * grid of tiles where not all have a source, you can hide the ones that
@@ -103,14 +112,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
   public loaded = false;
   private shortcuts: string[] = [];
-
-  public get decisionIndices(): number[] {
-    if (!this.model) {
-      return [];
-    }
-
-    return this.model.decisionModels.map((decision) => decision.decisionId).filter((decisionId) => decisionId >= 0);
-  }
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -265,12 +266,12 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
         let color: string | undefined;
         if (decision && decision.confirmed !== DecisionOptions.SKIP) {
-          color = `var(--decision-color-${decision.decisionId})`;
+          color = this.injector.colorService(decision);
         }
 
         return html`
           <sl-tooltip content="${tag.text ?? tag} (${decisionText})">
-            <span class="progress-meter-segment" style="background-color: ${ifDefined(color)}"></span>
+            <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
           </sl-tooltip>
         `;
       })}
@@ -278,17 +279,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   public render() {
-    const decisionClasses: Record<string, unknown> = {};
-
-    for (const decisionIndex of this.decisionIndices) {
-      const key = `decision-${decisionIndex}`;
-      decisionClasses[key] = true;
-    }
-
     const tileClasses = classMap({
       selected: this.selected,
       hidden: this.hidden,
-      ...decisionClasses,
     });
 
     const figureClasses = classMap({

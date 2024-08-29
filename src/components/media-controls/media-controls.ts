@@ -399,7 +399,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
               type="range"
               min="-0.5"
               max="0.5"
-              step="0.1"
+              step="0.01"
               value="0"
             />
           </label>
@@ -413,7 +413,15 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
         <sl-menu>
           <label>
-            <input @change="${changeNumberHandler}" name="contrast" type="range" min="0" max="2" step="0.1" value="1" />
+            <input
+              @change="${changeNumberHandler}"
+              name="contrast"
+              type="range"
+              min="0"
+              max="2"
+              step="0.01"
+              value="1"
+            />
           </label>
         </sl-menu>
       </sl-dropdown>

@@ -1,21 +1,24 @@
-import { html, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
-import { booleanConverter, enumConverter, tagArrayConverter } from "../../helpers/attributes";
+import { LitElement, TemplateResult, unsafeCSS } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { booleanConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Decision, DecisionId, DecisionOptions } from "../../models/decisions/decision";
-import { SelectionObserverType } from "../verification-grid/verification-grid";
+import { Decision } from "../../models/decisions/decision";
+import {
+  injectionContext,
+  SelectionObserverType,
+  VerificationGridInjector,
+} from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
-import { EnumValue } from "../../helpers/types/advancedTypes";
-import { Tag } from "../../models/tag";
+import { consume } from "@lit/context";
 import decisionStyles from "./css/style.css?inline";
+import { decisionColor } from "../../services/colors";
+import { KeyboardShortcut } from "verification-grid/help-dialog";
 
 interface DecisionContent {
   value: Decision[];
-  target: DecisionComponent;
 }
 
 export type DecisionEvent = CustomEvent<DecisionContent>;
@@ -23,47 +26,33 @@ export type DecisionComponentUnion = DecisionComponent | VerificationComponent |
 
 /**
  * @description
- * A decision that can be made either with keyboard shortcuts or by
- * clicking/touching on the element.
- *
- * @slot - The text/content of the decision
- *
- * @csspart decision-button - The button that triggers the decision
+ * A common abstract decision component that can be implemented by different
+ * types of decisions.
+ * e.g. a verification decision or a classification decision
  *
  * @fires decision
  */
 @customElement("oe-decision")
 export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public static styles = [unsafeCSS(decisionStyles), decisionColors];
-
   public static readonly decisionEventName = "decision" as const;
+
+  protected abstract handleShortcutKey(event: KeyboardEvent): void;
+  protected abstract isShortcutKey(event: KeyboardEvent): Readonly<boolean>;
 
   protected constructor() {
     super();
   }
 
-  /** Value that will be added to the oe-additional-tags column */
-  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter, reflect: true })
-  public additionalTags: Tag[] = [];
+  @consume({ context: injectionContext, subscribe: true })
+  @state()
+  protected injector: VerificationGridInjector = {
+    colorService: decisionColor,
+  };
 
   /** Disables the decision button and prevents decision events from firing */
   @property({ attribute: "disabled", type: Boolean, converter: booleanConverter, reflect: true })
   public disabled = false;
-
-  @property({ type: String, converter: enumConverter(DecisionOptions) as any })
-  public verified: EnumValue<DecisionOptions> = DecisionOptions.TRUE;
-
-  /**
-   * A keyboard key that when pressed will act as a click event on the button
-   */
-  @property({ type: String, reflect: true })
-  public shortcut?: string;
-
-  @property({ attribute: false, type: Boolean })
-  public highlighted = false;
-
-  @property({ attribute: false, type: Number })
-  public decisionId: DecisionId = 0;
 
   // we use a property with no attribute because we expect the value to be
   // updated from outside the component in Lit, the state decorator is used for
@@ -73,44 +62,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   @property({ attribute: false })
   public selectionMode: SelectionObserverType = "desktop";
 
-  @query("#decision-button")
-  private decisionButton!: HTMLButtonElement;
-
-  @state()
-  private keyboardHeldDown = false;
-
-  @state()
   private shouldEmitNext = true;
-
-  public decisionModels?: Decision[];
-
-  public willUpdate(change: PropertyValues<this>): void {
-    this.decisionModels ??= this.generateDecisionModels();
-
-    // we mutate the models directly so that we don't have to re-render
-    // and so that we can keep the same models reference and identifiers
-    if (change.has("verified")) {
-      for (const decision of this.decisionModels) {
-        decision.confirmed = this.verified;
-      }
-    }
-    if (change.has("decisionId")) {
-      for (const decision of this.decisionModels) {
-        decision.decisionId = this.decisionId;
-      }
-    }
-  }
-
-  // override in decision components that extend this base abstract decision
-  // component with an implementation that generates decision models that will
-  // be emitted when clicked / the shortcut key is pressed
-  public generateDecisionModels(): Decision[] {
-    return [];
-  }
-
-  public isShowingDecisionColor(): boolean {
-    return this.keyboardHeldDown || this.highlighted;
-  }
+  private keyboardHeldDown = false;
 
   private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
@@ -127,14 +80,38 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
     super.disconnectedCallback();
   }
 
+  // you should override this method in your subclass
+  public shortcutKeys(): KeyboardShortcut[] {
+    return [];
+  }
+
+  protected emitDecision(value: Decision[]): void {
+    this.keyboardHeldDown = false;
+
+    if (this.disabled) {
+      return;
+    }
+
+    const emitNext = this.shouldEmitNext;
+    this.shouldEmitNext = true;
+    if (!emitNext) {
+      return;
+    }
+
+    const event = new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
+      detail: { value },
+      bubbles: true,
+    });
+
+    this.dispatchEvent(event);
+  }
+
   private handleKeyUp(event: KeyboardEvent): void {
     if (event.key === ESCAPE_KEY) {
       return;
     }
 
-    if (this.isShortcutKey(event)) {
-      this.emitDecision();
-    }
+    this.handleShortcutKey(event);
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -155,75 +132,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  private isShortcutKey(event: KeyboardEvent): boolean {
-    if (this.shortcut === undefined) {
-      return false;
-    }
-
-    return event.key.toLowerCase() === this.shortcut.toLowerCase();
-  }
-
-  private emitDecision(): void {
-    this.keyboardHeldDown = false;
-
-    if (this.disabled) {
-      return;
-    }
-
-    const emitNext = this.shouldEmitNext;
-    this.shouldEmitNext = true;
-    if (!emitNext) {
-      return;
-    } else if (this.decisionModels === undefined) {
-      throw new Error("Decision model is not initialized");
-    }
-
-    // I focus on the button clicked with keyboard shortcuts
-    // so that the shortcut key has the same after effects as clicking
-    // e.g. you can press enter to repeat the decision
-    this.decisionButton.focus();
-
-    const event: DecisionEvent = new CustomEvent<DecisionContent>(DecisionComponent.decisionEventName, {
-      detail: {
-        value: this.decisionModels,
-        target: this,
-      },
-      bubbles: true,
-    });
-
-    this.dispatchEvent(event);
-  }
-
-  public render() {
-    const additionalTagsTemplate = this.additionalTags.length
-      ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})`
-      : nothing;
-
-    const keyboardLegend =
-      this.shortcut && this.selectionMode !== "tablet" ? html`<kbd>${this.shortcut.toUpperCase()}</kbd>` : nothing;
-
-    const buttonClasses = classMap({
-      disabled: !!this.disabled,
-      "show-decision-color": this.isShowingDecisionColor(),
-      "cancel-next": !this.shouldEmitNext,
-      [`decision-${this.decisionId}`]: this.verified !== DecisionOptions.SKIP,
-    });
-
-    return html`
-      <button
-        id="decision-button"
-        class="oe-btn-primary decision-button ${buttonClasses}"
-        part="decision-button"
-        title="Shortcut: ${this.shortcut}"
-        aria-disabled="${this.disabled}"
-        @click="${this.emitDecision}"
-      >
-        <div class="tag-text"><slot></slot></div>
-        <div class="additional-tags">${additionalTagsTemplate}</div>
-        ${this.selectionMode !== "tablet" ? html`<div class="keyboard-legend">${keyboardLegend}</div>` : nothing}
-      </button>
-    `;
-  }
+  public abstract render(): TemplateResult;
 }
 
 declare global {
