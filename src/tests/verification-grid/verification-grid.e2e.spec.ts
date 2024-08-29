@@ -60,7 +60,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should have the correct decisions", async ({ fixture }) => {
-      const expectedDecisions = ["Koala", "Not Koala"];
+      const expectedDecisions = ["true", "false"];
       const decisions = await fixture.availableDecision();
       expect(decisions).toEqual(expectedDecisions);
     });
@@ -827,12 +827,9 @@ test.describe("decision meter", () => {
   test.describe("classification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(`
-        <oe-classification tag="car" verified="true">Car</oe-classification>
-        <oe-classification tag="car" verified="false">Not Car</oe-classification>
-        <oe-classification tag="koala" verified="true">Koala</oe-classification>
-        <oe-classification tag="koala" verified="false">Not Koala</oe-classification>
-        <oe-classification tag="bird" verified="true">Bird</oe-classification>
-        <oe-classification tag="bird" verified="false">Not Bird</oe-classification>
+        <oe-classification tag="car" true-shortcut="h"></oe-classification>
+        <oe-classification tag="koala" true-shortcut="j"></oe-classification>
+        <oe-classification tag="bird" true-shortcut="k"></oe-classification>
       `);
 
       await fixture.dismissHelpDialog();
@@ -959,8 +956,8 @@ test.describe("decision meter", () => {
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(`
-        <oe-verification verified="true">Koala</oe-verification>
-        <oe-verification verified="false">Not Koala</oe-verification>
+        <oe-verification verified="true"></oe-verification>
+        <oe-verification verified="false"></oe-verification>
       `);
 
       await fixture.dismissHelpDialog();
@@ -997,12 +994,9 @@ test.describe("decision meter", () => {
         <oe-verification verified="true">Positive</oe-verification>
         <oe-verification verified="false">Negative</oe-verification>
 
-        <oe-classification tag="car" verified="true">Car</oe-classification>
-        <oe-classification tag="car" verified="false">Not Car</oe-classification>
-        <oe-classification tag="bird" verified="true">Bird</oe-classification>
-        <oe-classification tag="bird" verified="false">Not Bird</oe-classification>
-        <oe-classification tag="cat" verified="true">Cat</oe-classification>
-        <oe-classification tag="cat" verified="false">Not Cat</oe-classification>
+        <oe-classification tag="car">Car</oe-classification>
+        <oe-classification tag="bird">Bird</oe-classification>
+        <oe-classification tag="cat">Cat</oe-classification>
       `);
 
       await fixture.dismissHelpDialog();

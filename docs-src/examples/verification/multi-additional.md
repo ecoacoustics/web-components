@@ -6,13 +6,12 @@ title: Open Ecoacoustics | Examples | Verification | Multiple Class - Additional
 <h2 class="grid-title">Verification Interface (Multiple Classes - Additional Tags)</h2>
 
 <oe-verification-grid id="verification-grid" grid-size="5">
-  <oe-verification verified="true" additional-tags="land, male" shortcut="G">Sparrow</oe-verification>
-  <oe-verification verified="true" additional-tags="land, female" shortcut="H">Sparrow</oe-verification>
-  <oe-verification verified="true" additional-tags="flight, male" shortcut="J">Sparrow</oe-verification>
-  <oe-verification verified="true" additional-tags="flight, female" shortcut="K">Sparrow</oe-verification>
-  <oe-verification verified="true" shortcut=";">Crow</oe-verification>
-  <oe-verification verified="false" shortcut="'">Negative</oe-verification>
-  <oe-verification verified="true" shortcut="'">Confirmed</oe-verification>
+  <oe-verification verified="true" shortcut="y"></oe-verification>
+  <oe-verification verified="true" additional-tags="land, male" shortcut="g"></oe-verification>
+  <oe-verification verified="true" additional-tags="land, female" shortcut="h"></oe-verification>
+  <oe-verification verified="true" additional-tags="flight, male" shortcut="j"></oe-verification>
+  <oe-verification verified="true" additional-tags="flight, female" shortcut="k"></oe-verification>
+  <oe-verification verified="false" shortcut="n"></oe-verification>
 
   <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
   </oe-data-source>
