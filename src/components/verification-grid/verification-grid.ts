@@ -10,8 +10,8 @@ import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
 import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY } from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
-import { ClassificationComponent } from "decision/classification/classification";
-import { VerificationComponent } from "decision/verification/verification";
+import { ClassificationComponent } from "../decision/classification/classification";
+import { VerificationComponent } from "../decision/verification/verification";
 import { Decision } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
 import { Verification } from "../../models/decisions/verification";
@@ -22,6 +22,7 @@ import { repeat } from "lit/directives/repeat.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
+import { decisionColor } from "../../services/colors";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -32,12 +33,17 @@ export interface VerificationGridSettings {
   isFullscreen: Signal<boolean>;
 }
 
+export interface VerificationGridInjector {
+  colorService: typeof decisionColor;
+}
+
 export interface MousePosition {
   x: number;
   y: number;
 }
 
 export const verificationGridContext = createContext<VerificationGridSettings>(Symbol("verification-grid-context"));
+export const injectionContext = createContext<VerificationGridInjector>(Symbol("injection-context"));
 
 type SelectionEvent = CustomEvent<{
   shiftKey: boolean;
@@ -71,10 +77,8 @@ interface HighlightSelection {
  *     <oe-info-card></oe-info-card>
  *   </template>
  *
- *   <oe-verification verified="true" additional-tags="female" shortcut="H">Koala</oe-verification>
- *   <oe-verification verified="true" additional-tags="male" shortcut="J">Koala</oe-verification>
- *   <oe-verification shortcut="S" skip>Skip</oe-verification>
- *   <oe-verification shortcut="S" unsure>Unsure</oe-verification>
+ *   <oe-verification verified="true"></oe-verification>
+ *   <oe-verification verified="false"></oe-verification>
  *
  *   <oe-data-source slot="data-source" for="verification-grid" src="/public/grid-items.json" local>
  *   </oe-data-source>
@@ -103,6 +107,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     showAxes: signal(true),
     showMediaControls: signal(true),
     isFullscreen: signal(false),
+  };
+
+  @provide({ context: injectionContext })
+  @state()
+  public injector: VerificationGridInjector = {
+    colorService: decisionColor,
   };
 
   /** The number of items to display in a single grid */
@@ -161,10 +171,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return this.subjectHistory.length;
   }
 
-  /**
-   * A derived selector for all oe-decision, oe-verification
-   * and oe-classification elements
-   */
+  /** A computed selector for all oe-verification and oe-classification elements */
   public get decisionElements(): DecisionComponentUnion[] {
     return [...this.verificationDecisionElements, ...this.classificationDecisionElements];
   }
@@ -321,13 +328,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
       this.currentPage = await this.paginationFetcher.getItems(this.gridSize);
     }
-
-    const decisionElements = this.decisionElements;
-    if (decisionElements) {
-      decisionElements.forEach((element: DecisionComponent, i: number) => {
-        element.decisionId = i;
-      });
-    }
   }
 
   private updateRequiredClassificationTags(): void {
@@ -344,6 +344,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     this.requiredClassificationTags = Array.from(requiredTags.values());
+  }
+
+  private updateInjector(): void {
+    this.injector.colorService = decisionColor;
   }
 
   //#endregion
@@ -463,6 +467,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
+    this.updateInjector();
   }
 
   //#endregion
@@ -791,8 +796,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     this.historyMode();
     await this.renderVirtualPage(decisionHistory);
-    this.removeDecisionButtonHighlight();
-    this.showDecisionButtonHighlight(this.pageTouchedDecisionElements());
   }
 
   /**
@@ -814,9 +817,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // TODO: forcing a synchronous update is hacky, and we should definitely remove it
       this.performUpdate();
     }
-
-    const touchedDecisionElements = this.pageTouchedDecisionElements();
-    this.showDecisionButtonHighlight(touchedDecisionElements);
   }
 
   /**
@@ -827,7 +827,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
    */
   private verificationMode(): void {
     this.removeSubSelection();
-    this.removeDecisionButtonHighlight();
     this.historyHead = 0;
   }
 
@@ -845,7 +844,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private async nextPage(count: number = this.effectivePageSize): Promise<void> {
     this.removeSubSelection();
     this.resetSpectrogramSettings();
-    this.removeDecisionButtonHighlight();
 
     if (!this.paginationFetcher) {
       throw new Error("No paginator found.");
@@ -901,8 +899,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
-        // TODO: this behavior will be changed in
-        // https://github.com/ecoacoustics/web-components/issues/135
         if (tile.model.hasDecision(decision)) {
           tile.removeDecision(decision);
         } else {
@@ -912,10 +908,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     this.dispatchEvent(new CustomEvent(VerificationGridComponent.decisionMadeEventName, { detail: tileDecisions }));
-    const touchedDecisionElements = this.pageTouchedDecisionElements();
-    this.removeDecisionButtonHighlight();
-    this.showDecisionButtonHighlight(touchedDecisionElements);
-
     if (this.shouldAutoPage()) {
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
@@ -997,35 +989,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     this.decisionsDisabled = disabled;
     this.skipButton.disabled = disabled;
-  }
-
-  //#endregion
-
-  //#region DecisionHighlights
-
-  /**
-   * Returns an array of references to all decision elements that have been used
-   * on the current page of spectrograms
-   */
-  private pageTouchedDecisionElements(): DecisionComponent[] {
-    const touchedDecisionIds = this.currentPage.flatMap((subject: SubjectWrapper) =>
-      subject.decisionModels.map((decision) => decision.decisionId),
-    );
-
-    return this.decisionElements.filter((element) => touchedDecisionIds.includes(element.decisionId));
-  }
-
-  private showDecisionButtonHighlight(elements: DecisionComponent[]): void {
-    for (const decision of elements) {
-      decision.highlighted = true;
-    }
-  }
-
-  private removeDecisionButtonHighlight(): void {
-    const decisionElements = this.decisionElements ?? [];
-    for (const decision of decisionElements) {
-      decision.highlighted = false;
-    }
   }
 
   //#endregion
@@ -1203,8 +1166,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   // TODO: this function could definitely be refactored
-  private doneDecisionTemplate(): TemplateResult<1> {
-    const doneEventHandler = async (event: DecisionEvent) => {
+  private skipDecisionTemplate(): TemplateResult<1> {
+    const skipEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
       const requiredTags = this.requiredClassificationTags;
@@ -1218,9 +1181,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       await this.nextPage();
     };
 
-    return html`
-      <oe-decision id="skip-button" @decision="${doneEventHandler}" verified="SKIP" shortcut="\`"> Skip </oe-decision>
-    `;
+    return html`<button id="skip-button" class="oe-btn-primary" @click="${skipEventHandler}">Skip</button>`;
   }
 
   public render() {
@@ -1314,8 +1275,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             </h2>
             <div id="decisions-container" class="decision-control-actions">
               <slot @slotchange="${this.handleSlotChange}"></slot>
-
-              ${this.doneDecisionTemplate()}
+              ${this.skipDecisionTemplate()}
             </div>
           </span>
 

@@ -95,12 +95,10 @@ export class SubjectWrapper {
    * on the subject
    */
   public skipUndecided(requiresVerification: boolean, requiredClassifications: Tag[]): void {
-    const skipDecisionIndex = -1;
-
     // each subject can only have one verification decision
     const isMissingVerification = requiresVerification && this.verification === undefined;
     if (isMissingVerification) {
-      const skipVerification = new Verification(DecisionOptions.SKIP, skipDecisionIndex, this.tag);
+      const skipVerification = new Verification(DecisionOptions.SKIP, this.tag);
       this.addDecision(skipVerification);
     }
 
@@ -109,7 +107,7 @@ export class SubjectWrapper {
         continue;
       }
 
-      const skipClassification = new Classification(DecisionOptions.SKIP, skipDecisionIndex, tag);
+      const skipClassification = new Classification(DecisionOptions.SKIP, tag);
       this.addDecision(skipClassification);
     }
   }
@@ -117,7 +115,11 @@ export class SubjectWrapper {
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
     const decision = this.decisions.get(queryingDecision.tag.text);
-    return decision?.decisionId === queryingDecision.decisionId;
+    if (decision === undefined) {
+      return false;
+    }
+
+    return queryingDecision.confirmed === decision?.confirmed;
   }
 
   /** Checks if the current subject has a tag applied */

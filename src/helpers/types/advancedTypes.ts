@@ -29,3 +29,6 @@ export type AttributeConverter = PropertyDeclaration["converter"];
 export type ChangeEvent<T extends HTMLElement> = Event & {
   target: T;
 };
+
+/** A type that can be used to represent a stringified css variable */
+export type CssVariable = `--${string}`;

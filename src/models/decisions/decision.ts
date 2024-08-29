@@ -1,12 +1,6 @@
 import { EnumValue } from "../../helpers/types/advancedTypes";
 import { Tag } from "../tag";
 
-/**
- * A one-to-many relationship which can be used to identify if a decision
- * is the same as another
- */
-export type DecisionId = Readonly<number>;
-
 /** The decision states that can be applied to a tag */
 export enum DecisionOptions {
   FALSE = "false",
@@ -21,17 +15,13 @@ export enum DecisionOptions {
  * that implements the abstract class
  */
 export class Decision {
-  public constructor(confirmed: EnumValue<DecisionOptions>, decisionId: DecisionId, tag?: Tag) {
+  public constructor(confirmed: EnumValue<DecisionOptions>, tag?: Tag) {
     this.confirmed = confirmed;
-    this.decisionId = decisionId;
     this.tag = tag ?? { text: "" };
   }
 
   /** Stores the decision outcome */
   public confirmed: EnumValue<DecisionOptions>;
-
-  /** A reference to group the same decisions */
-  public decisionId: DecisionId;
 
   /** A tag that the decision was made about */
   public tag: Tag;

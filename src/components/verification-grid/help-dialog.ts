@@ -8,7 +8,7 @@ import { loop } from "../../helpers/directives";
 import { map } from "lit/directives/map.js";
 import helpDialogStyles from "./css/help-dialog-styles.css?inline";
 
-interface KeyboardShortcut {
+export interface KeyboardShortcut {
   key: string;
   description: string;
 }
@@ -169,16 +169,7 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
     // decision shortcuts are fetched from the decision elements
     // TODO: fix this
-    const decisionShortcuts: KeyboardShortcut[] = [
-      ...(
-        this.decisionElements?.map((element) => {
-          return {
-            key: element.shortcut,
-            description: `${element.innerText} ${element.additionalTags.length ? `(${element.additionalTags.map((model) => model.text)})` : ""}`,
-          };
-        }) ?? []
-      ).filter((element) => element.key),
-    ] as any;
+    const decisionShortcuts = this.decisionElements?.flatMap((element) => element.shortcutKeys());
 
     // TODO: there are some hacks in here to handle closing the modal when the user clicks off
     return html`

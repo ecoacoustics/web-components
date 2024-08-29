@@ -5,6 +5,7 @@ import {
   dragSlider,
   getBrowserAttribute,
   getBrowserValue,
+  getCssColorVariable,
   invokeBrowserMethod,
   removeBrowserAttribute,
   setBrowserAttribute,
@@ -19,16 +20,17 @@ import { Size } from "../../models/rendering";
 import {
   AxesComponent,
   DataSourceComponent,
-  DecisionComponent,
   MediaControlsComponent,
   SpectrogramCanvasScale,
   VerificationGridTileComponent,
   VerificationHelpDialogComponent,
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
-import { Decision, DecisionId } from "../../models/decisions/decision";
+import { Decision } from "../../models/decisions/decision";
 import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
+import { decisionColor } from "../../services/colors";
+import { CssVariable } from "../../helpers/types/advancedTypes";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -39,8 +41,6 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public verificationDecisions = () => this.page.locator("oe-verification").all();
-  public classificationDecisions = () => this.page.locator("oe-classification").all();
   public skipDecisionButton = () => this.page.locator("#skip-button").first();
 
   public helpDialog = () => this.page.locator("oe-verification-help-dialog").first();
@@ -49,6 +49,12 @@ class TestPage {
   public helpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public openHelpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+
+  public verificationDecisions = () => this.page.locator("oe-verification").all();
+  public classificationDecisions = () => this.page.locator("oe-classification").all();
+  public decisionButtons = () => this.page.locator(".decision-button").all();
+  public decisionButtonsText = () => this.page.locator(".button-text").all();
+  public decisionColorPills = () => this.page.locator(".decision-color-pill").all();
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
@@ -75,8 +81,8 @@ class TestPage {
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
   private defaultTemplate = `
-    <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
-    <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+    <oe-verification verified="true" shortcut="Y"></oe-verification>
+    <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
 
   public async create(customTemplate = this.defaultTemplate) {
@@ -106,7 +112,7 @@ class TestPage {
   public async panelColor(): Promise<string> {
     // I have hard coded the panel color here because we use HSL for the panel
     // color css variable, but DOM queries and assertions use RGB
-    return "rgb(242, 241, 254)";
+    return await getCssColorVariable(this.gridComponent(), "--oe-panel-color");
   }
 
   public async getGridSize(): Promise<number> {
@@ -164,19 +170,18 @@ class TestPage {
     return selectedTiles;
   }
 
-  public async getDecisionId(index: number): Promise<number> {
-    const decisionButton = (await this.decisionComponents())[index];
-    const color = (await getBrowserValue<DecisionComponent>(decisionButton, "decisionId")) as DecisionId;
-    return color;
-  }
+  public async getDecisionColor(index: number): Promise<string> {
+    const targets = await this.decisionColorPills();
+    const target = targets[index];
 
-  public async getDecisionColor(id: number): Promise<string> {
-    const colors = ["rgb(166, 206, 227)", "rgb(31, 120, 180)", "rgb(178, 223, 138)", "rgb(51, 160, 44)"];
-    return colors[id];
+    return await target.evaluate((element: HTMLSpanElement) => {
+      const styles = window.getComputedStyle(element);
+      return styles.backgroundColor;
+    });
   }
 
   public async availableDecision(): Promise<string[]> {
-    const decisions = await this.decisionComponents();
+    const decisions = await this.decisionButtonsText();
     const values: string[] = [];
 
     for (const decision of decisions) {
@@ -192,24 +197,20 @@ class TestPage {
     return tileModels.flatMap((model) => model.decisionModels);
   }
 
-  public async tileHighlightColors(): Promise<number[]> {
-    const values: number[] = [];
+  public async tileHighlightColors(): Promise<CssVariable[]> {
+    const values: CssVariable[] = [];
     const tiles = await this.gridTileComponents();
 
     for (const tile of tiles) {
       const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
 
       if (model.decisionModels) {
-        const tileColors = model.decisionModels.map((tileModel) => tileModel.decisionId);
+        const tileColors = model.decisionModels.map((tileModel) => decisionColor(tileModel));
         values.push(...tileColors);
       }
     }
 
     return values;
-  }
-
-  public async buttonHighlightColors(): Promise<string[]> {
-    return [];
   }
 
   public async highlightedTiles(): Promise<number[]> {
@@ -228,20 +229,6 @@ class TestPage {
     return highlightedTiles.map((_, i) => i);
   }
 
-  public async highlightedButtons(): Promise<number[]> {
-    const decisionComponents = await this.decisionComponents();
-
-    const highlightedButtons: Locator[] = [];
-
-    for (const button of decisionComponents) {
-      const isHighlighted = await getBrowserValue<DecisionComponent>(button, "highlighted");
-      if (isHighlighted) {
-        highlightedButtons.push(button);
-      }
-    }
-
-    return highlightedButtons.map((_, i) => i);
-  }
   public async verificationGridTileModels(): Promise<SubjectWrapper[]> {
     const gridTiles = await this.gridTileComponents();
 
@@ -411,7 +398,7 @@ class TestPage {
   }
 
   public async makeDecision(decision: number) {
-    const decisionComponents = await this.decisionComponents();
+    const decisionComponents = await this.decisionButtons();
     await decisionComponents[decision].click();
   }
 
