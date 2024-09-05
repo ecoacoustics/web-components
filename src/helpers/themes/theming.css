@@ -119,13 +119,6 @@ kbd {
   margin: 0.5rem;
   width: max-content;
 
-  /*
-    Even though we are using a monospaced font, some utf8 symbols such as the
-    shift key icon are taller than other characters
-    To fix this, I make each keyboard element the same height.
-  */
-  height: 1rem;
-
   &::before {
     content: "";
     position: absolute;

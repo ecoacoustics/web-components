@@ -3,6 +3,15 @@
   height: 100%;
   padding: 0.3em;
 
+  kbd {
+    /*
+      Even though we are using a monospaced font, some utf8 symbols such as the
+      shift key icon are taller than other characters
+      To fix this, I make each keyboard element the same height.
+    */
+    height: 1rem;
+  }
+
   > div {
     display: block;
 

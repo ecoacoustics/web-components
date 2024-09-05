@@ -212,6 +212,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
         return {
           subjects: [],
           context,
+          totalItems: content.length,
         };
       }
 
@@ -231,6 +232,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return {
         subjects,
         context,
+        totalItems: content.length,
       };
     };
   }

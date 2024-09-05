@@ -4,6 +4,7 @@ import { verificationGridFixture as test } from "./verification-grid.e2e.fixture
 import { expect } from "../assertions";
 import {
   MousePosition,
+  ProgressBar,
   SpectrogramCanvasScale,
   VerificationGridComponent,
   VerificationGridTileComponent,
@@ -43,8 +44,10 @@ test.describe("while the initial help dialog is open", () => {
 });
 
 test.describe("single verification grid", () => {
-  test.beforeEach(async ({ fixture }) => {
+  test.beforeEach(async ({ fixture, page }) => {
     await fixture.create();
+
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     // because the user should not be able to start interacting with the
     // verification grid while the help dialog is open, we need to dismiss it
@@ -73,6 +76,29 @@ test.describe("single verification grid", () => {
     test("should not start in fullscreen mode", async ({ fixture }) => {
       const fullscreenState = await fixture.isFullscreen();
       expect(fullscreenState).toBe(false);
+    });
+
+    test("should set the correct property values in the progress bar", async ({ fixture }) => {
+      const expectedTotal = 30;
+      const expectedCompleted = 0;
+      const expectedHistoryHeadOffset = 0;
+
+      const progressBar = fixture.gridProgressBar();
+      const realizedTotal = await getBrowserValue<ProgressBar>(progressBar, "total");
+      const realizedCompleted = await getBrowserValue<ProgressBar>(progressBar, "completed");
+      const realizedHistoryHeadOffset = await getBrowserValue<ProgressBar>(progressBar, "historyHead");
+
+      expect(realizedTotal).toBe(expectedTotal);
+      expect(realizedCompleted).toBe(expectedCompleted);
+      expect(realizedHistoryHeadOffset).toBe(expectedHistoryHeadOffset);
+    });
+
+    test("should not have progress meter segments", async ({ fixture }) => {
+      const completedSegments = await fixture.gridProgressCompletedSegment().count();
+      const viewHeadSegments = await fixture.gridProgressHeadSegment().count();
+
+      expect(completedSegments).toBe(0);
+      expect(viewHeadSegments).toBe(0);
     });
   });
 
@@ -307,6 +333,98 @@ test.describe("single verification grid", () => {
     //     expect(await fixture.selectedTiles()).toHaveLength(0);
     //   });
     // });
+  });
+
+  test.describe("progress bar", () => {
+    test("should not show the completed segment if a partial page of decisions is made ", async ({ fixture }) => {
+      // make a decision about one of the tiles. Meaning that the grid should
+      // not auto-page and the progress bar should not change
+      await fixture.createSubSelection([0]);
+      await fixture.makeDecision(0);
+
+      const completedSegments = await fixture.gridProgressCompletedSegment().count();
+      const viewHeadSegments = await fixture.gridProgressHeadSegment().count();
+
+      expect(completedSegments).toBe(0);
+      expect(viewHeadSegments).toBe(0);
+    });
+
+    test("should grow the view segments if a full page of decisions is made", async ({ fixture }) => {
+      // by making a decision without sub-selecting, we expect all the tiles to
+      // have the decision applied to them, meaning that the grid should auto
+      // page and the progress bars completed and head segments should grow
+      await fixture.makeDecision(0);
+
+      const completedSegments = await fixture.gridProgressCompletedSegment().count();
+
+      const expectedViewHeadWidth = await fixture.progressBarValueToPercentage(3);
+      const realizedViewHeadWidth = await fixture.progressBarHeadSize();
+
+      expect(completedSegments).toBe(0);
+      expect(realizedViewHeadWidth).toBe(expectedViewHeadWidth);
+    });
+
+    test("should show the correct tooltips if a full page of decisions is made", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.page.waitForTimeout(1000);
+
+      const expectedTooltip = "3 / 30 (10%) audio segments completed";
+      const completedTooltips = await fixture.gridProgressBarCompletedTooltip().count();
+      const realizedViewHeadTooltip = await fixture.progressBarViewHeadTooltip();
+
+      expect(completedTooltips).toBe(0);
+      expect(realizedViewHeadTooltip).toBe(expectedTooltip);
+    });
+
+    test("should not change the completed segment if the user navigates in history", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedCompletedWidth = await fixture.progressBarValueToPercentage(3);
+      const realizedCompletedWidth = await fixture.progressBarCompletedSize();
+
+      expect(realizedCompletedWidth).toBe(expectedCompletedWidth);
+    });
+
+    test("should change the view head tooltips if the user navigates in history", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const expectedCompletedTooltip = "3 / 30 (10%) audio segments completed (viewing history)";
+      const realizedCompletedTooltip = await fixture.progressBarCompletedTooltip();
+
+      // because the user is at the start of the history, we should not have a
+      // view head tooltip because there is no view head segment
+      const viewHeadTooltips = await fixture.gridProgressBarViewHeadTooltip().count();
+
+      expect(realizedCompletedTooltip).toBe(expectedCompletedTooltip);
+      expect(viewHeadTooltips).toBe(0);
+    });
+
+    test("should re-grow the view head segment if the user exits history", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+      await fixture.continueVerifying();
+
+      const expectedViewHeadWidth = await fixture.progressBarValueToPercentage(3);
+      const realizedViewHeadWidth = await fixture.progressBarHeadSize();
+
+      expect(realizedViewHeadWidth).toBe(expectedViewHeadWidth);
+    });
+
+    test("should have the the correct segment sizes if the user exits history", async ({ fixture }) => {
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+      await fixture.continueVerifying();
+
+      const completedSegments = await fixture.gridProgressCompletedSegment().count();
+      
+      const expectedViewHeadWidth = await fixture.progressBarValueToPercentage(3);
+      const realizedViewHeadWidth = await fixture.progressBarHeadSize();
+
+      expect(completedSegments).toBe(0);
+      expect(realizedViewHeadWidth).toBe(expectedViewHeadWidth);
+    });
   });
 
   test.describe("changing settings", () => {

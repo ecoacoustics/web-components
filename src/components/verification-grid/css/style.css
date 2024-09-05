@@ -65,19 +65,22 @@
   text-align: center;
   font-family: sans-serif;
   font-weight: normal;
-  font-size: 1.4rem;
+  font-size: 1rem;
   letter-spacing: 0em;
   color: var(--oe-font-color);
+  margin: var(--oe-spacing-large);
 }
 
 .verification-controls {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: end;
   padding: var(--oe-spacing);
   gap: var(--oe-spacing);
   color: var(--oe-font-color);
+  margin-left: 10%;
+  margin-right: 10%;
 }
 
 .decision-controls {
@@ -95,6 +98,10 @@
 .decision-controls-left,
 .decision-controls-right {
   display: flex;
+}
+
+.progress-bar {
+  flex: 1 1 100%;
 }
 
 .no-decisions-warning {

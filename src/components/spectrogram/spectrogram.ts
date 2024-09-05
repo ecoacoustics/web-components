@@ -111,6 +111,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
 
+  @query("#spectrogram-container")
+  private spectrogramContainer!: HTMLDivElement;
+
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
@@ -393,6 +396,13 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     } else {
       this.canvas.style.width = "auto";
     }
+
+    // TODO: we should do this in CSS
+    // I have set the size manually here so because for an unknown reason, the
+    // spectrogram canvas' grow indefinitely when in a Playwright browser
+    // we should figure out why this is happening and properly do this with CSS
+    this.spectrogramContainer.style.width = `${size.width}px`;
+    this.spectrogramContainer.style.height = `${size.height}px`;
   }
 
   /**

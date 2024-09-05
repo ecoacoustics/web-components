@@ -4,6 +4,7 @@ import { SubjectParser } from "./verificationParser";
 export interface IPageFetcherResponse<T> {
   subjects: SubjectWrapper[];
   context: T;
+  totalItems: number;
 }
 
 /**
@@ -20,7 +21,7 @@ export class GridPageFetcher {
     this.converter = SubjectParser;
   }
 
-  // by setting the page
+  public totalItems?: number;
   private pagingCallback: PageFetcher;
   private converter: SubjectParser;
   private subjectQueueBuffer: SubjectWrapper[] = [];
@@ -93,9 +94,10 @@ export class GridPageFetcher {
   // to a buffer that we can pull from when requesting results for the same
   // page
   private async fetchNextPage(): Promise<SubjectWrapper[]> {
-    const { subjects, context } = await this.pagingCallback(this.pagingContext);
+    const { subjects, context, totalItems } = await this.pagingCallback(this.pagingContext);
     const models = subjects.map(this.converter.parse);
 
+    this.totalItems = totalItems;
     this.pagingContext = context;
     this.subjectQueueBuffer.push(...models);
 
