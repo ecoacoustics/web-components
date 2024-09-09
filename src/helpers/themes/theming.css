@@ -47,7 +47,7 @@
 
   --oe-animation-time: 0.3s;
   --oe-spacing: 0.8em;
-  --oe-spacing-l: 1em;
+  --oe-spacing-large: 1em;
 
   --oe-primary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), var(--oe-theme-lightness));
   --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 25%));
@@ -282,7 +282,7 @@ button {
   margin: 0.1rem;
   font-size: 1em;
   max-width: max-content;
-  padding: var(--oe-spacing) var(--oe-spacing-l);
+  padding: var(--oe-spacing) var(--oe-spacing-large);
   background-color: var(--background-color);
   transition:
     background var(--oe-animation-time),
