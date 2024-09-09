@@ -53,7 +53,7 @@
   --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 25%));
   --oe-accent-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 20%));
   --oe-info-color: hsl(207deg, calc(var(--oe-theme-saturation) + 45%), calc(var(--oe-theme-lightness) + 15%));
-  --oe-info-bg-color: hsl(207deg, calc(var(--oe-theme-saturation) + 45%), calc(var(--oe-theme-lightness) + 40%));
+  --oe-info-bg-color: color-mix(in srgb, var(--oe-info-color) 15%, white);
   --oe-danger-color: color-mix(in srgb, hsl(0deg, 80%, 46%) 85%, var(--oe-background-color));
   --oe-selected-color: hsl(
     var(--oe-theme-hue),
