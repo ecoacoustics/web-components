@@ -338,7 +338,7 @@ button {
 
 .oe-btn-info {
   --border: var(--oe-border-width) solid var(--oe-info-color);
-  background-color: var(--oe-info-bg-color);
+  --background-color: var(--oe-info-bg-color);
 }
 
 .oe-btn-danger {
