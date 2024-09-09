@@ -325,7 +325,7 @@ button {
 
 .oe-btn-primary {
   border: var(--oe-border-width) solid var(--oe-primary-color);
-  background-color: transparent;
+  --background-color: transparent;
 }
 
 .oe-btn-secondary {
