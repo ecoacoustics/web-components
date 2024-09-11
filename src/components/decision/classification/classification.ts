@@ -155,6 +155,7 @@ export class ClassificationComponent extends DecisionComponent {
         part="${decision}-decision-button"
         title="Shortcut: ${shortcut}"
         style="--ripple-color: var(${color})"
+        aria-label="${decision} decision for ${this.tag.text}"
         aria-disabled="${this.disabled}"
         @click="${() => this.emitDecision([decisionModel])}"
       >

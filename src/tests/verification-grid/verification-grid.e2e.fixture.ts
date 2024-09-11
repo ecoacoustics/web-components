@@ -21,6 +21,7 @@ import {
   AxesComponent,
   DataSourceComponent,
   MediaControlsComponent,
+  ProgressBar,
   SpectrogramCanvasScale,
   VerificationGridTileComponent,
   VerificationHelpDialogComponent,
@@ -31,6 +32,7 @@ import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
+import { SlTooltip } from "@shoelace-style/shoelace";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -68,6 +70,12 @@ class TestPage {
     (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
   public gridTileProgressMeterTooltips = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
+
+  public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
+  public gridProgressBarCompletedTooltip = () => this.gridProgressBar().getByTestId("completed-tooltip").first();
+  public gridProgressBarViewHeadTooltip = () => this.gridProgressBar().getByTestId("view-head-tooltip").first();
+  public gridProgressCompletedSegment = () => this.gridProgressBar().locator(".completed-segment").first();
+  public gridProgressHeadSegment = () => this.gridProgressBar().locator(".head-segment").first();
 
   public mediaControlsComponent = async (index = 0) =>
     (await this.gridTileContainers())[index].locator("oe-media-controls").first();
@@ -255,6 +263,33 @@ class TestPage {
       const domMatrix = new DOMMatrix(styles.transform);
       return domMatrix[domMatrixTranslateXKey];
     });
+  }
+
+  public async progressBarCompletedSize() {
+    return await this.gridProgressCompletedSegment().evaluate((element: HTMLSpanElement) => element.style.width);
+  }
+
+  public async progressBarHeadSize() {
+    return await this.gridProgressHeadSegment().evaluate((element: HTMLSpanElement) => element.style.width);
+  }
+
+  public async progressBarValueToPercentage(value: number): Promise<string> {
+    const progressBar = this.gridProgressBar();
+
+    const maxValue = (await getBrowserValue<ProgressBar>(progressBar, "total")) as number;
+    const percentage = 100 * (value / maxValue);
+
+    return `${percentage}%`;
+  }
+
+  public async progressBarCompletedTooltip() {
+    const tooltip = this.gridProgressBarCompletedTooltip();
+    return await getBrowserValue<SlTooltip>(tooltip, "content");
+  }
+
+  public async progressBarViewHeadTooltip() {
+    const tooltip = this.gridProgressBarViewHeadTooltip();
+    return await getBrowserValue<SlTooltip>(tooltip, "content");
   }
 
   public async isViewingHistory(): Promise<boolean> {

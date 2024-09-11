@@ -65,6 +65,7 @@
       "samford",
       "subsite",
       "teleporting",
+      "progressbar",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

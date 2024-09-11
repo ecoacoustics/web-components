@@ -1,0 +1,29 @@
+.progress-bar {
+  display: flex;
+  position: relative;
+  height: var(--oe-font-size);
+  background-color: var(--oe-panel-color);
+  border-radius: var(--oe-border-rounding);
+  margin-top: var(--oe-spacing-large);
+
+  .segment {
+    height: 100%;
+    width: 100%;
+    border-radius: var(--oe-border-rounding);
+
+    &.head-segment {
+      background-color: var(--oe-secondary-color);
+      z-index: 1;
+    }
+
+    &.completed-segment {
+      background-color: var(--oe-selected-color);
+
+      &.offset-segment {
+        position: relative;
+        left: calc(-1 * var(--oe-border-rounding));
+        border-left: var(--oe-border-rounding) solid var(--oe-selected-color);
+      }
+    }
+  }
+}

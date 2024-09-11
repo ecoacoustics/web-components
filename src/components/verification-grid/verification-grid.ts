@@ -24,6 +24,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import verificationGridStyles from "./css/style.css?inline";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -1080,43 +1081,43 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return this.verificationDecisionElements.length > 0;
   }
 
-  private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean): TemplateResult<1> {
+  private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
     if (hasSubSelection) {
       return html`<p>Make a decision about all of the selected audio segments</p>`;
     }
 
     if (hasMultipleTiles) {
-      return html`<p>Make a decision about all of the audio segments</p>`;
+      return "Make a decision about all of the audio segments";
     } else {
-      return html`<p>Make a decision about the shown audio segment</p>`;
+      return "Make a decision about the shown audio segment";
     }
   }
 
-  private classificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean): TemplateResult<1> {
+  private classificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
     if (hasSubSelection) {
-      return html`<p>Apply labels to selected audio segments</p>`;
+      return "Apply labels to selected audio segments";
     }
 
     if (hasMultipleTiles) {
-      return html`<p>Classify all relevant audio segments</p>`;
+      return "Classify all relevant audio segments";
     } else {
-      return html`<p>Apply a classification to the audio segment</p>`;
+      return "Apply a classification to the audio segment";
     }
   }
 
-  private verificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean): TemplateResult<1> {
+  private verificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
     if (hasSubSelection) {
-      return html`<p>Do all of the selected audio segments have the correct applied tag</p>`;
+      return "Do all of the selected audio segments have the correct applied tag";
     }
 
     if (hasMultipleTiles) {
-      return html`<p>Do all of the audio segments have the correct applied tag</p>`;
+      return "Do all of the audio segments have the correct applied tag";
     } else {
-      return html`<p>Does the show audio segment have the correct applied tag</p>`;
+      return "Does the show audio segment have the correct applied tag";
     }
   }
 
-  private decisionPromptTemplate(): TemplateResult<1> {
+  private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
     const hasMultipleTiles = this.gridSize > 1;
@@ -1132,23 +1133,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // default prompt if we can't determine if it is a classification or
     // verification task
     if (hasSubSelection) {
-      return html`<p>Are all of the selected a</p>`;
+      return "Are all of the selected a";
     }
-    return html`<p>${hasMultipleTiles ? "Are all of these a" : "Is the shown spectrogram a"}</p>`;
+
+    return hasMultipleTiles ? "Are all of these a" : "Is the shown spectrogram a";
   }
 
   //#endregion
 
   //#region Templates
-
-  private statisticsTemplate(): TemplateResult<1> {
-    return html`
-      <div class="statistics-section">
-        <h2>Statistics</h2>
-        <p><span>Validated Items</span>: ${this.subjectHistory.length}</p>
-      </div>
-    `;
-  }
 
   private noItemsTemplate(): TemplateResult<1> {
     return html`
@@ -1282,9 +1275,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           <span class="decision-controls-right">
             <slot name="data-source"></slot>
           </span>
-        </div>
 
-        <div>${this.statisticsTemplate()}</div>
+          <oe-progress-bar
+            class="progress-bar"
+            history-head="${this.subjectHistory.length - this.historyHead}"
+            total="${ifDefined(this.paginationFetcher?.totalItems)}"
+            completed="${this.subjectHistory.length}"
+          ></oe-progress-bar>
+        </div>
       </div>
     `;
   }

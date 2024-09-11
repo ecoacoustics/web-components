@@ -13,9 +13,9 @@ import {
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
-import decisionStyles from "./css/style.css?inline";
 import { decisionColor } from "../../services/colors";
 import { KeyboardShortcut } from "verification-grid/help-dialog";
+import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {
   value: Decision[];
