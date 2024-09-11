@@ -178,7 +178,7 @@ export async function catchEvent<T extends Event>(locator: Page, name: string) {
 }
 
 // TODO: Combine this with the catchEvent function
-export async function catchLocatorEvent(locator: Locator, name: string) {
+export async function catchLocatorEvent<T extends Event>(locator: Locator, name: string): Promise<T> {
   return locator.evaluate((element: HTMLElement, name: string) => {
     return new Promise((resolve) => {
       element.addEventListener(name, (data) => resolve(data));
@@ -199,6 +199,13 @@ export async function getEventLogs(page: Page, name: string) {
     const eventStoreKey = `oe-${name}-events`;
     return window[eventStoreKey];
   }, name);
+}
+
+export async function getBrowserSignalValue<T extends HTMLElement, SignalType = unknown>(
+  component: Locator,
+  key: keyof T,
+): Promise<SignalType> {
+  return await component.evaluate((element: T, key: any) => element[key].peek(), key);
 }
 
 // TODO: We can smartly work out if it is a method or a property, and invoke it or read it

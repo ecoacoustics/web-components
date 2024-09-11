@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid">
+    <oe-verification-grid id="verification-grid" grid-size="4">
       <template>
         <oe-info-card></oe-info-card>
       </template>
@@ -31,7 +31,7 @@
             This service would
         -->
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local> </oe-data-source>
     </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>

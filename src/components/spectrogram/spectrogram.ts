@@ -507,10 +507,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   private setPaused(paused: boolean, keyboardShortcut = false): void {
-    // if the state doesn't change, we can short circuit exit and not update the
-    // media controls DOM node or emit a play event
-    if (paused == this.mediaElement.paused) return;
-
     const detail: IPlayEvent = {
       play: !paused,
       keyboardShortcut,

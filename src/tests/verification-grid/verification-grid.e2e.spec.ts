@@ -418,7 +418,7 @@ test.describe("single verification grid", () => {
       await fixture.continueVerifying();
 
       const completedSegments = await fixture.gridProgressCompletedSegment().count();
-      
+
       const expectedViewHeadWidth = await fixture.progressBarValueToPercentage(3);
       const realizedViewHeadWidth = await fixture.progressBarHeadSize();
 
@@ -552,7 +552,22 @@ test.describe("single verification grid", () => {
       expect(newViewingHistory).toBe(false);
     });
 
-    test.skip("should be able to navigate around in history using previous and next", async () => {});
+    test("should stop playing audio and reset time when the grid auto pages", async ({ fixture }) => {
+      await fixture.playSpectrogram(0);
+      await fixture.makeDecision(0);
+
+      // because there is a small delay between a an auto-page being requested
+      // and the page actually changing, we need to wait for a short period of
+      // time before we can assert the state of the audio
+      // the short delay is an intentional feature that allows the user to see
+      // that the decision has been applied to the grid before the grid auto pages
+      await fixture.page.waitForTimeout(1000);
+      const postPagedPlayingState = await fixture.isAudioPlaying(0);
+      const playbackTime = await fixture.audioPlaybackTime(0);
+
+      expect(postPagedPlayingState).toBe(false);
+      expect(playbackTime).toBe(0);
+    });
 
     // TODO: finish auto paging tests
     // test.describe("auto paging", () => {});
