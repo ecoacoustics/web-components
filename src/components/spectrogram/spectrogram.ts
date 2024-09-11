@@ -537,6 +537,12 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
       this.mediaElement.pause();
     } else {
+      // TODO: properly fix the high-freq time update before review
+      if (this.currentTime.value === this.audio.value.duration) {
+        this.currentTime.value = 0;
+        this.mediaElement.currentTime = 0;
+      }
+
       this.mediaElement.play();
       this.updateCurrentTime(true);
     }
@@ -565,7 +571,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload="metadata" crossorigin="anonymous">
+      <audio id="media-element" src="${this.src}" @ended="${() => this.pause()}" preload="metadata" crossorigin="anonymous">
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
     `;

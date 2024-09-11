@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { SpectrogramComponent } from "spectrogram/spectrogram";
+import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
 import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
@@ -75,7 +75,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private keyDownHandler = this.handleKeyDown.bind(this);
 
   public disconnectedCallback(): void {
-    this.spectrogramElement?.removeEventListener("play", this.playHandler);
+    this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
     document.removeEventListener("keydown", this.keyDownHandler);
     super.disconnectedCallback();
   }
@@ -104,7 +104,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
       // unbind the previous spectrogram element from the playing
-      this.spectrogramElement?.removeEventListener("play", this.playHandler);
+      this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
 
       if (!this.for) {
         this.spectrogramElement = null;
@@ -116,7 +116,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
       // TODO: this doesn't seem like the best way to select a spectrogram element
       this.spectrogramElement = this.parentElement?.querySelector<SpectrogramComponent>(`#${this.for}`);
-      this.spectrogramElement?.addEventListener("play", this.playHandler);
+      this.spectrogramElement?.addEventListener(SpectrogramComponent.playEventName, this.playHandler);
 
       if (!this.spectrogramElement) {
         return;
