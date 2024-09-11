@@ -368,7 +368,7 @@ test.describe("single verification grid", () => {
       await fixture.makeDecision(0);
       await fixture.page.waitForTimeout(1000);
 
-      const expectedTooltip = "3 / 30 (10%) audio segments completed";
+      const expectedTooltip = "3 / 30 (10.00%) audio segments completed";
       const completedTooltips = await fixture.gridProgressBarCompletedTooltip().count();
       const realizedViewHeadTooltip = await fixture.progressBarViewHeadTooltip();
 
@@ -390,7 +390,7 @@ test.describe("single verification grid", () => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
 
-      const expectedCompletedTooltip = "3 / 30 (10%) audio segments completed (viewing history)";
+      const expectedCompletedTooltip = "3 / 30 (10.00%) audio segments completed (viewing history)";
       const realizedCompletedTooltip = await fixture.progressBarCompletedTooltip();
 
       // because the user is at the start of the history, we should not have a

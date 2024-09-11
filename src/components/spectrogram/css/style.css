@@ -6,13 +6,13 @@
   position: relative;
   background-color: var(--oe-panel-color-lighter);
   width: 100%;
-  height: 100%;
+  height: auto;
 }
 
 #spectrogram-container > canvas {
   position: relative;
   display: inherit;
-  height: 100%;
+  height: auto;
 
   /*
     We set the minimum height to 64 because the minimum FFT window size that
