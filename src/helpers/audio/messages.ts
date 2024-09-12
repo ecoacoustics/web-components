@@ -1,5 +1,4 @@
 import { Size } from "../../models/rendering";
-import { Float32Tuple } from "../types/advancedTypes";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
 export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor" as const;
@@ -32,6 +31,6 @@ export type WorkerMessage = MessageEvent<
 
 // time domain processor
 
-export type TimeDomainSharedState = { sampleRate: number; timeBuffer: Float32Tuple };
+export type TimeDomainSharedState = { timeBuffer: SharedArrayBuffer };
 export type TimeDomainProcessorSetupMessage = NamedMessageData<"setup", TimeDomainSharedState>;
 export type TimeDomainProcessorMessage = MessageEvent<TimeDomainProcessorSetupMessage>;

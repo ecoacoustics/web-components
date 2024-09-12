@@ -32,5 +32,3 @@ export type ChangeEvent<T extends HTMLElement> = Event & {
 
 /** A type that can be used to represent a stringified css variable */
 export type CssVariable = `--${string}`;
-
-export type Float32Tuple = Float32Array;
