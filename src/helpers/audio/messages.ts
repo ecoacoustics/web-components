@@ -1,7 +1,9 @@
 import { Size } from "../../models/rendering";
+import { Float32Tuple } from "../types/advancedTypes";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
-export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor";
+export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor" as const;
+export const TIME_DOMAIN_PROCESSOR_NAME = "time-domain-processor" as const;
 
 export type NamedMessageData<TMessage, TData> = [name: TMessage, data: TData];
 export type Generation = { generation: number };
@@ -27,3 +29,9 @@ export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
 export type WorkerMessage = MessageEvent<
   WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
 >;
+
+// time domain processor
+
+export type TimeDomainSharedState = { sampleRate: number; timeBuffer: Float32Tuple };
+export type TimeDomainProcessorSetupMessage = NamedMessageData<"setup", TimeDomainSharedState>;
+export type TimeDomainProcessorMessage = MessageEvent<TimeDomainProcessorSetupMessage>;

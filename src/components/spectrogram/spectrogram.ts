@@ -10,6 +10,8 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
+import { TIME_DOMAIN_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import TimeDomainProcessor from "../../helpers/audio/time-domain-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
@@ -122,6 +124,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public fftSlice?: TwoDSlice<Pixel, Hertz>;
   public unitConverters: Signal<UnitConverter | undefined> = signal(undefined);
   private audioHelper = new AudioHelper();
+  private audioContext = new AudioContext();
   // TODO: remove this
   private doneFirstRender = false;
 
@@ -182,7 +185,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     super.disconnectedCallback();
   }
 
-  public firstUpdated(): void {
+  public async firstUpdated() {
     OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.resizeCanvas(this.canvas);
 
@@ -197,6 +200,13 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       signal(this.melScale),
     );
     this.unitConverters.value = unitConverters;
+
+    // attach the audio context
+    const workletUrl = new URL(TimeDomainProcessor, import.meta.url);
+    await this.audioContext.audioWorklet.addModule(workletUrl);
+    const audioWorklet = new AudioWorkletNode(this.audioContext, TIME_DOMAIN_PROCESSOR_NAME);
+
+    audioWorklet.connect(this.audioContext.destination);
   }
 
   public updated(change: PropertyValues<this>) {
@@ -537,12 +547,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
       this.mediaElement.pause();
     } else {
-      // TODO: properly fix the high-freq time update before review
-      if (this.currentTime.value === this.audio.value.duration) {
-        this.currentTime.value = 0;
-        this.mediaElement.currentTime = 0;
-      }
-
       this.mediaElement.play();
       this.updateCurrentTime(true);
     }
@@ -571,7 +575,14 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${() => this.pause()}" preload="metadata" crossorigin="anonymous">
+      <audio
+        id="media-element"
+        src="${this.src}"
+        @play="${() => this.play()}"
+        @ended="${() => this.pause()}"
+        preload="metadata"
+        crossorigin="anonymous"
+      >
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
     `;
