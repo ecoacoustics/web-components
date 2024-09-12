@@ -176,7 +176,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
     if (!this.selected && event.detail.keyboardShortcut) {
-      console.log("short from tile");
       event.preventDefault();
     }
   }

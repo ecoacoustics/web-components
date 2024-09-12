@@ -10,8 +10,8 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
-import { TIME_DOMAIN_PROCESSOR_NAME } from "../../helpers/audio/messages";
-import TimeDomainProcessor from "../../helpers/audio/time-domain-processor.ts?worker&url";
+import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
@@ -202,19 +202,30 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     );
     this.unitConverters.value = unitConverters;
 
+    // because audio context's automatically start in an active state, and start
+    // processing audio even if there is no <audio> element input, we immediately
+    // suspend it so that it doesn't use up additional resources / threads
+    // we should manually resume the audio context when the audio's when the
+    // play/paused state is updated
     this.audioContext.suspend();
 
-    // attach the audio context
     const source = this.audioContext.createMediaElementSource(this.mediaElement);
     source.connect(this.audioContext.destination);
-    const workletUrl = new URL(TimeDomainProcessor, import.meta.url);
+
+    // because FireFox reduces the accuracy of the audio element's currentTime
+    // we use an AudioWorkletNode to calculate a more accurate time by calculating
+    // the currentTime based on the number of samples processed
+    const workletUrl = new URL(HighAccuracyTimeProcessor, import.meta.url);
     await this.audioContext.audioWorklet.addModule(workletUrl);
-    const audioWorklet = new AudioWorkletNode(this.audioContext, TIME_DOMAIN_PROCESSOR_NAME);
+    const highAccuracyTimeWorklet = new AudioWorkletNode(this.audioContext, HIGH_ACCURACY_TIME_PROCESSOR_NAME);
 
+    // because we receive the accurate time from a separate audio worklet thread
+    // we communicate the accurate time to the main thread through a
+    // SharedArrayBuffer with one float32 value (the accurate time)
     const setupMessage = ["setup", { timeBuffer: this.currentTimeBuffer }];
-    audioWorklet.port.postMessage(setupMessage);
+    highAccuracyTimeWorklet.port.postMessage(setupMessage);
 
-    source.connect(audioWorklet);
+    source.connect(highAccuracyTimeWorklet);
   }
 
   public updated(change: PropertyValues<this>) {
@@ -439,9 +450,14 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     return invalidationKeys.some((key) => change.has(key));
   }
 
-  private frameBufferTime(): number {
-    const frameIndex = new Float32Array(this.currentTimeBuffer)[0];
-    return frameIndex;
+  /**
+   * Returns the amount of time processed by the high accuracy time processor
+   * It is important to note that the time does not represent the actual time
+   * of the audio element, but is actually a very accurate amount of time that
+   * has passed since the worklet node started processing audio
+   */
+  private highAccuracyElapsedTime(): number {
+    return new Float32Array(this.currentTimeBuffer)[0];
   }
 
   private updateCurrentTime(poll = false): void {
@@ -454,26 +470,28 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
         this.nextRequestId = null;
       }
 
-      const initialFrame = this.frameBufferTime();
-      const startOffset = this.currentTime.peek();
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighFreqCurrentTime(initialFrame, startOffset));
+      const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
+      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
       return;
     }
 
+    // even though the audio elements currentTime is not accurate to perform
+    // animations, we can use the currentTime to if we only want to update the
+    // audio once without polling updates
     this.currentTime.value = this.mediaElement.currentTime;
   }
 
   // TODO: move somewhere else
   private nextRequestId: number | null = null;
 
-  private pollUpdateHighFreqCurrentTime(startTime: number, startOffset: number): void {
+  private pollUpdateHighAccuracyTime(startTime: number): void {
     if (!this.paused) {
-      const bufferTime = this.frameBufferTime();
-      const timeElapsed = bufferTime - startTime + startOffset;
+      const bufferTime = this.highAccuracyElapsedTime();
+      const timeElapsed = bufferTime - startTime;
 
       this.currentTime.value = timeElapsed;
 
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighFreqCurrentTime(startTime, startOffset));
+      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
     }
   }
 

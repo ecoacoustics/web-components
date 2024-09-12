@@ -37,7 +37,3 @@
 #indicator-line {
   will-change: transform;
 }
-
-.paused {
-  shape-rendering: crispEdges;
-}
