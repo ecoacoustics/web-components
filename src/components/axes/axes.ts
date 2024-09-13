@@ -214,7 +214,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     const yAxisGridLinesTemplate = svg`${yValues.map(
-      (value, i) => svg`${i > 0 && i < yValues.length - 1 ? yGridLineTemplate(value) : nothing}`,
+      (value, i) => svg`${i > 0 && i < yValues.length ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`
@@ -249,9 +249,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         <g>
           <line
             part="x-tick"
-            x = "${xPosition}"
-            y1 = "${tickYPosition}"
-            y2 = "${tickYPosition + this.tickSize.height}"
+            x="${xPosition}"
+            y1="${tickYPosition}"
+            y2="${tickYPosition + this.tickSize.height}"
           ></line>
           <text
             part="x-label"
@@ -388,20 +388,24 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     // if the axis will fit. However, if we are using mel scale, then we have to
     // do some more complex calculations to check that the labels will fit
     if (!melScale) {
-      const domainDelta = domain[1] - domain[0];
+      const domainDelta = Math.abs(domain[1] - domain[0]);
       const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
-      const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding);
+      const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding * 2);
       return proposedSize < canvasSize;
     }
 
     // to check if the mel scale will fit, we can calculate the canvas position
     // of the last two labels and check if they overlap
-    // TODO: we shouldn't re-compute all the positions
+    // this is because the last two labels will be the closest together and the
+    // most likely to be overlapping
     const proposedValues = this.generateAxisValues(domain[0], domain[1], proposedStep, scale, false);
     const lastTwoValues = proposedValues.slice(-2);
     const lastTwoPositions = lastTwoValues.map((value) => scale(value));
-    const positionDelta = lastTwoPositions[0] - lastTwoPositions[1];
-    return positionDelta > fontSize + textLabelPadding;
+    const positionDelta = Math.abs(lastTwoPositions[0] - lastTwoPositions[1]);
+
+    // we multiple the padding by two so that the padding is virtually applied
+    // to both labels in the axes
+    return positionDelta > fontSize + textLabelPadding * 2;
   }
 
   // the calculate step function will use a binary search to find the largest
