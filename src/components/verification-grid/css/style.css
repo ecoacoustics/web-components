@@ -34,7 +34,6 @@
   justify-content: center;
   align-items: stretch;
   background-color: var(--oe-background-color);
-  height: 100%;
 }
 
 .verification-grid {
@@ -45,7 +44,7 @@
   user-select: none;
   justify-content: center;
   align-items: stretch;
-  height: 70vh;
+  flex-basis: 100%;
 
   /*
     We apply normal padding to the verification grid so that it is consistent

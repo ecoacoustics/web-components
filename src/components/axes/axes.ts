@@ -59,6 +59,8 @@ import axesStyles from "./css/style.css?inline";
 export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(axesStyles);
 
+  public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
+
   // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
   private static labelPadding: EmUnit = 0.75;
@@ -514,10 +516,6 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       </div>
     `;
   }
-
-  // TODO: the canvas that we use to calculate the font width/height should be
-  // cached as a static field
-  public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
 }
 
 declare global {

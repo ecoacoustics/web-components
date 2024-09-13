@@ -1193,18 +1193,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       <oe-verification-help-dialog
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
-        verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        classificationTasksCount="${this.requiredClassificationTags.length}"
+        .verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
+        .classificationTasksCount="${this.requiredClassificationTags.length}"
       ></oe-verification-help-dialog>
       <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
         <div
           id="grid-container"
+          class="verification-grid"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
-          class="verification-grid"
         >
           ${when(
             this.currentPage.length === 0,
