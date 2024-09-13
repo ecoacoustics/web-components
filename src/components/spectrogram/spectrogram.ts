@@ -125,7 +125,8 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public unitConverters: Signal<UnitConverter | undefined> = signal(undefined);
   private audioHelper = new AudioHelper();
   private audioContext = new AudioContext();
-  private currentTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
+  private highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
+  private currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
   // TODO: remove this
   private doneFirstRender = false;
 
@@ -222,7 +223,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     // because we receive the accurate time from a separate audio worklet thread
     // we communicate the accurate time to the main thread through a
     // SharedArrayBuffer with one float32 value (the accurate time)
-    const setupMessage = ["setup", { timeBuffer: this.currentTimeBuffer }];
+    const setupMessage = ["setup", { timeBuffer: this.highAccuracyTimeBuffer }];
     highAccuracyTimeWorklet.port.postMessage(setupMessage);
 
     source.connect(highAccuracyTimeWorklet);
@@ -457,7 +458,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
    * has passed since the worklet node started processing audio
    */
   private highAccuracyElapsedTime(): number {
-    return new Float32Array(this.currentTimeBuffer)[0];
+    return this.currentTimeBuffer[0];
   }
 
   private updateCurrentTime(poll = false): void {
