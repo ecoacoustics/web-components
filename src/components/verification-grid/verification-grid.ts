@@ -120,6 +120,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @property({ attribute: "grid-size", type: Number, reflect: true })
   public gridSize = 8;
 
+  @property({ attribute: "grid-size-n", type: Number })
+  public gridSizeN = 5;
+
+  @property({ attribute: "grid-size-m", type: Number })
+  public gridSizeM = 4;
+
   /**
    * The selection behavior of the verification grid
    * @values "desktop" | "tablet" | "default"
@@ -1208,6 +1214,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 this.currentPage,
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
+                    class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
                     .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"

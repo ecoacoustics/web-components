@@ -61,7 +61,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
-  private static labelPadding: EmUnit = 0.25;
+  private static labelPadding: EmUnit = 0.75;
   private static tickSize: EmUnit = 0.75;
   private static titleOffset: EmUnit = 0.25;
 

@@ -45,6 +45,7 @@
   user-select: none;
   justify-content: center;
   align-items: stretch;
+  height: 70vh;
 
   /*
     We apply normal padding to the verification grid so that it is consistent
@@ -60,6 +61,10 @@
     screen.
   */
   gap: var(--oe-spacing);
+}
+
+.grid-tile {
+  flex: 1 1;
 }
 
 .no-items-message {
