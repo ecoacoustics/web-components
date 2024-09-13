@@ -1,9 +1,11 @@
 import { Locator, Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import {
+  catchLocatorEvent,
   dragSelection,
   dragSlider,
   getBrowserAttribute,
+  getBrowserSignalValue,
   getBrowserValue,
   getCssColorVariable,
   invokeBrowserMethod,
@@ -23,6 +25,7 @@ import {
   MediaControlsComponent,
   ProgressBar,
   SpectrogramCanvasScale,
+  SpectrogramComponent,
   VerificationGridTileComponent,
   VerificationHelpDialogComponent,
 } from "../../components";
@@ -77,6 +80,12 @@ class TestPage {
   public gridProgressCompletedSegment = () => this.gridProgressBar().locator(".completed-segment").first();
   public gridProgressHeadSegment = () => this.gridProgressBar().locator(".head-segment").first();
 
+  public spectrogramComponent = async (index = 0) =>
+    (await this.gridTileComponents())[index].locator("oe-spectrogram").first();
+  public gridTileComponent = async (index = 0) =>
+    (await this.gridTileComponents())[index].first();
+  public audioElement = async (index = 0) =>
+    (await this.spectrogramComponent(index)).locator("audio").first();
   public mediaControlsComponent = async (index = 0) =>
     (await this.gridTileContainers())[index].locator("oe-media-controls").first();
   public brightnessControlsDropdown = async (index = 0) =>
@@ -253,6 +262,17 @@ class TestPage {
     return value as boolean;
   }
 
+  public async isAudioPlaying(index: number): Promise<boolean> {
+    const spectrogram = await this.spectrogramComponent(index);
+    const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
+    return !value as boolean;
+  }
+
+  public async audioPlaybackTime(index: number): Promise<number> {
+    const spectrogram = await this.spectrogramComponent(index);
+    return await getBrowserSignalValue<SpectrogramComponent, number>(spectrogram, "currentTime");
+  }
+
   public async indicatorPosition(index: number): Promise<number> {
     const indicatorLine = (await this.indicatorLines())[index];
 
@@ -379,16 +399,20 @@ class TestPage {
   }
 
   public async playSpectrogram(index: number) {
-    const gridTiles = await this.gridTileComponents();
-    const playButton = gridTiles[index].locator("[part='play-icon']").first();
+    const gridTile = await this.gridTileComponent(index);
+    const playButton = gridTile.locator("sl-icon[name='play']").first();
 
     await playButton.scrollIntoViewIfNeeded();
+
+    const targetAudioElement = await this.audioElement(index);
+    const playEvent = catchLocatorEvent(targetAudioElement, "play");
     await playButton.click();
+    await playEvent;
   }
 
   public async pauseSpectrogram(index: number) {
     const gridTiles = await this.gridTileComponents();
-    const pauseButton = gridTiles[index].locator("[part='pause-icon']").first();
+    const pauseButton = gridTiles[index].locator("sl-icon[name='pause']").first();
     await pauseButton.click();
   }
 

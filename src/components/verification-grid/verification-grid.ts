@@ -23,8 +23,8 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
-import verificationGridStyles from "./css/style.css?inline";
 import { ifDefined } from "lit/directives/if-defined.js";
+import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 

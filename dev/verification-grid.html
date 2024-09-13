@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid">
+    <oe-verification-grid id="verification-grid" grid-size="4">
       <template>
         <oe-info-card></oe-info-card>
       </template>
@@ -23,7 +23,7 @@
             We should see an error thrown for this classification component
             because it does not have a tag attribute
         -->
-      <oe-classification shortcut="M" tag="Cow"></oe-classification>
+      <oe-classification true-shortcut="m" tag="Cow"></oe-classification>
 
       <!--
             local would use a file picker UI, while src would allow a remote file
@@ -31,7 +31,7 @@
             This service would
         -->
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local> </oe-data-source>
     </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>

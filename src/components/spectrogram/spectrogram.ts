@@ -10,6 +10,8 @@ import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
+import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
 export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
@@ -122,6 +124,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public fftSlice?: TwoDSlice<Pixel, Hertz>;
   public unitConverters: Signal<UnitConverter | undefined> = signal(undefined);
   private audioHelper = new AudioHelper();
+  private audioContext = new AudioContext();
+  private highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
+  private currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
   // TODO: remove this
   private doneFirstRender = false;
 
@@ -182,7 +187,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     super.disconnectedCallback();
   }
 
-  public firstUpdated(): void {
+  public async firstUpdated() {
     OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.resizeCanvas(this.canvas);
 
@@ -197,6 +202,31 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       signal(this.melScale),
     );
     this.unitConverters.value = unitConverters;
+
+    // because audio context's automatically start in an active state, and start
+    // processing audio even if there is no <audio> element input, we immediately
+    // suspend it so that it doesn't use up additional resources / threads
+    // we should manually resume the audio context when the audio's when the
+    // play/paused state is updated
+    this.audioContext.suspend();
+
+    const source = this.audioContext.createMediaElementSource(this.mediaElement);
+    source.connect(this.audioContext.destination);
+
+    // because FireFox reduces the accuracy of the audio element's currentTime
+    // we use an AudioWorkletNode to calculate a more accurate time by calculating
+    // the currentTime based on the number of samples processed
+    const workletUrl = new URL(HighAccuracyTimeProcessor, import.meta.url);
+    await this.audioContext.audioWorklet.addModule(workletUrl);
+    const highAccuracyTimeWorklet = new AudioWorkletNode(this.audioContext, HIGH_ACCURACY_TIME_PROCESSOR_NAME);
+
+    // because we receive the accurate time from a separate audio worklet thread
+    // we communicate the accurate time to the main thread through a
+    // SharedArrayBuffer with one float32 value (the accurate time)
+    const setupMessage = ["setup", { timeBuffer: this.highAccuracyTimeBuffer }];
+    highAccuracyTimeWorklet.port.postMessage(setupMessage);
+
+    source.connect(highAccuracyTimeWorklet);
   }
 
   public updated(change: PropertyValues<this>) {
@@ -421,6 +451,16 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     return invalidationKeys.some((key) => change.has(key));
   }
 
+  /**
+   * Returns the amount of time processed by the high accuracy time processor
+   * It is important to note that the time does not represent the actual time
+   * of the audio element, but is actually a very accurate amount of time that
+   * has passed since the worklet node started processing audio
+   */
+  private highAccuracyElapsedTime(): number {
+    return this.currentTimeBuffer[0];
+  }
+
   private updateCurrentTime(poll = false): void {
     if (poll) {
       // if the user starts playing the audio, stops playing it, then starts playing it again within the same frame
@@ -431,86 +471,32 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
         this.nextRequestId = null;
       }
 
-      // we use request animation frame here because otherwise we could have two time
-      // updates in the same frame
-      // this could happen if we process the first time update before the next frame is requested
-      // meaning that it queues a time update for the next frame
-      // when the next frame is requested, the time will be updated again, meaning there was
-      // two time updates in the same frame
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighFreqCurrentTime());
+      const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
+      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
       return;
     }
 
+    // even though the audio elements currentTime is not accurate to perform
+    // animations, we can use the currentTime to if we only want to update the
+    // audio once without polling updates
     this.currentTime.value = this.mediaElement.currentTime;
   }
 
   // TODO: move somewhere else
   private nextRequestId: number | null = null;
-  private playStartedAt: DOMHighResTimeStamp | null = null;
 
-  // we used to set lastHighResSync to performance.now(), but this caused some
-  // visual artifacts when the audio was paused and then played again
-  // this was because the time between calling function and fetching the highResTime
-  // later on led to a time difference of a couple of milliseconds
-  private pollUpdateHighFreqCurrentTime(
-    lastHighResSync: DOMHighResTimeStamp | null = null,
-    lastObservedTime: number | null = null,
-  ): void {
-    // this will become a problem if we want to update the time in the future without pausing the media element
-    // e.g. seeking
+  private pollUpdateHighAccuracyTime(startTime: number): void {
     if (!this.paused) {
-      const mediaElementTime = this.mediaElement.currentTime;
-      let highResolutionDelta = 0;
+      const bufferTime = this.highAccuracyElapsedTime();
+      const timeElapsed = bufferTime - startTime;
 
-      // in Firefox there are anti-fingerprinting protections that reduce accuracy of the media element's currentTime
-      // this causes the same values to be emitted multiple times (when poling at 60 FPS), and will cause the last
-      // couple of milliseconds to be skipped
-      // to fix this, we use a high resolution timer, and if we see the same value twice, we calculate the difference
-      // that we have seen, so that we can "fill in the gaps"
-      // in browsers which report the real time (e.g. Chrome) this condition should never be true
-      const highResTime = performance.now();
-      if (mediaElementTime === lastObservedTime) {
-        // TODO: I don't think defaulting to the highResTime is correct
-        // however, this fixed the indicator jumping back at the start of the recording
-        highResolutionDelta = (highResTime - (lastHighResSync ?? highResTime)) / 1_000;
+      this.currentTime.value = timeElapsed;
 
-        if (this.playStartedAt === null) {
-          this.playStartedAt = highResTime;
-        }
-      } else {
-        if (this.playStartedAt !== null) {
-          lastHighResSync = highResTime;
-        }
-      }
-
-      // on some browsers, the media elements paused event doesn't emit the exact
-      // millisecond that the audio is paused/the duration is reached
-      // this can cause the high-resolution time to exceed the duration of the audio
-      // by a few milliseconds
-      // to fix this, we check if the new proposed time is greater than the duration
-      // if it is, we set the current time to the duration and set the paused state
-      const newProposedTime = mediaElementTime + highResolutionDelta;
-      if (newProposedTime >= this.audio.value.duration) {
-        this.currentTime.value = this.audio.value.duration;
-        this.pause();
-
-        // by returning early, we should never trigger the next requestAnimationFrame
-        return;
-      }
-
-      this.currentTime.value = mediaElementTime + highResolutionDelta;
-
-      this.nextRequestId = requestAnimationFrame(() =>
-        this.pollUpdateHighFreqCurrentTime(lastHighResSync, mediaElementTime),
-      );
+      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
     }
   }
 
   private setPaused(paused: boolean, keyboardShortcut = false): void {
-    // if the state doesn't change, we can short circuit exit and not update the
-    // media controls DOM node or emit a play event
-    if (paused == this.mediaElement.paused) return;
-
     const detail: IPlayEvent = {
       play: !paused,
       keyboardShortcut,
@@ -534,14 +520,11 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
         this.nextRequestId = null;
       }
 
-      // we set playStartedAt to null so that when we start playing again the
-      // high resolution time will not update until the first low resolution time
-      // is updated
-      this.playStartedAt = null;
-
       this.mediaElement.pause();
+      this.audioContext.suspend();
     } else {
       this.mediaElement.play();
+      this.audioContext.resume();
       this.updateCurrentTime(true);
     }
 
@@ -569,7 +552,14 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
-      <audio id="media-element" src="${this.src}" @ended="${this.pause}" preload="metadata" crossorigin="anonymous">
+      <audio
+        id="media-element"
+        src="${this.src}"
+        @play="${() => this.play()}"
+        @ended="${() => this.stop()}"
+        preload="metadata"
+        crossorigin="anonymous"
+      >
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </audio>
     `;

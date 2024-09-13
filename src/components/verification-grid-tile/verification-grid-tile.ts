@@ -126,13 +126,13 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       this.spectrogram.removeEventListener("loaded", this.loadedHandler);
     }
 
-    this.contentsWrapper.removeEventListener<any>("play", this.playHandler);
+    this.contentsWrapper.removeEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
 
     super.disconnectedCallback();
   }
 
   public firstUpdated(): void {
-    this.contentsWrapper.addEventListener<any>("play", this.playHandler);
+    this.contentsWrapper.addEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
 
     if (!this.spectrogram) {
       throw new Error("Could not find spectrogram component");

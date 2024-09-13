@@ -35,7 +35,5 @@
 }
 
 #indicator-line {
-  stroke: currentColor;
-  shape-rendering: crispEdges;
   will-change: transform;
 }

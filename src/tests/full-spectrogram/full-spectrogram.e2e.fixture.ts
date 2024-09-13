@@ -1,17 +1,20 @@
 import { Page } from "@playwright/test";
 import { test } from "@sand4rt/experimental-ct-web";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
-import { getBrowserValue } from "../helpers";
+import { getBrowserAttribute, getBrowserSignalValue, getBrowserValue, setBrowserAttribute } from "../helpers";
+import { AudioModel } from "../../models/recordings";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
 class TestPage {
   public constructor(public readonly page: Page) {}
 
-  public indicatorComponent = () => this.page.locator("oe-indicator").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
+  public audioElement = () => this.page.locator("oe-spectrogram audio").first();
+
   public mediaControlsComponent = () => this.page.locator("oe-media-controls").first();
   public actionButton = () => this.page.locator("oe-media-controls #action-button").first();
+  public actionButtonIcon = () => this.actionButton().locator("sl-icon").first();
   private audioSource = "http://localhost:3000/example.flac";
 
   public async create() {
@@ -54,6 +57,26 @@ class TestPage {
   public async isAudioPlaying(): Promise<boolean> {
     const value = await getBrowserValue<SpectrogramComponent>(this.spectrogramComponent(), "paused");
     return !value as boolean;
+  }
+
+  public async audioPlaybackTime(): Promise<number> {
+    return await getBrowserSignalValue<SpectrogramComponent, number>(this.spectrogramComponent(), "currentTime");
+  }
+
+  public async audioDuration(): Promise<number> {
+    const audioModel = await getBrowserSignalValue<SpectrogramComponent, AudioModel>(
+      this.spectrogramComponent(),
+      "audio",
+    );
+    return audioModel.duration;
+  }
+
+  public async mediaControlsPlayIcon(): Promise<string> {
+    return await getBrowserAttribute(this.actionButtonIcon(), "name");
+  }
+
+  public async changeSpectrogramSource(src: string) {
+    await setBrowserAttribute<SpectrogramComponent>(this.spectrogramComponent(), "src", src);
   }
 }
 

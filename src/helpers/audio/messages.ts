@@ -1,13 +1,14 @@
 import { Size } from "../../models/rendering";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
-export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor";
+export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor" as const;
+export const HIGH_ACCURACY_TIME_PROCESSOR_NAME = "high-accuracy-time-processor" as const;
 
 export type NamedMessageData<TMessage, TData> = [name: TMessage, data: TData];
 export type Generation = { generation: number };
 export type SharedBuffers = { state: SharedArrayBuffer; sampleBuffer: SharedArrayBuffer };
 
-// processor
+// FFT buffer builder processor
 
 export type SharedBuffersWithGeneration = SharedBuffers & Generation;
 
@@ -27,3 +28,9 @@ export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
 export type WorkerMessage = MessageEvent<
   WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
 >;
+
+// high accuracy time processor
+
+export type HighAccuracyTimeSharedState = { timeBuffer: SharedArrayBuffer };
+export type HighAccuracyTimeProcessorSetupMessage = NamedMessageData<"setup", HighAccuracyTimeSharedState>;
+export type HighAccuracyTimeProcessorMessage = MessageEvent<HighAccuracyTimeProcessorSetupMessage>;
