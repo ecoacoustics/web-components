@@ -1,6 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, nothing, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
 import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
@@ -24,6 +24,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { isPrime } from "../../helpers/primes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -51,6 +52,12 @@ type SelectionEvent = CustomEvent<{
   ctrlKey: boolean;
   index: number;
 }>;
+
+type GridShapeFactor = {
+  factorOne: number;
+  factorTwo: number;
+  targetDistance: number;
+};
 
 // by keeping the elements position in a separate object, we can
 // avoid doing DOM queries every time we need to check if the element
@@ -118,13 +125,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   /** The number of items to display in a single grid */
   @property({ attribute: "grid-size", type: Number, reflect: true })
-  public gridSize = 8;
-
-  @property({ attribute: "grid-size-n", type: Number })
-  public gridSizeN = 5;
-
-  @property({ attribute: "grid-size-m", type: Number })
-  public gridSizeM = 4;
+  public targetGridSize = 0;
 
   /**
    * The selection behavior of the verification grid
@@ -174,6 +175,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @state()
   public currentPage: SubjectWrapper[] = [];
 
+  @state()
+  private gridSizeN = this.targetGridSize;
+
+  @state()
+  private gridSizeM = 1;
+
   public get pagedItems(): number {
     return this.subjectHistory.length;
   }
@@ -215,7 +222,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   /** A count of the number of tiles currently visible on the screen */
   private get effectivePageSize(): number {
-    return this.gridSize - this.hiddenTiles;
+    return this.targetGridSize - this.hiddenTiles;
   }
 
   public connectedCallback(): void {
@@ -257,32 +264,31 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public firstUpdated(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+
+    const newGridShape = this.computeGridShape(this.targetGridSize);
+    this.gridSizeN = newGridShape.factorOne;
+    this.gridSizeM = newGridShape.factorTwo;
+
+    this.doneFirstUpdate = true;
   }
 
-  protected willUpdate(change: PropertyValues<this>): void {
-    // whenever the gridSize property updates, we check that the new value
-    // is a finite, positive number. If it is not, then we cancel the change
-    // and revert to the old value
-    if (change.has("gridSize")) {
-      const oldGridSize = change.get("gridSize") as number;
-      const newGridSize = this.gridSize;
-
-      // we use isFinite here to check that the value is not NaN, and that
-      // values such as Infinity are not considered as a valid grid size
-      if (!isFinite(newGridSize) || newGridSize <= 0) {
-        this.gridSize = oldGridSize;
-        console.error("New grid size value could not be converted to a number");
-      }
-    }
-  }
+  private doneFirstUpdate = false;
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
+    if (this.doneFirstUpdate && change.has("targetGridSize")) {
+      const newTarget = this.targetGridSize;
+
+      const newGridShape = this.computeGridShape(newTarget);
+      this.gridSizeN = newGridShape.factorOne;
+      this.gridSizeM = newGridShape.factorTwo;
+    }
+
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
     // gridSize is a part of source invalidation because if the grid size
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "gridSize"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "targetGridSize"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -296,6 +302,66 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
       await this.handleSourceInvalidation();
     }
+  }
+
+  private computeGridShape(target: number): GridShapeFactor {
+    if (target === 1) {
+      return { factorOne: 1, factorTwo: 1, targetDistance: 0 };
+    }
+
+    while (isPrime(target)) {
+      target += 1;
+    }
+
+    const targetContainer = this.gridContainer;
+    const targetContainerShape = targetContainer.getBoundingClientRect();
+    // const targetContainerShape = window.screen;
+
+    // e.g. 16/9 produces 1.77
+    const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
+
+    // some numbers e.g. 9 have one factor such as 3x3 which creates a aspect
+    // ratio of 1.00
+    // using a 3x3 grid for a 16:9 screen is not ideal because it will create
+    // a lot of dead space
+    // therefore, we have a threshold that we have to meet. If we do not meet
+    // the threshold, we keep increasing the target until we find a grid shape
+    // that meets the threshold
+    const targetThreshold = 1.6;
+
+    let optimalFactor: GridShapeFactor = {
+      factorOne: 1,
+      factorTwo: target,
+      targetDistance: Infinity,
+    };
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      for (let i = 1; i <= target; i++) {
+        if (target % i === 0) {
+          const factorOne = i;
+          const factorTwo = target / i;
+
+          // e.g. 1/2 produces 0.5
+          // and  2/1 produces 2
+          // so we should pick 2/1 in this case
+          const factorAspectRatio = factorOne / factorTwo;
+          const targetDistance = Math.abs(targetAspectRatio - factorAspectRatio);
+
+          if (targetDistance < optimalFactor.targetDistance) {
+            optimalFactor = { factorOne, factorTwo, targetDistance };
+          }
+        }
+      }
+
+      if (optimalFactor.targetDistance > targetThreshold) {
+        target += 1;
+      } else {
+        break;
+      }
+    }
+
+    return optimalFactor;
   }
 
   private handleTileInvalidation(): void {
@@ -333,7 +399,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      this.currentPage = await this.paginationFetcher.getItems(this.gridSize);
+      this.currentPage = await this.paginationFetcher.getItems(this.targetGridSize);
     }
   }
 
@@ -622,7 +688,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // we check that the help dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.gridSize > 1 && !this.isHelpDialogOpen();
+    return this.targetGridSize > 1 && !this.isHelpDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -778,7 +844,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
-      this.historyHead += this.gridSize;
+      this.historyHead += this.targetGridSize;
       await this.renderHistory(this.historyHead);
     }
   }
@@ -791,14 +857,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
-      this.historyHead -= this.gridSize;
+      this.historyHead -= this.targetGridSize;
       await this.renderHistory(this.historyHead);
     }
   }
 
   private async renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
-    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.gridSize);
+    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.targetGridSize);
     const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
 
     this.historyMode();
@@ -869,7 +935,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canNavigateNext(): boolean {
-    return this.historyHead > this.gridSize;
+    return this.historyHead > this.targetGridSize;
   }
 
   //#endregion
@@ -1126,7 +1192,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
-    const hasMultipleTiles = this.gridSize > 1;
+    const hasMultipleTiles = this.targetGridSize > 1;
 
     if (this.hasClassificationTask() && this.hasVerificationTask()) {
       return this.mixedTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
@@ -1193,8 +1259,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       <oe-verification-help-dialog
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
-        .verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        .classificationTasksCount="${this.requiredClassificationTags.length}"
+        verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
+        classificationTasksCount="${this.requiredClassificationTags.length}"
       ></oe-verification-help-dialog>
       <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
 
@@ -1202,6 +1268,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         <div
           id="grid-container"
           class="verification-grid"
+          style="--columns: ${this.gridSizeN}; --rows: ${this.gridSizeM};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"

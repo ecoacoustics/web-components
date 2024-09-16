@@ -28,6 +28,7 @@
   padding: var(--oe-spacing);
 }
 
+/* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;
   flex-wrap: wrap;
@@ -36,15 +37,17 @@
   background-color: var(--oe-background-color);
 }
 
+/* The verification grid that contains verification grid tiles */
 .verification-grid {
-  display: flex;
-  flex-wrap: wrap;
-  flex-grow: 1;
-  flex-basis: 100%;
+  --columns: 0;
+  --rows: 0;
+
+  display: grid;
+  width: 100%;
   user-select: none;
-  justify-content: center;
-  align-items: stretch;
-  flex-basis: 100%;
+
+  grid-template-columns: repeat(var(--columns), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
 
   /*
     We apply normal padding to the verification grid so that it is consistent
@@ -60,10 +63,6 @@
     screen.
   */
   gap: var(--oe-spacing);
-}
-
-.grid-tile {
-  flex: 1 1;
 }
 
 .no-items-message {

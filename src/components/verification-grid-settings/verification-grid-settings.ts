@@ -66,7 +66,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
       throw new Error("Could not find associated verification grid component");
     }
 
-    this.gridSize = this.verificationGrid.gridSize;
+    this.gridSize = this.verificationGrid.targetGridSize;
   }
 
   private handleGridSizeChange(event: ChangeEvent<HTMLInputElement>) {
@@ -78,7 +78,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
     const inputValue = event.target.value;
     const newGridSize = Number(inputValue);
 
-    this.verificationGrid.gridSize = newGridSize;
+    this.verificationGrid.targetGridSize = newGridSize;
 
     this.updateGridSizeState();
   }
