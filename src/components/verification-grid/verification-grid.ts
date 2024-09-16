@@ -25,6 +25,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { isPrime } from "../../helpers/primes";
+import { Pixel } from "../../models/unitConverters";
+import { GridShape } from "../../models/rendering";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -53,12 +55,6 @@ type SelectionEvent = CustomEvent<{
   index: number;
 }>;
 
-type GridShapeFactor = {
-  factorOne: number;
-  factorTwo: number;
-  targetDistance: number;
-};
-
 // by keeping the elements position in a separate object, we can
 // avoid doing DOM queries every time we need to check if the element
 // is intersecting with the highlight box
@@ -72,6 +68,15 @@ interface HighlightSelection {
   current: MousePosition;
   highlighting: boolean;
   elements: IntersectionElement[];
+}
+
+interface BreakpointGridSize {
+  screenWidth: Pixel;
+  gridSize: number;
+}
+
+interface GridShapeFactor extends GridShape {
+  targetDistance: number;
 }
 
 /**
@@ -193,10 +198,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
-  private intersectionHandler = this.handleIntersection.bind(this);
   private selectionHandler = this.handleSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
-  private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
+  private intersectionHandler = this.handleIntersection.bind(this);
+  private intersectionObserver = new IntersectionObserver(this.intersectionHandler, { threshold: 1 });
 
   // the subject history contains all the subjects that have decisions applied
   // to them, while the verification buffer contains all the subjects that have
@@ -217,12 +222,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     highlighting: false,
     elements: [],
   };
-
   private paginationFetcher?: GridPageFetcher;
+  private gridSizeBreakpoints: BreakpointGridSize[] = [
+    // mobile devices
+    { screenWidth: 0, gridSize: 1 },
+
+    // desktop devices
+    { screenWidth: 720, gridSize: 9 },
+  ];
 
   /** A count of the number of tiles currently visible on the screen */
   private get effectivePageSize(): number {
     return this.targetGridSize - this.hiddenTiles;
+  }
+
+  public get maximumGridSize(): number {
+    return this.targetGridSize;
   }
 
   public connectedCallback(): void {
@@ -265,9 +280,25 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
 
-    const newGridShape = this.computeGridShape(this.targetGridSize);
-    this.gridSizeN = newGridShape.factorOne;
-    this.gridSizeM = newGridShape.factorTwo;
+    // initial grid size < attributes < grid size settings < maximum grid size
+    if (this.targetGridSize) {
+      const newGridShape = this.computeGridShape(this.targetGridSize);
+      this.gridSizeN = newGridShape.columns;
+      this.gridSizeM = newGridShape.rows;
+    } else {
+      const screenSize = window.screen;
+      const relativeBreakpoint = this.gridSizeBreakpoints.findLast(
+        (breakpoint) => screenSize.width >= breakpoint.screenWidth,
+      );
+
+      if (relativeBreakpoint) {
+        this.targetGridSize = relativeBreakpoint.gridSize;
+      } else {
+        throw new Error("Could not find a suitable grid size for the current screen size");
+      }
+    }
+
+    this.intersectionObserver.observe(this.gridContainer);
 
     this.doneFirstUpdate = true;
   }
@@ -279,8 +310,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       const newTarget = this.targetGridSize;
 
       const newGridShape = this.computeGridShape(newTarget);
-      this.gridSizeN = newGridShape.factorOne;
-      this.gridSizeM = newGridShape.factorTwo;
+      this.gridSizeN = newGridShape.columns;
+      this.gridSizeM = newGridShape.rows;
+
+      // calculate if the new grid size will fit inside the container
+      this.handleResize();
     }
 
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
@@ -306,7 +340,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private computeGridShape(target: number): GridShapeFactor {
     if (target === 1) {
-      return { factorOne: 1, factorTwo: 1, targetDistance: 0 };
+      return { columns: 1, rows: 1, targetDistance: 0 };
     }
 
     while (isPrime(target)) {
@@ -327,11 +361,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetThreshold = 1.6;
+    const targetThreshold = 2.0;
 
     let optimalFactor: GridShapeFactor = {
-      factorOne: 1,
-      factorTwo: target,
+      columns: 1,
+      rows: target,
       targetDistance: Infinity,
     };
 
@@ -339,25 +373,25 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     while (true) {
       for (let i = 1; i <= target; i++) {
         if (target % i === 0) {
-          const factorOne = i;
-          const factorTwo = target / i;
+          const columns = i;
+          const rows = target / i;
 
           // e.g. 1/2 produces 0.5
           // and  2/1 produces 2
           // so we should pick 2/1 in this case
-          const factorAspectRatio = factorOne / factorTwo;
+          const factorAspectRatio = columns / rows;
           const targetDistance = Math.abs(targetAspectRatio - factorAspectRatio);
 
           if (targetDistance < optimalFactor.targetDistance) {
-            optimalFactor = { factorOne, factorTwo, targetDistance };
+            optimalFactor = { columns, rows, targetDistance };
           }
         }
       }
 
-      if (optimalFactor.targetDistance > targetThreshold) {
-        target += 1;
-      } else {
+      if (optimalFactor.targetDistance < targetThreshold) {
         break;
+      } else {
+        target += 1;
       }
     }
 
@@ -401,6 +435,21 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
       this.currentPage = await this.paginationFetcher.getItems(this.targetGridSize);
     }
+  }
+
+  private handleIntersection(entries: IntersectionObserverEntry[]): void {
+    for (const entry of entries) {
+      if (entry.intersectionRatio < 1) {
+        if (this.targetGridSize > 1) {
+          this.targetGridSize -= 1;
+        }
+      }
+    }
+  }
+
+  private handleResize() {
+    const intersectionRecords = this.intersectionObserver.takeRecords();
+    this.handleIntersection(intersectionRecords);
   }
 
   private updateRequiredClassificationTags(): void {
@@ -572,24 +621,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private hideSelectionShortcuts(): void {
     this.tileSelectionShortcutsShown(false);
     this.showingSelectionShortcuts = false;
-  }
-
-  // TODO: The intersection observer has been disabled because its functionality
-  // is buggy when the verification grid is larger than the screen size
-  // see: https://github.com/ecoacoustics/web-components/issues/146
-  // see: https://github.com/ecoacoustics/web-components/issues/147
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private handleIntersection(_entries: IntersectionObserverEntry[]): void {
-    // for (const entry of entries) {
-    //   if (entry.intersectionRatio < 1) {
-    //     // at the very minimum, we always want one grid tile showing
-    //     // even if this will cause some items to go off the screen
-    //     const newProposedHiddenTiles = this.hiddenTiles + 1;
-    //     if (newProposedHiddenTiles < this.gridSize) {
-    //       this.hideGridItems(newProposedHiddenTiles);
-    //     }
-    //   }
-    // }
   }
 
   private handleSelection(selectionEvent: SelectionEvent): void {
@@ -1272,6 +1303,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
+          @resize="${this.handleResize}"
         >
           ${when(
             this.currentPage.length === 0,

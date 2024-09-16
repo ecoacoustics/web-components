@@ -1,5 +1,15 @@
-import { Size } from "../../models/rendering";
-import { catchLocatorEvent, changeToDesktop, changeToMobile, getBrowserValue, setBrowserAttribute } from "../helpers";
+import { GridShape, Size } from "../../models/rendering";
+import {
+  catchLocatorEvent,
+  changeToDesktop,
+  changeToLaptop,
+  changeToMobile,
+  changeToTabletLandscape,
+  changeToTabletPortrait,
+  DeviceMock,
+  getBrowserValue,
+  setBrowserAttribute,
+} from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
 import {
@@ -56,8 +66,23 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("initial state", () => {
-    test("should have the correct grid size", async ({ fixture }) => {
-      const expectedGridSize = 3;
+    test("should have the correct grid size for a desktop screen size", async ({ fixture }) => {
+      await changeToDesktop(fixture.page);
+      const expectedGridSize = 9;
+      const gridSize = await fixture.getGridSize();
+      expect(gridSize).toEqual(expectedGridSize);
+    });
+
+    test("should have the correct grid size for a tablet screen size", async ({ fixture }) => {
+      await changeToMobile(fixture.page);
+      const expectedGridSize = 1;
+      const gridSize = await fixture.getGridSize();
+      expect(gridSize).toEqual(expectedGridSize);
+    });
+
+    test("should have the correct grid size for a mobile screen size", async ({ fixture }) => {
+      await changeToMobile(fixture.page);
+      const expectedGridSize = 1;
       const gridSize = await fixture.getGridSize();
       expect(gridSize).toEqual(expectedGridSize);
     });
@@ -949,6 +974,84 @@ test.describe("single verification grid", () => {
 
       expect(realizedPagedItems).toBe(expectedPagedItems);
     });
+
+    test.describe("dynamic grid sizes", () => {
+      test("should add tiles if the number of tiles do not fill the verification grid", () => {});
+
+      test("should remove tiles if the tiles cause the verification grid to overflow", () => {});
+
+      test("should keep the same grid size if the user scrolls on the page", () => {});
+
+      interface DynamicGridSizeTest {
+        deviceName: string;
+        device: DeviceMock;
+        expectedGridSize: number;
+        expectedGridShape: GridShape;
+        expectedTileSize: Size;
+      }
+
+      const testedGridSizes: DynamicGridSizeTest[] = [
+        {
+          deviceName: "desktop",
+          device: changeToDesktop,
+          expectedGridSize: 10,
+          expectedGridShape: { rows: 5, columns: 2 },
+          expectedTileSize: { width: 200, height: 200 },
+        },
+        {
+          deviceName: "laptop",
+          device: changeToLaptop,
+          expectedGridSize: 5,
+          expectedGridShape: { rows: 5, columns: 1 },
+          expectedTileSize: { width: 200, height: 200 },
+        },
+        {
+          deviceName: "landscape tablet",
+          device: changeToTabletLandscape,
+          expectedGridSize: 3,
+          expectedGridShape: { rows: 3, columns: 1 },
+          expectedTileSize: { width: 200, height: 200 },
+        },
+        {
+          deviceName: "portrait tablet",
+          device: changeToTabletPortrait,
+          expectedGridSize: 3,
+          expectedGridShape: { rows: 1, columns: 3 },
+          expectedTileSize: { width: 200, height: 200 },
+        },
+        {
+          deviceName: "mobile",
+          device: changeToMobile,
+          expectedGridSize: 1,
+          expectedGridShape: { rows: 1, columns: 1 },
+          expectedTileSize: { width: 200, height: 200 },
+        },
+
+        // TODO: test Samsung Smart Fridge
+      ];
+
+      for (const testConfig of testedGridSizes) {
+        test.describe(testConfig.deviceName, () => {
+          test(`should have the correct target grid size`, async ({ fixture }) => {
+            await testConfig.device(fixture.page);
+            const realizedTargetGridSize = await fixture.getTargetGridSize();
+            expect(realizedTargetGridSize).toEqual(testConfig.expectedGridSize);
+          });
+
+          test(`should have the correct grid shape`, async ({ fixture }) => {
+            await testConfig.device(fixture.page);
+            const realizedGridShape = await fixture.getGridShape();
+            expect(realizedGridShape).toEqual(testConfig.expectedGridShape);
+          });
+
+          test(`should have the correct tile sizes`, async ({ fixture }) => {
+            await testConfig.device(fixture.page);
+            const realizedTileSize = await fixture.getGridTileSize();
+            expect(realizedTileSize).toEqual(testConfig.expectedTileSize);
+          });
+        });
+      }
+    });
   });
 
   // during progressive creation, individual elements will be added to the
@@ -960,10 +1063,10 @@ test.describe("decision meter", () => {
   test.describe("classification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(`
-        <oe-classification tag="car" true-shortcut="h"></oe-classification>
-        <oe-classification tag="koala" true-shortcut="j"></oe-classification>
-        <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-      `);
+				<oe-classification tag="car" true-shortcut="h"></oe-classification>
+				<oe-classification tag="koala" true-shortcut="j"></oe-classification>
+				<oe-classification tag="bird" true-shortcut="k"></oe-classification>
+			`);
 
       await fixture.dismissHelpDialog();
     });
@@ -1089,9 +1192,9 @@ test.describe("decision meter", () => {
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(`
-        <oe-verification verified="true"></oe-verification>
-        <oe-verification verified="false"></oe-verification>
-      `);
+				<oe-verification verified="true"></oe-verification>
+				<oe-verification verified="false"></oe-verification>
+			`);
 
       await fixture.dismissHelpDialog();
     });
@@ -1124,13 +1227,13 @@ test.describe("decision meter", () => {
   test.describe("mixed classification and verification tasks", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(`
-        <oe-verification verified="true">Positive</oe-verification>
-        <oe-verification verified="false">Negative</oe-verification>
+				<oe-verification verified="true">Positive</oe-verification>
+				<oe-verification verified="false">Negative</oe-verification>
 
-        <oe-classification tag="car">Car</oe-classification>
-        <oe-classification tag="bird">Bird</oe-classification>
-        <oe-classification tag="cat">Cat</oe-classification>
-      `);
+				<oe-classification tag="car">Car</oe-classification>
+				<oe-classification tag="bird">Bird</oe-classification>
+				<oe-classification tag="cat">Cat</oe-classification>
+			`);
 
       await fixture.dismissHelpDialog();
     });
@@ -1172,13 +1275,13 @@ test.describe("verification grid with custom template", () => {
   test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       const customTemplate = `
-        <oe-verification verified="true">Koala</oe-verification>
-        <oe-verification verified="false">Not Koala</oe-verification>
+				<oe-verification verified="true">Koala</oe-verification>
+				<oe-verification verified="false">Not Koala</oe-verification>
 
-        <template>
-          <oe-info-card></oe-info-card>
-        </template>
-      `;
+				<template>
+					<oe-info-card></oe-info-card>
+				</template>
+			`;
       await fixture.create(customTemplate);
 
       await fixture.changeGridSource(fixture.testJsonInput);

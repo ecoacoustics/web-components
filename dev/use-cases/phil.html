@@ -8,28 +8,12 @@
   </head>
 
   <body>
-    <div id="grid-host">
-      <oe-verification-grid id="verification-grid" grid-size="2">
-        <oe-classification tag="koala" true-shortcut="h"></oe-classification>
-        <oe-classification tag="car" true-shortcut="j"></oe-classification>
-        <oe-classification tag="crickets" true-shortcut="k"></oe-classification>
+    <oe-verification-grid id="verification-grid">
+      <oe-classification tag="koala" true-shortcut="h"></oe-classification>
+      <oe-classification tag="car" true-shortcut="j"></oe-classification>
+      <oe-classification tag="crickets" true-shortcut="k"></oe-classification>
 
-        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv"></oe-data-source>
-      </oe-verification-grid>
-    </div>
-
-    <style>
-      body {
-        margin: 0px;
-      }
-
-      #grid-host {
-        position: relative;
-        left: 0px;
-        top: 0px;
-        width: 100vw;
-        min-height: 100vh;
-      }
-    </style>
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv"></oe-data-source>
+    </oe-verification-grid>
   </body>
 </html>

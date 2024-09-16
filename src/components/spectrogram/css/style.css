@@ -13,6 +13,7 @@
   position: relative;
   display: inherit;
   height: 100%;
+  max-height: 45vh;
 
   /*
     We set the minimum height to 64 because the minimum FFT window size that

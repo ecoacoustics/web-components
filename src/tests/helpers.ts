@@ -6,6 +6,13 @@ import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
 
+export type DeviceMock =
+  | typeof changeToMobile
+  | typeof changeToTabletPortrait
+  | typeof changeToTabletLandscape
+  | typeof changeToLaptop
+  | typeof changeToDesktop;
+
 export async function getElementSize<T extends HTMLElement>(element: T | Locator): Promise<Size> {
   const width = (await getBrowserValue<T>(element, "clientWidth")) as number;
   const height = (await getBrowserValue<T>(element, "clientHeight")) as number;
@@ -17,9 +24,19 @@ export async function changeToMobile(page: Page) {
   await page.setViewportSize(mobileSize);
 }
 
-export async function changeToTablet(page: Page) {
+export async function changeToTabletPortrait(page: Page) {
   const tabletSize: Size = { width: 768, height: 1024 };
   await page.setViewportSize(tabletSize);
+}
+
+export async function changeToTabletLandscape(page: Page) {
+  const tabletLandscapeSize: Size = { width: 1024, height: 768 };
+  await page.setViewportSize(tabletLandscapeSize);
+}
+
+export async function changeToLaptop(page: Page) {
+  const laptopSize: Size = { width: 1366, height: 768 };
+  await page.setViewportSize(laptopSize);
 }
 
 export async function changeToDesktop(page: Page) {

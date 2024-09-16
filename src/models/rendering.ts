@@ -5,6 +5,11 @@ export interface Size {
   height: number;
 }
 
+export interface GridShape {
+  rows: number;
+  columns: number;
+}
+
 // 2D slices are alwyas a subset of an fft spectrogram
 export class TwoDSlice<XT extends number, YT extends number> {
   public constructor(data: TwoDSlice<any, any>) {

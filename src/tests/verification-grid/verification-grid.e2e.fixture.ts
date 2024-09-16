@@ -8,6 +8,7 @@ import {
   getBrowserSignalValue,
   getBrowserValue,
   getCssColorVariable,
+  getCssVariable,
   invokeBrowserMethod,
   removeBrowserAttribute,
   setBrowserAttribute,
@@ -18,7 +19,7 @@ import {
   VerificationGridComponent,
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
-import { Size } from "../../models/rendering";
+import { GridShape, Size } from "../../models/rendering";
 import {
   AxesComponent,
   DataSourceComponent,
@@ -105,7 +106,7 @@ class TestPage {
 
   public async create(customTemplate = this.defaultTemplate) {
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="3">
+      <oe-verification-grid id="verification-grid">
         ${customTemplate}
 
         <oe-data-source
@@ -498,6 +499,32 @@ class TestPage {
       this.gridComponent(),
       "subjectHistory",
     )) as SubjectWrapper[];
+  }
+
+  public async getTargetGridSize(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "targetGridSize");
+    return gridSize as number;
+  }
+
+  public async getGridShape(): Promise<GridShape> {
+    const targetGrid = this.gridComponent();
+    const columns = Number(await getCssVariable(targetGrid, "--columns"));
+    const rows = Number(await getCssVariable(targetGrid, "--rows"));
+    return { columns, rows };
+  }
+
+  public async getGridTileSize(): Promise<Size> {
+    // because all the grid tiles should be the same size, we can just check the
+    // first grid tile and get its size
+    const gridTiles = await this.gridTileComponents();
+    const targetGridTile = gridTiles[0];
+
+    const boundingBox = await targetGridTile.boundingBox();
+    if (!boundingBox) {
+      throw new Error("Grid tile bounding box not found");
+    }
+
+    return { width: boundingBox.width, height: boundingBox.height };
   }
 
   // change attributes

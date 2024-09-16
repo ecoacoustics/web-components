@@ -1,6 +1,6 @@
 import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, unsafeCSS } from "lit";
+import { html, LitElement, nothing, unsafeCSS } from "lit";
 import {
   VerificationGridComponent,
   verificationGridContext,
@@ -88,6 +88,17 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
       throw new Error("Could not find associated verification grid component");
     }
 
+    const maximumGridSize = this.verificationGrid.maximumGridSize;
+    const minimumGridSize = 1;
+    const gridSizeStep = 1;
+
+    // if the user cannot change the grid size because the maximum grid size is
+    // equal to the minimum grid size, we should not show the grid size controls
+    // because their screen size is unlikely to change.
+    if (maximumGridSize === minimumGridSize) {
+      return nothing;
+    }
+
     return html`
       <sl-dropdown placement="top-start">
         <sl-tooltip slot="trigger" content="Change the verification grid size">
@@ -110,8 +121,9 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
               @change="${this.handleGridSizeChange}"
               type="range"
               value="${ifDefined(this.gridSize)}"
-              min="1"
-              max="36"
+              min="${minimumGridSize}"
+              max="${maximumGridSize}"
+              step="${gridSizeStep}"
             />
           </label>
         </sl-menu>
