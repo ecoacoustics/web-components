@@ -167,6 +167,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
 
+  @query("#element-container")
+  private elementContainer!: HTMLDivElement;
+
   @query("#decisions-container")
   private decisionsContainer!: HTMLSlotElement;
 
@@ -185,6 +188,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   @state()
   private gridSizeM = 1;
+
+  public get realizedGridSize(): number {
+    return this.gridSizeN * this.gridSizeM;
+  }
 
   public get pagedItems(): number {
     return this.subjectHistory.length;
@@ -233,11 +240,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   /** A count of the number of tiles currently visible on the screen */
   private get effectivePageSize(): number {
-    return this.targetGridSize - this.hiddenTiles;
+    return this.realizedGridSize - this.hiddenTiles;
   }
 
   public get maximumGridSize(): number {
-    return this.targetGridSize;
+    return this.realizedGridSize;
   }
 
   public connectedCallback(): void {
@@ -298,7 +305,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
     }
 
-    this.intersectionObserver.observe(this.gridContainer);
+    this.intersectionObserver.observe(this.elementContainer);
 
     this.doneFirstUpdate = true;
   }
@@ -314,7 +321,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       this.gridSizeM = newGridShape.rows;
 
       // calculate if the new grid size will fit inside the container
-      this.handleResize();
+      this.autoSizeGrid();
     }
 
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
@@ -322,7 +329,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "targetGridSize"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "realizedGridSize"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -347,9 +354,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       target += 1;
     }
 
-    const targetContainer = this.gridContainer;
-    const targetContainerShape = targetContainer.getBoundingClientRect();
-    // const targetContainerShape = window.screen;
+    // const targetContainer = this.gridContainer;
+    // const targetContainerShape = targetContainer.getBoundingClientRect();
+    const targetContainerShape = window.screen;
 
     // e.g. 16/9 produces 1.77
     const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
@@ -361,7 +368,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetThreshold = 2.0;
+    const targetThreshold = 0.75;
 
     let optimalFactor: GridShapeFactor = {
       columns: 1,
@@ -433,21 +440,26 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      this.currentPage = await this.paginationFetcher.getItems(this.targetGridSize);
+      this.currentPage = await this.paginationFetcher.getItems(this.realizedGridSize);
     }
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     for (const entry of entries) {
-      if (entry.intersectionRatio < 1) {
-        if (this.targetGridSize > 1) {
-          this.targetGridSize -= 1;
-        }
+      this.intersectionObserver.disconnect();
+
+      const element = entry.boundingClientRect;
+      const isInViewport = element.bottom < window.innerHeight;
+
+      if (!isInViewport && this.targetGridSize > 1) {
+        this.targetGridSize -= 1;
       }
+
+      this.intersectionObserver.observe(this.elementContainer);
     }
   }
 
-  private handleResize() {
+  private autoSizeGrid() {
     const intersectionRecords = this.intersectionObserver.takeRecords();
     this.handleIntersection(intersectionRecords);
   }
@@ -719,7 +731,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // we check that the help dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.targetGridSize > 1 && !this.isHelpDialogOpen();
+    return this.realizedGridSize > 1 && !this.isHelpDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -875,7 +887,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
-      this.historyHead += this.targetGridSize;
+      this.historyHead += this.realizedGridSize;
       await this.renderHistory(this.historyHead);
     }
   }
@@ -888,14 +900,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
-      this.historyHead -= this.targetGridSize;
+      this.historyHead -= this.realizedGridSize;
       await this.renderHistory(this.historyHead);
     }
   }
 
   private async renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
-    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.targetGridSize);
+    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.realizedGridSize);
     const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
 
     this.historyMode();
@@ -966,7 +978,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canNavigateNext(): boolean {
-    return this.historyHead > this.targetGridSize;
+    return this.historyHead > this.realizedGridSize;
   }
 
   //#endregion
@@ -1223,7 +1235,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
-    const hasMultipleTiles = this.targetGridSize > 1;
+    const hasMultipleTiles = this.realizedGridSize > 1;
 
     if (this.hasClassificationTask() && this.hasVerificationTask()) {
       return this.mixedTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
@@ -1303,7 +1315,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
-          @resize="${this.handleResize}"
+          @resize="${this.autoSizeGrid}"
         >
           ${when(
             this.currentPage.length === 0,
@@ -1331,38 +1343,39 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           <span class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
-            <button
-              data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal(false)}"
-              class="oe-btn-info"
-              rel="help"
-            >
-              <sl-icon name="question-circle" class="large-icon"></sl-icon>
-            </button>
+              <button
+                data-testid="help-dialog-button"
+                @click="${() => this.helpDialog.showModal(false)}"
+                class="oe-btn-info"
+                rel="help"
+              >
+                <sl-icon name="question-circle" class="large-icon"></sl-icon>
+              </button>
 
-            <button
-              data-testid="continue-verifying-button"
-              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-              ?disabled="${!this.isViewingHistory()}"
-              @click="${this.resumeVerification}"
-            >
-              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-            </button>
-          </span>
+              <button
+                data-testid="continue-verifying-button"
+                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
+                ?disabled="${!this.isViewingHistory()}"
+                @click="${this.resumeVerification}"
+              >
+                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+              </button>
+            </span>
 
-          <span class="decision-controls">
-            <h2 class="verification-controls-title">
-              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-            </h2>
-            <div id="decisions-container" class="decision-control-actions">
-              <slot @slotchange="${this.handleSlotChange}"></slot>
-              ${this.skipDecisionTemplate()}
-            </div>
-          </span>
+            <span class="decision-controls">
+              <h2 class="verification-controls-title">
+                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+              </h2>
+              <div id="decisions-container" class="decision-control-actions">
+                <slot @slotchange="${this.handleSlotChange}"></slot>
+                ${this.skipDecisionTemplate()}
+              </div>
+            </span>
 
-          <span class="decision-controls-right">
-            <slot name="data-source"></slot>
-          </span>
+            <span class="decision-controls-right">
+              <slot name="data-source"></slot>
+            </span>
+          </div>
 
           <div class="progress-bar">
             <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">

@@ -50,14 +50,6 @@
   grid-template-rows: repeat(var(--rows), 1fr);
 
   /*
-    We apply normal padding to the verification grid so that it is consistent
-    with the rest of the client, and so that the interactivity area is extended
-    slightly beyond the edge of the verification grids content
-  */
-  padding-top: var(--oe-spacing);
-  padding-bottom: var(--oe-spacing);
-
-  /*
     We use a grid gap property instead of adding margin to the grid tile
     styles so that on mobile, the grid tiles are flush with the edge of the
     screen.
@@ -125,16 +117,14 @@
   font-weight: bold;
 }
 
-/*
-  We apply styles to the <template> elements here because we cannot target the
-  template elements inside the verification-grid-tile because they are reflected
-  into the shadow dom, but not actually rendered in the tile dom (meaning that
-  we can't style them in the tile component).
-*/
-oe-spectrogram {
-  @media (max-width: 600px) {
-    /* TODO: do this better. This is a hacky solution for now */
-    height: 380px;
+@media (max-width: 600px) {
+  .decision-controls {
+    order: -1;
+  }
+
+  .controls-container {
+    margin-left: var(--oe-padding);
+    margin-right: 1rem;
   }
 }
 

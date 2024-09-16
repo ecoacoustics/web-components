@@ -101,7 +101,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
 
     return html`
       <sl-dropdown placement="top-start">
-        <sl-tooltip slot="trigger" content="Change the verification grid size">
+        <sl-tooltip slot="trigger" content="Change the verification grids target size">
           <button
             id="grid-size-trigger"
             @click="${this.updateGridSizeState}"
@@ -122,7 +122,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
               type="range"
               value="${ifDefined(this.gridSize)}"
               min="${minimumGridSize}"
-              max="${maximumGridSize}"
+              max="32"
               step="${gridSizeStep}"
             />
           </label>
