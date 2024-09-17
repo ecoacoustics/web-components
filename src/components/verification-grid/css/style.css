@@ -142,8 +142,7 @@ oe-spectrogram {
     order: -1;
   }
 
-  .controls-container {
-    margin-left: var(--oe-padding);
-    margin-right: var(--oe-padding);
+  .next-page-button {
+    order: 1;
   }
 }

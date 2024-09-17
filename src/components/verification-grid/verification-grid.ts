@@ -1264,7 +1264,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">
               <button
                 data-testid="previous-page-button"
-                class="oe-btn oe-btn-secondary"
+                class="previous-page-button oe-btn-secondary"
                 ?disabled="${!this.canNavigatePrevious()}"
                 @click="${this.handlePreviousPageClick}"
               >
@@ -1275,7 +1275,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             <sl-tooltip content="${this.gridSize > 1 ? "Next Page" : "Next"}">
               <button
                 data-testid="next-page-button"
-                class="oe-btn-secondary"
+                class="next-page-button oe-btn-secondary"
                 ?disabled="${!this.canNavigateNext()}"
                 @click="${this.handleNextPageClick}"
               >
