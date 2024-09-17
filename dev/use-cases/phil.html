@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid">
+    <oe-verification-grid id="verification-grid" grid-size="1">
       <oe-classification tag="koala" true-shortcut="h"></oe-classification>
       <oe-classification tag="car" true-shortcut="j"></oe-classification>
       <oe-classification tag="crickets" true-shortcut="k"></oe-classification>
@@ -20,6 +20,10 @@
   <style>
     body {
       margin: 0px;
+    }
+
+    oe-verification-grid {
+      height: 100dvh;
     }
   </style>
 </html>

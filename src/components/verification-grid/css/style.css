@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 #highlight-box {
   position: absolute;
   display: none;
@@ -31,6 +35,7 @@
 /* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;
+  height: 100%;
   flex-wrap: wrap;
   justify-content: center;
   align-items: stretch;

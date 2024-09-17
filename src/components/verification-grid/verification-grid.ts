@@ -329,7 +329,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "realizedGridSize"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "realizedGridSize", "targetGridSize"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
