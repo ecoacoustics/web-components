@@ -16,7 +16,6 @@ import {
   VerificationGridInjector,
   VerificationGridSettings,
 } from "../verification-grid/verification-grid";
-import { when } from "lit/directives/when.js";
 import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";

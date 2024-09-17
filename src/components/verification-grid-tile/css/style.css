@@ -15,7 +15,7 @@
   box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   cursor: pointer;
   margin-bottom: 0;
-  min-width: 350px;
+  min-width: 150px;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
 
