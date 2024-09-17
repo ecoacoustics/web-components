@@ -31,6 +31,7 @@
 .verification-container {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: stretch;
   background-color: var(--oe-background-color);
   height: 100%;
@@ -40,6 +41,7 @@
   display: flex;
   flex-wrap: wrap;
   flex-grow: 1;
+  flex-basis: 100%;
   user-select: none;
   justify-content: center;
   align-items: stretch;
@@ -66,10 +68,8 @@
 
 .controls-container {
   position: relative;
-  width: 100%;
+  width: 80%;
   height: min-content;
-  margin-left: 10%;
-  margin-right: 10%;
   align-self: end;
 }
 

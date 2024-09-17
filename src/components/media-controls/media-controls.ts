@@ -222,7 +222,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  private additionalSettingsTemplate() {
+  private settingsTemplate() {
     if (!this.spectrogramElement) {
       return nothing;
     }
@@ -231,7 +231,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
     const currentOptions = this.spectrogramElement.spectrogramOptions;
 
-    const changeHandler = (key: keyof SpectrogramOptions) => {
+    const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
@@ -262,7 +262,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       };
     };
 
-    const numberHandlerFactory = (key: keyof SpectrogramOptions) => {
+    const rangeInputHandler = (key: keyof SpectrogramOptions) => {
       return (event: Event) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
@@ -297,16 +297,17 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     };
 
     return html`
-      <sl-dropdown title="Settings" hoist>
+      <sl-dropdown hoist>
         <a class="settings-menu-item" slot="trigger">
           <sl-icon name="gear"></sl-icon>
         </a>
+
         <sl-menu>
           ${this.discreteSettingsTemplate(
             "Colour",
             Object.keys(colorScales),
             currentOptions.colorMap,
-            changeHandler("colorMap"),
+            discreteDropdownHandler("colorMap"),
           )}
           ${this.rangeSettingsTemplate(
             "Brightness",
@@ -314,39 +315,32 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
             0.5,
             0.01,
             currentOptions.brightness,
-            numberHandlerFactory("brightness"),
+            rangeInputHandler("brightness"),
           )}
-          ${this.rangeSettingsTemplate(
-            "Contrast",
-            0,
-            2,
-            0.01,
-            currentOptions.contrast,
-            numberHandlerFactory("contrast"),
-          )}
+          ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
           ${this.discreteSettingsTemplate(
             "Window Function",
             Array.from(windowFunctions.keys()),
             currentOptions.windowFunction,
-            changeHandler("windowFunction"),
+            discreteDropdownHandler("windowFunction"),
           )}
           ${this.discreteSettingsTemplate(
             "Window Size",
             possibleWindowSizes,
             currentOptions.windowSize,
-            changeHandler("windowSize"),
+            discreteDropdownHandler("windowSize"),
           )}
           ${this.discreteSettingsTemplate(
             "Window Overlap",
             [0, ...possibleWindowOverlaps],
             currentOptions.windowOverlap,
-            changeHandler("windowOverlap"),
+            discreteDropdownHandler("windowOverlap"),
           )}
           ${this.discreteSettingsTemplate(
             "Scale",
             ["linear", "mel"],
             currentOptions.melScale ? "mel" : "linear",
-            changeHandler("melScale"),
+            discreteDropdownHandler("melScale"),
           )}
           <sl-menu-item>
             Axes
@@ -406,7 +400,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>
 
-        ${this.additionalSettingsTemplate()}
+        ${this.settingsTemplate()}
       </div>
     `;
   }
