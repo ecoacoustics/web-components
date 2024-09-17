@@ -6,8 +6,8 @@
 
 #wrapped-element {
   position: relative;
-  padding-left: 2em;
-  padding-bottom: 1.5em;
+  padding-left: 2rem;
+  padding-bottom: 1.5rem;
 }
 
 svg {
