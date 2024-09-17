@@ -82,16 +82,17 @@ class TestPage {
 
   public spectrogramComponent = async (index = 0) =>
     (await this.gridTileComponents())[index].locator("oe-spectrogram").first();
-  public gridTileComponent = async (index = 0) =>
-    (await this.gridTileComponents())[index].first();
-  public audioElement = async (index = 0) =>
-    (await this.spectrogramComponent(index)).locator("audio").first();
+  public gridTileComponent = async (index = 0) => (await this.gridTileComponents())[index].first();
+  public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
+
   public mediaControlsComponent = async (index = 0) =>
     (await this.gridTileContainers())[index].locator("oe-media-controls").first();
-  public brightnessControlsDropdown = async (index = 0) =>
-    (await this.gridTileComponents())[index].locator("sl-dropdown[title='Brightness']").first();
+  public mediaControlsAdditionalSettings = async (index = 0) =>
+    (await this.mediaControlsComponent(index)).locator(".settings-menu-item").first();
+  public brightnessControlsMenu = async (index = 0) =>
+    (await this.gridTileContainers())[index].getByText("Brightness").first();
   public brightnessControlsInput = async (index = 0) =>
-    (await this.gridTileComponents())[index].locator("input[name='brightness']").first();
+    (await this.gridTileContainers())[index].locator("input").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
@@ -416,13 +417,20 @@ class TestPage {
     await pauseButton.click();
   }
 
+  public async openSettingsMenu(index: number) {
+    const settingsTarget = await this.mediaControlsComponent(index);
+    await settingsTarget.locator(".settings-menu-item").click();
+  }
+
   /**
    * Changes the brightness of the grid tile through the media controls
    * brightness slider by dragging the slider to the specified value.
    */
   public async changeBrightness(index: number, value: number) {
-    const dropdown = await this.brightnessControlsDropdown(index);
-    await dropdown.click();
+    await this.openSettingsMenu(index);
+
+    const brightnessMenu = await this.brightnessControlsMenu(index);
+    await brightnessMenu.click();
 
     const input = await this.brightnessControlsInput(index);
     await dragSlider(this.page, input, value);

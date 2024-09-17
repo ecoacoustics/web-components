@@ -21,6 +21,7 @@ class TestPage {
           src="http://localhost:3000/example.flac"
         ></oe-spectrogram>
       </oe-indicator>
+
       <oe-media-controls for="spectrogram"></oe-media-controls>
    `);
 

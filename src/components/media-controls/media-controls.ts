@@ -208,10 +208,8 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
         ${text}
         <sl-menu slot="submenu">
           <label>
-            ${currentValue}
             <input
               @change="${changeHandler}"
-              name="brightness"
               type="range"
               min="${min}"
               max="${max}"
@@ -299,8 +297,8 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     };
 
     return html`
-      <sl-dropdown title="Additional Settings" hoist>
-        <a slot="trigger">
+      <sl-dropdown title="Settings" hoist>
+        <a class="settings-menu-item" slot="trigger">
           <sl-icon name="gear"></sl-icon>
         </a>
         <sl-menu>
