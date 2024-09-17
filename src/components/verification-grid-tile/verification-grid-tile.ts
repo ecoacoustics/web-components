@@ -303,7 +303,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container ${figureClasses}">
-          <figcaption class="tag-label">${this.model?.tag?.text ?? this.model?.tag}</figcaption>
+          <div class="figure-head">
+            <figcaption class="tag-label">${this.model?.tag?.text ?? this.model?.tag}</figcaption>
+
+            ${when(
+              this.settings.showMediaControls.value,
+              () => html`<oe-media-controls for="spectrogram"></oe-media-controls>`,
+            )}
+          </div>
 
           <oe-axes
             ?x-title-visible="${watch(this.settings.showAxes)}"
@@ -319,11 +326,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
           </oe-axes>
 
           <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
-
-          ${when(
-            this.settings.showMediaControls.value,
-            () => html`<oe-media-controls for="spectrogram"></oe-media-controls>`,
-          )}
 
           <slot></slot>
         </figure>

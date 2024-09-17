@@ -1221,67 +1221,74 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           )}
         </div>
 
-        <div class="verification-controls">
-          <span class="decision-controls-left">
-            <oe-verification-grid-settings></oe-verification-grid-settings>
+        <div class="controls-container">
+          <div class="verification-controls">
+            <span class="decision-controls-left">
+              <oe-verification-grid-settings></oe-verification-grid-settings>
 
-            <button
-              data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal(false)}"
-              class="oe-btn-info"
-              rel="help"
-            >
-              <sl-icon name="question-circle" class="large-icon"></sl-icon>
-            </button>
+              <button
+                data-testid="help-dialog-button"
+                @click="${() => this.helpDialog.showModal(false)}"
+                class="oe-btn-info"
+                rel="help"
+              >
+                <sl-icon name="question-circle" class="large-icon"></sl-icon>
+              </button>
 
-            <button
-              data-testid="previous-page-button"
-              class="oe-btn oe-btn-secondary"
-              ?disabled="${!this.canNavigatePrevious()}"
-              @click="${this.handlePreviousPageClick}"
-            >
-              ${this.gridSize > 1 ? "Previous Page" : "Previous"}
-            </button>
+              <button
+                data-testid="continue-verifying-button"
+                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
+                ?disabled="${!this.isViewingHistory()}"
+                @click="${this.resumeVerification}"
+              >
+                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+              </button>
+            </span>
 
-            <button
-              data-testid="next-page-button"
-              class="oe-btn-secondary"
-              ?disabled="${!this.canNavigateNext()}"
-              @click="${this.handleNextPageClick}"
-            >
-              ${this.gridSize > 1 ? "Next Page" : "Next"}
-            </button>
+            <span class="decision-controls">
+              <h2 class="verification-controls-title">
+                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+              </h2>
+              <div id="decisions-container" class="decision-control-actions">
+                <slot @slotchange="${this.handleSlotChange}"></slot>
+                ${this.skipDecisionTemplate()}
+              </div>
+            </span>
 
-            <button
-              data-testid="continue-verifying-button"
-              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-              ?disabled="${!this.isViewingHistory()}"
-              @click="${this.resumeVerification}"
-            >
-              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-            </button>
-          </span>
+            <span class="decision-controls-right">
+              <slot name="data-source"></slot>
+            </span>
+          </div>
 
-          <span class="decision-controls">
-            <h2 class="verification-controls-title">
-              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-            </h2>
-            <div id="decisions-container" class="decision-control-actions">
-              <slot @slotchange="${this.handleSlotChange}"></slot>
-              ${this.skipDecisionTemplate()}
-            </div>
-          </span>
+          <div class="progress-bar">
+            <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">
+              <button
+                data-testid="previous-page-button"
+                class="oe-btn oe-btn-secondary"
+                ?disabled="${!this.canNavigatePrevious()}"
+                @click="${this.handlePreviousPageClick}"
+              >
+                &lt;
+              </button>
+            </sl-tooltip>
 
-          <span class="decision-controls-right">
-            <slot name="data-source"></slot>
-          </span>
+            <sl-tooltip content="${this.gridSize > 1 ? "Next Page" : "Next"}">
+              <button
+                data-testid="next-page-button"
+                class="oe-btn-secondary"
+                ?disabled="${!this.canNavigateNext()}"
+                @click="${this.handleNextPageClick}"
+              >
+                &gt;
+              </button>
+            </sl-tooltip>
 
-          <oe-progress-bar
-            class="progress-bar"
-            history-head="${this.subjectHistory.length - this.historyHead}"
-            total="${ifDefined(this.paginationFetcher?.totalItems)}"
-            completed="${this.subjectHistory.length}"
-          ></oe-progress-bar>
+            <oe-progress-bar
+              history-head="${this.subjectHistory.length - this.historyHead}"
+              total="${ifDefined(this.paginationFetcher?.totalItems)}"
+              completed="${this.subjectHistory.length}"
+            ></oe-progress-bar>
+          </div>
         </div>
       </div>
     `;

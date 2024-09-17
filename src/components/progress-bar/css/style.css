@@ -4,7 +4,6 @@
   height: var(--oe-font-size);
   background-color: var(--oe-panel-color);
   border-radius: var(--oe-border-rounding);
-  margin-top: var(--oe-spacing-large);
 
   .segment {
     height: 100%;

@@ -114,8 +114,10 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       // use add a keydown event listener so that we can bind space bar to play
       document.addEventListener("keydown", this.keyDownHandler);
 
-      // TODO: this doesn't seem like the best way to select a spectrogram element
-      this.spectrogramElement = this.parentElement?.querySelector<SpectrogramComponent>(`#${this.for}`);
+      // because we want to scope the for attribute to the current shadow root
+      // we need to use the getRootNode method to get the shadow root
+      const rootNode = this.getRootNode() as HTMLElement;
+      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(`#${this.for}`);
       this.spectrogramElement?.addEventListener(SpectrogramComponent.playEventName, this.playHandler);
 
       if (!this.spectrogramElement) {
@@ -168,12 +170,12 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  private selectSettingsTemplate(
-    text: any,
+  private discreteSettingsTemplate(
+    text: string,
     values: string[] | number[] | ReadonlyArray<number | string>,
     currentValue: string | number | boolean,
     changeHandler: (event: CustomEvent<{ item: SlMenuItem }>) => void,
-  ): TemplateResult<1> {
+  ): TemplateResult {
     return html`
       <sl-menu-item>
         ${text}
@@ -188,6 +190,35 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
                 ${value}
               </sl-menu-item>`,
           )}
+        </sl-menu>
+      </sl-menu-item>
+    `;
+  }
+
+  private rangeSettingsTemplate(
+    text: string,
+    min: number,
+    max: number,
+    step: number,
+    currentValue: number,
+    changeHandler: any,
+  ): TemplateResult {
+    return html`
+      <sl-menu-item>
+        ${text}
+        <sl-menu slot="submenu">
+          <label>
+            ${currentValue}
+            <input
+              @change="${changeHandler}"
+              name="brightness"
+              type="range"
+              min="${min}"
+              max="${max}"
+              step="${step}"
+              value="${currentValue}"
+            />
+          </label>
         </sl-menu>
       </sl-menu-item>
     `;
@@ -233,6 +264,22 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       };
     };
 
+    const numberHandlerFactory = (key: keyof SpectrogramOptions) => {
+      return (event: Event) => {
+        if (!this.spectrogramElement) {
+          throw new Error("No spectrogram element found");
+        }
+
+        const newValue = (event.target as HTMLInputElement).value;
+        const oldOptions = this.spectrogramElement.spectrogramOptions;
+
+        this.spectrogramElement.spectrogramOptions = {
+          ...oldOptions,
+          [key]: Number(newValue),
+        } as any;
+      };
+    };
+
     const axesChangeHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
       if (!this.axesElement) {
         throw new Error("No axes element found");
@@ -257,25 +304,47 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
           <sl-icon name="gear"></sl-icon>
         </a>
         <sl-menu>
-          ${this.selectSettingsTemplate(
+          ${this.discreteSettingsTemplate(
+            "Colour",
+            Object.keys(colorScales),
+            currentOptions.colorMap,
+            changeHandler("colorMap"),
+          )}
+          ${this.rangeSettingsTemplate(
+            "Brightness",
+            -0.5,
+            0.5,
+            0.01,
+            currentOptions.brightness,
+            numberHandlerFactory("brightness"),
+          )}
+          ${this.rangeSettingsTemplate(
+            "Contrast",
+            0,
+            2,
+            0.01,
+            currentOptions.contrast,
+            numberHandlerFactory("contrast"),
+          )}
+          ${this.discreteSettingsTemplate(
             "Window Function",
             Array.from(windowFunctions.keys()),
             currentOptions.windowFunction,
             changeHandler("windowFunction"),
           )}
-          ${this.selectSettingsTemplate(
+          ${this.discreteSettingsTemplate(
             "Window Size",
             possibleWindowSizes,
             currentOptions.windowSize,
             changeHandler("windowSize"),
           )}
-          ${this.selectSettingsTemplate(
+          ${this.discreteSettingsTemplate(
             "Window Overlap",
             [0, ...possibleWindowOverlaps],
             currentOptions.windowOverlap,
             changeHandler("windowOverlap"),
           )}
-          ${this.selectSettingsTemplate(
+          ${this.discreteSettingsTemplate(
             "Scale",
             ["linear", "mel"],
             currentOptions.melScale ? "mel" : "linear",
@@ -332,104 +401,6 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  private spectrogramSettingsTemplate(): TemplateResult<1> {
-    const changeColorHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
-      if (!this.spectrogramElement) {
-        throw new Error("No spectrogram element found");
-      }
-
-      const newValue = event.detail.item.value;
-
-      const oldOptions = this.spectrogramElement.spectrogramOptions;
-      this.spectrogramElement.spectrogramOptions = {
-        ...oldOptions,
-        colorMap: newValue,
-      } as any;
-
-      this.requestUpdate();
-    };
-
-    const changeNumberHandler = (event: Event) => {
-      if (!this.spectrogramElement) {
-        throw new Error("No spectrogram element found");
-      }
-
-      const newValue = (event.target as HTMLInputElement).value;
-      const key = (event.target as HTMLInputElement).name as keyof SpectrogramOptions;
-      const oldOptions = this.spectrogramElement.spectrogramOptions;
-
-      this.spectrogramElement.spectrogramOptions = {
-        ...oldOptions,
-        [key]: Number(newValue),
-      } as any;
-    };
-
-    const colorValues = Object.keys(colorScales);
-    const currentColor = this.spectrogramElement?.spectrogramOptions.colorMap ?? "grayscale";
-
-    return html`
-      <sl-dropdown title="Colour" hoist>
-        <a slot="trigger">
-          <sl-icon name="palette"></sl-icon>
-        </a>
-        <sl-menu @sl-select="${changeColorHandler}">
-          ${colorValues.map(
-            (value) =>
-              html`<sl-menu-item
-                value="${value}"
-                type="${value == currentColor ? "checkbox" : "normal"}"
-                ?checked="${value == currentColor}"
-              >
-                ${value}
-              </sl-menu-item>`,
-          )}
-        </sl-menu>
-      </sl-dropdown>
-
-      <sl-dropdown title="Brightness" hoist>
-        <a slot="trigger">
-          <sl-icon name="brightness-high"></sl-icon>
-        </a>
-
-        <sl-menu>
-          <label>
-            <input
-              @change="${changeNumberHandler}"
-              name="brightness"
-              type="range"
-              min="-0.5"
-              max="0.5"
-              step="0.01"
-              value="0"
-            />
-          </label>
-        </sl-menu>
-      </sl-dropdown>
-
-      <sl-dropdown title="Contrast" hoist>
-        <a slot="trigger">
-          <sl-icon name="circle-half"></sl-icon>
-        </a>
-
-        <sl-menu>
-          <label>
-            <input
-              @change="${changeNumberHandler}"
-              name="contrast"
-              type="range"
-              min="0"
-              max="2"
-              step="0.01"
-              value="1"
-            />
-          </label>
-        </sl-menu>
-      </sl-dropdown>
-
-      ${this.additionalSettingsTemplate()}
-    `;
-  }
-
   public render() {
     return html`
       <div class="container" @pointerdown="${this.handlePointerDown}">
@@ -437,7 +408,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>
 
-        ${this.spectrogramSettingsTemplate()}
+        ${this.additionalSettingsTemplate()}
       </div>
     `;
   }
