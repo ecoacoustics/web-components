@@ -26,7 +26,7 @@ import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { isPrime } from "../../helpers/primes";
 import { Pixel } from "../../models/unitConverters";
-import { GridShape } from "../../models/rendering";
+import { GridShape, Size } from "../../models/rendering";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -73,10 +73,6 @@ interface HighlightSelection {
 interface BreakpointGridSize {
   screenWidth: Pixel;
   gridSize: number;
-}
-
-interface GridShapeFactor extends GridShape {
-  targetDistance: number;
 }
 
 /**
@@ -345,21 +341,55 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  private computeGridShape(target: number): GridShapeFactor {
-    if (target === 1) {
-      return { columns: 1, rows: 1, targetDistance: 0 };
+  private tileSize(candidateShape: GridShape): Size {
+    const gridContainerSize = this.gridContainer.getBoundingClientRect();
+
+    const width = gridContainerSize.width / candidateShape.columns;
+    const height = gridContainerSize.height / candidateShape.rows;
+
+    return { width, height };
+  }
+
+  private willFitTileSize(candidateShape: GridShape): boolean {
+    const gridContainerSize = this.gridContainer.getBoundingClientRect();
+
+    const minimumTileWidth: Pixel = 128;
+    const minimumTileHeight: Pixel = 128;
+    const gapSize: Pixel = 10;
+
+    const proposedTileSize = this.tileSize(candidateShape);
+
+    const meetsMinimumWidth = proposedTileSize.width >= minimumTileWidth;
+    const meetsMinimumHeight = proposedTileSize.height >= minimumTileHeight;
+    if (!meetsMinimumWidth || !meetsMinimumHeight) {
+      return false;
     }
 
-    while (isPrime(target)) {
-      target += 1;
-    }
+    const candidateGridHeight = minimumTileHeight * candidateShape.rows + gapSize * (candidateShape.rows - 1);
+    const fitsHeight = candidateGridHeight <= gridContainerSize.height;
 
-    // const targetContainer = this.gridContainer;
-    // const targetContainerShape = targetContainer.getBoundingClientRect();
-    const targetContainerShape = window.screen;
+    const candidateGridWidth = minimumTileWidth * candidateShape.columns + gapSize * (candidateShape.columns - 1);
+    const fitsWidth = candidateGridWidth <= gridContainerSize.width;
 
-    // e.g. 16/9 produces 1.77
+    return fitsHeight && fitsWidth;
+  }
+
+  private gridAspectRatioDistance(candidateShape: GridShape): number {
+    const targetContainerShape = this.gridContainer.getBoundingClientRect();
+    // const targetContainerShape = { width: screen.width, height: screen.height };
+
     const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
+    const candidateSizeAspectRatio = candidateShape.columns / candidateShape.rows;
+
+    return Math.abs(targetAspectRatio - candidateSizeAspectRatio);
+  }
+
+  private computeGridShape(target: number): GridShape {
+    if (target === 1) {
+      return { columns: 1, rows: 1 };
+    }
+
+    let refinedTarget = target;
 
     // some numbers e.g. 9 have one factor such as 3x3 which creates a aspect
     // ratio of 1.00
@@ -368,41 +398,58 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetThreshold = 0.75;
-
-    let optimalFactor: GridShapeFactor = {
-      columns: 1,
-      rows: target,
-      targetDistance: Infinity,
-    };
+    const targetThreshold = 2;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      for (let i = 1; i <= target; i++) {
-        if (target % i === 0) {
+      while (isPrime(refinedTarget)) {
+        refinedTarget += 1;
+      }
+
+      const candidateShapes: GridShape[] = [];
+
+      for (let i = 1; i <= refinedTarget; i++) {
+        if (refinedTarget % i === 0) {
           const columns = i;
-          const rows = target / i;
+          const rows = refinedTarget / i;
 
-          // e.g. 1/2 produces 0.5
-          // and  2/1 produces 2
-          // so we should pick 2/1 in this case
-          const factorAspectRatio = columns / rows;
-          const targetDistance = Math.abs(targetAspectRatio - factorAspectRatio);
+          const candidateShape = { columns, rows };
+          const willFit = this.willFitTileSize(candidateShape);
+          const meetsAspectRatio = this.gridAspectRatioDistance(candidateShape) < targetThreshold;
 
-          if (targetDistance < optimalFactor.targetDistance) {
-            optimalFactor = { columns, rows, targetDistance };
+          if (willFit && meetsAspectRatio) {
+            candidateShapes.push({ columns, rows });
           }
         }
       }
 
-      if (optimalFactor.targetDistance < targetThreshold) {
-        break;
-      } else {
-        target += 1;
-      }
-    }
+      // to find the optimal grid shape, we find what grid shape will result in
+      // the largest grid tile size
+      let optimalGridShape: GridShape | undefined;
+      for (const candidate of candidateShapes) {
+        if (optimalGridShape === undefined) {
+          optimalGridShape = candidate;
+          continue;
+        }
 
-    return optimalFactor;
+        const optimalSize = this.tileSize(optimalGridShape);
+        const proposedSize = this.tileSize(candidate);
+
+        const optimalArea = optimalSize.width * optimalSize.height;
+        const proposedArea = proposedSize.width * proposedSize.height;
+
+        if (proposedArea > optimalArea) {
+          optimalGridShape = candidate;
+        }
+      }
+
+      if (!optimalGridShape) {
+        refinedTarget += 1;
+        continue;
+      }
+
+      return optimalGridShape;
+    }
   }
 
   private handleTileInvalidation(): void {
