@@ -350,10 +350,14 @@ button {
   border-radius: var(--oe-border-rounding);
 }
 
+/*
+  TODO: this helper class should probably be replaced with display: contents
+  inside the grid tile
+*/
 .vertically-fill {
   display: flex;
   flex-direction: column;
-  flex: 1 1;
+  flex: 1 2;
 }
 
 @keyframes fade-in {

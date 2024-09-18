@@ -1,6 +1,6 @@
 import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, unsafeCSS } from "lit";
+import { html, LitElement, unsafeCSS } from "lit";
 import {
   VerificationGridComponent,
   verificationGridContext,
