@@ -29,6 +29,10 @@
 }
 
 .verification-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
   background-color: var(--oe-background-color);
   height: 100%;
 }
@@ -37,6 +41,7 @@
   display: flex;
   flex-wrap: wrap;
   flex-grow: 1;
+  flex-basis: 100%;
   user-select: none;
   justify-content: center;
   align-items: stretch;
@@ -61,6 +66,20 @@
   font-size: 1.2rem;
 }
 
+.controls-container {
+  position: relative;
+  width: 80%;
+  height: min-content;
+  align-self: end;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--oe-spacing);
+  color: var(--oe-font-color);
+}
+
 .verification-controls-title {
   text-align: center;
   font-family: sans-serif;
@@ -69,18 +88,6 @@
   letter-spacing: 0em;
   color: var(--oe-font-color);
   margin: var(--oe-spacing-large);
-}
-
-.verification-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  padding: var(--oe-spacing);
-  gap: var(--oe-spacing);
-  color: var(--oe-font-color);
-  margin-left: 10%;
-  margin-right: 10%;
 }
 
 .decision-controls {
@@ -101,7 +108,13 @@
 }
 
 .progress-bar {
+  display: flex;
   flex: 1 1 100%;
+  align-items: center;
+
+  oe-progress-bar {
+    width: 100%;
+  }
 }
 
 .no-decisions-warning {
@@ -119,5 +132,19 @@ oe-spectrogram {
   @media (max-width: 600px) {
     /* TODO: do this better. This is a hacky solution for now */
     height: 380px;
+  }
+}
+
+@media (max-width: 600px) {
+  .decision-controls {
+    order: -1;
+  }
+
+  .progress-bar {
+    order: -1;
+  }
+
+  .next-page-button {
+    order: 1;
   }
 }

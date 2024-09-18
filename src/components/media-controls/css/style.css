@@ -1,12 +1,3 @@
-:host {
-  display: flex;
-  position: relative;
-  justify-content: center;
-
-  width: fit-content;
-  margin: auto;
-}
-
 sl-menu-item[checked]::part(base) {
   background-color: var(--oe-selected-color);
   color: var(--oe-font-color);
@@ -31,8 +22,6 @@ sl-icon.large-icon {
   position: relative;
   align-items: center;
   justify-content: center;
-  margin-top: var(--oe-spacing);
-  margin-bottom: var(--oe-spacing);
   color: var(--oe-font-color);
   width: fit-content;
   background-color: var(--oe-background-color);

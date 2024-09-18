@@ -28,12 +28,11 @@
   }
 }
 
-.tag-label {
-  position: flex;
-  padding: var(--oe-spacing);
-  padding-top: 0px;
-  text-align: center;
-  width: 100%;
+.figure-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--oe-spacing);
 }
 
 /* TODO: maybe add a border here */

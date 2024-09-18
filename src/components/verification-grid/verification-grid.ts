@@ -1221,7 +1221,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           )}
         </div>
 
-        <div class="verification-controls">
+        <div class="controls-container">
           <span class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
@@ -1232,24 +1232,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               rel="help"
             >
               <sl-icon name="question-circle" class="large-icon"></sl-icon>
-            </button>
-
-            <button
-              data-testid="previous-page-button"
-              class="oe-btn oe-btn-secondary"
-              ?disabled="${!this.canNavigatePrevious()}"
-              @click="${this.handlePreviousPageClick}"
-            >
-              ${this.gridSize > 1 ? "Previous Page" : "Previous"}
-            </button>
-
-            <button
-              data-testid="next-page-button"
-              class="oe-btn-secondary"
-              ?disabled="${!this.canNavigateNext()}"
-              @click="${this.handleNextPageClick}"
-            >
-              ${this.gridSize > 1 ? "Next Page" : "Next"}
             </button>
 
             <button
@@ -1276,12 +1258,35 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             <slot name="data-source"></slot>
           </span>
 
-          <oe-progress-bar
-            class="progress-bar"
-            history-head="${this.subjectHistory.length - this.historyHead}"
-            total="${ifDefined(this.paginationFetcher?.totalItems)}"
-            completed="${this.subjectHistory.length}"
-          ></oe-progress-bar>
+          <div class="progress-bar">
+            <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">
+              <button
+                data-testid="previous-page-button"
+                class="previous-page-button oe-btn-secondary"
+                ?disabled="${!this.canNavigatePrevious()}"
+                @click="${this.handlePreviousPageClick}"
+              >
+                &lt;
+              </button>
+            </sl-tooltip>
+
+            <sl-tooltip content="${this.gridSize > 1 ? "Next Page" : "Next"}">
+              <button
+                data-testid="next-page-button"
+                class="next-page-button oe-btn-secondary"
+                ?disabled="${!this.canNavigateNext()}"
+                @click="${this.handleNextPageClick}"
+              >
+                &gt;
+              </button>
+            </sl-tooltip>
+
+            <oe-progress-bar
+              history-head="${this.subjectHistory.length - this.historyHead}"
+              total="${ifDefined(this.paginationFetcher?.totalItems)}"
+              completed="${this.subjectHistory.length}"
+            ></oe-progress-bar>
+          </div>
         </div>
       </div>
     `;
