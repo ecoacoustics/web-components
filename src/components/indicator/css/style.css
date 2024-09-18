@@ -1,8 +1,5 @@
 :host {
-  display: flex;
-  flex-direction: column;
   position: relative;
-  flex: 1 1 100%;
 
   /*
     By setting the width to 100%, the indicator component will take up the full
@@ -25,9 +22,6 @@
 }
 
 #wrapped-element {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 100%;
   position: relative;
 }
 

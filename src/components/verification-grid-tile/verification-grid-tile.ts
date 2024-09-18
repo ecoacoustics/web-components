@@ -296,14 +296,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
         id="contents-wrapper"
         @pointerdown="${this.dispatchSelectedEvent}"
         @keydown="${this.handleFocusedKeyDown}"
-        class="tile-container ${tileClasses}"
+        class="tile-container vertically-fill ${tileClasses}"
         part="tile-container"
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
       >
         ${this.keyboardShortcutTemplate()}
-        <figure class="spectrogram-container ${figureClasses}">
+        <figure class="spectrogram-container vertically-fill ${figureClasses}">
           <div class="figure-head">
             <figcaption class="tag-label">
               <sl-tooltip content="This item was tagged as '${tagText}' in your data source" placement="bottom-start">
@@ -318,6 +318,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
           </div>
 
           <oe-axes
+            class="vertically-fill"
             ?x-title-visible="${watch(this.settings.showAxes)}"
             ?y-title-visible="${watch(this.settings.showAxes)}"
             ?x-axis="${watch(this.settings.showAxes)}"
@@ -325,8 +326,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             ?x-grid="${watch(this.settings.showAxes)}"
             ?y-grid="${watch(this.settings.showAxes)}"
           >
-            <oe-indicator>
-              <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
+            <oe-indicator class="vertically-fill">
+              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

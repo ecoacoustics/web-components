@@ -1,9 +1,6 @@
 :host {
   --decision-color: var(--oe-panel-color);
   --selected-border-size: 4px;
-
-  display: flex;
-  flex-direction: column;
 }
 
 oe-axes {
@@ -11,20 +8,12 @@ oe-axes {
 }
 
 .spectrogram-container {
-  display: flex;
-  flex-direction: column;
-
   margin: 0px;
   background-color: var(--oe-panel-color);
   padding: var(--oe-spacing);
-
-  flex: 1 1 100%;
 }
 
 .tile-container {
-  display: flex;
-  flex-direction: column;
-
   position: relative;
   border-radius: var(--oe-border-rounding);
   box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
@@ -33,7 +22,6 @@ oe-axes {
   min-width: 150px;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
-  flex: 1;
 
   transition:
     border-color var(--oe-animation-time) ease-out,

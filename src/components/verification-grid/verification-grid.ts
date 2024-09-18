@@ -1325,7 +1325,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 this.currentPage,
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
-                    class="grid-tile"
+                    class="grid-tile vertically-fill"
                     @loaded="${this.handleSpectrogramLoaded}"
                     .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"

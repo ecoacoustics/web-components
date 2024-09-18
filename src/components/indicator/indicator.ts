@@ -60,7 +60,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
 
   public render() {
     return html`
-      <div id="wrapped-element">
+      <div id="wrapped-element" class="vertically-fill">
         <svg id="indicator-svg">
           <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px);">
             <line id="indicator-line" part="indicator-line" y1="0" y2="100%"></line>

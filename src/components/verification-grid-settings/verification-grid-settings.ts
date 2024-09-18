@@ -96,7 +96,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
     // equal to the minimum grid size, we should not show the grid size controls
     // because their screen size is unlikely to change.
     if (maximumGridSize === minimumGridSize) {
-      return nothing;
+      // return nothing;
     }
 
     return html`
