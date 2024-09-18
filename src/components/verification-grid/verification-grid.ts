@@ -1222,43 +1222,41 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         </div>
 
         <div class="controls-container">
-          <div class="verification-controls">
-            <span class="decision-controls-left">
-              <oe-verification-grid-settings></oe-verification-grid-settings>
+          <span class="decision-controls-left">
+            <oe-verification-grid-settings></oe-verification-grid-settings>
 
-              <button
-                data-testid="help-dialog-button"
-                @click="${() => this.helpDialog.showModal(false)}"
-                class="oe-btn-info"
-                rel="help"
-              >
-                <sl-icon name="question-circle" class="large-icon"></sl-icon>
-              </button>
+            <button
+              data-testid="help-dialog-button"
+              @click="${() => this.helpDialog.showModal(false)}"
+              class="oe-btn-info"
+              rel="help"
+            >
+              <sl-icon name="question-circle" class="large-icon"></sl-icon>
+            </button>
 
-              <button
-                data-testid="continue-verifying-button"
-                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-                ?disabled="${!this.isViewingHistory()}"
-                @click="${this.resumeVerification}"
-              >
-                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-              </button>
-            </span>
+            <button
+              data-testid="continue-verifying-button"
+              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
+              ?disabled="${!this.isViewingHistory()}"
+              @click="${this.resumeVerification}"
+            >
+              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+            </button>
+          </span>
 
-            <span class="decision-controls">
-              <h2 class="verification-controls-title">
-                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-              </h2>
-              <div id="decisions-container" class="decision-control-actions">
-                <slot @slotchange="${this.handleSlotChange}"></slot>
-                ${this.skipDecisionTemplate()}
-              </div>
-            </span>
+          <span class="decision-controls">
+            <h2 class="verification-controls-title">
+              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+            </h2>
+            <div id="decisions-container" class="decision-control-actions">
+              <slot @slotchange="${this.handleSlotChange}"></slot>
+              ${this.skipDecisionTemplate()}
+            </div>
+          </span>
 
-            <span class="decision-controls-right">
-              <slot name="data-source"></slot>
-            </span>
-          </div>
+          <span class="decision-controls-right">
+            <slot name="data-source"></slot>
+          </span>
 
           <div class="progress-bar">
             <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">

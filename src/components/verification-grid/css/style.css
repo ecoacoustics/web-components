@@ -71,6 +71,13 @@
   width: 80%;
   height: min-content;
   align-self: end;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--oe-spacing);
+  color: var(--oe-font-color);
 }
 
 .verification-controls-title {
@@ -81,15 +88,6 @@
   letter-spacing: 0em;
   color: var(--oe-font-color);
   margin: var(--oe-spacing-large);
-}
-
-.verification-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  gap: var(--oe-spacing);
-  color: var(--oe-font-color);
 }
 
 .decision-controls {
@@ -139,6 +137,10 @@ oe-spectrogram {
 
 @media (max-width: 600px) {
   .decision-controls {
+    order: -1;
+  }
+
+  .progress-bar {
     order: -1;
   }
 
