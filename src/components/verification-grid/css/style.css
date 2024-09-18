@@ -110,6 +110,7 @@
 .progress-bar {
   display: flex;
   flex: 1 1 100%;
+  height: min-content;
   align-items: center;
 
   oe-progress-bar {

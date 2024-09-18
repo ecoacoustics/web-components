@@ -1386,7 +1386,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           )}
         </div>
 
-        <div class="controls-container">
+        <div id="element-container" class="controls-container">
           <span class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
@@ -1425,7 +1425,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           </div>
 
           <div class="progress-bar">
-            <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">
+            <sl-tooltip content="${this.realizedGridSize > 1 ? "Previous Page" : "Previous"}">
               <button
                 data-testid="previous-page-button"
                 class="previous-page-button oe-btn-secondary"
@@ -1436,7 +1436,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               </button>
             </sl-tooltip>
 
-            <sl-tooltip content="${this.gridSize > 1 ? "Next Page" : "Next"}">
+            <sl-tooltip content="${this.realizedGridSize > 1 ? "Next Page" : "Next"}">
               <button
                 data-testid="next-page-button"
                 class="next-page-button oe-btn-secondary"

@@ -20,6 +20,7 @@ import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { when } from "lit/directives/when.js";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
