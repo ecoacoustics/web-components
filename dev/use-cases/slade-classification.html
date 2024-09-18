@@ -8,25 +8,23 @@
   </head>
 
   <body>
-    <div id="grid-host">
-      <oe-verification-grid id="verification-grid" grid-size="1">
-        <template>
-          <oe-info-card></oe-info-card>
-        </template>
+    <oe-verification-grid id="verification-grid" grid-size="1">
+      <template>
+        <oe-info-card></oe-info-card>
+      </template>
 
-        <oe-classification true-shortcut="y" false-shortcut="n" tag="blue winged kookaburra"></oe-classification>
+      <oe-classification true-shortcut="y" false-shortcut="n" tag="blue winged kookaburra"></oe-classification>
 
-        <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
-      </oe-verification-grid>
-    </div>
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local> </oe-data-source>
+    </oe-verification-grid>
 
     <style>
-      #grid-host {
-        position: relative;
-        left: 0px;
-        top: 0px;
-        width: 100vw;
-        min-height: 100vh;
+      body {
+        margin: 0px;
+      }
+
+      oe-verification-grid {
+        height: 100dvh;
       }
     </style>
   </body>
