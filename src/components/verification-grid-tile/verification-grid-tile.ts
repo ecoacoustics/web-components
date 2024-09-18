@@ -279,6 +279,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   public render() {
+    const tagText = this.model?.tag?.text ?? this.model?.tag;
+
     const tileClasses = classMap({
       selected: this.selected,
       hidden: this.hidden,
@@ -304,7 +306,11 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container ${figureClasses}">
           <div class="figure-head">
-            <figcaption class="tag-label">${this.model?.tag?.text ?? this.model?.tag}</figcaption>
+            <figcaption class="tag-label">
+              <sl-tooltip content="This item was tagged as '${tagText}' in your data source" placement="bottom-start">
+                <span>${tagText}</span>
+              </sl-tooltip>
+            </figcaption>
 
             ${when(
               this.settings.showMediaControls.value,
