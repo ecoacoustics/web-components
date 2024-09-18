@@ -1,18 +1,22 @@
 :host {
+  display: flex;
+  flex-direction: column;
   position: relative;
-  display: inline-block !important;
   width: 100%;
 }
 
 #wrapped-element {
+  display: flex;
+  flex-direction: column;
   position: relative;
   padding-left: 2rem;
   padding-bottom: 1.5rem;
+  flex: 1 1 100%;
 }
 
 svg {
   position: absolute;
-  width: 100%;
+  width: auto;
   height: auto;
   overflow: visible;
 
