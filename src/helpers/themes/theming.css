@@ -350,6 +350,12 @@ button {
   border-radius: var(--oe-border-rounding);
 }
 
+.vertically-fill {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 @keyframes fade-in {
   0% {
     opacity: 0;
