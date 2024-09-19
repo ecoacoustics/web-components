@@ -9,15 +9,11 @@
 
   <body>
     <oe-verification-grid id="verification-grid" grid-size="4">
-      <template>
-        <oe-info-card></oe-info-card>
-      </template>
-
-      <oe-verification verified="TRUE" shortcut="H"></oe-verification>
-      <oe-verification verified="TRUE" additional-tags="hello,world" shortcut="J"></oe-verification>
-      <oe-verification verified="FALSE" shortcut="K"></oe-verification>
-      <oe-verification verified="SKIP" shortcut="L"></oe-verification>
-      <oe-verification verified="UNSURE" shortcut=";"></oe-verification>
+      <oe-verification verified="true" shortcut="H"></oe-verification>
+      <oe-verification verified="true" additional-tags="hello,world" shortcut="J"></oe-verification>
+      <oe-verification verified="false" shortcut="K"></oe-verification>
+      <oe-verification verified="skip" shortcut="L"></oe-verification>
+      <oe-verification verified="unsure" shortcut=";"></oe-verification>
 
       <!--
             We should see an error thrown for this classification component
