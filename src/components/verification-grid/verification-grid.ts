@@ -24,7 +24,6 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { isPrime } from "../../helpers/primes";
 import { Pixel } from "../../models/unitConverters";
 import { GridShape, Size } from "../../models/rendering";
 import verificationGridStyles from "./css/style.css?inline";
@@ -374,6 +373,16 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return fitsHeight && fitsWidth;
   }
 
+  // private gridAspectRatioDistance(candidateShape: GridShape): number {
+  //   const targetContainerShape = this.gridContainer.getBoundingClientRect();
+  //   // const targetContainerShape = { width: screen.width, height: screen.height };
+
+  //   const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
+  //   const candidateSizeAspectRatio = candidateShape.columns / candidateShape.rows;
+
+  //   return Math.abs(targetAspectRatio - candidateSizeAspectRatio);
+  // }
+
   private gridAspectRatioDistance(candidateShape: GridShape): number {
     const targetContainerShape = this.gridContainer.getBoundingClientRect();
     // const targetContainerShape = { width: screen.width, height: screen.height };
@@ -381,12 +390,33 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
     const candidateSizeAspectRatio = candidateShape.columns / candidateShape.rows;
 
-    return Math.abs(targetAspectRatio - candidateSizeAspectRatio);
+    const distance = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
+    const maxRatio = Math.max(targetAspectRatio, candidateSizeAspectRatio);
+    const similarity = 1 - distance / maxRatio;
+
+    return similarity;
   }
 
   private computeGridShape(target: number): GridShape {
     if (target === 1) {
       return { columns: 1, rows: 1 };
+    } else if (target === 4) {
+      // TODO: Find out why 2x2 is not being preferred in our current algorithm
+      // and fix it so that we don't have to use this hack
+      //
+      // our current implementation works well for most grid sizes
+      // however, for a grid target of 4, it will prefer a 4x1 grid over a 2x2
+      // this is because 2x2 does not meet our aspect ratio threshold
+      // this is expected because we don't usually want a 1:1 aspect ratio
+      // for a 16:9 screen
+      // however, in the case of a target of 4, we want a 2x2 grid
+      // I've used this hack to force a 2x2 grid for a target of 4
+      // when the grid containers aspect ratio is close to 16:9
+      const screenSize = window.screen;
+      const aspectRatio = screenSize.width / screenSize.height;
+      if (aspectRatio > 1.6 && aspectRatio < 1.8) {
+        return { columns: 2, rows: 2 };
+      }
     }
 
     let refinedTarget = target;
@@ -398,14 +428,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetThreshold = 2;
+    const targetThreshold = 0.25;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      while (isPrime(refinedTarget)) {
-        refinedTarget += 1;
-      }
-
       const candidateShapes: GridShape[] = [];
 
       for (let i = 1; i <= refinedTarget; i++) {
@@ -415,7 +441,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
           const candidateShape = { columns, rows };
           const willFit = this.willFitTileSize(candidateShape);
-          const meetsAspectRatio = this.gridAspectRatioDistance(candidateShape) < targetThreshold;
+          const meetsAspectRatio = this.gridAspectRatioDistance(candidateShape) > targetThreshold;
 
           if (willFit && meetsAspectRatio) {
             candidateShapes.push({ columns, rows });
@@ -499,7 +525,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       const isInViewport = element.bottom < window.innerHeight;
 
       if (!isInViewport && this.targetGridSize > 1) {
-        this.targetGridSize -= 1;
+        // this.targetGridSize -= 1;
       }
 
       this.intersectionObserver.observe(this.elementContainer);

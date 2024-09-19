@@ -35,10 +35,8 @@
 /* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;
-  height: 100%;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
+  flex-direction: column;
+  max-height: 100%;
   background-color: var(--oe-background-color);
 }
 
@@ -50,6 +48,7 @@
   display: grid;
   width: 100%;
   user-select: none;
+  flex: 1 1 1px;
 
   grid-template-columns: repeat(var(--columns), 1fr);
   grid-template-rows: repeat(var(--rows), 1fr);
@@ -70,7 +69,7 @@
   position: relative;
   width: 80%;
   height: min-content;
-  align-self: end;
+  align-self: center;
 
   display: flex;
   flex-wrap: wrap;
