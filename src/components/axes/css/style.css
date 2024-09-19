@@ -1,22 +1,18 @@
 :host {
   position: relative;
   width: 100%;
-
-  &::part(tick),
-  &::part(grid) {
-    color: lightblue;
-  }
 }
 
 #wrapped-element {
   position: relative;
+  padding-left: 2rem;
+  padding-bottom: 1.5rem;
 }
 
-#axes-svg {
+svg {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
+  width: auto;
+  height: auto;
   overflow: visible;
 
   /*
@@ -43,4 +39,11 @@
 .grid-line {
   stroke-width: 1;
   opacity: 0.4;
+}
+
+:host {
+  &::part(tick),
+  &::part(grid) {
+    color: lightblue;
+  }
 }

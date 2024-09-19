@@ -1,4 +1,4 @@
-import { html, LitElement, nothing, svg, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "../../../playwright";
@@ -220,7 +220,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     return svg`
-      <g part = "grid" >
+      <g g part = "grid" >
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
@@ -229,11 +229,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size): TemplateResult {
-    const zeroSizeObject: Size = { width: 0, height: 0 };
-
-    const xTitleFontSize = this.showXTitle ? this.calculateFontSize(this.xTitle) : zeroSizeObject;
-    const yTitleFontSize = this.showYTitle ? this.calculateFontSize(this.yTitle) : zeroSizeObject;
+  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+    const xTitleFontSize = this.calculateFontSize(this.xTitle);
+    const yTitleFontSize = this.calculateFontSize(this.yTitle);
     const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
@@ -241,12 +239,13 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
-    const yTitleOffset = yTitleFontSize.height;
+    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
+    const yTitleOffset = yTitleFontSize.height + fontSize.width;
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter.scaleX.value(value);
-      const labelYPosition = canvasSize.height - fontSize.height - this.titleOffset.height - xTitleFontSize.height;
-      const tickYPosition = canvasSize.height - fontSize.height;
+      const labelYPosition = canvasSize.height + this.tickSize.height;
+      const tickYPosition = canvasSize.height;
 
       return svg`
         <g>
@@ -270,7 +269,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     };
 
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = this.tickSize.height + yTitleFontSize.height + this.titleOffset.width;
+      const xPosition = -this.tickSize;
       const yPosition = this.unitConverter.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
@@ -283,6 +282,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         ></line>
         <text
           part="y-label"
+          text-anchor="end"
           dominant-baseline="middle"
           x="${xPosition - this.labelPadding.width}"
           y="${yPosition}"
@@ -300,7 +300,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       <text
         part="title x-title"
         x="${canvasSize.width / 2}"
-        y="${canvasSize.height}"
+        y="${canvasSize.height + xTitleOffset}"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -315,8 +315,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         part="title y-title"
         x="-${yTitleOffset}"
         y="${canvasSize.height / 2}"
-        transform="rotate(90, ${yTitleOffset}, ${canvasSize.height / 2})"
+        transform="rotate(270, -${yTitleOffset}, ${canvasSize.height / 2})"
         text-anchor="middle"
+        font-family="sans-serif"
       >
         ${this.yTitle}
       </text>
@@ -504,16 +505,14 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
     const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
+    return html`<svg>${gridLines} ${labels}</svg>`;
   }
 
   public render() {
     return html`
-      <div class="vertically-fill">
+      <div id="wrapped-element" class="vertically-fill">
         ${this.unitConverter ? this.axesTemplate() : nothing}
-        <div id="wrapped-element" class="vertically-fill">
-          <slot @slotchange="${this.handleSlotChange}"></slot>
-        </div>
+        <slot @slotchange="${this.handleSlotChange}"></slot>
       </div>
     `;
   }
