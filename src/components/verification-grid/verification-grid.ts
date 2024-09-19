@@ -24,9 +24,9 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { isPrime } from "../../helpers/primes";
 import { Pixel } from "../../models/unitConverters";
 import { GridShape, Size } from "../../models/rendering";
-import { isPrime } from "../../helpers/primes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -54,10 +54,6 @@ type SelectionEvent = CustomEvent<{
   ctrlKey: boolean;
   index: number;
 }>;
-
-interface GridShapeCandidate extends GridShape {
-  fitness: number;
-}
 
 // by keeping the elements position in a separate object, we can
 // avoid doing DOM queries every time we need to check if the element
@@ -357,8 +353,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private willFitTileSize(candidateShape: GridShape): boolean {
     const gridContainerSize = this.gridContainer.getBoundingClientRect();
 
-    const minimumTileWidth: Pixel = 250;
-    const minimumTileHeight: Pixel = 200;
+    const minimumTileWidth: Pixel = 128;
+    const minimumTileHeight: Pixel = 128;
     const gapSize: Pixel = 10;
 
     const proposedTileSize = this.tileSize(candidateShape);
@@ -385,33 +381,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
     const candidateSizeAspectRatio = candidateShape.columns / candidateShape.rows;
 
-    const distance = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
-    const maxRatio = Math.max(targetAspectRatio, candidateSizeAspectRatio);
-    const similarity = 1 - distance / maxRatio;
-
-    return similarity;
+    return Math.abs(targetAspectRatio - candidateSizeAspectRatio);
   }
 
-  private gridTileSquareness(candidateShape: GridShape): number {
-    const proposedTileSize = this.tileSize(candidateShape);
-    const proposedTileSquareness = 1 / (1 + Math.abs(proposedTileSize.width / proposedTileSize.height - 1));
-    return proposedTileSquareness;
-  }
-
-  private gridShapeFitness(candidateShape: GridShape): GridShapeCandidate {
-    const proposedTileSquareness = this.gridTileSquareness(candidateShape);
-    const aspectRatioDistance = this.gridAspectRatioDistance(candidateShape);
-    const fitness = proposedTileSquareness * aspectRatioDistance;
-
-    console.log(candidateShape, { aspectRatioDistance, proposedTileSquareness, fitness });
-
-    return { ...candidateShape, fitness };
-  }
-
-  // optimize for the most square tiles
-  // and the grid size closest to the targets aspect ratio
-  // then do some averaging math to find the fitness which is determined
-  // by a combination of the tiles squareness and the grids aspect ratio distance
   private computeGridShape(target: number): GridShape {
     if (target === 1) {
       return { columns: 1, rows: 1 };
@@ -426,8 +398,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetAspectRatioThreshold = 2;
-    const targetFitnessThreshold = 0;
+    const targetThreshold = 2;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -444,7 +415,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
           const candidateShape = { columns, rows };
           const willFit = this.willFitTileSize(candidateShape);
-          const meetsAspectRatio = this.gridAspectRatioDistance(candidateShape) < targetAspectRatioThreshold;
+          const meetsAspectRatio = this.gridAspectRatioDistance(candidateShape) < targetThreshold;
 
           if (willFit && meetsAspectRatio) {
             candidateShapes.push({ columns, rows });
@@ -452,48 +423,30 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         }
       }
 
-      if (candidateShapes.length === 0) {
+      // to find the optimal grid shape, we find what grid shape will result in
+      // the largest grid tile size
+      let optimalGridShape: GridShape | undefined;
+      for (const candidate of candidateShapes) {
+        if (optimalGridShape === undefined) {
+          optimalGridShape = candidate;
+          continue;
+        }
+
+        const optimalSize = this.tileSize(optimalGridShape);
+        const proposedSize = this.tileSize(candidate);
+
+        const optimalArea = optimalSize.width * optimalSize.height;
+        const proposedArea = proposedSize.width * proposedSize.height;
+
+        if (proposedArea > optimalArea) {
+          optimalGridShape = candidate;
+        }
+      }
+
+      if (!optimalGridShape) {
         refinedTarget += 1;
         continue;
       }
-
-      const candidateGridShapes = candidateShapes.map((shape) => this.gridShapeFitness(shape));
-      const optimalGridShape = candidateGridShapes.reduce(
-        (prev, current) => (prev.fitness > current.fitness ? prev : current),
-        candidateGridShapes[0],
-      );
-
-      if (optimalGridShape.fitness < targetFitnessThreshold) {
-        refinedTarget += 1;
-        continue;
-      }
-
-      // // to find the optimal grid shape, we find what grid shape will result in
-      // // the largest grid tile size
-      // let optimalGridShape: GridShapeCandidate | undefined;
-      // for (const candidate of candidateShapes) {
-      //   if (optimalGridShape === undefined) {
-      //     optimalGridShape = candidate;
-      //     continue;
-      //   }
-
-      //   const optimalSize = this.tileSize(optimalGridShape);
-      //   const proposedSize = this.tileSize(candidate);
-
-      //   const optimalArea = optimalSize.width * optimalSize.height;
-      //   const proposedArea = proposedSize.width * proposedSize.height;
-
-      //   const squarenessValue = (shape: Size) => 1 - 1 / (1 + Math.abs(shape.width / shape.height - 1));
-      //   const optimalSquareness = squarenessValue(optimalSize);
-      //   const proposedSquareness = squarenessValue(proposedSize);
-
-      //   const optimalFitness = optimalArea * Math.log(optimalSquareness);
-      //   const proposedFitness = proposedArea * Math.log(proposedSquareness);
-
-      //   if (proposedFitness > optimalFitness) {
-      //     optimalGridShape = candidate;
-      //   }
-      // }
 
       return optimalGridShape;
     }
