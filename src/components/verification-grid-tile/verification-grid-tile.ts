@@ -328,7 +328,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             ?y-grid="${watch(this.settings.showAxes)}"
           >
             <oe-indicator class="vertically-fill">
-              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
+              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="grayscale"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

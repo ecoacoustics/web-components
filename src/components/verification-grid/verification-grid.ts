@@ -487,7 +487,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      this.currentPage = await this.paginationFetcher.getItems(this.realizedGridSize);
+      this.currentPage = await this.paginationFetcher.getItems(this.targetGridSize);
     }
   }
 
@@ -1386,46 +1386,45 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           )}
         </div>
 
-        <div id="element-container" class="controls-container">
-          <span class="decision-controls-left">
+        <div class="controls-container">
+          <span id="element-container" class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
-              <button
-                data-testid="help-dialog-button"
-                @click="${() => this.helpDialog.showModal(false)}"
-                class="oe-btn-info"
-                rel="help"
-              >
-                <sl-icon name="question-circle" class="large-icon"></sl-icon>
-              </button>
+            <button
+              data-testid="help-dialog-button"
+              @click="${() => this.helpDialog.showModal(false)}"
+              class="oe-btn-info"
+              rel="help"
+            >
+              <sl-icon name="question-circle" class="large-icon"></sl-icon>
+            </button>
 
-              <button
-                data-testid="continue-verifying-button"
-                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-                ?disabled="${!this.isViewingHistory()}"
-                @click="${this.resumeVerification}"
-              >
-                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-              </button>
-            </span>
+            <button
+              data-testid="continue-verifying-button"
+              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
+              ?disabled="${!this.isViewingHistory()}"
+              @click="${this.resumeVerification}"
+            >
+              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+            </button>
+          </span>
 
-            <span class="decision-controls">
-              <h2 class="verification-controls-title">
-                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-              </h2>
-              <div id="decisions-container" class="decision-control-actions">
-                <slot @slotchange="${this.handleSlotChange}"></slot>
-                ${this.skipDecisionTemplate()}
-              </div>
-            </span>
+          <span class="decision-controls">
+            <h2 class="verification-controls-title">
+              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+            </h2>
+            <div id="decisions-container" class="decision-control-actions">
+              <slot @slotchange="${this.handleSlotChange}"></slot>
+              ${this.skipDecisionTemplate()}
+            </div>
+          </span>
 
-            <span class="decision-controls-right">
-              <slot name="data-source"></slot>
-            </span>
-          </div>
+          <span class="decision-controls-right">
+            <slot name="data-source"></slot>
+          </span>
 
           <div class="progress-bar">
-            <sl-tooltip content="${this.realizedGridSize > 1 ? "Previous Page" : "Previous"}">
+            <sl-tooltip content="${this.targetGridSize > 1 ? "Previous Page" : "Previous"}">
               <button
                 data-testid="previous-page-button"
                 class="previous-page-button oe-btn-secondary"
@@ -1436,7 +1435,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               </button>
             </sl-tooltip>
 
-            <sl-tooltip content="${this.realizedGridSize > 1 ? "Next Page" : "Next"}">
+            <sl-tooltip content="${this.targetGridSize > 1 ? "Next Page" : "Next"}">
               <button
                 data-testid="next-page-button"
                 class="next-page-button oe-btn-secondary"

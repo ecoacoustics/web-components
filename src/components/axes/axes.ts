@@ -110,8 +110,8 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: SpectrogramComponent;
 
-  @query("#wrapped-element")
-  private wrappedElement!: Readonly<HTMLDivElement>;
+  @query("#axes-svg")
+  private elementChrome!: Readonly<HTMLDivElement>;
 
   // if we do not know the text that we want to measure, we use one large
   // character as an upperbound estimate of the size of characters
@@ -159,15 +159,15 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       // we don't have to use a resize observer to observe when the spectrogram
       // or slotted elements resize because we will receive a signal from the
       // unit converter which will trigger a re-render
-      this.unitConverter.canvasSize.subscribe(this.handleCanvasResize);
+      this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
     }
   }
 
   private handleCanvasResize(canvasSize: Size): void {
-    if (this?.wrappedElement) {
+    if (this?.elementChrome) {
       const { width, height } = canvasSize;
-      this.wrappedElement.style.width = `${width}px`;
-      this.wrappedElement.style.height = `${height}px`;
+      this.elementChrome.style.width = `${width}px`;
+      this.elementChrome.style.height = `${height}px`;
     }
   }
 
@@ -505,13 +505,13 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
     const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg>${gridLines} ${labels}</svg>`;
+    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
   }
 
   public render() {
     return html`
-      <div id="wrapped-element" class="vertically-fill">
-        ${this.unitConverter ? this.axesTemplate() : nothing}
+      ${this.unitConverter ? this.axesTemplate() : nothing}
+      <div class="wrapper-container">
         <slot @slotchange="${this.handleSlotChange}"></slot>
       </div>
     `;
