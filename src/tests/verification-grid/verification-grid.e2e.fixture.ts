@@ -8,7 +8,6 @@ import {
   getBrowserSignalValue,
   getBrowserValue,
   getCssColorVariable,
-  getCssVariable,
   invokeBrowserMethod,
   removeBrowserAttribute,
   setBrowserAttribute,

@@ -278,6 +278,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
 
+    // because dynamic grid sizes depend on the size of the grid container
+    // if we are using a computed grid size, we should compute a new shape for
+    // the verification grid when the grid container resizes
+    const resizeObserver = new ResizeObserver(() => this.autoShapeGrid());
+    resizeObserver.observe(this.gridContainer);
+
     // if the user has explicitly set a grid size through the `grid-size`
     // attribute, we should use that grid size
     // however, if the verification grid does not have a `grid-size` attribute
@@ -311,7 +317,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "realizedGridSize", "targetGridSize"];
+    const sourceInvalidationKeys: (keyof this)[] = [
+      "getPage",
+      "targetGridSize",
+      // TODO: The typing doesn't work for gridSizeN and gridSizeM because they
+      // are private properties. We should correctly type the invalidation keys
+      // so that we don't have to use an "as any" type cast
+      "gridSizeN" as any,
+      "gridSizeM" as any,
+    ];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -450,8 +464,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // meaning that the verification grid will soft fail to prevent all the
       // users work being lost
       const maxGridSize = 1_000 as const;
-      if (refinedTarget >= maxGridSize) {
-        console.error("Reached maximum grid size. Recovering via a 1x1 grid");
+      console.log(refinedTarget);
+      if (refinedTarget >= maxGridSize || refinedTarget <= 0) {
+        console.error("Reached maximum/minimum grid size. Recovering via a 1x1 grid.");
         this.targetGridSize = 1;
         return { columns: 1, rows: 1 };
       }
@@ -471,6 +486,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           if (isPrime(refinedTarget)) {
             refinedTarget += 1;
             continue;
+          }
+
+          if (refinedTarget === 1) {
+            return { columns: 1, rows: 1 };
           }
 
           refinedTarget -= 1;
@@ -1408,7 +1427,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
-          @resize="${() => this.autoShapeGrid()}"
         >
           ${when(
             this.currentPage.length === 0,

@@ -50,7 +50,6 @@
   user-select: none;
   flex: 1 1;
   min-height: 1px;
-  overflow: hidden;
 
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
