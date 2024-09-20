@@ -9,7 +9,7 @@ import { CssVariable } from "../helpers/types/advancedTypes";
 export type DeviceMock = (page: Page) => Promise<void>;
 
 export const testBreakpoints = {
-  mobile: { width: 320, height: 568 },
+  mobile: { width: 432, height: 960 },
   tabletPortrait: { width: 768, height: 1024 },
   tabletLandscape: { width: 1024, height: 768 },
   laptop: { width: 1366, height: 768 },
@@ -28,13 +28,11 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
 export async function changeToMobile(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.mobile);
   await viewportMock(page);
-  navigator["userAgentData"].mobile = true;
 }
 
 export async function changeToDesktop(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.desktop);
   await viewportMock(page);
-  navigator["userAgentData"].mobile = false;
 }
 
 export function mockDeviceSize(size: Size): DeviceMock {

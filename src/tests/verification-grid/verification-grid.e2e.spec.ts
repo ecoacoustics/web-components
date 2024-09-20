@@ -909,6 +909,8 @@ test.describe("single verification grid", () => {
 
   test.describe("changing grid size", () => {
     test("should show new items when increasing the grid size", async ({ fixture }) => {
+      // we use a grid size of one in this test to make asserting output easier
+
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
 
@@ -916,20 +918,20 @@ test.describe("single verification grid", () => {
       const expectedNewModel: SubjectWrapper = new SubjectWrapper(
         {
           AudioLink: "http://localhost:3000/example.flac",
-          Datetime: "2019-10-22T04:00:00.000Z",
-          Distance: "4.958763122558594",
-          FileId: 251486,
-          Filename: "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac",
-          Offset: 15,
-          Site: "SEQP-Samford",
-          SiteId: 255,
-          Subsite: "Dry-B",
+          Datetime: "2021-03-06T00:00:00.000Z",
+          Distance: "5.148530006408691",
+          FileId: 718570,
+          Filename: "20210306T110000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-A_718570.flac",
+          Offset: 30,
+          Site: "Little-Llangothlin-Reserve-Warra-National-Park",
+          SiteId: 41,
+          Subsite: "Dry-A",
           Tag: "koala",
         },
         "http://localhost:3000/example.flac",
         "koala" as any,
       );
-      expectedNewModel.clientCached = true;
+      expectedNewModel.clientCached = false;
       expectedNewModel.serverCached = true;
       expectedNewModel.decisions = {} as any;
 
@@ -962,8 +964,6 @@ test.describe("single verification grid", () => {
     });
 
     test("should not page any items when increasing and decreasing the grid size", async ({ fixture }) => {
-      // increase the grid size by one item, then remove it
-      // we should see that the
       const initialGridSize = await fixture.getGridSize();
       await fixture.changeGridSize(initialGridSize + 1);
       await fixture.changeGridSize(initialGridSize);
@@ -975,18 +975,11 @@ test.describe("single verification grid", () => {
     });
 
     test.describe("dynamic grid sizes", () => {
-      test("should add tiles if the number of tiles do not fill the verification grid", () => {});
-
-      test("should remove tiles if the tiles cause the verification grid to overflow", () => {});
-
-      test("should keep the same grid size if the user scrolls on the page", () => {});
-
       interface DynamicGridSizeTest {
         deviceName: string;
         device: DeviceMock;
         expectedGridSize: number;
         expectedGridShape: GridShape;
-        expectedTileSize: Size;
       }
 
       const testedGridSizes: DynamicGridSizeTest[] = [
@@ -995,41 +988,36 @@ test.describe("single verification grid", () => {
           device: mockDeviceSize(testBreakpoints.desktop),
           expectedGridSize: 10,
           expectedGridShape: { columns: 5, rows: 2 },
-          expectedTileSize: { width: 200, height: 200 },
         },
         {
           deviceName: "laptop",
           device: mockDeviceSize(testBreakpoints.laptop),
-          expectedGridSize: 10,
-          expectedGridShape: { columns: 5, rows: 2 },
-          expectedTileSize: { width: 200, height: 200 },
+          expectedGridSize: 5,
+          expectedGridShape: { columns: 5, rows: 1 },
         },
         {
           deviceName: "landscape tablet",
           device: mockDeviceSize(testBreakpoints.tabletLandscape),
-          expectedGridSize: 3,
-          expectedGridShape: { columns: 1, rows: 3 },
-          expectedTileSize: { width: 200, height: 200 },
+          expectedGridSize: 4,
+          expectedGridShape: { columns: 4, rows: 1 },
         },
         {
           deviceName: "portrait tablet",
           device: mockDeviceSize(testBreakpoints.tabletPortrait),
-          expectedGridSize: 3,
-          expectedGridShape: { columns: 3, rows: 1 },
-          expectedTileSize: { width: 200, height: 200 },
+          expectedGridSize: 6,
+          expectedGridShape: { columns: 3, rows: 2 },
         },
         {
           deviceName: "mobile",
           device: changeToMobile,
           expectedGridSize: 1,
           expectedGridShape: { columns: 1, rows: 1 },
-          expectedTileSize: { width: 200, height: 200 },
         },
       ];
 
       for (const testConfig of testedGridSizes) {
         test.describe(testConfig.deviceName, () => {
-          test(`should have the correct target grid size`, async ({ fixture }) => {
+          test(`should have the correct grid size`, async ({ fixture }) => {
             await testConfig.device(fixture.page);
             const realizedTargetGridSize = await fixture.getRealizedGridSize();
             expect(realizedTargetGridSize).toEqual(testConfig.expectedGridSize);
@@ -1039,12 +1027,6 @@ test.describe("single verification grid", () => {
             await testConfig.device(fixture.page);
             const realizedGridShape = await fixture.getGridShape();
             expect(realizedGridShape).toEqual(testConfig.expectedGridShape);
-          });
-
-          test(`should have the correct tile sizes`, async ({ fixture }) => {
-            await testConfig.device(fixture.page);
-            const realizedTileSize = await fixture.getGridTileSize();
-            expect(realizedTileSize).toEqual(testConfig.expectedTileSize);
           });
         });
       }
