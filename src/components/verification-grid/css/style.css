@@ -48,11 +48,11 @@
   display: grid;
   width: 100%;
   user-select: none;
-  flex: 1 1 1px;
+  flex: 1 1;
   min-height: 1px;
 
-  grid-template-columns: repeat(var(--columns), 1fr);
-  grid-template-rows: repeat(var(--rows), 1fr);
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
 
   /*
     We use a grid gap property instead of adding margin to the grid tile
