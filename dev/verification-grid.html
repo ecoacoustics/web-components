@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid" grid-size="1">
+    <oe-verification-grid id="verification-grid" grid-size="6">
       <oe-verification verified="true" shortcut="H"></oe-verification>
       <oe-verification verified="true" additional-tags="hello,world" shortcut="J"></oe-verification>
       <oe-verification verified="false" shortcut="K"></oe-verification>
@@ -27,7 +27,7 @@
         This service would
       -->
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local> </oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json"></oe-data-source>
     </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>

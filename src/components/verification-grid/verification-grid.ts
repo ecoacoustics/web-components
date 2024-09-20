@@ -428,7 +428,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
     // that meets the threshold
-    const targetThreshold = 0.25;
+    const targetThreshold = 0.5;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {

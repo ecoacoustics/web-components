@@ -410,7 +410,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.audioHelper.resizeCanvas(size);
     } else {
       this.canvas.width = size.width;
-      this.canvas.height = size.height;
+      // this.canvas.height = size.height;
     }
 
     if (this.scaling === "original") {
@@ -550,7 +550,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public render() {
     return html`
       <div id="spectrogram-container">
-        <canvas></canvas>
+        <canvas width="1" height="1"></canvas>
       </div>
       <audio
         id="media-element"
