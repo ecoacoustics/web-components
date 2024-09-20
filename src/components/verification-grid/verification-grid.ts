@@ -365,9 +365,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return meetsMinimumHeight && meetsMinimumWidth;
   }
 
-  private gridAspectRatioSimilarity(gridShape: GridShape): number {
-    const targetContainerShape = this.gridContainer.getBoundingClientRect();
-    const targetAspectRatio = targetContainerShape.width / targetContainerShape.height;
+  private gridAspectRatioSimilarity(containerSize: Size, gridShape: GridShape): number {
+    const targetAspectRatio = containerSize.width / containerSize.height;
     const candidateSizeAspectRatio = gridShape.columns / gridShape.rows;
 
     const distance = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
@@ -442,7 +441,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
           const candidateShape = { columns, rows };
           const willFit = this.willFitTileSize(containerSize, candidateShape);
-          const meetsAspectRatio = this.gridAspectRatioSimilarity(candidateShape) > targetThreshold;
+          const meetsAspectRatio = this.gridAspectRatioSimilarity(containerSize, candidateShape) > targetThreshold;
 
           if (willFit) {
             hasFittingCandidate = true;
@@ -461,7 +460,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // meaning that the verification grid will soft fail to prevent all the
       // users work being lost
       const maxGridSize = 1_000 as const;
-      console.log(refinedTarget);
       if (refinedTarget >= maxGridSize || refinedTarget <= 0) {
         console.error("Reached maximum/minimum grid size. Recovering via a 1x1 grid.");
         this.targetGridSize = 1;
