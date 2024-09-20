@@ -49,6 +49,7 @@
   width: 100%;
   user-select: none;
   flex: 1 1 1px;
+  min-height: 1px;
 
   grid-template-columns: repeat(var(--columns), 1fr);
   grid-template-rows: repeat(var(--rows), 1fr);
