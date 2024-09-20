@@ -2,13 +2,12 @@ import { GridShape, Size } from "../../models/rendering";
 import {
   catchLocatorEvent,
   changeToDesktop,
-  changeToLaptop,
   changeToMobile,
-  changeToTabletLandscape,
-  changeToTabletPortrait,
   DeviceMock,
   getBrowserValue,
+  mockDeviceSize,
   setBrowserAttribute,
+  testBreakpoints,
 } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
@@ -993,48 +992,46 @@ test.describe("single verification grid", () => {
       const testedGridSizes: DynamicGridSizeTest[] = [
         {
           deviceName: "desktop",
-          device: changeToDesktop,
+          device: mockDeviceSize(testBreakpoints.desktop),
           expectedGridSize: 10,
-          expectedGridShape: { rows: 5, columns: 2 },
+          expectedGridShape: { columns: 5, rows: 2 },
           expectedTileSize: { width: 200, height: 200 },
         },
         {
           deviceName: "laptop",
-          device: changeToLaptop,
-          expectedGridSize: 5,
-          expectedGridShape: { rows: 5, columns: 1 },
+          device: mockDeviceSize(testBreakpoints.laptop),
+          expectedGridSize: 10,
+          expectedGridShape: { columns: 5, rows: 2 },
           expectedTileSize: { width: 200, height: 200 },
         },
         {
           deviceName: "landscape tablet",
-          device: changeToTabletLandscape,
+          device: mockDeviceSize(testBreakpoints.tabletLandscape),
           expectedGridSize: 3,
-          expectedGridShape: { rows: 3, columns: 1 },
+          expectedGridShape: { columns: 1, rows: 3 },
           expectedTileSize: { width: 200, height: 200 },
         },
         {
           deviceName: "portrait tablet",
-          device: changeToTabletPortrait,
+          device: mockDeviceSize(testBreakpoints.tabletPortrait),
           expectedGridSize: 3,
-          expectedGridShape: { rows: 1, columns: 3 },
+          expectedGridShape: { columns: 3, rows: 1 },
           expectedTileSize: { width: 200, height: 200 },
         },
         {
           deviceName: "mobile",
           device: changeToMobile,
           expectedGridSize: 1,
-          expectedGridShape: { rows: 1, columns: 1 },
+          expectedGridShape: { columns: 1, rows: 1 },
           expectedTileSize: { width: 200, height: 200 },
         },
-
-        // TODO: test Samsung Smart Fridge
       ];
 
       for (const testConfig of testedGridSizes) {
         test.describe(testConfig.deviceName, () => {
           test(`should have the correct target grid size`, async ({ fixture }) => {
             await testConfig.device(fixture.page);
-            const realizedTargetGridSize = await fixture.getTargetGridSize();
+            const realizedTargetGridSize = await fixture.getRealizedGridSize();
             expect(realizedTargetGridSize).toEqual(testConfig.expectedGridSize);
           });
 

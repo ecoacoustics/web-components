@@ -501,15 +501,15 @@ class TestPage {
     )) as SubjectWrapper[];
   }
 
-  public async getTargetGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "targetGridSize");
+  public async getRealizedGridSize(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "realizedGridSize");
     return gridSize as number;
   }
 
   public async getGridShape(): Promise<GridShape> {
     const targetGrid = this.gridComponent();
-    const columns = Number(await getCssVariable(targetGrid, "--columns"));
-    const rows = Number(await getCssVariable(targetGrid, "--rows"));
+    const columns = (await getBrowserValue<VerificationGridComponent>(targetGrid, "gridSizeN" as any)) as any;
+    const rows = (await getBrowserValue<VerificationGridComponent>(targetGrid, "gridSizeM" as any)) as any;
     return { columns, rows };
   }
 

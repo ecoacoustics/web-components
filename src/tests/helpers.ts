@@ -6,12 +6,15 @@ import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
 
-export type DeviceMock =
-  | typeof changeToMobile
-  | typeof changeToTabletPortrait
-  | typeof changeToTabletLandscape
-  | typeof changeToLaptop
-  | typeof changeToDesktop;
+export type DeviceMock = (page: Page) => Promise<void>;
+
+export const testBreakpoints = {
+  mobile: { width: 320, height: 568 },
+  tabletPortrait: { width: 768, height: 1024 },
+  tabletLandscape: { width: 1024, height: 768 },
+  laptop: { width: 1366, height: 768 },
+  desktop: { width: 1920, height: 1080 },
+} as const satisfies Record<string, Size>;
 
 export async function getElementSize<T extends HTMLElement>(element: T | Locator): Promise<Size> {
   const width = (await getBrowserValue<T>(element, "clientWidth")) as number;
@@ -19,29 +22,23 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
   return { width, height };
 }
 
+// because mobile devices emit different user agent hints, we have a
+// special function to mock a mobile device in test that is more
+// complex than just changing the screen size
 export async function changeToMobile(page: Page) {
-  const mobileSize: Size = { width: 320, height: 568 };
-  await page.setViewportSize(mobileSize);
-}
-
-export async function changeToTabletPortrait(page: Page) {
-  const tabletSize: Size = { width: 768, height: 1024 };
-  await page.setViewportSize(tabletSize);
-}
-
-export async function changeToTabletLandscape(page: Page) {
-  const tabletLandscapeSize: Size = { width: 1024, height: 768 };
-  await page.setViewportSize(tabletLandscapeSize);
-}
-
-export async function changeToLaptop(page: Page) {
-  const laptopSize: Size = { width: 1366, height: 768 };
-  await page.setViewportSize(laptopSize);
+  const viewportMock = mockDeviceSize(testBreakpoints.mobile);
+  await viewportMock(page);
+  navigator["userAgentData"].mobile = true;
 }
 
 export async function changeToDesktop(page: Page) {
-  const desktopSize: Size = { width: 1920, height: 1080 };
-  await page.setViewportSize(desktopSize);
+  const viewportMock = mockDeviceSize(testBreakpoints.desktop);
+  await viewportMock(page);
+  navigator["userAgentData"].mobile = false;
+}
+
+export function mockDeviceSize(size: Size): DeviceMock {
+  return (page: Page) => page.setViewportSize(size);
 }
 
 export async function insertHtml(page: Page, html: string) {

@@ -162,9 +162,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
 
-  @query("#element-container")
-  private elementContainer!: HTMLDivElement;
-
   @query("#decisions-container")
   private decisionsContainer!: HTMLSlotElement;
 
@@ -203,7 +200,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private selectionHandler = this.handleSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
   private intersectionHandler = this.handleIntersection.bind(this);
-  private intersectionObserver = new IntersectionObserver(this.intersectionHandler, { threshold: 1 });
+  private intersectionObserver!: IntersectionObserver;
 
   // the subject history contains all the subjects that have decisions applied
   // to them, while the verification buffer contains all the subjects that have
@@ -218,13 +215,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private doneRenderBoxInit = false;
+  private paginationFetcher?: GridPageFetcher;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
     elements: [],
   };
-  private paginationFetcher?: GridPageFetcher;
   private gridSizeBreakpoints: BreakpointGridSize[] = [
     // mobile devices
     { screenWidth: 0, gridSize: 1 },
@@ -282,7 +279,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
 
-    // initial grid size < attributes < grid size settings < maximum grid size
+    // we add an intersection observer to the grid container so that if elements
+    // start overflowing outside of the grid, we can reduce the grid size
+    this.intersectionObserver = new IntersectionObserver(this.intersectionHandler, {
+      root: this.gridContainer,
+      threshold: 0,
+    });
+
+    // if the user has explicitly set a grid size through the `grid-size`
+    // attribute, we should use that grid size
+    // however, if the verification grid does not have a `grid-size` attribute
+    // then we look at our grid size breakpoints to determine the grid size
+    // that will fit the best on the screen
     if (this.targetGridSize) {
       const newGridShape = this.computeGridShape(this.targetGridSize);
       this.gridSizeN = newGridShape.columns;
@@ -295,12 +303,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
       if (relativeBreakpoint) {
         this.targetGridSize = relativeBreakpoint.gridSize;
-      } else {
-        throw new Error("Could not find a suitable grid size for the current screen size");
       }
     }
 
-    this.intersectionObserver.observe(this.elementContainer);
+    this.observeTileIntersection();
 
     this.doneFirstUpdate = true;
   }
@@ -478,6 +484,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  private observeTileIntersection(): void {
+    const gridTiles = this.gridTiles;
+    for (const tile of gridTiles) {
+      this.intersectionObserver.observe(tile);
+    }
+  }
+
   private handleTileInvalidation(): void {
     // if the user doesn't explicitly define a "selection-behavior" attribute
     // then we will infer the selection behavior based on the device type
@@ -518,6 +531,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
+    console.debug(entries);
     for (const entry of entries) {
       this.intersectionObserver.disconnect();
 
@@ -525,10 +539,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       const isInViewport = element.bottom < window.innerHeight;
 
       if (!isInViewport && this.targetGridSize > 1) {
-        // this.targetGridSize -= 1;
+        this.targetGridSize -= 1;
       }
 
-      this.intersectionObserver.observe(this.elementContainer);
+      this.observeTileIntersection();
     }
   }
 
