@@ -278,9 +278,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
 
-    // because dynamic grid sizes depend on the size of the grid container
-    // if we are using a computed grid size, we should compute a new shape for
-    // the verification grid when the grid container resizes
+    // this resize observer computes a new grid shape whenever the grid
+    // container changes in size
+    // this means that we get some nice animation-like effects when resizing
+    // the window
     const resizeObserver = new ResizeObserver(() => this.autoShapeGrid());
     resizeObserver.observe(this.gridContainer);
 
@@ -301,14 +302,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         this.targetGridSize = relativeBreakpoint.gridSize;
       }
     }
-
-    this.doneFirstUpdate = true;
   }
 
-  private doneFirstUpdate = false;
-
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
-    if (this.doneFirstUpdate && change.has("targetGridSize")) {
+    if (this.gridContainer && change.has("targetGridSize")) {
       this.autoShapeGrid();
     }
 
@@ -418,7 +415,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // a lot of dead space
     // therefore, we have a threshold that we have to meet. If we do not meet
     // the threshold, we keep increasing the target until we find a grid shape
-    // that meets the threshold
+    // that meets the similarity percentage threshold
     const targetThreshold = 0.5;
 
     // eslint-disable-next-line no-constant-condition

@@ -16,11 +16,11 @@ import {
   VerificationGridInjector,
   VerificationGridSettings,
 } from "../verification-grid/verification-grid";
+import { when } from "lit/directives/when.js";
 import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { when } from "lit/directives/when.js";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
@@ -328,7 +328,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             ?y-grid="${watch(this.settings.showAxes)}"
           >
             <oe-indicator class="vertically-fill">
-              <oe-spectrogram id="spectrogram" class="vertically-fill"></oe-spectrogram>
+              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

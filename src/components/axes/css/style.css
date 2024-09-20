@@ -3,14 +3,20 @@
 
   position: relative;
 
-  display: flex;
-  flex-direction: column;
-  flex: 1 1;
-
   &::part(tick),
   &::part(grid) {
     color: lightblue;
   }
+}
+
+slot {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  min-height: 0px;
+
+  padding-left: var(--axes-padding);
+  padding-bottom: var(--axes-padding);
 }
 
 #axes-svg {
@@ -46,14 +52,4 @@
 .grid-line {
   stroke-width: 1;
   opacity: 0.4;
-}
-
-.wrapper-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1;
-  min-height: 0px;
-
-  padding-left: var(--axes-padding);
-  padding-bottom: var(--axes-padding);
 }

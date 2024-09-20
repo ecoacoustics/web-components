@@ -49,7 +49,16 @@
   width: 100%;
   user-select: none;
   flex: 1 1;
-  min-height: 1px;
+
+  /*
+    We set the minimum height to zero so that the verification grid flex item
+    can shrink past its content size.
+    If we do not set the property, the flex item will automatically set its
+    minimum height to the summed height of the grid tiles.
+    By overriding the minimum height, the grid tiles will shrink to fit in the
+    verification grid.
+  */
+  min-height: 0px;
 
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
@@ -123,14 +132,16 @@
   font-weight: bold;
 }
 
-@media (max-width: 600px) {
-  .decision-controls {
-    order: -1;
-  }
-
-  .controls-container {
-    margin-left: var(--oe-padding);
-    margin-right: 1rem;
+/*
+  We apply styles to the <template> elements here because we cannot target the
+  template elements inside the verification-grid-tile because they are reflected
+  into the shadow dom, but not actually rendered in the tile dom (meaning that
+  we can't style them in the tile component).
+*/
+oe-spectrogram {
+  @media (max-width: 600px) {
+    /* TODO: do this better. This is a hacky solution for now */
+    height: 380px;
   }
 }
 

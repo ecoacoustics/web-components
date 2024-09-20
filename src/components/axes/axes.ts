@@ -63,7 +63,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
-  private static labelPadding: EmUnit = 0.75;
+  private static labelPadding: EmUnit = 0.25;
   private static tickSize: EmUnit = 0.75;
   private static titleOffset: EmUnit = 0.25;
 
@@ -216,7 +216,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     const yAxisGridLinesTemplate = svg`${yValues.map(
-      (value, i) => svg`${i > 0 && i < yValues.length ? yGridLineTemplate(value) : nothing}`,
+      (value, i) => svg`${i > 0 && i < yValues.length - 1 ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`
@@ -392,6 +392,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     if (!melScale) {
       const domainDelta = Math.abs(domain[1] - domain[0]);
       const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
+
+      // we double the padding because the padding is applied to both sides of
+      // the label
       const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding * 2);
       return proposedSize < canvasSize;
     }
@@ -511,9 +514,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   public render() {
     return html`
       ${this.unitConverter ? this.axesTemplate() : nothing}
-      <div class="wrapper-container">
-        <slot @slotchange="${this.handleSlotChange}"></slot>
-      </div>
+      <slot @slotchange="${this.handleSlotChange}"></slot>
     `;
   }
 }

@@ -1,5 +1,6 @@
 :host {
   position: relative;
+  display: inline-block;
 
   /*
     By setting the width to 100%, the indicator component will take up the full

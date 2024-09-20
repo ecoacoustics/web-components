@@ -2,7 +2,6 @@ import { RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
 import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
-import { SpectrogramOptions } from "../helpers/audio/models";
 
 export type Seconds = number;
 export type Hertz = number;
@@ -108,18 +107,6 @@ export class UnitConverter {
   public scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
-
-  public originalCanvasSize(options: SpectrogramOptions) {
-    const step = options.windowSize - options.windowOverlap;
-    const duration = this.audioModel.value.duration;
-    const sampleRate = this.audioModel.value.sampleRate;
-    const totalSamples = duration * sampleRate;
-
-    const width = Math.ceil(totalSamples / step);
-    const height = options.windowSize / 2;
-
-    return { width, height };
-  }
 
   // TODO: I think passing in a scaleConverter here is a hack
   /**
