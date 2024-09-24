@@ -18,7 +18,8 @@ import {
   VerificationGridComponent,
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
-import { GridShape, Size } from "../../models/rendering";
+import { Size } from "../../models/rendering";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import {
   AxesComponent,
   DataSourceComponent,

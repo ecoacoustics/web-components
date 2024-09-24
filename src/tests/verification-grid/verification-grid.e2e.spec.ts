@@ -1,4 +1,5 @@
-import { GridShape, Size } from "../../models/rendering";
+import { Size } from "../../models/rendering";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import {
   catchLocatorEvent,
   changeToDesktop,
