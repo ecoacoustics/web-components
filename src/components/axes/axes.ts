@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -12,6 +12,7 @@ import {
   ScaleDomain,
   ScaleRange,
   EmUnit,
+  Pixel,
 } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -106,6 +107,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   /** Shows/hides y-axis labels and grid lines */
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
+
+  @state()
+  private xAxisPadding: Pixel = 0;
+
+  @state()
+  private yAxisPadding: Pixel = 9;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: SpectrogramComponent;
@@ -220,7 +227,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     return svg`
-      <g g part = "grid" >
+      <g part = "grid" >
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
@@ -241,6 +248,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     // label assuming at a fixed amount away from the largest theoretical axis label
     const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
     const yTitleOffset = yTitleFontSize.height + fontSize.width;
+
+    this.xAxisPadding = xTitleOffset + fontSize.height;
+    this.yAxisPadding = yTitleOffset + fontSize.width;
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter.scaleX.value(value);
@@ -395,7 +405,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
       // we double the padding because the padding is applied to both sides of
       // the label
-      const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding * 2);
+      //
+      // prettier removes the brackets because they are not need
+      // however, I want to add them because it makes the code and algorithm
+      // more readable
+      // prettier-ignore
+      const proposedSize = numberOfProposedLabels * (fontSize + (textLabelPadding * 2));
       return proposedSize < canvasSize;
     }
 
@@ -410,7 +425,8 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
     // we multiple the padding by two so that the padding is virtually applied
     // to both labels in the axes
-    return positionDelta > fontSize + textLabelPadding * 2;
+    // prettier-ignore
+    return positionDelta > fontSize + (textLabelPadding * 2);
   }
 
   // the calculate step function will use a binary search to find the largest
@@ -508,13 +524,23 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
     const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
+    return html`<svg
+      id="axes-svg"
+      style="
+        --x-axis-padding: ${this.xAxisPadding}px;
+        --y-axis-padding: ${this.yAxisPadding}px;
+      "
+    >
+      ${gridLines} ${labels}
+    </svg>`;
   }
 
   public render() {
     return html`
-      ${this.unitConverter ? this.axesTemplate() : nothing}
-      <slot @slotchange="${this.handleSlotChange}"></slot>
+      <div class="wrapper-element">
+        ${this.unitConverter ? this.axesTemplate() : nothing}
+        <slot @slotchange="${this.handleSlotChange}"></slot>
+      </div>
     `;
   }
 }

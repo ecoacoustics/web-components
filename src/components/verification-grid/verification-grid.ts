@@ -24,10 +24,9 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { Pixel } from "../../models/unitConverters";
+import { Pixel, UnitInterval } from "../../models/unitConverters";
 import { GridShape, Size } from "../../models/rendering";
 import verificationGridStyles from "./css/style.css?inline";
-import { isPrime } from "../../helpers/primes";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -35,6 +34,7 @@ export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
   showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
+  maximumTargetGridSize: Signal<number>;
 }
 
 export interface VerificationGridInjector {
@@ -68,11 +68,6 @@ interface HighlightSelection {
   current: MousePosition;
   highlighting: boolean;
   elements: IntersectionElement[];
-}
-
-interface BreakpointGridSize {
-  screenWidth: Pixel;
-  gridSize: number;
 }
 
 /**
@@ -116,6 +111,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     showAxes: signal(true),
     showMediaControls: signal(true),
     isFullscreen: signal(false),
+    maximumTargetGridSize: signal(32),
   };
 
   @provide({ context: injectionContext })
@@ -177,13 +173,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public currentPage: SubjectWrapper[] = [];
 
   @state()
-  private gridSizeN = this.targetGridSize;
+  private rows = this.targetGridSize;
 
   @state()
-  private gridSizeM = 1;
+  private columns = 1;
 
   public get realizedGridSize(): number {
-    return this.gridSizeN * this.gridSizeM;
+    return this.rows * this.columns;
   }
 
   public get pagedItems(): number {
@@ -214,6 +210,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private doneRenderBoxInit = false;
+  private gapSize: Pixel = 12;
   private paginationFetcher?: GridPageFetcher;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
@@ -221,14 +218,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     highlighting: false,
     elements: [],
   };
-  private minimumGridSize: Size = { width: 180, height: 300 };
-  private gridSizeBreakpoints: BreakpointGridSize[] = [
-    // mobile devices
-    { screenWidth: 0, gridSize: 1 },
-
-    // desktop devices
-    { screenWidth: 720, gridSize: 10 },
-  ];
+  private minimumTileSize: Size = { width: 180, height: 300 };
+  private currentGridSize: Size = { width: 0, height: 0 };
 
   /** A count of the number of tiles currently visible on the screen */
   private get effectivePageSize(): number {
@@ -282,7 +273,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // container changes in size
     // this means that we get some nice animation-like effects when resizing
     // the window
-    const resizeObserver = new ResizeObserver(() => this.autoShapeGrid());
+    // the first time that the verification grid is observed, it will trigger
+    // the callback, setting the initial size of the verification grid
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      const gridTarget = entries[0];
+      this.currentGridSize = gridTarget.contentRect;
+      this.autoShapeGrid();
+    });
     resizeObserver.observe(this.gridContainer);
 
     // if the user has explicitly set a grid size through the `grid-size`
@@ -290,17 +287,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // however, if the verification grid does not have a `grid-size` attribute
     // then we look at our grid size breakpoints to determine the grid size
     // that will fit the best on the screen
-    if (this.targetGridSize) {
-      this.autoShapeGrid();
-    } else {
-      const screenSize = window.screen;
-      const relativeBreakpoint = this.gridSizeBreakpoints.findLast(
-        (breakpoint) => screenSize.width >= breakpoint.screenWidth,
-      );
-
-      if (relativeBreakpoint) {
-        this.targetGridSize = relativeBreakpoint.gridSize;
-      }
+    if (!this.targetGridSize) {
+      const targetSize = this.defaultGridSize();
+      this.targetGridSize = targetSize;
     }
   }
 
@@ -338,10 +327,23 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  private defaultGridSize(): number {
+    const screenSize = window.screen;
+
+    // for mobile devices, we want to show a single tile
+    // for anything that is larger than a phone, we want to target ten tiles
+    // if ten tiles will not fit on the screen, the grid will automatically
+    // select the largest grid size that will fit
+    if (screenSize.width <= 720) {
+      return 1;
+    } else {
+      return 10;
+    }
+  }
+
   private tileSize(containerSize: Size, gridShape: GridShape): Size {
-    const gapSize: Pixel = 18;
-    const totalGapWidth = gapSize * (gridShape.columns - 1);
-    const totalGapHeight = gapSize * (gridShape.rows - 1);
+    const totalGapWidth = this.gapSize * (gridShape.columns - 1);
+    const totalGapHeight = this.gapSize * (gridShape.rows - 1);
     const usableContainerSize: Size = {
       width: containerSize.width - totalGapWidth,
       height: containerSize.height - totalGapHeight,
@@ -353,19 +355,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return { width, height };
   }
 
-  private willFitTileSize(containerSize: Size, gridShape: GridShape): boolean {
-    const minimumTileWidth: Pixel = this.minimumGridSize.width;
-    const minimumTileHeight: Pixel = this.minimumGridSize.height;
-
-    const proposedTileSize = this.tileSize(containerSize, gridShape);
-
-    const meetsMinimumWidth = proposedTileSize.width >= minimumTileWidth;
-    const meetsMinimumHeight = proposedTileSize.height >= minimumTileHeight;
-
-    return meetsMinimumHeight && meetsMinimumWidth;
-  }
-
-  private gridAspectRatioSimilarity(containerSize: Size, gridShape: GridShape): number {
+  /**
+   * @description
+   * Computes the similarity between the grid aspect ratio and the container
+   * aspect ratio
+   *
+   * @param containerSize - The size of the grid container
+   * @param gridShape - The shape of the grid
+   *
+   * @returns A value between 0 and 1 that represents the similarity between the
+   * grid aspect ratio and the container aspect ratio
+   */
+  private gridAspectRatioSimilarity(containerSize: Size, gridShape: GridShape): UnitInterval {
     const targetAspectRatio = containerSize.width / containerSize.height;
     const candidateSizeAspectRatio = gridShape.columns / gridShape.rows;
 
@@ -376,7 +377,99 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return similarity;
   }
 
-  private computeGridShape(target: number): GridShape {
+  private meetsAspectRatioSimilarityThreshold(containerSize: Size, gridShape: GridShape): boolean {
+    // some numbers e.g. 9 have one factor such as 3x3 which creates a aspect
+    // ratio of 1.00
+    // using a 3x3 grid for a 16:9 (≈1.78) screen is not ideal because it will
+    // create a lot of dead space
+    // therefore, we have a threshold that we have to meet. If we do not meet
+    // the threshold, we keep increasing the target until we find a grid shape
+    // that meets the similarity percentage threshold
+    const threshold: UnitInterval = 0.5;
+
+    const similarity = this.gridAspectRatioSimilarity(containerSize, gridShape);
+    return similarity >= threshold;
+  }
+
+  private willFitTileSize(containerSize: Size, gridShape: GridShape): boolean {
+    const minimumTileWidth: Pixel = this.minimumTileSize.width;
+    const minimumTileHeight: Pixel = this.minimumTileSize.height;
+
+    const proposedTileSize = this.tileSize(containerSize, gridShape);
+
+    const meetsMinimumWidth = proposedTileSize.width >= minimumTileWidth;
+    const meetsMinimumHeight = proposedTileSize.height >= minimumTileHeight;
+
+    return meetsMinimumHeight && meetsMinimumWidth;
+  }
+
+  /**
+   * Returns all the possible grid shapes that can be used to create a grid of
+   * the target size.
+   * This function does not check if the grid shape will fit in the container.
+   */
+  private targetCandidates(target: number): GridShape[] {
+    const candidateShapes: GridShape[] = [];
+
+    // find all the factors of the target grid size
+    for (let i = 1; i <= target; i++) {
+      const isFactor = target % i === 0;
+      if (isFactor) {
+        const columns = i;
+        const rows = target / i;
+        candidateShapes.push({ columns, rows });
+      }
+    }
+
+    return candidateShapes;
+  }
+
+  /**
+   * Returns all candidates that meet the preconditions for the grid size to be
+   * considered.
+   *
+   * e.g. The grid size must fit in the container and must be similar to the
+   *      containers aspect ratio
+   */
+  private eligibleGridShapes(candidates: GridShape[]): GridShape[] {
+    return candidates.filter((candidate: GridShape) => {
+      const fitsTileSize = this.willFitTileSize(this.currentGridSize, candidate);
+      const meetsAspectRatio = this.meetsAspectRatioSimilarityThreshold(this.currentGridSize, candidate);
+      return fitsTileSize && meetsAspectRatio;
+    });
+  }
+
+  /**
+   * Out of a list of eligible candidates, this function returns the optimal
+   * grid shape that will fit in the container
+   */
+  private optimalGridShape(candidates: GridShape[]): GridShape {
+    const containerSize = this.currentGridSize;
+
+    // to find the optimal grid shape, we find what grid shape will result in
+    // the largest grid tile size
+    let foundOptimal: GridShape = candidates[0];
+    for (const candidate of candidates) {
+      const optimalSize = this.tileSize(containerSize, foundOptimal);
+      const proposedSize = this.tileSize(containerSize, candidate);
+
+      const optimalArea = optimalSize.width * optimalSize.height;
+      const proposedArea = proposedSize.width * proposedSize.height;
+
+      if (proposedArea > optimalArea) {
+        foundOptimal = candidate;
+      }
+    }
+
+    return foundOptimal;
+  }
+
+  /**
+   * Finds the optimal grid shape for a target grid size
+   * If no grid shape will fit or meet the preconditions
+   * the function will return null
+   */
+  private computeGridShape(target: number): GridShape | null {
     if (target === 1) {
       return { columns: 1, rows: 1 };
     } else if (target === 4) {
@@ -391,139 +484,85 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // however, in the case of a target of 4, we want a 2x2 grid
       // I've used this hack to force a 2x2 grid for a target of 4
       // when the grid containers aspect ratio is close to 16:9
-      const screenSize = window.screen;
-      const aspectRatio = screenSize.width / screenSize.height;
+      const aspectRatio = this.currentGridSize.width / this.currentGridSize.height;
 
       // we allow for a bit of deviation from the exact 16:9 aspect ratio so
       // similar aspect ratios also get the nicer grid size for a target of 4
       const matchingAspectRatio = 16 / 9;
-      const matchingDeviation = 0.2;
+      const matchingDeviation = 1;
+      const minimumScreenSize = 1200;
 
-      if (Math.abs(aspectRatio - matchingAspectRatio) <= matchingDeviation) {
+      if (
+        Math.abs(aspectRatio - matchingAspectRatio) <= matchingDeviation &&
+        this.currentGridSize.width >= minimumScreenSize
+      ) {
         return { columns: 2, rows: 2 };
       }
     }
 
-    const containerSize = this.gridContainer.getBoundingClientRect();
-    let refinedTarget = target;
-    const testedTargets: number[] = [];
+    let candidateShapes = this.targetCandidates(target);
+    candidateShapes = this.eligibleGridShapes(candidateShapes);
 
-    // some numbers e.g. 9 have one factor such as 3x3 which creates a aspect
-    // ratio of 1.00
-    // using a 3x3 grid for a 16:9 screen is not ideal because it will create
-    // a lot of dead space
-    // therefore, we have a threshold that we have to meet. If we do not meet
-    // the threshold, we keep increasing the target until we find a grid shape
-    // that meets the similarity percentage threshold
-    const targetThreshold = 0.5;
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const candidateShapes: GridShape[] = [];
-
-      // sometimes we can get stuck in an infinite loop where increasing grid
-      // size will result in the grid not fitting, but decreasing the grid size
-      // will result in a grid that does not meet the aspect ratio threshold
-      // to resolve this, we keep a record of the targets that we have checked
-      // if we see the same one twice (we have increased, then decreased)
-      // we will decrement the grid size until we find a grid that fits
-      if (testedTargets.includes(refinedTarget)) {
-        refinedTarget -= 1;
-        continue;
-      }
-      testedTargets.push(refinedTarget);
-
-      let hasFittingCandidate = false;
-      for (let i = 1; i <= refinedTarget; i++) {
-        if (refinedTarget % i === 0) {
-          const columns = i;
-          const rows = refinedTarget / i;
-
-          const candidateShape = { columns, rows };
-          const willFit = this.willFitTileSize(containerSize, candidateShape);
-          const meetsAspectRatio = this.gridAspectRatioSimilarity(containerSize, candidateShape) > targetThreshold;
-
-          if (willFit) {
-            hasFittingCandidate = true;
-
-            if (meetsAspectRatio) {
-              candidateShapes.push({ columns, rows });
-            }
-          }
-        }
-      }
-
-      // if we have reached this condition, there is a fatal bug in the
-      // dynamic grid size code. This condition should never be triggered
-      // I have added the condition so that if dynamic grid size gets stuck in
-      // and infinite loop it won't completely crash the browser
-      // meaning that the verification grid will soft fail to prevent all the
-      // users work being lost
-      const maxGridSize = 1_000 as const;
-      if (refinedTarget >= maxGridSize || refinedTarget <= 0) {
-        console.error("Reached maximum/minimum grid size. Recovering via a 1x1 grid.");
-        this.targetGridSize = 1;
-        return { columns: 1, rows: 1 };
-      }
-
-      // there are two reasons why we might reject candidate shapes
-      // either they would not fit on the screen or they do not meet the
-      // minimum similarity to the containers aspect ratio
-      //
-      // if all the candidates are rejected because they do not fit, we will
-      // attempt to decrease the size until we find a target that correctly fits
-      //
-      // if we had a candidate that fit, but we rejected it because it did not
-      // meet the aspect ratio threshold, we continue to increase the target
-      // until we find a candidate that meets our conditions
-      if (candidateShapes.length === 0) {
-        if (!hasFittingCandidate) {
-          if (isPrime(refinedTarget)) {
-            refinedTarget += 1;
-            continue;
-          }
-
-          if (refinedTarget === 1) {
-            return { columns: 1, rows: 1 };
-          }
-
-          refinedTarget -= 1;
-          continue;
-        }
-
-        refinedTarget += 1;
-        continue;
-      }
-
-      // to find the optimal grid shape, we find what grid shape will result in
-      // the largest grid tile size
-      // this also inadvertently finds the grid shape that will best match the
-      // containers aspect ratio
-      let optimalGridShape: GridShape = candidateShapes[0];
-      for (const candidate of candidateShapes) {
-        const optimalSize = this.tileSize(containerSize, optimalGridShape);
-        const proposedSize = this.tileSize(containerSize, candidate);
-
-        const optimalArea = optimalSize.width * optimalSize.height;
-        const proposedArea = proposedSize.width * proposedSize.height;
-
-        if (proposedArea > optimalArea) {
-          optimalGridShape = candidate;
-        }
-      }
-
-      // because we know that the candidate shapes array is not empty, we can
-      // safely assume that the optimal grid shape is not undefined
-      // and use a type cast to GridShape
-      return optimalGridShape;
+    if (candidateShapes.length === 0) {
+      return null;
     }
+
+    return this.optimalGridShape(candidateShapes);
   }
 
+  /**
+   * Performs a breadth first search around the target grid size to find the
+   * optimal grid shape that will fit in the container and meet the
+   * preconditions
+   */
+  private gridShapeSearch(target: number): GridShape {
+    // check if the target grid size has an optimal grid shape
+    // if it does not, then the pre-conditions for the target have not been met
+    // meaning that it does not fit or did not reach the aspect ratio threshold
+    const optimalShape = this.computeGridShape(target);
+    if (optimalShape) {
+      return optimalShape;
+    }
+
+    // if we did not find an optimal grid shape, we do a breadth first search
+    // to find the closest grid shape that will fit in the container
+    // we do this by checking either side of the target grid size until we find
+    // a grid shape that fits
+    for (let displacement = 1; displacement < target; displacement++) {
+      const upperBound = target + displacement;
+      const lowerBound = target - displacement;
+
+      // we prefer to add more tiles to the grid rather than remove tiles
+      // this means that sizes such as 9 are rounded up to 10 rather than
+      // rounded down to 8
+      const upperOptimal = this.computeGridShape(upperBound);
+      if (upperOptimal) {
+        return upperOptimal;
+      }
+
+      const lowerOptimal = this.computeGridShape(lowerBound);
+      if (lowerOptimal) {
+        return lowerOptimal;
+      }
+    }
+
+    // if we reach this condition, it means that the lower bound reached one
+    // even though a grid size of one was rejected because it did not
+    // satisfy the preconditions, it is the minimum grid size that we allow
+    // and we should therefore render a 1x1 grid
+    console.error("Could not find an optimal grid shape, rendering a 1x1 grid");
+    return { columns: 1, rows: 1 };
+  }
+
+  /**
+   * Updates the verification grid with the optimal grid shape as defined by the
+   * grid shape optimizer
+   */
   private autoShapeGrid(): void {
     const newTarget = this.targetGridSize;
-    const newGridShape = this.computeGridShape(newTarget);
-    this.gridSizeN = newGridShape.columns;
-    this.gridSizeM = newGridShape.rows;
+    const newGridShape = this.gridShapeSearch(newTarget);
+    this.rows = newGridShape.columns;
+    this.columns = newGridShape.rows;
   }
 
   private handleTileInvalidation(): void {
@@ -1418,7 +1457,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         <div
           id="grid-container"
           class="verification-grid"
-          style="--columns: ${this.gridSizeN}; --rows: ${this.gridSizeM};"
+          style="--columns: ${this.rows}; --rows: ${this.columns}; --gap-size: ${this.gapSize}px;"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"

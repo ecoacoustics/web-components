@@ -1,32 +1,36 @@
 :host {
-  --axes-padding: 2rem;
+  --x-axis-padding: 2em;
+  --y-axis-padding: 2em;
 
-  position: relative;
-
-  &::part(tick),
   &::part(grid) {
     color: lightblue;
+    stroke-width: 1;
+    opacity: 0.4;
+  }
+
+  &::part(tick) {
+    color: black;
+    stroke-width: 1;
   }
 }
 
 slot {
   display: flex;
-  flex-direction: column;
-  flex: 1 1;
-  min-height: 0px;
+  width: 100%;
+  height: 100%;
 
-  padding-left: var(--axes-padding);
-  padding-bottom: var(--axes-padding);
+  padding-left: var(--x-axis-padding);
+  padding-bottom: var(--y-axis-padding);
 }
 
 #axes-svg {
   position: absolute;
-  width: auto;
-  height: auto;
+  width: calc(100% - var(--x-axis-padding));
+  height: calc(100% - var(--y-axis-padding));
   overflow: visible;
 
-  padding-left: var(--axes-padding);
-  padding-bottom: var(--axes-padding);
+  padding-left: var(--x-axis-padding);
+  padding-bottom: var(--y-axis-padding);
 
   /*
     The axes lines will be hidden behind the spectrogram if we do not set
@@ -49,7 +53,7 @@ slot {
   }
 }
 
-.grid-line {
-  stroke-width: 1;
-  opacity: 0.4;
+.wrapper-element {
+  width: calc(100% - var(--x-axis-padding));
+  height: calc(100% - var(--y-axis-padding));
 }
