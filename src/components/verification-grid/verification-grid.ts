@@ -212,13 +212,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private doneRenderBoxInit = false;
   private gapSize: Pixel = 12;
   private paginationFetcher?: GridPageFetcher;
+  private minimumTileSize?: Size;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
     elements: [],
   };
-  private minimumTileSize: Size = { width: 180, height: 300 };
   private currentGridSize: Size = { width: 0, height: 0 };
 
   /** A count of the number of tiles currently visible on the screen */
@@ -309,8 +309,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // TODO: The typing doesn't work for gridSizeN and gridSizeM because they
       // are private properties. We should correctly type the invalidation keys
       // so that we don't have to use an "as any" type cast
-      "gridSizeN" as any,
-      "gridSizeM" as any,
+      "columns" as any,
+      "rows" as any,
     ];
 
     // tile invalidations cause the functionality of the tiles to change
@@ -341,7 +341,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  private tileSize(containerSize: Size, gridShape: GridShape): Size {
+  private tileSizeForShape(containerSize: Size, gridShape: GridShape): Size {
     const totalGapWidth = this.gapSize * (gridShape.columns - 1);
     const totalGapHeight = this.gapSize * (gridShape.rows - 1);
     const usableContainerSize: Size = {
@@ -392,10 +392,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private willFitTileSize(containerSize: Size, gridShape: GridShape): boolean {
+    if (!this.minimumTileSize) {
+      throw new Error("Minimum tile size is not set");
+    }
+
     const minimumTileWidth: Pixel = this.minimumTileSize.width;
     const minimumTileHeight: Pixel = this.minimumTileSize.height;
 
-    const proposedTileSize = this.tileSize(containerSize, gridShape);
+    const proposedTileSize = this.tileSizeForShape(containerSize, gridShape);
 
     const meetsMinimumWidth = proposedTileSize.width >= minimumTileWidth;
     const meetsMinimumHeight = proposedTileSize.height >= minimumTileHeight;
@@ -450,8 +454,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // the largest grid tile size
     let foundOptimal: GridShape = candidates[0];
     for (const candidate of candidates) {
-      const optimalSize = this.tileSize(containerSize, foundOptimal);
-      const proposedSize = this.tileSize(containerSize, candidate);
+      const optimalSize = this.tileSizeForShape(containerSize, foundOptimal);
+      const proposedSize = this.tileSizeForShape(containerSize, candidate);
 
       const optimalArea = optimalSize.width * optimalSize.height;
       const proposedArea = proposedSize.width * proposedSize.height;
@@ -630,6 +634,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.injector.colorService = decisionColor;
   }
 
+  private updateMinimumTileSize(): void {
+    this.minimumTileSize = { width: 180, height: 300 };
+  }
+
   //#endregion
 
   //#region EventHandlers
@@ -748,6 +756,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
     this.updateInjector();
+    this.updateMinimumTileSize();
   }
 
   //#endregion

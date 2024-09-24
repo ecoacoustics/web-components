@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "../../../playwright";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -12,7 +12,6 @@ import {
   ScaleDomain,
   ScaleRange,
   EmUnit,
-  Pixel,
 } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -107,12 +106,6 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   /** Shows/hides y-axis labels and grid lines */
   @property({ attribute: "y-grid", converter: booleanConverter })
   public showYGrid = true;
-
-  @state()
-  private xAxisPadding: Pixel = 0;
-
-  @state()
-  private yAxisPadding: Pixel = 9;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: SpectrogramComponent;
@@ -249,8 +242,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
     const yTitleOffset = yTitleFontSize.height + fontSize.width;
 
-    this.xAxisPadding = xTitleOffset + fontSize.height;
-    this.yAxisPadding = yTitleOffset + fontSize.width;
+    if (this.elementChrome) {
+      const xAxisPadding = xTitleOffset + fontSize.height;
+      const yAxisPadding = yTitleOffset + fontSize.width;
+      this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
+      this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
+    }
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter.scaleX.value(value);
@@ -524,23 +521,13 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
     const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg
-      id="axes-svg"
-      style="
-        --x-axis-padding: ${this.xAxisPadding}px;
-        --y-axis-padding: ${this.yAxisPadding}px;
-      "
-    >
-      ${gridLines} ${labels}
-    </svg>`;
+    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
   }
 
   public render() {
     return html`
-      <div class="wrapper-element">
-        ${this.unitConverter ? this.axesTemplate() : nothing}
-        <slot @slotchange="${this.handleSlotChange}"></slot>
-      </div>
+      ${this.unitConverter ? this.axesTemplate() : nothing}
+      <slot @slotchange="${this.handleSlotChange}"></slot>
     `;
   }
 }
