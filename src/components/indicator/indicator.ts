@@ -24,8 +24,8 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
-  @query("#wrapped-element")
-  private wrappedElement!: Readonly<HTMLDivElement>;
+  @query("#indicator-svg")
+  private indicatorSvg!: HTMLDivElement;
 
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
@@ -45,16 +45,16 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
       });
 
       if (this.unitConverter) {
-        this.unitConverter.canvasSize.subscribe(this.handleCanvasResize);
+        this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
       }
     }
   }
 
   private handleCanvasResize(canvasSize: Size): void {
-    if (this?.wrappedElement) {
+    if (this?.indicatorSvg) {
       const { width, height } = canvasSize;
-      this.wrappedElement.style.width = `${width}px`;
-      this.wrappedElement.style.height = `${height}px`;
+      this.indicatorSvg.style.width = `${width}px`;
+      this.indicatorSvg.style.height = `${height}px`;
     }
   }
 

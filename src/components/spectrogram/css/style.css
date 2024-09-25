@@ -1,5 +1,8 @@
 :host {
+  --min-height: 128px;
+
   display: block;
+  min-height: var(--min-height) !important;
 }
 
 #spectrogram-container {
@@ -7,6 +10,8 @@
   background-color: var(--oe-panel-color-lighter);
   width: 100%;
   height: 100%;
+
+  min-height: var(--min-height);
 }
 
 #spectrogram-container > canvas {
@@ -19,5 +24,5 @@
     we support is 64 samples. Therefore, if the user does not specify a container
     with a minimum height, we should at least show 64px in height (the width will auto-scale)
   */
-  min-height: 128px;
+  min-height: var(--min-height);
 }

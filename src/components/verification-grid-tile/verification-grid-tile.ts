@@ -103,7 +103,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   public isOverlapping!: Signal<boolean>;
 
   @query("oe-spectrogram")
-  private spectrogram?: SpectrogramComponent;
+  private spectrogram!: SpectrogramComponent;
+
+  @query("#progress-meter")
+  private progressMeter!: HTMLDivElement;
 
   @query("#contents-wrapper")
   private contentsWrapper!: HTMLDivElement;
@@ -156,7 +159,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       // the spectrogram overflows the container
       threshold: 0,
     });
-    intersectionObserver.observe(this.spectrogram);
+    intersectionObserver.observe(this.progressMeter);
+    intersectionObserver.observe(this.contentsWrapper);
   }
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
@@ -359,9 +363,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             </oe-indicator>
           </oe-axes>
 
-          <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
-
           <slot></slot>
+
+          <div id="progress-meter" class="progress-meter">${this.meterSegmentsTemplate()}</div>
         </figure>
       </div>
     `;

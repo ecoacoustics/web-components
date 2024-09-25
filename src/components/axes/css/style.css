@@ -2,6 +2,8 @@
   --x-axis-padding: 2em;
   --y-axis-padding: 2em;
 
+  min-height: calc(128px + var(--y-axis-padding)) !important;
+
   &::part(grid) {
     color: lightblue;
     stroke-width: 1;

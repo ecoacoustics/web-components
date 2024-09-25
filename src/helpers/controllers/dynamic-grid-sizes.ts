@@ -22,19 +22,26 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       this.handleResize(container);
     });
     resizeObserver.observe(container);
+    let debounceTimeout: number | undefined;
 
     this.isOverlapping.subscribe((value: boolean) => {
-      if (value) {
-        this.handleIntersection();
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
       }
+
+      debounceTimeout = window.setTimeout(() => {
+        if (value) {
+          this.handleIntersection();
+        }
+      }, 500);
     });
   }
 
   private targetElement: VerificationGridComponent;
   private candidateShapes: GridShape[] = [];
   private containerSize: Size = { width: 0, height: 0 };
-  private minimumGridCellSize: Size = { width: 0, height: 0 };
-  // private minimumGridCellSize: Size = { width: 100, height: 300 };
+  // private minimumGridCellSize: Size = { width: 0, height: 0 };
+  private minimumGridCellSize: Size = { width: 200, height: 300 };
   private fallbackGridShape: GridShape = { columns: 1, rows: 1, strength: 0 };
   private isOverlapping: Signal<boolean>;
   private target = 0;
@@ -72,15 +79,17 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
    * and that it hasn't overflowed in the past.
    */
   private nextCandidateShape(): GridShape {
-    this.candidateShapes.forEach((shape) => {
-      console.log(shape);
-    });
+    // this.candidateShapes.forEach((shape) => {
+    //   console.log(shape);
+    // });
 
     const nextBufferCandidate = this.candidateShapes.shift();
+    // console.log(nextBufferCandidate);
     if (nextBufferCandidate) {
       return nextBufferCandidate;
     }
 
+    console.error("ran out of candidates, using 1x1 as fallback");
     return this.fallbackGridShape;
   }
 
