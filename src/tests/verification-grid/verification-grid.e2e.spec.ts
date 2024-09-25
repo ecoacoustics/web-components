@@ -958,55 +958,68 @@ test.describe("single verification grid", () => {
       interface DynamicGridSizeTest {
         deviceName: string;
         device: DeviceMock;
-        expectedGridSize: number;
-        expectedGridShape: GridShape;
+        withoutSlotShape: GridShape;
+        withSlotShape: GridShape;
       }
 
       const testedGridSizes: DynamicGridSizeTest[] = [
         {
           deviceName: "desktop",
           device: mockDeviceSize(testBreakpoints.desktop),
-          expectedGridSize: 10,
-          expectedGridShape: { columns: 5, rows: 2 },
+          withoutSlotShape: { columns: 5, rows: 2 },
+          withSlotShape: { columns: 5, rows: 1 },
         },
         {
           deviceName: "laptop",
           device: mockDeviceSize(testBreakpoints.laptop),
-          expectedGridSize: 5,
-          expectedGridShape: { columns: 5, rows: 1 },
+          withoutSlotShape: { columns: 5, rows: 1 },
+          withSlotShape: { columns: 3, rows: 1 },
         },
         {
           deviceName: "landscape tablet",
           device: mockDeviceSize(testBreakpoints.tabletLandscape),
-          expectedGridSize: 4,
-          expectedGridShape: { columns: 4, rows: 1 },
+          withoutSlotShape: { columns: 4, rows: 1 },
+          withSlotShape: { columns: 2, rows: 1 },
         },
         {
           deviceName: "portrait tablet",
           device: mockDeviceSize(testBreakpoints.tabletPortrait),
-          expectedGridSize: 6,
-          expectedGridShape: { columns: 3, rows: 2 },
+          withoutSlotShape: { columns: 3, rows: 2 },
+          withSlotShape: { columns: 3, rows: 1 },
         },
         {
           deviceName: "mobile",
           device: changeToMobile,
-          expectedGridSize: 1,
-          expectedGridShape: { columns: 1, rows: 1 },
+          withoutSlotShape: { columns: 1, rows: 1 },
+          withSlotShape: { columns: 1, rows: 1 },
         },
       ];
 
       for (const testConfig of testedGridSizes) {
         test.describe(testConfig.deviceName, () => {
-          test(`should have the correct grid size`, async ({ fixture }) => {
-            await testConfig.device(fixture.page);
-            const realizedTargetGridSize = await fixture.getRealizedGridSize();
-            expect(realizedTargetGridSize).toEqual(testConfig.expectedGridSize);
-          });
-
           test(`should have the correct grid shape`, async ({ fixture }) => {
             await testConfig.device(fixture.page);
             const realizedGridShape = await fixture.getGridShape();
-            expect(realizedGridShape).toEqual(testConfig.expectedGridShape);
+            expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
+          });
+
+          test("should have the correct grid shape with slot content", async ({ fixture }) => {
+            const testedSlotContent = `
+              <div>
+                <h1>Heading text</h1>
+
+                <p>
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
+                  voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
+                </p>
+              </div>
+            `;
+
+            await testConfig.device(fixture.page);
+            await fixture.create(testedSlotContent);
+
+            const realizedGridShape = await fixture.getGridShape();
+            expect(realizedGridShape).toEqual(testConfig.withSlotShape);
           });
         });
       }

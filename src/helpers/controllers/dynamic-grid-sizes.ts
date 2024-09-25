@@ -78,10 +78,6 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
    * and that it hasn't overflowed in the past.
    */
   private nextCandidateShape(): GridShape {
-    // this.candidateShapes.forEach((shape) => {
-    //   console.log(shape);
-    // });
-
     const nextBufferCandidate = this.candidateShapes.shift();
     if (nextBufferCandidate) {
       return nextBufferCandidate;
