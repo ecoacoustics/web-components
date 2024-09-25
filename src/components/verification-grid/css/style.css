@@ -44,7 +44,6 @@
 .verification-grid {
   --columns: 0;
   --rows: 0;
-  --gap-size: 18px;
 
   display: grid;
   width: 100%;
@@ -69,7 +68,7 @@
     styles so that on mobile, the grid tiles are flush with the edge of the
     screen.
   */
-  gap: var(--gap-size);
+  gap: var(--oe-spacing);
 }
 
 .no-items-message {

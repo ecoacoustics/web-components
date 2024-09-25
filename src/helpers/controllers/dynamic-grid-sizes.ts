@@ -1,3 +1,4 @@
+import { Signal } from "@lit-labs/preact-signals";
 import { VerificationGridComponent } from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
 import { Pixel, UnitInterval } from "../../models/unitConverters";
@@ -5,11 +6,13 @@ import { Pixel, UnitInterval } from "../../models/unitConverters";
 export interface GridShape {
   rows: number;
   columns: number;
+  strength?: number;
 }
 
 export class DynamicGridSizeController<Container extends HTMLElement> {
-  public constructor(container: Container, targetElement: VerificationGridComponent) {
+  public constructor(container: Container, targetElement: VerificationGridComponent, isOverlapping: Signal<boolean>) {
     this.targetElement = targetElement;
+    this.isOverlapping = isOverlapping;
 
     const resizeObserver = new ResizeObserver((size: ResizeObserverEntry[]) => {
       // because we know that this resize observer will only ever be used with
@@ -20,83 +23,88 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     });
     resizeObserver.observe(container);
 
-    // use a mutation observer to check when grid tiles are added to the grid
-    const mutationObserver = new MutationObserver((mutations: MutationRecord[]) => {
-      for (const mutation of mutations) {
-        const addedNodes = Array.from(mutation.addedNodes);
-        for (const node of addedNodes) {
-          const isGridTile = node instanceof HTMLElement;
-          if (isGridTile) {
-            this.observeTile(node);
-          }
-        }
+    this.isOverlapping.subscribe((value: boolean) => {
+      if (value) {
+        this.handleIntersection();
       }
     });
-    mutationObserver.observe(container, { childList: true });
   }
 
   private targetElement: VerificationGridComponent;
   private candidateShapes: GridShape[] = [];
   private containerSize: Size = { width: 0, height: 0 };
-  private minimumTileSize: Size = { width: 180, height: 300 };
-  private target?: number;
+  private minimumGridCellSize: Size = { width: 0, height: 0 };
+  // private minimumGridCellSize: Size = { width: 100, height: 300 };
+  private fallbackGridShape: GridShape = { columns: 1, rows: 1, strength: 0 };
+  private isOverlapping: Signal<boolean>;
+  private target = 0;
 
   public setTarget(target: number): void {
-    const candidates = this.generateSearchTargetBuffer(target);
-    this.candidateShapes = this.sortByEligibility(candidates);
     this.target = target;
+    this.candidateShapes = this.generateSearchTargetBuffer(target);
+    this.nextGridShape();
   }
 
-  public autoShapeGrid(): void {
-    if (this.target !== undefined) {
-      this.candidateShapes = this.generateSearchTargetBuffer(this.target);
+  private handleResize(container: ResizeObserverEntry): void {
+    this.containerSize = container.contentRect;
+    this.setTarget(this.target);
+  }
 
-      const startingShape = this.candidateShapes[0];
-      this.setGridShape(startingShape);
+  private handleIntersection(): void {
+    this.nextGridShape();
+  }
+
+  /**
+   * This function will start a process that picks the most optimal grid size
+   * it might not pick a grid size that fits exactly.
+   * In this case, the intersection handler will be called to try a different
+   * grid size.
+   */
+  private nextGridShape(): void {
+    const nextCandidate = this.nextCandidateShape();
+    this.setGridShape(nextCandidate);
+  }
+
+  /**
+   * @returns
+   * The first candidate shape that is viable.
+   * Viability means that we have determined that it will fit in the container
+   * and that it hasn't overflowed in the past.
+   */
+  private nextCandidateShape(): GridShape {
+    this.candidateShapes.forEach((shape) => {
+      console.log(shape);
+    });
+
+    const nextBufferCandidate = this.candidateShapes.shift();
+    if (nextBufferCandidate) {
+      return nextBufferCandidate;
     }
-  }
 
-  private observeTile(element: HTMLElement): void {
-    const observer = new IntersectionObserver(
-      (entries: IntersectionObserverEntry[]) => {
-        this.handleIntersection(entries[0]);
-      },
-      { threshold: 0 },
-    );
-    observer.observe(element);
+    return this.fallbackGridShape;
   }
 
   // because we might overflow above and below the target, we generate possible
   // grid shapes that are within a certain range of the target
-  private generateSearchTargetBuffer(target: number): GridShape[] {
-    const displacementLimit = 2;
-    const upperLimit = target + displacementLimit;
+  private generateSearchTargetBuffer(target: number, displacementStart = 1, displacementLimit = 2): GridShape[] {
+    const candidateTargets = [this.sortByEligibility(this.candidateShapesForTarget(target))];
 
-    const candidateTargets = [this.sortByEligibility(this.fittingCandidateShapesForTarget(target))];
-
-    for (let displacement = 1; displacement <= upperLimit; displacement++) {
+    for (let displacement = displacementStart; displacement <= displacementLimit; displacement++) {
       const lowerTarget = target - displacement;
       const upperTarget = target + displacement;
 
+      // we push the upper candidates first so that they are preferred if we
+      // cannot exactly match the target
+      const upperCandidates = this.candidateShapesForTarget(upperTarget);
+      candidateTargets.push(this.sortByEligibility(upperCandidates));
+
       if (lowerTarget > 0) {
-        const lowerCandidates = this.fittingCandidateShapesForTarget(lowerTarget);
+        const lowerCandidates = this.candidateShapesForTarget(lowerTarget);
         candidateTargets.push(this.sortByEligibility(lowerCandidates));
       }
-
-      const upperCandidates = this.fittingCandidateShapesForTarget(upperTarget);
-      candidateTargets.push(this.sortByEligibility(upperCandidates));
     }
 
     return candidateTargets.flat();
-  }
-
-  private fittingCandidateShapesForTarget(target: number): GridShape[] {
-    const candidateShapes = this.candidateShapesForTarget(target);
-    return candidateShapes.filter((shape) => {
-      const fitsShape = this.willFitShape(shape);
-      const meetsThreshold = this.meetsAspectRatioSimilarityThreshold(shape);
-      return fitsShape && meetsThreshold;
-    });
   }
 
   /**
@@ -113,7 +121,11 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       if (isFactor) {
         const columns = i;
         const rows = target / i;
-        candidateShapes.push({ columns, rows });
+
+        const willFit = this.willFitShape({ columns, rows });
+        if (willFit) {
+          candidateShapes.push({ columns, rows });
+        }
       }
     }
 
@@ -122,29 +134,18 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
 
   private sortByEligibility(shapes: GridShape[]): GridShape[] {
     const sortCallback = (a: GridShape, b: GridShape): number => {
-      const aSimilarity = this.gridAspectRatioSimilarity(this.containerSize, a);
-      const bSimilarity = this.gridAspectRatioSimilarity(this.containerSize, b);
-      return bSimilarity - aSimilarity;
+      const aStrength = this.gridAspectRatioSimilarity(this.containerSize, a);
+      const bStrength = this.gridAspectRatioSimilarity(this.containerSize, b);
+      a.strength = aStrength;
+      b.strength = bStrength;
+      return bStrength - aStrength;
     };
 
     return shapes.sort(sortCallback);
   }
 
-  private handleResize(container: ResizeObserverEntry): void {
-    this.containerSize = container.contentRect;
-    this.autoShapeGrid();
-  }
-
-  private handleIntersection(entry: IntersectionObserverEntry): void {
-    if (entry.intersectionRatio === 1) {
-      return;
-    }
-
-    this.candidateShapes.shift();
-    this.setGridShape(this.candidateShapes[0]);
-  }
-
   private setGridShape(shape: GridShape): void {
+    this.isOverlapping.value = false;
     this.targetElement.columns = shape.columns;
     this.targetElement.rows = shape.rows;
   }
@@ -172,10 +173,10 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   }
 
   private willFitShape(gridShape: GridShape): boolean {
-    const minimumTileWidth: Pixel = this.minimumTileSize.width;
-    const minimumTileHeight: Pixel = this.minimumTileSize.height;
+    const minimumTileWidth: Pixel = this.minimumGridCellSize.width;
+    const minimumTileHeight: Pixel = this.minimumGridCellSize.height;
 
-    const proposedTileSize = this.tileSizeForShape(gridShape);
+    const proposedTileSize = this.gridCellSizeForShape(gridShape);
 
     const meetsMinimumWidth = proposedTileSize.width >= minimumTileWidth;
     const meetsMinimumHeight = proposedTileSize.height >= minimumTileHeight;
@@ -183,7 +184,7 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     return meetsMinimumHeight && meetsMinimumWidth;
   }
 
-  private tileSizeForShape(gridShape: GridShape): Size {
+  private gridCellSizeForShape(gridShape: GridShape): Size {
     const usableContainerSize: Size = {
       width: this.containerSize.width,
       height: this.containerSize.height,
@@ -193,19 +194,5 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     const height = usableContainerSize.height / gridShape.rows;
 
     return { width, height };
-  }
-
-  private meetsAspectRatioSimilarityThreshold(gridShape: GridShape): boolean {
-    // some numbers e.g. 9 have one factor such as 3x3 which creates a aspect
-    // ratio of 1.00
-    // using a 3x3 grid for a 16:9 (≈1.78) screen is not ideal because it will
-    // create a lot of dead space
-    // therefore, we have a threshold that we have to meet. If we do not meet
-    // the threshold, we keep increasing the target until we find a grid shape
-    // that meets the similarity percentage threshold
-    const threshold: UnitInterval = 0.5;
-
-    const similarity = this.gridAspectRatioSimilarity(this.containerSize, gridShape);
-    return similarity >= threshold;
   }
 }

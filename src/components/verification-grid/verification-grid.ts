@@ -24,7 +24,6 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { Pixel } from "../../models/unitConverters";
 import { DynamicGridSizeController } from "../../helpers/controllers/dynamic-grid-sizes";
 import verificationGridStyles from "./css/style.css?inline";
 
@@ -210,8 +209,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private doneRenderBoxInit = false;
-  private gapSize: Pixel = 12;
-  private gridController!: DynamicGridSizeController<HTMLDivElement>;
+  private isOverlapping = signal<boolean>(false);
+  private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
@@ -268,8 +267,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
 
-    this.gridController = new DynamicGridSizeController(this.gridContainer, this);
-
     // if the user has explicitly set a grid size through the `grid-size`
     // attribute, we should use that grid size
     // however, if the verification grid does not have a `grid-size` attribute
@@ -282,7 +279,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
-    if (this.gridController && change.has("targetGridSize")) {
+    if (this.gridContainer && change.has("targetGridSize")) {
+      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.isOverlapping);
       this.gridController.setTarget(this.targetGridSize);
     }
 
@@ -325,7 +323,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (screenSize.width <= 720) {
       return 1;
     } else {
-      return 10;
+      return 9;
     }
   }
 
@@ -781,8 +779,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    console.log("stop highlight");
-
     // TODO: make this better
     element.style.width = "0px";
     element.style.height = "0px";
@@ -1221,7 +1217,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         <div
           id="grid-container"
           class="verification-grid"
-          style="--columns: ${this.columns}; --rows: ${this.rows}; --gap-size: ${this.gapSize}px;"
+          style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
@@ -1236,6 +1232,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
+                    .isOverlapping="${this.isOverlapping}"
                     .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"
                     .index="${i}"

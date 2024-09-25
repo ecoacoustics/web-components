@@ -28,8 +28,10 @@ export class GridPageFetcher {
   private pagingContext: PageFetcherContext = {};
 
   // caches the audio for the next n items in the buffer
-  private clientCacheLength = 10;
-  private serverCacheLength = 50;
+  // private clientCacheLength = 10;
+  // private serverCacheLength = 50;
+  private clientCacheLength = 0;
+  private serverCacheLength = 0;
 
   /**
    * Removes the next n requestedItems from the queue
