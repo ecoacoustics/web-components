@@ -198,7 +198,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     for (const entry of entries) {
       if (entry.intersectionRatio < 1) {
-        console.log("intersecting tile");
         this.isOverlapping.value = true;
         return;
       }
@@ -363,9 +362,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             </oe-indicator>
           </oe-axes>
 
-          <slot></slot>
-
           <div id="progress-meter" class="progress-meter">${this.meterSegmentsTemplate()}</div>
+
+          <slot></slot>
         </figure>
       </div>
     `;

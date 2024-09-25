@@ -15,6 +15,8 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     this.isOverlapping = isOverlapping;
 
     const resizeObserver = new ResizeObserver((size: ResizeObserverEntry[]) => {
+      if (!this.target) return;
+
       // because we know that this resize observer will only ever be used with
       // one element, we can safely assume that the first element in the array
       // is the container element
@@ -41,13 +43,14 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   private candidateShapes: GridShape[] = [];
   private containerSize: Size = { width: 0, height: 0 };
   // private minimumGridCellSize: Size = { width: 0, height: 0 };
-  private minimumGridCellSize: Size = { width: 200, height: 300 };
-  private fallbackGridShape: GridShape = { columns: 1, rows: 1, strength: 0 };
+  private minimumGridCellSize: Size = { width: 300, height: 300 };
   private isOverlapping: Signal<boolean>;
   private target = 0;
+  private displacementMaximum = 0;
 
   public setTarget(target: number): void {
     this.target = target;
+    this.displacementMaximum = 0;
     this.candidateShapes = this.generateSearchTargetBuffer(target);
     this.nextGridShape();
   }
@@ -84,19 +87,34 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     // });
 
     const nextBufferCandidate = this.candidateShapes.shift();
-    // console.log(nextBufferCandidate);
     if (nextBufferCandidate) {
       return nextBufferCandidate;
     }
 
-    console.error("ran out of candidates, using 1x1 as fallback");
-    return this.fallbackGridShape;
+    // because we have exhausted all the candidate grid shapes, we want to
+    // generate new candidates
+    const displacementRange = 2;
+    const displacementStart = this.displacementMaximum + 1;
+    const displacementEnd = this.displacementMaximum + displacementRange;
+
+    const newCandidates = this.generateSearchTargetBuffer(this.target, displacementStart, displacementEnd, false);
+    this.candidateShapes.push(...newCandidates);
+
+    return this.nextCandidateShape();
   }
 
   // because we might overflow above and below the target, we generate possible
   // grid shapes that are within a certain range of the target
-  private generateSearchTargetBuffer(target: number, displacementStart = 1, displacementLimit = 2): GridShape[] {
-    const candidateTargets = [this.sortByEligibility(this.candidateShapesForTarget(target))];
+  private generateSearchTargetBuffer(
+    target: number,
+    displacementStart = 1,
+    displacementLimit = 2,
+    includeTarget = true,
+  ): GridShape[] {
+    const candidateTargets: GridShape[][] = [];
+    if (includeTarget) {
+      candidateTargets.push(this.sortByEligibility(this.candidateShapesForTarget(target)));
+    }
 
     for (let displacement = displacementStart; displacement <= displacementLimit; displacement++) {
       const lowerTarget = target - displacement;
@@ -105,13 +123,19 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       // we push the upper candidates first so that they are preferred if we
       // cannot exactly match the target
       const upperCandidates = this.candidateShapesForTarget(upperTarget);
-      candidateTargets.push(this.sortByEligibility(upperCandidates));
+      if (upperCandidates.length > 0) {
+        candidateTargets.push(this.sortByEligibility(upperCandidates));
+      }
 
       if (lowerTarget > 0) {
         const lowerCandidates = this.candidateShapesForTarget(lowerTarget);
-        candidateTargets.push(this.sortByEligibility(lowerCandidates));
+        if (lowerCandidates.length > 0) {
+          candidateTargets.push(this.sortByEligibility(lowerCandidates));
+        }
       }
     }
+
+    this.displacementMaximum = Math.max(displacementLimit, this.displacementMaximum);
 
     return candidateTargets.flat();
   }
@@ -142,14 +166,12 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   }
 
   private sortByEligibility(shapes: GridShape[]): GridShape[] {
-    const sortCallback = (a: GridShape, b: GridShape): number => {
-      const aStrength = this.gridAspectRatioSimilarity(this.containerSize, a);
-      const bStrength = this.gridAspectRatioSimilarity(this.containerSize, b);
-      a.strength = aStrength;
-      b.strength = bStrength;
-      return bStrength - aStrength;
-    };
+    for (const shape of shapes) {
+      const strength = this.gridAspectRatioSimilarity(this.containerSize, shape);
+      shape.strength = strength;
+    }
 
+    const sortCallback = (a: GridShape, b: GridShape): number => (a.strength ?? 0) - (b.strength ?? 0);
     return shapes.sort(sortCallback);
   }
 
@@ -171,14 +193,12 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
    * grid aspect ratio and the container aspect ratio
    */
   private gridAspectRatioSimilarity(containerSize: Size, gridShape: GridShape): UnitInterval {
+    const tileSize = this.gridCellSizeForShape(gridShape);
     const targetAspectRatio = containerSize.width / containerSize.height;
-    const candidateSizeAspectRatio = gridShape.columns / gridShape.rows;
-
-    const distance = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
-    const maxRatio = Math.max(targetAspectRatio, candidateSizeAspectRatio);
-    const similarity = 1 - distance / maxRatio;
-
-    return similarity;
+    const candidateSizeAspectRatio = tileSize.width / tileSize.height;
+    const difference = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
+    console.debug({ difference, targetAspectRatio, candidateSizeAspectRatio }, gridShape);
+    return difference;
   }
 
   private willFitShape(gridShape: GridShape): boolean {

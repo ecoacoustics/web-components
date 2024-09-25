@@ -323,7 +323,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (screenSize.width <= 720) {
       return 1;
     } else {
-      return 9;
+      return 10;
     }
   }
 
