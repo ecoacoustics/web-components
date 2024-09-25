@@ -6,7 +6,6 @@ import { Pixel, UnitInterval } from "../../models/unitConverters";
 export interface GridShape {
   rows: number;
   columns: number;
-  strength?: number;
 }
 
 export class DynamicGridSizeController<Container extends HTMLElement> {
@@ -35,22 +34,19 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
         if (value) {
           this.handleIntersection();
         }
-      }, 500);
+      }, 5);
     });
   }
 
   private targetElement: VerificationGridComponent;
   private candidateShapes: GridShape[] = [];
   private containerSize: Size = { width: 0, height: 0 };
-  // private minimumGridCellSize: Size = { width: 0, height: 0 };
   private minimumGridCellSize: Size = { width: 300, height: 300 };
   private isOverlapping: Signal<boolean>;
   private target = 0;
-  private displacementMaximum = 0;
 
   public setTarget(target: number): void {
     this.target = target;
-    this.displacementMaximum = 0;
     this.candidateShapes = this.generateSearchTargetBuffer(target);
     this.nextGridShape();
   }
@@ -91,53 +87,35 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       return nextBufferCandidate;
     }
 
-    // because we have exhausted all the candidate grid shapes, we want to
-    // generate new candidates
-    const displacementRange = 2;
-    const displacementStart = this.displacementMaximum + 1;
-    const displacementEnd = this.displacementMaximum + displacementRange;
-
-    const newCandidates = this.generateSearchTargetBuffer(this.target, displacementStart, displacementEnd, false);
-    this.candidateShapes.push(...newCandidates);
-
-    return this.nextCandidateShape();
+    // fall back to a 1x1 grid
+    return { columns: 1, rows: 1 };
   }
 
   // because we might overflow above and below the target, we generate possible
   // grid shapes that are within a certain range of the target
-  private generateSearchTargetBuffer(
-    target: number,
-    displacementStart = 1,
-    displacementLimit = 2,
-    includeTarget = true,
-  ): GridShape[] {
-    const candidateTargets: GridShape[][] = [];
-    if (includeTarget) {
-      candidateTargets.push(this.sortByEligibility(this.candidateShapesForTarget(target)));
+  private generateSearchTargetBuffer(target: number): GridShape[] {
+    // because one is the minimum grid size, we know that if one doesn't fit
+    // then nothing will fit.
+    // therefore, we do not have to worry about alternative candidate shapes for
+    // a grid size of one.
+    if (target === 1) {
+      return [{ columns: 1, rows: 1 }];
     }
 
-    for (let displacement = displacementStart; displacement <= displacementLimit; displacement++) {
-      const lowerTarget = target - displacement;
-      const upperTarget = target + displacement;
+    const candidateTargets: GridShape[] = [];
 
-      // we push the upper candidates first so that they are preferred if we
-      // cannot exactly match the target
-      const upperCandidates = this.candidateShapesForTarget(upperTarget);
-      if (upperCandidates.length > 0) {
-        candidateTargets.push(this.sortByEligibility(upperCandidates));
-      }
+    candidateTargets.push(
+      ...this.candidateShapesForTarget(target),
+      ...this.candidateShapesForTarget(target + 1),
+      ...this.candidateShapesForTarget(target + 2),
+    );
 
-      if (lowerTarget > 0) {
-        const lowerCandidates = this.candidateShapesForTarget(lowerTarget);
-        if (lowerCandidates.length > 0) {
-          candidateTargets.push(this.sortByEligibility(lowerCandidates));
-        }
-      }
+    // find all candidates all down to one
+    for (let offset = target - 1; offset > 0; offset--) {
+      candidateTargets.push(...this.candidateShapesForTarget(offset));
     }
 
-    this.displacementMaximum = Math.max(displacementLimit, this.displacementMaximum);
-
-    return candidateTargets.flat();
+    return this.sortByEligibility(candidateTargets);
   }
 
   /**
@@ -166,13 +144,24 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   }
 
   private sortByEligibility(shapes: GridShape[]): GridShape[] {
-    for (const shape of shapes) {
-      const strength = this.gridAspectRatioSimilarity(this.containerSize, shape);
-      shape.strength = strength;
-    }
+    const sortFunction = (a: GridShape, b: GridShape) => {
+      const aSize = a.columns * a.rows;
+      const bSize = b.columns * b.rows;
 
-    const sortCallback = (a: GridShape, b: GridShape): number => (a.strength ?? 0) - (b.strength ?? 0);
-    return shapes.sort(sortCallback);
+      const aTargetDistance = Math.abs(this.target - aSize);
+      const bTargetDistance = Math.abs(this.target - bSize);
+
+      // second stage sort
+      if (aTargetDistance === bTargetDistance) {
+        const aSimilarity = this.gridAspectRatioSimilarity(this.containerSize, a);
+        const bSimilarity = this.gridAspectRatioSimilarity(this.containerSize, b);
+        return aSimilarity - bSimilarity;
+      }
+
+      return aTargetDistance - bTargetDistance;
+    };
+
+    return shapes.sort(sortFunction);
   }
 
   private setGridShape(shape: GridShape): void {
@@ -197,7 +186,6 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     const targetAspectRatio = containerSize.width / containerSize.height;
     const candidateSizeAspectRatio = tileSize.width / tileSize.height;
     const difference = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
-    console.debug({ difference, targetAspectRatio, candidateSizeAspectRatio }, gridShape);
     return difference;
   }
 

@@ -105,8 +105,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   @query("oe-spectrogram")
   private spectrogram!: SpectrogramComponent;
 
-  @query("#progress-meter")
-  private progressMeter!: HTMLDivElement;
+  @query("#slot-wrapper")
+  private slotWrapper!: HTMLDivElement;
 
   @query("#contents-wrapper")
   private contentsWrapper!: HTMLDivElement;
@@ -118,6 +118,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
   public loaded = false;
   private shortcuts: string[] = [];
+  private intersectionObserver!: IntersectionObserver;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -134,6 +135,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
     this.contentsWrapper.removeEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
 
+    this.intersectionObserver.disconnect();
+
     super.disconnectedCallback();
   }
 
@@ -147,20 +150,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     this.spectrogram.addEventListener("loading", this.loadingHandler);
     this.spectrogram.addEventListener("loaded", this.loadedHandler);
 
-    // because the spectrogram has a minimum height, it can overflow the grid
-    // tiles container.
-    // if this occurs, it is a sign that the grid is too large and we need to
-    // reduce the grid size.
-    // we advertise this to the verification grid through the isOverflowing
-    // signal
-    const intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
+    this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
       // the spectrogram overflows the container
       threshold: 0,
     });
-    intersectionObserver.observe(this.progressMeter);
-    intersectionObserver.observe(this.contentsWrapper);
+    this.intersectionObserver.observe(this.slotWrapper);
+    this.intersectionObserver.observe(this.contentsWrapper);
   }
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
@@ -196,12 +193,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
-    for (const entry of entries) {
-      if (entry.intersectionRatio < 1) {
-        this.isOverlapping.value = true;
-        return;
-      }
-    }
+    this.isOverlapping.value = entries.some((entry) => entry.intersectionRatio < 1);
   }
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
@@ -364,7 +356,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
           <div id="progress-meter" class="progress-meter">${this.meterSegmentsTemplate()}</div>
 
-          <slot></slot>
+          <div id="slot-wrapper">
+            <slot></slot>
+          </div>
         </figure>
       </div>
     `;
