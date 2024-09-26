@@ -184,6 +184,17 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
     OeResizeObserver.instance.unobserve(this.canvas);
+
+    // because the resize observer is disconnected when the spectrogram is
+    // removed from the DOM, it will never emit the final resize event of
+    // zero
+    // this means that any elements that depend on the size of the spectrogram
+    // component e.g. axes, indicators, etc. will still stay the same size
+    // to fix this, we emit a canvas size of zero when the component is removed
+    if (this.unitConverters.value) {
+      this.unitConverters.value.canvasSize.value = { width: 0, height: 0 };
+    }
+
     super.disconnectedCallback();
   }
 

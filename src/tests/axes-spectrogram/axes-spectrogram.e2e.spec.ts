@@ -20,39 +20,39 @@ test.describe("interactions between axes and spectrogram", () => {
     const testCases: SpectrogramSizeTest[] = [
       {
         spectrogramSize: { width: 1000, height: 1000 },
-        expectedXStep: 0.1,
+        expectedXStep: 0.2,
         expectedYStep: 0.5,
-        expectedXTickCount: 51,
+        expectedXTickCount: 26,
         expectedYTickCount: 23,
       },
       {
         spectrogramSize: { width: 500, height: 500 },
-        expectedXStep: 0.2,
+        expectedXStep: 0.5,
         expectedYStep: 1,
-        expectedXTickCount: 26,
+        expectedXTickCount: 11,
         expectedYTickCount: 12,
       },
       {
         spectrogramSize: { width: 1000, height: 500 },
-        expectedXStep: 0.1,
+        expectedXStep: 0.2,
         expectedYStep: 0.5,
-        expectedXTickCount: 51,
+        expectedXTickCount: 26,
         expectedYTickCount: 23,
       },
       {
         spectrogramSize: { width: 500, height: 1000 },
-        expectedXStep: 0.2,
+        expectedXStep: 0.5,
         expectedYStep: 1,
-        expectedXTickCount: 26,
+        expectedXTickCount: 11,
         expectedYTickCount: 12,
       },
       {
         spectrogramSize: { width: 100, height: 100 },
-        expectedXStep: 1,
+        expectedXStep: 2,
         expectedYStep: 2,
         // we expect four here because it should include the last value
         // even though it is not a part of the "nice interval"
-        expectedXTickCount: 6,
+        expectedXTickCount: 4,
         expectedYTickCount: 6,
       },
     ];

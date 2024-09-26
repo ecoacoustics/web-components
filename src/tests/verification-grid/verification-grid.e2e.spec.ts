@@ -340,6 +340,10 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("progress bar", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+    });
+
     test("should not show the completed segment if a partial page of decisions is made ", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
@@ -887,9 +891,9 @@ test.describe("single verification grid", () => {
     });
   });
 
-  test.describe("changing grid size", () => {
+  test.describe("grid sizes", () => {
     test("should show new items when increasing the grid size", async ({ fixture }) => {
-      // we use a grid size of one in this test to make asserting output easier
+      await fixture.changeGridSize(3);
 
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
@@ -898,14 +902,14 @@ test.describe("single verification grid", () => {
       const expectedNewModel: SubjectWrapper = new SubjectWrapper(
         {
           AudioLink: "http://localhost:3000/example.flac",
-          Datetime: "2021-03-06T00:00:00.000Z",
-          Distance: "5.148530006408691",
-          FileId: 718570,
-          Filename: "20210306T110000+1100_Little-Llangothlin-Reserve-Warra-National-Park-Dry-A_718570.flac",
-          Offset: 30,
-          Site: "Little-Llangothlin-Reserve-Warra-National-Park",
-          SiteId: 41,
-          Subsite: "Dry-A",
+          Datetime: "2019-10-22T04:00:00.000Z",
+          Distance: "4.958763122558594",
+          FileId: 251486,
+          Filename: "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac",
+          Offset: 15,
+          Site: "SEQP-Samford",
+          SiteId: 255,
+          Subsite: "Dry-B",
           Tag: "koala",
         },
         "http://localhost:3000/example.flac",
@@ -929,6 +933,8 @@ test.describe("single verification grid", () => {
     // grid indexes are used to create sub-selection shortcut keys. If this test
     // fails, it is likely that sub-selection keyboard shortcuts do not work
     test("should have the correct grid index after increasing grid size", async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
       await fixture.changeGridSize(newGridSize);
@@ -954,76 +960,99 @@ test.describe("single verification grid", () => {
       expect(realizedPagedItems).toBe(expectedPagedItems);
     });
 
-    test.describe("dynamic grid sizes", () => {
-      interface DynamicGridSizeTest {
-        deviceName: string;
-        device: DeviceMock;
-        withoutSlotShape: GridShape;
-        withSlotShape: GridShape;
-      }
+    interface DynamicGridSizeTest {
+      deviceName: string;
+      device: DeviceMock;
+      withoutSlotShape: GridShape;
+      withSlotShape: GridShape;
+    }
 
-      const testedGridSizes: DynamicGridSizeTest[] = [
-        {
-          deviceName: "desktop",
-          device: mockDeviceSize(testBreakpoints.desktop),
-          withoutSlotShape: { columns: 5, rows: 2 },
-          withSlotShape: { columns: 5, rows: 1 },
-        },
-        {
-          deviceName: "laptop",
-          device: mockDeviceSize(testBreakpoints.laptop),
-          withoutSlotShape: { columns: 5, rows: 1 },
-          withSlotShape: { columns: 3, rows: 1 },
-        },
-        {
-          deviceName: "landscape tablet",
-          device: mockDeviceSize(testBreakpoints.tabletLandscape),
-          withoutSlotShape: { columns: 4, rows: 1 },
-          withSlotShape: { columns: 2, rows: 1 },
-        },
-        {
-          deviceName: "portrait tablet",
-          device: mockDeviceSize(testBreakpoints.tabletPortrait),
-          withoutSlotShape: { columns: 3, rows: 2 },
-          withSlotShape: { columns: 3, rows: 1 },
-        },
-        {
-          deviceName: "mobile",
-          device: changeToMobile,
-          withoutSlotShape: { columns: 1, rows: 1 },
-          withSlotShape: { columns: 1, rows: 1 },
-        },
-      ];
+    const testedGridSizes: DynamicGridSizeTest[] = [
+      {
+        deviceName: "desktop",
+        device: mockDeviceSize(testBreakpoints.desktop),
+        withoutSlotShape: { columns: 5, rows: 2 },
+        withSlotShape: { columns: 4, rows: 2 },
+      },
+      {
+        deviceName: "laptop",
+        device: mockDeviceSize(testBreakpoints.laptop),
+        withoutSlotShape: { columns: 4, rows: 1 },
+        withSlotShape: { columns: 4, rows: 1 },
+      },
+      {
+        deviceName: "landscape tablet",
+        device: mockDeviceSize(testBreakpoints.tabletLandscape),
+        withoutSlotShape: { columns: 3, rows: 1 },
+        withSlotShape: { columns: 3, rows: 1 },
+      },
+      {
+        deviceName: "portrait tablet",
+        device: mockDeviceSize(testBreakpoints.tabletPortrait),
+        withoutSlotShape: { columns: 2, rows: 2 },
+        withSlotShape: { columns: 2, rows: 1 },
+      },
+      {
+        deviceName: "mobile",
+        device: changeToMobile,
+        withoutSlotShape: { columns: 1, rows: 1 },
+        withSlotShape: { columns: 1, rows: 1 },
+      },
+    ];
 
-      for (const testConfig of testedGridSizes) {
-        test.describe(testConfig.deviceName, () => {
-          test(`should have the correct grid shape`, async ({ fixture }) => {
-            await testConfig.device(fixture.page);
-            const realizedGridShape = await fixture.getGridShape();
-            expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
-          });
+    for (const testConfig of testedGridSizes) {
+      const testedSlotContent = `
+        <template>
+          <div>
+            <h1>Heading text</h1>
 
-          test("should have the correct grid shape with slot content", async ({ fixture }) => {
-            const testedSlotContent = `
-              <div>
-                <h1>Heading text</h1>
+            <p>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
+              voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
+            </p>
+          </div>
+        </template>
 
-                <p>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
-                  voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
-                </p>
-              </div>
-            `;
+        <oe-verification verified="true" shortcut="Y"></oe-verification>
+        <oe-verification verified="false" shortcut="N"></oe-verification>
+      `;
 
-            await testConfig.device(fixture.page);
-            await fixture.create(testedSlotContent);
+      test.describe(testConfig.deviceName, () => {
+        test(`should have the correct grid shape`, async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create();
+          await fixture.dismissHelpDialog();
 
-            const realizedGridShape = await fixture.getGridShape();
-            expect(realizedGridShape).toEqual(testConfig.withSlotShape);
-          });
+          const realizedGridShape = await fixture.getGridShape();
+          expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
         });
-      }
-    });
+
+        test("should have the correct grid shape with slot content", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create(testedSlotContent);
+          await fixture.dismissHelpDialog();
+
+          const realizedGridShape = await fixture.getGridShape();
+          expect(realizedGridShape).toEqual(testConfig.withSlotShape);
+        });
+
+        test("should look correct", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create();
+          await fixture.dismissHelpDialog();
+
+          await expect(fixture.page).toHaveScreenshot();
+        });
+
+        test("should look correct with slot content", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create(testedSlotContent);
+          await fixture.dismissHelpDialog();
+
+          await expect(fixture.page).toHaveScreenshot();
+        });
+      });
+    }
   });
 
   // during progressive creation, individual elements will be added to the
@@ -1040,17 +1069,20 @@ test.describe("decision meter", () => {
         <oe-classification tag="bird" true-shortcut="k"></oe-classification>
 			`);
 
+      await fixture.changeGridSize(3);
+
       await fixture.dismissHelpDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      const expectedSegments = 3;
+      const expectedSegments = await fixture.getGridSize();
       const realizedSegments = await fixture.gridTileProgressMeterSegments();
       expect(realizedSegments).toHaveLength(expectedSegments);
     });
 
     test("should have the correct colors without a decision", async ({ fixture }) => {
-      const expectedColors = Array.from({ length: 3 }).fill(await fixture.panelColor());
+      const gridSize = await fixture.getGridSize();
+      const expectedColors = Array.from({ length: gridSize }).fill(await fixture.panelColor());
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual(expectedColors);
     });

@@ -113,7 +113,6 @@ class TestPage {
           slot="data-source"
           for="verification-grid"
           src="${this.testJsonInput}"
-          local
         ></oe-data-source>
       </oe-verification-grid>
     `);
@@ -508,8 +507,8 @@ class TestPage {
 
   public async getGridShape(): Promise<GridShape> {
     const targetGrid = this.gridComponent();
-    const columns = (await getBrowserValue<VerificationGridComponent>(targetGrid, "gridSizeN" as any)) as any;
-    const rows = (await getBrowserValue<VerificationGridComponent>(targetGrid, "gridSizeM" as any)) as any;
+    const columns = (await getBrowserValue<VerificationGridComponent>(targetGrid, "columns")) as number;
+    const rows = (await getBrowserValue<VerificationGridComponent>(targetGrid, "rows")) as number;
     return { columns, rows };
   }
 

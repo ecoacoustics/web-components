@@ -1,6 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, PropertyValueMap, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
@@ -275,6 +275,23 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (!this.targetGridSize) {
       const targetSize = this.defaultGridSize();
       this.targetGridSize = targetSize;
+    }
+  }
+
+  protected willUpdate(change: PropertyValues<this>): void {
+    // whenever the targetGridSize property updates, we check that the new value
+    // is a finite, positive number. If it is not, then we cancel the change
+    // and revert to the old value
+    if (change.has("targetGridSize")) {
+      const oldGridSize = change.get("targetGridSize") as number;
+      const newGridSize = this.targetGridSize;
+
+      // we use isFinite here to check that the value is not NaN, and that
+      // values such as Infinity are not considered as a valid grid size
+      if (!isFinite(newGridSize) || newGridSize <= 0) {
+        this.targetGridSize = oldGridSize;
+        console.error("New grid size value could not be converted to a number");
+      }
     }
   }
 

@@ -220,7 +220,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     return svg`
-      <g part = "grid" >
+      <g part="grid" >
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
