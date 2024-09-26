@@ -26,19 +26,10 @@
       <oe-verification verified="skip" shortcut="L"></oe-verification>
       <oe-verification verified="unsure" shortcut=";"></oe-verification>
 
-      <!--
-        We should see an error thrown for this classification component
-        because it does not have a tag attribute
-      -->
       <oe-classification true-shortcut="m" tag="Cow"></oe-classification>
 
-      <!--
-        local would use a file picker UI, while src would allow a remote file
-        This should probably use a data service.
-        This service would
-      -->
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json"></oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local></oe-data-source>
     </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>

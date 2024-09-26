@@ -99,7 +99,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   @property({ attribute: false, type: Array })
   public requiredTags!: Tag[];
 
-  @state()
+  @property({ attribute: false })
   public isOverlapping!: Signal<boolean>;
 
   @query("oe-spectrogram")
@@ -153,7 +153,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
-      // the spectrogram overflows the container
+      // any part of the observed elements overflow the component
       threshold: 0,
     });
     this.intersectionObserver.observe(this.slotWrapper);
@@ -193,7 +193,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
-    this.isOverlapping.value = entries.some((entry) => entry.intersectionRatio < 1);
+    const hasOverflowingContent = entries.some((entry) => entry.intersectionRatio < 1);
+    if (hasOverflowingContent) {
+      this.isOverlapping.value = true;
+    }
   }
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
@@ -354,7 +357,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             </oe-indicator>
           </oe-axes>
 
-          <div id="progress-meter" class="progress-meter">${this.meterSegmentsTemplate()}</div>
+          <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
 
           <div id="slot-wrapper">
             <slot></slot>

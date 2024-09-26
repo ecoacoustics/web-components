@@ -23,8 +23,12 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       this.handleResize(container);
     });
     resizeObserver.observe(container);
-    let debounceTimeout: number | undefined;
 
+    // because each tile advertises if they are overlapping, we debounce the
+    // overlapping signal so that if one grid size causes multiple tiles to
+    // overlap (and the signal is set multiple times), we only have to handle
+    // the intersection once
+    let debounceTimeout: number | undefined;
     this.isOverlapping.subscribe((value: boolean) => {
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
@@ -45,28 +49,33 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   private isOverlapping: Signal<boolean>;
   private target = 0;
 
+  /**
+   * Generates a list of candidates for the target and applies the most optimal
+   * candidate.
+   *
+   * If the candidate does not fit, the intersection handler will be called to
+   * try the next candidate.
+   */
   public setTarget(target: number): void {
     this.target = target;
     this.candidateShapes = this.generateSearchTargetBuffer(target);
-    this.nextGridShape();
+    this.applyNextCandidateShape();
   }
 
+  /**
+   * Re-generates possible candidates for the new container size
+   * and applies the most optimal candidate.
+   */
   private handleResize(container: ResizeObserverEntry): void {
     this.containerSize = container.contentRect;
     this.setTarget(this.target);
   }
 
   private handleIntersection(): void {
-    this.nextGridShape();
+    this.applyNextCandidateShape();
   }
 
-  /**
-   * This function will start a process that picks the most optimal grid size
-   * it might not pick a grid size that fits exactly.
-   * In this case, the intersection handler will be called to try a different
-   * grid size.
-   */
-  private nextGridShape(): void {
+  private applyNextCandidateShape(): void {
     const nextCandidate = this.nextCandidateShape();
     this.setGridShape(nextCandidate);
   }
@@ -83,7 +92,9 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       return nextBufferCandidate;
     }
 
-    // fall back to a 1x1 grid
+    // if we run out of candidates we default to a 1x1 grid
+    // this can occur if 1 1x1 grid overflows and we have no other candidates
+    // in this case, we want to fall back to a 1x1 grid as "least bad" option
     return { columns: 1, rows: 1 };
   }
 
@@ -93,7 +104,7 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     // because one is the minimum grid size, we know that if one doesn't fit
     // then nothing will fit.
     // therefore, we do not have to worry about alternative candidate shapes for
-    // a grid size of one.
+    // a grid size of one, and we can short circuit generating candidates
     if (target === 1) {
       return [{ columns: 1, rows: 1 }];
     }
@@ -107,8 +118,8 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     );
 
     // find all candidates all down to one
-    for (let offset = target - 1; offset > 0; offset--) {
-      candidateTargets.push(...this.candidateShapesForTarget(offset));
+    for (let lowScanTarget = target - 1; lowScanTarget > 0; lowScanTarget--) {
+      candidateTargets.push(...this.candidateShapesForTarget(lowScanTarget));
     }
 
     return this.sortByEligibility(candidateTargets);
@@ -129,8 +140,14 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
         const columns = i;
         const rows = target / i;
 
-        const willFit = this.willFitShape({ columns, rows });
-        if (willFit) {
+        // we have a minimum cell size that a candidate needs to meet
+        // because users can provide a custom template of a variable size
+        // this function cannot guarantee that the grid will fit in the
+        // container.
+        // however, we keep this condition in so that we can filter out
+        // candidates that will definitely not fit
+        const meetsMinimumSize = this.validateShapeCellSize({ columns, rows });
+        if (meetsMinimumSize) {
           candidateShapes.push({ columns, rows });
         }
       }
@@ -139,6 +156,11 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     return candidateShapes;
   }
 
+  /**
+   * Sorts the grid shape candidates by two conditions:
+   * 1. The distance from the target grid size
+   * 2. The similarity between the grid aspect ratio and the container aspect ratio
+   */
   private sortByEligibility(shapes: GridShape[]): GridShape[] {
     const sortFunction = (a: GridShape, b: GridShape) => {
       const aSize = a.columns * a.rows;
@@ -147,7 +169,8 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       const aTargetDistance = Math.abs(this.target - aSize);
       const bTargetDistance = Math.abs(this.target - bSize);
 
-      // second stage sort
+      // if two candidates have the same distance from the target, we want to
+      // sort the candidates by the similarity between the grid aspect ratio
       if (aTargetDistance === bTargetDistance) {
         const aSimilarity = this.gridAspectRatioSimilarity(this.containerSize, a);
         const bSimilarity = this.gridAspectRatioSimilarity(this.containerSize, b);
@@ -185,7 +208,12 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     return difference;
   }
 
-  private willFitShape(gridShape: GridShape): boolean {
+  /**
+   * @returns
+   * A boolean that represents if the cells in the proposed grid shape meet
+   * the minimum cell size requirements.
+   */
+  private validateShapeCellSize(gridShape: GridShape): boolean {
     const minimumTileWidth: Pixel = this.minimumGridCellSize.width;
     const minimumTileHeight: Pixel = this.minimumGridCellSize.height;
 
@@ -197,6 +225,10 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     return meetsMinimumHeight && meetsMinimumWidth;
   }
 
+  /**
+   * @returns
+   * A size object that represents the size of a cell in a proposed grid shape
+   */
   private gridCellSizeForShape(gridShape: GridShape): Size {
     const usableContainerSize: Size = {
       width: this.containerSize.width,

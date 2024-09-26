@@ -6,24 +6,6 @@
   flex-direction: column;
 }
 
-#progress-meter {
-  --progress-meter-rounding: var(--oe-border-rounding);
-
-  display: flex;
-  width: 100%;
-  min-height: var(--oe-spacing);
-  border: var(--oe-border-width) solid var(--oe-border-color);
-  border-radius: var(--progress-meter-rounding);
-
-  /*
-    Only apply spacing to the top and bottom of the progress meter because we
-    want the progress meter to be vertically aligned to all the other elements
-    in the verification grid tile.
-  */
-  margin-top: var(--oe-spacing);
-  margin-bottom: var(--oe-spacing);
-}
-
 .spectrogram-container {
   margin: 0px;
   background-color: var(--oe-panel-color);
@@ -88,6 +70,24 @@
 
   background-color: var(--oe-panel-color);
   border-radius: var(--oe-border-rounding);
+}
+
+.progress-meter {
+  --progress-meter-rounding: var(--oe-border-rounding);
+
+  display: flex;
+  width: 100%;
+  min-height: var(--oe-spacing);
+  border: var(--oe-border-width) solid var(--oe-border-color);
+  border-radius: var(--progress-meter-rounding);
+
+  /*
+    Only apply spacing to the top and bottom of the progress meter because we
+    want the progress meter to be vertically aligned to all the other elements
+    in the verification grid tile.
+  */
+  margin-top: var(--oe-spacing);
+  margin-bottom: var(--oe-spacing);
 }
 
 .progress-meter-segment {

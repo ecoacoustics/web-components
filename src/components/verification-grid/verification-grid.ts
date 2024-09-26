@@ -33,7 +33,6 @@ export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
   showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
-  maximumTargetGridSize: Signal<number>;
 }
 
 export interface VerificationGridInjector {
@@ -110,7 +109,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     showAxes: signal(true),
     showMediaControls: signal(true),
     isFullscreen: signal(false),
-    maximumTargetGridSize: signal(32),
   };
 
   @provide({ context: injectionContext })
@@ -121,7 +119,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   /** The number of items to display in a single grid */
   @property({ attribute: "grid-size", type: Number, reflect: true })
-  public targetGridSize = 0;
+  public targetGridSize = 10;
 
   /**
    * The selection behavior of the verification grid
@@ -177,8 +175,19 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @state()
   public rows = 1;
 
-  public get realizedGridSize(): number {
-    return this.rows * this.columns;
+  /** A count of the number of tiles shown in the grid */
+  public get populatedTileCount(): number {
+    // we want to respect the users grid size preference if it fits
+    // however, if the requested grid size does not fit, we will use the
+    // computed grid size which is the maximum number of tiles that we could
+    // fit on the page
+    const gridSize = this.rows * this.columns;
+    return Math.min(gridSize, this.targetGridSize);
+  }
+
+  /** A count of the number of tiles currently visible on the screen */
+  private get effectivePageSize(): number {
+    return this.populatedTileCount - this.hiddenTiles;
   }
 
   public get pagedItems(): number {
@@ -218,15 +227,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     highlighting: false,
     elements: [],
   };
-
-  /** A count of the number of tiles currently visible on the screen */
-  private get effectivePageSize(): number {
-    return this.realizedGridSize - this.hiddenTiles;
-  }
-
-  public get maximumGridSize(): number {
-    return this.realizedGridSize;
-  }
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -290,7 +290,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // values such as Infinity are not considered as a valid grid size
       if (!isFinite(newGridSize) || newGridSize <= 0) {
         this.targetGridSize = oldGridSize;
-        console.error("New grid size value could not be converted to a number");
+        console.error(`New grid size "${newGridSize}" could not be converted to a finite number`);
       }
     }
   }
@@ -306,15 +306,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = [
-      "getPage",
-      "targetGridSize",
-      // TODO: The typing doesn't work for gridSizeN and gridSizeM because they
-      // are private properties. We should correctly type the invalidation keys
-      // so that we don't have to use an "as any" type cast
-      "columns" as any,
-      "rows" as any,
-    ];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "targetGridSize", "columns", "rows"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -378,14 +370,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.subjectHistory = [];
 
     if (this.getPage) {
-      // we want to respect the users grid size preference if it fits
-      // however, if the requested grid size does not fit, we will use the
-      // computed grid size which is the maximum number of tiles that we could
-      // fit on the page
-      const numberOfItems = Math.min(this.targetGridSize, this.realizedGridSize);
-
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      this.currentPage = await this.paginationFetcher.getItems(numberOfItems);
+      this.currentPage = await this.paginationFetcher.getItems(this.populatedTileCount);
     }
   }
 
@@ -656,7 +642,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // we check that the help dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.realizedGridSize > 1 && !this.isHelpDialogOpen();
+    return this.populatedTileCount > 1 && !this.isHelpDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -810,7 +796,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
-      this.historyHead += this.realizedGridSize;
+      this.historyHead += this.populatedTileCount;
       await this.renderHistory(this.historyHead);
     }
   }
@@ -823,14 +809,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
-      this.historyHead -= this.realizedGridSize;
+      this.historyHead -= this.populatedTileCount;
       await this.renderHistory(this.historyHead);
     }
   }
 
   private async renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
-    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.realizedGridSize);
+    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.populatedTileCount);
     const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
 
     this.historyMode();
@@ -901,7 +887,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canNavigateNext(): boolean {
-    return this.historyHead > this.realizedGridSize;
+    return this.historyHead > this.populatedTileCount;
   }
 
   //#endregion
@@ -1158,7 +1144,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
-    const hasMultipleTiles = this.realizedGridSize > 1;
+    const hasMultipleTiles = this.populatedTileCount > 1;
 
     if (this.hasClassificationTask() && this.hasVerificationTask()) {
       return this.mixedTaskPromptTemplate(hasMultipleTiles, hasSubSelection);

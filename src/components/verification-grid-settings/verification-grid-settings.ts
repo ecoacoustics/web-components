@@ -1,6 +1,6 @@
 import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, unsafeCSS } from "lit";
+import { html, LitElement, unsafeCSS } from "lit";
 import {
   VerificationGridComponent,
   verificationGridContext,
@@ -10,7 +10,7 @@ import { queryParentElement } from "../../helpers/decorators";
 import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { consume } from "@lit/context";
-import { SignalWatcher, watch } from "@lit-labs/preact-signals";
+import { SignalWatcher } from "@lit-labs/preact-signals";
 import settingComponentStyles from "./css/style.css?inline";
 
 @customElement("oe-verification-grid-settings")
@@ -88,11 +88,6 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
       throw new Error("Could not find associated verification grid component");
     }
 
-    const canResizeGrid = this.settings.maximumTargetGridSize.value > 1;
-    if (!canResizeGrid) {
-      return nothing;
-    }
-
     return html`
       <sl-dropdown placement="top-start">
         <sl-tooltip slot="trigger" content="Change the verification grids target size">
@@ -116,7 +111,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
               type="range"
               value="${ifDefined(this.gridSize)}"
               min="1"
-              max="${watch(this.settings.maximumTargetGridSize)}"
+              max="36"
             />
           </label>
         </sl-menu>

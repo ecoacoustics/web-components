@@ -500,8 +500,8 @@ class TestPage {
     )) as SubjectWrapper[];
   }
 
-  public async getRealizedGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "realizedGridSize");
+  public async getPopulatedGridSize(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "populatedTileCount");
     return gridSize as number;
   }
 

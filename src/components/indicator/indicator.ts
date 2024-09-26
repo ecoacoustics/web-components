@@ -25,7 +25,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
   private spectrogram?: SpectrogramComponent;
 
   @query("#indicator-svg")
-  private indicatorSvg!: HTMLDivElement;
+  private indicatorSvg!: Readonly<HTMLDivElement>;
 
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
