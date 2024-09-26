@@ -2,6 +2,15 @@
   --decision-color: var(--oe-panel-color);
   --selected-border-size: 4px;
 
+  /*
+    It is okay to change the display property here because we do not expect
+    users to be using the oe-verification-grid-tile component because it is
+    an internal component that should only be used by us in the verification
+    grid component.
+
+    If we ever want to make this component publicly available, we should
+    consider removing the display property from the :host selector.
+  */
   display: flex;
   flex-direction: column;
 }
@@ -20,7 +29,6 @@
   margin-bottom: 0;
   min-width: 300px;
   min-height: 300px;
-  max-height: 100%;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
   overflow: hidden;

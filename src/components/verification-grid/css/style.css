@@ -1,7 +1,3 @@
-:host {
-  display: block;
-}
-
 #highlight-box {
   position: absolute;
   display: none;
