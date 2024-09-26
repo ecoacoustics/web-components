@@ -156,6 +156,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       // any part of the observed elements overflow the component
       threshold: 0,
     });
+
+    // we observe the slot wrapper because it has user defined content, meaning
+    // that it can overflow in any way possible
+    // we want to detect when content overflows the tile so that we can try a
+    // different grid size
+    //
+    // we observe the content wrapper because it can overflow when the
+    // spectrograms minimum height/width is reached
     this.intersectionObserver.observe(this.slotWrapper);
     this.intersectionObserver.observe(this.contentsWrapper);
   }
