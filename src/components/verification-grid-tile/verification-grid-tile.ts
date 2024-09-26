@@ -9,7 +9,7 @@ import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
-import { Signal, SignalWatcher, watch } from "@lit-labs/preact-signals";
+import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import {
   injectionContext,
   verificationGridContext,
@@ -22,6 +22,12 @@ import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import verificationGridTileStyles from "./css/style.css?inline";
+
+export type OverflowEvent = CustomEvent<OverflowEventDetail>;
+
+interface OverflowEventDetail {
+  isOverlapping: boolean;
+}
 
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
@@ -99,8 +105,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   @property({ attribute: false, type: Array })
   public requiredTags!: Tag[];
 
-  @property({ attribute: false })
-  public isOverlapping!: Signal<boolean>;
+  @property({ attribute: false, type: Boolean })
+  public isOverlapping = false;
 
   @query("oe-spectrogram")
   private spectrogram!: SpectrogramComponent;
@@ -201,10 +207,17 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
-    const hasOverflowingContent = entries.some((entry) => entry.intersectionRatio < 1);
-    if (hasOverflowingContent) {
-      this.isOverlapping.value = true;
-    }
+    const hasOverlapContent = entries.some((entry) => entry.intersectionRatio < 1);
+
+    this.isOverlapping = hasOverlapContent;
+
+    const overlapEvent = new CustomEvent<OverflowEventDetail>("overlap", {
+      detail: {
+        isOverlapping: hasOverlapContent,
+      },
+      bubbles: true,
+    });
+    this.dispatchEvent(overlapEvent);
   }
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {

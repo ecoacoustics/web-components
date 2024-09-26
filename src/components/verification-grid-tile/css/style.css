@@ -27,11 +27,16 @@
   box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   cursor: pointer;
   margin-bottom: 0;
-  min-width: 300px;
-  min-height: 300px;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
   overflow: hidden;
+
+  /*
+    This minimum grid tile size is reflected in the dynamic grid layout helper
+    see src/helpers/controllers/dynamic-grid-size.ts#L40
+  */
+  min-width: 300px;
+  min-height: 300px;
 
   transition:
     border-color var(--oe-animation-time) ease-out,

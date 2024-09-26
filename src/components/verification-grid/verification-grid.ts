@@ -1,7 +1,7 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
+import { OverflowEvent, VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
@@ -24,7 +24,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { DynamicGridSizeController } from "../../helpers/controllers/dynamic-grid-sizes";
+import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -175,6 +175,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @state()
   public rows = 1;
 
+  public get gridShape(): GridShape {
+    return { columns: this.columns, rows: this.rows };
+  }
+
   /** A count of the number of tiles shown in the grid */
   public get populatedTileCount(): number {
     // we want to respect the users grid size preference if it fits
@@ -218,7 +222,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private doneRenderBoxInit = false;
-  private isOverlapping = signal<boolean>(false);
+  private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
   private highlight: HighlightSelection = {
@@ -297,7 +301,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     if (this.gridContainer && change.has("targetGridSize")) {
-      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.isOverlapping);
+      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.anyOverlap);
       this.gridController.setTarget(this.targetGridSize);
     }
 
@@ -513,6 +517,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
     this.updateInjector();
+  }
+
+  private handleTileOverlap(event: OverflowEvent): void {
+    if (event.detail.isOverlapping === this.anyOverlap.value) {
+      return;
+    }
+
+    const gridTiles = this.gridTiles;
+    for (const tile of gridTiles) {
+      if (tile.isOverlapping) {
+        this.anyOverlap.value = true;
+        return;
+      }
+    }
+
+    this.anyOverlap.value = false;
   }
 
   //#endregion
@@ -1224,6 +1244,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
+          @overlap="${this.handleTileOverlap}"
         >
           ${when(
             this.currentPage.length === 0,
@@ -1235,7 +1256,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
-                    .isOverlapping="${this.isOverlapping}"
                     .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"
                     .index="${i}"

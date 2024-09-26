@@ -1027,6 +1027,8 @@ test.describe("single verification grid", () => {
           expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
         });
 
+        // if these tests are failing it is a sign that the grid tile's
+        // intersection observer is not working correctly
         test("should have the correct grid shape with slot content", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create(testedSlotContent);
