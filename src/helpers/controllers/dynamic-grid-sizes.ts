@@ -1,7 +1,7 @@
 import { Signal } from "@lit-labs/preact-signals";
 import { VerificationGridComponent } from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
-import { Pixel, UnitInterval } from "../../models/unitConverters";
+import { Pixel } from "../../models/unitConverters";
 
 export interface GridShape {
   rows: number;
@@ -193,8 +193,7 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     return result;
   }
 
-  private static closestDistance = (a: GridShapeWithDistance, b: GridShapeWithDistance): number =>
-    a.distance - b.distance;
+  private static closestDistance = (a: GridShapeWithDistance, b: GridShapeWithDistance) => a.distance - b.distance;
 
   private static cosineDistance(vectorA: number[], vectorB: number[]): number {
     // Check if vectors are of the same length
