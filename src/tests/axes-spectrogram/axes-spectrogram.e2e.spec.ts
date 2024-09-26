@@ -21,16 +21,16 @@ test.describe("interactions between axes and spectrogram", () => {
       {
         spectrogramSize: { width: 1000, height: 1000 },
         expectedXStep: 0.2,
-        expectedYStep: 0.5,
+        expectedYStep: 0.2,
         expectedXTickCount: 26,
-        expectedYTickCount: 23,
+        expectedYTickCount: 56,
       },
       {
         spectrogramSize: { width: 500, height: 500 },
         expectedXStep: 0.5,
-        expectedYStep: 1,
+        expectedYStep: 0.5,
         expectedXTickCount: 11,
-        expectedYTickCount: 12,
+        expectedYTickCount: 23,
       },
       {
         spectrogramSize: { width: 1000, height: 500 },
@@ -42,9 +42,9 @@ test.describe("interactions between axes and spectrogram", () => {
       {
         spectrogramSize: { width: 500, height: 1000 },
         expectedXStep: 0.5,
-        expectedYStep: 1,
+        expectedYStep: 0.2,
         expectedXTickCount: 11,
-        expectedYTickCount: 12,
+        expectedYTickCount: 56,
       },
       {
         spectrogramSize: { width: 100, height: 100 },

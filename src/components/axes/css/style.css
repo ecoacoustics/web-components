@@ -1,6 +1,6 @@
 :host {
-  --x-axis-padding: 2em;
-  --y-axis-padding: 2em;
+  --x-axis-padding: 2rem;
+  --y-axis-padding: 2rem;
 
   min-height: calc(128px + var(--y-axis-padding)) !important;
 
