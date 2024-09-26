@@ -25,9 +25,8 @@
 }
 
 slot {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1;
+  display: inherit;
+  height: 100%;
   min-height: 0px;
 
   padding-left: var(--x-axis-padding);
