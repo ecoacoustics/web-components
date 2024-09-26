@@ -8,6 +8,10 @@ export interface GridShape {
   columns: number;
 }
 
+interface GridShapeWithDistance extends GridShape {
+  distance: number;
+}
+
 export class DynamicGridSizeController<Container extends HTMLElement> {
   public constructor(container: Container, targetElement: VerificationGridComponent, isOverlapping: Signal<boolean>) {
     this.targetElement = targetElement;
@@ -77,6 +81,7 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
 
   private applyNextCandidateShape(): void {
     const nextCandidate = this.nextCandidateShape();
+    console.warn("applying next candidate", nextCandidate);
     this.setGridShape(nextCandidate);
   }
 
@@ -162,50 +167,81 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
    * 2. The similarity between the grid aspect ratio and the container aspect ratio
    */
   private sortByEligibility(shapes: GridShape[]): GridShape[] {
-    const sortFunction = (a: GridShape, b: GridShape) => {
-      const aSize = a.columns * a.rows;
-      const bSize = b.columns * b.rows;
+    const containerArea = this.containerSize.width * this.containerSize.height;
+    const containerAspectRatio = this.containerSize.width / this.containerSize.height;
+    const desiredGridSize = this.target;
+    const desiredArea = containerArea / desiredGridSize;
+    const calculate = (shape: GridShape) => {
+      const proposedRatio = shape.columns / shape.rows;
+      const proposedSize = Math.min(this.target, shape.columns * shape.rows);
 
-      const aTargetDistance = Math.abs(this.target - aSize);
-      const bTargetDistance = Math.abs(this.target - bSize);
+      const proposedArea = containerArea / (shape.columns * shape.rows);
 
-      // if two candidates have the same distance from the target, we want to
-      // sort the candidates by the similarity between the grid aspect ratio
-      if (aTargetDistance === bTargetDistance) {
-        const aSimilarity = this.gridAspectRatioSimilarity(this.containerSize, a);
-        const bSimilarity = this.gridAspectRatioSimilarity(this.containerSize, b);
-        return aSimilarity - bSimilarity;
-      }
+      const distance = DynamicGridSizeController.cosineDistance(
+        [proposedRatio, proposedSize, proposedArea],
+        [containerAspectRatio, desiredGridSize, desiredArea],
+      );
 
-      return aTargetDistance - bTargetDistance;
+      return {
+        distance,
+        rows: shape.rows,
+        columns: shape.columns,
+        // proposedSize,
+        // proposedRatio,
+        // proposedArea,
+        // containerAspectRatio,
+      };
     };
 
-    return shapes.sort(sortFunction);
+    const result = shapes.map(calculate).sort(DynamicGridSizeController.closestDistance);
+
+    // console.info("sorted candidates");
+    // console.table(result);
+
+    return result;
+  }
+
+  private static closestDistance = (a: GridShapeWithDistance, b: GridShapeWithDistance): number =>
+    a.distance - b.distance;
+
+  private static cosineDistance(vectorA: number[], vectorB: number[]): number {
+    // Check if vectors are of the same length
+    if (vectorA.length !== vectorB.length) {
+      throw new Error("Vectors must be of the same length");
+    }
+
+    // Calculate dot product
+    let dotProduct = 0;
+    let magnitudeA = 0;
+    let magnitudeB = 0;
+
+    for (let i = 0; i < vectorA.length; i++) {
+      dotProduct += vectorA[i] * vectorB[i];
+      magnitudeA += vectorA[i] * vectorA[i];
+      magnitudeB += vectorB[i] * vectorB[i];
+    }
+
+    // Calculate magnitudes
+    magnitudeA = Math.sqrt(magnitudeA);
+    magnitudeB = Math.sqrt(magnitudeB);
+
+    if (magnitudeA === 0 || magnitudeB === 0) {
+      throw new Error("Vector magnitude cannot be zero");
+    }
+
+    // Calculate cosine similarity
+    const cosineSimilarity = dotProduct / (magnitudeA * magnitudeB);
+
+    // Convert cosine similarity to cosine distance
+    const cosineDistance = 1 - cosineSimilarity;
+
+    return cosineDistance;
   }
 
   private setGridShape(shape: GridShape): void {
     this.isOverlapping.value = false;
     this.targetElement.columns = shape.columns;
     this.targetElement.rows = shape.rows;
-  }
-
-  /**
-   * @description
-   * Computes the similarity between the grid aspect ratio and the container
-   * aspect ratio
-   *
-   * @param containerSize - The size of the grid container
-   * @param gridShape - The shape of the grid
-   *
-   * @returns A value between 0 and 1 that represents the similarity between the
-   * grid aspect ratio and the container aspect ratio
-   */
-  private gridAspectRatioSimilarity(containerSize: Size, gridShape: GridShape): UnitInterval {
-    const tileSize = this.gridCellSizeForShape(gridShape);
-    const targetAspectRatio = containerSize.width / containerSize.height;
-    const candidateSizeAspectRatio = tileSize.width / tileSize.height;
-    const difference = Math.abs(targetAspectRatio - candidateSizeAspectRatio);
-    return difference;
   }
 
   /**
