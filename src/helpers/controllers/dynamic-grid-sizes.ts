@@ -15,7 +15,7 @@ interface GridShapeWithDistance extends GridShape {
 export class DynamicGridSizeController<Container extends HTMLElement> {
   public constructor(container: Container, targetElement: VerificationGridComponent, isOverlapping: Signal<boolean>) {
     this.targetElement = targetElement;
-    this.isOverlapping = isOverlapping;
+    this.anyOverlap = isOverlapping;
 
     const resizeObserver = new ResizeObserver((size: ResizeObserverEntry[]) => {
       if (!this.target) return;
@@ -28,29 +28,21 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     });
     resizeObserver.observe(container);
 
-    // because each tile advertises if they are overlapping, we debounce the
-    // overlapping signal so that if one grid size causes multiple tiles to
-    // overlap (and the signal is set multiple times), we only have to handle
-    // the intersection once
-    let debounceTimeout: number | undefined;
-    this.isOverlapping.subscribe((value: boolean) => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
+    this.anyOverlap.subscribe((value: boolean) => {
+      if (value) {
+        this.handleIntersection();
       }
-
-      debounceTimeout = window.setTimeout(() => {
-        if (value) {
-          this.handleIntersection();
-        }
-      }, 5);
     });
   }
 
   private targetElement: VerificationGridComponent;
   private candidateShapes: GridShape[] = [];
   private containerSize: Size = { width: 0, height: 0 };
+
+  // this minimum grid cell size is enforced by the grid tiles css
+  // see: src/components/verification-grid-tile/verification-grid-tile/style.css#L30
   private minimumGridCellSize: Size = { width: 300, height: 300 };
-  private isOverlapping: Signal<boolean>;
+  private anyOverlap: Signal<boolean>;
   private target = 0;
 
   /**
@@ -239,7 +231,6 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   }
 
   private setGridShape(shape: GridShape): void {
-    this.isOverlapping.value = false;
     this.targetElement.columns = shape.columns;
     this.targetElement.rows = shape.rows;
   }
