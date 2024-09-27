@@ -1,5 +1,5 @@
 {
-  "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "*.config.*", "@types/"],
+  "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "*.config.*", "@types/", "playwright/", "dev/"],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ES2021",

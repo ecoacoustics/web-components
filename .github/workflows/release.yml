@@ -29,5 +29,5 @@ jobs:
     needs: Create-Release
     uses: ./.github/workflows/publish.yml
     with:
-      tag_name: ${{ needs.Create-Release.outputs.tag_name }}-rc.1
+      tag_name: ${{ needs.Create-Release.outputs.tag_name }}
     secrets: inherit
