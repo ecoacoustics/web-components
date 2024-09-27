@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - release-workflow
 
 jobs:
   Create-Release:
@@ -27,6 +26,7 @@ jobs:
 
   Publish-Release:
     needs: Create-Release
+    if: ${{ needs.Create-Release.outputs.release_created }}
     uses: ./.github/workflows/publish.yml
     with:
       tag_name: ${{ needs.Create-Release.outputs.tag_name }}
