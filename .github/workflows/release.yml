@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   Create-Release:
@@ -28,5 +29,5 @@ jobs:
     needs: Create-Release
     uses: ./.github/workflows/publish.yml
     with:
-      tag_name: ${{ needs.Create-Release.outputs.tag_name }}
+      tag_name: ${{ needs.Create-Release.outputs.tag_name }}-rc.1
     secrets: inherit
