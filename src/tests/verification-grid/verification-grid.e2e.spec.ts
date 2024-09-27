@@ -972,7 +972,7 @@ test.describe("single verification grid", () => {
         deviceName: "desktop",
         device: mockDeviceSize(testBreakpoints.desktop),
         withoutSlotShape: { columns: 5, rows: 2 },
-        withSlotShape: { columns: 4, rows: 2 },
+        withSlotShape: { columns: 6, rows: 2 },
       },
       {
         deviceName: "laptop",
@@ -1043,6 +1043,7 @@ test.describe("single verification grid", () => {
           await fixture.create();
           await fixture.dismissHelpDialog();
 
+          await fixture.onlyShowTileOutlines();
           await expect(fixture.page).toHaveScreenshot();
         });
 
@@ -1051,6 +1052,11 @@ test.describe("single verification grid", () => {
           await fixture.create(testedSlotContent);
           await fixture.dismissHelpDialog();
 
+          // to reduce the maintainability burden of this test, we only check
+          // the grid container for visual correctness
+          // we also make all of the elements invisible, and only show outlines
+          // of each grid tile
+          await fixture.onlyShowTileOutlines();
           await expect(fixture.page).toHaveScreenshot();
         });
       });

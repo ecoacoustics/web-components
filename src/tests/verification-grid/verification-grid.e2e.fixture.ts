@@ -42,6 +42,7 @@ class TestPage {
   public constructor(public readonly page: Page) {}
 
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
+  public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
@@ -562,6 +563,27 @@ class TestPage {
 
   public async toggleFullscreen(state: boolean) {
     await this.changeGridSetting("isFullscreen", state);
+  }
+
+  public async onlyShowTileOutlines(): Promise<void> {
+    await this.page.addStyleTag({
+      content: "* { visibility: hidden; }",
+    });
+
+    const gridTiles = await this.gridTileComponents();
+    for (const tile of gridTiles) {
+      await tile.evaluate((element: VerificationGridTileComponent) => {
+        element.style.border = "red 2px solid";
+        element.style.visibility = "visible";
+      });
+    }
+
+    const tileContents = await this.gridTileContainers();
+    for (const tile of tileContents) {
+      await tile.evaluate((element: HTMLElement) => {
+        element.style.visibility = "hidden";
+      });
+    }
   }
 
   private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {
