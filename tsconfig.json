@@ -1,4 +1,6 @@
 {
+  // when generating types for the project, we do not want to include test files
+  // or types for the dev environment
   "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "*.config.*", "@types/", "playwright/", "dev/"],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
