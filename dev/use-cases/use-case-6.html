@@ -8,34 +8,18 @@
   </head>
 
   <body>
-    <div id="grid-host">
-      <oe-verification-grid id="verification-grid" grid-size="4">
-        <template>
-          <oe-info-card></oe-info-card>
-        </template>
+    <oe-verification-grid id="verification-grid">
+      <template>
+        <oe-info-card></oe-info-card>
+      </template>
 
-        <oe-verification verified="true" shortcut="Y"></oe-verification>
-        <oe-verification verified="false" shortcut="N"></oe-verification>
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
 
-        <oe-verification verified="true" shortcut="U" additional-tags="rain"></oe-verification>
-        <oe-verification verified="false" shortcut="M" additional-tags="rain"></oe-verification>
+      <oe-verification verified="true" shortcut="U" additional-tags="rain"></oe-verification>
+      <oe-verification verified="false" shortcut="M" additional-tags="rain"></oe-verification>
 
-        <oe-data-source slot="data-source" for="verification-grid" src="/kaledioscope.csv"> </oe-data-source>
-      </oe-verification-grid>
-    </div>
-
-    <style>
-      body {
-        margin: 0px;
-      }
-
-      #grid-host {
-        position: relative;
-        left: 0px;
-        top: 0px;
-        width: 100vw;
-        min-height: 100vh;
-      }
-    </style>
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv"> </oe-data-source>
+    </oe-verification-grid>
   </body>
 </html>

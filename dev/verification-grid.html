@@ -8,30 +8,28 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid" grid-size="4">
+    <oe-verification-grid id="verification-grid">
       <template>
-        <oe-info-card></oe-info-card>
+        <div>
+          <h1>Large text test</h1>
+
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
+            voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
+          </p>
+        </div>
       </template>
 
-      <oe-verification verified="TRUE" shortcut="H"></oe-verification>
-      <oe-verification verified="TRUE" additional-tags="hello,world" shortcut="J"></oe-verification>
-      <oe-verification verified="FALSE" shortcut="K"></oe-verification>
-      <oe-verification verified="SKIP" shortcut="L"></oe-verification>
-      <oe-verification verified="UNSURE" shortcut=";"></oe-verification>
+      <oe-verification verified="true" shortcut="H"></oe-verification>
+      <oe-verification verified="true" additional-tags="hello,world" shortcut="J"></oe-verification>
+      <oe-verification verified="false" shortcut="K"></oe-verification>
+      <oe-verification verified="skip" shortcut="L"></oe-verification>
+      <oe-verification verified="unsure" shortcut=";"></oe-verification>
 
-      <!--
-            We should see an error thrown for this classification component
-            because it does not have a tag attribute
-        -->
       <oe-classification true-shortcut="m" tag="Cow"></oe-classification>
 
-      <!--
-            local would use a file picker UI, while src would allow a remote file
-            This should probably use a data service.
-            This service would
-        -->
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
-      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local> </oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local></oe-data-source>
     </oe-verification-grid>
 
     <button onclick="changeVerificationGridSize();">Change explicit grid size</button>
@@ -39,12 +37,6 @@
     <button onclick="changeGridSize();">Change verification grid host size</button>
     <button onclick="changeSelectionBehavior();">Change selection behavior</button>
     <button onclick="changeCallback();">Use custom callback</button>
-
-    <style>
-      body {
-        margin: 0px;
-      }
-    </style>
 
     <script>
       const verificationGridElement = document.getElementById("verification-grid");

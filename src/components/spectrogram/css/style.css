@@ -1,23 +1,37 @@
 :host {
+  /*
+    TODO: we should remove display: block from the components :host
+    Because :host is user configurable, we should not add style properties
+    that are used to effect the layout of shadow DOM children.
+
+    Using display: block here means that if the user changes the display on
+    the host element, it will break the layout of the spectrogram.
+
+    e.g. <oe-spectrogram style="display: inline-block"></oe-spectrogram>
+    can potentially break the layout spectrogram content.
+  */
   display: block;
+
+  --min-height: 128px;
 }
 
 #spectrogram-container {
   position: relative;
   background-color: var(--oe-panel-color-lighter);
   width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: var(--min-height);
 }
 
 #spectrogram-container > canvas {
   position: relative;
   display: inherit;
-  height: auto;
+  height: 100%;
 
   /*
     We set the minimum height to 64 because the minimum FFT window size that
     we support is 64 samples. Therefore, if the user does not specify a container
     with a minimum height, we should at least show 64px in height (the width will auto-scale)
   */
-  min-height: 128px;
+  min-height: var(--min-height);
 }

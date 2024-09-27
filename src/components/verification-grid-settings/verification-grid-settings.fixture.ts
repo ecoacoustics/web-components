@@ -85,7 +85,7 @@ class TestPage {
 
   /** Returns the value of the verification grids `grid-size` attribute */
   public async verificationGridSize(): Promise<number> {
-    return (await getBrowserValue<VerificationGridComponent>(this.verificationGrid(), "gridSize")) as number;
+    return (await getBrowserValue<VerificationGridComponent>(this.verificationGrid(), "targetGridSize")) as number;
   }
 
   /** Returns the grid size shown by the grid size settings input */

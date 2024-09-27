@@ -1,6 +1,18 @@
 :host {
   --decision-color: var(--oe-panel-color);
   --selected-border-size: 4px;
+
+  /*
+    It is okay to change the display property here because we do not expect
+    users to be using the oe-verification-grid-tile component because it is
+    an internal component that should only be used by us in the verification
+    grid component.
+
+    If we ever want to make this component publicly available, we should
+    consider removing the display property from the :host selector.
+  */
+  display: flex;
+  flex-direction: column;
 }
 
 .spectrogram-container {
@@ -15,9 +27,16 @@
   box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   cursor: pointer;
   margin-bottom: 0;
-  min-width: 350px;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
+  overflow: hidden;
+
+  /*
+    This minimum grid tile size is reflected in the dynamic grid layout helper
+    see src/helpers/controllers/dynamic-grid-size.ts#L40
+  */
+  min-width: 300px;
+  min-height: 300px;
 
   transition:
     border-color var(--oe-animation-time) ease-out,
@@ -70,8 +89,8 @@
   --progress-meter-rounding: var(--oe-border-rounding);
 
   display: flex;
-  height: var(--oe-spacing);
   width: 100%;
+  min-height: var(--oe-spacing);
   border: var(--oe-border-width) solid var(--oe-border-color);
   border-radius: var(--progress-meter-rounding);
 

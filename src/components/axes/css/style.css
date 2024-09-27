@@ -1,18 +1,41 @@
 :host {
-  position: relative;
-  display: inline-block !important;
-  width: 100%;
+  /*
+    This is the initial padding applied to both axes
+    It should be overwritten with the actual padding values once we know how
+    much space the axes labels will take up
+
+    We set an initial padding size to a reasonable value so that elements don't
+    change their position too much when the axes labels are added
+  */
+  --x-axis-padding: 2em;
+  --y-axis-padding: 2em;
+
+  min-height: calc(128px + var(--y-axis-padding)) !important;
+
+  padding-bottom: var(--x-axis-padding);
+  padding-left: var(--y-axis-padding);
+
+  &::part(grid) {
+    color: lightblue;
+    stroke-width: 1;
+    opacity: 0.4;
+  }
+
+  &::part(tick) {
+    color: black;
+    stroke-width: 1;
+  }
 }
 
-#wrapped-element {
-  position: relative;
-  padding-left: 2rem;
-  padding-bottom: 1.5rem;
+slot {
+  display: inherit;
+  height: 100%;
+  min-height: 0px;
 }
 
-svg {
+#axes-svg {
   position: absolute;
-  width: 100%;
+  width: auto;
   height: auto;
   overflow: visible;
 
@@ -34,17 +57,5 @@ svg {
 
   g {
     stroke: currentColor;
-  }
-}
-
-.grid-line {
-  stroke-width: 1;
-  opacity: 0.4;
-}
-
-:host {
-  &::part(tick),
-  &::part(grid) {
-    color: lightblue;
   }
 }

@@ -19,6 +19,7 @@ import {
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import {
   AxesComponent,
   DataSourceComponent,
@@ -41,6 +42,7 @@ class TestPage {
   public constructor(public readonly page: Page) {}
 
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
+  public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
@@ -105,14 +107,13 @@ class TestPage {
 
   public async create(customTemplate = this.defaultTemplate) {
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="3">
+      <oe-verification-grid id="verification-grid">
         ${customTemplate}
 
         <oe-data-source
           slot="data-source"
           for="verification-grid"
           src="${this.testJsonInput}"
-          local
         ></oe-data-source>
       </oe-verification-grid>
     `);
@@ -500,6 +501,32 @@ class TestPage {
     )) as SubjectWrapper[];
   }
 
+  public async getPopulatedGridSize(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "populatedTileCount");
+    return gridSize as number;
+  }
+
+  public async getGridShape(): Promise<GridShape> {
+    const targetGrid = this.gridComponent();
+    const columns = (await getBrowserValue<VerificationGridComponent>(targetGrid, "columns")) as number;
+    const rows = (await getBrowserValue<VerificationGridComponent>(targetGrid, "rows")) as number;
+    return { columns, rows };
+  }
+
+  public async getGridTileSize(): Promise<Size> {
+    // because all the grid tiles should be the same size, we can just check the
+    // first grid tile and get its size
+    const gridTiles = await this.gridTileComponents();
+    const targetGridTile = gridTiles[0];
+
+    const boundingBox = await targetGridTile.boundingBox();
+    if (!boundingBox) {
+      throw new Error("Grid tile bounding box not found");
+    }
+
+    return { width: boundingBox.width, height: boundingBox.height };
+  }
+
   // change attributes
   public async changeSelectionMode(mode: SelectionObserverType) {
     // we use "as any" here because the setBrowserAttribute helper typing checks
@@ -536,6 +563,27 @@ class TestPage {
 
   public async toggleFullscreen(state: boolean) {
     await this.changeGridSetting("isFullscreen", state);
+  }
+
+  public async onlyShowTileOutlines(): Promise<void> {
+    await this.page.addStyleTag({
+      content: "* { visibility: hidden; }",
+    });
+
+    const gridTiles = await this.gridTileComponents();
+    for (const tile of gridTiles) {
+      await tile.evaluate((element: VerificationGridTileComponent) => {
+        element.style.border = "red 2px solid";
+        element.style.visibility = "visible";
+      });
+    }
+
+    const tileContents = await this.gridTileContainers();
+    for (const tile of tileContents) {
+      await tile.evaluate((element: HTMLElement) => {
+        element.style.visibility = "hidden";
+      });
+    }
   }
 
   private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {

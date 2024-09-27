@@ -10,6 +10,12 @@ export type Sample = number;
 export type Pixel = number;
 export type EmUnit = number;
 
+/**
+ * A value that is bounded from [0, 1]
+ * A unit intervals can be used to represent percentages in decimal form
+ */
+export type UnitInterval = number;
+
 export type ScaleDomain<T extends number> = [min: T, min: T];
 export type ScaleRange<T extends number> = [min: T, max: T];
 

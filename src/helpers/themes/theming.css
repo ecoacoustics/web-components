@@ -40,7 +40,6 @@
   --oe-border-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 10%));
   --oe-border-width: 1px;
 
- 
   --oe-backdrop-shadow: 3px 3px 4px;
   --oe-font-family: "Roboto", sans-serif;
   --oe-font-size: 11px;
@@ -349,6 +348,13 @@ button {
 .oe-pill {
   display: inline-block;
   border-radius: var(--oe-border-rounding);
+}
+
+.vertically-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  min-height: 0px;
 }
 
 @keyframes fade-in {

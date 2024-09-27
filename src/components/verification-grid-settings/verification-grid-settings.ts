@@ -66,7 +66,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
       throw new Error("Could not find associated verification grid component");
     }
 
-    this.gridSize = this.verificationGrid.gridSize;
+    this.gridSize = this.verificationGrid.targetGridSize;
   }
 
   private handleGridSizeChange(event: ChangeEvent<HTMLInputElement>) {
@@ -78,7 +78,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
     const inputValue = event.target.value;
     const newGridSize = Number(inputValue);
 
-    this.verificationGrid.gridSize = newGridSize;
+    this.verificationGrid.targetGridSize = newGridSize;
 
     this.updateGridSizeState();
   }
@@ -90,7 +90,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
 
     return html`
       <sl-dropdown placement="top-start">
-        <sl-tooltip slot="trigger" content="Change the verification grid size">
+        <sl-tooltip slot="trigger" content="Change the verification grids target size">
           <button
             id="grid-size-trigger"
             @click="${this.updateGridSizeState}"

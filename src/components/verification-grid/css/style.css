@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: 100dvh;
+}
+
 #highlight-box {
   position: absolute;
   display: none;
@@ -28,31 +33,36 @@
   padding: var(--oe-spacing);
 }
 
+/* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
-  background-color: var(--oe-background-color);
+  flex-direction: column;
   height: 100%;
+  background-color: var(--oe-background-color);
 }
 
+/* The verification grid that contains verification grid tiles */
 .verification-grid {
-  display: flex;
-  flex-wrap: wrap;
-  flex-grow: 1;
-  flex-basis: 100%;
+  --columns: 0;
+  --rows: 0;
+
+  display: grid;
+  width: 100%;
   user-select: none;
-  justify-content: center;
-  align-items: stretch;
+  flex: 1 1;
 
   /*
-    We apply normal padding to the verification grid so that it is consistent
-    with the rest of the client, and so that the interactivity area is extended
-    slightly beyond the edge of the verification grids content
+    We set the minimum height to zero so that the verification grid flex item
+    can shrink past its content size.
+    If we do not set the property, the flex item will automatically set its
+    minimum height to the summed height of the grid tiles.
+    By overriding the minimum height, the grid tiles will shrink to fit in the
+    verification grid.
   */
-  padding-top: var(--oe-spacing);
-  padding-bottom: var(--oe-spacing);
+  min-height: 0px;
+
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
 
   /*
     We use a grid gap property instead of adding margin to the grid tile
@@ -70,7 +80,7 @@
   position: relative;
   width: 80%;
   height: min-content;
-  align-self: end;
+  align-self: center;
 
   display: flex;
   flex-wrap: wrap;
@@ -110,6 +120,7 @@
 .progress-bar {
   display: flex;
   flex: 1 1 100%;
+  height: min-content;
   align-items: center;
 
   oe-progress-bar {

@@ -59,6 +59,8 @@ import axesStyles from "./css/style.css?inline";
 export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(axesStyles);
 
+  public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
+
   // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
   private static labelPadding: EmUnit = 0.25;
@@ -108,8 +110,8 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram!: SpectrogramComponent;
 
-  @query("#wrapped-element")
-  private wrappedElement!: Readonly<HTMLDivElement>;
+  @query("#axes-svg")
+  private elementChrome!: Readonly<HTMLDivElement>;
 
   // if we do not know the text that we want to measure, we use one large
   // character as an upperbound estimate of the size of characters
@@ -157,15 +159,15 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       // we don't have to use a resize observer to observe when the spectrogram
       // or slotted elements resize because we will receive a signal from the
       // unit converter which will trigger a re-render
-      this.unitConverter.canvasSize.subscribe(this.handleCanvasResize);
+      this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
     }
   }
 
   private handleCanvasResize(canvasSize: Size): void {
-    if (this?.wrappedElement) {
+    if (this?.elementChrome) {
       const { width, height } = canvasSize;
-      this.wrappedElement.style.width = `${width}px`;
-      this.wrappedElement.style.height = `${height}px`;
+      this.elementChrome.style.width = `${width}px`;
+      this.elementChrome.style.height = `${height}px`;
     }
   }
 
@@ -218,7 +220,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     )}`;
 
     return svg`
-      <g g part = "grid" >
+      <g part="grid" >
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
@@ -240,6 +242,13 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
     const yTitleOffset = yTitleFontSize.height + fontSize.width;
 
+    if (this.elementChrome) {
+      const xAxisPadding = xTitleOffset + xTitleFontSize.height;
+      const yAxisPadding = yTitleOffset;
+      this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
+      this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
+    }
+
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter.scaleX.value(value);
       const labelYPosition = canvasSize.height + this.tickSize.height;
@@ -249,9 +258,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
         <g>
           <line
             part="x-tick"
-            x = "${xPosition}"
-            y1 = "${tickYPosition}"
-            y2 = "${tickYPosition + this.tickSize.height}"
+            x="${xPosition}"
+            y1="${tickYPosition}"
+            y2="${tickYPosition + this.tickSize.height}"
           ></line>
           <text
             part="x-label"
@@ -388,20 +397,33 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     // if the axis will fit. However, if we are using mel scale, then we have to
     // do some more complex calculations to check that the labels will fit
     if (!melScale) {
-      const domainDelta = domain[1] - domain[0];
+      const domainDelta = Math.abs(domain[1] - domain[0]);
       const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
-      const proposedSize = numberOfProposedLabels * (fontSize + textLabelPadding);
+
+      // we double the padding because the padding is applied to both sides of
+      // the label
+      //
+      // prettier removes the brackets because they are not need
+      // however, I want to add them because it makes the code and algorithm
+      // more readable
+      // prettier-ignore
+      const proposedSize = numberOfProposedLabels * (fontSize + (textLabelPadding * 2));
       return proposedSize < canvasSize;
     }
 
     // to check if the mel scale will fit, we can calculate the canvas position
     // of the last two labels and check if they overlap
-    // TODO: we shouldn't re-compute all the positions
+    // this is because the last two labels will be the closest together and the
+    // most likely to be overlapping
     const proposedValues = this.generateAxisValues(domain[0], domain[1], proposedStep, scale, false);
     const lastTwoValues = proposedValues.slice(-2);
     const lastTwoPositions = lastTwoValues.map((value) => scale(value));
-    const positionDelta = lastTwoPositions[0] - lastTwoPositions[1];
-    return positionDelta > fontSize + textLabelPadding;
+    const positionDelta = Math.abs(lastTwoPositions[0] - lastTwoPositions[1]);
+
+    // we multiple the padding by two so that the padding is virtually applied
+    // to both labels in the axes
+    // prettier-ignore
+    return positionDelta > fontSize + (textLabelPadding * 2);
   }
 
   // the calculate step function will use a binary search to find the largest
@@ -499,21 +521,15 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
     const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg>${gridLines} ${labels}</svg>`;
+    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
   }
 
   public render() {
     return html`
-      <div id="wrapped-element">
-        ${this.unitConverter ? this.axesTemplate() : nothing}
-        <slot @slotchange="${this.handleSlotChange}"></slot>
-      </div>
+      ${this.unitConverter ? this.axesTemplate() : nothing}
+      <slot @slotchange="${this.handleSlotChange}"></slot>
     `;
   }
-
-  // TODO: the canvas that we use to calculate the font width/height should be
-  // cached as a static field
-  public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
 }
 
 declare global {

@@ -61,16 +61,16 @@ class TestPage {
   }
 
   public async xAxisStep(): Promise<number> {
-    const lastValue = await (await this.xAxisLabels()).at(-1)?.textContent();
-    const secondLastValue = await (await this.xAxisLabels()).at(-2)?.textContent();
-    const step = Number(lastValue) - Number(secondLastValue);
+    const firstValue = await (await this.xAxisLabels()).at(0)?.textContent();
+    const secondValue = await (await this.xAxisLabels()).at(1)?.textContent();
+    const step = Number(firstValue) - Number(secondValue);
     return Math.abs(step);
   }
 
   public async yAxisStep(): Promise<number> {
-    const lastValue = await (await this.yAxisLabels()).at(-1)?.textContent();
-    const secondLastValue = await (await this.yAxisLabels()).at(-2)?.textContent();
-    const step = Number(lastValue) - Number(secondLastValue);
+    const firstValue = await (await this.yAxisLabels()).at(0)?.textContent();
+    const secondValue = await (await this.yAxisLabels()).at(1)?.textContent();
+    const step = Number(firstValue) - Number(secondValue);
     return Math.abs(step);
   }
 

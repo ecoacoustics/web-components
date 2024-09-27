@@ -1,5 +1,15 @@
 import { Size } from "../../models/rendering";
-import { catchLocatorEvent, changeToDesktop, changeToMobile, getBrowserValue, setBrowserAttribute } from "../helpers";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import {
+  catchLocatorEvent,
+  changeToDesktop,
+  changeToMobile,
+  DeviceMock,
+  getBrowserValue,
+  mockDeviceSize,
+  setBrowserAttribute,
+  testBreakpoints,
+} from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
 import {
@@ -56,12 +66,6 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("initial state", () => {
-    test("should have the correct grid size", async ({ fixture }) => {
-      const expectedGridSize = 3;
-      const gridSize = await fixture.getGridSize();
-      expect(gridSize).toEqual(expectedGridSize);
-    });
-
     test("should have the correct decisions", async ({ fixture }) => {
       const expectedDecisions = ["true", "false"];
       const decisions = await fixture.availableDecision();
@@ -336,6 +340,10 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("progress bar", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+    });
+
     test("should not show the completed segment if a partial page of decisions is made ", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
@@ -494,6 +502,10 @@ test.describe("single verification grid", () => {
   // });
 
   test.describe("pagination", () => {
+    test.beforeEach(async ({ fixture }) => {
+        await fixture.changeGridSize(3);
+    });
+
     test("should disable the previous button when there are no previous pages", async ({ fixture }) => {
       await expect(fixture.previousPageButton()).toBeDisabled();
     });
@@ -883,8 +895,10 @@ test.describe("single verification grid", () => {
     });
   });
 
-  test.describe("changing grid size", () => {
+  test.describe("grid sizes", () => {
     test("should show new items when increasing the grid size", async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
 
@@ -923,6 +937,8 @@ test.describe("single verification grid", () => {
     // grid indexes are used to create sub-selection shortcut keys. If this test
     // fails, it is likely that sub-selection keyboard shortcuts do not work
     test("should have the correct grid index after increasing grid size", async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
       await fixture.changeGridSize(newGridSize);
@@ -938,8 +954,6 @@ test.describe("single verification grid", () => {
     });
 
     test("should not page any items when increasing and decreasing the grid size", async ({ fixture }) => {
-      // increase the grid size by one item, then remove it
-      // we should see that the
       const initialGridSize = await fixture.getGridSize();
       await fixture.changeGridSize(initialGridSize + 1);
       await fixture.changeGridSize(initialGridSize);
@@ -949,6 +963,108 @@ test.describe("single verification grid", () => {
 
       expect(realizedPagedItems).toBe(expectedPagedItems);
     });
+
+    interface DynamicGridSizeTest {
+      deviceName: string;
+      device: DeviceMock;
+      withoutSlotShape: GridShape;
+      withSlotShape: GridShape;
+    }
+
+    const testedGridSizes: DynamicGridSizeTest[] = [
+      {
+        deviceName: "desktop",
+        device: mockDeviceSize(testBreakpoints.desktop),
+        withoutSlotShape: { columns: 5, rows: 2 },
+        withSlotShape: { columns: 6, rows: 2 },
+      },
+      {
+        deviceName: "laptop",
+        device: mockDeviceSize(testBreakpoints.laptop),
+        withoutSlotShape: { columns: 4, rows: 1 },
+        withSlotShape: { columns: 4, rows: 1 },
+      },
+      {
+        deviceName: "landscape tablet",
+        device: mockDeviceSize(testBreakpoints.tabletLandscape),
+        withoutSlotShape: { columns: 3, rows: 1 },
+        withSlotShape: { columns: 3, rows: 1 },
+      },
+      {
+        deviceName: "portrait tablet",
+        device: mockDeviceSize(testBreakpoints.tabletPortrait),
+        withoutSlotShape: { columns: 2, rows: 2 },
+        withSlotShape: { columns: 2, rows: 1 },
+      },
+      {
+        deviceName: "mobile",
+        device: changeToMobile,
+        withoutSlotShape: { columns: 1, rows: 1 },
+        withSlotShape: { columns: 1, rows: 1 },
+      },
+    ];
+
+    for (const testConfig of testedGridSizes) {
+      const testedSlotContent = `
+        <template>
+          <div>
+            <h1>Heading text</h1>
+
+            <p>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
+              voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
+            </p>
+          </div>
+        </template>
+
+        <oe-verification verified="true" shortcut="Y"></oe-verification>
+        <oe-verification verified="false" shortcut="N"></oe-verification>
+      `;
+
+      test.describe(testConfig.deviceName, () => {
+        test(`should have the correct grid shape`, async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create();
+          await fixture.dismissHelpDialog();
+
+          const realizedGridShape = await fixture.getGridShape();
+          expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
+        });
+
+        // if these tests are failing it is a sign that the grid tile's
+        // intersection observer is not working correctly
+        test("should have the correct grid shape with slot content", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create(testedSlotContent);
+          await fixture.dismissHelpDialog();
+
+          const realizedGridShape = await fixture.getGridShape();
+          expect(realizedGridShape).toEqual(testConfig.withSlotShape);
+        });
+
+        test("should look correct", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create();
+          await fixture.dismissHelpDialog();
+
+          await fixture.onlyShowTileOutlines();
+          await expect(fixture.page).toHaveScreenshot();
+        });
+
+        test("should look correct with slot content", async ({ fixture }) => {
+          await testConfig.device(fixture.page);
+          await fixture.create(testedSlotContent);
+          await fixture.dismissHelpDialog();
+
+          // to reduce the maintainability burden of this test, we only check
+          // the grid container for visual correctness
+          // we also make all of the elements invisible, and only show outlines
+          // of each grid tile
+          await fixture.onlyShowTileOutlines();
+          await expect(fixture.page).toHaveScreenshot();
+        });
+      });
+    }
   });
 
   // during progressive creation, individual elements will be added to the
@@ -963,19 +1079,22 @@ test.describe("decision meter", () => {
         <oe-classification tag="car" true-shortcut="h"></oe-classification>
         <oe-classification tag="koala" true-shortcut="j"></oe-classification>
         <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-      `);
+			`);
+
+      await fixture.changeGridSize(3);
 
       await fixture.dismissHelpDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      const expectedSegments = 3;
+      const expectedSegments = await fixture.getGridSize();
       const realizedSegments = await fixture.gridTileProgressMeterSegments();
       expect(realizedSegments).toHaveLength(expectedSegments);
     });
 
     test("should have the correct colors without a decision", async ({ fixture }) => {
-      const expectedColors = Array.from({ length: 3 }).fill(await fixture.panelColor());
+      const gridSize = await fixture.getGridSize();
+      const expectedColors = Array.from({ length: gridSize }).fill(await fixture.panelColor());
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual(expectedColors);
     });
@@ -1091,7 +1210,7 @@ test.describe("decision meter", () => {
       await fixture.create(`
         <oe-verification verified="true"></oe-verification>
         <oe-verification verified="false"></oe-verification>
-      `);
+			`);
 
       await fixture.dismissHelpDialog();
     });
@@ -1130,7 +1249,7 @@ test.describe("decision meter", () => {
         <oe-classification tag="car">Car</oe-classification>
         <oe-classification tag="bird">Bird</oe-classification>
         <oe-classification tag="cat">Cat</oe-classification>
-      `);
+			`);
 
       await fixture.dismissHelpDialog();
     });
@@ -1176,9 +1295,9 @@ test.describe("verification grid with custom template", () => {
         <oe-verification verified="false">Not Koala</oe-verification>
 
         <template>
-          <oe-info-card></oe-info-card>
+        <oe-info-card></oe-info-card>
         </template>
-      `;
+			`;
       await fixture.create(customTemplate);
 
       await fixture.changeGridSource(fixture.testJsonInput);

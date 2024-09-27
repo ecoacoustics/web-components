@@ -1,7 +1,7 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
+import { OverflowEvent, VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
@@ -24,6 +24,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -118,7 +119,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   /** The number of items to display in a single grid */
   @property({ attribute: "grid-size", type: Number, reflect: true })
-  public gridSize = 8;
+  public targetGridSize = 10;
 
   /**
    * The selection behavior of the verification grid
@@ -168,6 +169,31 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @state()
   public currentPage: SubjectWrapper[] = [];
 
+  @state()
+  public columns = this.targetGridSize;
+
+  @state()
+  public rows = 1;
+
+  public get gridShape(): GridShape {
+    return { columns: this.columns, rows: this.rows };
+  }
+
+  /** A count of the number of tiles shown in the grid */
+  public get populatedTileCount(): number {
+    // we want to respect the users grid size preference if it fits
+    // however, if the requested grid size does not fit, we will use the
+    // computed grid size which is the maximum number of tiles that we could
+    // fit on the page
+    const gridSize = this.rows * this.columns;
+    return Math.min(gridSize, this.targetGridSize);
+  }
+
+  /** A count of the number of tiles currently visible on the screen */
+  private get effectivePageSize(): number {
+    return this.populatedTileCount - this.hiddenTiles;
+  }
+
   public get pagedItems(): number {
     return this.subjectHistory.length;
   }
@@ -180,10 +206,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
-  private intersectionHandler = this.handleIntersection.bind(this);
   private selectionHandler = this.handleSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
-  private intersectionObserver = new IntersectionObserver(this.intersectionHandler);
 
   // the subject history contains all the subjects that have decisions applied
   // to them, while the verification buffer contains all the subjects that have
@@ -198,19 +222,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private doneRenderBoxInit = false;
+  private anyOverlap = signal<boolean>(false);
+  private gridController?: DynamicGridSizeController<HTMLDivElement>;
+  private paginationFetcher?: GridPageFetcher;
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
     elements: [],
   };
-
-  private paginationFetcher?: GridPageFetcher;
-
-  /** A count of the number of tiles currently visible on the screen */
-  private get effectivePageSize(): number {
-    return this.gridSize - this.hiddenTiles;
-  }
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -220,7 +240,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   public disconnectedCallback(): void {
-    this.intersectionObserver.disconnect();
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
@@ -251,32 +270,47 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public firstUpdated(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+
+    // if the user has explicitly set a grid size through the `grid-size`
+    // attribute, we should use that grid size
+    // however, if the verification grid does not have a `grid-size` attribute
+    // then we look at our grid size breakpoints to determine the grid size
+    // that will fit the best on the screen
+    if (!this.targetGridSize) {
+      const targetSize = this.defaultGridSize();
+      this.targetGridSize = targetSize;
+    }
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
-    // whenever the gridSize property updates, we check that the new value
+    // whenever the targetGridSize property updates, we check that the new value
     // is a finite, positive number. If it is not, then we cancel the change
     // and revert to the old value
-    if (change.has("gridSize")) {
-      const oldGridSize = change.get("gridSize") as number;
-      const newGridSize = this.gridSize;
+    if (change.has("targetGridSize")) {
+      const oldGridSize = change.get("targetGridSize") as number;
+      const newGridSize = this.targetGridSize;
 
       // we use isFinite here to check that the value is not NaN, and that
       // values such as Infinity are not considered as a valid grid size
       if (!isFinite(newGridSize) || newGridSize <= 0) {
-        this.gridSize = oldGridSize;
-        console.error("New grid size value could not be converted to a number");
+        this.targetGridSize = oldGridSize;
+        console.error(`New grid size "${newGridSize}" could not be converted to a finite number`);
       }
     }
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
+    if (this.gridContainer && change.has("targetGridSize")) {
+      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.anyOverlap);
+      this.gridController.setTarget(this.targetGridSize);
+    }
+
     const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
     // gridSize is a part of source invalidation because if the grid size
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "gridSize"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "targetGridSize", "columns", "rows"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -289,6 +323,20 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // they will not be re-created
     if (sourceInvalidationKeys.some((key) => change.has(key))) {
       await this.handleSourceInvalidation();
+    }
+  }
+
+  private defaultGridSize(): number {
+    const screenSize = window.screen;
+
+    // for mobile devices, we want to show a single tile
+    // for anything that is larger than a phone, we want to target ten tiles
+    // if ten tiles will not fit on the screen, the grid will automatically
+    // select the largest grid size that will fit
+    if (screenSize.width <= 720) {
+      return 1;
+    } else {
+      return 10;
     }
   }
 
@@ -327,7 +375,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage);
-      this.currentPage = await this.paginationFetcher.getItems(this.gridSize);
+      this.currentPage = await this.paginationFetcher.getItems(this.populatedTileCount);
     }
   }
 
@@ -471,6 +519,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.updateInjector();
   }
 
+  private handleTileOverlap(event: OverflowEvent): void {
+    if (event.detail.isOverlapping === this.anyOverlap.value) {
+      return;
+    }
+
+    const gridTiles = this.gridTiles;
+    for (const tile of gridTiles) {
+      if (tile.isOverlapping) {
+        this.anyOverlap.value = true;
+        return;
+      }
+    }
+
+    this.anyOverlap.value = false;
+  }
+
   //#endregion
 
   //#region SelectionHandlers
@@ -500,24 +564,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private hideSelectionShortcuts(): void {
     this.tileSelectionShortcutsShown(false);
     this.showingSelectionShortcuts = false;
-  }
-
-  // TODO: The intersection observer has been disabled because its functionality
-  // is buggy when the verification grid is larger than the screen size
-  // see: https://github.com/ecoacoustics/web-components/issues/146
-  // see: https://github.com/ecoacoustics/web-components/issues/147
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private handleIntersection(_entries: IntersectionObserverEntry[]): void {
-    // for (const entry of entries) {
-    //   if (entry.intersectionRatio < 1) {
-    //     // at the very minimum, we always want one grid tile showing
-    //     // even if this will cause some items to go off the screen
-    //     const newProposedHiddenTiles = this.hiddenTiles + 1;
-    //     if (newProposedHiddenTiles < this.gridSize) {
-    //       this.hideGridItems(newProposedHiddenTiles);
-    //     }
-    //   }
-    // }
   }
 
   private handleSelection(selectionEvent: SelectionEvent): void {
@@ -616,7 +662,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // we check that the help dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.gridSize > 1 && !this.isHelpDialogOpen();
+    return this.populatedTileCount > 1 && !this.isHelpDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -756,8 +802,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    console.log("stop highlight");
-
     // TODO: make this better
     element.style.width = "0px";
     element.style.height = "0px";
@@ -772,7 +816,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
-      this.historyHead += this.gridSize;
+      this.historyHead += this.populatedTileCount;
       await this.renderHistory(this.historyHead);
     }
   }
@@ -785,14 +829,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
-      this.historyHead -= this.gridSize;
+      this.historyHead -= this.populatedTileCount;
       await this.renderHistory(this.historyHead);
     }
   }
 
   private async renderHistory(historyOffset: number) {
     const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
-    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.gridSize);
+    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.populatedTileCount);
     const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
 
     this.historyMode();
@@ -863,7 +907,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canNavigateNext(): boolean {
-    return this.historyHead > this.gridSize;
+    return this.historyHead > this.populatedTileCount;
   }
 
   //#endregion
@@ -1120,7 +1164,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
-    const hasMultipleTiles = this.gridSize > 1;
+    const hasMultipleTiles = this.populatedTileCount > 1;
 
     if (this.hasClassificationTask() && this.hasVerificationTask()) {
       return this.mixedTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
@@ -1195,10 +1239,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       <div class="verification-container">
         <div
           id="grid-container"
+          class="verification-grid"
+          style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
           @pointermove="${this.resizeHighlightBox}"
-          class="verification-grid"
+          @overlap="${this.handleTileOverlap}"
         >
           ${when(
             this.currentPage.length === 0,
@@ -1208,6 +1254,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 this.currentPage,
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
+                    class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
                     .requiredTags="${this.tilesRequiredTags(subject)}"
                     .model="${subject}"
@@ -1222,7 +1269,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         </div>
 
         <div class="controls-container">
-          <span class="decision-controls-left">
+          <span id="element-container" class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
             <button
@@ -1249,7 +1296,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
             </h2>
             <div id="decisions-container" class="decision-control-actions">
-              <slot @slotchange="${this.handleSlotChange}"></slot>
+              <slot @slotchange="${() => this.handleSlotChange()}"></slot>
               ${this.skipDecisionTemplate()}
             </div>
           </span>
@@ -1259,7 +1306,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           </span>
 
           <div class="progress-bar">
-            <sl-tooltip content="${this.gridSize > 1 ? "Previous Page" : "Previous"}">
+            <sl-tooltip content="${this.targetGridSize > 1 ? "Previous Page" : "Previous"}">
               <button
                 data-testid="previous-page-button"
                 class="previous-page-button oe-btn-secondary"
@@ -1270,7 +1317,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               </button>
             </sl-tooltip>
 
-            <sl-tooltip content="${this.gridSize > 1 ? "Next Page" : "Next"}">
+            <sl-tooltip content="${this.targetGridSize > 1 ? "Next Page" : "Next"}">
               <button
                 data-testid="next-page-button"
                 class="next-page-button oe-btn-secondary"

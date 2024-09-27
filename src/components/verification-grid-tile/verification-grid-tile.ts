@@ -23,6 +23,12 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import verificationGridTileStyles from "./css/style.css?inline";
 
+export type OverflowEvent = CustomEvent<OverflowEventDetail>;
+
+interface OverflowEventDetail {
+  isOverlapping: boolean;
+}
+
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
   1: "!",
@@ -99,8 +105,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   @property({ attribute: false, type: Array })
   public requiredTags!: Tag[];
 
+  @property({ attribute: false, type: Boolean })
+  public isOverlapping = false;
+
   @query("oe-spectrogram")
-  private spectrogram?: SpectrogramComponent;
+  private spectrogram!: SpectrogramComponent;
+
+  @query("#slot-wrapper")
+  private slotWrapper!: HTMLDivElement;
 
   @query("#contents-wrapper")
   private contentsWrapper!: HTMLDivElement;
@@ -112,6 +124,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
   public loaded = false;
   private shortcuts: string[] = [];
+  private intersectionObserver!: IntersectionObserver;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -128,6 +141,8 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
     this.contentsWrapper.removeEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
 
+    this.intersectionObserver.disconnect();
+
     super.disconnectedCallback();
   }
 
@@ -140,6 +155,23 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
 
     this.spectrogram.addEventListener("loading", this.loadingHandler);
     this.spectrogram.addEventListener("loaded", this.loadedHandler);
+
+    this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
+      root: this,
+      // a threshold of zero indicates that we should trigger the callback if
+      // any part of the observed elements overflow the component
+      threshold: 0,
+    });
+
+    // we observe the slot wrapper because it has user defined content, meaning
+    // that it can overflow in any way possible
+    // we want to detect when content overflows the tile so that we can try a
+    // different grid size
+    //
+    // we observe the content wrapper because it can overflow when the
+    // spectrograms minimum height/width is reached
+    this.intersectionObserver.observe(this.slotWrapper);
+    this.intersectionObserver.observe(this.contentsWrapper);
   }
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
@@ -172,6 +204,20 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   public removeDecision(decision: Decision) {
     this.model.removeDecision(decision);
     this.requestUpdate();
+  }
+
+  private handleIntersection(entries: IntersectionObserverEntry[]): void {
+    const hasOverlapContent = entries.some((entry) => entry.intersectionRatio < 1);
+
+    this.isOverlapping = hasOverlapContent;
+
+    const overlapEvent = new CustomEvent<OverflowEventDetail>("overlap", {
+      detail: {
+        isOverlapping: hasOverlapContent,
+      },
+      bubbles: true,
+    });
+    this.dispatchEvent(overlapEvent);
   }
 
   private handlePlay(event: CustomEvent<IPlayEvent>): void {
@@ -297,14 +343,14 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
         id="contents-wrapper"
         @pointerdown="${this.dispatchSelectedEvent}"
         @keydown="${this.handleFocusedKeyDown}"
-        class="tile-container ${tileClasses}"
+        class="tile-container vertically-fill ${tileClasses}"
         part="tile-container"
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
       >
         ${this.keyboardShortcutTemplate()}
-        <figure class="spectrogram-container ${figureClasses}">
+        <figure class="spectrogram-container vertically-fill ${figureClasses}">
           <div class="figure-head">
             <figcaption class="tag-label">
               <sl-tooltip content="This item was tagged as '${tagText}' in your data source" placement="bottom-start">
@@ -319,6 +365,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
           </div>
 
           <oe-axes
+            class="vertically-fill"
             ?x-title-visible="${watch(this.settings.showAxes)}"
             ?y-title-visible="${watch(this.settings.showAxes)}"
             ?x-axis="${watch(this.settings.showAxes)}"
@@ -326,14 +373,16 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             ?x-grid="${watch(this.settings.showAxes)}"
             ?y-grid="${watch(this.settings.showAxes)}"
           >
-            <oe-indicator>
-              <oe-spectrogram id="spectrogram" color-map="audacity"></oe-spectrogram>
+            <oe-indicator class="vertically-fill">
+              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 
           <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
 
-          <slot></slot>
+          <div id="slot-wrapper">
+            <slot></slot>
+          </div>
         </figure>
       </div>
     `;
