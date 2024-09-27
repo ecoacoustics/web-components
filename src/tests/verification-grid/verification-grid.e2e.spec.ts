@@ -502,6 +502,10 @@ test.describe("single verification grid", () => {
   // });
 
   test.describe("pagination", () => {
+    test.beforeEach(async ({ fixture }) => {
+        await fixture.changeGridSize(3);
+    });
+
     test("should disable the previous button when there are no previous pages", async ({ fixture }) => {
       await expect(fixture.previousPageButton()).toBeDisabled();
     });

@@ -12,6 +12,9 @@
 
   min-height: calc(128px + var(--y-axis-padding)) !important;
 
+  padding-bottom: var(--x-axis-padding);
+  padding-left: var(--y-axis-padding);
+
   &::part(grid) {
     color: lightblue;
     stroke-width: 1;
@@ -28,9 +31,6 @@ slot {
   display: inherit;
   height: 100%;
   min-height: 0px;
-
-  padding-left: var(--x-axis-padding);
-  padding-bottom: var(--y-axis-padding);
 }
 
 #axes-svg {
@@ -38,9 +38,6 @@ slot {
   width: auto;
   height: auto;
   overflow: visible;
-
-  padding-left: var(--x-axis-padding);
-  padding-bottom: var(--y-axis-padding);
 
   /*
     The axes lines will be hidden behind the spectrogram if we do not set

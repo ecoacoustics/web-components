@@ -244,7 +244,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
     if (this.elementChrome) {
       const xAxisPadding = xTitleOffset + xTitleFontSize.height;
-      const yAxisPadding = yTitleOffset + yTitleFontSize.width;
+      const yAxisPadding = yTitleOffset;
       this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
       this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
     }
