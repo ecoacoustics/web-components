@@ -1,7 +1,7 @@
 import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { SpectrogramComponent } from "../../../playwright";
+import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import {
   Hertz,
