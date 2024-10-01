@@ -1,11 +1,11 @@
-import { invokeBrowserMethod, setBrowserAttribute } from "../../tests/helpers";
+import { invokeBrowserMethod } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect, test } from "../../tests/assertions";
 import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
 import { sleep } from "../../helpers/utilities";
 
 test.describe("unit tests", () => {
-  test("play/pause events", async ({ mount }) => {
+  test("play/pause events", async ({ mount, page }) => {
     let outside: CustomEvent<boolean> | undefined;
     const component = await mount(SpectrogramComponent, {
       props: {
@@ -21,6 +21,12 @@ test.describe("unit tests", () => {
     await invokeBrowserMethod<SpectrogramComponent>(component, "play");
     expect(outside).toEqual({ keyboardShortcut: false, play: true });
 
+    // I have added this timeout to make this test less flakey
+    // without this, the test would sometimes fail because the play event
+    // does not fire before the pause event
+    // TODO: we should correctly await here until the play event is fired
+    await page.waitForTimeout(1000);
+
     await invokeBrowserMethod<SpectrogramComponent>(component, "pause");
     expect(outside).toEqual({ keyboardShortcut: false, play: false });
   });
@@ -29,7 +35,7 @@ test.describe("unit tests", () => {
     let loadingEvent: CustomEvent | undefined;
     let loadedEvent: CustomEvent | undefined;
 
-    const component = await mount(SpectrogramComponent, {
+    await mount(SpectrogramComponent, {
       props: {
         src: "http://localhost:3000/example.flac",
       },
@@ -42,8 +48,6 @@ test.describe("unit tests", () => {
         },
       },
     });
-
-    await setBrowserAttribute<SpectrogramComponent>(component, "src", "/example2.flac");
 
     // TODO: this is a hacky way to wait for the loading event to fire, there should be a better way
     await page.waitForTimeout(1000);

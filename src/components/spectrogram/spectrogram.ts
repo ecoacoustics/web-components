@@ -348,12 +348,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     this.pause();
   }
 
-  private handleSlotChange(): void {
-    if (this.hasSource()) {
-      this.renderSpectrogram();
-    }
-  }
-
   private originalFftSize(): Size {
     const options = this.spectrogramOptions;
     const step = options.windowSize - options.windowOverlap;
@@ -457,6 +451,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
+    // our AbstractComponent mixin triggers a change event when the slot content
+    // changes, meaning that we can use the slotElements property to check if
+    // the source has been invalidated through the slot
     const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slotElements"];
     return invalidationKeys.some((key) => change.has(key));
   }
@@ -570,7 +567,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
         preload="metadata"
         crossorigin="anonymous"
       >
-        <slot @slotchange="${this.handleSlotChange}"></slot>
+        <slot></slot>
       </audio>
     `;
   }
