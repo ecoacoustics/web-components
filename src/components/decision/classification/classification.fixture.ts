@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { catchEvent, removeBrowserAttribute, setBrowserAttribute } from "../../../tests/helpers";
 import { ClassificationComponent } from "./classification";
 import { DecisionEvent } from "../decision";
+import { test } from "../../../tests/assertions";
 
 class ClassificationComponentFixture {
   constructor(public readonly page: Page) {}

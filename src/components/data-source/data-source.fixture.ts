@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { invokeBrowserMethod, removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { Subject } from "../../models/subject";
+import { test } from "../../tests/assertions";
 
 class DataSourceFixture {
   public constructor(public readonly page: Page) {}

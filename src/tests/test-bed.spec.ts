@@ -1,5 +1,4 @@
-import { test } from "@sand4rt/experimental-ct-web";
-import { expect } from "./assertions";
+import { expect, test } from "./assertions";
 
 test.describe("Test Bed", () => {
   // since SharedArrayBuffer requires additional headers and permissions

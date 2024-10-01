@@ -1,4 +1,4 @@
-import { test } from "@sand4rt/experimental-ct-web";
+import { test } from "../tests/assertions";
 
 test.describe("VerificationParser", () => {
   test.skip("should correctly parse an empty subject", () => {});

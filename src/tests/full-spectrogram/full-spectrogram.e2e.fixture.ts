@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { getBrowserAttribute, getBrowserSignalValue, getBrowserValue, setBrowserAttribute } from "../helpers";
 import { AudioModel } from "../../models/recordings";
+import { test } from "../assertions";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases

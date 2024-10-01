@@ -1,5 +1,4 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import {
   catchEvent,
   emitBrowserEvent,
@@ -9,6 +8,7 @@ import {
 } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
+import { test } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

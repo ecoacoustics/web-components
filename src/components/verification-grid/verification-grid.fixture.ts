@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { setBrowserAttribute } from "../../tests/helpers";
 import { VerificationGridComponent } from "./verification-grid";
+import { test } from "../../tests/assertions";
 
 class VerificationGridFixture {
   public constructor(public readonly page: Page) {}

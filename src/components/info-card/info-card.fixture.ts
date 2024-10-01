@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { getBrowserValue, setBrowserValue } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
+import { test } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

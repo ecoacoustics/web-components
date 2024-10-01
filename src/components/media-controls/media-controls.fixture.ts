@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
+import { test } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

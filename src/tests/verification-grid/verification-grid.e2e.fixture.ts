@@ -1,5 +1,4 @@
 import { Locator, Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import {
   catchLocatorEvent,
   dragSelection,
@@ -32,7 +31,7 @@ import {
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
-import { expect } from "../assertions";
+import { expect, test } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";

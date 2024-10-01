@@ -1,9 +1,8 @@
 import { setBrowserAttribute } from "../helpers";
 import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
-import { test } from "@sand4rt/experimental-ct-web";
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
-import { expect } from "../assertions";
+import { expect, test } from "../assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

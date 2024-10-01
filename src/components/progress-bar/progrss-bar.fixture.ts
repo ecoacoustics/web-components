@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { setBrowserAttribute } from "../../tests/helpers";
 import { ProgressBar } from "./progress-bar";
+import { test } from "../../tests/assertions";
 
 class ProgressBarFixture {
   public constructor(public readonly page: Page) {}
@@ -25,11 +25,7 @@ class ProgressBarFixture {
   }
 
   public async changeViewHead(value: number) {
-    await setBrowserAttribute<ProgressBar>(
-      this.component(),
-      "history-head" as keyof ProgressBar,
-      value.toString(),
-    );
+    await setBrowserAttribute<ProgressBar>(this.component(), "history-head" as keyof ProgressBar, value.toString());
   }
 
   public async changeCompletedHead(value: number) {

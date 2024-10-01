@@ -1,7 +1,6 @@
-import { test } from "@sand4rt/experimental-ct-web";
 import { invokeBrowserMethod, setBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
-import { expect } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
 import { sleep } from "../../helpers/utilities";
 

@@ -6,7 +6,7 @@
   ],
   "settings": {
     "files.insertFinalNewline": true,
-    "workbench.iconTheme": "material-icon-theme",
+    "workbench.iconTheme": "Monokai Classic Icons",
     "editor.inlineSuggest.enabled": true,
     "editor.renderWhitespace": "trailing",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -66,6 +66,7 @@
       "subsite",
       "teleporting",
       "progressbar",
+      "pageerror",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
