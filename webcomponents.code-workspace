@@ -6,7 +6,7 @@
   ],
   "settings": {
     "files.insertFinalNewline": true,
-    "workbench.iconTheme": "Monokai Classic Icons",
+    "workbench.iconTheme": "material-icon-theme",
     "editor.inlineSuggest.enabled": true,
     "editor.renderWhitespace": "trailing",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
