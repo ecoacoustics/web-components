@@ -202,10 +202,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
     this.resizeCanvas(this.canvas);
 
-    if (this.hasSource()) {
-      this.renderSpectrogram();
-    }
-
     const unitConverters = new UnitConverter(
       this.renderWindow,
       this.renderCanvasSize,
@@ -242,28 +238,32 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
   public updated(change: PropertyValues<this>) {
     if (this.doneFirstRender) {
-      // spectrogram regeneration functionality
-      if (this.invalidateSpectrogramOptions(change)) {
-        this.regenerateSpectrogramOptions();
-
-        if (this.unitConverters.value) {
-          this.unitConverters.value.melScale.value = this.melScale;
-        }
-      } else if (this.invalidateSpectrogramSource(change)) {
+      // because regenerating the options is also performed when the source is
+      // invalidated, we only use the regenerateSpectrogramOptions method when
+      // only the options are updated
+      if (this.invalidateSpectrogramSource(change)) {
         this.pause();
         this.regenerateSpectrogram();
         this.updateCurrentTime();
+      } else if (this.invalidateSpectrogramOptions(change)) {
+        this.regenerateSpectrogramOptions();
+      }
+
+      if (this.unitConverters.value && change.has("melScale")) {
+        this.unitConverters.value.melScale.value = this.melScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
-      if (this.hasSource()) {
-        this.renderSpectrogram();
-      }
+      this.renderSpectrogram();
     }
 
     this.resizeCanvas(this.canvas);
   }
 
   public renderSpectrogram(): void {
+    if (!this.hasSource()) {
+      return;
+    }
+
     this.dispatchEvent(
       new CustomEvent("loading", {
         bubbles: true,
@@ -292,7 +292,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       return;
     }
 
-    console.log("regenerating spectrogram");
     this.dispatchEvent(
       new CustomEvent("loading", {
         bubbles: true,
@@ -347,12 +346,6 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public stop(): void {
     this.currentTime.value = 0;
     this.pause();
-  }
-
-  private handleSlotChange(): void {
-    if (this.hasSource()) {
-      this.renderSpectrogram();
-    }
   }
 
   private originalFftSize(): Size {
@@ -458,6 +451,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
+    // our AbstractComponent mixin triggers a change event when the slot content
+    // changes, meaning that we can use the slotElements property to check if
+    // the source has been invalidated through the slot
     const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slotElements"];
     return invalidationKeys.some((key) => change.has(key));
   }
@@ -571,7 +567,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
         preload="metadata"
         crossorigin="anonymous"
       >
-        <slot @slotchange="${this.handleSlotChange}"></slot>
+        <slot></slot>
       </audio>
     `;
   }

@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { setBrowserAttribute } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { test } from "../assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

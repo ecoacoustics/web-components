@@ -66,6 +66,7 @@
       "subsite",
       "teleporting",
       "progressbar",
+      "pageerror",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

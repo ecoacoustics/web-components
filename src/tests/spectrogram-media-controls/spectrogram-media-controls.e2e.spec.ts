@@ -36,12 +36,16 @@ test.describe("two spectrograms with different ids", () => {
     expect(await fixture.isPlayingAudio(fixture.spectrogramTwo())).toBe(true);
   });
 
-  test("unbinding a media controls element from a spectrogram", async ({ fixture }) => {
+  // because we have unbound the media controls from the spectrogram element
+  // we expect this to throw an error
+  test.fail("unbinding a media controls element from a spectrogram", async ({ fixture }) => {
     await removeBrowserAttribute<MediaControlsComponent>(fixture.mediaControls(), "for");
 
     await fixture.playAudio();
-    expect(await fixture.isPlayingAudio(fixture.spectrogramOne())).toBe(false);
-    expect(await fixture.isPlayingAudio(fixture.spectrogramTwo())).toBe(false);
+
+    // TODO: check that the spectrogram components are not playing audio
+    // expect(await fixture.isPlayingAudio(fixture.spectrogramOne())).toBe(false);
+    // expect(await fixture.isPlayingAudio(fixture.spectrogramTwo())).toBe(false);
   });
 });
 

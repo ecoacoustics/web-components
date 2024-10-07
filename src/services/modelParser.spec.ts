@@ -1,4 +1,4 @@
-import { test } from "@sand4rt/experimental-ct-web";
+import { test } from "../tests/assertions";
 
 test.describe("ModelParser", () => {
   test.describe("getKeyPermutations", () => {

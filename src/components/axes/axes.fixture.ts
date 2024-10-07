@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
+import { test } from "../../tests/assertions";
 
 class AxesFixture {
   public constructor(public readonly page: Page) {}

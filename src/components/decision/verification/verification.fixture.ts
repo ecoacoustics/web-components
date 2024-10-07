@@ -1,10 +1,10 @@
 import { Page } from "@playwright/test";
-import { test } from "@sand4rt/experimental-ct-web";
 import { catchEvent, removeBrowserAttribute, setBrowserAttribute, setBrowserValue } from "../../../tests/helpers";
 import { VerificationComponent } from "./verification";
 import { SelectionObserverType } from "../../verification-grid/verification-grid";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
+import { test } from "../../../tests/assertions";
 
 class VerificationComponentFixture {
   public constructor(public readonly page: Page) {}
