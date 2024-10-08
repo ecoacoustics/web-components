@@ -105,7 +105,8 @@ export class GridPageFetcher {
     const { subjects, context, totalItems } = await this.pagingCallback(this.pagingContext);
     const models = subjects.map(this.converter.parse);
 
-    // TODO: this is a hack that was implemented so that we can use
+    // TODO: remove this hack that was implemented so that we can add
+    // authentication url parameters
     models.forEach((model) => {
       model.url = this.urlTransformer(model.url);
     });
