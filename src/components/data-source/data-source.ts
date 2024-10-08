@@ -10,8 +10,8 @@ import { Subject, SubjectWrapper } from "../../models/subject";
 import { DataSourceFetcher } from "../../services/dataSourceFetcher";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
-import dataSourceStyles from "./css/style.css?inline";
 import { required } from "../../helpers/decorators";
+import dataSourceStyles from "./css/style.css?inline";
 
 type PagingContext = {
   page: number;

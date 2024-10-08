@@ -43,6 +43,10 @@ export const tagConverter = (value: string | null): Tag => {
  */
 export const callbackConverter = (value: string | ((...params: any) => any)) => {
   if (typeof value === "string") {
+    if (value === "") {
+      throw new Error("Empty string is not a valid callback");
+    }
+
     return new Function(value);
   }
 
