@@ -6,6 +6,13 @@ on:
       production:
         required: true
         type: boolean
+  workflow_dispatch:
+    inputs:
+      production:
+        type: boolean
+        description: "Deploy to production website"
+        required: true
+        
 
 jobs:
   Documentation-Publish:
