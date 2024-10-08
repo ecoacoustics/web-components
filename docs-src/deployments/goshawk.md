@@ -35,7 +35,6 @@ function setup() {
         authToken = prompt(helpMessage);
     } while (!authToken)
 
-    console.debug(verificationGrid);
     verificationGrid.urlTransformer = createUrlTransformer(authToken);
 
     // we set the datasource's src after the url transformer so that the
@@ -44,5 +43,7 @@ function setup() {
     dataSource.src = "/public/goshawk.csv";
 }
 
-setup();
+window.addEventListener("load", () => {
+    setup();
+});
 </script>
