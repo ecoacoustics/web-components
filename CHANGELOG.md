@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.1...web-components-v1.1.2) (2024-10-08)
+
+
+### Features
+
+* Add the ability to transform subject urls ([#209](https://github.com/ecoacoustics/web-components/issues/209)) ([b716ec9](https://github.com/ecoacoustics/web-components/commit/b716ec98ababaf89e1cb14d7105df4dd692f3d03)), closes [#208](https://github.com/ecoacoustics/web-components/issues/208)
+
 ## [1.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.0...web-components-v1.1.1) (2024-10-07)
 
 
