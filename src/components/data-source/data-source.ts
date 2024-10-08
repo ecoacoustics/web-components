@@ -106,11 +106,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const downloadedFileName = `${basename}_verified${extension}`;
 
     let formattedResults = "";
-    if (fileFormat === "application/json") {
+    // we use startsWith here because some servers respond with content-types
+    // in the format content-type/subtype; charset=encoding
+    // e.g. text/csv; charset=UTF-8
+    if (fileFormat.startsWith("application/json")) {
       formattedResults = JSON.stringify(results);
-    } else if (fileFormat === "text/csv") {
+    } else if (fileFormat.startsWith("text/csv")) {
       formattedResults = new Parser().parse(results);
-    } else if (fileFormat === "text/tab-separated-values") {
+    } else if (fileFormat.startsWith("text/tab-separated-values")) {
       formattedResults = new Parser({ delimiter: "\t" }).parse(results);
     } else {
       // we should never reach this condition because we checked that the file

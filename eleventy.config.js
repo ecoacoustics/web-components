@@ -4,6 +4,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPlugin(syntaxHighlight);
   eleventyConfig.addPassthroughCopy("docs-src/docs.css");
   eleventyConfig.addPassthroughCopy("public/");
+  eleventyConfig.addPassthroughCopy("docs-src/public/");
   eleventyConfig.addPassthroughCopy("components.js");
   eleventyConfig.addPassthroughCopy("assets/");
 
