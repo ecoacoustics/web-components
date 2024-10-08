@@ -1,6 +1,6 @@
 ---
 layout: layouts/deployment.11ty.js
-title: Goshawk Verification - Open Ecoacoustics
+title: Goshawk Verification
 ---
 
 <oe-verification-grid id="verification-grid">
@@ -15,9 +15,9 @@ Please input your Ecosounds 'Authentication Token'.
 You can find your authentication token at the bottom left corner of ecosounds.org/my_account
 
 1. Go to ecosounds.org
-2. Click on "Log In"
+2. Click on "Log In" in the menu bar
 3. Log into your account using your email and password
-4. Click on your username in the top-right of the navbar
+4. Click on your username in the top-right of the menu bar
 5. In the bottom left of your profile, you should see a card called 'Authentication Token'. Press the eye icon, then copy the text
 6. Paste the text into this prompt and press 'Ok'
 `;
@@ -31,10 +31,15 @@ function setup() {
     const dataSource = document.getElementById("data-source");
     let authToken = undefined;
 
+    // if the user doesn't put in an authentication token or presses cancel
+    // we want ot keep showing them the auth token prompt
     do {
         authToken = prompt(helpMessage);
     } while (!authToken)
 
+    // we use a url transformer to add the user_token parameter to all the
+    // subject urls
+    // this authentication token will NOT be added to the results output
     verificationGrid.urlTransformer = createUrlTransformer(authToken);
 
     // we set the datasource's src after the url transformer so that the
