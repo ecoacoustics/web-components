@@ -67,22 +67,17 @@ export class DataSourceFetcher {
 
     const content = await this.file.text();
     let models: Subject[];
-    switch (this.mediaType) {
-      case "application/json": {
-        models = JSON.parse(content);
-        break;
-      }
-      case "text/csv": {
-        models = await csv({ flatKeys: true }).fromString(content);
-        break;
-      }
-      case "text/tab-separated-values": {
-        models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
-        break;
-      }
-      default: {
-        throw DataSourceFetcher.unsupportedFormatError;
-      }
+    // we use startsWith here because some servers respond with content-types
+    // in the format content-type/subtype; charset=encoding
+    // e.g. text/csv; charset=UTF-8
+    if (this.mediaType.startsWith("application/json")) {
+      models = JSON.parse(content);
+    } else if (this.mediaType.startsWith("text/csv")) {
+      models = await csv({ flatKeys: true }).fromString(content);
+    } else if (this.mediaType.startsWith("text/tab-separated-values")) {
+      models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
+    } else {
+      throw DataSourceFetcher.unsupportedFormatError;
     }
 
     return models;
