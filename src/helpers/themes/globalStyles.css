@@ -1,0 +1,304 @@
+@import url("@shoelace-style/shoelace/dist/themes/light.css");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
+/*
+  Because some of our web component support going into fullscreen mode, we
+  theme the backdrop color of the fullscreen mode to our custom background color
+  This means that if the component doesn't fully fill up the screen when in
+  fullscreen mode, the background color will be our themed color, not the
+  default black color
+*/
+:host:fullscreen::backdrop {
+  background-color: var(--oe-background-color);
+}
+
+* {
+  font-family: var(--oe-font-family);
+
+  /* CSS Resets */
+  font-weight: normal;
+}
+
+sl-icon {
+  display: flex;
+  font-size: calc(var(--oe-font-size) * 1.2);
+  justify-items: center;
+  align-items: center;
+  padding: var(--oe-spacing);
+
+  &.large-icon {
+    font-size: calc(var(--oe-font-size) * 1.5);
+    padding: 0;
+  }
+}
+
+button:disabled,
+input:disabled {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+kbd {
+  position: relative;
+  display: inline-flex;
+  color: var(--oe-font-color);
+  font-family: "Courier New", Courier, monospace;
+  text-align: center;
+  align-items: center;
+  font-weight: bold;
+  padding: 0.2rem;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  z-index: 0;
+  margin-top: 0.2rem;
+  margin: 0.5rem;
+  width: max-content;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.13em;
+    background: radial-gradient(circle farthest-corner at top right, #ededed, #c8c8c8);
+    box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0.2);
+    z-index: -1;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: -0.065em;
+    left: -0.065em;
+    width: 100%;
+    height: 100%;
+    padding: 0.13em;
+    border-radius: 0.15em;
+    background: radial-gradient(circle farthest-corner at bottom right, #cacaca, #cacaca);
+    box-shadow: 0.065em 0.065em 0.13em 0.13em rgba(0, 0, 0, 0.5);
+    z-index: -2;
+  }
+}
+
+a {
+  text-decoration: underline;
+  color: var(--oe-font-color);
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background-color: var(--oe-font-color-lighter);
+}
+
+dialog {
+  position: relative;
+  box-shadow: var(--oe-box-shadow);
+  border: var(--oe-border-width) solid var(--oe-selected-color);
+  min-width: 70%;
+  max-width: 80%;
+  max-height: 100%;
+  background-color: var(--oe-background-color);
+  border-radius: var(--oe-border-rounding);
+  padding: 2rem;
+
+  animation: fade-in 600ms forwards;
+
+  dialog[open] {
+    animation: fade-in 600ms forwards;
+  }
+
+  /* Styles applied to mobile devices */
+  @media (max-width: 600px) {
+    max-width: 100%;
+    padding: 1rem;
+  }
+}
+
+p {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: var(--oe-font-color);
+}
+
+input:not([type="checkbox"], [type="radio"]),
+textarea,
+select {
+  box-shadow: 0 0 0 1px var(--oe-secondary-color);
+
+  &:focus {
+    box-shadow: 0 0 0 2px var(--oe-selected-color);
+  }
+}
+
+input,
+textarea,
+select {
+  font-size: 1rem;
+  padding: var(--oe-spacing);
+  border: none;
+  border-radius: var(--oe-border-rounding);
+  background-color: var(--oe-panel-color-lighter);
+  color: var(--oe-font-color);
+
+  &:focus {
+    outline: none;
+    border-color: var(--oe-selected-color);
+    background-color: var(--oe-background-color);
+  }
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  -webkit-appearance: none;
+  appearance: textfield;
+}
+
+input[type="range"] {
+  padding: 0;
+
+  /* &::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+      background: var(--oe-primary-color);
+      border-radius: var(--oe-border-rounding);
+    }
+
+    &::-webkit-slider-runnable-track,
+    &::-moz-range-track {
+      background-color: var(--oe-panel-color);
+    } */
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  position: relative;
+  accent-color: var(--oe-primary-color);
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+label:has(input) {
+  display: flex;
+  align-items: center;
+  gap: var(--oe-spacing);
+}
+
+input[type="file"] {
+  position: relative;
+  padding: 0.5rem;
+  border: none;
+
+  &::file-selector-button {
+    border: none;
+    border-radius: var(--oe-border-rounding);
+    color: var(--oe-font-color);
+    font-weight: bold;
+    background-color: var(--oe-panel-color);
+    padding: 0.5rem;
+  }
+}
+
+/*
+  Ripple effect is modified from a CSS-Tricks article
+  https://css-tricks.com/how-to-recreate-the-ripple-effect-of-material-design-buttons/#aa-css-only
+*/
+button {
+  --ripple-color: color-mix(in srgb, var(--background-color) 90%, black);
+  --background-color: var(--oe-panel-color);
+  --border: none;
+
+  border: var(--border);
+  border-radius: var(--oe-border-rounding);
+  margin: 0.1rem;
+  font-size: 1em;
+  padding: var(--oe-spacing) var(--oe-spacing-large);
+  background-color: var(--background-color);
+  transition:
+    background var(--oe-animation-time),
+    border var(--oe-animation-time);
+  cursor: pointer;
+
+  &:hover:not(:disabled, .disabled) {
+    background: var(--background-color) radial-gradient(circle, transparent 1%, var(--background-color) 1%)
+      center/15000%;
+  }
+
+  &:active:not(:disabled, .disabled) {
+    background-color: var(--ripple-color);
+    background-size: 100%;
+    transition: background 0s;
+  }
+
+  /*
+    User agents create an outline around an element that has explicit focus
+    (focus set through .focus)
+    However, this is not the behavior that we want. Therefore, we use a CSS
+    reset to disable this behavior
+  */
+  &:focus {
+    /* TODO: I have currently disabled this so that you can tab-select */
+    /* outline: none; */
+    outline: var(--oe-border-width) solid var(--oe-selected-color);
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.disabled {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oe-btn-primary {
+  border: var(--oe-border-width) solid var(--oe-primary-color);
+  --background-color: transparent;
+}
+
+.oe-btn-secondary {
+  border: none;
+  background: none;
+  box-shadow: none;
+  font-weight: bold;
+  color: var(--oe-primary-color);
+}
+
+.oe-btn-info {
+  --border: var(--oe-border-width) solid var(--oe-info-color);
+  --background-color: var(--oe-info-bg-color);
+}
+
+.oe-btn-danger {
+  --background-color: var(--oe-danger-color);
+  color: white;
+}
+
+.oe-pill {
+  display: inline-block;
+  border-radius: var(--oe-border-rounding);
+}
+
+.vertically-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  min-height: 0px;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

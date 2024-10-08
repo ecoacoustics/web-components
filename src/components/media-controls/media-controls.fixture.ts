@@ -23,6 +23,7 @@ class TestPage {
         </oe-media-controls>
     `);
     await this.page.waitForLoadState("networkidle");
+    await this.page.waitForSelector("oe-media-controls");
   }
 
   public async updateSlot(content: string) {

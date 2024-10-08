@@ -10,12 +10,6 @@ class ProgressBarFixture {
   public completedSegment = () => this.page.locator(".completed-segment").first();
   public viewHeadSegment = () => this.page.locator(".head-segment").first();
 
-  public async create() {
-    await this.page.setContent("<oe-progress-bar total='100' history-head='0' completed='0'></oe-progress-bar>");
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-progress-bar");
-  }
-
   public async completedSegmentSize(): Promise<string> {
     return await this.completedSegment().evaluate((element: HTMLSpanElement) => element.style.width);
   }
