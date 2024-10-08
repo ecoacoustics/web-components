@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.0...web-components-v1.1.1) (2024-10-07)
+
+
+### Bug Fixes
+
+* Spectrograms performing double initial render ([#201](https://github.com/ecoacoustics/web-components/issues/201)) ([023ebe4](https://github.com/ecoacoustics/web-components/commit/023ebe48c2d5b71b71535a3276a9118715cf4807)), closes [#200](https://github.com/ecoacoustics/web-components/issues/200)
+
 ## [1.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.0.0...web-components-v1.1.0) (2024-09-27)
 
 
