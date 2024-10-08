@@ -8,6 +8,12 @@ export interface IPageFetcherResponse<T> {
 }
 
 /**
+ * A callback that will be applied to every subjects url
+ * this can be useful for adding authentication information
+ */
+export type UrlTransformer = (url: string) => string;
+
+/**
  * A context object that is passed to the page fetcher function after every call
  * this can be used to keep track of state such as the current page, where the
  * page fetcher would increment the page number after every call.
@@ -16,14 +22,16 @@ export type PageFetcherContext = Record<string, unknown>;
 export type PageFetcher<T extends PageFetcherContext = any> = (context: T) => Promise<IPageFetcherResponse<T>>;
 
 export class GridPageFetcher {
-  public constructor(pagingCallback: PageFetcher) {
+  public constructor(pagingCallback: PageFetcher, urlTransformer: UrlTransformer) {
     this.pagingCallback = pagingCallback;
     this.converter = SubjectParser;
+    this.urlTransformer = urlTransformer;
   }
 
   public totalItems?: number;
   private pagingCallback: PageFetcher;
   private converter: SubjectParser;
+  private urlTransformer: UrlTransformer;
   private subjectQueueBuffer: SubjectWrapper[] = [];
   private pagingContext: PageFetcherContext = {};
 
@@ -96,6 +104,11 @@ export class GridPageFetcher {
   private async fetchNextPage(): Promise<SubjectWrapper[]> {
     const { subjects, context, totalItems } = await this.pagingCallback(this.pagingContext);
     const models = subjects.map(this.converter.parse);
+
+    // TODO: this is a hack that was implemented so that we can use
+    models.forEach((model) => {
+      model.url = this.urlTransformer(model.url);
+    });
 
     this.totalItems = totalItems;
     this.pagingContext = context;

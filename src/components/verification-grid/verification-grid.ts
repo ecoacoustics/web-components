@@ -7,7 +7,7 @@ import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
-import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
+import { GridPageFetcher, PageFetcher, UrlTransformer } from "../../services/gridPageFetcher";
 import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY } from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
@@ -132,6 +132,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   /** A callback function that returns a page of recordings */
   @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
   public getPage?: PageFetcher;
+
+  /**
+   * A callback function that will be applied to all subject urls
+   *
+   * @default
+   * an identity function that returns the url unchanged
+   */
+  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
+  public urlTransformer: UrlTransformer = (url) => url;
 
   @state()
   private historyHead = 0;
@@ -310,7 +319,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "targetGridSize", "columns", "rows"];
+    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer", "targetGridSize", "columns", "rows"];
 
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
@@ -374,7 +383,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.subjectHistory = [];
 
     if (this.getPage) {
-      this.paginationFetcher = new GridPageFetcher(this.getPage);
+      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
       this.currentPage = await this.paginationFetcher.getItems(this.populatedTileCount);
     }
   }
