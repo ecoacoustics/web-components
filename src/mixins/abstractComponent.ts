@@ -1,9 +1,12 @@
 import { CSSResultGroup, LitElement, unsafeCSS } from "lit";
 import { ReactiveController } from "./reactiveController";
-import theming from "../helpers/themes/theming.css?inline";
+import globalStyles from "../helpers/themes/globalStyles.css?inline";
+import defaultTheming from "../helpers/themes/theming.css?inline";
 
 type ImplementsConstructor<T> = new (...args: any[]) => T;
 type Component = ImplementsConstructor<LitElement>;
+
+let themingInserted = false;
 
 export const AbstractComponent = <T extends Component>(superClass: T) => {
   class AbstractComponentClass extends superClass {
@@ -12,8 +15,13 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
     }
 
     protected static finalizeStyles(styles: CSSResultGroup) {
-      const themingStyles = unsafeCSS(theming);
-      let newStyles: CSSResultGroup = [themingStyles];
+      // we only want to apply the theming styles once to the documents root
+      if (!themingInserted) {
+        AbstractComponentClass.insertTheming();
+      }
+
+      const globalCss = unsafeCSS(globalStyles);
+      let newStyles: CSSResultGroup = [globalCss];
 
       // it is important that the theming is the first style
       // this is because all the styles in the styles array get combined into
@@ -25,14 +33,22 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
       // if the theming is not the first style, then the component styles will
       // be overridden by the theming styles
       if (Array.isArray(styles)) {
-        newStyles = [themingStyles, ...styles];
+        newStyles = [globalCss, ...styles];
       } else if (styles !== undefined) {
-        newStyles = [themingStyles, styles];
+        newStyles = [globalCss, styles];
       }
 
       // eslint-disable-next-line
       // @ts-ignore
       return super.finalizeStyles(newStyles);
+    }
+
+    private static insertTheming(): void {
+      themingInserted = true;
+
+      const style = document.createElement("style");
+      style.innerHTML = defaultTheming;
+      document.head.appendChild(style);
     }
 
     private reactiveController = new ReactiveController(this);
