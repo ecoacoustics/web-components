@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.2...web-components-v1.1.3) (2024-10-09)
+
+
+### Bug Fixes
+
+* theming styles are applied multiple times ([#203](https://github.com/ecoacoustics/web-components/issues/203)) ([1731cb5](https://github.com/ecoacoustics/web-components/commit/1731cb56b7c3555279468350f06951401a8c2bed)), closes [#202](https://github.com/ecoacoustics/web-components/issues/202)
+
 ## [1.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.1...web-components-v1.1.2) (2024-10-08)
 
 
