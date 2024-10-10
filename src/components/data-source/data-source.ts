@@ -119,12 +119,18 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   private async downloadUrlSourcedResults(): Promise<void> {
     if (!this.urlDataFetcher) {
       throw new Error("Data fetcher is not defined");
+    } else if (!this.urlDataFetcher.file) {
+      // all url data fetchers should have a file object
+      // if we react this condition, it means that either the url data fetcher
+      // hasn't been initialized correctly, or we have called this function
+      // with a callback sourced fetcher
+      throw new Error("Data fetcher does not have a file.");
     }
 
     const results = await this.urlSourcedResultRows();
     const fileFormat = this.urlDataFetcher.mediaType ?? "";
 
-    const originalFilePath = this.urlDataFetcher.file?.name ?? "verified-results.json";
+    const originalFilePath = this.urlDataFetcher.file.name;
     const extensionIndex = originalFilePath.lastIndexOf(".");
     const basename = originalFilePath.slice(0, extensionIndex).split("/").at(-1);
     const extension = originalFilePath.slice(extensionIndex);
