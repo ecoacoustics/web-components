@@ -7,7 +7,7 @@ import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { Subject, SubjectWrapper } from "../../models/subject";
-import { DataSourceFetcher } from "../../services/dataSourceFetcher";
+import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
@@ -64,7 +64,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   @query("input[type=file]")
   private fileInput!: HTMLInputElement;
 
-  public urlDataFetcher?: DataSourceFetcher;
+  public urlDataFetcher?: UrlSourcedFetcher;
   private verificationGrid?: VerificationGridComponent;
   private decisionHandler = this.handleDecision.bind(this);
 
@@ -280,7 +280,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.urlDataFetcher = await new DataSourceFetcher().updateSrc(this.src);
+    this.urlDataFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     if (!this.urlDataFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }

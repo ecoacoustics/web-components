@@ -4,10 +4,13 @@ import csv from "csvtojson";
 // TODO: this class should use the strategy pattern and perform caching
 /**
  * @description
- * Fetches a data source of an unknown type/shape and returns it in a standard format.
- * e.g. can fetch a CSV, TSV, JSON file and always return a JSON object.
+ * Fetches a remote data source such has a CSV, TSV, JSON file
+ * and always return a JSON object.
+ *
+ * This class can also be used to parse files provided by the local file system
+ * picker API by converting the selected file into a data URL.
  */
-export class DataSourceFetcher {
+export class UrlSourcedFetcher {
   private static readonly unsupportedFormatError = new Error("Unsupported file format");
   private static readonly undeterminedFormatError = new Error("Could not determine file format");
 
@@ -77,7 +80,7 @@ export class DataSourceFetcher {
     } else if (this.mediaType.startsWith("text/tab-separated-values")) {
       models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
     } else {
-      throw DataSourceFetcher.unsupportedFormatError;
+      throw UrlSourcedFetcher.unsupportedFormatError;
     }
 
     return models;
@@ -91,7 +94,7 @@ export class DataSourceFetcher {
   private fileExtensionMediaType(path: string): string {
     const extension = path.split(".").at(-1)?.toLowerCase();
     if (!extension) {
-      throw DataSourceFetcher.undeterminedFormatError;
+      throw UrlSourcedFetcher.undeterminedFormatError;
     }
 
     const translationTable: Record<string, string> = {
@@ -104,6 +107,6 @@ export class DataSourceFetcher {
       return translationTable[extension];
     }
 
-    throw DataSourceFetcher.unsupportedFormatError;
+    throw UrlSourcedFetcher.unsupportedFormatError;
   }
 }
