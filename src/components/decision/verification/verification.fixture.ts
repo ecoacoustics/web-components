@@ -20,6 +20,15 @@ class VerificationComponentFixture {
     await this.page.setContent(`<oe-verification verified="true"></oe-verification>`);
     await this.page.waitForLoadState("networkidle");
     await this.page.waitForSelector("oe-verification");
+
+    // mock the verification grid by binding it to the document object
+    // this means that we can test that the shortcut keys work correctly without
+    // having to create the entire verification grid
+    // shortcut keys + integration testing is tested in the verification grid
+    // e2e tests
+    await this.component().evaluate((element: VerificationComponent) => {
+      element.verificationGrid = document as any;
+    });
   }
 
   // events

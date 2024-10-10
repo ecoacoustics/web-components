@@ -1,4 +1,4 @@
-import { LitElement, TemplateResult, unsafeCSS } from "lit";
+import { LitElement, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { booleanConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
@@ -8,6 +8,7 @@ import { Decision } from "../../models/decisions/decision";
 import {
   injectionContext,
   SelectionObserverType,
+  VerificationGridComponent,
   VerificationGridInjector,
 } from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
@@ -62,6 +63,9 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   @property({ attribute: false })
   public selectionMode: SelectionObserverType = "desktop";
 
+  @state()
+  public verificationGrid!: VerificationGridComponent;
+
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
 
@@ -70,14 +74,26 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener("keydown", this.keyDownHandler);
-    document.addEventListener("keyup", this.keyUpHandler);
   }
 
   public disconnectedCallback(): void {
-    document.removeEventListener("keydown", this.keyDownHandler);
-    document.removeEventListener("keyup", this.keyUpHandler);
+    this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
+    this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);
     super.disconnectedCallback();
+  }
+
+  public willUpdate(change: PropertyValues<this>): void {
+    if (change.has("verificationGrid")) {
+      // if we are currently attached to a verification grid, we should remove
+      // the event listeners from the old grid
+      if (change.get("verificationGrid")) {
+        this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
+        this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);
+      }
+
+      this.verificationGrid.addEventListener("keydown", this.keyDownHandler);
+      this.verificationGrid.addEventListener("keyup", this.keyUpHandler);
+    }
   }
 
   // you should override this method in your subclass

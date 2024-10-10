@@ -40,6 +40,8 @@ import { SlTooltip } from "@shoelace-style/shoelace";
 class TestPage {
   public constructor(public readonly page: Page) {}
 
+  public hostAppInput = () => this.page.getByTestId("host-app-input").first();
+
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
   public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
@@ -118,6 +120,33 @@ class TestPage {
     `);
     await this.page.waitForLoadState("networkidle");
     await this.page.waitForSelector("oe-verification-grid");
+  }
+
+  public async createWithAppChrome() {
+    await this.page.setContent(`
+      <div id="host-application-wrapper">
+        <oe-verification-grid id="verification-grid">
+          ${this.defaultTemplate}
+
+          <oe-data-source
+            slot="data-source"
+            for="verification-grid"
+            src="${this.testJsonInput}"
+          ></oe-data-source>
+        </oe-verification-grid>
+      </div>
+
+      <div>
+        <p>This is some content from the host application</p>
+
+        <p>
+          If you use this input box, you shouldn't trigger any key events on the
+          verification grid.
+        </p>
+
+        <input data-testid="host-app-input" type="text" />
+      </div>
+    `);
   }
 
   // getters

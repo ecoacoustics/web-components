@@ -22,6 +22,15 @@ class ClassificationComponentFixture {
     await this.page.setContent("<oe-classification tag='koala'></oe-classification>");
     await this.page.waitForLoadState("networkidle");
     await this.page.waitForSelector("oe-classification");
+
+    // mock the verification grid by binding it to the document object
+    // this means that we can test that the shortcut keys work correctly without
+    // having to create the entire verification grid
+    // shortcut keys + integration testing is tested in the verification grid
+    // e2e tests
+    await this.component().evaluate((element: ClassificationComponent) => {
+      element.verificationGrid = document as any;
+    });
   }
 
   public decisionEvent() {
