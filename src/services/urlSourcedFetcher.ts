@@ -1,5 +1,10 @@
-import { Subject } from "../models/subject";
+import { Subject, SubjectWrapper } from "../models/subject";
+import { PageFetcher } from "./gridPageFetcher";
 import csv from "csvtojson";
+
+type PagingContext = {
+  page: number;
+};
 
 // TODO: this class should use the strategy pattern and perform caching
 /**
@@ -11,6 +16,8 @@ import csv from "csvtojson";
  * picker API by converting the selected file into a data URL.
  */
 export class UrlSourcedFetcher {
+  public static readonly brand = Symbol("UrlSourcedFetcher");
+  private static readonly pageSize = 10 as const;
   private static readonly unsupportedFormatError = new Error("Unsupported file format");
   private static readonly undeterminedFormatError = new Error("Could not determine file format");
 
@@ -57,6 +64,38 @@ export class UrlSourcedFetcher {
     this.jsonModels = await this.generateSubjects();
 
     return this;
+  }
+
+  public buildCallback(content: SubjectWrapper[]): PageFetcher<PagingContext> {
+    if (!Array.isArray(content)) {
+      throw new Error("Response is not an array");
+    }
+
+    const callback = async (context: PagingContext) => {
+      const currentPage = context.page ?? -1;
+      const nextPage = currentPage + 1;
+
+      const pageSize = UrlSourcedFetcher.pageSize;
+      const startIndex = pageSize * nextPage;
+      const endIndex = startIndex + pageSize;
+
+      // we increment the page number on the context object so that when the
+      // callback is used again, we will know what page we are up to
+      context.page = nextPage;
+
+      const subjects = content.slice(startIndex, endIndex);
+
+      return {
+        subjects,
+        context,
+        totalItems: content.length,
+      };
+    };
+
+    // TODO: remove this hacky way to set the brand property
+    callback.brand = UrlSourcedFetcher.brand;
+
+    return callback;
   }
 
   public async subjects(): Promise<ReadonlyArray<Subject> | undefined> {
