@@ -19,7 +19,9 @@ export type UrlTransformer = (url: string) => string;
  * page fetcher would increment the page number after every call.
  */
 export type PageFetcherContext = Record<string, unknown>;
-export type PageFetcher<T extends PageFetcherContext = any> = (context: T) => Promise<IPageFetcherResponse<T>>;
+// TODO: remove the brand from the PageFetcher. This was done so that we could
+// see if the callback was created by the UrlSourcedFetcher
+export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & { brand?: symbol };
 
 export class GridPageFetcher {
   public constructor(pagingCallback: PageFetcher, urlTransformer: UrlTransformer) {

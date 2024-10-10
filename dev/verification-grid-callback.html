@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Verification Component Callback</title>
+    <script type="module" src="/src/components/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid id="verification-grid" grid-size="2">
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid"></oe-data-source>
+    </oe-verification-grid>
+
+    <script>
+      const verificationGrid = document.getElementById("verification-grid");
+
+      const testingCallback = () => {
+        return {
+          subjects: [
+            { url: "https://api.acousticobservatory.org/audio_recordings/643356/media.flac?start_offset=30&end_offset=35" },
+            { url: "https://api.acousticobservatory.org/audio_recordings/515726/media.flac?start_offset=45&end_offset=50" },
+            { url: "https://api.acousticobservatory.org/audio_recordings/16714/media.flac?start_offset=5&end_offset=10" },
+            { url: "https://api.acousticobservatory.org/audio_recordings/251486/media.flac?start_offset=15&end_offset=20" },
+            { url: "https://api.acousticobservatory.org/audio_recordings/177657/media.flac?start_offset=40&end_offset=45" },
+            { url: "https://api.acousticobservatory.org/audio_recordings/266173/media.flac?start_offset=45&end_offset=50" },
+          ]
+        };
+      };
+
+      verificationGrid.getPage = testingCallback.bind(this);
+    </script>
+  </body>
+</html>

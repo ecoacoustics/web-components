@@ -54,22 +54,18 @@
       }
 
       function changeCallback() {
-        const dataSourceElement = document.querySelector("oe-data-source");
-
-        if (dataSourceElement) {
-          dataSourceElement.outerHTML = "";
-        }
-
         verificationGridElement.getPage = () => {
           return new Promise((resolve) => {
-            resolve([
-              { url: "/example.flac" },
-              { url: "/example.flac" },
-              { url: "/example.flac" },
-              { url: "/example.flac" },
-              { url: "/example.flac" },
-              { url: "/example.flac" },
-            ]);
+            resolve({
+              subjects: [
+                { url: "/example.flac" },
+                { url: "/example.flac" },
+                { url: "/example.flac" },
+                { url: "/example.flac" },
+                { url: "/example.flac" },
+                { url: "/example.flac" },
+              ],
+            });
           });
         };
       }

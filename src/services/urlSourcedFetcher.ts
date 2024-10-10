@@ -1,13 +1,23 @@
-import { Subject } from "../models/subject";
+import { Subject, SubjectWrapper } from "../models/subject";
+import { PageFetcher } from "./gridPageFetcher";
 import csv from "csvtojson";
+
+type PagingContext = {
+  page: number;
+};
 
 // TODO: this class should use the strategy pattern and perform caching
 /**
  * @description
- * Fetches a data source of an unknown type/shape and returns it in a standard format.
- * e.g. can fetch a CSV, TSV, JSON file and always return a JSON object.
+ * Fetches a remote data source such has a CSV, TSV, JSON file
+ * and always return a JSON object.
+ *
+ * This class can also be used to parse files provided by the local file system
+ * picker API by converting the selected file into a data URL.
  */
-export class DataSourceFetcher {
+export class UrlSourcedFetcher {
+  public static readonly brand = Symbol("UrlSourcedFetcher");
+  private static readonly pageSize = 10 as const;
   private static readonly unsupportedFormatError = new Error("Unsupported file format");
   private static readonly undeterminedFormatError = new Error("Could not determine file format");
 
@@ -56,6 +66,38 @@ export class DataSourceFetcher {
     return this;
   }
 
+  public buildCallback(content: SubjectWrapper[]): PageFetcher<PagingContext> {
+    if (!Array.isArray(content)) {
+      throw new Error("Response is not an array");
+    }
+
+    const callback = async (context: PagingContext) => {
+      const currentPage = context.page ?? -1;
+      const nextPage = currentPage + 1;
+
+      const pageSize = UrlSourcedFetcher.pageSize;
+      const startIndex = pageSize * nextPage;
+      const endIndex = startIndex + pageSize;
+
+      // we increment the page number on the context object so that when the
+      // callback is used again, we will know what page we are up to
+      context.page = nextPage;
+
+      const subjects = content.slice(startIndex, endIndex);
+
+      return {
+        subjects,
+        context,
+        totalItems: content.length,
+      };
+    };
+
+    // TODO: remove this hacky way to set the brand property
+    callback.brand = UrlSourcedFetcher.brand;
+
+    return callback;
+  }
+
   public async subjects(): Promise<ReadonlyArray<Subject> | undefined> {
     return (this.jsonModels ??= await this.generateSubjects());
   }
@@ -77,7 +119,7 @@ export class DataSourceFetcher {
     } else if (this.mediaType.startsWith("text/tab-separated-values")) {
       models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
     } else {
-      throw DataSourceFetcher.unsupportedFormatError;
+      throw UrlSourcedFetcher.unsupportedFormatError;
     }
 
     return models;
@@ -91,7 +133,7 @@ export class DataSourceFetcher {
   private fileExtensionMediaType(path: string): string {
     const extension = path.split(".").at(-1)?.toLowerCase();
     if (!extension) {
-      throw DataSourceFetcher.undeterminedFormatError;
+      throw UrlSourcedFetcher.undeterminedFormatError;
     }
 
     const translationTable: Record<string, string> = {
@@ -104,6 +146,6 @@ export class DataSourceFetcher {
       return translationTable[extension];
     }
 
-    throw DataSourceFetcher.unsupportedFormatError;
+    throw UrlSourcedFetcher.unsupportedFormatError;
   }
 }

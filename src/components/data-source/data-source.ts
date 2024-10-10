@@ -7,15 +7,10 @@ import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { Subject, SubjectWrapper } from "../../models/subject";
-import { DataSourceFetcher } from "../../services/dataSourceFetcher";
-import { PageFetcher } from "../../services/gridPageFetcher";
+import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
 import dataSourceStyles from "./css/style.css?inline";
-
-type PagingContext = {
-  page: number;
-};
 
 /**
  * @description
@@ -33,7 +28,6 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   // to prevent column name collision, we prepend all the fields that we add
   // to the original data input with "oe"
   public static readonly columnNamespace = "oe_" as const;
-  public static readonly pageSize = 10 as const;
 
   /** A remote JSON or CSV file to use as the data source */
   @property({ type: String })
@@ -64,11 +58,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   @query("input[type=file]")
   private fileInput!: HTMLInputElement;
 
-  public dataFetcher?: DataSourceFetcher;
+  public urlSourcedFetcher?: UrlSourcedFetcher;
   private verificationGrid?: VerificationGridComponent;
   private decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
+    // TODO: I think these conditions might be faulty for removing attributes
+    // e.g. if you remove the "for" or "src" attributes, I don't think these
+    // functions will trigger the update to remove the previous functionality
     if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
       const verificationElement = document.getElementById(this.for);
 
@@ -91,14 +88,48 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   public async downloadResults(): Promise<void> {
     if (!this.canDownload) {
       return;
-    } else if (!this.dataFetcher?.file) {
-      throw new Error("File is not defined");
     }
 
-    const results = await this.resultRows();
-    const fileFormat = this.dataFetcher.mediaType ?? "";
+    // TODO: remove this hack that was added to fix an issue where if the
+    // data source was changed from a local file to a callback-based source
+    // the downloaded results would return the previously used local file
+    // as the basis for the results
+    const isCallbackFromUrlSourcedFetcher = this.verificationGrid?.getPage?.brand === UrlSourcedFetcher.brand;
 
-    const originalFilePath = this.dataFetcher.file.name;
+    if (isCallbackFromUrlSourcedFetcher) {
+      await this.downloadUrlSourcedResults();
+    } else {
+      await this.downloadCallbackSourcedResults();
+    }
+  }
+
+  private async downloadCallbackSourcedResults(): Promise<void> {
+    if (!this.verificationGrid) {
+      throw new Error("associated verification grid could not be found");
+    }
+
+    const decisions: SubjectWrapper[] = this.verificationGrid.subjectHistory;
+    const formattedResults = JSON.stringify(decisions);
+
+    const file = new File([formattedResults], "verification-results.json", { type: "application/json" });
+    downloadFile(file);
+  }
+
+  private async downloadUrlSourcedResults(): Promise<void> {
+    if (!this.urlSourcedFetcher) {
+      throw new Error("Data fetcher is not defined");
+    } else if (!this.urlSourcedFetcher.file) {
+      // all url data fetchers should have a file object
+      // if we react this condition, it means that either the url data fetcher
+      // hasn't been initialized correctly, or we have called this function
+      // with a callback sourced fetcher
+      throw new Error("Data fetcher does not have a file.");
+    }
+
+    const results = await this.urlSourcedResultRows();
+    const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
+
+    const originalFilePath = this.urlSourcedFetcher.file.name;
     const extensionIndex = originalFilePath.lastIndexOf(".");
     const basename = originalFilePath.slice(0, extensionIndex).split("/").at(-1);
     const extension = originalFilePath.slice(extensionIndex);
@@ -127,18 +158,20 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // is not stable in FireFox
     // TODO: Inline the functionality once Firefox ESR supports the
     // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
-    const file = new File([formattedResults], downloadedFileName, { type: this.dataFetcher.file.type });
+    const fileType = this.urlSourcedFetcher.file?.type ?? "json";
+    const file = new File([formattedResults], downloadedFileName, { type: fileType });
     downloadFile(file);
   }
 
-  public async resultRows(): Promise<ReadonlyArray<Subject>> {
-    if (!this.dataFetcher) {
+  // TODO: move this into the urlSourcedFetcher class
+  private async urlSourcedResultRows(): Promise<ReadonlyArray<Subject>> {
+    if (!this.urlSourcedFetcher) {
       throw new Error("Data fetcher is not defined");
     }
 
     // if there is no verification grid, we want to return the raw data back
     // to the user without any modification
-    const subjects = (await this.dataFetcher.subjects()) ?? [];
+    const subjects = (await this.urlSourcedFetcher.subjects()) ?? [];
     if (!this.verificationGrid) {
       return subjects;
     }
@@ -149,10 +182,11 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const currentPageDecisions = this.verificationGrid.currentPage;
     const allDecisions = [...decisionHistory, ...currentPageDecisions];
 
-    return subjects.map((model) => this.rowDecision(model, allDecisions));
+    return subjects.map((model) => this.urlSourcedResultRowDecision(model, allDecisions));
   }
 
-  private rowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
+  // TODO: move this into the urlSourcedFetcher class
+  private urlSourcedResultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
     const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
@@ -205,55 +239,20 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.src = URL.createObjectURL(file);
   }
 
-  private buildCallback(content: SubjectWrapper[]): PageFetcher<PagingContext> {
-    if (!Array.isArray(content)) {
-      throw new Error("Response is not an array");
-    }
-
-    return async (context: PagingContext) => {
-      if (!this.verificationGrid) {
-        return {
-          subjects: [],
-          context,
-          totalItems: content.length,
-        };
-      }
-
-      const currentPage = context.page ?? -1;
-      const nextPage = currentPage + 1;
-
-      const pageSize = DataSourceComponent.pageSize;
-      const startIndex = pageSize * nextPage;
-      const endIndex = startIndex + pageSize;
-
-      // we increment the page number on the context object so that when the
-      // callback is used again, we will know what page we are up to
-      context.page = nextPage;
-
-      const subjects = content.slice(startIndex, endIndex);
-
-      return {
-        subjects,
-        context,
-        totalItems: content.length,
-      };
-    };
-  }
-
   private async updateVerificationGrid(): Promise<void> {
-    if (!this.verificationGrid || !this.src) {
+    if (!this.verificationGrid) {
+      throw new Error("could not find verification grid component");
+    } else if (!this.src) {
       return;
-    } else if (!this.for) {
-      throw new Error("for attribute must be set on a data source");
     }
 
-    this.dataFetcher = await new DataSourceFetcher().updateSrc(this.src);
-    if (!this.dataFetcher.file) {
+    this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    if (!this.urlSourcedFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    this.fileName = this.dataFetcher.file.name;
-    const data = await this.dataFetcher.subjects();
+    this.fileName = this.urlSourcedFetcher.file.name;
+    const data = await this.urlSourcedFetcher.subjects();
 
     if (!Array.isArray(data)) {
       throw new Error("Response is not an array");
@@ -261,7 +260,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    const fetcher = this.buildCallback(data);
+    const fetcher = this.urlSourcedFetcher.buildCallback(data);
     if (!fetcher) {
       return;
     }
