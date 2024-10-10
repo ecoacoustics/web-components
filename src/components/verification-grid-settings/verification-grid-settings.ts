@@ -93,7 +93,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
         <sl-tooltip slot="trigger" content="Change the verification grids target size">
           <button
             id="grid-size-trigger"
-            @click="${this.updateGridSizeState}"
+            @click="${() => this.updateGridSizeState()}"
             class="oe-btn-secondary"
             ?disabled="${!this.verificationGrid}"
             aria-label="Change the verification grid size"

@@ -69,6 +69,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   private decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
+    // TODO: I think these conditions might be faulty for removing attributes
+    // e.g. if you remove the "for" or "src" attributes, I don't think these
+    // functions will trigger the update to remove the previous functionality
     if ((changedProperties.has("for") && !!this.for) || (changedProperties.has("src") && !!this.src)) {
       const verificationElement = document.getElementById(this.for);
 
@@ -91,14 +94,61 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   public async downloadResults(): Promise<void> {
     if (!this.canDownload) {
       return;
-    } else if (!this.dataFetcher?.file) {
-      throw new Error("File is not defined");
+    }
+
+    if (this.dataFetcher) {
+      await this.downloadLocalFile();
+    } else {
+      await this.downloadRemoteSource();
+    }
+  }
+
+  public async resultRows(): Promise<ReadonlyArray<Subject>> {
+    if (!this.dataFetcher) {
+      throw new Error("Data fetcher is not defined");
+    }
+
+    // if there is no verification grid, we want to return the raw data back
+    // to the user without any modification
+    const subjects = (await this.dataFetcher.subjects()) ?? [];
+    if (!this.verificationGrid) {
+      return subjects;
+    }
+
+    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
+    // as item delimiters)
+    const decisionHistory = this.verificationGrid.subjectHistory;
+    const currentPageDecisions = this.verificationGrid.currentPage;
+    const allDecisions = [...decisionHistory, ...currentPageDecisions];
+
+    return subjects.map((model) => this.rowDecision(model, allDecisions));
+  }
+
+  private async downloadRemoteSource(): Promise<void> {
+    if (!this.verificationGrid) {
+      throw new Error("associated verification grid could not be found");
+    }
+
+    const decisions: SubjectWrapper[] = this.verificationGrid.subjectHistory;
+    const formattedResults = JSON.stringify(decisions);
+
+    const file = new File(
+      [formattedResults],
+      "verification-results.json",
+      { type: "application/json" }
+    );
+    downloadFile(file);
+  }
+
+  private async downloadLocalFile(): Promise<void> {
+    if (!this.dataFetcher) {
+      throw new Error("Data fetcher is not defined");
     }
 
     const results = await this.resultRows();
     const fileFormat = this.dataFetcher.mediaType ?? "";
 
-    const originalFilePath = this.dataFetcher.file.name;
+    const originalFilePath = this.dataFetcher.file?.name ?? "verified-results.json";
     const extensionIndex = originalFilePath.lastIndexOf(".");
     const basename = originalFilePath.slice(0, extensionIndex).split("/").at(-1);
     const extension = originalFilePath.slice(extensionIndex);
@@ -127,29 +177,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // is not stable in FireFox
     // TODO: Inline the functionality once Firefox ESR supports the
     // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
-    const file = new File([formattedResults], downloadedFileName, { type: this.dataFetcher.file.type });
+    const fileType = this.dataFetcher.file?.type ?? "json";
+    const file = new File([formattedResults], downloadedFileName, { type: fileType });
     downloadFile(file);
-  }
-
-  public async resultRows(): Promise<ReadonlyArray<Subject>> {
-    if (!this.dataFetcher) {
-      throw new Error("Data fetcher is not defined");
-    }
-
-    // if there is no verification grid, we want to return the raw data back
-    // to the user without any modification
-    const subjects = (await this.dataFetcher.subjects()) ?? [];
-    if (!this.verificationGrid) {
-      return subjects;
-    }
-
-    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
-    // as item delimiters)
-    const decisionHistory = this.verificationGrid.subjectHistory;
-    const currentPageDecisions = this.verificationGrid.currentPage;
-    const allDecisions = [...decisionHistory, ...currentPageDecisions];
-
-    return subjects.map((model) => this.rowDecision(model, allDecisions));
   }
 
   private rowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
@@ -241,10 +271,12 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   private async updateVerificationGrid(): Promise<void> {
-    if (!this.verificationGrid || !this.src) {
-      return;
-    } else if (!this.for) {
+    if (!this.for) {
       throw new Error("for attribute must be set on a data source");
+    } else if (!this.verificationGrid) {
+      throw new Error("could not find verification grid component");
+    } else if (!this.src) {
+      return;
     }
 
     this.dataFetcher = await new DataSourceFetcher().updateSrc(this.src);
@@ -306,7 +338,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
         <button
           data-testid="download-results-button"
           class="oe-btn-secondary"
-          @click="${this.downloadResults}"
+          @click="${() => this.downloadResults()}"
           ?disabled="${!this.canDownload}"
         >
           Download Results
