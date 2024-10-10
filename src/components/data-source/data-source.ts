@@ -338,7 +338,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
         <button
           data-testid="download-results-button"
           class="oe-btn-secondary"
-          @click="${() => this.downloadResults()}"
+          @click="${this.downloadResults}"
           ?disabled="${!this.canDownload}"
         >
           Download Results

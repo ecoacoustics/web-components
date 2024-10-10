@@ -1294,7 +1294,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
               data-testid="continue-verifying-button"
               class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
               ?disabled="${!this.isViewingHistory()}"
-              @click="${() => this.resumeVerification()}"
+              @click="${this.resumeVerification}"
             >
               Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
             </button>
@@ -1320,7 +1320,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 data-testid="previous-page-button"
                 class="previous-page-button oe-btn-secondary"
                 ?disabled="${!this.canNavigatePrevious()}"
-                @click="${() => this.handlePreviousPageClick()}"
+                @click="${this.handlePreviousPageClick}"
               >
                 &lt;
               </button>
@@ -1331,7 +1331,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                 data-testid="next-page-button"
                 class="next-page-button oe-btn-secondary"
                 ?disabled="${!this.canNavigateNext()}"
-                @click="${() => this.handleNextPageClick()}"
+                @click="${this.handleNextPageClick}"
               >
                 &gt;
               </button>
