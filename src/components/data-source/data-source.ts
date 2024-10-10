@@ -64,7 +64,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   @query("input[type=file]")
   private fileInput!: HTMLInputElement;
 
-  public dataFetcher?: DataSourceFetcher;
+  public urlDataFetcher?: DataSourceFetcher;
   private verificationGrid?: VerificationGridComponent;
   private decisionHandler = this.handleDecision.bind(this);
 
@@ -96,35 +96,15 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    if (this.dataFetcher) {
-      await this.downloadLocalFile();
+    if (this.urlDataFetcher) {
+      await this.downloadUrlSourcedResults();
     } else {
-      await this.downloadRemoteSource();
+      await this.downloadCallbackSourcedResults();
     }
   }
 
-  public async resultRows(): Promise<ReadonlyArray<Subject>> {
-    if (!this.dataFetcher) {
-      throw new Error("Data fetcher is not defined");
-    }
-
-    // if there is no verification grid, we want to return the raw data back
-    // to the user without any modification
-    const subjects = (await this.dataFetcher.subjects()) ?? [];
-    if (!this.verificationGrid) {
-      return subjects;
-    }
-
-    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
-    // as item delimiters)
-    const decisionHistory = this.verificationGrid.subjectHistory;
-    const currentPageDecisions = this.verificationGrid.currentPage;
-    const allDecisions = [...decisionHistory, ...currentPageDecisions];
-
-    return subjects.map((model) => this.rowDecision(model, allDecisions));
-  }
-
-  private async downloadRemoteSource(): Promise<void> {
+  // if we are using a callback source
+  private async downloadCallbackSourcedResults(): Promise<void> {
     if (!this.verificationGrid) {
       throw new Error("associated verification grid could not be found");
     }
@@ -132,23 +112,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const decisions: SubjectWrapper[] = this.verificationGrid.subjectHistory;
     const formattedResults = JSON.stringify(decisions);
 
-    const file = new File(
-      [formattedResults],
-      "verification-results.json",
-      { type: "application/json" }
-    );
+    const file = new File([formattedResults], "verification-results.json", { type: "application/json" });
     downloadFile(file);
   }
 
-  private async downloadLocalFile(): Promise<void> {
-    if (!this.dataFetcher) {
+  private async downloadUrlSourcedResults(): Promise<void> {
+    if (!this.urlDataFetcher) {
       throw new Error("Data fetcher is not defined");
     }
 
-    const results = await this.resultRows();
-    const fileFormat = this.dataFetcher.mediaType ?? "";
+    const results = await this.urlSourcedResultRows();
+    const fileFormat = this.urlDataFetcher.mediaType ?? "";
 
-    const originalFilePath = this.dataFetcher.file?.name ?? "verified-results.json";
+    const originalFilePath = this.urlDataFetcher.file?.name ?? "verified-results.json";
     const extensionIndex = originalFilePath.lastIndexOf(".");
     const basename = originalFilePath.slice(0, extensionIndex).split("/").at(-1);
     const extension = originalFilePath.slice(extensionIndex);
@@ -177,12 +153,33 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // is not stable in FireFox
     // TODO: Inline the functionality once Firefox ESR supports the
     // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
-    const fileType = this.dataFetcher.file?.type ?? "json";
+    const fileType = this.urlDataFetcher.file?.type ?? "json";
     const file = new File([formattedResults], downloadedFileName, { type: fileType });
     downloadFile(file);
   }
 
-  private rowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
+  private async urlSourcedResultRows(): Promise<ReadonlyArray<Subject>> {
+    if (!this.urlDataFetcher) {
+      throw new Error("Data fetcher is not defined");
+    }
+
+    // if there is no verification grid, we want to return the raw data back
+    // to the user without any modification
+    const subjects = (await this.urlDataFetcher.subjects()) ?? [];
+    if (!this.verificationGrid) {
+      return subjects;
+    }
+
+    // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
+    // as item delimiters)
+    const decisionHistory = this.verificationGrid.subjectHistory;
+    const currentPageDecisions = this.verificationGrid.currentPage;
+    const allDecisions = [...decisionHistory, ...currentPageDecisions];
+
+    return subjects.map((model) => this.urlSourcedResultRowDecision(model, allDecisions));
+  }
+
+  private urlSourcedResultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
     const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
@@ -271,21 +268,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   private async updateVerificationGrid(): Promise<void> {
-    if (!this.for) {
-      throw new Error("for attribute must be set on a data source");
-    } else if (!this.verificationGrid) {
+    if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     } else if (!this.src) {
       return;
     }
 
-    this.dataFetcher = await new DataSourceFetcher().updateSrc(this.src);
-    if (!this.dataFetcher.file) {
+    this.urlDataFetcher = await new DataSourceFetcher().updateSrc(this.src);
+    if (!this.urlDataFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    this.fileName = this.dataFetcher.file.name;
-    const data = await this.dataFetcher.subjects();
+    this.fileName = this.urlDataFetcher.file.name;
+    const data = await this.urlDataFetcher.subjects();
 
     if (!Array.isArray(data)) {
       throw new Error("Response is not an array");
