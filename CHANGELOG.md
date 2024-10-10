@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.3...web-components-v1.1.4) (2024-10-10)
+
+
+### Bug Fixes
+
+* Result downloads for callback paginated sources ([#205](https://github.com/ecoacoustics/web-components/issues/205)) ([2c30f70](https://github.com/ecoacoustics/web-components/commit/2c30f70fd7966bf41c724cf592ab622e29be79cd)), closes [#204](https://github.com/ecoacoustics/web-components/issues/204)
+
 ## [1.1.3](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.2...web-components-v1.1.3) (2024-10-09)
 
 
