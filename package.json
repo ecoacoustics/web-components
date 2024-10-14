@@ -1,7 +1,7 @@
 {
   "name": "@ecoacoustics/web-components",
   "description": "Ecoacoustic web components",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "types": "@types/",
   "type": "module",
   "main": "components.js",
