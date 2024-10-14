@@ -8,7 +8,7 @@ import { callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher, UrlTransformer } from "../../services/gridPageFetcher";
-import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY } from "../../helpers/keyboard";
+import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
@@ -243,14 +243,14 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener("keydown", this.keydownHandler);
-    document.addEventListener("keyup", this.keyupHandler);
+    this.addEventListener("keydown", this.keydownHandler);
+    this.addEventListener("keyup", this.keyupHandler);
     window.addEventListener("blur", this.blurHandler);
   }
 
   public disconnectedCallback(): void {
-    document.removeEventListener("keydown", this.keydownHandler);
-    document.removeEventListener("keyup", this.keyupHandler);
+    this.removeEventListener("keydown", this.keydownHandler);
+    this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
     this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
@@ -408,10 +408,23 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.injector.colorService = decisionColor;
   }
 
+  private updateDecisionElements(): void {
+    for (const element of this.decisionElements) {
+      element.verificationGrid = this;
+    }
+  }
+
   //#endregion
 
   //#region EventHandlers
   private handleKeyDown(event: KeyboardEvent): void {
+    // most browsers scroll a page width when the user presses the space bar
+    // however, since space bar can also be used to play spectrograms, we don't
+    // want to scroll when the space bar is pressed
+    if (event.key === SPACE_KEY) {
+      event.preventDefault();
+    }
+
     if (event.altKey) {
       // showing/hiding selection shortcuts is quite expensive because it
       // requires DOM queries
@@ -526,6 +539,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
     this.updateInjector();
+    this.updateDecisionElements();
   }
 
   private handleTileOverlap(event: OverflowEvent): void {

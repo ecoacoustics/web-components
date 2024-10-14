@@ -67,6 +67,7 @@
       "teleporting",
       "progressbar",
       "pageerror",
+      "spacebar",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

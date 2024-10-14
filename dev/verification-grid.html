@@ -38,6 +38,30 @@
     <button onclick="changeSelectionBehavior();">Change selection behavior</button>
     <button onclick="changeCallback();">Use custom callback</button>
 
+    <div class="host-application-tester">
+      <p>
+        This input box is outside of the verification grid. You should be able to type in it using decision shortcut
+        keys without the verification grid capturing it as a decision input.
+      </p>
+
+      <p>Hint: Try to use <kbd>Ctrl</kbd> + <kbd>A</kbd>. You should not see the verification grid get selected.</p>
+
+      <input type="text" />
+    </div>
+
+    <style>
+      .host-application-tester {
+        border: var(--oe-border-width) solid var(--oe-border-color);
+        border-radius: var(--oe-border-rounding);
+        padding: var(--oe-spacing);
+        margin-top: var(--oe-spacing);
+
+        &:has(:focus) {
+          background-color: var(--oe-selected-color);
+        }
+      }
+    </style>
+
     <script>
       const verificationGridElement = document.getElementById("verification-grid");
 

@@ -144,6 +144,17 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
+    const ignoreTargets = ["input"];
+    const eventTarget = event.target;
+    if (!(eventTarget instanceof HTMLElement)) {
+      return;
+    }
+
+    const targetTag = eventTarget.tagName.toLowerCase();
+    if (ignoreTargets.includes(targetTag)) {
+      return;
+    }
+
     if (event.key === SPACE_KEY) {
       this.toggleAudio(true);
     }

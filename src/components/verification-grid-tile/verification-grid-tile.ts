@@ -5,7 +5,7 @@ import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, createContext, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
-import { ENTER_KEY, SPACE_KEY } from "../../helpers/keyboard";
+import { ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
@@ -250,13 +250,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   // in MacOS when the command key is held down
   // https://stackoverflow.com/q/11818637
   private handleKeyDown(event: KeyboardEvent): void {
-    // most browsers scroll a page width when the user presses the space bar
-    // however, since space bar can also be used to play spectrograms, we don't
-    // want to scroll when the space bar is pressed
-    if (event.key === SPACE_KEY) {
-      event.preventDefault();
-    }
-
     if (event.altKey && this.shortcuts.includes(event.key.toLowerCase())) {
       this.dispatchEvent(
         new CustomEvent(VerificationGridTileComponent.selectedEventName, {
