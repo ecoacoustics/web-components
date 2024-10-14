@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.4...web-components-v1.1.5) (2024-10-14)
+
+
+### Bug Fixes
+
+* Reduce focus area for keyboard shortcuts ([#217](https://github.com/ecoacoustics/web-components/issues/217)) ([feae234](https://github.com/ecoacoustics/web-components/commit/feae23445854c80fb2ae45dc9dbb76014d6162ae)), closes [#91](https://github.com/ecoacoustics/web-components/issues/91)
+
 ## [1.1.4](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.3...web-components-v1.1.4) (2024-10-10)
 
 
