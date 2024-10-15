@@ -1,5 +1,5 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
-import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property, query, queryAssignedElements, state } from "lit/decorators.js";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
@@ -108,11 +108,11 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   @property({ type: Number })
   public contrast = 1;
 
-  @property({ type: Object })
-  public defaultOptions: SpectrogramOptions = new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity");
-
   @queryAssignedElements()
   public slotElements!: Array<HTMLElement>;
+
+  @state()
+  private defaultOptions: SpectrogramOptions = new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity");
 
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
@@ -154,6 +154,36 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     this.brightness = options.brightness;
     this.contrast = options.contrast;
     this.colorMap = options.colorMap;
+  }
+
+  public get defaultSpectrogramOptions(): SpectrogramOptions {
+    return this.defaultOptions;
+  }
+
+  public set defaultSpectrogramOptions(options: SpectrogramOptions) {
+    // TODO: make this a lot better
+    const currentOptions = this.spectrogramOptions;
+    const currentDefaults = this.defaultOptions;
+    const newOptions = currentOptions;
+
+    const newOptionEntries = Object.entries(options);
+
+    for (const [key, value] of newOptionEntries) {
+      if ((options as any)[key] === (currentDefaults as any)[key]) {
+        continue;
+      }
+
+      const isDefault = (currentDefaults as any)[key] === (currentOptions as any)[key];
+      if (isDefault) {
+        console.debug(`Setting default option ${key} to ${value}`);
+        (newOptions as any)[key] = value;
+      } else {
+        (newOptions as any)[key] = (currentOptions as any)[key];
+      }
+    }
+
+    this.defaultOptions = options;
+    this.spectrogramOptions = newOptions;
   }
 
   public get possibleWindowSizes(): ReadonlyArray<number> {

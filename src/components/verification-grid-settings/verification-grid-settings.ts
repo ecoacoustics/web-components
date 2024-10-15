@@ -121,7 +121,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
   }
 
   private tileSettingsTemplate() {
-    const settingsTemplate = settingsTemplateFactory(this.settings.spectrogramOptions);
+    const settingsTemplate = settingsTemplateFactory(this.settings.defaultSpectrogramOptions);
 
     return html`
       <sl-dropdown placement="top-start">

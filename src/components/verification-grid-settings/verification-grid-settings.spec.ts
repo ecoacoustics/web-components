@@ -99,4 +99,21 @@ test.describe("Verification Grid Settings Component", () => {
     // it does not fit on the screen
     test.skip("should not be able to change the grid size to a count that would not fit on the screen", () => {});
   });
+
+  test.describe("default spectrogram settings", () => {
+    test("should not allow the window overlap to be larger than the window size", async ({ fixture }) => {
+      await fixture.changeWindowSize(512);
+    });
+
+    test("should show a check icon next to the current default window size", async ({ fixture }) => {});
+
+    // string value change
+    test("should emit the correct spectrogram settings for a color map change", async ({ fixture }) => {});
+
+    // number value change
+    test("should emit the correct spectrogram settings for a window size change", async ({ fixture }) => {});
+
+    // boolean value change
+    test("should emit the correct spectrogram settings for a mel-scale change", async ({ fixture }) => {});
+  });
 });

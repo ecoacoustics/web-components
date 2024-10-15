@@ -34,7 +34,7 @@ export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
   showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
-  spectrogramOptions: Signal<SpectrogramOptions>;
+  defaultSpectrogramOptions: Signal<SpectrogramOptions>;
 }
 
 export interface VerificationGridInjector {
@@ -111,7 +111,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     showAxes: signal(true),
     showMediaControls: signal(true),
     isFullscreen: signal(false),
-    spectrogramOptions: signal(new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity")),
+    defaultSpectrogramOptions: signal(new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity")),
   };
 
   @provide({ context: injectionContext })
