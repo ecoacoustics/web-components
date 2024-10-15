@@ -24,6 +24,11 @@ class TestPage {
   public templateTriggerButton = () => this.page.locator("#settings-template-trigger").first();
   public templateCheckboxes = () => this.page.locator(".template-change-input").all();
 
+  public windowSizeInputs = () => this.page.locator("#window-size-input").all();
+  public windowOverlapInputs = () => this.page.locator("#window-overlap-input").all();
+  public colorMapInputs = () => this.page.locator("#color-map-input").all();
+  public melScaleInputs = () => this.page.locator("#mel-scale-input").all();
+
   public async create() {
     await this.page.setContent(`
       <oe-verification-grid id="verification-grid" grid-size="0">
@@ -93,6 +98,12 @@ class TestPage {
     await this.gridSizeTriggerButton().click();
     return (await getBrowserValue<HTMLInputElement>(this.gridSizeInput(), "value")) as string;
   }
+
+  public async changeWindowSize(size: number): Promise<void> {}
+
+  public async changeColorMap(colorMap: string): Promise<void> {}
+
+  public async changeMelScale(melScale: boolean): Promise<void> {}
 }
 
 export const settingsFixture = test.extend<{ fixture: TestPage }>({

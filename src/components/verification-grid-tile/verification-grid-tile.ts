@@ -22,6 +22,7 @@ import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import verificationGridTileStyles from "./css/style.css?inline";
+import { SpectrogramOptions } from "../../helpers/audio/models";
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
 
@@ -126,6 +127,17 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   private shortcuts: string[] = [];
   private intersectionObserver!: IntersectionObserver;
 
+  public get spectrogramOptions(): Partial<SpectrogramOptions> {
+    const defaultOptions: Partial<SpectrogramOptions> = {
+      colorMap: "audacity",
+    };
+
+    return {
+      ...defaultOptions,
+      ...this.settings.defaultSpectrogramOptions.value,
+    };
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("keydown", this.keyDownHandler);
@@ -172,6 +184,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     // spectrograms minimum height/width is reached
     this.intersectionObserver.observe(this.slotWrapper);
     this.intersectionObserver.observe(this.contentsWrapper);
+
+    this.settings.defaultSpectrogramOptions.subscribe((newDefaults) => {
+      this.spectrogram.defaultSpectrogramOptions = newDefaults;
+    });
   }
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
@@ -367,7 +383,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             ?y-grid="${watch(this.settings.showAxes)}"
           >
             <oe-indicator class="vertically-fill">
-              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
+              <oe-spectrogram id="spectrogram" class="vertically-fill"></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

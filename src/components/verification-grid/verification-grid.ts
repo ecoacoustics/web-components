@@ -25,6 +25,7 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import { SpectrogramOptions } from "../../helpers/audio/models";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -33,6 +34,7 @@ export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
   showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
+  defaultSpectrogramOptions: Signal<SpectrogramOptions>;
 }
 
 export interface VerificationGridInjector {
@@ -109,6 +111,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     showAxes: signal(true),
     showMediaControls: signal(true),
     isFullscreen: signal(false),
+    defaultSpectrogramOptions: signal(new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity")),
   };
 
   @provide({ context: injectionContext })

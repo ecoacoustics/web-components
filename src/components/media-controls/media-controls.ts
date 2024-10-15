@@ -1,15 +1,14 @@
-import { LitElement, PropertyValues, TemplateResult, html, nothing, unsafeCSS } from "lit";
+import { LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { SlMenuItem } from "@shoelace-style/shoelace";
-import { SpectrogramOptions } from "../../helpers/audio/models";
-import { AxesComponent } from "../axes/axes";
-import { windowFunctions } from "../../helpers/audio/window";
-import { colorScales } from "../../helpers/audio/colors";
+import { AxesComponent, AxesOptions } from "../axes/axes";
 import { SPACE_KEY } from "../../helpers/keyboard";
+import { settingsTemplateFactory } from "../../templates/settings";
+import { signal } from "@lit-labs/preact-signals";
+import { SpectrogramOptions } from "../../helpers/audio/models";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -181,131 +180,32 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  private discreteSettingsTemplate(
-    text: string,
-    values: string[] | number[] | ReadonlyArray<number | string>,
-    currentValue: string | number | boolean,
-    changeHandler: (event: CustomEvent<{ item: SlMenuItem }>) => void,
-  ): TemplateResult {
-    return html`
-      <sl-menu-item>
-        ${text}
-        <sl-menu @sl-select="${changeHandler}" slot="submenu">
-          ${values.map(
-            (value) =>
-              html`<sl-menu-item
-                type="${value == currentValue ? "checkbox" : "normal"}"
-                value="${value}"
-                ?checked=${value == currentValue}
-              >
-                ${value}
-              </sl-menu-item>`,
-          )}
-        </sl-menu>
-      </sl-menu-item>
-    `;
-  }
-
-  private rangeSettingsTemplate(
-    text: string,
-    min: number,
-    max: number,
-    step: number,
-    currentValue: number,
-    changeHandler: any,
-  ): TemplateResult {
-    return html`
-      <sl-menu-item>
-        ${text}
-        <sl-menu slot="submenu">
-          <label>
-            <input
-              @change="${changeHandler}"
-              type="range"
-              min="${min}"
-              max="${max}"
-              step="${step}"
-              value="${currentValue}"
-            />
-          </label>
-        </sl-menu>
-      </sl-menu-item>
-    `;
-  }
-
   private settingsTemplate() {
-    if (!this.spectrogramElement) {
+    if (!this.spectrogramElement || !this.axesElement) {
       return nothing;
     }
 
-    const possibleWindowSizes = this.spectrogramElement.possibleWindowSizes;
-    const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
-    const currentOptions = this.spectrogramElement.spectrogramOptions;
+    const spectrogramOptionsSignal = signal<SpectrogramOptions>(this.spectrogramElement.spectrogramOptions);
+    spectrogramOptionsSignal.subscribe((newOptions) => {
+      if (!this.spectrogramElement) {
+        throw new Error(
+          "No spectrogram element found. This might be because you forgot to unsubscribe from the options signal",
+        );
+      }
+      this.spectrogramElement.spectrogramOptions = newOptions;
+    });
 
-    const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
-      return (event: CustomEvent<{ item: SlMenuItem }>) => {
-        if (!this.spectrogramElement) {
-          throw new Error("No spectrogram element found");
-        }
-
-        // TODO: remove this after demo
-        let newValue: string | number | boolean = ["windowSize", "windowOverlap"].includes(key)
-          ? Number(event.detail.item.value)
-          : event.detail.item.value;
-
-        if (key === "melScale") {
-          newValue = newValue === "mel";
-        }
-
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
-        if (key === "windowSize" && this.spectrogramElement) {
-          if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
-            oldOptions.windowOverlap = (newValue as number) / 2;
-          }
-        }
-
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: newValue,
-        } as any;
-
-        this.requestUpdate();
-      };
-    };
-
-    const rangeInputHandler = (key: keyof SpectrogramOptions) => {
-      return (event: Event) => {
-        if (!this.spectrogramElement) {
-          throw new Error("No spectrogram element found");
-        }
-
-        const newValue = (event.target as HTMLInputElement).value;
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
-
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: Number(newValue),
-        } as any;
-      };
-    };
-
-    const axesChangeHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
+    const axesOptionsSignal = signal<AxesOptions>(this.axesElement.axesOptions);
+    axesOptionsSignal.subscribe((newOptions) => {
       if (!this.axesElement) {
-        throw new Error("No axes element found");
+        throw new Error(
+          "No axes element found. This might be because you forgot to unsubscribe from the options signal",
+        );
       }
+      this.axesElement.axesOptions = newOptions;
+    });
 
-      const menuItem = event.detail.item;
-      const checkboxElement = menuItem.querySelector<HTMLInputElement>("input[type=checkbox]");
-
-      if (!checkboxElement) {
-        throw new Error("No checkbox element found");
-      }
-
-      const key = checkboxElement.name as keyof AxesComponent;
-      const value = checkboxElement.checked;
-
-      (this.axesElement as any)[key] = value;
-    };
+    const settingsTemplate = settingsTemplateFactory(spectrogramOptionsSignal, axesOptionsSignal);
 
     return html`
       <sl-dropdown hoist>
@@ -313,93 +213,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
           <sl-icon name="gear"></sl-icon>
         </a>
 
-        <sl-menu>
-          ${this.discreteSettingsTemplate(
-            "Colour",
-            Object.keys(colorScales),
-            currentOptions.colorMap,
-            discreteDropdownHandler("colorMap"),
-          )}
-          ${this.rangeSettingsTemplate(
-            "Brightness",
-            -0.5,
-            0.5,
-            0.01,
-            currentOptions.brightness,
-            rangeInputHandler("brightness"),
-          )}
-          ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
-          ${this.discreteSettingsTemplate(
-            "Window Function",
-            Array.from(windowFunctions.keys()),
-            currentOptions.windowFunction,
-            discreteDropdownHandler("windowFunction"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Size",
-            possibleWindowSizes,
-            currentOptions.windowSize,
-            discreteDropdownHandler("windowSize"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Overlap",
-            [0, ...possibleWindowOverlaps],
-            currentOptions.windowOverlap,
-            discreteDropdownHandler("windowOverlap"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Scale",
-            ["linear", "mel"],
-            currentOptions.melScale ? "mel" : "linear",
-            discreteDropdownHandler("melScale"),
-          )}
-          <sl-menu-item>
-            Axes
-            <sl-menu @sl-select="${axesChangeHandler}" slot="submenu">
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXTitle" ?checked=${this.axesElement?.showXTitle} />
-                  X-Axis Title
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYTitle" ?checked=${this.axesElement?.showYTitle} />
-                  Y-Axis Title
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXAxis" ?checked=${this.axesElement?.showXAxis} />
-                  X-Axis Labels
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYAxis" ?checked=${this.axesElement?.showYAxis} />
-                  Y-Axis Labels
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXGrid" ?checked=${this.axesElement?.showXGrid} />
-                  X-Axis Grid Lines
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYGrid" ?checked=${this.axesElement?.showYGrid} />
-                  Y-Axis Grid Lines
-                </label>
-              </sl-menu-item>
-            </sl-menu>
-          </sl-menu-item>
-        </sl-menu>
+        ${settingsTemplate}
       </sl-dropdown>
     `;
   }

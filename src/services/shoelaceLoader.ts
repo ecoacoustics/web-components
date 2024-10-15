@@ -9,6 +9,7 @@ import questionCircleIcon from "../../node_modules/@shoelace-style/shoelace/dist
 import fullscreenExitIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/fullscreen-exit.svg?raw";
 import arrowsFullscreenIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/arrows-fullscreen.svg?raw";
 import gridIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/grid.svg?raw";
+import slidersIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/sliders.svg?raw";
 
 type InlineSvg = `data:image/svg+xml,${string}`;
 
@@ -25,6 +26,7 @@ const registeredIcons: Record<string, string> = {
   palette: paletteIcon,
   gear: gearIcon,
   grid: gridIcon,
+  sliders: slidersIcon,
 };
 
 export function registerBundledIcons() {

@@ -1,5 +1,5 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
-import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property, query, queryAssignedElements, state } from "lit/decorators.js";
 import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
@@ -11,6 +11,7 @@ import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import { ColorMapName } from "../../helpers/audio/colors";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -92,8 +93,8 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public melScale = false;
 
   /** A color map to use for the spectrogram */
-  @property({ type: String, attribute: "color-map" })
-  public colorMap = "";
+  @property({ attribute: "color-map" })
+  public colorMap: ColorMapName = "audacity";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number })
@@ -109,6 +110,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
   @queryAssignedElements()
   public slotElements!: Array<HTMLElement>;
+
+  @state()
+  private defaultOptions: SpectrogramOptions = new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity");
 
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
@@ -150,6 +154,36 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     this.brightness = options.brightness;
     this.contrast = options.contrast;
     this.colorMap = options.colorMap;
+  }
+
+  public get defaultSpectrogramOptions(): SpectrogramOptions {
+    return this.defaultOptions;
+  }
+
+  public set defaultSpectrogramOptions(options: SpectrogramOptions) {
+    // TODO: make this a lot better
+    const currentOptions = this.spectrogramOptions;
+    const currentDefaults = this.defaultOptions;
+    const newOptions = currentOptions;
+
+    const newOptionEntries = Object.entries(options);
+
+    for (const [key, value] of newOptionEntries) {
+      if ((options as any)[key] === (currentDefaults as any)[key]) {
+        continue;
+      }
+
+      const isDefault = (currentDefaults as any)[key] === (currentOptions as any)[key];
+      if (isDefault) {
+        console.debug(`Setting default option ${key} to ${value}`);
+        (newOptions as any)[key] = value;
+      } else {
+        (newOptions as any)[key] = (currentOptions as any)[key];
+      }
+    }
+
+    this.defaultOptions = options;
+    this.spectrogramOptions = newOptions;
   }
 
   public get possibleWindowSizes(): ReadonlyArray<number> {
@@ -327,11 +361,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   public resetSettings(): void {
-    this.colorMap = "audacity";
-    this.contrast = 1;
-    this.brightness = 0;
-    this.melScale = false;
-
+    this.spectrogramOptions = this.defaultOptions;
     this.stop();
   }
 
