@@ -51,4 +51,9 @@ function setup() {
 window.addEventListener("load", () => {
     setup();
 });
+
+window.addEventListener("beforeunload", (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+});
 </script>
