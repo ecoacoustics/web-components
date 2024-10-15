@@ -50,7 +50,10 @@ const jetScale = makeScaler(
   chroma.scale(jetColorScheme.map((a) => chroma.rgb(a[0] * 255, a[1] * 255, a[2] * 255))).mode("lrgb"),
 );
 
-export const colorScales: Record<Color, string | ColorScaler> = {
+// use satisfies here so that we get autocomplete for the colorScale keys
+// using satisfies allows us to check that the object is the correct type without
+// increasing the types scope to include all possible keys
+export const colorScales = {
   grayscale: "Greys",
   blue: "Blues",
   green: "Greens",
@@ -68,7 +71,7 @@ export const colorScales: Record<Color, string | ColorScaler> = {
   gammaII: gammaIIScale,
   jet: jetScale,
   raven: jetScale,
-};
+} satisfies Record<Color, string | ColorScaler>;
 
 export type ColorMapName = keyof typeof colorScales;
 

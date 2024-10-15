@@ -11,6 +11,7 @@ import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import { ColorMapName } from "../../helpers/audio/colors";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -92,8 +93,8 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public melScale = false;
 
   /** A color map to use for the spectrogram */
-  @property({ type: String, attribute: "color-map" })
-  public colorMap = "";
+  @property({ attribute: "color-map" })
+  public colorMap: ColorMapName = "audacity";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number })
@@ -106,6 +107,9 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   /** A scalar multiplier that should be applied to fft values */
   @property({ type: Number })
   public contrast = 1;
+
+  @property({ type: Object })
+  public defaultOptions: SpectrogramOptions = new SpectrogramOptions(512, 0, "hann", false, 0, 1, "audacity");
 
   @queryAssignedElements()
   public slotElements!: Array<HTMLElement>;
@@ -327,11 +331,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   }
 
   public resetSettings(): void {
-    this.colorMap = "audacity";
-    this.contrast = 1;
-    this.brightness = 0;
-    this.melScale = false;
-
+    this.spectrogramOptions = this.defaultOptions;
     this.stop();
   }
 

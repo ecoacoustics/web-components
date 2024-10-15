@@ -11,6 +11,7 @@ import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
+import { settingsTemplateFactory } from "../../templates/settings";
 import settingComponentStyles from "./css/style.css?inline";
 
 @customElement("oe-verification-grid-settings")
@@ -119,6 +120,26 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
     `;
   }
 
+  private tileSettingsTemplate() {
+    const settingsTemplate = settingsTemplateFactory(this.settings.spectrogramOptions);
+
+    return html`
+      <sl-dropdown placement="top-start">
+        <sl-tooltip slot="trigger" content="Change the default spectrogram settings">
+          <button
+            id="spectrogram-settings-trigger"
+            class="oe-btn-secondary"
+            aria-label="Change the default spectrogram settings"
+          >
+            <sl-icon name="sliders" class="large-icon"></sl-icon>
+          </button>
+        </sl-tooltip>
+
+        ${settingsTemplate}
+      </sl-dropdown>
+    `;
+  }
+
   private fullscreenSettingsTemplate() {
     // document.fullscreenEnabled is a browser API that checks if the current
     // webpage is allowed to enter fullscreen mode
@@ -154,6 +175,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(AbstractCom
       <div class="settings-container">
         ${this.gridSizeSettingsTemplate()}
         ${this.fullscreenSettingsTemplate()}
+        ${this.tileSettingsTemplate()}
       </div>
     `;
   }

@@ -26,6 +26,19 @@ import axesStyles from "./css/style.css?inline";
 // which are used in the axes rendering
 // see: https://github.com/ecoacoustics/web-components/issues/85
 
+export interface AxesOptions {
+  xTitle: string;
+  yTitle: string;
+  showXTitle: boolean;
+  showYTitle: boolean;
+  showXAxis: boolean;
+  showYAxis: boolean;
+  showXGrid: boolean;
+  showYGrid: boolean;
+  xStep?: Seconds;
+  yStep?: Hertz;
+}
+
 /**
  * @description
  * X and Y axis grid lines showing duration and frequency of a spectrogram
@@ -112,6 +125,34 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   @query("#axes-svg")
   private elementChrome!: Readonly<HTMLDivElement>;
+
+  public get axesOptions(): AxesOptions {
+    return {
+      xStep: this.xStepOverride,
+      yStep: this.yStepOverride,
+      xTitle: this.xTitle,
+      yTitle: this.yTitle,
+      showXTitle: this.showXTitle,
+      showYTitle: this.showYTitle,
+      showXAxis: this.showXAxis,
+      showYAxis: this.showYAxis,
+      showXGrid: this.showXGrid,
+      showYGrid: this.showYGrid,
+    };
+  }
+
+  public set axesOptions(value: AxesOptions) {
+    this.xStepOverride = value.xStep;
+    this.yStepOverride = value.yStep;
+    this.xTitle = value.xTitle;
+    this.yTitle = value.yTitle;
+    this.showXTitle = value.showXTitle;
+    this.showYTitle = value.showYTitle;
+    this.showXAxis = value.showXAxis;
+    this.showYAxis = value.showYAxis;
+    this.showXGrid = value.showXGrid;
+    this.showYGrid = value.showYGrid;
+  }
 
   // if we do not know the text that we want to measure, we use one large
   // character as an upperbound estimate of the size of characters
