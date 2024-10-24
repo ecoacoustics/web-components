@@ -6,7 +6,6 @@ import postcssNested from "postcss-nested";
 import autoprefixer from "autoprefixer";
 // import mkcert from "vite-plugin-mkcert";
 
-// vite config for the dev server and documentation
 export default defineConfig({
   // if we use the default "spa" app type, if a page is not found, the server
   // will return the index.html file. This is annoying for tests and dev
@@ -50,13 +49,30 @@ export default defineConfig({
     // https: true,
   },
   build: {
-    // TODO: this should not be the root directory
-    outDir: ".",
+    outDir: "./dist",
     copyPublicDir: false,
     lib: {
-      name: "components",
-      fileName: "components",
-      entry: "src/components/index.ts",
+      entry: {
+        components: "./src/components/index.ts",
+
+        "components/media-controls": "./src/components/media-controls/media-controls.ts",
+        "components/spectrogram": "./src/components/spectrogram/spectrogram.ts",
+        "components/indicator": "./src/components/indicator/indicator.ts",
+        "components/logger": "./src/components/logger/logger.ts",
+        "components/axes": "./src/components/axes/axes.ts",
+        "components/verification-grid": "./src/components/verification-grid/verification-grid.ts",
+        "components/verification-grid-tile": "./src/components/verification-grid-tile/verification-grid-tile.ts",
+        "components/info-card": "./src/components/info-card/info-card.ts",
+        "components/data-source": "./src/components/data-source/data-source.ts",
+        "components/help-dialog": "./src/components/verification-grid/help-dialog.ts",
+        "components/decision": "./src/components/decision/decision.ts",
+        "components/classification": "./src/components/decision/classification/classification.ts",
+        "components/verification": "./src/components/decision/verification/verification.ts",
+        "components/verification-grid-settings": "./src/components/verification-grid-settings/verification-grid-settings.ts",
+        "components/progress-bar": "./src/components/progress-bar/progress-bar.ts",
+
+        "components/helpers/constants/contextTokens": "./src/helpers/constants/contextTokens.ts",
+      },
       formats: ["es"],
     },
   },

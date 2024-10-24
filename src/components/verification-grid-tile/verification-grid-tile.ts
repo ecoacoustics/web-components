@@ -3,24 +3,20 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
-import { consume, createContext, provide } from "@lit/context";
+import { consume, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
 import { ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
-import {
-  injectionContext,
-  verificationGridContext,
-  VerificationGridInjector,
-  VerificationGridSettings,
-} from "../verification-grid/verification-grid";
+import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
@@ -42,8 +38,6 @@ const shortcutTranslation: Record<string, string> = {
   9: "(",
   0: ")",
 } as const;
-
-export const gridTileContext = createContext<SubjectWrapper>(Symbol("grid-tile-context"));
 
 /**
  * @description

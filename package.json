@@ -4,7 +4,7 @@
   "version": "1.1.5",
   "types": "@types/",
   "type": "module",
-  "main": "components.js",
+  "main": "./dist/components.js",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "build:components && build:docs",
@@ -21,25 +21,30 @@
     "format": "prettier . --write"
   },
   "files": [
-    "components.js",
-    "assets",
-    "@types"
+    "./dist/components.js",
+    "./dist/assets",
+    "./dist/@types"
   ],
   "exports": {
     ".": {
       "import": [
-        "./components.js",
-        "./assets/*",
+        "./dist/components.js",
+        "./dist/assets/*",
         "./@types/*"
       ],
       "require": [
-        "./components.js",
-        "./assets/*",
+        "./dist/components.js",
+        "./dist/assets/*",
         "./@types/*"
       ]
+    },
+    "./dist/components/*": {
+      "import": "./dist/components/*.js",
+      "require": "./dist/components/*.js",
+      "types": "./@types/components/*.d.ts"
     }
   },
-  "customElements": "custom-elements.json",
+  "customElements": "dist/custom-elements.json",
   "dependencies": {
     "@json2csv/plainjs": "^7.0.6",
     "@lit-labs/preact-signals": "^1.0.2",
