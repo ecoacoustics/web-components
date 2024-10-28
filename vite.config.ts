@@ -53,8 +53,12 @@ export default defineConfig({
     copyPublicDir: false,
     lib: {
       entry: {
+        // the components.js entry imports all components, helpers, and services
+        // in a single barrel file. This is typically the entrypoint for CDN's
         components: "./src/components/index.ts",
 
+        // each entry point represents a component, helper, or service that can
+        // be imported individually without importing all components
         "components/media-controls": "./src/components/media-controls/media-controls.ts",
         "components/spectrogram": "./src/components/spectrogram/spectrogram.ts",
         "components/indicator": "./src/components/indicator/indicator.ts",

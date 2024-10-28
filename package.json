@@ -1,7 +1,7 @@
 {
   "name": "@ecoacoustics/web-components",
   "description": "Ecoacoustic web components",
-  "version": "1.1.5",
+  "version": "1.1.6-alpha.1",
   "types": "@types/",
   "type": "module",
   "main": "./dist/components.js",
@@ -21,28 +21,12 @@
     "format": "prettier . --write"
   },
   "files": [
-    "./dist/components.js",
-    "./dist/assets",
-    "./dist/@types"
+    "./dist",
+    "./@types"
   ],
   "exports": {
-    ".": {
-      "import": [
-        "./dist/components.js",
-        "./dist/assets/*",
-        "./@types/*"
-      ],
-      "require": [
-        "./dist/components.js",
-        "./dist/assets/*",
-        "./@types/*"
-      ]
-    },
-    "./dist/components/*": {
-      "import": "./dist/components/*.js",
-      "require": "./dist/components/*.js",
-      "types": "./@types/components/*.d.ts"
-    }
+    ".": "./dist/components.js",
+    "./dist/components/*": "./dist/components/*.js"
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {
