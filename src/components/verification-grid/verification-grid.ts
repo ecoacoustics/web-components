@@ -15,7 +15,7 @@ import { VerificationComponent } from "../decision/verification/verification";
 import { Decision } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
 import { Verification } from "../../models/decisions/verification";
-import { createContext, provide } from "@lit/context";
+import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { repeat } from "lit/directives/repeat.js";
@@ -26,6 +26,7 @@ import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import verificationGridStyles from "./css/style.css?inline";
+import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -43,9 +44,6 @@ export interface MousePosition {
   x: number;
   y: number;
 }
-
-export const verificationGridContext = createContext<VerificationGridSettings>(Symbol("verification-grid-context"));
-export const injectionContext = createContext<VerificationGridInjector>(Symbol("injection-context"));
 
 type SelectionEvent = CustomEvent<{
   shiftKey: boolean;

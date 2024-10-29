@@ -1,6 +1,5 @@
 import { LitElement, PropertyValues, TemplateResult, html, nothing, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ILogger, rootContext } from "../logger/logger";
 import { provide } from "@lit/context";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -10,6 +9,7 @@ import { AxesComponent } from "../axes/axes";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
+import { IRootContext, rootContext } from "../../helpers/constants/contextTokens";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -63,7 +63,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public playIconPosition: PreferenceLocation = "default";
 
   @provide({ context: rootContext })
-  private logger: ILogger = {
+  private logger: IRootContext = {
     log: console.log,
   };
 

@@ -21,6 +21,8 @@ export * from "./decision/verification/verification";
 export * from "./verification-grid-settings/verification-grid-settings";
 export * from "./progress-bar/progress-bar";
 
+export * from "../helpers/constants/contextTokens";
+
 // TODO: cherry pick shoelace components
 // see: https://github.com/ecoacoustics/web-components/issues/83
 // import "@shoelace-style/shoelace/dist/components/menu/menu.js";

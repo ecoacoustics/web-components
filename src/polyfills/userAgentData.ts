@@ -13,9 +13,16 @@ function userAgentPolyfill(): NavigatorUAData {
   } as any;
 }
 
-// if we don't use defineProperty, on Chrome we get the error
-// Cannot set property userAgentData of #<Navigator> which has only a getter
-const polyfill = navigator["userAgentData"] ?? userAgentPolyfill();
-Object.defineProperty(navigator as any, "userAgentData", {
-  get: () => polyfill,
-});
+
+const userAgentDataKey = "userAgentData" as const;
+
+// if multiple components are imported from multiple entry point, we only want
+// to apply the polyfill once
+if (!(userAgentDataKey in navigator)) {
+    // if we don't use defineProperty, on Chrome we get the error
+    // Cannot set property userAgentData of #<Navigator> which has only a getter
+    const polyfill = userAgentPolyfill();
+    Object.defineProperty(navigator as any, userAgentDataKey, {
+        get: () => polyfill,
+    });
+}

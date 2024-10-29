@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - CDN Test</title>
+    <!-- <script type="module" src="https://esm.run/@ecoacoustics/web-components/dist/components.js"></script> -->
+
+    <!-- Does not work because it tries to import the buffer-builder-processor incorrectly -->
+    <script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid id="verification-grid">
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local></oe-data-source>
+    </oe-verification-grid>
+
+    <p>
+      This dev page tests the CDN. It will fetch the latest version of the web components from JSDelivr and create a
+      verification grid.
+    </p>
+
+    <section>
+      <h3>Warning</h3>
+      <p>
+          This page does not use a local development build. Make sure that the version that you are testing is published
+          to NPM.
+      </p>
+    </section>
+  </body>
+</html>

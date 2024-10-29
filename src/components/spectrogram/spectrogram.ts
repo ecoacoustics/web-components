@@ -183,6 +183,10 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
+    // if the spectrogram component is rapidly added and removed from the DOM
+    // the canvas will not be initialized, and the canvas can be undefined
+    // this can sometimes occur during tests if the test runner doesn't
+    // correctly wait for the component to be fully initialized
     OeResizeObserver.instance.unobserve(this.canvas);
 
     // because the resize observer is disconnected when the spectrogram is

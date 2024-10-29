@@ -25,7 +25,16 @@ export class OeResizeObserver {
   }
 
   public static unobserve(element: HTMLElement): void {
-    this.instance.unobserve(element);
+    // I have had to add this condition to prevent race conditions in component
+    // destruction
+    // e.g. If a component is added, and then destroyed before a full life cycle
+    // has completed
+    if (element instanceof Element) {
+      this.instance.unobserve(element);
+    } else {
+      console.warn("Attempted to unobserve a non-element");
+    }
+
     this.callbacks.delete(element);
   }
 }

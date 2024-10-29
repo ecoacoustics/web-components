@@ -1,16 +1,13 @@
 import { customElement, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, unsafeCSS } from "lit";
-import {
-  VerificationGridComponent,
-  verificationGridContext,
-  VerificationGridSettings,
-} from "../verification-grid/verification-grid";
+import { VerificationGridComponent, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { queryParentElement } from "../../helpers/decorators";
 import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
+import { verificationGridContext } from "../../helpers/constants/contextTokens";
 import settingComponentStyles from "./css/style.css?inline";
 
 @customElement("oe-verification-grid-settings")
