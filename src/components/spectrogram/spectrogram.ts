@@ -187,11 +187,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     // the canvas will not be initialized, and the canvas can be undefined
     // this can sometimes occur during tests if the test runner doesn't
     // correctly wait for the component to be fully initialized
-    if (this.canvas instanceof Element) {
-      OeResizeObserver.instance.unobserve(this.canvas);
-    } else {
-      console.warn("Spectrogram component disconnected before canvas was initialized");
-    }
+    OeResizeObserver.instance.unobserve(this.canvas);
 
     // because the resize observer is disconnected when the spectrogram is
     // removed from the DOM, the unit converter value will still have the old
