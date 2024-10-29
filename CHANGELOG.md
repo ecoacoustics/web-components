@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.5...web-components-v1.2.0) (2024-10-29)
+
+
+### Features
+
+* **build:** Emit ESM modules in build output ([#227](https://github.com/ecoacoustics/web-components/issues/227)) ([8fc9aee](https://github.com/ecoacoustics/web-components/commit/8fc9aee1ddf1d0a9d8a0aa1d956dec9d56b72ba7))
+
 ## [1.1.5](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.4...web-components-v1.1.5) (2024-10-14)
 
 
