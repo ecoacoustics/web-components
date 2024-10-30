@@ -22,7 +22,9 @@ export abstract class ModelParser<T> {
 
     for (const [target, candidateKeys] of Object.entries(transformer)) {
       for (const candidateKey of candidateKeys) {
-        if (original[candidateKey]) {
+        const originalSubjectValue = original[candidateKey];
+
+        if (originalSubjectValue !== undefined) {
           model[target] = original[candidateKey];
         }
       }

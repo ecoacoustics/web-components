@@ -14,8 +14,8 @@
     "build:components": "vite build && tsc",
     "publish:components": "pnpm build:components && npm publish --access public",
     "test": "playwright test .",
-    "test:unit": "playwright test src/components/",
-    "test:e2e": "playwright test tests/",
+    "test:unit": "playwright test src/components/ src/services/",
+    "test:e2e": "playwright test src/tests/",
     "test:report": "playwright show-report test-results",
     "lint": "eslint .",
     "format": "prettier . --write"

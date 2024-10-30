@@ -4,7 +4,7 @@ import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
 
 /** Original unprocessed data from the data source */
-export type Subject = Record<any, unknown>;
+export type Subject = Record<PropertyKey, unknown>;
 
 /**
  * @constructor

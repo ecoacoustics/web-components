@@ -1,5 +1,5 @@
 import { SubjectWrapper } from "../models/subject";
-import { SubjectParser } from "./verificationParser";
+import { SubjectParser } from "./subjectParser";
 
 export interface IPageFetcherResponse<T> {
   subjects: SubjectWrapper[];
