@@ -91,7 +91,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     }
 
     if (!SubjectParser.emittedTagArrayWarning) {
-      console.warn("Received a subject model with a tag array. The only the first tag will be used.");
+      console.warn("Received a subject model with a tag array. Only the first tag will be used.");
       SubjectParser.emittedTagArrayWarning = true;
     }
 
