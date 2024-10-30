@@ -9,7 +9,7 @@
     "Offset": 30,
     "AudioLink": "http://localhost:3000/example.flac",
     "Distance": "4.542739391326904",
-    "Tag": "koala"
+    "Tag": ["koala", "kangaroo"]
   },
   {
     "Filename": "20210527T140000+1000_Mt-Barney-Wet-B_515726.flac",
