@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.0...web-components-v1.2.1) (2024-10-30)
+
+
+### Bug Fixes
+
+* **data:** Parsing of tag model arrays on subject model ([#222](https://github.com/ecoacoustics/web-components/issues/222)) ([8583946](https://github.com/ecoacoustics/web-components/commit/85839464d1427ad886aafc96a700a6b6cd1143ab)), closes [#213](https://github.com/ecoacoustics/web-components/issues/213)
+
 ## [1.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.1.5...web-components-v1.2.0) (2024-10-29)
 
 
