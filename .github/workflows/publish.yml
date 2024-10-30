@@ -17,10 +17,9 @@ jobs:
     steps:
       # publish to NPM for each release created
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: nschloe/action-cached-lfs-checkout@v1
         with:
           ref: ${{ github.ref }}
-          lfs: true
 
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v3

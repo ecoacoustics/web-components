@@ -12,16 +12,14 @@ on:
         type: boolean
         description: "Deploy to production website"
         required: true
-        
 
 jobs:
   Documentation-Publish:
     name: Deploy Preview on Netlify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
+      - name: Checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
