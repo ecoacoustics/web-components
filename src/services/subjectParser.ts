@@ -68,12 +68,6 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return subjectTag as any;
     }
 
-    const isSymbol = typeof subjectTag === "symbol";
-    if (isSymbol) {
-      // using toString() on a symbol
-      return { text: subjectTag.toString() };
-    }
-
     // the first guard of this function ensures that any value that gets to here
     // is not null or undefined, meaning that we should attempt to convert it to
     // a human readable format by calling toString()
