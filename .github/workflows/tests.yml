@@ -13,13 +13,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Checkout and Setup
-        uses: actions/checkout@v4
-        with:
-          # Playwright snapshot tests generate pngs that are uploaded via
-          # git lfs. We therefore have to use git lfs when cloning the repo
-          # for tests so that snapshot tests have a truth to asset against
-          lfs: true
+      # Playwright snapshot tests generate pngs that are uploaded via
+      # git lfs. We therefore have to use git lfs when cloning the repo
+      # for tests so that snapshot tests have a truth to asset against
+      - name: Checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
 
       - name: Grant Audio Permissions (MacOS)
         if: matrix.os == 'macos-latest'
