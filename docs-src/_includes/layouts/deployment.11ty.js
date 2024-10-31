@@ -7,7 +7,7 @@ export default function render({ content, title }) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <script type="module" src="/components.js"></script>
+    <script type="module" src="/dist/components.js"></script>
   </head>
   <body>
     <div id="main-wrapper">
