@@ -5,7 +5,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("docs-src/docs.css");
   eleventyConfig.addPassthroughCopy("public/");
   eleventyConfig.addPassthroughCopy("docs-src/public/");
-  eleventyConfig.addPassthroughCopy("components.js");
+  eleventyConfig.addPassthroughCopy("dist/");
   eleventyConfig.addPassthroughCopy("assets/");
 
   eleventyConfig.addPassthroughCopy("node_modules/prismjs/themes/prism-okaidia.min.css");
