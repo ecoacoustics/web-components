@@ -25,8 +25,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
-import verificationGridStyles from "./css/style.css?inline";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -51,19 +51,15 @@ type SelectionEvent = CustomEvent<{
   index: number;
 }>;
 
-// by keeping the elements position in a separate object, we can
-// avoid doing DOM queries every time we need to check if the element
-// is intersecting with the highlight box
-interface IntersectionElement {
-  position: DOMRectReadOnly;
-  element: HTMLElement;
-}
-
 interface HighlightSelection {
   start: MousePosition;
   current: MousePosition;
   highlighting: boolean;
-  elements: IntersectionElement[];
+
+  // we store the observed elements in an array so that we don't re-query the
+  // DOM for the grid tiles every time the highlight box is resized
+  //! Warning: be sure to update this array if grid tiles are added/removed
+  observedElements: VerificationGridTileComponent[];
 }
 
 /**
@@ -169,6 +165,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @query("#skip-button")
   private skipButton!: DecisionComponent;
 
+  @query("#highlight-box")
+  private highlightBox!: HTMLDivElement;
+
   @state()
   private currentSubSelection: SubjectWrapper[] = [];
 
@@ -228,7 +227,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
-  private doneRenderBoxInit = false;
   private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
@@ -236,7 +234,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
-    elements: [],
+    observedElements: [],
   };
 
   public connectedCallback(): void {
@@ -383,6 +381,17 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (this.getPage) {
       this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
       this.currentPage = await this.paginationFetcher.getItems(this.populatedTileCount);
+    }
+
+    // if grid tile elements change during a selection event, we want to add
+    // observe the overlap with new elements and remove the overlap checks of
+    // old elements that no longer exist
+    //
+    // because updating the observed elements requires a DOM query, I only want
+    // to update the observed elements if the grid tiles have changed during a
+    // selection event
+    if (this.highlight.highlighting) {
+      this.updateHighlightObservedElements();
     }
   }
 
@@ -715,51 +724,34 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     if (event.isPrimary) {
-      this.highlight.highlighting = true;
-
       if (!this.shadowRoot) {
         return;
       }
 
-      const element = this.shadowRoot.getElementById("highlight-box");
-      if (!element) {
-        return;
-      }
+      this.highlight.highlighting = true;
 
-      if (!this.doneRenderBoxInit) {
-        // const intersectionObserver = new IntersectionObserver((event) => this.highlightIntersectionHandler(event));
-        // intersectionObserver.observe(element);
+      const highlightBoxElement = this.highlightBox;
+      this.updateHighlightObservedElements();
 
-        this.gridTiles.forEach((tile) => {
-          this.highlight.elements.push({
-            position: tile.getBoundingClientRect(),
-            element: tile,
-          });
-        });
+      const { pageX, pageY } = event;
 
-        this.doneRenderBoxInit = true;
-      }
+      highlightBoxElement.style.left = `${pageX}px`;
+      highlightBoxElement.style.top = `${pageY}px`;
 
-      element.style.left = `${event.pageX}px`;
-      element.style.top = `${event.pageY}px`;
-
-      this.highlight.start = { x: event.pageX, y: event.pageY };
+      this.highlight.start = { x: pageX, y: pageY };
     }
   }
 
+  private updateHighlightObservedElements(): void {
+    this.highlight.observedElements = Array.from(this.gridTiles);
+  }
+
   private resizeHighlightBox(event: PointerEvent) {
-    if (!this.highlight.highlighting) {
+    if (!this.highlight.highlighting || !this.shadowRoot) {
       return;
     }
 
-    if (!this.shadowRoot) {
-      return;
-    }
-
-    const element = this.shadowRoot.getElementById("highlight-box");
-    if (!element) {
-      return;
-    }
+    const highlightBoxElement = this.highlightBox;
 
     const { pageX, pageY } = event;
     this.highlight.current = { x: pageX, y: pageY };
@@ -772,63 +764,80 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const highlightThreshold = 15 as const;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
-      element.style.display = "block";
+      highlightBoxElement.style.display = "block";
     } else {
       return;
     }
 
-    element.style.width = `${Math.abs(highlightWidth)}px`;
-    element.style.height = `${Math.abs(highlightHeight)}px`;
+    // the highlights width / height can be negative if the user drags to the
+    // top or left of the screen
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
 
+    // if the user selects from the right to the left, we change the position
+    // of the highlight box to so that the top left of the highlight box is
+    // always aligned with the users pointer
     if (highlightWidth < 0) {
-      element.style.left = `${pageX}px`;
+      highlightBoxElement.style.left = `${pageX}px`;
     }
 
     if (highlightHeight < 0) {
-      element.style.top = `${pageY}px`;
+      highlightBoxElement.style.top = `${pageY}px`;
     }
 
     this.calculateHighlightIntersection();
   }
 
   private calculateHighlightIntersection(): void {
-    const xMin = Math.min(this.highlight.start.x, this.highlight.current.x);
-    const xMax = Math.max(this.highlight.start.x, this.highlight.current.x);
-    const yMin = Math.min(this.highlight.start.y, this.highlight.current.y);
-    const yMax = Math.max(this.highlight.start.y, this.highlight.current.y);
+    const selectionLeftSide = Math.min(this.highlight.start.x, this.highlight.current.x);
+    const selectionTopSide = Math.min(this.highlight.start.y, this.highlight.current.y);
 
-    for (const element of this.highlight.elements) {
-      const { top, bottom, left, right } = element.position;
+    const selectionRightSide = Math.max(this.highlight.start.x, this.highlight.current.x);
+    const selectionBottomSide = Math.max(this.highlight.start.y, this.highlight.current.y);
 
-      const selectedElement = element.element as VerificationGridTileComponent;
-      if (left <= xMax && right >= xMin && top <= yMax && bottom >= yMin) {
-        selectedElement.selected = true;
-      } else {
-        selectedElement.selected = false;
-      }
+    for (const target of this.highlight.observedElements) {
+      const targetTop = target.offsetTop;
+      const targetBottom = targetTop + target.offsetHeight;
+      const targetLeft = target.offsetLeft;
+      const targetRight = targetLeft + target.offsetWidth;
+
+      // seeing each of these conditions individually is a lot easier to
+      // understand than seeing them all condensed into a single line
+      // since prettier wants to consolidate all these conditions into one
+      // line, I use prettier ignore
+      // prettier-ignore
+      const isOverlapping =
+        targetLeft <= selectionRightSide &&
+        targetRight >= selectionLeftSide &&
+        targetTop <= selectionBottomSide &&
+        targetBottom >= selectionTopSide;
+
+      target.selected = isOverlapping;
     }
 
     this.updateSubSelection();
   }
 
   private hideHighlightBox(): void {
+    // we set the highlighting to false before the function guards so that if
+    // the user (somehow) changes from a desktop device to a mobile device
+    // while the highlight box is open, the highlight box will be correctly
+    // hidden
+    // this can (rarely) occur when the user switches between "desktop view"
+    // in their browser settings
+    this.highlight.highlighting = false;
+
     if (!this.shadowRoot || this.isMobileDevice()) {
       return;
     }
 
-    this.highlight.highlighting = false;
-
-    const element = this.shadowRoot.getElementById("highlight-box");
-    if (!element) {
-      return;
-    }
-
-    // TODO: make this better
-    element.style.width = "0px";
-    element.style.height = "0px";
-    element.style.top = "0px";
-    element.style.left = "0px";
-    element.style.display = "none";
+    // TODO: improve this logic
+    const highlightBoxElement = this.highlightBox;
+    highlightBoxElement.style.width = "0px";
+    highlightBoxElement.style.height = "0px";
+    highlightBoxElement.style.top = "0px";
+    highlightBoxElement.style.left = "0px";
+    highlightBoxElement.style.display = "none";
   }
 
   //#endregion
@@ -1255,7 +1264,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
         classificationTasksCount="${this.requiredClassificationTags.length}"
       ></oe-verification-help-dialog>
-      <div id="highlight-box" @mouseup="${this.hideHighlightBox}" @mousemove="${this.resizeHighlightBox}"></div>
+      <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
         <div

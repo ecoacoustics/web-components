@@ -123,7 +123,14 @@ class TestPage {
   }
 
   public async createWithAppChrome() {
+    // this test fixture has an app chrome with a header so that the grid is not
+    // flush with the top of the page
+    // this allows us to test how the verification grid interacts with scrolling
     await this.page.setContent(`
+      <header>
+        <h1>Host Application</h1>
+      </header>
+
       <div id="host-application-wrapper">
         <oe-verification-grid id="verification-grid">
           ${this.defaultTemplate}
@@ -612,6 +619,19 @@ class TestPage {
         element.style.visibility = "hidden";
       });
     }
+  }
+
+  public async highlightSelectAllTiles() {
+    const verificationGrid = this.gridComponent();
+    const bounding = await verificationGrid.boundingBox();
+    if (!bounding) {
+      throw new Error("Could not get the bounding box of the verification grid");
+    }
+
+    const start = { x: bounding.x, y: bounding.y };
+    const end = { x: bounding.x + bounding.width, y: bounding.y + bounding.height };
+
+    await this.createSelectionBox(start, end);
   }
 
   private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {
