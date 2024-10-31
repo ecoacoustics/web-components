@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.1...web-components-v1.2.2) (2024-10-31)
+
+
+### Bug Fixes
+
+* **selection:** Selection highlight when resizing ([ad2881e](https://github.com/ecoacoustics/web-components/commit/ad2881ed4efcc1a7133dd084f93d0a220beaf685)), closes [#187](https://github.com/ecoacoustics/web-components/issues/187)
+
 ## [1.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.0...web-components-v1.2.1) (2024-10-30)
 
 
