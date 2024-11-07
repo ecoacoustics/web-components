@@ -1,7 +1,9 @@
+import { DataSourceComponent } from "../components/data-source/data-source";
 import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
+import { EnumValue } from "../helpers/types/advancedTypes";
 
 /** Original unprocessed data from the data source */
 export type Subject = Record<PropertyKey, unknown>;
@@ -130,5 +132,30 @@ export class SubjectWrapper {
   /** Checks if all tags in an array are present on a subject */
   public hasTags(tags: Tag[]): boolean {
     return tags.every((tag) => this.hasTag(tag));
+  }
+
+  public toJSON() {
+    const namespace = DataSourceComponent.columnNamespace;
+    const verificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
+    const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
+    
+    const verificationModel = this.verification;
+    if (verificationModel) {
+      verificationColumns[`${namespace}tag`] = verificationModel.tag;
+      verificationColumns[`${namespace}confirmed`] = verificationModel.confirmed;
+    }
+
+    const classificationModels = this.classifications;
+    for (const classification of classificationModels) {
+      const column = `${namespace}${classification.tag.text}`;
+      const value = classification.confirmed;
+      classificationColumns[column] = value;
+    }
+
+    return {
+      ...this.subject,
+      ...verificationColumns,
+      ...classificationColumns,
+    };
   }
 }

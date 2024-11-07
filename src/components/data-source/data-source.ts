@@ -126,7 +126,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const results = await this.urlSourcedResultRows();
+    const results = await this.resultRows();
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
     const originalFilePath = this.urlSourcedFetcher.file.name;
@@ -164,7 +164,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   // TODO: move this into the urlSourcedFetcher class
-  private async urlSourcedResultRows(): Promise<ReadonlyArray<Subject>> {
+  private async resultRows(): Promise<ReadonlyArray<Subject>> {
     if (!this.urlSourcedFetcher) {
       throw new Error("Data fetcher is not defined");
     }
@@ -182,47 +182,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const currentPageDecisions = this.verificationGrid.currentPage;
     const allDecisions = [...decisionHistory, ...currentPageDecisions];
 
-    return subjects.map((model) => this.urlSourcedResultRowDecision(model, allDecisions));
+    return subjects.map((model) => this.resultRowDecision(model, allDecisions));
   }
 
   // TODO: move this into the urlSourcedFetcher class
-  private urlSourcedResultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
+  private resultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
     const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
-
     if (!decision) {
-      // if we hit this condition, it means that the user has not yet made a
-      // decision about the subject. In this case, we should return the
-      // original subject model with empty fields
       return subject;
     }
 
-    const namespace = DataSourceComponent.columnNamespace;
-    const verification = decision.verification;
-    const classifications = decision.classifications;
-
-    const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
-    const verificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
-
-    if (classifications) {
-      for (const classification of classifications) {
-        const column = `${namespace}${classification.tag.text}`;
-        const value = classification.confirmed;
-        classificationColumns[column] = value;
-      }
-    }
-
-    if (verification) {
-      verificationColumns[`${namespace}tag`] = decision.tag.text;
-      verificationColumns[`${namespace}confirmed`] = verification.confirmed;
-    }
-
-    return {
-      ...subject,
-      ...verificationColumns,
-      ...classificationColumns,
-    };
+    return decision.toJSON();
   }
 
   private handleDecision(): void {
