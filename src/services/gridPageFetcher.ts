@@ -1,4 +1,4 @@
-import { SubjectWrapper } from "../models/subject";
+import { Subject, SubjectWrapper } from "../models/subject";
 import { SubjectParser } from "./subjectParser";
 
 export interface IPageFetcherResponse<T> {
@@ -11,7 +11,7 @@ export interface IPageFetcherResponse<T> {
  * A callback that will be applied to every subjects url
  * this can be useful for adding authentication information
  */
-export type UrlTransformer = (url: string) => string;
+export type UrlTransformer = (url: string, subject?: Subject) => string;
 
 /**
  * A context object that is passed to the page fetcher function after every call
@@ -21,7 +21,9 @@ export type UrlTransformer = (url: string) => string;
 export type PageFetcherContext = Record<string, unknown>;
 // TODO: remove the brand from the PageFetcher. This was done so that we could
 // see if the callback was created by the UrlSourcedFetcher
-export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & { brand?: symbol };
+export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & {
+  brand?: symbol;
+};
 
 export class GridPageFetcher {
   public constructor(pagingCallback: PageFetcher, urlTransformer: UrlTransformer) {
@@ -110,7 +112,7 @@ export class GridPageFetcher {
     // TODO: remove this hack that was implemented so that we can add
     // authentication url parameters
     models.forEach((model) => {
-      model.url = this.urlTransformer(model.url);
+      model.url = this.urlTransformer(model.url, model.subject);
     });
 
     this.totalItems = totalItems;
