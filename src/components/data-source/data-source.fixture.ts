@@ -19,16 +19,12 @@ class DataSourceFixture {
 
   public async create() {
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="3" pre-fetch="false">
-        <template>
-            <oe-spectrogram></oe-spectrogram>
-        </template>
-
-        <oe-decision verified="true" tag="koala">Koala</oe-decision>
-        <oe-decision verified="false" tag="koala">Not Koala</oe-decision>
-        <oe-decision verified="false" tag="koala" additional-tags="frog">
+      <oe-verification-grid id="verification-grid" grid-size="3">
+        <oe-verification verified="true">Koala</oe-verification>
+        <oe-verification verified="false">Not Koala</oe-verification>
+        <oe-verification verified="false" additional-tags="frog">
           Additional Tags
-        </oe-decision>
+        </oe-verification>
 
         <oe-data-source
           slot="data-source"

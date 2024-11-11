@@ -62,23 +62,23 @@ test.describe("data source", () => {
             (row) =>
               ({
                 ...row,
-                "oe-tag": "",
-                "oe-confirmed": "",
-                "oe-additional-tags": "",
+                "oe_tag": "",
+                "oe_confirmed": "",
+                "oe_additional-tags": "",
               }) as any,
           );
 
-          expectedResult[0]["oe-tag"] = "koala";
-          expectedResult[0]["oe-confirmed"] = "true";
-          expectedResult[0]["oe-additional-tags"] = ["koala"];
+          expectedResult[0]["oe_tag"] = "koala";
+          expectedResult[0]["oe_confirmed"] = "true";
+          expectedResult[0]["oe_koala"] = "true";
 
-          expectedResult[1]["oe-tag"] = "koala";
-          expectedResult[1]["oe-confirmed"] = "true";
-          expectedResult[1]["oe-additional-tags"] = ["koala"];
+          expectedResult[1]["oe_tag"] = "koala";
+          expectedResult[1]["oe_confirmed"] = "true";
+          expectedResult[1]["oe_koala"] = "true";
 
-          expectedResult[2]["oe-tag"] = "koala";
-          expectedResult[2]["oe-confirmed"] = "true";
-          expectedResult[2]["oe-additional-tags"] = ["koala"];
+          expectedResult[2]["oe_tag"] = "koala";
+          expectedResult[2]["oe_confirmed"] = "true";
+          expectedResult[2]["oe_koala"] = "true";
 
           const decisions = [0];
           await fixture.makeDecisions(decisions);
@@ -96,17 +96,17 @@ test.describe("data source", () => {
             (row) =>
               ({
                 ...row,
-                "oe-tag": "",
-                "oe-confirmed": "",
-                "oe-additional-tags": "",
+                "oe_tag": "",
+                "oe_confirmed": "",
+                "oe_additional_tags": "",
               }) as any,
           );
 
           const subSelectionIndex = 1;
           const decisions = [1];
-          expectedResult[subSelectionIndex]["oe-tag"] = "koala";
-          expectedResult[subSelectionIndex]["oe-confirmed"] = "false";
-          expectedResult[subSelectionIndex]["oe-additional-tags"] = ["koala"];
+          expectedResult[subSelectionIndex]["oe_tag"] = "koala";
+          expectedResult[subSelectionIndex]["oe_confirmed"] = "false";
+          expectedResult[subSelectionIndex]["oe_additional_tags"] = ["koala"];
 
           await fixture.makeSubSelection([subSelectionIndex]);
           await fixture.makeDecisions(decisions);
