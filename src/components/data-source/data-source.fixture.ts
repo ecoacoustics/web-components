@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { invokeBrowserMethod, removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
+import { removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { Subject } from "../../models/subject";
 import { test } from "../../tests/assertions";
@@ -65,15 +65,21 @@ class DataSourceFixture {
   }
 
   public async getFileName(): Promise<string> {
-    return await this.component().evaluate((element: DataSourceComponent) => element.dataFetcher?.file?.name ?? "");
+    return await this.component().evaluate(
+      (element: DataSourceComponent) => element.urlSourcedFetcher?.file?.name ?? "",
+    );
   }
 
   public async getMediaType(): Promise<string> {
-    return await this.component().evaluate((element: DataSourceComponent) => element.dataFetcher?.mediaType ?? "");
+    return await this.component().evaluate(
+      (element: DataSourceComponent) => element.urlSourcedFetcher?.mediaType ?? "",
+    );
   }
 
   public async getFileContent(): Promise<ReadonlyArray<Subject>> {
-    return (await invokeBrowserMethod<DataSourceComponent>(this.component(), "resultRows")) as ReadonlyArray<Subject>;
+    return (await this.component().evaluate(
+      (element: DataSourceComponent) => element.urlSourcedFetcher?.subjects() ?? [],
+    )) as ReadonlyArray<Subject>;
   }
 
   public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {

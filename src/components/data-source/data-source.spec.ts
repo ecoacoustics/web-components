@@ -55,70 +55,66 @@ test.describe("data source", () => {
         test.skip(`should correctly identify a ${fileType} file type from file extensions`, () => {});
       });
 
-      // TODO: these tests are currently disabled because they have not been
-      // adapted to the new showSaveFilePicker API
-      // test.describe("downloading results", () => {
-      //   test("should have the correct content for results with no decisions", async ({ fixture }) => {
-      //     const expectedResult = mockFileContent.map((row) => ({
-      //       ...row,
-      //       "oe-tag": "",
-      //       "oe-confirmed": "",
-      //       "oe-additional-tags": "",
-      //     }));
-      //     const realizedResult = await fixture.getFileContent();
-      //     expect(realizedResult).toEqual(expectedResult);
-      //   });
+      test.describe("downloading results", () => {
+        test("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
+          const originalFileContent = await fixture.getFileContent();
+          const expectedResult = originalFileContent.map(
+            (row) =>
+              ({
+                ...row,
+                "oe-tag": "",
+                "oe-confirmed": "",
+                "oe-additional-tags": "",
+              }) as any,
+          );
 
-      //   test("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
-      //     const expectedResult = mockFileContent.map((row) => ({
-      //       ...row,
-      //       "oe-tag": "",
-      //       "oe-confirmed": "",
-      //       "oe-additional-tags": "",
-      //     }) as any);
+          expectedResult[0]["oe-tag"] = "koala";
+          expectedResult[0]["oe-confirmed"] = "true";
+          expectedResult[0]["oe-additional-tags"] = ["koala"];
 
-      //     expectedResult[0]["oe-tag"] = "koala";
-      //     expectedResult[0]["oe-confirmed"] = "true";
-      //     expectedResult[0]["oe-additional-tags"] = ["koala"];
+          expectedResult[1]["oe-tag"] = "koala";
+          expectedResult[1]["oe-confirmed"] = "true";
+          expectedResult[1]["oe-additional-tags"] = ["koala"];
 
-      //     expectedResult[1]["oe-tag"] = "koala";
-      //     expectedResult[1]["oe-confirmed"] = "true";
-      //     expectedResult[1]["oe-additional-tags"] = ["koala"];
+          expectedResult[2]["oe-tag"] = "koala";
+          expectedResult[2]["oe-confirmed"] = "true";
+          expectedResult[2]["oe-additional-tags"] = ["koala"];
 
-      //     expectedResult[2]["oe-tag"] = "koala";
-      //     expectedResult[2]["oe-confirmed"] = "true";
-      //     expectedResult[2]["oe-additional-tags"] = ["koala"];
+          const decisions = [0];
+          await fixture.makeDecisions(decisions);
 
-      //     const decisions = [0];
-      //     await fixture.makeDecisions(decisions);
+          const realizedResult = await fixture.getFileContent();
+          expect(realizedResult).toEqual(expectedResult);
+        });
 
-      //     const realizedResult = await fixture.getFileContent();
-      //     expect(realizedResult).toEqual(expectedResult);
-      //   });
+        // in this test, we make a decision about the second item in the grid
+        // meaning that the first row should be empty, the second row should
+        // have the decision, and the third row should be empty
+        test("should have the correct content for results with a sub-selection", async ({ fixture }) => {
+          const originalFileContent = await fixture.getFileContent();
+          const expectedResult = originalFileContent.map(
+            (row) =>
+              ({
+                ...row,
+                "oe-tag": "",
+                "oe-confirmed": "",
+                "oe-additional-tags": "",
+              }) as any,
+          );
 
-      //   // in this test, we make a decision about the second item in the grid
-      //   // meaning that the first row should be empty, the second row should
-      //   // have the decision, and the third row should be empty
-      //   test("should have the correct content for results with a sub-selection", async ({ fixture }) => {
-      //     const expectedResult = mockFileContent.map((row) => ({
-      //       ...row,
-      //       "oe-tag": "",
-      //       "oe-confirmed": "",
-      //       "oe-additional-tags": "",
-      //     }) as any);
+          const subSelectionIndex = 1;
+          const decisions = [1];
+          expectedResult[subSelectionIndex]["oe-tag"] = "koala";
+          expectedResult[subSelectionIndex]["oe-confirmed"] = "false";
+          expectedResult[subSelectionIndex]["oe-additional-tags"] = ["koala"];
 
-      //     const subSelectionIndex = 1;
-      //     expectedResult[subSelectionIndex]["oe-tag"] = "koala";
-      //     expectedResult[subSelectionIndex]["oe-confirmed"] = "false";
-      //     expectedResult[subSelectionIndex]["oe-additional-tags"] = ["koala"];
+          await fixture.makeSubSelection([subSelectionIndex]);
+          await fixture.makeDecisions(decisions);
 
-      //     await fixture.makeSubSelection([1]);
-      //     await fixture.makeDecisions([subSelectionIndex]);
-
-      //     const realizedResult = await fixture.getFileContent();
-      //     expect(realizedResult).toEqual(expectedResult);
-      //   });
-      // });
+          const realizedResult = await fixture.getFileContent();
+          expect(realizedResult).toEqual(expectedResult);
+        });
+      });
     });
   });
 

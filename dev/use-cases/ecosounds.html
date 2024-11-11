@@ -50,8 +50,17 @@
           const src = randomSample(possibleAudioSamples);
           const tag = randomSample(possibleTags);
 
-          return { src, tag };
+          return {
+            additionalData: {
+              data: "This is some additional data that should be included in results",
+              dateTime: new Date().toISOString(),
+            },
+            additionalText: "you should see this in the results",
+            src,
+            tag,
+          };
         });
+
         return { subjects };
       }
 

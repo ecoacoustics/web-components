@@ -1,11 +1,9 @@
 import { Parser } from "@json2csv/plainjs";
 import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { EnumValue } from "../../helpers/types/advancedTypes";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { DecisionOptions } from "../../models/decisions/decision";
 import { Subject, SubjectWrapper } from "../../models/subject";
 import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
@@ -96,6 +94,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // as the basis for the results
     const isCallbackFromUrlSourcedFetcher = this.verificationGrid?.getPage?.brand === UrlSourcedFetcher.brand;
 
+    // 1. If the data source is a URL (or file served through a URL), we know
+    //    the entire dataset. Therefore, we need to return the entire dataset
+    //    with additional columns for the decisions made by the user
+    //
+    // 2. If the data source is provided through a callback, we do not know the
+    //    entire dataset when downloading. Therefore, we don't have to worry
+    //    about joining the decisions with the original dataset, and we can just
+    //    flatten the subjects and their decisions
     if (isCallbackFromUrlSourcedFetcher) {
       await this.downloadUrlSourcedResults();
     } else {
@@ -108,10 +114,11 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("associated verification grid could not be found");
     }
 
-    const decisions: SubjectWrapper[] = this.verificationGrid.subjectHistory;
-    const formattedResults = JSON.stringify(decisions);
+    const allDecisions = this.decidedSubjects();
+    const downloadableResults = allDecisions.map((model) => model.toDownloadable());
+    const stringifiedResults = JSON.stringify(downloadableResults);
 
-    const file = new File([formattedResults], "verification-results.json", { type: "application/json" });
+    const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
     downloadFile(file);
   }
 
@@ -126,7 +133,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const results = await this.resultRows();
+    const results = await this.urlSourcedResultRows();
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
     const originalFilePath = this.urlSourcedFetcher.file.name;
@@ -164,7 +171,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   // TODO: move this into the urlSourcedFetcher class
-  private async resultRows(): Promise<ReadonlyArray<Subject>> {
+  private async urlSourcedResultRows(): Promise<ReadonlyArray<Subject>> {
     if (!this.urlSourcedFetcher) {
       throw new Error("Data fetcher is not defined");
     }
@@ -178,23 +185,37 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
     // as item delimiters)
-    const decisionHistory = this.verificationGrid.subjectHistory;
-    const currentPageDecisions = this.verificationGrid.currentPage;
-    const allDecisions = [...decisionHistory, ...currentPageDecisions];
-
-    return subjects.map((model) => this.resultRowDecision(model, allDecisions));
+    const allDecisions = this.decidedSubjects();
+    return subjects.map((model) => this.urlSourcedResultRowDecision(model, allDecisions));
   }
 
   // TODO: move this into the urlSourcedFetcher class
-  private resultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
+  private urlSourcedResultRowDecision(subject: Subject, decisionHistory: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
-    const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
+    const decision = decisionHistory.find((decision) => decision.subject === subject);
     if (!decision) {
       return subject;
     }
 
-    return decision.toJSON();
+    return decision.toDownloadable();
+  }
+
+  // TODO: this method should not longer be needed once we create a unified
+  // history buffer
+  // see: https://github.com/ecoacoustics/web-components/issues/139
+  /**
+   * A merged subject array of the subject history and the current visible page
+   * in the verification grid
+   */
+  private decidedSubjects(): SubjectWrapper[] {
+    if (!this.verificationGrid) {
+      throw new Error("Verification grid not found");
+    }
+
+    const decisionHistory = this.verificationGrid.subjectHistory;
+    const currentPageDecisions = this.verificationGrid.currentPage;
+    return [...decisionHistory, ...currentPageDecisions];
   }
 
   private handleDecision(): void {

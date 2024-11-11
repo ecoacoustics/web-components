@@ -8,6 +8,16 @@ import { EnumValue } from "../helpers/types/advancedTypes";
 /** Original unprocessed data from the data source */
 export type Subject = Record<PropertyKey, unknown>;
 
+const tagColumnName = `${DataSourceComponent.columnNamespace}tag` as const;
+const confirmedColumnName = `${DataSourceComponent.columnNamespace}confirmed` as const;
+type ClassificationColumn = `${typeof DataSourceComponent.columnNamespace}${string}`;
+
+export interface DownloadableResult extends Subject {
+    [tagColumnName]: string;
+    [confirmedColumnName]: EnumValue<DecisionOptions>;
+    [key: ClassificationColumn]: EnumValue<DecisionOptions>;
+}
+
 /**
  * @constructor
  * @param {Subject} subject
@@ -134,16 +144,14 @@ export class SubjectWrapper {
     return tags.every((tag) => this.hasTag(tag));
   }
 
-  public toJSON() {
+  public toDownloadable(): Partial<DownloadableResult> {
     const namespace = DataSourceComponent.columnNamespace;
-    const verificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
     const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
-    
-    const verificationModel = this.verification;
-    if (verificationModel) {
-      verificationColumns[`${namespace}tag`] = verificationModel.tag;
-      verificationColumns[`${namespace}confirmed`] = verificationModel.confirmed;
-    }
+
+    const verificationColumns = this.verification ? {
+      [tagColumnName]: this.verification.tag.text,
+      [confirmedColumnName]: this.verification.confirmed,
+    } : {};
 
     const classificationModels = this.classifications;
     for (const classification of classificationModels) {
