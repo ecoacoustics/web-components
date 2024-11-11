@@ -6,23 +6,38 @@ import { DownloadableResult, Subject, SubjectWrapper } from "./subject";
 import { Tag } from "./tag";
 
 interface SubjectWrapperTest {
+  name: string;
   subject: Subject;
   url: string;
   tag: Tag;
 
-  decisions: Decision[];
+  decisions?: Decision[];
 
-  expectedVerification: Verification;
-  expectedClassification: Classification[];
-  expectedDownloadableResult: Partial<DownloadableResult>;
+  expectedVerification?: Verification;
+  expectedClassifications?: Classification[];
+  expectedDownloadableResult?: Partial<DownloadableResult>;
 }
 
-const tests: SubjectWrapperTest[] = [];
+const tests: SubjectWrapperTest[] = [
+  {
+    subject: {
+      name: "empty subject",
+      subject: {},
+      url: "",
+      tag: { text: "" },
+      decisions: [],
+      expectedverification: {},
+      expectedClassifications: [],
+      expectedDownloadableResult: {},
+    },
+  },
+];
 
 function createSubjectWrapper(subjectTest: SubjectWrapperTest): SubjectWrapper {
   const model = new SubjectWrapper(subjectTest.subject, subjectTest.url, subjectTest.tag);
 
-  for (const decision of subjectTest.decisions) {
+  const testDecisions = subjectTest.decisions ?? [];
+  for (const decision of testDecisions) {
     model.addDecision(decision);
   }
 
@@ -31,23 +46,25 @@ function createSubjectWrapper(subjectTest: SubjectWrapperTest): SubjectWrapper {
 
 test.describe("Subject", () => {
   for (const subjectTest of tests) {
-    test("should have the correct verification models", () => {
-      const model = createSubjectWrapper(subjectTest);
-      expect(model.verification).toEqual(subjectTest.expectedVerification);
-    });
+    test.describe(subjectTest.name, () => {
+      test("should have the correct verification models", () => {
+        const model = createSubjectWrapper(subjectTest);
+        expect(model.verification).toEqual(subjectTest.expectedVerification);
+      });
 
-    test("should have the correct classification models", () => {
-      const model = createSubjectWrapper(subjectTest);
-      expect(model.classifications).toEqual(subjectTest.expectedClassification);
-    });
+      test("should have the correct classification models", () => {
+        const model = createSubjectWrapper(subjectTest);
+        expect(model.classifications).toEqual(subjectTest.expectedClassifications);
+      });
 
-    test("should have the correct downloadable result", () => {
-      const model = createSubjectWrapper(subjectTest);
+      test("should have the correct downloadable result", () => {
+        const model = createSubjectWrapper(subjectTest);
 
-      const expectedResult = subjectTest.expectedDownloadableResult;
-      const realizedResult = model.toDownloadable();
+        const expectedResult = subjectTest.expectedDownloadableResult;
+        const realizedResult = model.toDownloadable();
 
-      expect(realizedResult).toEqual(expectedResult);
+        expect(realizedResult).toEqual(expectedResult);
+      });
     });
   }
 

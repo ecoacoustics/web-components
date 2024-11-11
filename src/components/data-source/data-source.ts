@@ -21,10 +21,6 @@ import dataSourceStyles from "./css/style.css?inline";
 export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
 
-  // since we do not know the input format of the provided csv or json files
-  // it is possible for users to input a csv file that already has a column name
-  // to prevent column name collision, we prepend all the fields that we add
-  // to the original data input with "oe"
   public static readonly columnNamespace = "oe_" as const;
 
   /** A remote JSON or CSV file to use as the data source */
@@ -95,11 +91,11 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const isCallbackFromUrlSourcedFetcher = this.verificationGrid?.getPage?.brand === UrlSourcedFetcher.brand;
 
     // 1. If the data source is a URL (or file served through a URL), we know
-    //    the entire dataset. Therefore, we need to return the entire dataset
-    //    with additional columns for the decisions made by the user
+    //    all the contents of the dataset. Therefore, we need to return the
+    // entire dataset with additional columns for the decisions made by the user
     //
     // 2. If the data source is provided through a callback, we do not know the
-    //    entire dataset when downloading. Therefore, we don't have to worry
+    //    entire dataset when downloading. Therefore, we don't need to worry
     //    about joining the decisions with the original dataset, and we can just
     //    flatten the subjects and their decisions
     if (isCallbackFromUrlSourcedFetcher) {
