@@ -34,7 +34,10 @@ export abstract class ModelParser<T> {
   }
 
   private static getKeyPermutations(key: string): string[] {
+    const identityCase = (value: any) => value;
+
     const supportedCasings = [
+      identityCase,
       camelCase,
       snakeCase,
       dotCase,

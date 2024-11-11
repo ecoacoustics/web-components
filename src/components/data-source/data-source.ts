@@ -214,7 +214,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
 
     if (verification) {
-      verificationColumns[`${namespace}tag`] = decision.tag;
+      verificationColumns[`${namespace}tag`] = decision.tag.text;
       verificationColumns[`${namespace}confirmed`] = verification.confirmed;
     }
 
@@ -282,7 +282,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           @click="${handleClick}"
           aria-controls="browser-file-input"
         >
-          ${this.fileName ? `File: ${this.fileName}` : "Browse files"}
+          ${this.fileName ? "Browse files" : "Browse files"}
         </button>
         <input
           id="browser-file-input"
