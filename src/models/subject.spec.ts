@@ -53,10 +53,7 @@ function testVerificationDecision(): SubjectWrapperTest {
 function testClassificationDecision(): SubjectWrapperTest {
   const decisionOutcome = DecisionOptions.FALSE;
   const decisionTag = { text: "sloth" };
-  const classificationDecision = new Classification(
-    decisionOutcome,
-    decisionTag,
-  );
+  const classificationDecision = new Classification(decisionOutcome, decisionTag);
 
   return {
     name: "subject with a classification decision",
@@ -71,7 +68,7 @@ function testClassificationDecision(): SubjectWrapperTest {
     expectedClassifications: [classificationDecision],
     expectedDownloadableResult: {
       ...fakeSubject,
-      "oe_sloth": decisionOutcome,
+      oe_sloth: decisionOutcome,
     },
   };
 }
@@ -106,10 +103,7 @@ function testMultipleClassificationDecisions(): SubjectWrapperTest {
 function testAdditionalTagsDecision(): SubjectWrapperTest {
   const testVerificationTag: Tag = { text: "cat" };
 
-  const verificationDecision = new Verification(
-    DecisionOptions.TRUE,
-    testVerificationTag,
-  );
+  const verificationDecision = new Verification(DecisionOptions.TRUE, testVerificationTag);
   const classificationDecisions = [
     new Classification(DecisionOptions.TRUE, { text: "male" }),
     new Classification(DecisionOptions.FALSE, { text: "female" }),
@@ -160,18 +154,12 @@ const tests: SubjectWrapperTest[] = [
 ];
 
 function createSubjectWrapper(subjectTest: SubjectWrapperTest): SubjectWrapper {
-  const model = new SubjectWrapper(
-    subjectTest.subject,
-    "https://api.ecosounds.org",
-    subjectTest.tag,
-  );
+  const model = new SubjectWrapper(subjectTest.subject, "https://api.ecosounds.org", subjectTest.tag);
 
   const testDecisions = subjectTest.decisions ?? [];
   for (const decision of testDecisions) {
     model.addDecision(decision);
   }
-
-  console.log(testDecisions);
 
   return model;
 }
@@ -205,11 +193,7 @@ test.describe("hasTag", () => {
   test("should return the correct value for a subject with no decisions", () => {
     const testedTag = { text: "foo" };
 
-    const subject = new SubjectWrapper(
-      {},
-      "https://api.ecosounds.org",
-      testedTag,
-    );
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", testedTag);
     const hasTag = subject.hasTag(testedTag);
 
     expect(hasTag).toEqual(false);
@@ -218,11 +202,7 @@ test.describe("hasTag", () => {
   test("should return the correct value for a subject without the tag", () => {
     const testedTag = { text: "foo" };
     const decisionTag = { text: "bar" };
-    const subject = new SubjectWrapper(
-      {},
-      "https://api.ecosounds.org",
-      testedTag,
-    );
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", testedTag);
 
     const decision = new Decision(DecisionOptions.TRUE, decisionTag);
     subject.addDecision(decision);
@@ -234,11 +214,7 @@ test.describe("hasTag", () => {
 
   test("should return the correct value for a subject with the tag", () => {
     const testedTag = { text: "foo" };
-    const subject = new SubjectWrapper(
-      {},
-      "https://api.ecosounds.org",
-      testedTag,
-    );
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", testedTag);
 
     const decision = new Decision(DecisionOptions.TRUE, testedTag);
     subject.addDecision(decision);
