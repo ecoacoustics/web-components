@@ -12,9 +12,8 @@ import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../he
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
-import { Decision } from "../../models/decisions/decision";
+import { Decision, DecisionKind } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
-import { Verification } from "../../models/decisions/verification";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -967,17 +966,33 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     for (const [tile, decisions] of tileDecisions) {
       for (const decision of decisions) {
-        if (decision instanceof Verification) {
-          decision.tag = tile.model.tag;
+        // I have used Object.assign here to clone the decision by value instead
+        // of using the reference to the decision object
+        //
+        // I clone the object so that all of the SubjectWrapper's don't have the
+        // same decision object reference assigned to them in their decisions
+        // if I was to use the decision object reference then changing a
+        // property on one decision would change the property on all subjects
+        const clonedDecision = Object.assign({}, decision);
+
+        // we check the original decision model using "instanceof" because
+        // instanceof will check to see if the "Verification" constructor is in
+        // the newDecisionInstance prototype chain
+        // because we have used Object.assign(), the cloned decision will not
+        // contain the Verification constructor in its prototype chain
+        if (clonedDecision.kind === DecisionKind.VERIFICATION) {
+          // if the decision is a verification decision, we want to set the
+          // verified tag to the subjects tag
+          clonedDecision.tag = tile.model.tag;
         }
 
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
-        if (tile.model.hasDecision(decision)) {
-          tile.removeDecision(decision);
+        if (tile.model.hasDecision(clonedDecision)) {
+          tile.removeDecision(clonedDecision);
         } else {
-          tile.addDecision(decision);
+          tile.addDecision(clonedDecision);
         }
       }
     }

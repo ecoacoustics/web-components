@@ -13,4 +13,6 @@ export class Verification extends Decision {
   public constructor(confirmed: EnumValue<DecisionOptions>, tag?: Tag) {
     super(confirmed, tag);
   }
+
+  public kind = "verification";
 }

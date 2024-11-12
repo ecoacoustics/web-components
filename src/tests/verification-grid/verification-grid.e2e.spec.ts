@@ -24,6 +24,7 @@ import {
 import { SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
+import { DecisionOptions } from "../../models/decisions/decision";
 
 test.describe("while the initial help dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -1152,7 +1153,12 @@ test.describe("decisions", () => {
     await fixture.makeDecision(0);
 
     const firstTileDecisions = await fixture.getAppliedDecisions(0);
-    expect(firstTileDecisions).toEqual([{ confirmed: "true", tag: { text: "koala" } }]);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "koala" },
+      },
+    ]);
 
     await fixture.createSubSelection([1]);
     await fixture.makeDecision(0);
@@ -1163,7 +1169,12 @@ test.describe("decisions", () => {
     // overwrite the tag model from the first tile
     // see https://github.com/ecoacoustics/web-components/issues/245
     const secondTileDecisions = await fixture.getAppliedDecisions(1);
-    expect(secondTileDecisions).toEqual([{ confirmed: "true", tag: { text: "fish" } }]);
+    expect(secondTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "fish" },
+      },
+    ]);
 
     // we should see that any tiles that we have not clicked on do not have a
     // decision applied to them
@@ -1178,9 +1189,9 @@ test.describe("decisions", () => {
 
     const appliedDecisions = await fixture.allAppliedDecisions();
     expect(appliedDecisions).toEqual([
-      { confirmed: "false", tag: { text: "koala" } },
-      { confirmed: "false", tag: { text: "fish" } },
-      { confirmed: "false", tag: { text: "kangaroo" } }
+      { confirmed: DecisionOptions.FALSE, tag: { text: "koala" } },
+      { confirmed: DecisionOptions.FALSE, tag: { text: "fish" } },
+      { confirmed: DecisionOptions.FALSE, tag: { text: "kangaroo" } },
     ]);
   });
 
@@ -1189,12 +1200,22 @@ test.describe("decisions", () => {
     await fixture.makeDecision(0);
 
     const firstTileDecisions = await fixture.getAppliedDecisions(0);
-    expect(firstTileDecisions).toEqual([{ confirmed: "true", tag: { text: "koala" } }]);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "koala" },
+      },
+    ]);
 
     // notice that the "confirmed" value has change from "true" to "false"
     // because we changed the decision
     await fixture.makeDecision(1);
-    expect(firstTileDecisions).toEqual([{ confirmed: "false", tag: { text: "koala" } }]);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.FALSE,
+        tag: { text: "koala" },
+      },
+    ]);
   });
 });
 

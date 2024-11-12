@@ -1,12 +1,10 @@
 import { CssVariable } from "../helpers/types/advancedTypes";
-import { Decision } from "../models/decisions/decision";
-import { Verification } from "../models/decisions/verification";
+import { Decision, DecisionKind } from "../models/decisions/decision";
 
 const tagColors = new Map<string, CssVariable>();
 
 export function decisionColor(decision: Decision): CssVariable {
-  // const isVerification = decision instanceof Verification;
-  const isVerification = decision instanceof Verification;
+  const isVerification = decision.kind === DecisionKind.VERIFICATION;
   const colorNamespace = isVerification ? "verification" : "class";
 
   if (isVerification) {

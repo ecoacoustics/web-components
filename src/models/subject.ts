@@ -1,5 +1,5 @@
 import { Classification } from "./decisions/classification";
-import { Decision, DecisionOptions } from "./decisions/decision";
+import { Decision, DecisionKind, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
 import { EnumValue } from "../helpers/types/advancedTypes";
@@ -79,7 +79,7 @@ export class SubjectWrapper {
 
   /** Multiple classification decisions that have been applied to a subject */
   public get classifications(): Classification[] {
-    return this.decisionModels.filter((decision) => decision instanceof Classification) as Classification[];
+    return this.decisionModels.filter((decision) => decision.kind === DecisionKind.CLASSIFICATION) as Classification[];
   }
 
   /**
