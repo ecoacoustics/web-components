@@ -122,6 +122,21 @@ class TestPage {
     await this.page.waitForSelector("oe-verification-grid");
   }
 
+  public async createWithClassificationTask() {
+    await this.create(`
+      <oe-classification tag="car" true-shortcut="h"></oe-classification>
+      <oe-classification tag="koala" true-shortcut="j"></oe-classification>
+      <oe-classification tag="bird" true-shortcut="k"></oe-classification>
+    `);
+  }
+
+  public async createWithVerificationTask() {
+    await this.create(`
+      <oe-verification verified="true"></oe-verification>
+      <oe-verification verified="false"></oe-verification>
+    `);
+  }
+
   public async createWithAppChrome() {
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
@@ -246,9 +261,25 @@ class TestPage {
     return values;
   }
 
-  public async appliedDecisions(): Promise<Decision[]> {
-    const tileModels = await this.verificationGridTileModels();
-    return tileModels.flatMap((model) => model.decisionModels);
+  public async allAppliedDecisions(): Promise<Decision[]> {
+    const result: Decision[] = [];
+
+    const gridTiles = await this.gridTileComponents();
+    for (let i = 0; i < gridTiles.length; i++) {
+      const tileDecisions = await this.getAppliedDecisions(i);
+      result.push(...tileDecisions);
+    }
+
+    return result;
+  }
+  
+  public async getAppliedDecisions(index: number): Promise<Decision[]> {
+    const tileModels = await this.gridTileComponents();
+    const tileTarget = tileModels[index];
+
+    return await tileTarget.evaluate((element: VerificationGridTileComponent) => {
+      return element.model.decisionModels;
+    });
   }
 
   public async tileHighlightColors(): Promise<CssVariable[]> {
