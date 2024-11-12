@@ -31,19 +31,9 @@ test.describe("data source", () => {
     });
   });
 
-  // TODO: finish these tests
   ["json", "csv", "tsv"].forEach((fileType) => {
     test.describe(`file type ${fileType}`, () => {
       const mockFileName = `test-items-2.${fileType}`;
-      // const mockFileContent = [
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "4.846035957336426" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "4.846035957336426" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "4.846035957336426" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "4.958763122558594" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "5.02945613861084" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "5.045819282531738" },
-      //   { "AudioLink": "http://localhost:3000/example2.flac", "Distance": "5.081274509429932" }
-      // ];
 
       test.beforeEach(async ({ fixture }) => {
         await fixture.setRemoteFile(`http://localhost:3000/${mockFileName}`);
@@ -58,32 +48,26 @@ test.describe("data source", () => {
       test.describe("downloading results", () => {
         test("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
           const originalFileContent = await fixture.getFileContent();
-          const expectedResult = originalFileContent.map(
-            (row) =>
-              ({
-                ...row,
-                "oe_tag": "",
-                "oe_confirmed": "",
-                "oe_additional-tags": "",
-              }) as any,
-          );
 
+          // we expect that the oe_frog column has been added to the results
+          // because we make an additional tags decision where the additional
+          // tag is "frog"
+          const expectedResult = originalFileContent;
           expectedResult[0]["oe_tag"] = "koala";
           expectedResult[0]["oe_confirmed"] = "true";
-          expectedResult[0]["oe_koala"] = "true";
+          expectedResult[0]["oe_frog"] = "true";
 
           expectedResult[1]["oe_tag"] = "koala";
           expectedResult[1]["oe_confirmed"] = "true";
-          expectedResult[1]["oe_koala"] = "true";
+          expectedResult[1]["oe_frog"] = "true";
 
           expectedResult[2]["oe_tag"] = "koala";
           expectedResult[2]["oe_confirmed"] = "true";
-          expectedResult[2]["oe_koala"] = "true";
+          expectedResult[2]["oe_frog"] = "true";
 
-          const decisions = [0];
-          await fixture.makeDecisions(decisions);
+          await fixture.sendDecision(fixture.decisions.additionalTags);
 
-          const realizedResult = await fixture.getFileContent();
+          const realizedResult = await fixture.getDownloadResults();
           expect(realizedResult).toEqual(expectedResult);
         });
 
@@ -92,26 +76,16 @@ test.describe("data source", () => {
         // have the decision, and the third row should be empty
         test("should have the correct content for results with a sub-selection", async ({ fixture }) => {
           const originalFileContent = await fixture.getFileContent();
-          const expectedResult = originalFileContent.map(
-            (row) =>
-              ({
-                ...row,
-                "oe_tag": "",
-                "oe_confirmed": "",
-                "oe_additional_tags": "",
-              }) as any,
-          );
-
           const subSelectionIndex = 1;
-          const decisions = [1];
+
+          const expectedResult = originalFileContent;
           expectedResult[subSelectionIndex]["oe_tag"] = "koala";
           expectedResult[subSelectionIndex]["oe_confirmed"] = "false";
-          expectedResult[subSelectionIndex]["oe_additional_tags"] = ["koala"];
 
           await fixture.makeSubSelection([subSelectionIndex]);
-          await fixture.makeDecisions(decisions);
+          await fixture.sendDecision(fixture.decisions.negative);
 
-          const realizedResult = await fixture.getFileContent();
+          const realizedResult = await fixture.getDownloadResults();
           expect(realizedResult).toEqual(expectedResult);
         });
       });

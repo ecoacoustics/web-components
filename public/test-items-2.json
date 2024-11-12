@@ -1,30 +1,37 @@
 [
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
+    "Distance": "4.846035957336426",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
+    "Distance": "4.846035957336426",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
+    "Distance": "4.846035957336426",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.958763122558594"
+    "Distance": "4.958763122558594",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.02945613861084"
+    "Distance": "5.02945613861084",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.045819282531738"
+    "Distance": "5.045819282531738",
+    "Tags": "koala"
   },
   {
     "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.081274509429932"
+    "Distance": "5.081274509429932",
+    "Tags": "koala"
   }
 ]
