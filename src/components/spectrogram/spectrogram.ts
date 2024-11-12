@@ -48,6 +48,8 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public static styles = unsafeCSS(spectrogramStyles);
 
   public static readonly playEventName = "play" as const;
+  public static readonly loadingEventName = "loading" as const;
+  public static readonly loadedEventName = "loaded" as const;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -269,7 +271,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     }
 
     this.dispatchEvent(
-      new CustomEvent("loading", {
+      new CustomEvent(SpectrogramComponent.loadingEventName, {
         bubbles: true,
       }),
     );
@@ -297,7 +299,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     }
 
     this.dispatchEvent(
-      new CustomEvent("loading", {
+      new CustomEvent(SpectrogramComponent.loadingEventName, {
         bubbles: true,
       }),
     );
@@ -307,7 +309,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
       this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
       this.dispatchEvent(
-        new CustomEvent("loaded", {
+        new CustomEvent(SpectrogramComponent.loadedEventName, {
           bubbles: true,
         }),
       );
@@ -323,7 +325,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
     this.audioHelper.regenerateSpectrogram(this.spectrogramOptions).then(() => {
       this.dispatchEvent(
-        new CustomEvent("loaded", {
+        new CustomEvent(SpectrogramComponent.loadedEventName, {
           bubbles: true,
         }),
       );

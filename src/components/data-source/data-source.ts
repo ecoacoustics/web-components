@@ -1,11 +1,9 @@
 import { Parser } from "@json2csv/plainjs";
 import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { EnumValue } from "../../helpers/types/advancedTypes";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { DecisionOptions } from "../../models/decisions/decision";
 import { Subject, SubjectWrapper } from "../../models/subject";
 import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
@@ -22,12 +20,6 @@ import dataSourceStyles from "./css/style.css?inline";
 @customElement("oe-data-source")
 export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
-
-  // since we do not know the input format of the provided csv or json files
-  // it is possible for users to input a csv file that already has a column name
-  // to prevent column name collision, we prepend all the fields that we add
-  // to the original data input with "oe"
-  public static readonly columnNamespace = "oe_" as const;
 
   /** A remote JSON or CSV file to use as the data source */
   @property({ type: String })
@@ -96,6 +88,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // as the basis for the results
     const isCallbackFromUrlSourcedFetcher = this.verificationGrid?.getPage?.brand === UrlSourcedFetcher.brand;
 
+    // 1. If the data source is a URL (or file served through a URL), we know
+    //    all the contents of the dataset. Therefore, we need to return the
+    //    entire dataset with additional columns for decisions
+    //
+    // 2. If the data source is provided through a callback, we do not know the
+    //    entire dataset when downloading. Therefore, we don't need to worry
+    //    about joining the decisions with the original dataset, and we can just
+    //    flatten the subjects and their decisions
     if (isCallbackFromUrlSourcedFetcher) {
       await this.downloadUrlSourcedResults();
     } else {
@@ -108,10 +108,11 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("associated verification grid could not be found");
     }
 
-    const decisions: SubjectWrapper[] = this.verificationGrid.subjectHistory;
-    const formattedResults = JSON.stringify(decisions);
+    const allDecisions = this.decidedSubjects();
+    const downloadableResults = allDecisions.map((model) => model.toDownloadable());
+    const stringifiedResults = JSON.stringify(downloadableResults);
 
-    const file = new File([formattedResults], "verification-results.json", { type: "application/json" });
+    const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
     downloadFile(file);
   }
 
@@ -178,51 +179,37 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     // TODO: probably apply a transformation to arrays in CSVs (use semi-columns
     // as item delimiters)
-    const decisionHistory = this.verificationGrid.subjectHistory;
-    const currentPageDecisions = this.verificationGrid.currentPage;
-    const allDecisions = [...decisionHistory, ...currentPageDecisions];
-
+    const allDecisions = this.decidedSubjects();
     return subjects.map((model) => this.urlSourcedResultRowDecision(model, allDecisions));
   }
 
   // TODO: move this into the urlSourcedFetcher class
-  private urlSourcedResultRowDecision(subject: Subject, subjects: SubjectWrapper[]): Readonly<Subject> {
+  private urlSourcedResultRowDecision(subject: Subject, decisionHistory: SubjectWrapper[]): Readonly<Subject> {
     // because we compare subjects by reference when downloading the results,
     // we cannot copy the original subject model by value anywhere
-    const decision = subjects.find((decision) => decision.subject && subject && decision.subject === subject);
-
+    const decision = decisionHistory.find((decision) => decision.subject === subject);
     if (!decision) {
-      // if we hit this condition, it means that the user has not yet made a
-      // decision about the subject. In this case, we should return the
-      // original subject model with empty fields
       return subject;
     }
 
-    const namespace = DataSourceComponent.columnNamespace;
-    const verification = decision.verification;
-    const classifications = decision.classifications;
+    return decision.toDownloadable();
+  }
 
-    const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
-    const verificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
-
-    if (classifications) {
-      for (const classification of classifications) {
-        const column = `${namespace}${classification.tag.text}`;
-        const value = classification.confirmed;
-        classificationColumns[column] = value;
-      }
+  // TODO: this method should not longer be needed once we create a unified
+  // history buffer
+  // see: https://github.com/ecoacoustics/web-components/issues/139
+  /**
+   * A merged subject array of the subject history and the current visible page
+   * in the verification grid
+   */
+  private decidedSubjects(): SubjectWrapper[] {
+    if (!this.verificationGrid) {
+      throw new Error("Verification grid not found");
     }
 
-    if (verification) {
-      verificationColumns[`${namespace}tag`] = decision.tag.text;
-      verificationColumns[`${namespace}confirmed`] = verification.confirmed;
-    }
-
-    return {
-      ...subject,
-      ...verificationColumns,
-      ...classificationColumns,
-    };
+    const decisionHistory = this.verificationGrid.subjectHistory;
+    const currentPageDecisions = this.verificationGrid.currentPage;
+    return [...decisionHistory, ...currentPageDecisions];
   }
 
   private handleDecision(): void {

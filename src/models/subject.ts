@@ -2,9 +2,26 @@ import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
+import { EnumValue } from "../helpers/types/advancedTypes";
 
 /** Original unprocessed data from the data source */
 export type Subject = Record<PropertyKey, unknown>;
+
+const columnNamespace = "oe_" as const;
+
+// since we do not know the input format of the provided csv or json files
+// it is possible for users to input a csv file that already has a column name
+// to prevent column name collision, we prepend all the fields that we add
+// to the original data input with "oe"
+const tagColumnName = `${columnNamespace}tag` as const;
+const confirmedColumnName = `${columnNamespace}confirmed` as const;
+type ClassificationColumn = `${typeof columnNamespace}${string}`;
+
+export interface DownloadableResult extends Subject {
+  [tagColumnName]: string;
+  [confirmedColumnName]: EnumValue<DecisionOptions>;
+  [key: ClassificationColumn]: EnumValue<DecisionOptions>;
+}
 
 /**
  * @constructor
@@ -130,5 +147,30 @@ export class SubjectWrapper {
   /** Checks if all tags in an array are present on a subject */
   public hasTags(tags: Tag[]): boolean {
     return tags.every((tag) => this.hasTag(tag));
+  }
+
+  public toDownloadable(): Partial<DownloadableResult> {
+    const namespace = columnNamespace;
+    const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
+
+    const verificationColumns = this.verification
+      ? {
+          [tagColumnName]: this.verification.tag.text,
+          [confirmedColumnName]: this.verification.confirmed,
+        }
+      : {};
+
+    const classificationModels = this.classifications;
+    for (const classification of classificationModels) {
+      const column = `${namespace}${classification.tag.text}`;
+      const value = classification.confirmed;
+      classificationColumns[column] = value;
+    }
+
+    return {
+      ...this.subject,
+      ...verificationColumns,
+      ...classificationColumns,
+    };
   }
 }

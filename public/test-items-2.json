@@ -1,30 +1,3 @@
-[
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.846035957336426"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "4.958763122558594"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.02945613861084"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.045819282531738"
-  },
-  {
-    "AudioLink": "http://localhost:3000/example2.flac",
-    "Distance": "5.081274509429932"
-  }
-]
+version https://git-lfs.github.com/spec/v1
+oid sha256:80ca8227becd6e1e03b459f7e2bd22ebe03c04e81b5e3df58be9f87dcc793c66
+size 856

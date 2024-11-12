@@ -1,11 +1,13 @@
-import theming from "../../src/helpers/themes/theming.css?inline";
+import theming from "../..src/helpers/themes/theming.css?inline";
+import globalStyles from "../../src/helpers/themes/globalStyles.css?inline";
 
-export function LitStyles(): HTMLStyleElement {
+export function appendStyles(content: string): void {
   const style = document.createElement("style");
-  style.innerHTML = theming;
-  return style;
+  style.innerHTML = content;
+  document.body.appendChild(style);
 }
 
 window.addEventListener("load", () => {
-  document.body.appendChild(LitStyles());
+  appendStyles(theming);
+  appendStyles(globalStyles);
 });

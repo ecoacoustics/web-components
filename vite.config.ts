@@ -52,6 +52,11 @@ export default defineConfig({
     outDir: "./dist",
     copyPublicDir: false,
     lib: {
+      // we exclude the entry object from formatting so that we can inline all
+      // of the entry point components onto their own lines
+      // if we instead allowed prettier to format the entry object, it would
+      // split some of the key/value pairs onto multiple lines
+      // prettier-ignore
       entry: {
         // the components.js entry imports all components, helpers, and services
         // in a single barrel file. This is typically the entrypoint for CDN's
