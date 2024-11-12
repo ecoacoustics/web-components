@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.2...web-components-v1.2.3) (2024-11-12)
+
+
+### Bug Fixes
+
+* Downloading callback paginated items ([#240](https://github.com/ecoacoustics/web-components/issues/240)) ([b1a51c8](https://github.com/ecoacoustics/web-components/commit/b1a51c84b05a639a2108c6280c17a4bb461c1a30)), closes [#239](https://github.com/ecoacoustics/web-components/issues/239)
+
 ## [1.2.2](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.1...web-components-v1.2.2) (2024-10-31)
 
 
