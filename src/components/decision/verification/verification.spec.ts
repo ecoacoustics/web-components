@@ -1,6 +1,6 @@
 import { expect } from "@sand4rt/experimental-ct-web";
 import { verificationFixture as test } from "./verification.fixture";
-import { getCssColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
+import { getCssBackgroundColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
 
 test.describe("Verification Component", () => {
@@ -69,7 +69,7 @@ test.describe("Verification Component", () => {
   test("should have the correct color for a true decision", async ({ fixture }) => {
     await fixture.changeVerified(DecisionOptions.TRUE);
 
-    const expectedColor = await getCssColorVariable(fixture.component(), "--verification-true");
+    const expectedColor = await getCssBackgroundColorVariable(fixture.component(), "--verification-true");
     const realizedColor = await fixture.getPillColor();
     expect(realizedColor).toEqual(expectedColor);
   });
@@ -77,7 +77,7 @@ test.describe("Verification Component", () => {
   test("should have the correct color for a false decision", async ({ fixture }) => {
     await fixture.changeVerified(DecisionOptions.FALSE);
 
-    const expectedColor = await getCssColorVariable(fixture.component(), "--verification-false");
+    const expectedColor = await getCssBackgroundColorVariable(fixture.component(), "--verification-false");
     const realizedColor = await fixture.getPillColor();
     expect(realizedColor).toEqual(expectedColor);
   });

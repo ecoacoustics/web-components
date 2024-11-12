@@ -21,8 +21,6 @@ import dataSourceStyles from "./css/style.css?inline";
 export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
 
-  public static readonly columnNamespace = "oe_" as const;
-
   /** A remote JSON or CSV file to use as the data source */
   @property({ type: String })
   public src?: string;
@@ -92,7 +90,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     // 1. If the data source is a URL (or file served through a URL), we know
     //    all the contents of the dataset. Therefore, we need to return the
-    // entire dataset with additional columns for the decisions made by the user
+    //    entire dataset with additional columns for decisions
     //
     // 2. If the data source is provided through a callback, we do not know the
     //    entire dataset when downloading. Therefore, we don't need to worry

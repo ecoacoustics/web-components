@@ -56,24 +56,23 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   }, name);
 }
 
-export async function getCssColorVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
+// for some reason new versions of chrome return the background color as  rgba,
+// but the foreground color as standard rgb.
+// this can break tests if you are comparing background colors to foreground
+// colors.
+// therefore, this function is only reliable for background colors assertions
+export async function getCssBackgroundColorVariable<T extends HTMLElement>(
+  locator: Locator,
+  name: CssVariable,
+): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
-    // using window.getComputedStyle().getPropertyValue() will return the value
-    // of the css variable as a string, not as a color
-    // because this test helper is used to assert against background colors
-    // we need to convert the css color variable into the same format that
-    // will be used during assertions (rgb)
-    // this is done by creating a temporary div, setting the color to the
-    // variable, and then getting the computed color
-    // by creating a temporary div, we can ensure that the color is in the same
-    // format that the test is asserting against
     const cssColorToRgb = (color: string) => {
       const temp = document.createElement("div");
       temp.style.display = "none";
-      temp.style.color = color;
+      temp.style.backgroundColor = color;
       document.body.appendChild(temp);
 
-      const rgb = window.getComputedStyle(temp).color;
+      const rgb = window.getComputedStyle(temp).backgroundColor;
       document.body.removeChild(temp);
 
       return rgb;

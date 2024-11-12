@@ -6,7 +6,7 @@ import {
   getBrowserAttribute,
   getBrowserSignalValue,
   getBrowserValue,
-  getCssColorVariable,
+  getCssBackgroundColorVariable,
   invokeBrowserMethod,
   removeBrowserAttribute,
   setBrowserAttribute,
@@ -166,7 +166,7 @@ class TestPage {
   public async panelColor(): Promise<string> {
     // I have hard coded the panel color here because we use HSL for the panel
     // color css variable, but DOM queries and assertions use RGB
-    return await getCssColorVariable(this.gridComponent(), "--oe-panel-color");
+    return await getCssBackgroundColorVariable(this.gridComponent(), "--oe-panel-color");
   }
 
   public async getGridSize(): Promise<number> {
