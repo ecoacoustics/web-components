@@ -9,17 +9,6 @@ export enum DecisionOptions {
   SKIP = "skip",
 }
 
-export enum DecisionKind {
-  VERIFICATION = "verification",
-  CLASSIFICATION = "classification",
-
-  /**
-   * An unknown decision type.
-   * Warning: this type should not be used outside of the AbstractDecision class
-   */
-  DECISION = "decision",
-}
-
 /**
  * @description
  * A polymorphic structure that can be used to represent any decision type
@@ -30,9 +19,6 @@ export class Decision {
     this.confirmed = confirmed;
     this.tag = tag ?? { text: "" };
   }
-
-  /** What kind of decision this model represents */
-  public kind: DecisionKind = DecisionKind.DECISION;
 
   /** Stores the decision outcome */
   public confirmed: EnumValue<DecisionOptions>;

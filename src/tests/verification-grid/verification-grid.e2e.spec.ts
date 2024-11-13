@@ -991,7 +991,6 @@ test.describe("single verification grid", () => {
       );
       expectedNewModel.clientCached = true;
       expectedNewModel.serverCached = true;
-      expectedNewModel.decisions = {} as any;
 
       await fixture.changeGridSize(newGridSize);
 

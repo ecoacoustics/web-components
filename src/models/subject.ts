@@ -1,5 +1,5 @@
 import { Classification } from "./decisions/classification";
-import { Decision, DecisionKind, DecisionOptions } from "./decisions/decision";
+import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
 import { EnumValue } from "../helpers/types/advancedTypes";
@@ -63,9 +63,20 @@ export class SubjectWrapper {
   // but can have multiple classification decisions
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
-  public decisions = new Map<TagName, Decision>();
+  public verificationDecisions?: Verification;
+  public classificationDecisions = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
+
+  public get decisions(): ReadonlyMap<string, Decision> {
+    const decisionMap = new Map([...this.classificationDecisions]);
+
+    if (this.verificationDecisions) {
+      decisionMap.set(this.verificationDecisions.tag.text, this.verificationDecisions);
+    }
+
+    return decisionMap;
+  }
 
   /** An array of all the decisions applied to a subject */
   public get decisionModels(): Decision[] {
@@ -79,7 +90,7 @@ export class SubjectWrapper {
 
   /** Multiple classification decisions that have been applied to a subject */
   public get classifications(): Classification[] {
-    return this.decisionModels.filter((decision) => decision.kind === DecisionKind.CLASSIFICATION) as Classification[];
+    return this.decisionModels.filter((decision) => decision instanceof Classification) as Classification[];
   }
 
   /**
@@ -89,12 +100,53 @@ export class SubjectWrapper {
    * possible to have both a positive and negative decision about a tag
    */
   public addDecision(decision: Decision): void {
-    this.decisions.set(decision.tag.text, decision);
+    if (decision instanceof Verification) {
+      this.addVerification(decision);
+    } else if (decision instanceof Classification) {
+      this.addClassification(decision);
+    } else {
+      throw new Error("Invalid decision type");
+    }
   }
 
   /** Removes a decision from the subject */
-  public removeDecision(decisionToRemove: Decision) {
-    this.decisions.delete(decisionToRemove.tag.text);
+  public removeDecision(decision: Decision) {
+    if (decision instanceof Verification) {
+      this.removeVerification();
+    } else if (decision instanceof Classification) {
+      this.removeClassification(decision.tag);
+    } else {
+      throw new Error("Invalid decision type");
+    }
+  }
+
+  public addVerification(model: Verification): void {
+    // when a verification decision is made, it usually doesn't have a tag
+    // on the model. This is because the tag is usually associated with the
+    // subject, which the verification button cannot know about when it makes
+    // the verification model
+    //
+    // additionally, because the verification model passed into this function
+    // will be the same object and share the same reference with all other
+    // verification models produced by the verification button, we create a new
+    // instance of the verification model with the populated tag field using
+    // the verification models addTag() method.
+    // this creates a new instance of the verification model so that when the
+    // tag is changed, it doesn't update all references
+    const populatedVerification = model.addTag(this.tag);
+    this.verificationDecisions = populatedVerification;
+  }
+
+  public addClassification(model: Classification): void {
+    this.classificationDecisions.set(model.tag.text, model);
+  }
+
+  public removeVerification(): void {
+    this.verificationDecisions = undefined;
+  }
+
+  public removeClassification(tag: Tag): void {
+    this.classificationDecisions.delete(tag.text);
   }
 
   /**

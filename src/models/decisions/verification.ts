@@ -14,5 +14,13 @@ export class Verification extends Decision {
     super(confirmed, tag);
   }
 
-  public kind = "verification";
+  /** returns a new verification instance with the tag property changed */
+  public addTag(tag: Tag): Verification {
+    // we return a new instance of the verification model instead of mutating
+    // the original tag model because Verification models are shared between
+    // all descendants of a creator
+    // by returning a new instance, we can ensure that the original shared
+    // instance is not updated with the changed tag
+    return new Verification(this.confirmed, tag);
+  }
 }
