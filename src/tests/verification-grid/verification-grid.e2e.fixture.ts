@@ -277,9 +277,8 @@ class TestPage {
     const tileModels = await this.gridTileComponents();
     const tileTarget = tileModels[index];
 
-    return await tileTarget.evaluate((element: VerificationGridTileComponent) => {
-      return element.model.decisionModels;
-    });
+    const tileModel = (await getBrowserValue<VerificationGridTileComponent>(tileTarget, "model")) as SubjectWrapper;
+    return this.subjectDecisions(tileModel);
   }
 
   public async tileHighlightColors(): Promise<CssVariable[]> {
@@ -288,9 +287,10 @@ class TestPage {
 
     for (const tile of tiles) {
       const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+      const modelDecisions = this.subjectDecisions(model);
 
-      if (model.decisionModels) {
-        const tileColors = model.decisionModels.map((tileModel) => decisionColor(tileModel));
+      if (modelDecisions.length > 0) {
+        const tileColors = modelDecisions.map((tileModel) => decisionColor(tileModel));
         values.push(...tileColors);
       }
     }
@@ -305,13 +305,24 @@ class TestPage {
 
     for (const tile of gridTiles) {
       const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
-      const isHighlighted = model.decisionModels && model.decisionModels.length > 0;
+      const modelDecisions = this.subjectDecisions(model);
+
+      const isHighlighted = modelDecisions.length > 0;
       if (isHighlighted) {
         highlightedTiles.push(tile);
       }
     }
 
     return highlightedTiles.map((_, i) => i);
+  }
+
+  public subjectDecisions(subject: SubjectWrapper): Decision[] {
+    const subjectClassifications = Array.from(subject.classifications.values());
+    
+    return [
+        ...(subject.verification ? [subject.verification] : []),
+        ...subjectClassifications,
+    ];
   }
 
   public async verificationGridTileModels(): Promise<SubjectWrapper[]> {

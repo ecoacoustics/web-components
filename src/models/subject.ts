@@ -63,34 +63,19 @@ export class SubjectWrapper {
   // but can have multiple classification decisions
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
-  public verificationDecisions?: Verification;
-  public classificationDecisions = new Map<TagName, Classification>();
+  public verification?: Verification;
+  public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
 
   public get decisions(): ReadonlyMap<string, Decision> {
-    const decisionMap = new Map([...this.classificationDecisions]);
+    const decisionMap = new Map([...this.classifications]);
 
-    if (this.verificationDecisions) {
-      decisionMap.set(this.verificationDecisions.tag.text, this.verificationDecisions);
+    if (this.verification) {
+      decisionMap.set(this.verification.tag.text, this.verification);
     }
 
     return decisionMap;
-  }
-
-  /** An array of all the decisions applied to a subject */
-  public get decisionModels(): Decision[] {
-    return Array.from(this.decisions.values());
-  }
-
-  /** The singular verification decision that has been applied to a subject */
-  public get verification(): Verification | undefined {
-    return this.decisions.get(this.tag.text) as Verification;
-  }
-
-  /** Multiple classification decisions that have been applied to a subject */
-  public get classifications(): Classification[] {
-    return this.decisionModels.filter((decision) => decision instanceof Classification) as Classification[];
   }
 
   /**
@@ -120,35 +105,6 @@ export class SubjectWrapper {
     }
   }
 
-  public addVerification(model: Verification): void {
-    // when a verification decision is made, it usually doesn't have a tag
-    // on the model. This is because the tag is usually associated with the
-    // subject, which the verification button cannot know about when it makes
-    // the verification model
-    //
-    // additionally, because the verification model passed into this function
-    // will be the same object and share the same reference with all other
-    // verification models produced by the verification button, we create a new
-    // instance of the verification model with the populated tag field using
-    // the verification models addTag() method.
-    // this creates a new instance of the verification model so that when the
-    // tag is changed, it doesn't update all references
-    const populatedVerification = model.addTag(this.tag);
-    this.verificationDecisions = populatedVerification;
-  }
-
-  public addClassification(model: Classification): void {
-    this.classificationDecisions.set(model.tag.text, model);
-  }
-
-  public removeVerification(): void {
-    this.verificationDecisions = undefined;
-  }
-
-  public removeClassification(tag: Tag): void {
-    this.classificationDecisions.delete(tag.text);
-  }
-
   /**
    * @description
    * Compares the subjects decisions to an array of required tags and
@@ -172,7 +128,7 @@ export class SubjectWrapper {
     }
 
     for (const tag of requiredClassifications) {
-      if (this.classifications.some((classification) => classification.tag.text === tag.text)) {
+      if (this.classifications.has(tag.text)) {
         continue;
       }
 
@@ -183,12 +139,18 @@ export class SubjectWrapper {
 
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
-    const decision = this.decisions.get(queryingDecision.tag.text);
+    const decision =
+      queryingDecision instanceof Classification
+        ? this.classifications.get(queryingDecision.tag.text)
+        : this.verification;
+
     if (decision === undefined) {
       return false;
     }
 
-    return queryingDecision.confirmed === decision?.confirmed;
+    const hasMatchingTag = queryingDecision.tag.text === decision.tag.text;
+    const hasMatchingDecision = queryingDecision.confirmed === decision.confirmed;
+    return hasMatchingTag && hasMatchingDecision;
   }
 
   /** Checks if the current subject has a tag applied */
@@ -212,7 +174,7 @@ export class SubjectWrapper {
         }
       : {};
 
-    const classificationModels = this.classifications;
+    const classificationModels = this.classifications.values();
     for (const classification of classificationModels) {
       const column = `${namespace}${classification.tag.text}`;
       const value = classification.confirmed;
@@ -224,5 +186,34 @@ export class SubjectWrapper {
       ...verificationColumns,
       ...classificationColumns,
     };
+  }
+
+  private addVerification(model: Verification): void {
+    // when a verification decision is made, it usually doesn't have a tag
+    // on the model. This is because the tag is usually associated with the
+    // subject, which the verification button cannot know about when it makes
+    // the verification model
+    //
+    // additionally, because the verification model passed into this function
+    // will be the same object and share the same reference with all other
+    // verification models produced by the verification button, we create a new
+    // instance of the verification model with the populated tag field using
+    // the verification models addTag() method.
+    // this creates a new instance of the verification model so that when the
+    // tag is changed, it doesn't update all references
+    const populatedVerification = model.addTag(this.tag);
+    this.verification = populatedVerification;
+  }
+
+  private addClassification(model: Classification): void {
+    this.classifications.set(model.tag.text, model);
+  }
+
+  private removeVerification(): void {
+    this.verification = undefined;
+  }
+
+  private removeClassification(tag: Tag): void {
+    this.classifications.delete(tag.text);
   }
 }

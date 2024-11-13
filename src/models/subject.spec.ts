@@ -174,7 +174,8 @@ test.describe("subject shapes", () => {
 
       test("should have the correct classification models", () => {
         const model = createSubjectWrapper(testCase);
-        expect(model.classifications).toEqual(testCase.expectedClassifications);
+        const classificationArray = Array.from(model.classifications.values());
+        expect(classificationArray).toEqual(testCase.expectedClassifications);
       });
 
       test("should have the correct downloadable result", () => {
@@ -271,5 +272,305 @@ test.describe("hasTag", () => {
 
     const hasTag = subject.hasTag(testedTag);
     expect(hasTag).toEqual(true);
+  });
+});
+
+test.describe("addDecision", () => {
+  test("should add a new verification decision", () => {
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
+
+    const verificationDecision = DecisionOptions.TRUE;
+    const decision = new Verification(verificationDecision);
+    subject.addDecision(decision);
+
+    // the expected verification is not the same as the decision model that we
+    // passed to the addDecision method because we expect the SubjectWrapper to
+    // add its own tag to the decision
+    const expectedVerification = new Verification(verificationDecision, subjectTag);
+    expect(subject.verification).toEqual(expectedVerification);
+
+    // we also expect that the applied decision has a new reference
+    // we want to ensure that the decision applied to the SubjectWrapper is a
+    // new instance of the input decision model so that when we add the tag
+    // property, it doesn't update the tag on every other subject model
+    //
+    // by using the not.toBe matcher, we are asserting that the references are
+    // not the same
+    expect(subject.verification).not.toBe(decision);
+  });
+
+  test("should overwrite an existing verification decision", () => {
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
+
+    const initialDecision = new Verification(DecisionOptions.TRUE);
+    subject.addDecision(initialDecision);
+
+    const newVerificationDecision = DecisionOptions.FALSE;
+    const newDecision = new Verification(newVerificationDecision);
+    subject.addDecision(newDecision);
+
+    // similar to the previous test, we expect that the subject model will add
+    // its own tag to the decision when addDecision is called
+    const expectedNewDecision = new Verification(newVerificationDecision, subjectTag);
+    expect(subject.verification).toEqual(expectedNewDecision);
+  });
+
+  test("should add a new classification decision", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const decision = new Classification(DecisionOptions.TRUE, { text: "bar" });
+    subject.addDecision(decision);
+
+    const expectedMap = new Map<string, Classification>([[decision.tag.text, decision]]);
+    const realizedMap = subject.classifications;
+    expect(realizedMap).toEqual(expectedMap);
+  });
+
+  test("should overwrite an existing classification decision if it has the same tag", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const initialDecision = new Classification(DecisionOptions.TRUE, { text: "bar" });
+    subject.addDecision(initialDecision);
+
+    const newDecision = new Classification(DecisionOptions.FALSE, { text: "bar" });
+    subject.addDecision(newDecision);
+
+    const expectedMap = new Map<string, Classification>([[newDecision.tag.text, newDecision]]);
+    const realizedMap = subject.classifications;
+    expect(realizedMap).toEqual(expectedMap);
+  });
+
+  test("should add a new tag to an existing map if the tag doesn't exist", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const initialDecision = new Classification(DecisionOptions.TRUE, { text: "bar" });
+    subject.addDecision(initialDecision);
+
+    const newDecision = new Classification(DecisionOptions.FALSE, { text: "baz" });
+    subject.addDecision(newDecision);
+
+    const expectedMap = new Map<string, Classification>([
+      [initialDecision.tag.text, initialDecision],
+      [newDecision.tag.text, newDecision],
+    ]);
+    const realizedMap = subject.classifications;
+    expect(realizedMap).toEqual(expectedMap);
+  });
+});
+
+test.describe("removeDecision", () => {
+  test("should have no effect on a subject with no decisions", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    // I have added a condition to Playwright to fail the test if anything
+    // throws an error
+    // therefore this test will fail if the removeDecision method errors
+    subject.removeDecision(new Verification(DecisionOptions.TRUE));
+
+    expect(subject.verification).toBeUndefined();
+    expect(subject.classifications.size).toEqual(0);
+  });
+
+  test("should have no effect if the decision doesn't exist", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const unappliedDecision = new Verification(DecisionOptions.FALSE);
+    subject.removeDecision(unappliedDecision);
+
+    expect(subject.verification).toBeUndefined();
+    expect(subject.classifications.size).toEqual(0);
+  });
+
+  test("should be able to remove a verification decision", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const decision = new Verification(DecisionOptions.TRUE);
+
+    subject.addDecision(decision);
+    subject.removeDecision(decision);
+
+    expect(subject.verification).toBeUndefined();
+  });
+
+  test("should be able to remove a classification decision", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const decision = new Classification(DecisionOptions.TRUE, { text: "bar" });
+
+    subject.addDecision(decision);
+    subject.removeDecision(decision);
+
+    expect(subject.classifications.size).toEqual(0);
+  });
+
+  test("should be able to remove a verification while there is a classification of the same tag", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const verification = new Verification(DecisionOptions.TRUE);
+    const classification = new Classification(DecisionOptions.TRUE, { text: "foo" });
+
+    subject.addDecision(verification);
+    subject.addDecision(classification);
+    subject.removeDecision(verification);
+
+    expect(subject.verification).toBeUndefined();
+    expect(subject.classifications.size).toEqual(1);
+    expect(subject.classifications.get("foo")).toEqual(classification);
+  });
+
+  test("should be able to remove a classification while there is a verification of the same tag", () => {
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
+
+    const verification = new Verification(DecisionOptions.TRUE);
+    const classification = new Classification(DecisionOptions.TRUE, subjectTag);
+
+    subject.addDecision(verification);
+    subject.addDecision(classification);
+    subject.removeDecision(classification);
+
+    expect(subject.verification).not.toBeUndefined();
+    expect(subject.classifications.size).toEqual(0);
+  });
+});
+
+test.describe("skipUndecided", () => {
+  test("should add skip decision for missing verification", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    subject.skipUndecided(true, []);
+
+    expect(subject.verification?.confirmed).toEqual(DecisionOptions.SKIP);
+  });
+
+  test("should add skip decisions for missing classifications", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const requiredTags = [{ text: "bar" }, { text: "baz" }];
+
+    subject.skipUndecided(false, requiredTags);
+
+    expect(subject.classifications.get("bar")?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect(subject.classifications.get("baz")?.confirmed).toEqual(DecisionOptions.SKIP);
+  });
+
+  test("should not overwrite existing decisions", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const existingDecision = new Classification(DecisionOptions.TRUE, { text: "bar" });
+
+    subject.addDecision(existingDecision);
+    subject.skipUndecided(false, [{ text: "bar" }]);
+
+    expect(subject.classifications.get("bar")).toEqual(existingDecision);
+  });
+
+  test("should handle both verification and classification skips", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const requiredTags = [{ text: "bar" }, { text: "baz" }];
+
+    subject.skipUndecided(true, requiredTags);
+
+    expect(subject.verification?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect(subject.classifications.get("bar")?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect(subject.classifications.get("baz")?.confirmed).toEqual(DecisionOptions.SKIP);
+  });
+});
+
+test.describe("hasDecision", () => {
+  test("should return false for a subject with no decisions", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const testedVerification = new Verification(DecisionOptions.TRUE);
+    const testedClassification = new Classification(DecisionOptions.TRUE, { text: "bar" });
+
+    const hasVerification = subject.hasDecision(testedVerification);
+    const hasClassification = subject.hasDecision(testedClassification);
+
+    expect(hasVerification).toEqual(false);
+    expect(hasClassification).toEqual(false);
+  });
+
+  test("should return true for a subject with a verification decision", () => {
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
+
+    const decisionOutcome = DecisionOptions.TRUE;
+    const appliedDecision = new Verification(decisionOutcome);
+    subject.addDecision(appliedDecision);
+
+    // I create a new verification decision and test if the subject has the
+    // decision to test that the comparison is based on the decisions tag, and
+    // not by the decisions object reference
+    const testedDecision = new Verification(decisionOutcome, subjectTag);
+    const hasDecision = subject.hasDecision(testedDecision);
+
+    expect(hasDecision).toEqual(true);
+  });
+
+  test("should return true for a subject with a classification decision", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+
+    const decisionOutcome = DecisionOptions.TRUE;
+    const decisionTag: Tag = { text: "bar" };
+    const decision = new Classification(decisionOutcome, decisionTag);
+    subject.addDecision(decision);
+
+    // similar to the previous test, I create a new classification decision and
+    // test if it exists on the subject model to assert that the hasDecision
+    // method compares decisions based on tags and not object references
+    const testedDecision = new Classification(decisionOutcome, decisionTag);
+    const hasDecision = subject.hasDecision(testedDecision);
+
+    expect(hasDecision).toEqual(true);
+  });
+
+  test("should not match a verification decision with a classification decision that has the same tag", () => {
+    const testedTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", testedTag);
+
+    const classificationDecision = new Classification(DecisionOptions.TRUE, testedTag);
+    subject.addDecision(classificationDecision);
+
+    const unappliedVerification = new Verification(DecisionOptions.TRUE);
+
+    const hasVerificationDecision = subject.hasDecision(unappliedVerification);
+    expect(hasVerificationDecision).toEqual(false);
+  });
+
+  test("should not match a classification decision with a verification decision that has the same tag", () => {
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
+
+    const verificationDecision = new Verification(DecisionOptions.TRUE);
+    subject.addDecision(verificationDecision);
+
+    const unappliedClassification = new Classification(DecisionOptions.TRUE, subjectTag);
+
+    const hasClassificationDecision = subject.hasDecision(unappliedClassification);
+    expect(hasClassificationDecision).toEqual(false);
+  });
+});
+
+test.describe("skipUndecided", () => {
+  test("should apply a skip decision to a subject that has a missing verification", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    subject.skipUndecided(true, []);
+    expect(subject.verification?.confirmed).toEqual(DecisionOptions.SKIP);
+  });
+
+  test("should apply a skip decision to a subject that has a missing classification", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    subject.skipUndecided(false, [{ text: "bar" }]);
+    expect(subject.classifications.get("bar")?.confirmed).toEqual(DecisionOptions.SKIP);
+  });
+
+  test("should apply a skip decision to a subject that has missing verifications and classifications", () => {
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    subject.skipUndecided(true, [{ text: "bar" }]);
+
+    const expectedDecisionMap = new Map<string, Decision>([
+      ["foo", new Verification(DecisionOptions.SKIP, { text: "foo" })],
+      ["bar", new Classification(DecisionOptions.SKIP, { text: "bar" })],
+    ]);
+
+    expect(subject.decisions).toEqual(expectedDecisionMap);
   });
 });
