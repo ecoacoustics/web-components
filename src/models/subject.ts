@@ -129,17 +129,17 @@ export class SubjectWrapper {
 
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
-    const matchingDecision =
-      queryingDecision instanceof Classification
-        ? this.classifications.get(queryingDecision.tag.text)
-        : this.verification;
+    if (queryingDecision instanceof Verification) {
+      return this.verification?.confirmed === queryingDecision.confirmed;
+    }
 
-    if (matchingDecision === undefined) {
+    const matchingClassification = this.classifications.get(queryingDecision.tag.text);
+    if (matchingClassification === undefined) {
       return false;
     }
 
-    const hasMatchingTag = queryingDecision.tag.text === matchingDecision.tag.text;
-    const hasMatchingDecision = queryingDecision.confirmed === matchingDecision.confirmed;
+    const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
+    const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
     return hasMatchingTag && hasMatchingDecision;
   }
 

@@ -499,7 +499,11 @@ test.describe("hasDecision", () => {
     // I create a new verification decision and test if the subject has the
     // decision to test that the comparison is based on the decisions tag, and
     // not by the decisions object reference
-    const testedDecision = new Verification(decisionOutcome, subjectTag);
+    //
+    // additionally, note that this verification model does not have a tag
+    // this was done intentionally because we need to support testing comparing
+    // verification decisions where we do not know the tag
+    const testedDecision = new Verification(decisionOutcome);
     const hasDecision = subject.hasDecision(testedDecision);
 
     expect(hasDecision).toEqual(true);
