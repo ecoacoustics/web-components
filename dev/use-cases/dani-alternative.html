@@ -17,6 +17,14 @@
       <oe-classification tag="fledgling" true-shortcut="k"></oe-classification>
       <oe-classification tag="in-flight" true-shortcut="l"></oe-classification>
 
+      <!--
+        the kaleidoscope.csv dataset includes a lot of testing labels with the
+       value "insects".
+       When you make a classification decision about insects, you should not see
+       the verification decision update.
+      -->
+      <oe-classification tag="insects" true-shortcut="B"></oe-classification>
+
       <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv"></oe-data-source>
     </oe-verification-grid>
   </body>
