@@ -21,8 +21,8 @@ export class Decision {
   }
 
   /** Stores the decision outcome */
-  public confirmed: EnumValue<DecisionOptions>;
+  public readonly confirmed: EnumValue<DecisionOptions>;
 
   /** A tag that the decision was made about */
-  public tag: Tag;
+  public readonly tag: Tag;
 }
