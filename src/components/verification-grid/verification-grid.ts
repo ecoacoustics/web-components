@@ -1032,12 +1032,19 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // (instead of the decision identifier) so that negative/positive decisions
     // on the same tag are not counted as two separate decisions
     // meaning that we only have to make a classification about each tag once
-    const requiredTags: Tag[] = this.classificationDecisionElements.map(
+    const requiredClassificationTags: Tag[] = this.classificationDecisionElements.map(
       (element: ClassificationComponent) => element.tag,
     );
 
     const verificationTiles = Array.from(this.gridTiles);
-    return !verificationTiles.every((tile) => tile.model.hasTags(requiredTags));
+    for (const tile of verificationTiles) {
+      const hasAllTags = requiredClassificationTags.every((tag) => tile.model.classifications.has(tag.text));
+      if (!hasAllTags) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private setDecisionDisabled(disabled: boolean): void {

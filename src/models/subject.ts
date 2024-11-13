@@ -143,20 +143,6 @@ export class SubjectWrapper {
     return hasMatchingTag && hasMatchingDecision;
   }
 
-  /** Checks if the current subject has a tag applied */
-  public hasTag(tag: Tag): boolean {
-    if (tag.text === this.tag.text && this.verification) {
-      return true;
-    }
-
-    return this.classifications.has(tag.text);
-  }
-
-  /** Checks if all tags in an array are present on a subject */
-  public hasTags(tags: Tag[]): boolean {
-    return tags.every((tag) => this.hasTag(tag));
-  }
-
   public toDownloadable(): Partial<DownloadableResult> {
     const namespace = columnNamespace;
     const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
