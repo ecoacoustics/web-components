@@ -68,16 +68,6 @@ export class SubjectWrapper {
   public url: string;
   public tag: Tag;
 
-  public get decisions(): ReadonlyMap<string, Decision> {
-    const decisionMap = new Map([...this.classifications]);
-
-    if (this.verification) {
-      decisionMap.set(this.verification.tag.text, this.verification);
-    }
-
-    return decisionMap;
-  }
-
   /**
    * Adds a decision to the subject and removes any decisions that have been
    * made against the same tag.
@@ -139,23 +129,27 @@ export class SubjectWrapper {
 
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
-    const decision =
+    const matchingDecision =
       queryingDecision instanceof Classification
         ? this.classifications.get(queryingDecision.tag.text)
         : this.verification;
 
-    if (decision === undefined) {
+    if (matchingDecision === undefined) {
       return false;
     }
 
-    const hasMatchingTag = queryingDecision.tag.text === decision.tag.text;
-    const hasMatchingDecision = queryingDecision.confirmed === decision.confirmed;
+    const hasMatchingTag = queryingDecision.tag.text === matchingDecision.tag.text;
+    const hasMatchingDecision = queryingDecision.confirmed === matchingDecision.confirmed;
     return hasMatchingTag && hasMatchingDecision;
   }
 
   /** Checks if the current subject has a tag applied */
   public hasTag(tag: Tag): boolean {
-    return this.decisions.has(tag.text);
+    if (tag.text === this.tag.text && this.verification) {
+      return true;
+    }
+
+    return this.classifications.has(tag.text);
   }
 
   /** Checks if all tags in an array are present on a subject */

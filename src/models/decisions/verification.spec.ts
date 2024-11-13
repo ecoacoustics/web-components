@@ -1,10 +1,11 @@
 import { expect, test } from "../../tests/assertions";
+import { Tag } from "../tag";
 import { DecisionOptions } from "./decision";
 import { Verification } from "./verification";
 
 test.describe("addTag", () => {
   test("should return a new instance of the verification model with the tag property changed", () => {
-    const tag = { text: "foo" };
+    const tag: Tag = { text: "foo" };
     const verification = new Verification(DecisionOptions.TRUE);
     const newVerification = verification.addTag(tag);
 

@@ -100,6 +100,9 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   public requiredTags!: Tag[];
 
   @property({ attribute: false, type: Boolean })
+  public requiresVerification = false;
+
+  @property({ attribute: false, type: Boolean })
   public isOverlapping = false;
 
   @query("oe-spectrogram")
@@ -291,23 +294,51 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     `;
   }
 
-  private meterSegmentsTemplate(): TemplateResult<1> {
+  private classificationMeterTemplate(): TemplateResult {
     return html`
       ${repeat(this.requiredTags, (tag: Tag) => {
-        const decision = this.model.decisions.get(tag.text);
-        const decisionText = decision ? decision.confirmed : "no decision";
+        const decision = this.model.classifications.get(tag.text);
+        const tooltipText = decision ? decision.confirmed : "no decision";
 
         let color: string | undefined;
         if (decision && decision.confirmed !== DecisionOptions.SKIP) {
           color = this.injector.colorService(decision);
         }
 
-        return html`
-          <sl-tooltip content="${tag.text ?? tag} (${decisionText})">
-            <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
-          </sl-tooltip>
-        `;
+        return this.meterSegmentTemplate(`Classification (${tooltipText})`, color);
       })}
+    `;
+  }
+
+  private verificationMeterTemplate(): TemplateResult {
+    const currentVerificationModel = this.model.verification;
+    const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
+
+    let meterColor: string | undefined;
+    if (currentVerificationModel) {
+      meterColor = this.injector.colorService(currentVerificationModel);
+    }
+
+    return this.meterSegmentTemplate(`Verification (${decisionText})`, meterColor);
+  }
+
+  private meterSegmentTemplate(tooltip: string, color?: string): TemplateResult {
+    return html`
+      <sl-tooltip content="${tooltip}">
+        <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
+      </sl-tooltip>
+    `;
+  }
+
+  private progressMeterTemplate(): TemplateResult {
+    // prettier wants to format this as a single line because it thinks it is
+    // string interpolation
+    // to improve readability, I have disabled prettier for this line so that we
+    // can put each of the templates on a separate line
+    // prettier-ignore
+    return html`
+      ${this.classificationMeterTemplate()}
+      ${when(this.requiresVerification, () => this.verificationMeterTemplate())}
     `;
   }
 
@@ -365,7 +396,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             </oe-indicator>
           </oe-axes>
 
-          <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
+          <div class="progress-meter">${this.progressMeterTemplate()}</div>
 
           <div id="slot-wrapper">
             <slot></slot>

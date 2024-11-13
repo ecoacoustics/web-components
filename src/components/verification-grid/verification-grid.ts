@@ -995,17 +995,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
   }
 
-  private tilesRequiredTags(subject: SubjectWrapper): Tag[] {
-    const classificationTags = this.requiredClassificationTags;
-
-    if (!this.hasVerificationTask()) {
-      return classificationTags;
-    }
-
-    const verificationTag = subject.tag;
-    return classificationTags.concat(verificationTag);
-  }
-
   // for verification tasks, the user will be adding one verification decision
   // to each grid tile. Therefore, we can test that there is some sort of
   // verifications applied to every tile
@@ -1281,7 +1270,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
-                    .requiredTags="${this.tilesRequiredTags(subject)}"
+                    .requiresVerification="${this.hasVerificationTask()}"
+                    .requiredTags="${this.requiredClassificationTags}"
                     .model="${subject}"
                     .index="${i}"
                   >
