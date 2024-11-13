@@ -563,14 +563,16 @@ test.describe("skipUndecided", () => {
   });
 
   test("should apply a skip decision to a subject that has missing verifications and classifications", () => {
-    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
+    const subjectTag: Tag = { text: "foo" };
+    const subject = new SubjectWrapper({}, "https://api.ecosounds.org", subjectTag);
     subject.skipUndecided(true, [{ text: "bar" }]);
 
-    const expectedDecisionMap = new Map<string, Decision>([
-      ["foo", new Verification(DecisionOptions.SKIP, { text: "foo" })],
+    const expectedVerification = new Verification(DecisionOptions.SKIP, subjectTag);
+    const expectedClassifications = new Map<string, Decision>([
       ["bar", new Classification(DecisionOptions.SKIP, { text: "bar" })],
     ]);
 
-    expect(subject.decisions).toEqual(expectedDecisionMap);
+    expect(subject.verification).toEqual(expectedVerification);
+    expect(subject.classifications).toEqual(expectedClassifications);
   });
 });

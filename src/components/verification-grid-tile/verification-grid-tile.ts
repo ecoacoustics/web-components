@@ -1,6 +1,6 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
@@ -298,28 +298,31 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     return html`
       ${repeat(this.requiredTags, (tag: Tag) => {
         const decision = this.model.classifications.get(tag.text);
-        const tooltipText = decision ? decision.confirmed : "no decision";
+        const decisionText = decision ? decision.confirmed : "no decision";
 
         let color: string | undefined;
         if (decision && decision.confirmed !== DecisionOptions.SKIP) {
           color = this.injector.colorService(decision);
         }
 
-        return this.meterSegmentTemplate(`Classification (${tooltipText})`, color);
+        return this.meterSegmentTemplate(`${tag.text} (${decisionText})`, color);
       })}
     `;
   }
 
-  private verificationMeterTemplate(): TemplateResult {
+  private verificationMeterTemplate(): TemplateResult | typeof nothing {
     const currentVerificationModel = this.model.verification;
     const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
+    const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
 
-    let meterColor: string | undefined;
-    if (currentVerificationModel) {
-      meterColor = this.injector.colorService(currentVerificationModel);
+    // if there is no verification decision on the tiles subject model, then
+    // return the verification meter segment with no color
+    if (!currentVerificationModel) {
+      return this.meterSegmentTemplate(tooltipText);
     }
 
-    return this.meterSegmentTemplate(`Verification (${decisionText})`, meterColor);
+    const meterColor = this.injector.colorService(currentVerificationModel);
+    return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
   private meterSegmentTemplate(tooltip: string, color?: string): TemplateResult {

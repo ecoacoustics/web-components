@@ -1221,12 +1221,13 @@ test.describe("decisions", () => {
 test.describe("decision meter", () => {
   test.describe("classification task", () => {
     test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithClassificationTask();
       await fixture.changeGridSize(3);
       await fixture.dismissHelpDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      const expectedSegments = await fixture.getGridSize();
+      const expectedSegments = 3;
       const realizedSegments = await fixture.gridTileProgressMeterSegments();
       expect(realizedSegments).toHaveLength(expectedSegments);
     });
@@ -1369,7 +1370,7 @@ test.describe("decision meter", () => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
 
-      const expectedTooltips = ["koala (true)"];
+      const expectedTooltips = ["verification: koala (true)"];
       const realizedTooltips = await fixture.progressMeterTooltips();
       expect(realizedTooltips).toEqual(expectedTooltips);
     });
@@ -1415,7 +1416,7 @@ test.describe("decision meter", () => {
       await fixture.makeDecision(0);
       await fixture.makeDecision(3);
 
-      const expectedTooltips = ["car (false)", "bird (no decision)", "cat (no decision)", "koala (true)"];
+      const expectedTooltips = ["car (false)", "bird (no decision)", "cat (no decision)", "verification: koala (true)"];
       const realizedTooltips = await fixture.progressMeterTooltips();
       expect(realizedTooltips).toEqual(expectedTooltips);
     });
