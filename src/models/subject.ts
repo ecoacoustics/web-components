@@ -169,19 +169,11 @@ export class SubjectWrapper {
   }
 
   private addVerification(model: Verification): void {
-    // when a verification decision is made, it usually doesn't have a tag
-    // on the model. This is because the tag is usually associated with the
-    // subject, which the verification button cannot know about when it makes
-    // the verification model
-    //
-    // additionally, because the verification model passed into this function
-    // will be the same object and share the same reference with all other
-    // verification models produced by the verification button, we create a new
-    // instance of the verification model with the populated tag field using
-    // the verification models addTag() method.
-    // this creates a new instance of the verification model so that when the
-    // tag is changed, it doesn't update all references
-    const populatedVerification = model.addTag(this.tag);
+    // when a verification decision is made, it doesn't have a tag on the model.
+    // This is because the tag is usually associated with the subject, which the
+    // verification button cannot know about when it makes the verification
+    // model
+    const populatedVerification = model.withTag(this.tag);
     this.verification = populatedVerification;
   }
 

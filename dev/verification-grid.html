@@ -28,13 +28,24 @@
         </div>
       </template>
 
+      <oe-classification true-shortcut="a" tag="Turtle"></oe-classification>
+
+      <!--
+        I have purposely placed the oe-verification components between the
+        classification decisions
+        I have done this so that we can assert that the progress meter will
+        display the progress segments in the same order that the decision
+        buttons are listed out
+        We should see that the the verification segment is between the turtle
+        and cow progress meter segments
+       -->
       <oe-verification verified="true" shortcut="H"></oe-verification>
       <oe-verification verified="true" additional-tags="hello,world" shortcut="J"></oe-verification>
       <oe-verification verified="false" shortcut="K"></oe-verification>
       <oe-verification verified="skip" shortcut="L"></oe-verification>
       <oe-verification verified="unsure" shortcut=";"></oe-verification>
 
-      <oe-classification true-shortcut="m" tag="Cow"></oe-classification>
+      <oe-classification true-shortcut="b" tag="Cow"></oe-classification>
 
       <!-- <oe-data-source for="verification-grid" local></oe-data-source> -->
       <oe-data-source slot="data-source" for="verification-grid" src="/grid-items.json" local></oe-data-source>

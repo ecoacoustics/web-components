@@ -146,6 +146,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @queryAssignedElements({ selector: "oe-classification" })
   private classificationDecisionElements!: ClassificationComponent[];
 
+  /** A selector for all oe-verification and oe-classification elements */
+  @queryAssignedElements({ selector: "oe-verification, oe-classification" })
+  private decisionElements!: DecisionComponentUnion[];
+
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
@@ -201,11 +205,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   public get pagedItems(): number {
     return this.subjectHistory.length;
-  }
-
-  /** A computed selector for all oe-verification and oe-classification elements */
-  public get decisionElements(): DecisionComponentUnion[] {
-    return [...this.verificationDecisionElements, ...this.classificationDecisionElements];
   }
 
   private keydownHandler = this.handleKeyDown.bind(this);
@@ -1277,8 +1276,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
-                    .requiresVerification="${this.hasVerificationTask()}"
-                    .requiredTags="${this.requiredClassificationTags}"
+                    .requiredDecisions="${this.decisionElements}"
                     .model="${subject}"
                     .index="${i}"
                   >

@@ -12,11 +12,13 @@ import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
-import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import { DecisionComponentUnion } from "../decision/decision";
+import { VerificationComponent } from "../decision/verification/verification";
+import { ClassificationComponent } from "../decision/classification/classification";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
@@ -97,10 +99,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   public index = 0;
 
   @property({ attribute: false, type: Array })
-  public requiredTags!: Tag[];
-
-  @property({ attribute: false, type: Boolean })
-  public requiresVerification = false;
+  public requiredDecisions: DecisionComponentUnion[] = [];
 
   @property({ attribute: false, type: Boolean })
   public isOverlapping = false;
@@ -294,20 +293,17 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     `;
   }
 
-  private classificationMeterTemplate(): TemplateResult {
-    return html`
-      ${repeat(this.requiredTags, (tag: Tag) => {
-        const decision = this.model.classifications.get(tag.text);
-        const decisionText = decision ? decision.confirmed : "no decision";
+  private classificationMeterTemplate(requiredDecision: ClassificationComponent): TemplateResult {
+    const requiredTag = requiredDecision.tag;
+    const decision = this.model.classifications.get(requiredTag.text);
+    const decisionText = decision ? decision.confirmed : "no decision";
 
-        let color: string | undefined;
-        if (decision && decision.confirmed !== DecisionOptions.SKIP) {
-          color = this.injector.colorService(decision);
-        }
+    let color: string | undefined;
+    if (decision && decision.confirmed !== DecisionOptions.SKIP) {
+      color = this.injector.colorService(decision);
+    }
 
-        return this.meterSegmentTemplate(`${tag.text} (${decisionText})`, color);
-      })}
-    `;
+    return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
 
   private verificationMeterTemplate(): TemplateResult | typeof nothing {
@@ -334,14 +330,25 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   }
 
   private progressMeterTemplate(): TemplateResult {
+    let foundVerification = false;
+
     // prettier wants to format this as a single line because it thinks it is
     // string interpolation
     // to improve readability, I have disabled prettier for this line so that we
     // can put each of the templates on a separate line
     // prettier-ignore
     return html`
-      ${this.classificationMeterTemplate()}
-      ${when(this.requiresVerification, () => this.verificationMeterTemplate())}
+      ${repeat(this.requiredDecisions, (decisionComponent: DecisionComponentUnion) => {
+        if (decisionComponent instanceof ClassificationComponent) {
+          return this.classificationMeterTemplate(decisionComponent);
+        } else if (decisionComponent instanceof VerificationComponent && !foundVerification) {
+          foundVerification = true;
+          return this.verificationMeterTemplate();
+        }
+
+        console.error("Unknown decision type", decisionComponent);
+        return nothing;
+      })}
     `;
   }
 

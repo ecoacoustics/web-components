@@ -3,11 +3,11 @@ import { Tag } from "../tag";
 import { DecisionOptions } from "./decision";
 import { Verification } from "./verification";
 
-test.describe("addTag", () => {
+test.describe("withTag", () => {
   test("should return a new instance of the verification model with the tag property changed", () => {
     const tag: Tag = { text: "foo" };
     const verification = new Verification(DecisionOptions.TRUE);
-    const newVerification = verification.addTag(tag);
+    const newVerification = verification.withTag(tag);
 
     // by using the "toBe" assertion here, it will compare the references of the
     // two objects and ensure that they are different instances
