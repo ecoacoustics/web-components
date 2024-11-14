@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.3...web-components-v1.2.4) (2024-11-14)
+
+
+### Bug Fixes
+
+* Incorrect verification decision tag updates ([#246](https://github.com/ecoacoustics/web-components/issues/246)) ([b08ed0a](https://github.com/ecoacoustics/web-components/commit/b08ed0a4786806cd5e9915782be7f2905aebe4dc)), closes [#245](https://github.com/ecoacoustics/web-components/issues/245)
+
 ## [1.2.3](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.2...web-components-v1.2.3) (2024-11-12)
 
 
