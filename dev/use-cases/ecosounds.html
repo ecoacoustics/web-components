@@ -51,6 +51,11 @@
           const tag = randomSample(possibleTags);
 
           return {
+            injector: {
+              type: "audio",
+              provider: { src },
+              warning: "you should not see this value in the downloaded result"
+            },
             additionalData: {
               data: "This is some additional data that should be included in results",
               dateTime: new Date().toISOString(),
@@ -58,6 +63,12 @@
             additionalText: "you should see this in the results",
             src,
             tag,
+            toJSON: function() {
+              // return all properties in this object except for the 'injector'
+              // property
+              const { injector, ...subjectData } = this;
+              return subjectData;
+            },
           };
         });
 

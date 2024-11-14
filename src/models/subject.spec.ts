@@ -147,6 +147,20 @@ const tests: SubjectWrapperTest[] = [
     // modification when we download the results
     expectedDownloadableResult: fakeSubject as DownloadableResult,
   },
+  {
+    name: "complex object with toJSON method",
+    subject: {
+      fileName: "this value should not be emitted",
+      createdAt: 999,
+      updatedAt: 9999,
+      nestedObject: { name: "non-downloaded name field" },
+      toJSON: () => ({ x: "only x should be emitted" }),
+    },
+    tag: { text: "foo" },
+    expectedVerification: undefined,
+    expectedClassifications: [],
+    expectedDownloadableResult: { x: "only x should be emitted" },
+  },
   testVerificationDecision(),
   testClassificationDecision(),
   testMultipleClassificationDecisions(),
