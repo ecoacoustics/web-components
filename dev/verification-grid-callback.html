@@ -20,6 +20,10 @@
 
       const testingCallback = () => {
         return {
+          // prettier wants to split out each property key onto a new line
+          // however, because these objects only have one key, it is more
+          // readable if we keep each object on its own line
+          // prettier-ignore
           subjects: [
             { url: "https://api.acousticobservatory.org/audio_recordings/643356/media.flac?start_offset=30&end_offset=35" },
             { url: "https://api.acousticobservatory.org/audio_recordings/515726/media.flac?start_offset=45&end_offset=50" },
@@ -27,7 +31,7 @@
             { url: "https://api.acousticobservatory.org/audio_recordings/251486/media.flac?start_offset=15&end_offset=20" },
             { url: "https://api.acousticobservatory.org/audio_recordings/177657/media.flac?start_offset=40&end_offset=45" },
             { url: "https://api.acousticobservatory.org/audio_recordings/266173/media.flac?start_offset=45&end_offset=50" },
-          ]
+          ],
         };
       };
 

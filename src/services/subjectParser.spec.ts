@@ -140,7 +140,7 @@ const tests: VerificationParserTest[] = [
       tags: [[]],
     },
     expectedTag: { text: "" },
-  }
+  },
 ];
 
 test.describe("SubjectParser", () => {

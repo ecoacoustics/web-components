@@ -272,7 +272,7 @@ class TestPage {
 
     return result;
   }
-  
+
   public async getAppliedDecisions(index: number): Promise<Decision[]> {
     const tileModels = await this.gridTileComponents();
     const tileTarget = tileModels[index];
@@ -318,7 +318,11 @@ class TestPage {
 
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
     const subjectClassifications = Array.from(subject.classifications.values());
-    
+
+    // prettier wants to inline all of these into one line, but I think that
+    // separating verifications and classifications into separate lines makes
+    // the code easier to read
+    // prettier-ignore
     return [
         ...(subject.verification ? [subject.verification] : []),
         ...subjectClassifications,
