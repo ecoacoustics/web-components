@@ -50,14 +50,17 @@ export class VerificationComponent extends DecisionComponent {
 
   protected override handleShortcutKey(event: KeyboardEvent): void {
     if (this.isShortcutKey(event)) {
-      const decisionModels = this.generateDecisionModels();
-      this.emitDecision(decisionModels);
+      this.handleDecision();
       this.decisionButton.focus();
     }
   }
 
   protected override isShortcutKey(event: KeyboardEvent): Readonly<boolean> {
     return event.key.toLowerCase() === this.shortcut.toLowerCase();
+  }
+
+  protected handleDecision(): void {
+    this.emitDecision(this.generateDecisionModels());
   }
 
   private generateDecisionModels(): [Verification, ...Classification[]] {
@@ -95,7 +98,7 @@ export class VerificationComponent extends DecisionComponent {
         title="Shortcut: ${this.shortcut}"
         style="--ripple-color: var(${color})"
         aria-disabled="${this.disabled}"
-        @click="${() => this.emitDecision(decisionModels)}"
+        @click="${() => this.handleDecision()}"
       >
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 

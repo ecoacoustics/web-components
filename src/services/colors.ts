@@ -5,7 +5,6 @@ import { Verification } from "../models/decisions/verification";
 const tagColors = new Map<string, CssVariable>();
 
 export function decisionColor(decision: Decision): CssVariable {
-  // const isVerification = decision instanceof Verification;
   const isVerification = decision instanceof Verification;
   const colorNamespace = isVerification ? "verification" : "class";
 

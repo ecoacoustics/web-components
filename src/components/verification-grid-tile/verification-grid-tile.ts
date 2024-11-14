@@ -1,6 +1,6 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
@@ -12,12 +12,18 @@ import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
-import { Tag } from "../../models/tag";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import { Tag } from "../../models/tag";
 import verificationGridTileStyles from "./css/style.css?inline";
+
+export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
+
+export type RequiredVerification = typeof requiredVerificationPlaceholder;
+export type RequiredClassification = Tag;
+export type RequiredDecision = RequiredVerification | RequiredClassification;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
 
@@ -97,7 +103,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   public index = 0;
 
   @property({ attribute: false, type: Array })
-  public requiredTags!: Tag[];
+  public readonly requiredDecisions: RequiredDecision[] = [];
 
   @property({ attribute: false, type: Boolean })
   public isOverlapping = false;
@@ -291,22 +297,54 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     `;
   }
 
-  private meterSegmentsTemplate(): TemplateResult<1> {
-    return html`
-      ${repeat(this.requiredTags, (tag: Tag) => {
-        const decision = this.model.decisions.get(tag.text);
-        const decisionText = decision ? decision.confirmed : "no decision";
+  private classificationMeterTemplate(requiredTag: Tag): TemplateResult {
+    const decision = this.model.classifications.get(requiredTag.text);
+    const decisionText = decision ? decision.confirmed : "no decision";
 
-        let color: string | undefined;
-        if (decision && decision.confirmed !== DecisionOptions.SKIP) {
-          color = this.injector.colorService(decision);
+    let color: string | undefined;
+    if (decision && decision.confirmed !== DecisionOptions.SKIP) {
+      color = this.injector.colorService(decision);
+    }
+
+    return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
+  }
+
+  private verificationMeterTemplate(): TemplateResult | typeof nothing {
+    const currentVerificationModel = this.model.verification;
+    const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
+    const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
+
+    // if there is no verification decision on the tiles subject model, then
+    // return the verification meter segment with no color
+    if (!currentVerificationModel) {
+      return this.meterSegmentTemplate(tooltipText);
+    }
+
+    const meterColor = this.injector.colorService(currentVerificationModel);
+    return this.meterSegmentTemplate(tooltipText, meterColor);
+  }
+
+  private meterSegmentTemplate(tooltip: string, color?: string): TemplateResult {
+    return html`
+      <sl-tooltip content="${tooltip}">
+        <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
+      </sl-tooltip>
+    `;
+  }
+
+  private progressMeterTemplate(): TemplateResult {
+    // prettier wants to format this as a single line because it thinks it is
+    // string interpolation
+    // to improve readability, I have disabled prettier for this line so that we
+    // can put each of the templates on a separate line
+    // prettier-ignore
+    return html`
+      ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
+        if (requiredDecision === requiredVerificationPlaceholder) {
+          return this.verificationMeterTemplate();
         }
 
-        return html`
-          <sl-tooltip content="${tag.text ?? tag} (${decisionText})">
-            <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
-          </sl-tooltip>
-        `;
+        return this.classificationMeterTemplate(requiredDecision);
       })}
     `;
   }
@@ -365,7 +403,7 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
             </oe-indicator>
           </oe-axes>
 
-          <div class="progress-meter">${this.meterSegmentsTemplate()}</div>
+          <div class="progress-meter">${this.progressMeterTemplate()}</div>
 
           <div id="slot-wrapper">
             <slot></slot>

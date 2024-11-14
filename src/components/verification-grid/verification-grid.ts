@@ -1,7 +1,12 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { OverflowEvent, VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
+import {
+  OverflowEvent,
+  RequiredDecision,
+  requiredVerificationPlaceholder,
+  VerificationGridTileComponent,
+} from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
@@ -14,7 +19,6 @@ import { ClassificationComponent } from "../decision/classification/classificati
 import { VerificationComponent } from "../decision/verification/verification";
 import { Decision } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
-import { Verification } from "../../models/decisions/verification";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -147,6 +151,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @queryAssignedElements({ selector: "oe-classification" })
   private classificationDecisionElements!: ClassificationComponent[];
 
+  /** A selector for all oe-verification and oe-classification elements */
+  @queryAssignedElements({ selector: "oe-verification, oe-classification" })
+  private decisionElements!: DecisionComponentUnion[];
+
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
@@ -204,11 +212,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return this.subjectHistory.length;
   }
 
-  /** A computed selector for all oe-verification and oe-classification elements */
-  public get decisionElements(): DecisionComponentUnion[] {
-    return [...this.verificationDecisionElements, ...this.classificationDecisionElements];
-  }
-
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -223,6 +226,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public subjectHistory: SubjectWrapper[] = [];
   private verificationBuffer: SubjectWrapper[] = [];
   private requiredClassificationTags: Tag[] = [];
+  private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
   private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
@@ -395,6 +399,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  private updateRequiredDecisions(): void {
+    let foundVerification = false;
+    const result: RequiredDecision[] = [];
+
+    for (const decisionElement of this.decisionElements) {
+      if (decisionElement instanceof VerificationComponent && !foundVerification) {
+        foundVerification = true;
+        result.push(requiredVerificationPlaceholder);
+      } else if (decisionElement instanceof ClassificationComponent) {
+        result.push(decisionElement.tag);
+      }
+    }
+
+    this.requiredDecisions = result;
+  }
+
   private updateRequiredClassificationTags(): void {
     const requiredTags = new Map<string, Tag>();
 
@@ -483,9 +503,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           // we prevent default on the ctrl + A event so that chrome doesn't
           // select all the text on the page
           event.preventDefault();
+          this.subSelectAll();
         }
-
-        this.subSelectAll();
         break;
       }
 
@@ -545,6 +564,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
+    this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
   }
@@ -967,10 +987,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     for (const [tile, decisions] of tileDecisions) {
       for (const decision of decisions) {
-        if (decision instanceof Verification) {
-          decision.tag = tile.model.tag;
-        }
-
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
@@ -998,17 +1014,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // the colors change when they change an applied decision
 
     return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
-  }
-
-  private tilesRequiredTags(subject: SubjectWrapper): Tag[] {
-    const classificationTags = this.requiredClassificationTags;
-
-    if (!this.hasVerificationTask()) {
-      return classificationTags;
-    }
-
-    const verificationTag = subject.tag;
-    return classificationTags.concat(verificationTag);
   }
 
   // for verification tasks, the user will be adding one verification decision
@@ -1048,12 +1053,19 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // (instead of the decision identifier) so that negative/positive decisions
     // on the same tag are not counted as two separate decisions
     // meaning that we only have to make a classification about each tag once
-    const requiredTags: Tag[] = this.classificationDecisionElements.map(
+    const requiredClassificationTags: Tag[] = this.classificationDecisionElements.map(
       (element: ClassificationComponent) => element.tag,
     );
 
     const verificationTiles = Array.from(this.gridTiles);
-    return !verificationTiles.every((tile) => tile.model.hasTags(requiredTags));
+    for (const tile of verificationTiles) {
+      const hasAllTags = requiredClassificationTags.every((tag) => tile.model.classifications.has(tag.text));
+      if (!hasAllTags) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private setDecisionDisabled(disabled: boolean): void {
@@ -1286,7 +1298,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
-                    .requiredTags="${this.tilesRequiredTags(subject)}"
+                    .requiredDecisions="${this.requiredDecisions}"
                     .model="${subject}"
                     .index="${i}"
                   >

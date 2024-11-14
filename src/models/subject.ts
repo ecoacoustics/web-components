@@ -63,24 +63,10 @@ export class SubjectWrapper {
   // but can have multiple classification decisions
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
-  public decisions = new Map<TagName, Decision>();
+  public verification?: Verification;
+  public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
-
-  /** An array of all the decisions applied to a subject */
-  public get decisionModels(): Decision[] {
-    return Array.from(this.decisions.values());
-  }
-
-  /** The singular verification decision that has been applied to a subject */
-  public get verification(): Verification | undefined {
-    return this.decisions.get(this.tag.text) as Verification;
-  }
-
-  /** Multiple classification decisions that have been applied to a subject */
-  public get classifications(): Classification[] {
-    return this.decisionModels.filter((decision) => decision instanceof Classification) as Classification[];
-  }
 
   /**
    * Adds a decision to the subject and removes any decisions that have been
@@ -89,12 +75,24 @@ export class SubjectWrapper {
    * possible to have both a positive and negative decision about a tag
    */
   public addDecision(decision: Decision): void {
-    this.decisions.set(decision.tag.text, decision);
+    if (decision instanceof Verification) {
+      this.addVerification(decision);
+    } else if (decision instanceof Classification) {
+      this.addClassification(decision);
+    } else {
+      throw new Error("Invalid decision type");
+    }
   }
 
   /** Removes a decision from the subject */
-  public removeDecision(decisionToRemove: Decision) {
-    this.decisions.delete(decisionToRemove.tag.text);
+  public removeDecision(decision: Decision) {
+    if (decision instanceof Verification) {
+      this.removeVerification();
+    } else if (decision instanceof Classification) {
+      this.removeClassification(decision.tag);
+    } else {
+      throw new Error("Invalid decision type");
+    }
   }
 
   /**
@@ -120,7 +118,7 @@ export class SubjectWrapper {
     }
 
     for (const tag of requiredClassifications) {
-      if (this.classifications.some((classification) => classification.tag.text === tag.text)) {
+      if (this.classifications.has(tag.text)) {
         continue;
       }
 
@@ -131,22 +129,18 @@ export class SubjectWrapper {
 
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
-    const decision = this.decisions.get(queryingDecision.tag.text);
-    if (decision === undefined) {
+    if (queryingDecision instanceof Verification) {
+      return this.verification?.confirmed === queryingDecision.confirmed;
+    }
+
+    const matchingClassification = this.classifications.get(queryingDecision.tag.text);
+    if (matchingClassification === undefined) {
       return false;
     }
 
-    return queryingDecision.confirmed === decision?.confirmed;
-  }
-
-  /** Checks if the current subject has a tag applied */
-  public hasTag(tag: Tag): boolean {
-    return this.decisions.has(tag.text);
-  }
-
-  /** Checks if all tags in an array are present on a subject */
-  public hasTags(tags: Tag[]): boolean {
-    return tags.every((tag) => this.hasTag(tag));
+    const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
+    const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
+    return hasMatchingTag && hasMatchingDecision;
   }
 
   public toDownloadable(): Partial<DownloadableResult> {
@@ -160,7 +154,7 @@ export class SubjectWrapper {
         }
       : {};
 
-    const classificationModels = this.classifications;
+    const classificationModels = this.classifications.values();
     for (const classification of classificationModels) {
       const column = `${namespace}${classification.tag.text}`;
       const value = classification.confirmed;
@@ -172,5 +166,26 @@ export class SubjectWrapper {
       ...verificationColumns,
       ...classificationColumns,
     };
+  }
+
+  private addVerification(model: Verification): void {
+    // when a verification decision is made, it doesn't have a tag on the model.
+    // This is because the tag is usually associated with the subject, which the
+    // verification button cannot know about when it makes the verification
+    // model
+    const populatedVerification = model.withTag(this.tag);
+    this.verification = populatedVerification;
+  }
+
+  private addClassification(model: Classification): void {
+    this.classifications.set(model.tag.text, model);
+  }
+
+  private removeVerification(): void {
+    this.verification = undefined;
+  }
+
+  private removeClassification(tag: Tag): void {
+    this.classifications.delete(tag.text);
   }
 }

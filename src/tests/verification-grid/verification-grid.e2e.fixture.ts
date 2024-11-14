@@ -122,6 +122,21 @@ class TestPage {
     await this.page.waitForSelector("oe-verification-grid");
   }
 
+  public async createWithClassificationTask() {
+    await this.create(`
+      <oe-classification tag="car" true-shortcut="h"></oe-classification>
+      <oe-classification tag="koala" true-shortcut="j"></oe-classification>
+      <oe-classification tag="bird" true-shortcut="k"></oe-classification>
+    `);
+  }
+
+  public async createWithVerificationTask() {
+    await this.create(`
+      <oe-verification verified="true"></oe-verification>
+      <oe-verification verified="false"></oe-verification>
+    `);
+  }
+
   public async createWithAppChrome() {
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
@@ -246,9 +261,24 @@ class TestPage {
     return values;
   }
 
-  public async appliedDecisions(): Promise<Decision[]> {
-    const tileModels = await this.verificationGridTileModels();
-    return tileModels.flatMap((model) => model.decisionModels);
+  public async allAppliedDecisions(): Promise<Decision[]> {
+    const result: Decision[] = [];
+
+    const gridTiles = await this.gridTileComponents();
+    for (let i = 0; i < gridTiles.length; i++) {
+      const tileDecisions = await this.getAppliedDecisions(i);
+      result.push(...tileDecisions);
+    }
+
+    return result;
+  }
+
+  public async getAppliedDecisions(index: number): Promise<Decision[]> {
+    const tileModels = await this.gridTileComponents();
+    const tileTarget = tileModels[index];
+
+    const tileModel = (await getBrowserValue<VerificationGridTileComponent>(tileTarget, "model")) as SubjectWrapper;
+    return this.subjectDecisions(tileModel);
   }
 
   public async tileHighlightColors(): Promise<CssVariable[]> {
@@ -257,9 +287,10 @@ class TestPage {
 
     for (const tile of tiles) {
       const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+      const modelDecisions = this.subjectDecisions(model);
 
-      if (model.decisionModels) {
-        const tileColors = model.decisionModels.map((tileModel) => decisionColor(tileModel));
+      if (modelDecisions.length > 0) {
+        const tileColors = modelDecisions.map((tileModel) => decisionColor(tileModel));
         values.push(...tileColors);
       }
     }
@@ -274,13 +305,28 @@ class TestPage {
 
     for (const tile of gridTiles) {
       const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
-      const isHighlighted = model.decisionModels && model.decisionModels.length > 0;
+      const modelDecisions = this.subjectDecisions(model);
+
+      const isHighlighted = modelDecisions.length > 0;
       if (isHighlighted) {
         highlightedTiles.push(tile);
       }
     }
 
     return highlightedTiles.map((_, i) => i);
+  }
+
+  public subjectDecisions(subject: SubjectWrapper): Decision[] {
+    const subjectClassifications = Array.from(subject.classifications.values());
+
+    // prettier wants to inline all of these into one line, but I think that
+    // separating verifications and classifications into separate lines makes
+    // the code easier to read
+    // prettier-ignore
+    return [
+        ...(subject.verification ? [subject.verification] : []),
+        ...subjectClassifications,
+    ];
   }
 
   public async verificationGridTileModels(): Promise<SubjectWrapper[]> {

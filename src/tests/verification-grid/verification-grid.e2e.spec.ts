@@ -24,6 +24,7 @@ import {
 import { SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
+import { DecisionOptions } from "../../models/decisions/decision";
 
 test.describe("while the initial help dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -106,6 +107,8 @@ test.describe("single verification grid", () => {
       expect(completedSegments).toBe(0);
       expect(viewHeadSegments).toBe(0);
     });
+
+    test("should not have any applied decisions", () => {});
   });
 
   // unlike the initial help dialog, these tests assert that the help dialog
@@ -988,7 +991,6 @@ test.describe("single verification grid", () => {
       );
       expectedNewModel.clientCached = true;
       expectedNewModel.serverCached = true;
-      expectedNewModel.decisions = {} as any;
 
       await fixture.changeGridSize(newGridSize);
 
@@ -1139,22 +1141,93 @@ test.describe("single verification grid", () => {
   test.describe("progressive creation of a verification grid", () => {});
 });
 
+test.describe("decisions", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.changeGridSize(3);
+    await fixture.dismissHelpDialog();
+  });
+
+  test("should be able to add a decisions to a sub-selection", async ({ fixture }) => {
+    await fixture.createSubSelection([0]);
+    await fixture.makeDecision(0);
+
+    const firstTileDecisions = await fixture.getAppliedDecisions(0);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "koala" },
+      },
+    ]);
+
+    await fixture.createSubSelection([1]);
+    await fixture.makeDecision(0);
+
+    // we test selecting two tiles with different tags because this test
+    // previously failed because the verification button would use an object
+    // reference for the tag, causing the tag model from the second tile to
+    // overwrite the tag model from the first tile
+    // see https://github.com/ecoacoustics/web-components/issues/245
+    const secondTileDecisions = await fixture.getAppliedDecisions(1);
+    expect(secondTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "fish" },
+      },
+    ]);
+
+    // we should see that any tiles that we have not clicked on do not have a
+    // decision applied to them
+    const undecidedTileDecisions = await fixture.getAppliedDecisions(2);
+    expect(undecidedTileDecisions).toEqual([]);
+  });
+
+  test("should be able to add a decision to all subjects", async ({ fixture }) => {
+    // by making a decision without making a sub-selection first, we should
+    // see that all the tiles get the decision applied to them
+    await fixture.makeDecision(1);
+
+    const appliedDecisions = await fixture.allAppliedDecisions();
+    expect(appliedDecisions).toEqual([
+      { confirmed: DecisionOptions.FALSE, tag: { text: "koala" } },
+      { confirmed: DecisionOptions.FALSE, tag: { text: "fish" } },
+      { confirmed: DecisionOptions.FALSE, tag: { text: "kangaroo" } },
+    ]);
+  });
+
+  test("should be able to change a decision", async ({ fixture }) => {
+    await fixture.createSubSelection([0]);
+    await fixture.makeDecision(0);
+
+    const firstTileDecisions = await fixture.getAppliedDecisions(0);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.TRUE,
+        tag: { text: "koala" },
+      },
+    ]);
+
+    // notice that the "confirmed" value has change from "true" to "false"
+    // because we changed the decision
+    await fixture.makeDecision(1);
+    expect(firstTileDecisions).toEqual([
+      {
+        confirmed: DecisionOptions.FALSE,
+        tag: { text: "koala" },
+      },
+    ]);
+  });
+});
+
 test.describe("decision meter", () => {
   test.describe("classification task", () => {
     test.beforeEach(async ({ fixture }) => {
-      await fixture.create(`
-        <oe-classification tag="car" true-shortcut="h"></oe-classification>
-        <oe-classification tag="koala" true-shortcut="j"></oe-classification>
-        <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-			`);
-
+      await fixture.createWithClassificationTask();
       await fixture.changeGridSize(3);
-
       await fixture.dismissHelpDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      const expectedSegments = await fixture.getGridSize();
+      const expectedSegments = 3;
       const realizedSegments = await fixture.gridTileProgressMeterSegments();
       expect(realizedSegments).toHaveLength(expectedSegments);
     });
@@ -1274,11 +1347,7 @@ test.describe("decision meter", () => {
 
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
-      await fixture.create(`
-        <oe-verification verified="true"></oe-verification>
-        <oe-verification verified="false"></oe-verification>
-			`);
-
+      await fixture.createWithVerificationTask();
       await fixture.dismissHelpDialog();
     });
 
@@ -1301,7 +1370,7 @@ test.describe("decision meter", () => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
 
-      const expectedTooltips = ["koala (true)"];
+      const expectedTooltips = ["verification: koala (true)"];
       const realizedTooltips = await fixture.progressMeterTooltips();
       expect(realizedTooltips).toEqual(expectedTooltips);
     });
@@ -1347,7 +1416,7 @@ test.describe("decision meter", () => {
       await fixture.makeDecision(0);
       await fixture.makeDecision(3);
 
-      const expectedTooltips = ["car (false)", "bird (no decision)", "cat (no decision)", "koala (true)"];
+      const expectedTooltips = ["car (false)", "bird (no decision)", "cat (no decision)", "verification: koala (true)"];
       const realizedTooltips = await fixture.progressMeterTooltips();
       expect(realizedTooltips).toEqual(expectedTooltips);
     });
