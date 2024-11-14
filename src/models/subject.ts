@@ -161,8 +161,16 @@ export class SubjectWrapper {
       classificationColumns[column] = value;
     }
 
+    // the toJSON method is a protocol that is used by JSON.stringify and
+    // other serialization methods to convert an object into a more simplified
+    // format
+    // we test if the subject has a toJSON method and use it if possible
+    // since toJSON isn't always available on the object prototype, we want to
+    // simply return the original object if the toJSON method isn't available
+    const originalSubject = typeof this.subject.toJSON === "function" ? this.subject.toJSON() : this.subject;
+
     return {
-      ...this.subject,
+      ...originalSubject,
       ...verificationColumns,
       ...classificationColumns,
     };
