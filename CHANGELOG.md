@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.4...web-components-v1.2.5) (2024-11-14)
+
+
+### Bug Fixes
+
+* support calling toJSON on downloaded subjects ([#248](https://github.com/ecoacoustics/web-components/issues/248)) ([2534137](https://github.com/ecoacoustics/web-components/commit/253413742fb1df05e89a6d1d82dea10116f501e7))
+
 ## [1.2.4](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.3...web-components-v1.2.4) (2024-11-14)
 
 
