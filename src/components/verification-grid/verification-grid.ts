@@ -1,7 +1,12 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
-import { OverflowEvent, VerificationGridTileComponent } from "../verification-grid-tile/verification-grid-tile";
+import {
+  OverflowEvent,
+  RequiredDecision,
+  requiredVerificationPlaceholder,
+  VerificationGridTileComponent,
+} from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
@@ -221,6 +226,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public subjectHistory: SubjectWrapper[] = [];
   private verificationBuffer: SubjectWrapper[] = [];
   private requiredClassificationTags: Tag[] = [];
+  private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
   private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
@@ -393,6 +399,22 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  private updateRequiredDecisions(): void {
+    let foundVerification = false;
+    const result: RequiredDecision[] = [];
+
+    for (const decisionElement of this.decisionElements) {
+      if (decisionElement instanceof VerificationComponent && !foundVerification) {
+        foundVerification = true;
+        result.push(requiredVerificationPlaceholder);
+      } else if (decisionElement instanceof ClassificationComponent) {
+        result.push(decisionElement.tag);
+      }
+    }
+
+    this.requiredDecisions = result;
+  }
+
   private updateRequiredClassificationTags(): void {
     const requiredTags = new Map<string, Tag>();
 
@@ -481,9 +503,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           // we prevent default on the ctrl + A event so that chrome doesn't
           // select all the text on the page
           event.preventDefault();
+          this.subSelectAll();
         }
-
-        this.subSelectAll();
         break;
       }
 
@@ -543,6 +564,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private handleSlotChange(): void {
     this.updateRequiredClassificationTags();
+    this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
   }
@@ -1276,7 +1298,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
-                    .requiredDecisions="${this.decisionElements}"
+                    .requiredDecisions="${this.requiredDecisions}"
                     .model="${subject}"
                     .index="${i}"
                   >
