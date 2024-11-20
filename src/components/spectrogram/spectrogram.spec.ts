@@ -98,18 +98,18 @@ fixture.describe("spectrogram", () => {
     const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
     await fixture.updateSlot(slot);
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram, "play");
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
     expect(await fixture.isPlayingAudio()).toBe(true);
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram, "pause");
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
     expect(await fixture.isPlayingAudio()).toBe(false);
   });
 
   fixture("playing and pausing audio with src attribute", async ({ fixture }) => {
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram, "play");
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
     expect(await fixture.isPlayingAudio()).toBe(true);
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram, "pause");
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
     expect(await fixture.isPlayingAudio()).toBe(false);
   });
 });

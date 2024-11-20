@@ -45,6 +45,10 @@
 
       const possibleTags = ["bird", "insect", "mammal", "reptile"];
 
+      function createUrlTransformer() {
+        return (url) => `${url}?url_transformer=true`;
+      }
+
       function gridPaginator() {
         const subjects = Array.from({ length: 25 }).map(() => {
           const src = randomSample(possibleAudioSamples);
@@ -54,7 +58,7 @@
             injector: {
               type: "audio",
               provider: { src },
-              warning: "you should not see this value in the downloaded result"
+              warning: "you should not see this value in the downloaded result",
             },
             additionalData: {
               data: "This is some additional data that should be included in results",
@@ -63,7 +67,7 @@
             additionalText: "you should see this in the results",
             src,
             tag,
-            toJSON: function() {
+            toJSON: function () {
               // return all properties in this object except for the 'injector'
               // property
               const { injector, ...subjectData } = this;
@@ -77,6 +81,7 @@
 
       function setup() {
         const verificationGrid = document.querySelector("oe-verification-grid");
+        verificationGrid.urlTransformer = createUrlTransformer();
         verificationGrid.getPage = gridPaginator;
       }
 

@@ -12,7 +12,7 @@ import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
-import { GridPageFetcher, PageFetcher, UrlTransformer } from "../../services/gridPageFetcher";
+import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
 import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
@@ -30,9 +30,12 @@ import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import { UrlTransformer } from "../../services/subjectParser";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
+
+export type PageOperation = <T = unknown>(subject: SubjectWrapper) => T;
 
 export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
@@ -64,6 +67,11 @@ interface HighlightSelection {
   // DOM for the grid tiles every time the highlight box is resized
   //! Warning: be sure to update this array if grid tiles are added/removed
   observedElements: VerificationGridTileComponent[];
+}
+
+interface CurrentPage {
+  start: number;
+  end: number;
 }
 
 /**
@@ -140,9 +148,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
   public urlTransformer: UrlTransformer = (url) => url;
 
-  @state()
-  private historyHead = 0;
-
   /** selector for oe-verification elements */
   @queryAssignedElements({ selector: "oe-verification" })
   private verificationDecisionElements!: VerificationComponent[];
@@ -177,20 +182,56 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private highlightBox!: HTMLDivElement;
 
   @state()
-  private currentSubSelection: SubjectWrapper[] = [];
-
-  /** The array of subjects that are currently displayed in grid tiles */
-  @state()
-  public currentPage: SubjectWrapper[] = [];
-
-  @state()
   public columns = this.targetGridSize;
 
   @state()
   public rows = 1;
 
+  @state()
+  private currentSubSelection: SubjectWrapper[] = [];
+
   public get gridShape(): GridShape {
     return { columns: this.columns, rows: this.rows };
+  }
+
+  /**
+   * The index of the first item from the `subjects` array in the currently
+   * displayed verification grid page
+   */
+  public get viewHead(): number {
+    return this.viewHeadIndex;
+  }
+
+  public set viewHead(value: number) {
+    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
+
+    // because the viewHead is an index into the "subjects" array, it cannot
+    // be larger than the length of the subjects array.
+    // if we receive a value that is larger than the subjects buffer, we emit
+    // a warning so that we can catch it in dev, and use the subject arrays
+    // length as a fallback to prevent hard-failing.
+    const avaliableSubjectsCount = this.subjects.length;
+    if (clampedHead > avaliableSubjectsCount) {
+      console.warn("Attempted to set the viewHead to a value larger than the subjects array");
+      clampedHead = avaliableSubjectsCount;
+    }
+
+    this.viewHeadIndex = clampedHead;
+    this.renderVirtualPage();
+  }
+
+  /**
+   * The index from the `subjects` array indicating up to which point
+   * decisions have been made
+   * It is updated as each page is completed
+   */
+  public get decisionHead(): number {
+    return this.decisionHeadIndex;
+  }
+
+  private set decisionHead(value: number) {
+    this.decisionHeadIndex = value;
+    this.paginationFetcher?.populateSubjects(this.decisionHead);
   }
 
   /** A count of the number of tiles shown in the grid */
@@ -204,12 +245,17 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   /** A count of the number of tiles currently visible on the screen */
-  private get effectivePageSize(): number {
+  public get effectivePageSize(): number {
     return this.populatedTileCount - this.hiddenTiles;
   }
 
-  public get pagedItems(): number {
-    return this.subjectHistory.length;
+  private get currentPageIndices(): CurrentPage {
+    const start = this.viewHead;
+
+    const endCandidate = start + this.effectivePageSize;
+    const end = Math.min(endCandidate, this.subjects.length);
+
+    return { start, end };
   }
 
   private keydownHandler = this.handleKeyDown.bind(this);
@@ -218,13 +264,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private selectionHandler = this.handleSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
 
-  // the subject history contains all the subjects that have decisions applied
-  // to them, while the verification buffer contains all the subjects that have
-  // not yet been verified
-  // TODO: these two buffers will be consolidated as part of
-  // https://github.com/ecoacoustics/web-components/issues/139
-  public subjectHistory: SubjectWrapper[] = [];
-  private verificationBuffer: SubjectWrapper[] = [];
+  public subjects: SubjectWrapper[] = [];
+
+  private decisionHeadIndex = 0;
+  private viewHeadIndex = 0;
+
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
@@ -260,7 +304,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   public isViewingHistory(): boolean {
-    return this.historyHead !== 0;
+    // we know that the user is viewing history if the subjectBuffer index
+    // currently being displayed is less than where the user has verified up to
+    return this.viewHead < this.decisionHead;
   }
 
   public resetSpectrogramSettings(): void {
@@ -275,6 +321,23 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
   //#region Updates
+
+  // because subjects are appended into the "subjects" array asyncronously by
+  // the gridPageFetcher, it is possible for the verification grid to be ahead
+  // of where the async page fetcher has populated the subjects up to.
+  // therefore, we use a callback to append to the "subjects" array so that we
+  // can trigger change detection if we receive new subjects when we are
+  // currently displaying none
+  public pushToSubjects(value: SubjectWrapper[]): void {
+    this.subjects.push(...value);
+
+    // tiles will be hidden when the provided dataset does not provide enough
+    // data to create a full verification grid page.
+    // if we were previously lacking the data to fill a verification grid and
+    // we just appended more items, we should re-render the verification grid
+    // so that the new data can be added
+    this.renderVirtualPage();
+  }
 
   public firstUpdated(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
@@ -314,24 +377,27 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       this.gridController.setTarget(this.targetGridSize);
     }
 
-    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
-    // gridSize is a part of source invalidation because if the grid size
-    // increases, there will be verification grid tiles without any source
-    // additionally, if the grid size is decreased, we want the "currentPage"
-    // of sources to update / remove un-needed items
-    const sourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer", "targetGridSize", "columns", "rows"];
-
     // tile invalidations cause the functionality of the tiles to change
     // however, they do not cause the spectrograms or the template to render
+    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
     if (tileInvalidationKeys.some((key) => change.has(key))) {
       this.handleTileInvalidation();
     }
 
-    // invalidating the source will cause the grid tiles and spectrogram to
-    // invalidate meaning that each grid tile will re-render, however
-    // they will not be re-created
-    if (sourceInvalidationKeys.some((key) => change.has(key))) {
-      await this.handleSourceInvalidation();
+    // invalidating the verification grids source will cause the grid tiles and
+    // spectrograms to re-render, from the start of the new data source
+    const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
+    if (gridSourceInvalidationKeys.some((key) => change.has(key))) {
+      await this.handleGridSourceInvalidation();
+    }
+
+    // gridSize is a part of page source invalidation because if the grid size
+    // increases, there will be verification grid tiles without any source
+    // additionally, if the grid size is decreased, we want the "currentPage"
+    // of sources to update / remove un-needed items
+    const pageInvalidationKeys: (keyof this)[] = ["targetGridSize", "columns", "rows"];
+    if (pageInvalidationKeys.some((key) => change.has(key))) {
+      this.handlePageInvalidation();
     }
   }
 
@@ -373,18 +439,23 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.removeSubSelection();
   }
 
-  private async handleSourceInvalidation(): Promise<void> {
-    // if the user is in the middle of viewing history when they load a new
-    // verification file, we want to change back to the default verification
-    // interface don't show any decision highlights, etc...
-    if (!this.isViewingHistory()) {
-      this.verificationMode();
-    }
-    this.subjectHistory = [];
+  /**
+   * handles the data source of the verification grid changing
+   * this will reset the verification task and re-fetch the first page of
+   * subjects from the new data source
+   */
+  private async handleGridSourceInvalidation(): Promise<void> {
+    this.resetBufferHeads();
 
     if (this.getPage) {
-      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
-      this.currentPage = await this.paginationFetcher.getItems(this.populatedTileCount);
+      this.paginationFetcher = new GridPageFetcher(
+        this.getPage,
+        this.urlTransformer,
+        this.subjects,
+        this.pushToSubjects.bind(this),
+      );
+      await this.paginationFetcher.populateSubjects(this.decisionHead);
+      this.renderVirtualPage();
     }
 
     // if grid tile elements change during a selection event, we want to add
@@ -397,6 +468,21 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     if (this.highlight.highlighting) {
       this.updateHighlightObservedElements();
     }
+  }
+
+  /**
+   * handles the currently rendered page of subjects changing
+   * e.g. the number of tiles being rendered, or the source of a singular tile
+   *      changing
+   * causing the current page to be re-rendered from the viewHead position
+   */
+  private handlePageInvalidation(): void {
+    this.renderVirtualPage();
+  }
+
+  private resetBufferHeads(): void {
+    this.viewHead = 0;
+    this.decisionHead = 0;
   }
 
   private updateRequiredDecisions(): void {
@@ -438,6 +524,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private updateDecisionElements(): void {
     for (const element of this.decisionElements) {
       element.verificationGrid = this;
+    }
+  }
+
+  private *currentPage(): Generator<SubjectWrapper, void, void> {
+    const page = this.currentPageIndices;
+    for (let i = page.start; i < page.end; i++) {
+      yield this.subjects[i];
     }
   }
 
@@ -741,6 +834,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private renderHighlightBox(event: PointerEvent) {
     if (!this.canSubSelect() || this.isMobileDevice()) {
       return;
+    } else if (event.button !== 0) {
+      // if the user is not using the left mouse button we do not want to
+      // render a selection highlight box
+      // allowing users to create selection highlight boxes with non-primary
+      // buttons, can cause bugs
+      // e.g. Using right click to create a selection highlight box will cause
+      // the context menu to open, and will stop the pointerUp event from
+      // triggering which is needed to stop highlight selection
+      return;
     }
 
     if (event.isPrimary) {
@@ -866,72 +968,34 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private async handlePreviousPageClick(): Promise<void> {
     if (this.canNavigatePrevious()) {
-      this.historyHead += this.populatedTileCount;
-      await this.renderHistory(this.historyHead);
+      this.pageBackward();
     }
   }
 
   private handleNextPageClick(): void {
-    if (this.isViewingHistory()) {
-      this.pageForwardHistory();
-    }
-  }
-
-  private async pageForwardHistory(): Promise<void> {
     if (this.canNavigateNext()) {
-      this.historyHead -= this.populatedTileCount;
-      await this.renderHistory(this.historyHead);
+      this.pageForward();
     }
   }
 
-  private async renderHistory(historyOffset: number) {
-    const decisionStart = Math.max(0, this.subjectHistory.length - historyOffset);
-    const decisionEnd = Math.min(this.subjectHistory.length, decisionStart + this.populatedTileCount);
-    const decisionHistory = this.subjectHistory.slice(decisionStart, decisionEnd);
-
-    this.historyMode();
-    await this.renderVirtualPage(decisionHistory);
-  }
-
-  /**
-   * @description
-   * Change the verification grid to the "history mode" layout
-   * Note: Changing to "History Mode" does not render the history. It is only
-   *       responsible for changing the layout of the verification grid.
-   */
-  private historyMode(): void {
-    if (this.subjectHistory.length === 0) {
-      throw new Error("No decisions to show in history");
-    }
-
-    // if the user has completed all their verifications, then all the grid
-    // items would have been removed
-    // therefore, we have to recreate these grid tiles before we can start
-    // rendering history (if they are not present)
-    if (!this.gridTiles || this.gridTiles.length === 0) {
-      // TODO: forcing a synchronous update is hacky, and we should definitely remove it
-      this.performUpdate();
-    }
-  }
-
-  /**
-   * @description
-   * Change the verification grid to the "normal mode" layout
-   * Note: Changing to "Verification Mode" does not stop rendering history
-   *       responsible for changing the layout of the verification grid.
-   */
-  private verificationMode(): void {
+  private async pageForward(): Promise<void> {
+    const proposedViewHead = this.viewHead + this.populatedTileCount;
+    this.viewHead = proposedViewHead;
     this.removeSubSelection();
-    this.historyHead = 0;
   }
 
-  /**
-   * @description
-   * Changes to the "verification mode" and renders the
-   */
+  private pageBackward(): void {
+    // the new viewHead value is only a proposal for the viewHead setter
+    // because the viewHead setter might reject the new value if it is less
+    // than zero or exceeds the length of the subjects array
+    const proposedHead = this.viewHead - this.populatedTileCount;
+    this.viewHead = proposedHead;
+    this.removeSubSelection();
+  }
+
+  /** Changes the viewHead to the current page of undecided results */
   private async resumeVerification(): Promise<void> {
-    await this.renderVirtualPage(this.verificationBuffer);
-    this.verificationMode();
+    this.viewHead = this.decisionHead;
   }
 
   // we ue the effective grid size here so that hidden tiles are not counted
@@ -944,20 +1008,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       throw new Error("No paginator found.");
     }
 
-    this.subjectHistory.push(...this.currentPage);
-    this.currentPage = await this.paginationFetcher.getItems(count);
-    this.verificationBuffer = this.currentPage;
-    await this.renderVirtualPage(this.currentPage);
+    // the viewHead property has a setter that will cause the verification grid
+    // to render the next page of spectrograms when we increase the viewHead
+    this.decisionHead += count;
+    this.viewHead += count;
   }
 
   private canNavigatePrevious(): boolean {
-    const hasHistory = this.pagedItems > 0;
-    const canNavigateBackHistory = this.historyHead < this.subjectHistory.length;
-    return hasHistory && canNavigateBackHistory;
+    return this.viewHead > 0;
   }
 
   private canNavigateNext(): boolean {
-    return this.historyHead > this.populatedTileCount;
+    return this.isViewingHistory();
   }
 
   //#endregion
@@ -1082,38 +1144,46 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   //#region Rendering
 
-  private async renderVirtualPage(nextPage: SubjectWrapper[]): Promise<void> {
+  private renderVirtualPage(): void {
+    const pageSubjects = Array.from(this.currentPage());
+
     // even though making a decision will cause the spectrograms to load and
     // emit the "loading" event (causing the decision buttons to be disabled)
     // there can be some input lag between when we request to change the src
     // and when the spectrograms begin to start rendering
     // I also do this first so that if the functionality below fails then the
     // user can't continue making decisions that won't be saved when downloaded
-    this.setDecisionDisabled(true);
-
-    // by setting the current page, we trigger the template to render the
-    // grid tiles with the new subjects
-    this.currentPage = nextPage;
-
+    //
+    // because it is possible for the new page to be a subset of the current
+    // page. E.g. when decreasing the grid size, we only want to disable the
+    // decision buttons if there are going to be new spectrograms loading
     const elements = this.gridTiles;
+    if (elements.length < pageSubjects.length) {
+      this.setDecisionDisabled(true);
+    }
+
     if (elements === undefined || elements.length === 0) {
+      this.requestUpdate();
       return;
     }
 
     // if this guard condition is true, it means that we have exhausted the
     // entire data source provided by the getPage callback
-    if (nextPage.length === 0) {
+    if (pageSubjects.length === 0) {
+      this.requestUpdate();
       return;
     }
 
     // if we are on the last page, we hide the remaining elements
-    const pagedDelta = elements.length - nextPage.length;
+    const pagedDelta = elements.length - pageSubjects.length;
     if (pagedDelta > 0) {
       this.hideGridItems(pagedDelta);
     } else if (this.hiddenTiles > 0) {
       this.showAllGridItems();
       this.hiddenTiles = 0;
     }
+
+    this.requestUpdate();
   }
 
   private hideGridItems(numberOfTiles: number): void {
@@ -1235,7 +1305,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         <p>
           <strong>No un-validated results found</strong>
         </p>
-        <p>All ${this.pagedItems} annotations are validated</p>
+        <p>All ${this.decisionHead} annotations are validated</p>
       </div>
     `;
   }
@@ -1289,11 +1359,11 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           @overlap="${this.handleTileOverlap}"
         >
           ${when(
-            this.currentPage.length === 0,
+            this.currentPageIndices.start === this.currentPageIndices.end,
             () => this.noItemsTemplate(),
             () => html`
               ${repeat(
-                this.currentPage,
+                this.currentPage(),
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
                     class="grid-tile"
@@ -1371,9 +1441,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
             </sl-tooltip>
 
             <oe-progress-bar
-              history-head="${this.subjectHistory.length - this.historyHead}"
+              history-head="${this.viewHead}"
               total="${ifDefined(this.paginationFetcher?.totalItems)}"
-              completed="${this.subjectHistory.length}"
+              completed="${this.decisionHead}"
             ></oe-progress-bar>
           </div>
         </div>

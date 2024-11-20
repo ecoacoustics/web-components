@@ -68,6 +68,7 @@
       "progressbar",
       "pageerror",
       "spacebar",
+      "appender",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

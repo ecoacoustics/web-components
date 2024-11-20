@@ -3,6 +3,12 @@ import { Tag } from "../models/tag";
 import { ModelParser } from "./modelParser";
 import { Transformer } from "./modelParser";
 
+/**
+ * A callback that will be applied to every subjects url
+ * this can be useful for adding authentication information
+ */
+export type UrlTransformer = (url: string, subject?: Subject) => string;
+
 export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   private static emittedTagArrayWarning = false;
 
@@ -13,7 +19,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   // generic type, which would reduce linting and bundling optimizations
   private static defaultTag = { text: "" } as const satisfies Tag;
 
-  public static parse(original: Subject): SubjectWrapper {
+  public static parse(original: Subject, urlTransformer: UrlTransformer): SubjectWrapper {
     const transformer: Transformer = {
       url: SubjectParser.keyTransformer(["src", "url", "audioLink"]),
       tag: SubjectParser.keyTransformer([
@@ -46,11 +52,12 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const partialModel = SubjectParser.deriveModel(original, transformer);
 
-    const url = (partialModel.url as string) ?? "";
+    const originalUrl = (partialModel.url as string) ?? "";
+    const transformedUrl = urlTransformer(originalUrl, original);
 
     const tag: Tag = SubjectParser.tagParser(partialModel.tag);
 
-    return new SubjectWrapper(original as Subject, url, tag);
+    return new SubjectWrapper(original as Subject, transformedUrl, tag);
   }
 
   private static tagParser(subjectTag: any): Tag {

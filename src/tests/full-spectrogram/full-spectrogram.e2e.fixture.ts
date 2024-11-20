@@ -1,6 +1,12 @@
 import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
-import { getBrowserAttribute, getBrowserSignalValue, getBrowserValue, setBrowserAttribute } from "../helpers";
+import {
+  getBrowserAttribute,
+  getBrowserSignalValue,
+  getBrowserValue,
+  setBrowserAttribute,
+  waitForContentReady,
+} from "../helpers";
 import { AudioModel } from "../../models/recordings";
 import { test } from "../assertions";
 
@@ -31,7 +37,7 @@ class TestPage {
       </oe-axes>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `);
-    await this.page.waitForLoadState("networkidle");
+    await waitForContentReady(this.page, ["oe-axes", "oe-indicator", "oe-spectrogram", "oe-media-controls"]);
   }
 
   public async removeElement(selector: string) {

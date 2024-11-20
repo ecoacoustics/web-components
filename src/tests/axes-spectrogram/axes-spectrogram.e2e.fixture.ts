@@ -1,4 +1,4 @@
-import { setBrowserAttribute } from "../helpers";
+import { setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
@@ -29,9 +29,7 @@ class TestPage {
         ></oe-spectrogram>
       </oe-axes>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-axes");
-    await this.page.waitForSelector("oe-spectrogram");
+    await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
   public async changeSize(size: Size) {

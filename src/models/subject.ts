@@ -4,6 +4,13 @@ import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
 import { EnumValue } from "../helpers/types/advancedTypes";
 
+export enum AudioCachedState {
+  COLD,
+  REQUESTED,
+  SUCCESS,
+  FAILED,
+}
+
 /** Original unprocessed data from the data source */
 export type Subject = Record<PropertyKey, unknown>;
 
@@ -54,10 +61,10 @@ export class SubjectWrapper {
   public subject: Readonly<Subject>;
 
   /** If the audio has been pre-fetched using a GET request */
-  public clientCached = false;
+  public clientCached = AudioCachedState.COLD;
 
   /** If the audio has been warmed/split on the server using a HEAD request */
-  public serverCached = false;
+  public serverCached = AudioCachedState.COLD;
 
   // each row can only have one verification decision
   // but can have multiple classification decisions

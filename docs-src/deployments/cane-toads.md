@@ -21,7 +21,7 @@ You can find your authentication token at the bottom left corner of ecosounds.or
 5. In the bottom left of your profile, you should see a card called 'Authentication Token'. Press the eye icon, then copy the text
 6. Paste the text into this prompt and press 'Ok'
 `;
-let doneDecision = false;
+let madeDecision = false;
 
 function createUrlTransformer(authToken) {
     return (url, subject) => {

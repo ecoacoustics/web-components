@@ -5,6 +5,7 @@ import {
   getBrowserValue,
   setBrowserAttribute,
   setBrowserValue,
+  waitForContentReady,
 } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
@@ -26,20 +27,13 @@ class TestPage {
 
   public async create() {
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="0">
-        <template>
-          <oe-spectrogram></oe-spectrogram>
-        </template>
-      </oe-verification-grid>
+      <oe-verification-grid id="verification-grid" grid-size="0"></oe-verification-grid>
     `);
-    await this.page.waitForLoadState("networkidle");
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
 
     // because the help dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component
     await this.dismissHelpDialogButton().click();
-
-    await this.page.waitForSelector("oe-verification-grid");
-    await this.page.waitForSelector("oe-verification-grid-settings");
   }
 
   public async isFullscreen(): Promise<boolean> {

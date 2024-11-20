@@ -1,10 +1,5 @@
-import { Subject, SubjectWrapper } from "../models/subject";
-import { PageFetcher } from "./gridPageFetcher";
+import { Subject } from "../models/subject";
 import csv from "csvtojson";
-
-type PagingContext = {
-  page: number;
-};
 
 // TODO: this class should use the strategy pattern and perform caching
 /**
@@ -17,7 +12,6 @@ type PagingContext = {
  */
 export class UrlSourcedFetcher {
   public static readonly brand = Symbol("UrlSourcedFetcher");
-  private static readonly pageSize = 10 as const;
   private static readonly unsupportedFormatError = new Error("Unsupported file format");
   private static readonly undeterminedFormatError = new Error("Could not determine file format");
 
@@ -27,7 +21,6 @@ export class UrlSourcedFetcher {
 
   public file?: File;
   private _src!: string;
-  private jsonModels?: ReadonlyArray<Subject>;
 
   /**
    * returns the IANA media type as defined by
@@ -44,7 +37,7 @@ export class UrlSourcedFetcher {
     return this.file.type ?? this.fileExtensionMediaType(this.file.name);
   }
 
-  public async updateSrc(src: string) {
+  public async updateSrc(src: string): Promise<typeof this> {
     this._src = src;
 
     const response = await fetch(src);
@@ -60,49 +53,10 @@ export class UrlSourcedFetcher {
     // w3c File constructor spec
     this.file = new File([responseData], this.src ?? "data", { type: responseContentType ?? "" });
 
-    // TODO: we can probably do this in async, but I haven't checked for side effects
-    this.jsonModels = await this.generateSubjects();
-
     return this;
   }
 
-  public buildCallback(content: SubjectWrapper[]): PageFetcher<PagingContext> {
-    if (!Array.isArray(content)) {
-      throw new Error("Response is not an array");
-    }
-
-    const callback = async (context: PagingContext) => {
-      const currentPage = context.page ?? -1;
-      const nextPage = currentPage + 1;
-
-      const pageSize = UrlSourcedFetcher.pageSize;
-      const startIndex = pageSize * nextPage;
-      const endIndex = startIndex + pageSize;
-
-      // we increment the page number on the context object so that when the
-      // callback is used again, we will know what page we are up to
-      context.page = nextPage;
-
-      const subjects = content.slice(startIndex, endIndex);
-
-      return {
-        subjects,
-        context,
-        totalItems: content.length,
-      };
-    };
-
-    // TODO: remove this hacky way to set the brand property
-    callback.brand = UrlSourcedFetcher.brand;
-
-    return callback;
-  }
-
-  public async subjects(): Promise<ReadonlyArray<Subject> | undefined> {
-    return (this.jsonModels ??= await this.generateSubjects());
-  }
-
-  private async generateSubjects(): Promise<ReadonlyArray<Subject>> {
+  public async generateSubjects(): Promise<Subject[]> {
     if (!this.file) {
       throw new Error("File is not defined");
     }
@@ -120,6 +74,15 @@ export class UrlSourcedFetcher {
       models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
     } else {
       throw UrlSourcedFetcher.unsupportedFormatError;
+    }
+
+    // to itterate over the dataset, we require the input file to be an array
+    // of subjects
+    // if we do not receive an array of subjects, the urlSourcedFetcher will
+    // fallback to an empty dataset and log an error in the console
+    if (!Array.isArray(models)) {
+      console.error("Error passing dataset: Expected an array of subjects. Received", typeof models);
+      return [];
     }
 
     return models;
