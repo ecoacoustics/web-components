@@ -21,7 +21,7 @@ import {
   VerificationGridComponent,
   VerificationGridTileComponent,
 } from "../../components";
-import { SubjectWrapper } from "../../models/subject";
+import { AudioCachedState, SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
@@ -46,8 +46,8 @@ test.describe("while the initial help dialog is open", () => {
 
   test("should not be able to make decisions with keyboard shortcuts", async ({ fixture }) => {
     await fixture.gridComponent().press("Y");
-    const userDecisions = await fixture.userDecisions();
-    expect(userDecisions).toHaveLength(0);
+    const verificationHead = await fixture.getVerificationHead();
+    expect(verificationHead).toEqual(0);
   });
 
   test("should have an option to not show the help dialog again", async ({ fixture }) => {
@@ -989,8 +989,8 @@ test.describe("single verification grid", () => {
         "http://localhost:3000/example.flac",
         "koala" as any,
       );
-      expectedNewModel.clientCached = true;
-      expectedNewModel.serverCached = true;
+      expectedNewModel.clientCached = AudioCachedState.REQUESTED;
+      expectedNewModel.serverCached = AudioCachedState.REQUESTED;
 
       await fixture.changeGridSize(newGridSize);
 
@@ -1005,7 +1005,7 @@ test.describe("single verification grid", () => {
 
     // grid indexes are used to create sub-selection shortcut keys. If this test
     // fails, it is likely that sub-selection keyboard shortcuts do not work
-    test("should have the correct grid index after increasing grid size", async ({ fixture }) => {
+    test("should have the correct grid tile indexes after increasing grid size", async ({ fixture }) => {
       await fixture.changeGridSize(3);
 
       const initialGridSize = await fixture.getGridSize();
@@ -1028,9 +1028,97 @@ test.describe("single verification grid", () => {
       await fixture.changeGridSize(initialGridSize);
 
       const expectedPagedItems = 0;
-      const realizedPagedItems = await fixture.getPagedItems();
+      const realizedPagedItems = await fixture.getViewHead();
 
       expect(realizedPagedItems).toBe(expectedPagedItems);
+    });
+
+    test("should show un-decided items if increasing the grid size from the end of history", async ({ fixture }) => {
+      // we change the initial grid size that we make decisions about to two
+      // so that when we increase the grid size, we know that the new grid size
+      // will fit and show the un-decided items
+      const initialGridSize = 2;
+      await fixture.changeGridSize(initialGridSize);
+
+      // because we make a decision about the entire page, we expect that the
+      // verification grid will auto-page, allowing us to navigate back in
+      // history
+      await fixture.makeDecision(0);
+      await fixture.viewPreviousHistoryPage();
+
+      const newGridSize = initialGridSize + 1;
+      await fixture.changeGridSize(newGridSize);
+
+      // we expect that the first two tiles will hold the same decision that we
+      // made before we increased the grid size
+      const firstTileDecisions = await fixture.getAppliedDecisions(0);
+      const secondTileDecisions = await fixture.getAppliedDecisions(0);
+      const undecidedTileDecisions = await fixture.getAppliedDecisions(0);
+
+      expect(firstTileDecisions.length).toBeGreaterThan(0);
+      expect(secondTileDecisions.length).toBeGreaterThan(0);
+      expect(undecidedTileDecisions.length).toEqual(0);
+    });
+
+    test("should retain sub-selection after increasing grid size", async ({ fixture }) => {
+      const initialGridSize = 2;
+      await fixture.changeGridSize(initialGridSize);
+
+      const testedSubSelection = [0, 1];
+      await fixture.createSubSelection(testedSubSelection);
+      const initialSelectedTiles = await fixture.selectedTileIndexes();
+
+      expect(initialSelectedTiles).toEqual(testedSubSelection);
+    });
+
+    test("should retain decisions after increasing grid size", async ({ fixture }) => {
+      const initialGridSize = 2;
+      await fixture.changeGridSize(initialGridSize);
+
+      // we sub-select the first tile and make a decision about it so that the
+      // verification grid will not auto-page, because the second tile doesn't
+      // have a decision applied to it
+      await fixture.createSubSelection([0]);
+      await fixture.makeDecision(0);
+
+      const newGridSize = initialGridSize + 1;
+      await fixture.changeGridSize(newGridSize);
+
+      // after increasing the grid size, we expect that the first tile will
+      // still have its decision applied to it
+      const testedTileDecisions = await fixture.getAppliedDecisions(0);
+      expect(testedTileDecisions.length).toBeGreaterThan(0);
+    });
+
+    // if we make a decision about a tile, then hide the tile by decreasing the
+    // grid size until it is hidden, the tile should still have the decision
+    // applied, and we should be able to see the decision again if we increase
+    // the grid size until the tile is visible again
+    test("should retain decisions hidden by a decreased grid size", async ({ fixture }) => {
+      const initialGridSize = 2;
+      await fixture.changeGridSize(initialGridSize);
+
+      // we sub-select the last tile and make a decision about it so that when
+      // we decrease the grid size, this last tile will be hidden first
+      await fixture.createSubSelection([1]);
+      await fixture.makeDecision(0);
+
+      const newGridSize = initialGridSize - 1;
+      await fixture.changeGridSize(newGridSize);
+
+      // after changing the grid size down by one, we expect that none of the
+      // tiles will have any decisions applied to them because the only tile
+      // with a decision applied was hidden when the grid size was decreased
+      const undecidedTileDecisions = await fixture.getAppliedDecisions(0);
+      expect(undecidedTileDecisions.length).toEqual(0);
+
+      // we increase the grid size until the tile is visible again
+      await fixture.changeGridSize(initialGridSize);
+
+      // after increasing the grid size, we expect that the last tile will still
+      // have its decision applied to it
+      const testedTileDecisions = await fixture.getAppliedDecisions(1);
+      expect(testedTileDecisions.length).toBeGreaterThan(0);
     });
 
     interface DynamicGridSizeTest {

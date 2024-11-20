@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { catchEvent, removeBrowserAttribute, setBrowserAttribute } from "../../../tests/helpers";
+import { catchEvent, removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../../tests/helpers";
 import { ClassificationComponent } from "./classification";
 import { DecisionEvent } from "../decision";
 import { test } from "../../../tests/assertions";
@@ -20,8 +20,8 @@ class ClassificationComponentFixture {
   public async create() {
     // pull the tag out of the `tag` attribute
     await this.page.setContent("<oe-classification tag='koala'></oe-classification>");
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-classification");
+
+    await waitForContentReady(this.page, ["oe-classification"]);
 
     // mock the verification grid by binding it to the document object
     // this means that we can test that the shortcut keys work correctly without

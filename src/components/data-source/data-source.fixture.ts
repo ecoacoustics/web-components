@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import { removeBrowserAttribute, setBrowserAttribute } from "../../tests/helpers";
+import { removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
-import { Subject } from "../../models/subject";
+import { DownloadableResult, Subject } from "../../models/subject";
 import { test } from "../../tests/assertions";
 
 class DataSourceFixture {
@@ -41,9 +41,7 @@ class DataSourceFixture {
       </oe-verification-grid>
     `);
 
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-data-source");
-    await this.page.waitForSelector("oe-verification-grid");
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
   }
 
   public async setLocalAttribute(value: boolean) {
@@ -80,13 +78,13 @@ class DataSourceFixture {
   }
 
   public async getFileContent(): Promise<ReadonlyArray<Subject>> {
-    return (await this.component().evaluate(
-      (element: DataSourceComponent) => element.urlSourcedFetcher?.subjects() ?? [],
+    return (await this.component().evaluate((element: DataSourceComponent) =>
+      element.urlSourcedFetcher?.generateSubjects(),
     )) as ReadonlyArray<Subject>;
   }
 
-  public async getDownloadResults(): Promise<ReadonlyArray<Subject>> {
-    return await this.component().evaluate((element: DataSourceComponent) => element["urlSourcedResultRows"]());
+  public async getDownloadResults(): Promise<ReadonlyArray<Partial<DownloadableResult>>> {
+    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
   }
 
   public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {

@@ -270,3 +270,12 @@ export async function invokeBrowserMethod<T extends HTMLElement>(
     args,
   );
 }
+
+export async function waitForContentReady(page: Page, selectors: string[] = []): Promise<void> {
+  // wait for the page to emit the "load"
+  await page.waitForLoadState();
+  await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
+
+  // wait until all network requests have completed
+  await page.waitForLoadState("networkidle");
+}

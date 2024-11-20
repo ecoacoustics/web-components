@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { getBrowserValue, setBrowserValue } from "../../tests/helpers";
+import { getBrowserValue, setBrowserValue, waitForContentReady } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
 import { test } from "../../tests/assertions";
@@ -16,8 +16,7 @@ class TestPage {
 
   public async create() {
     await this.page.setContent(`<oe-info-card></oe-info-card>`);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-info-card");
+    await waitForContentReady(this.page, ["oe-info-card"]);
   }
 
   public async changeSubject(subject: Subject) {

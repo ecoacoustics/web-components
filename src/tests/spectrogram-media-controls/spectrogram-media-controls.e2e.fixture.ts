@@ -1,6 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
-import { getBrowserValue, hasBrowserAttribute } from "../helpers";
+import { getBrowserValue, hasBrowserAttribute, waitForContentReady } from "../helpers";
 import { test } from "../assertions";
 
 class MultipleSpectrogramFixture {
@@ -28,7 +28,7 @@ class MultipleSpectrogramFixture {
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
     `);
-    await this.page.waitForLoadState("networkidle");
+    await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithSameIds() {
@@ -45,7 +45,7 @@ class MultipleSpectrogramFixture {
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
     `);
-    await this.page.waitForLoadState("networkidle");
+    await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async isPlayingAudio(component: Locator): Promise<boolean> {

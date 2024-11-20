@@ -10,6 +10,7 @@ import {
   invokeBrowserMethod,
   removeBrowserAttribute,
   setBrowserAttribute,
+  waitForContentReady,
 } from "../helpers";
 import {
   MousePosition,
@@ -118,8 +119,8 @@ class TestPage {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-verification-grid");
+
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
   }
 
   public async createWithClassificationTask() {
@@ -189,8 +190,13 @@ class TestPage {
     return gridTiles.length;
   }
 
-  public async getPagedItems(): Promise<number> {
-    const pagedItems = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "pagedItems");
+  public async getViewHead(): Promise<number> {
+    const pagedItems = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "viewHead");
+    return pagedItems as number;
+  }
+
+  public async getVerificationHead(): Promise<number> {
+    const pagedItems = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "decisionHead");
     return pagedItems as number;
   }
 
@@ -573,13 +579,6 @@ class TestPage {
 
   public async selectFile() {
     await this.fileInputButton().setInputFiles("file.json");
-  }
-
-  public async userDecisions(): Promise<SubjectWrapper[]> {
-    return (await getBrowserValue<VerificationGridComponent>(
-      this.gridComponent(),
-      "subjectHistory",
-    )) as SubjectWrapper[];
   }
 
   public async getPopulatedGridSize(): Promise<number> {

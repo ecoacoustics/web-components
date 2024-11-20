@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute } from "../../tests/helpers";
+import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { VerificationGridComponent } from "./verification-grid";
 import { test } from "../../tests/assertions";
 
@@ -22,8 +22,7 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-verification-grid");
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source"]);
   }
 
   public async createWithDecisionElements() {
@@ -33,8 +32,8 @@ class VerificationGridFixture {
           <div class="template-element"></div>
         </template>
 
-        <oe-decision verified="true" tag="koala" shortcut="Y">Koala</oe-decision>
-        <oe-decision verified="false" tag="koala" shortcut="N">Not Koala</oe-decision>
+        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
 
         <oe-data-source
           src="http://localhost:3000/grid-items.json"
@@ -42,8 +41,7 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-verification-grid");
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
   }
 
   public async setGridSize(value: number) {

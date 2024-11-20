@@ -145,7 +145,7 @@ const tests: VerificationParserTest[] = [
 
 test.describe("SubjectParser", () => {
   for (const testItem of tests) {
-    const result = SubjectParser.parse(testItem.input);
+    const result = SubjectParser.parse(testItem.input, (url) => url);
 
     if ("expectedUrl" in testItem) {
       test(`should have the correct url for a ${testItem.name}`, () => {

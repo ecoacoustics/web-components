@@ -2,6 +2,7 @@ import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { test } from "../../tests/assertions";
+import { waitForContentReady } from "../../tests/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -22,8 +23,7 @@ class TestPage {
             ${slotTemplate ?? ""}
         </oe-media-controls>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-media-controls");
+    await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
   }
 
   public async updateSlot(content: string) {

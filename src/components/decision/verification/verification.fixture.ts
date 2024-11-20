@@ -1,5 +1,11 @@
 import { Page } from "@playwright/test";
-import { catchEvent, removeBrowserAttribute, setBrowserAttribute, setBrowserValue } from "../../../tests/helpers";
+import {
+  catchEvent,
+  removeBrowserAttribute,
+  setBrowserAttribute,
+  setBrowserValue,
+  waitForContentReady,
+} from "../../../tests/helpers";
 import { VerificationComponent } from "./verification";
 import { SelectionObserverType } from "../../verification-grid/verification-grid";
 import { DecisionOptions } from "../../../models/decisions/decision";
@@ -18,8 +24,7 @@ class VerificationComponentFixture {
 
   public async create() {
     await this.page.setContent(`<oe-verification verified="true"></oe-verification>`);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-verification");
+    await waitForContentReady(this.page, ["oe-verification"]);
 
     // mock the verification grid by binding it to the document object
     // this means that we can test that the shortcut keys work correctly without

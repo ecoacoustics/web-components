@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { getBrowserValue } from "../../tests/helpers";
+import { getBrowserValue, waitForContentReady } from "../../tests/helpers";
 import { VerificationGridTileComponent } from "./verification-grid-tile";
 import { test } from "../../tests/assertions";
 
@@ -18,8 +18,7 @@ class VerificationGridTileFixture {
         <oe-spectrogram></oe-spectrogram>
       </oe-verification-grid-tile>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-verification-grid-tile");
+    await waitForContentReady(this.page, ["oe-verification-grid-tile", "oe-spectrogram"]);
   }
 
   public async isSelected(): Promise<boolean> {

@@ -1,5 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
+import { waitForContentReady } from "../../tests/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -15,8 +16,7 @@ class TestPage {
           <div style="width: 200px; height: 200px;"></div>
         </oe-indicator>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-indicator");
+    await waitForContentReady(this.page, ["oe-indicator"]);
   }
 }
 

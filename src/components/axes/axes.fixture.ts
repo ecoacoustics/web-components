@@ -1,5 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
+import { waitForContentReady } from "../../tests/helpers";
 
 class AxesFixture {
   public constructor(public readonly page: Page) {}
@@ -13,8 +14,7 @@ class AxesFixture {
         <div data-testid="inner-content"></div>
       </oe-axes>
     `);
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector("oe-axes");
+    await waitForContentReady(this.page, ["oe-axes"]);
   }
 }
 

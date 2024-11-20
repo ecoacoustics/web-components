@@ -47,7 +47,7 @@ test.describe("data source", () => {
 
       test.describe("downloading results", () => {
         test("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
-          const originalFileContent = await fixture.getFileContent();
+          const originalFileContent = await fixture.getDownloadResults();
 
           // we expect that the oe_frog column has been added to the results
           // because we make an additional tags decision where the additional
@@ -75,7 +75,7 @@ test.describe("data source", () => {
         // meaning that the first row should be empty, the second row should
         // have the decision, and the third row should be empty
         test("should have the correct content for results with a sub-selection", async ({ fixture }) => {
-          const originalFileContent = await fixture.getFileContent();
+          const originalFileContent = await fixture.getDownloadResults();
           const subSelectionIndex = 1;
 
           const expectedResult = originalFileContent;

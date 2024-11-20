@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute } from "../helpers";
+import { setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { test } from "../assertions";
 
@@ -24,9 +24,7 @@ class TestPage {
       <oe-media-controls for="spectrogram"></oe-media-controls>
    `);
 
-    await this.page.waitForSelector("oe-indicator");
-    await this.page.waitForSelector("oe-spectrogram");
-    await this.page.waitForLoadState("networkidle");
+    await waitForContentReady(this.page, ["oe-indicator", "oe-spectrogram", "oe-media-controls"]);
   }
 
   public async removeSpectrogramElement() {

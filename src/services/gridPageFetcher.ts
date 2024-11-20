@@ -1,17 +1,11 @@
-import { Subject, SubjectWrapper } from "../models/subject";
-import { SubjectParser } from "./subjectParser";
+import { AudioCachedState, Subject, SubjectWrapper } from "../models/subject";
+import { SubjectParser, UrlTransformer } from "./subjectParser";
 
 export interface IPageFetcherResponse<T> {
-  subjects: SubjectWrapper[];
+  subjects: Subject[];
   context: T;
   totalItems: number;
 }
-
-/**
- * A callback that will be applied to every subjects url
- * this can be useful for adding authentication information
- */
-export type UrlTransformer = (url: string, subject?: Subject) => string;
 
 /**
  * A context object that is passed to the page fetcher function after every call
@@ -19,46 +13,52 @@ export type UrlTransformer = (url: string, subject?: Subject) => string;
  * page fetcher would increment the page number after every call.
  */
 export type PageFetcherContext = Record<string, unknown>;
+
 // TODO: remove the brand from the PageFetcher. This was done so that we could
 // see if the callback was created by the UrlSourcedFetcher
 export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & {
   brand?: symbol;
 };
 
+export type SubjectAppender = (value: SubjectWrapper[]) => void;
+
 export class GridPageFetcher {
-  public constructor(pagingCallback: PageFetcher, urlTransformer: UrlTransformer) {
+  public constructor(
+    pagingCallback: PageFetcher,
+    urlTransformer: UrlTransformer,
+    subjectQueue: ReadonlyArray<SubjectWrapper>,
+    appender: SubjectAppender,
+  ) {
     this.pagingCallback = pagingCallback;
-    this.converter = SubjectParser;
     this.urlTransformer = urlTransformer;
+    this.subjectQueue = subjectQueue;
+    this.appender = appender;
   }
 
   public totalItems?: number;
   private pagingCallback: PageFetcher;
-  private converter: SubjectParser;
   private urlTransformer: UrlTransformer;
-  private subjectQueueBuffer: SubjectWrapper[] = [];
+  private subjectQueue: ReadonlyArray<SubjectWrapper>;
+  private appender: SubjectAppender;
   private pagingContext: PageFetcherContext = {};
 
   // caches the audio for the next n items in the buffer
   private clientCacheLength = 10;
   private serverCacheLength = 50;
 
-  /**
-   * Removes the next n requestedItems from the queue
-   * If this method is called in a predictable manner, it can perform some
-   * caching operations to improve performance
-   */
-  public async getItems(requestedItems: number): Promise<SubjectWrapper[]> {
-    const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength, requestedItems);
+  public async populateSubjects(decisionHead: number): Promise<void> {
+    const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength) + decisionHead;
 
     // continue to fetch items until we have enough items in the queue
     // or the paging function returns no more items
     // (we have reached the end of the dataset)
-    while (this.subjectQueueBuffer.length < requiredQueueSize) {
-      const nextPage = await this.fetchNextPage();
-      if (nextPage.length === 0) {
+    while (this.subjectQueue.length < requiredQueueSize) {
+      const fetchedPage = await this.fetchNextPage();
+      if (fetchedPage.length === 0) {
         break;
       }
+
+      this.appender(fetchedPage);
     }
 
     // because the queue buffer may have been expanded by the fetchNextPage
@@ -66,24 +66,30 @@ export class GridPageFetcher {
     // these async functions are purposely not awaited because we do not
     // want to block the main thread while doing cache operations
     // TODO: we should make sure that only the latest cache operation is run
-    // TODO: there might be a race condition here with changing the cache
-    // heads a few lines down
-    this.audioCacheClient();
-    this.audioCacheServer();
+    this.refreshCache(decisionHead);
+  }
 
-    return this.subjectQueueBuffer.splice(0, requestedItems);
+  public async refreshCache(decisionHead: number): Promise<void> {
+    this.audioCacheClient(decisionHead);
+    this.audioCacheServer(decisionHead);
   }
 
   // during client caching, we do a GET request to the server for the
   // audio file. Therefore, requests that have already been client cached
   // have also already been server cached. We therefore, remove these
   // requests from the calculations
-  private async audioCacheClient(): Promise<void> {
-    const models = this.subjectQueueBuffer.slice(0, this.clientCacheLength).filter((model) => !model.clientCached);
+  private async audioCacheClient(decisionHead: number): Promise<void> {
+    const models = this.subjectQueue
+      .slice(decisionHead, decisionHead + this.clientCacheLength)
+      .filter((model) => model.clientCached === AudioCachedState.COLD);
 
     for (const model of models) {
-      model.clientCached = true;
-      fetch(model.url);
+      model.clientCached = AudioCachedState.REQUESTED;
+      fetch(model.url)
+        .then((response: Response) => {
+          model.clientCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
+        })
+        .catch(() => (model.clientCached = AudioCachedState.FAILED));
     }
   }
 
@@ -91,12 +97,18 @@ export class GridPageFetcher {
   // audio file. We do this because some servers have to split a large
   // audio file using ffmpeg when a file is requested.
   // by doing a HEAD request, we can warm the ffmpeg split file on the server
-  private async audioCacheServer(): Promise<void> {
-    const models = this.subjectQueueBuffer.slice(0, this.serverCacheLength).filter((model) => !model.serverCached);
+  private async audioCacheServer(viewHead: number): Promise<void> {
+    const models = this.subjectQueue
+      .slice(viewHead, viewHead + this.serverCacheLength)
+      .filter((model) => model.serverCached === AudioCachedState.COLD);
 
     for (const model of models) {
-      model.serverCached = true;
-      fetch(model.url, { method: "HEAD" });
+      model.serverCached = AudioCachedState.REQUESTED;
+      fetch(model.url, { method: "HEAD" })
+        .then((response: Response) => {
+          model.serverCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
+        })
+        .catch(() => (model.serverCached = AudioCachedState.FAILED));
     }
   }
 
@@ -107,17 +119,10 @@ export class GridPageFetcher {
   // page
   private async fetchNextPage(): Promise<SubjectWrapper[]> {
     const { subjects, context, totalItems } = await this.pagingCallback(this.pagingContext);
-    const models = subjects.map(this.converter.parse);
-
-    // TODO: remove this hack that was implemented so that we can add
-    // authentication url parameters
-    models.forEach((model) => {
-      model.url = this.urlTransformer(model.url, model.subject);
-    });
+    const models = subjects.map((subject) => SubjectParser.parse(subject, this.urlTransformer));
 
     this.totalItems = totalItems;
     this.pagingContext = context;
-    this.subjectQueueBuffer.push(...models);
 
     return models;
   }
