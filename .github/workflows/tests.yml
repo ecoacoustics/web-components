@@ -45,5 +45,5 @@ jobs:
         with:
           name: test-report-${{ matrix.os }}
           path: ./test-report/
-          retention-days: 30
+          retention-days: 7
           overwrite: true

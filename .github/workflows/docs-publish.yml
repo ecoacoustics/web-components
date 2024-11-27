@@ -16,7 +16,9 @@ on:
 jobs:
   Documentation-Publish:
     name: Deploy Preview on Netlify
+    timeout-minutes: 5
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: nschloe/action-cached-lfs-checkout@v1

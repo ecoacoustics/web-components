@@ -144,14 +144,17 @@ test.describe("interactions between axes and spectrogram", () => {
     // the initial offset created by the fixture is two seconds
     // by changing the offset attribute to three we should see the x-axis change
     test.skip("changing the offset should change the x-axis correctly", async ({ fixture }) => {
-      const firstLabelText = "14.0";
-      const lastLabelText = "19.0";
+      const xFirstText = "14.0";
+      const xLastText = "19.0";
+
+      const yFirstText = "0.0";
+      const yLastText = "11.0";
 
       // an offset of 14, the offset is larger than the recording length
       // all components should still work correctly
-      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", firstLabelText);
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", xFirstText);
 
-      await fixture.assertAxisRange(firstLabelText, lastLabelText, "0.0", "11.0");
+      await fixture.assertAxisRange(xFirstText, xLastText, yFirstText, yLastText);
     });
   });
 
