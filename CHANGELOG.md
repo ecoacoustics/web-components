@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.5...web-components-v1.2.6) (2024-11-27)
+
+
+### Bug Fixes
+
+* Don't page when pressing skip in history ([b186e2e](https://github.com/ecoacoustics/web-components/commit/b186e2ea2ba49d9a011d0034b761782eaec2ccc6))
+
 ## [1.2.5](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.4...web-components-v1.2.5) (2024-11-14)
 
 
