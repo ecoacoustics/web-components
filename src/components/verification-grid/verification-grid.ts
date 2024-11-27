@@ -1327,7 +1327,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
         tile.model.skipUndecided(hasVerificationTask, requiredTags);
       }
 
-      await this.nextPage();
+      if (!this.isViewingHistory()) {
+        await this.nextPage();
+      }
     };
 
     return html`<button id="skip-button" class="oe-btn-primary" @click="${skipEventHandler}">Skip</button>`;
