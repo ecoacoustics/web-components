@@ -203,7 +203,6 @@ hr {
 oe-spectrogram {
     position: relative;
     width: 300px;
-    height: 100px;
 }
 
 .main-spectrogram {
@@ -231,7 +230,6 @@ oe-spectrogram {
 .search-card-spectrogram {
   position: relative;
   width: 300px;
-  height: 100px;
 }
 
 .search-card-details {

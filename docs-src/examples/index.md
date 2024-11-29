@@ -7,8 +7,6 @@ title: Open Ecoacoustics | Examples
 
 [A2O Search](./search/index.html)
 
-[Verification Grid (Fake)](./verification/index.html)
-
 [Verification Grid (Single Class)](./verification/single/index.html)
 
 [Verification Grid (Single Class - Additional Tags)](./verification/single-additional/index.html)
