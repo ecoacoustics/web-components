@@ -24,7 +24,7 @@ Loading...
             color-map="audacity"
             window-function="hann"
             window-size="512"
-            window-overlap="128"
+            window-overlap="0"
           ></oe-spectrogram>
         </oe-indicator>
       </oe-axes>
@@ -33,19 +33,25 @@ Loading...
     <div class="col">
       <label>
         Window Function
-        <select class="form-select" onchange="updateAttribute('window-function', event.target.value)">
+        <select
+          id="window-function-input"
+          class="form-select"
+          onchange="updateAttribute('window-function', event.target.value)"
+        >
           <option value="">None</option>
-          <option class="default-selected" value="hann">Hann</option>
+          <option value="hann">Hann</option>
           <option value="hamming">Hamming</option>
+          <option value="cosine">Cosine</option>
           <option value="lanczos">Lanczos</option>
           <option value="gaussian">Gaussian</option>
           <option value="tukey">Tukey</option>
           <option value="blackman">Blackman</option>
-          <option value="exact-blackman">Exact Blackman</option>
-          <option value="blackman-harris">Blackman Harris</option>
-          <option value="blackman-nuttall">Blackman Nuttall</option>
+          <option value="exact_blackman">Exact Blackman</option>
           <option value="kaiser">Kaiser</option>
-          <option value="flat-top">Flat Top</option>
+          <option value="nutall">Nutall</option>
+          <option value="blackman_harris">Blackman Harris</option>
+          <option value="blackman_nuttall">Blackman Nuttall</option>
+          <option value="flat_top">Flat Top</option>
         </select>
       </label>
       <label>
@@ -56,9 +62,13 @@ Loading...
           onchange="updateWindowSize(event.target.value)"
         >
           <option value="256">256</option>
-          <option class="default-selected" value="512">512</option>
+          <option value="512">512</option>
           <option value="1024">1024</option>
           <option value="2048">2048</option>
+          <option value="4096">4096</option>
+          <option value="8192">8192</option>
+          <option value="16384">16384</option>
+          <option value="32768">32768</option>
         </select>
       </label>
       <label>
@@ -68,16 +78,20 @@ Loading...
           class="form-select"
           onchange="updateAttribute('window-overlap', event.target.value)"
         >
-          <option class="default-selected" value="0">0</option>
+          <option value="0">0</option>
           <option value="128">128</option>
           <option value="256">256</option>
         </select>
       </label>
       <label>
         Color Map
-        <select class="form-select" onchange="updateAttribute('color-map', event.target.value)">
+        <select
+          id="color-map-input"
+          class="form-select"
+          onchange="updateAttribute('color-map', event.target.value)"
+        >
           <option value="grayscale">Grayscale</option>
-          <option class="default-selected" value="audacity">Audacity</option>
+          <option value="audacity">Audacity</option>
           <option value="raven">Raven</option>
           <option value="cubeHelix">Cube Helix</option>
           <option value="viridis">Viridis</option>
@@ -95,8 +109,12 @@ Loading...
       </label>
       <label>
         Scale
-        <select class="form-select" onchange="booleanAttribute('mel-scale', event.target.value)">
-          <option class="default-selected" value="false">Linear</option>
+        <select
+          id="mel-scale-input"
+          class="form-select"
+          onchange="booleanAttribute('mel-scale', event.target.value)"
+        >
+          <option value="false">Linear</option>
           <option value="true">Mel</option>
         </select>
       </label>
@@ -124,9 +142,13 @@ Loading...
       </label>
       <label>
         URL Source
-        <select class="form-select" onchange="updateAttribute('src', event.target.value)">
+        <select
+          id="src-input"
+          class="form-select"
+          onchange="updateAttribute('src', event.target.value)"
+        >
           <option value="/public/example_1s.wav">1 second .wav</option>
-          <option class="default-selected" value="/public/example.flac">5 second .flac</option>
+          <option value="/public/example.flac">5 second .flac</option>
           <option value="/public/example2.flac">5 second (alternative) .flac</option>
           <option value="/public/example_34s.flac">34 second .flac</option>
         </select>
@@ -136,43 +158,64 @@ Loading...
 </div>
 
 <script>
-/*
-  Known bugs on this page:
-  1. If the user changes the spectrogram settings through the media controls
-     input, the input boxes and code output will not update correctly
-*/
 window.onload = () => {
   setup();
 };
 
-const spectrogram = () => document.querySelector("oe-spectrogram");
+// components
+const spectrogram = () => document.getElementById("playing-spectrogram");
+
+// dropdowns
 const windowSizeInput = () => document.getElementById("window-size-input");
 const windowOverlapInput = () => document.getElementById("window-overlap-input");
+const windowFunctionInput = () => document.getElementById("window-function-input");
+const melScaleInput = () => document.getElementById("mel-scale-input");
+const colorMapInput = () => document.getElementById("color-map-input");
+const spectrogramSourceInput = () => document.getElementById("src-input");
+
+// input boxes
 const brightnessInput = () => document.getElementById("brightness-input");
 const contrastInput = () => document.getElementById("contrast-input");
 
 function setup() {
   spectrogram().addEventListener("loaded", () => updateCodeExample());
-  selectDefaultOptions();
+  spectrogram().addEventListener("options-change", (newOptions) => updateInputs(newOptions.detail));
+
+  // WARNING: HACKY CODE / WORKAROUND AHEAD
+  //
+  // using the html "selected" attribute can sometimes be faulty
+  // e.g. On FireFox if you reload the page (without hard-reload), the dropdown
+  // elements will still have the same selected option before the page reload
+  // but the onchange event will not fire
+  // this can cause the spectrograms options to be different from the values
+  // displayed in the select element dropdowns
+  const defaultDemoSpectrogramOptions = {
+    windowSize: 512,
+    windowOverlap: 0,
+    windowFunction: "hann",
+    colorMap: "audacity",
+    melScale: false,
+    brightness: 0,
+    contrast: 1,
+  };
+
+  updateInputs(defaultDemoSpectrogramOptions);
+
+  updateSelectedDropdown(spectrogramSourceInput(), "/public/example.flac");
 }
 
-// WARNING: HACKY CODE / WORKAROUND AHEAD
-//
-// using the html "selected" attribute can sometimes be faulty
-// e.g. On FireFox if you reload the page (without hard-reload), the dropdown
-// elements will still have the same selected option before the page reload
-// but the onchange event will not fire
-// this can cause the spectrograms options to be different from the values
-// displayed in the select element dropdowns
-function selectDefaultOptions() {
-  const defaultOptions = document.getElementsByClassName("default-selected");
-  for (const element of defaultOptions) {
-    element.selected = true;
-  }
+function updateInputs(options) {
+  updateSelectedDropdown(windowOverlapInput(), options.windowOverlap);
 
-  // this is a hack to get the number inputs set to the correct initial value
-  brightnessInput().value = 0;
-  contrastInput().value = 1;
+  updateWindowSize(options.windowSize);
+  updateSelectedDropdown(windowSizeInput(), options.windowSize);
+
+  updateSelectedDropdown(windowFunctionInput(), options.windowFunction);
+  updateSelectedDropdown(melScaleInput(), options.melScale);
+  updateSelectedDropdown(colorMapInput(), options.colorMap);
+
+  brightnessInput().value = options.brightness;
+  contrastInput().value = options.contrast;
 }
 
 function updateCodeExample() {
@@ -195,7 +238,7 @@ function updateWindowSize(windowSize) {
   const maximumOverlapValue = windowSizeValue / 2;
   setMaximumWindowOverlap(maximumOverlapValue);
 
-  updateAttribute("window-size", event.target.value);
+  updateAttribute("window-size", windowSize);
 }
 
 function setMaximumWindowOverlap(maximum) {
@@ -205,7 +248,7 @@ function setMaximumWindowOverlap(maximum) {
   // set the innerHTML to an empty string to remove all the outdated options
   overlapInputInstance.innerHTML = "";
   
-  const candidateOverlaps = [0, 128, 256, 512, 1024];
+  const candidateOverlaps = [0, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
   const possibleOverlaps = candidateOverlaps.filter(
     (value) => value <= maximum,
   );
@@ -231,18 +274,26 @@ function setMaximumWindowOverlap(maximum) {
 }
 
 function updateAttribute(attribute, value) {
-  document.getElementById("playing-spectrogram").setAttribute(attribute, value);
+  spectrogram().setAttribute(attribute, value);
   updateCodeExample();
 }
 
 function booleanAttribute(attribute, show) {
   const shouldShow = show === "true";
-  const spectrogram = document.getElementById("playing-spectrogram");
+  const spectrogram = spectrogram();
 
   if (shouldShow) {
     spectrogram.setAttribute(attribute, "");
   } else {
     spectrogram.removeAttribute(attribute);
+  }
+}
+
+function updateSelectedDropdown(target, value) {
+  const dropdownOptions = target.querySelectorAll("option");
+
+  for (const element of dropdownOptions) {
+    element.selected = element.value.toString() === value.toString();
   }
 }
 </script>
