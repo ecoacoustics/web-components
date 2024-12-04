@@ -3,10 +3,18 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
+import { DecisionsSlide } from "./slides/decisions";
+import { PagingSlide } from "./slides/paging";
+import { SelectionSlide } from "./slides/selection";
+import { ShortcutsSlide } from "./slides/shortcuts";
+import { AbstractSlide } from "./slides/abstractSlide";
+import { map } from "lit/directives/map.js";
+import { when } from "lit/directives/when.js";
+import { StartTaskSlide } from "./slides/startTask";
 import helpDialogStyles from "./css/style.css?inline";
 
 export interface KeyboardShortcut {
-  key: string;
+  keys: string[];
   description: string;
 }
 
@@ -19,7 +27,7 @@ const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
  * @event open - Dispatched when the dialog is opened
  * @event close - Dispatched when the dialog is closed
  */
-@customElement("oe-verification-help-dialog")
+@customElement("oe-verification-bootstrap")
 export class VerificationHelpDialogComponent extends AbstractComponent(LitElement) {
   static styles = unsafeCSS(helpDialogStyles);
 
@@ -34,6 +42,9 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
   @property({ type: Number })
   public classificationTasksCount!: number;
+
+  @property({ type: Number })
+  public activeSlide = 0;
 
   @state()
   private showRememberOption = true;
@@ -64,12 +75,24 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
+  private slides: AbstractSlide[] = [];
+
   public firstUpdated(): void {
     const shouldShowHelpDialog = localStorage.getItem(helpPreferenceLocalStorageKey) === null;
 
     if (shouldShowHelpDialog) {
       this.showModal();
     }
+  }
+
+  public updated(): void {
+    this.slides = [
+      new ShortcutsSlide(this.decisionShortcuts),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
+      new PagingSlide(),
+      new SelectionSlide(),
+      new StartTaskSlide(this.hasVerificationTask, this.hasClassificationTask),
+    ];
   }
 
   public showModal(showRememberOption = true) {
@@ -92,6 +115,25 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
     }
   }
 
+  private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
+    return html`
+      <p>${slide.description}</p>
+      ${when(
+        slide.isSvg,
+        () => html`<svg viewBox="-10 -10 280 300">${slide.render()}</svg>`,
+        () => slide.render(),
+      )}
+    `;
+  }
+
+  private slidesTemplate(): HTMLTemplateResult {
+    return html`
+      <sl-carousel navigation pagination mouse-dragging>
+        ${map(this.slides, (slide) => html`<sl-carousel-item>${this.renderSlide(slide)}</sl-carousel-item>`)}
+      </sl-carousel>
+    `;
+  }
+
   public render(): HTMLTemplateResult {
     return html`
       <dialog
@@ -100,7 +142,9 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
         @close="${this.handleDialogClose}"
       >
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
-          <h1>Information</h1>
+          <div class="dialog-content">${this.slidesTemplate()}</div>
+
+          <div class="divider"></div>
 
           <form class="dialog-controls" method="dialog">
             <label class="show-again">
@@ -133,6 +177,6 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-verification-help-dialog": VerificationHelpDialogComponent;
+    "oe-verification-bootstrap": VerificationHelpDialogComponent;
   }
 }

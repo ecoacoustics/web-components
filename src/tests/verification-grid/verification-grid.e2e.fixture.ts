@@ -52,7 +52,7 @@ class TestPage {
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
   public skipDecisionButton = () => this.page.locator("#skip-button").first();
 
-  public helpDialog = () => this.page.locator("oe-verification-help-dialog").first();
+  public helpDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public helpDialogContainer = () => this.page.locator("#help-dialog").first();
   public helpDialogPreference = () => this.page.locator("#dialog-preference").first();
   public helpDialogButton = () => this.page.getByTestId("help-dialog-button").first();

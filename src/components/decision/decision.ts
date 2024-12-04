@@ -14,8 +14,8 @@ import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
 import { decisionColor } from "../../services/colors";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { injectionContext } from "../../helpers/constants/contextTokens";
+import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {

@@ -81,6 +81,22 @@ kbd {
     box-shadow: 0.065em 0.065em 0.13em 0.13em rgba(0, 0, 0, 0.5);
     z-index: -2;
   }
+
+  &.depressed {
+    &::before {
+      top: 0.13em;
+      left: 0.13em;
+      background: radial-gradient(circle farthest-corner at top right, #c8c8c8, #ededed);
+      box-shadow: -0.13em -0.13em 0 0.1em rgba(0, 0, 0, 0.2);
+    }
+
+    &::after {
+      top: 0.065em;
+      left: 0.065em;
+      background: radial-gradient(circle farthest-corner at bottom right, #cacaca, #cacaca);
+      box-shadow: -0.065em -0.065em 0.13em 0.13em rgba(0, 0, 0, 0.5);
+    }
+  }
 }
 
 a {
@@ -107,7 +123,7 @@ dialog {
   max-height: 100%;
   background-color: var(--oe-background-color);
   border-radius: var(--oe-border-rounding);
-  padding: 2rem;
+  padding: 0;
 
   animation: fade-in 600ms forwards;
 
@@ -280,6 +296,12 @@ button {
 .oe-btn-danger {
   --background-color: var(--oe-danger-color);
   color: white;
+}
+
+.divider {
+  border-top: var(--oe-border-width) solid var(--oe-border-color);
+  margin-top: var(--oe-spacing-large);
+  margin-bottom: var(--oe-spacing-large);
 }
 
 .oe-pill {

@@ -166,7 +166,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
-  @query("oe-verification-help-dialog")
+  @query("oe-verification-bootstrap")
   private helpDialog!: VerificationHelpDialogComponent;
 
   @query("#grid-container")
@@ -1342,12 +1342,12 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     return html`
-      <oe-verification-help-dialog
+      <oe-verification-bootstrap
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
         verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
         classificationTasksCount="${this.requiredClassificationTags.length}"
-      ></oe-verification-help-dialog>
+      ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">

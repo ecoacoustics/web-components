@@ -7,8 +7,8 @@ import { Tag } from "../../../models/tag";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { map } from "lit/directives/map.js";
+import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -82,14 +82,14 @@ export class ClassificationComponent extends DecisionComponent {
 
     if (this.derivedTrueShortcut) {
       shortcuts.push({
-        key: this.derivedTrueShortcut,
+        keys: [this.derivedTrueShortcut],
         description: `Add a 'true' ${this.tag.text} classification`,
       });
     }
 
     if (this.derivedFalseShortcut) {
       shortcuts.push({
-        key: this.derivedFalseShortcut,
+        keys: [this.derivedFalseShortcut],
         description: `Add a 'false' ${this.tag.text} classification`,
       });
     }

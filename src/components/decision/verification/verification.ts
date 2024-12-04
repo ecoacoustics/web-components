@@ -7,8 +7,8 @@ import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { Tag } from "../../../models/tag";
+import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 
 /**
  * @description
@@ -45,7 +45,7 @@ export class VerificationComponent extends DecisionComponent {
       description += ` and also these tags: ${additionalTagText}`;
     }
 
-    return [{ key: this.shortcut, description }];
+    return [{ keys: [this.shortcut], description }];
   }
 
   protected override handleShortcutKey(event: KeyboardEvent): void {

@@ -1,14 +1,12 @@
-import { SVGTemplateResult } from "lit";
-import { Seconds } from "../../../models/unitConverters";
+import { HTMLTemplateResult, SVGTemplateResult } from "lit";
 
 export abstract class AbstractSlide {
-  public abstract play(): void;
-  public abstract pause(): void;
-  public abstract render(): SVGTemplateResult;
-
-  public get playbackPosition(): Seconds {
-    return this._playbackPosition;
+  public constructor(description: string) {
+    this.description = description;
   }
 
-  protected _playbackPosition: Seconds = 0;
+  public description: string;
+  public isSvg = true;
+
+  public abstract render(): SVGTemplateResult | HTMLTemplateResult;
 }
