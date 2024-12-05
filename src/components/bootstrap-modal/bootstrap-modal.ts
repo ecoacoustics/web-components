@@ -85,9 +85,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new PagingSlide(),
       // new ShortcutsSlide(this.decisionShortcuts, this),
 
+      new ShortcutsSlide(this.decisionShortcuts, this),
       new SelectionSlide(),
       new PagingSlide(),
-      new ShortcutsSlide(this.decisionShortcuts, this),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
     ];
   }
@@ -99,7 +99,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    // TODO: I have temporarily disabled this line for DX purposes
+    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     this.helpDialogElement.close();
   }
 

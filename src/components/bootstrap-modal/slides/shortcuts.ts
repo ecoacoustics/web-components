@@ -73,7 +73,7 @@ export class ShortcutsSlide extends AbstractSlide {
         </div>
 
         <div class="shortcut">
-          <div class="shortcut-keys">${shortcut.map((key) => html`<kbd>${key}</kbd>`)}</div>
+          <div class="shortcut-keys">${shortcut.map((key) => html`<kbd class="depressed">${key}</kbd>`)}</div>
         </div>
       </div>
     `;
