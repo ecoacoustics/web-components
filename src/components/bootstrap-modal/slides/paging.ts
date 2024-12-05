@@ -22,7 +22,7 @@ export class PagingSlide extends AbstractSlide {
         <use href="#decision-buttons" x="125" y="140" />
         <use href="#progress-bar" x="0" y="80" style="--progress: 90px" />
 
-        <use class="cursor" href="#cursor" x="23" y="190" />
+        <use class="paging-cursor" href="#cursor" x="23" y="190" />
       </g>
     `;
   }

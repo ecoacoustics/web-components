@@ -85,10 +85,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new PagingSlide(),
       // new ShortcutsSlide(this.decisionShortcuts, this),
 
+      new SelectionSlide(),
       new PagingSlide(),
       new ShortcutsSlide(this.decisionShortcuts, this),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
-      new SelectionSlide(),
     ];
   }
 

@@ -56,7 +56,7 @@ sl-carousel {
 
 .slide {
   &.paging-slide {
-    @keyframes cursor-movement {
+    @keyframes paging-cursor-movement {
       from {
         transform: translate3d(50%, -50%, 0);
       }
@@ -71,7 +71,44 @@ sl-carousel {
     }
   }
 
-  .cursor {
-    animation: cursor-movement 3s infinite;
+  &.selection-slide {
+    @keyframes selection-cursor-movement {
+      from {
+        transform: translate3d(-70px, -60px, 0);
+      }
+
+      10% {
+        transform: translate3d(-100px, -80px, 0);
+      }
+
+      30% {
+        transform: translate3d(0px, -80px, 0);
+      }
+
+      50% {
+        transform: translate3d(-100px, 0px, 0);
+      }
+
+      60% {
+        transform: translate3d(-100px, 0px, 0);
+      }
+
+      /* selection highlight box animations */
+      80% {
+        transform: translate3d(-200px, -80px, 0);
+      }
+
+      to {
+        transform: none;
+      }
+    }
   }
+}
+
+.paging-cursor {
+  animation: paging-cursor-movement 3s infinite;
+}
+
+.selection-cursor {
+  animation: selection-cursor-movement 5s infinite;
 }
