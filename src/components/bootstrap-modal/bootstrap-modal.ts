@@ -1,6 +1,6 @@
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
 import { DecisionsSlide } from "./slides/decisions";
@@ -28,7 +28,7 @@ const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
  * @event close - Dispatched when the dialog is closed
  */
 @customElement("oe-verification-bootstrap")
-export class VerificationHelpDialogComponent extends AbstractComponent(LitElement) {
+export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   static styles = unsafeCSS(helpDialogStyles);
 
   @property({ type: Array })
@@ -46,14 +46,8 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
   @property({ type: Number })
   public activeSlide = 0;
 
-  @state()
-  private showRememberOption = true;
-
   @query("#help-dialog")
   private helpDialogElement!: HTMLDialogElement;
-
-  @query("#dialog-preference")
-  private dialogPreferenceElement: HTMLInputElement | undefined;
 
   public get open(): boolean {
     return this.helpDialogElement.open;
@@ -87,32 +81,23 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
   public updated(): void {
     this.slides = [
-      new ShortcutsSlide(this.decisionShortcuts),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
-      new PagingSlide(),
       new SelectionSlide(),
+      new PagingSlide(),
+      new ShortcutsSlide(this.decisionShortcuts, this),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       new StartTaskSlide(this.hasVerificationTask, this.hasClassificationTask),
     ];
   }
 
-  public showModal(showRememberOption = true) {
-    this.showRememberOption = showRememberOption;
+  public showModal() {
     this.helpDialogElement.showModal();
     this.dispatchEvent(new CustomEvent("open"));
   }
 
-  private handleDialogClose(): void {
+  public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-
-    const dialogPreferenceElement = this.dialogPreferenceElement;
-    if (!dialogPreferenceElement) {
-      return;
-    }
-
-    const shouldNotShowDialog = dialogPreferenceElement.checked;
-    if (shouldNotShowDialog) {
-      localStorage.setItem(helpPreferenceLocalStorageKey, "true");
-    }
+    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    this.helpDialogElement.close();
   }
 
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
@@ -120,7 +105,7 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
       <p>${slide.description}</p>
       ${when(
         slide.isSvg,
-        () => html`<svg viewBox="-10 -10 280 300">${slide.render()}</svg>`,
+        () => html`<svg viewBox="-10 -10 270 250">${slide.render()}</svg>`,
         () => slide.render(),
       )}
     `;
@@ -136,39 +121,9 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog
-        id="help-dialog"
-        @pointerdown="${() => this.helpDialogElement.close()}"
-        @close="${this.handleDialogClose}"
-      >
+      <dialog id="help-dialog" @pointerdown="${() => this.helpDialogElement.close()}" @close="${this.closeModal}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <div class="dialog-content">${this.slidesTemplate()}</div>
-
-          <div class="divider"></div>
-
-          <form class="dialog-controls" method="dialog">
-            <label class="show-again">
-              ${this.showRememberOption
-                ? html`
-                    <input
-                      id="dialog-preference"
-                      name="dialog-preference"
-                      type="checkbox"
-                      ?checked="${localStorage.getItem(helpPreferenceLocalStorageKey) !== null}"
-                    />
-                    Do not show this dialog again
-                  `
-                : nothing}
-            </label>
-            <button
-              data-testid="dismiss-help-dialog-btn"
-              class="oe-btn oe-btn-primary close-btn"
-              type="submit"
-              autofocus
-            >
-              Close
-            </button>
-          </form>
         </div>
       </dialog>
     `;
@@ -177,6 +132,6 @@ export class VerificationHelpDialogComponent extends AbstractComponent(LitElemen
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-verification-bootstrap": VerificationHelpDialogComponent;
+    "oe-verification-bootstrap": VerificationBootstrapComponent;
   }
 }

@@ -23,7 +23,11 @@
   );
 
   --oe-border-rounding: 1em;
-  --oe-border-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) - 10%));
+  --oe-border-color: hsl(
+    var(--oe-theme-hue),
+    calc(var(--oe-theme-saturation) - 40%),
+    calc(var(--oe-theme-lightness) - 10%)
+  );
   --oe-border-width: 1px;
 
   --oe-backdrop-shadow: 3px 3px 4px;

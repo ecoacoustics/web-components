@@ -125,6 +125,13 @@ dialog {
   border-radius: var(--oe-border-rounding);
   padding: 0;
 
+  /*
+    If outline is not disabled, dialog elements will have an outline around them
+    when they are focused. This is not the behavior that we want, so we disable
+    it here.
+  */
+  outline: none;
+
   animation: fade-in 600ms forwards;
 
   dialog[open] {

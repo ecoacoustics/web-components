@@ -30,7 +30,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser";
-import { VerificationHelpDialogComponent } from "bootstrap-modal/bootstrap-modal";
+import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -167,7 +167,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
   @query("oe-verification-bootstrap")
-  private helpDialog!: VerificationHelpDialogComponent;
+  private helpDialog!: VerificationBootstrapComponent;
 
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
@@ -602,7 +602,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "?": {
-        this.helpDialog.showModal(false);
+        this.helpDialog.showModal();
         break;
       }
     }
@@ -1388,7 +1388,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
             <button
               data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal(false)}"
+              @click="${() => this.helpDialog.showModal()}"
               class="oe-btn-info"
               rel="help"
             >
