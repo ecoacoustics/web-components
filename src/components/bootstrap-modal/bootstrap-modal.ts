@@ -138,6 +138,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return html`
       <dialog id="help-dialog" @pointerdown="${() => this.helpDialogElement.close()}" @close="${this.closeModal}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+          <div class="dialog-header">
+            <h2>Information</h2>
+            <button class="close-button">x</button>
+          </div>
+
           <div class="dialog-content">${this.slidesTemplate()}</div>
         </div>
       </dialog>

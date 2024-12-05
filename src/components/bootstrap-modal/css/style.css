@@ -13,7 +13,13 @@ sl-carousel {
   height: fit-content;
 }
 
-.dialog-controls {
-  display: block;
-  position: relative;
+.dialog-header {
+  display: flex;
+  border-bottom: solid var();
+
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+  }
 }
