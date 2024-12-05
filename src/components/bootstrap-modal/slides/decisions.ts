@@ -26,7 +26,7 @@ export class DecisionsSlide extends AbstractSlide {
 
       ${verificationGridSprite()}
 
-      <use href="#decision-buttons" x="65" y="120" />
+      <use href="#decision-buttons" x="125" y="140" />
     `;
   }
 }

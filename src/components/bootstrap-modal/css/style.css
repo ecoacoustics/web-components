@@ -40,9 +40,38 @@ sl-carousel {
 .shortcut-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  flex: 1;
 
-  border: var(--oe-border-width) solid var(--oe-border-color);
   padding: var(--oe-spacing);
-  border-radius: var(--oe-border-rounding);
+
+  .shortcut-template-title {
+    text-align: center;
+  }
+
+  .shortcut,
+  .shortcut-animation {
+    align-self: center;
+  }
+}
+
+.slide {
+  &.paging-slide {
+    @keyframes cursor-movement {
+      from {
+        transform: translate3d(50%, -50%, 0);
+      }
+
+      60% {
+        transform: translate3d(-5%, 0%, 0);
+      }
+
+      to {
+        transform: none;
+      }
+    }
+  }
+
+  .cursor {
+    animation: cursor-movement 3s infinite;
+  }
 }

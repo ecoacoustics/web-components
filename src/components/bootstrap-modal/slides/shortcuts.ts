@@ -20,6 +20,8 @@ export class ShortcutsSlide extends AbstractSlide {
   private decisionShortcutTemplate() {
     return html`
       <div class="shortcut-card">
+        <h3>Decision shortcuts</h3>
+
         ${map(
           this.shortcuts,
           (shortcut) => html`
@@ -38,14 +40,12 @@ export class ShortcutsSlide extends AbstractSlide {
       ${importSprites(gridTile)}
 
       <use href="#grid-tile" x="10" y="10" />
-      <use href="#grid-tile" x="80" y="10" />
-      <use href="#grid-tile" x="150" y="10" />
-      <use href="#grid-tile" x="220" y="10" />
+      <use href="#grid-tile" x="100" y="10" />
+      <use href="#grid-tile" x="190" y="10" />
 
-      <use href="#grid-tile" x="10" y="60" />
-      <use href="#grid-tile" x="80" y="60" />
-      <use href="#grid-tile" x="150" y="60" />
-      <use href="#grid-tile" x="220" y="60" />
+      <use href="#grid-tile" x="10" y="80" />
+      <use href="#grid-tile" x="100" y="80" />
+      <use href="#grid-tile" x="190" y="80" />
     `;
   }
 
@@ -54,20 +54,20 @@ export class ShortcutsSlide extends AbstractSlide {
       ${importSprites(gridTile)}
 
       <use href="#grid-tile" x="10" y="10" />
-      <use href="#grid-tile" x="80" y="10" />
-      <use href="#grid-tile" x="150" y="10" />
-      <use href="#grid-tile" x="220" y="10" />
+      <use href="#grid-tile" x="100" y="10" />
+      <use href="#grid-tile" x="190" y="10" />
 
-      <use href="#grid-tile" x="10" y="60" />
-      <use href="#grid-tile" x="80" y="60" />
-      <use href="#grid-tile" x="150" y="60" />
-      <use href="#grid-tile" x="220" y="60" />
+      <use href="#grid-tile" x="10" y="80" />
+      <use href="#grid-tile" x="100" y="80" />
+      <use href="#grid-tile" x="190" y="80" />
     `;
   }
 
-  private shortcutTemplate(shortcut: string[], animation: SVGTemplateResult) {
+  private shortcutTemplate(shortcut: string[], animation: SVGTemplateResult, shortcutTitle: string) {
     return html`
       <div class="shortcut-card">
+        <h3 class="shortcut-template-title">${shortcutTitle}</h3>
+
         <div class="shortcut-animation">
           <svg>${animation}</svg>
         </div>
@@ -80,10 +80,12 @@ export class ShortcutsSlide extends AbstractSlide {
   }
 
   public render() {
+    // prettier-ignore
     return html`
       <div class="shortcut-slide">
-        ${this.decisionShortcutTemplate()} ${this.shortcutTemplate(["Ctrl", "A"], this.selectAllAnimation())}
-        ${this.shortcutTemplate(["Esc"], this.deselectAllAnimation())}
+        ${this.decisionShortcutTemplate()}
+        ${this.shortcutTemplate(["Ctrl", "A"], this.selectAllAnimation(), "Select all")}
+        ${this.shortcutTemplate(["Esc"], this.deselectAllAnimation(), "De-select all")}
       </div>
 
       <button @click="${() => this.dialog.closeModal()}" class="oe-btn-primary">Close</button>

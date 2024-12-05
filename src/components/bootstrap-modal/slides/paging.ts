@@ -5,7 +5,7 @@ import { verificationGridSprite } from "./sprites/verification-grid.sprite";
 import gridTile from "./sprites/grid-tile.svg?raw";
 import decisionButtons from "./sprites/decision-buttons.svg?raw";
 import progressBar from "./sprites/progress-bar.svg?raw";
-import attentionCircle from "./sprites/attention-circle.svg?raw";
+import cursorSprite from "./sprites/cursor.svg?raw";
 
 export class PagingSlide extends AbstractSlide {
   public constructor() {
@@ -14,14 +14,16 @@ export class PagingSlide extends AbstractSlide {
 
   public render() {
     return svg`
-      ${importSprites(gridTile, decisionButtons, progressBar, attentionCircle)}
+      <g class="paging-slide">
+        ${importSprites(gridTile, decisionButtons, progressBar, cursorSprite)}
 
-      ${verificationGridSprite()}
+        ${verificationGridSprite()}
 
-      <use href="#decision-buttons" x="65" y="120" />
-      <use href="#progress-bar" x="0" y="40" style="--progress: 90px" />
+        <use href="#decision-buttons" x="125" y="140" />
+        <use href="#progress-bar" x="0" y="80" style="--progress: 90px" />
 
-      <use href="#attention-circle" x="-30" y="0" style="--progress: 90px" />
+        <use class="cursor" href="#cursor" x="23" y="190" />
+      </g>
     `;
   }
 }

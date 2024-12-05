@@ -10,7 +10,6 @@ import { ShortcutsSlide } from "./slides/shortcuts";
 import { AbstractSlide } from "./slides/abstractSlide";
 import { map } from "lit/directives/map.js";
 import { when } from "lit/directives/when.js";
-import { StartTaskSlide } from "./slides/startTask";
 import helpDialogStyles from "./css/style.css?inline";
 
 export interface KeyboardShortcut {
@@ -81,11 +80,15 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public updated(): void {
     this.slides = [
-      new SelectionSlide(),
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
+      // new SelectionSlide(),
+      // new PagingSlide(),
+      // new ShortcutsSlide(this.decisionShortcuts, this),
+
       new PagingSlide(),
       new ShortcutsSlide(this.decisionShortcuts, this),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
-      new StartTaskSlide(this.hasVerificationTask, this.hasClassificationTask),
+      new SelectionSlide(),
     ];
   }
 
@@ -105,7 +108,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <p>${slide.description}</p>
       ${when(
         slide.isSvg,
-        () => html`<svg viewBox="-10 -10 270 250">${slide.render()}</svg>`,
+        () => html`<svg class="slide" viewBox="-10 0 390 230">${slide.render()}</svg>`,
         () => slide.render(),
       )}
     `;
