@@ -1,8 +1,5 @@
 .shortcut-slide {
   @keyframes selection-animation {
-    from {
-    }
-
     to {
       --oe-panel-color: var(--oe-selected-color);
     }

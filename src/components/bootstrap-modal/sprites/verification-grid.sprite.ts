@@ -22,7 +22,7 @@ export function verificationGridSprite(): SVGTemplateResult {
     <g class="grid-tiles">
       ${Array.from({ length: gridTileCount }).map((_, index) => {
         const position = gridTilePosition(index);
-        return svg`<use href="#grid-tile" x="${position.x}" y="${position.y}" />`;
+        return svg`<use class="tile-${index}" href="#grid-tile" x="${position.x}" y="${position.y}" />`;
       })}
     </g>
   `;

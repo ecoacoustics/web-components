@@ -3,7 +3,7 @@ import { AbstractSlide } from "../abstractSlide";
 import { html, svg, SVGTemplateResult } from "lit";
 import { map } from "lit/directives/map.js";
 import { KeyboardShortcut, VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import gridTile from "../sprites/grid-tile.svg?raw";
+import gridTile from "../../sprites/grid-tile.svg?raw";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[], dialog: VerificationBootstrapComponent) {

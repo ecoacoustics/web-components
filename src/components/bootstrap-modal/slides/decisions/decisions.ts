@@ -1,9 +1,9 @@
 import { AbstractSlide } from "../abstractSlide";
 import { svg } from "lit";
 import { importSprites } from "../../../../helpers/svgs/imports";
-import { verificationGridSprite } from "../sprites/verification-grid.sprite";
-import decisionButtons from "../sprites/decision-buttons.svg?raw";
-import gridTile from "../sprites/grid-tile.svg?raw";
+import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
+import decisionButtons from "../../sprites/decision-buttons.svg?raw";
+import gridTile from "../../sprites/grid-tile.svg?raw";
 
 export class DecisionsSlide extends AbstractSlide {
   public constructor(verificationTask: boolean, classificationTask: boolean) {
