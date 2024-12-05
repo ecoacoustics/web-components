@@ -1,9 +1,9 @@
-import { importSprites } from "../../../helpers/svgs/imports";
-import { AbstractSlide } from "./abstractSlide";
+import { importSprites } from "../../../../helpers/svgs/imports";
+import { AbstractSlide } from "../abstractSlide";
 import { html, svg, SVGTemplateResult } from "lit";
 import { map } from "lit/directives/map.js";
 import { KeyboardShortcut, VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import gridTile from "./sprites/grid-tile.svg?raw";
+import gridTile from "../sprites/grid-tile.svg?raw";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[], dialog: VerificationBootstrapComponent) {
@@ -39,13 +39,13 @@ export class ShortcutsSlide extends AbstractSlide {
     return svg`
       ${importSprites(gridTile)}
 
-      <use href="#grid-tile" x="10" y="10" />
-      <use href="#grid-tile" x="100" y="10" />
-      <use href="#grid-tile" x="190" y="10" />
+      <use class="selection-tile" href="#grid-tile" x="10" y="10" />
+      <use class="selection-tile" href="#grid-tile" x="100" y="10" />
+      <use class="selection-tile" href="#grid-tile" x="190" y="10" />
 
-      <use href="#grid-tile" x="10" y="80" />
-      <use href="#grid-tile" x="100" y="80" />
-      <use href="#grid-tile" x="190" y="80" />
+      <use class="selection-tile" href="#grid-tile" x="10" y="80" />
+      <use class="selection-tile" href="#grid-tile" x="100" y="80" />
+      <use class="selection-tile" href="#grid-tile" x="190" y="80" />
     `;
   }
 
@@ -53,13 +53,13 @@ export class ShortcutsSlide extends AbstractSlide {
     return svg`
       ${importSprites(gridTile)}
 
-      <use href="#grid-tile" x="10" y="10" />
-      <use href="#grid-tile" x="100" y="10" />
-      <use href="#grid-tile" x="190" y="10" />
+      <use class="deselection-tile" href="#grid-tile" x="10" y="10" />
+      <use class="deselection-tile" href="#grid-tile" x="100" y="10" />
+      <use class="deselection-tile" href="#grid-tile" x="190" y="10" />
 
-      <use href="#grid-tile" x="10" y="80" />
-      <use href="#grid-tile" x="100" y="80" />
-      <use href="#grid-tile" x="190" y="80" />
+      <use class="deselection-tile" href="#grid-tile" x="10" y="80" />
+      <use class="deselection-tile" href="#grid-tile" x="100" y="80" />
+      <use class="deselection-tile" href="#grid-tile" x="190" y="80" />
     `;
   }
 
@@ -73,7 +73,7 @@ export class ShortcutsSlide extends AbstractSlide {
         </div>
 
         <div class="shortcut">
-          <div class="shortcut-keys">${shortcut.map((key) => html`<kbd class="depressed">${key}</kbd>`)}</div>
+          <div class="shortcut-keys">${shortcut.map((key) => html`<kbd>${key}</kbd>`)}</div>
         </div>
       </div>
     `;
@@ -88,7 +88,7 @@ export class ShortcutsSlide extends AbstractSlide {
         ${this.shortcutTemplate(["Esc"], this.deselectAllAnimation(), "De-select all")}
       </div>
 
-      <button @click="${() => this.dialog.closeModal()}" class="oe-btn-primary">Close</button>
+      <button @click="${() => this.dialog.closeModal()}" class="oe-btn-primary">Begin Verification</button>
     `;
   }
 }

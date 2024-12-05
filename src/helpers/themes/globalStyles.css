@@ -132,11 +132,14 @@ hr {
 
 dialog {
   position: relative;
+
+  min-width: 70%;
+  min-height: 70%;
+  max-width: calc(100dvw - var(--oe-spacing));
+  max-height: calc(100dvh - var(--oe-spacing));
+
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);
-  min-width: 70%;
-  max-width: 80%;
-  max-height: 100%;
   background-color: var(--oe-background-color);
   border-radius: var(--oe-border-rounding);
   padding: 0;

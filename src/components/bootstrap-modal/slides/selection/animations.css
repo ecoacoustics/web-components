@@ -1,0 +1,33 @@
+.selection-slide {
+  @keyframes selection-cursor-movement {
+    from {
+      transform: translate3d(-70px, -60px, 0);
+    }
+
+    10% {
+      transform: translate3d(-100px, -80px, 0);
+    }
+
+    30% {
+      transform: translate3d(0px, -80px, 0);
+    }
+
+    50%,
+    60% {
+      transform: translate3d(-100px, 0px, 0);
+    }
+
+    /* selection highlight box animations */
+    80% {
+      transform: translate3d(-200px, -80px, 0);
+    }
+
+    to {
+      transform: none;
+    }
+  }
+}
+
+.selection-cursor {
+  animation: selection-cursor-movement 5s infinite;
+}

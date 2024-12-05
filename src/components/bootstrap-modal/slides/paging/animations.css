@@ -1,0 +1,20 @@
+.paging-slide {
+  @keyframes paging-cursor-movement {
+    from {
+      transform: translate3d(50%, -50%, 0);
+    }
+
+    60% {
+      transform: translate3d(-5%, 0%, 0);
+    }
+
+    to {
+      transform: none;
+    }
+  }
+}
+
+.paging-cursor {
+  animation: paging-cursor-movement 3s infinite;
+  animation-delay: 1s;
+}

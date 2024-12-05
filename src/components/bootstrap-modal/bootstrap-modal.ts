@@ -3,14 +3,19 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
-import { DecisionsSlide } from "./slides/decisions";
-import { PagingSlide } from "./slides/paging";
-import { SelectionSlide } from "./slides/selection";
-import { ShortcutsSlide } from "./slides/shortcuts";
 import { AbstractSlide } from "./slides/abstractSlide";
 import { map } from "lit/directives/map.js";
 import { when } from "lit/directives/when.js";
+import { DecisionsSlide } from "./slides/decisions/decisions";
+import { PagingSlide } from "./slides/paging/paging";
+import { SelectionSlide } from "./slides/selection/selection";
+import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
+
+import decisionSlideStyles from "./slides/decisions/animations.css?inline";
+import pagingSlideStyles from "./slides/paging/animations.css?inline";
+import selectionSlideStyles from "./slides/selection/animations.css?inline";
+import shortcutSlideStyles from "./slides/shortcuts/animations.css?inline";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -28,7 +33,13 @@ const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
  */
 @customElement("oe-verification-bootstrap")
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
-  static styles = unsafeCSS(helpDialogStyles);
+  static styles = [
+    unsafeCSS(helpDialogStyles),
+    unsafeCSS(decisionSlideStyles),
+    unsafeCSS(pagingSlideStyles),
+    unsafeCSS(selectionSlideStyles),
+    unsafeCSS(shortcutSlideStyles),
+  ];
 
   @property({ type: Array })
   public decisionElements!: DecisionComponent[];
@@ -85,8 +96,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new PagingSlide(),
       // new ShortcutsSlide(this.decisionShortcuts, this),
 
-      new ShortcutsSlide(this.decisionShortcuts, this),
       new SelectionSlide(),
+      new ShortcutsSlide(this.decisionShortcuts, this),
       new PagingSlide(),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
     ];

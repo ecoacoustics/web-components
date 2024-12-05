@@ -1,11 +1,11 @@
-import { importSprites } from "../../../helpers/svgs/imports";
-import { AbstractSlide } from "./abstractSlide";
+import { importSprites } from "../../../../helpers/svgs/imports";
+import { AbstractSlide } from "../abstractSlide";
 import { svg } from "lit";
-import { verificationGridSprite } from "./sprites/verification-grid.sprite";
-import gridTile from "./sprites/grid-tile.svg?raw";
-import decisionButtons from "./sprites/decision-buttons.svg?raw";
-import progressBar from "./sprites/progress-bar.svg?raw";
-import cursorSprite from "./sprites/cursor.svg?raw";
+import { verificationGridSprite } from "../sprites/verification-grid.sprite";
+import gridTile from "../sprites/grid-tile.svg?raw";
+import decisionButtons from "../sprites/decision-buttons.svg?raw";
+import progressBar from "../sprites/progress-bar.svg?raw";
+import cursorSprite from "../sprites/cursor.svg?raw";
 
 export class PagingSlide extends AbstractSlide {
   public constructor() {
