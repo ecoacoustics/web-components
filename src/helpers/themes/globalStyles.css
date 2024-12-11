@@ -153,12 +153,12 @@ dialog {
     the dialog, and that you should dismiss the dialog to interact with the
     main page content.
 
-    Sometimes (on really small screens), 70% of the screen width or height does
-    not leave enough space for the dialog to be clearly raised above the main
-    content.
+    Sometimes (on really small screens), percentage of the screen width or
+    height does not leave enough space for the dialog to be clearly raised above
+    the main content.
   */
-  max-width: min(70%, calc(100dvw - var(--oe-spacing-large)));
-  max-height: min(70%, calc(100dvh - var(--oe-spacing-large)));
+  max-width: min(80%, calc(100dvw - var(--oe-spacing-large)));
+  max-height: min(80%, calc(100dvh - var(--oe-spacing-large)));
 
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);

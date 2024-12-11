@@ -4,7 +4,6 @@ import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
 import { AbstractSlide } from "./slides/abstractSlide";
-import { map } from "lit/directives/map.js";
 import { when } from "lit/directives/when.js";
 import { DecisionsSlide } from "./slides/decisions/decisions";
 import { PagingSlide } from "./slides/paging/paging";
@@ -17,6 +16,7 @@ import decisionSlideStyles from "./slides/decisions/animations.css?inline";
 import pagingSlideStyles from "./slides/paging/animations.css?inline";
 import selectionSlideStyles from "./slides/selection/animations.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/animations.css?inline";
+import { loop } from "../../helpers/directives";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -96,14 +96,13 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new ShortcutsSlide(this.decisionShortcuts, this),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       new SelectionSlide(),
       new PagingSlide(),
     ];
 
     if (!this.isMobile) {
-      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this));
+      this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }
   }
 
@@ -133,7 +132,20 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private slidesTemplate(): HTMLTemplateResult {
     return html`
       <sl-carousel navigation pagination mouse-dragging>
-        ${map(this.slides, (slide) => html`<sl-carousel-item>${this.renderSlide(slide)}</sl-carousel-item>`)}
+        ${loop(
+          this.slides,
+          (slide, { last }) => html`
+            <sl-carousel-item>
+              ${this.renderSlide(slide)}
+              <div class="slide-footer">
+                ${when(
+                  last,
+                  () => html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Begin</button>`,
+                )}
+              </div>
+            </sl-carousel-item>
+          `,
+        )}
       </sl-carousel>
     `;
   }

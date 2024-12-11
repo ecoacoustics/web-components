@@ -11,12 +11,6 @@ sl-carousel {
   height: calc(100% - 4rem);
 }
 
-.dialog-content {
-  position: relative;
-  height: fit-content;
-  padding: 2rem;
-}
-
 .dialog-header {
   display: flex;
   background-color: var(--oe-panel-color);
@@ -37,4 +31,14 @@ sl-carousel {
   .close-button {
     line-height: 1;
   }
+}
+
+.dialog-content {
+  position: relative;
+  height: fit-content;
+  padding: 2rem;
+}
+
+.dialog-footer {
+  padding: 1rem;
 }

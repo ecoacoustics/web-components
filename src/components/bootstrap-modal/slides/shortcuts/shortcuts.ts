@@ -2,20 +2,17 @@ import { importSprites } from "../../../../helpers/svgs/imports";
 import { AbstractSlide } from "../abstractSlide";
 import { html, svg } from "lit";
 import { map } from "lit/directives/map.js";
-import { KeyboardShortcut, VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
+import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 import gridTile from "../../sprites/grid-tile.svg?raw";
 
 export class ShortcutsSlide extends AbstractSlide {
-  public constructor(shortcuts: KeyboardShortcut[], dialog: VerificationBootstrapComponent) {
+  public constructor(shortcuts: KeyboardShortcut[]) {
     super("You can use the following shortcuts to complete your tasks");
-
     this.shortcuts = shortcuts;
-    this.dialog = dialog;
   }
 
   public override isSvg = false;
   private shortcuts: KeyboardShortcut[];
-  private dialog: VerificationBootstrapComponent;
 
   private decisionShortcutTemplate() {
     return html`
@@ -81,8 +78,6 @@ export class ShortcutsSlide extends AbstractSlide {
           ${this.selectionShortcutsTemplate()}
         </div>
       </div>
-
-      <button @click="${() => this.dialog.closeModal()}" class="oe-btn-primary">Begin</button>
     `;
   }
 }
