@@ -12,6 +12,7 @@ import { SelectionSlide } from "./slides/selection/selection";
 import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
 
+// TOOD: These should probably move somewhere else
 import decisionSlideStyles from "./slides/decisions/animations.css?inline";
 import pagingSlideStyles from "./slides/paging/animations.css?inline";
 import selectionSlideStyles from "./slides/selection/animations.css?inline";
@@ -94,13 +95,16 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       // new SelectionSlide(),
       // new PagingSlide(),
-      // new ShortcutsSlide(this.decisionShortcuts, this),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       new ShortcutsSlide(this.decisionShortcuts, this),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       new SelectionSlide(),
       new PagingSlide(),
     ];
+
+    if (!this.isMobile) {
+      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this));
+    }
   }
 
   public showModal() {
@@ -111,7 +115,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
     // TODO: I have temporarily disabled this line for DX purposes
-    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     this.helpDialogElement.close();
   }
 
@@ -139,8 +143,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="help-dialog" @pointerdown="${() => this.helpDialogElement.close()}" @close="${this.closeModal}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <div class="dialog-header">
-            <h2>Information</h2>
-            <button class="close-button">x</button>
+            <h2 class="dialog-title">Information</h2>
+            <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </div>
 
           <div class="dialog-content">${this.slidesTemplate()}</div>

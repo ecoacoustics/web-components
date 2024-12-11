@@ -133,10 +133,32 @@ hr {
 dialog {
   position: relative;
 
-  min-width: 70%;
-  min-height: 70%;
-  max-width: calc(100dvw - var(--oe-spacing));
-  max-height: calc(100dvh - var(--oe-spacing));
+  height: max-content;
+  height: max-content;
+
+  /*
+    We have a minimum width and height so that all dialogs are clearly not a
+    part of the main content.
+    By setting a minimum width and height of 50%, we ensure that the dialog will
+    always look raised against the main content.
+  */
+  min-width: 50%;
+  min-height: 50%;
+
+  /*
+    Similar to the minimum width and height, we set a maximum width and height
+    to ensure that there is always a clear distinction between the dialog and
+    the main content.
+    It should always be clearly visible that there is interactive content under
+    the dialog, and that you should dismiss the dialog to interact with the
+    main page content.
+
+    Sometimes (on really small screens), 70% of the screen width or height does
+    not leave enough space for the dialog to be clearly raised above the main
+    content.
+  */
+  max-width: min(70%, calc(100dvw - var(--oe-spacing-large)));
+  max-height: min(70%, calc(100dvh - var(--oe-spacing-large)));
 
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);

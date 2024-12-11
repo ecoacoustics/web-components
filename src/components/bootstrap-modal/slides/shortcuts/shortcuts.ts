@@ -19,9 +19,6 @@ export class ShortcutsSlide extends AbstractSlide {
 
   private decisionShortcutTemplate() {
     return html`
-      <div class="shortcut-card">
-        <h3>Decision shortcuts</h3>
-
         ${map(
           this.shortcuts,
           (shortcut) => html`
@@ -49,6 +46,17 @@ export class ShortcutsSlide extends AbstractSlide {
     `;
   }
 
+  private selectionShortcutsTemplate() {
+    // prettier-ignore
+    return html`
+      <svg viewBox="0 0 270 140">${this.gridAnimation()}</svg>
+      <div class="selection-shortcut-keys">
+        ${this.shortcutTemplate(["Ctrl", "A"], "Select all")}
+        ${this.shortcutTemplate(["Esc"], "De-select all")}
+      </div>
+    `;
+  }
+
   private shortcutTemplate(shortcut: string[], shortcutTitle: string) {
     return html`
       <div>
@@ -61,16 +69,16 @@ export class ShortcutsSlide extends AbstractSlide {
   }
 
   public render() {
-    // prettier-ignore
     return html`
       <div class="shortcut-slide">
-        ${this.decisionShortcutTemplate()}
+        <div class="decision-shortcuts shortcut-card">
+          <h3>Decision Shortcuts</h3>
+          ${this.decisionShortcutTemplate()}
+        </div>
+
         <div class="selection-shortcuts shortcut-card">
-          <svg viewBox="0 0 270 140">${this.gridAnimation()}</svg>
-          <div class="selection-shortcut-keys">
-            ${this.shortcutTemplate(["Ctrl", "A"], "Select all")}
-            ${this.shortcutTemplate(["Esc"], "De-select all")}
-          </div>
+          <h3>Selection Shortcuts</h3>
+          ${this.selectionShortcutsTemplate()}
         </div>
       </div>
 

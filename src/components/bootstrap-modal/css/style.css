@@ -7,23 +7,34 @@ sl-carousel {
 }
 
 .dialog-container {
-  position: absolute;
+  position: relative;
   height: calc(100% - 4rem);
-  padding: 2rem;
 }
 
 .dialog-content {
   position: relative;
   height: fit-content;
+  padding: 2rem;
 }
 
 .dialog-header {
   display: flex;
-  border-bottom: solid var();
+  background-color: var(--oe-panel-color);
+  padding: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  /* create a box shadow at the bottom */
+  box-shadow: var(--oe-box-shadow);
 
   justify-content: space-between;
+  align-items: center;
 
-  h2 {
+  .dialog-title {
     margin: 0;
+  }
+
+  .close-button {
+    line-height: 1;
   }
 }
