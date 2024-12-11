@@ -1,3 +1,7 @@
+:host {
+  --decision-color: var(--oe-panel-color);
+}
+
 sl-carousel {
   max-height: 550px;
 }

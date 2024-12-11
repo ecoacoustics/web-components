@@ -39,13 +39,13 @@ export class ShortcutsSlide extends AbstractSlide {
     return svg`
       ${importSprites(gridTile)}
 
-      <use class="grid-tile" href="#grid-tile" x="10" y="10" />
-      <use class="grid-tile" href="#grid-tile" x="100" y="10" />
-      <use class="grid-tile" href="#grid-tile" x="190" y="10" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="10" y="10" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="100" y="10" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="190" y="10" />
 
-      <use class="grid-tile" href="#grid-tile" x="10" y="80" />
-      <use class="grid-tile" href="#grid-tile" x="100" y="80" />
-      <use class="grid-tile" href="#grid-tile" x="190" y="80" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="10" y="80" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="100" y="80" />
+      <use class="shortcut-grid-tile" href="#grid-tile" x="190" y="80" />
     `;
   }
 

@@ -1,0 +1,67 @@
+.decisions-slide {
+  @keyframes decisions-cursor-movement {
+    from {
+      transform: translate3d(15%, 0, 0);
+    }
+
+    50% {
+      transform: none;
+    }
+
+    to {
+      transform: translate3d(15%, 0, 0);
+    }
+  }
+
+  @keyframes decisions-slide-movement {
+    from {
+      transform: translate3d(100%, 0, 0);
+    }
+
+    50% {
+      transform: none;
+    }
+  }
+
+  @keyframes decisions-slide-decisions-1 {
+    from {
+      --decision-color: green;
+    }
+
+    50% {
+      --decision-color: green;
+    }
+
+    to {
+      --decision-color: red;
+    }
+  }
+
+  @keyframes decisions-slide-decisions-2 {
+    from {
+      --decision-color: var(--oe-panel-color);
+    }
+
+    to {
+      --decision-color: var(--oe-panel-color);
+    }
+  }
+}
+
+.decisions-cursor {
+  animation: decisions-cursor-movement 8s infinite;
+}
+
+.decisions-pages {
+  animation: decisions-slide-movement 4s infinite;
+  animation-delay: 2s;
+}
+
+.decisions-page-1 {
+  animation: decisions-slide-decisions-1 8s infinite;
+  transform: translate3d(-100%, 0, 0);
+}
+
+.decisions-page-2 {
+  animation: decisions-slide-decisions-2 8s infinite;
+}

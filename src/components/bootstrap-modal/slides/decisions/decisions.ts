@@ -4,6 +4,7 @@ import { importSprites } from "../../../../helpers/svgs/imports";
 import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
 import decisionButtons from "../../sprites/decision-buttons.svg?raw";
 import gridTile from "../../sprites/grid-tile.svg?raw";
+import cursorSprite from "../../sprites/cursor.svg?raw";
 
 export class DecisionsSlide extends AbstractSlide {
   public constructor(verificationTask: boolean, classificationTask: boolean) {
@@ -22,11 +23,16 @@ export class DecisionsSlide extends AbstractSlide {
 
   public render() {
     return svg`
-      ${importSprites(gridTile, decisionButtons)}
+      ${importSprites(gridTile, decisionButtons, cursorSprite)}
 
-      ${verificationGridSprite()}
+      <g class="decisions-pages">
+        <g class="decisions-page-1">${verificationGridSprite()}</g>
+        <g class="decisions-page-2">${verificationGridSprite()}</g>
+      </g>
 
       <use href="#decision-buttons" x="125" y="140" />
+
+      <use class="decisions-cursor" href="#cursor" x="150" y="150" />
     `;
   }
 }

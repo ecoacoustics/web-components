@@ -53,9 +53,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @property({ type: Number })
   public classificationTasksCount!: number;
 
-  @property({ type: Number })
-  public activeSlide = 0;
-
   @query("#help-dialog")
   private helpDialogElement!: HTMLDialogElement;
 
@@ -96,10 +93,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new PagingSlide(),
       // new ShortcutsSlide(this.decisionShortcuts, this),
 
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
       new ShortcutsSlide(this.decisionShortcuts, this),
       new SelectionSlide(),
       new PagingSlide(),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
     ];
   }
 
@@ -111,7 +108,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
     // TODO: I have temporarily disabled this line for DX purposes
-    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     this.helpDialogElement.close();
   }
 
