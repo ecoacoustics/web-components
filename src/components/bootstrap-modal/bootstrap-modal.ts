@@ -17,6 +17,7 @@ import pagingSlideStyles from "./slides/paging/animations.css?inline";
 import selectionSlideStyles from "./slides/selection/animations.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/animations.css?inline";
 import { loop } from "../../helpers/directives";
+import { Tag } from "../../models/tag";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -42,20 +43,20 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(shortcutSlideStyles),
   ];
 
-  @property({ type: Array })
+  @property({ type: Array, attribute: false })
   public decisionElements!: DecisionComponent[];
 
-  @property({ type: String })
+  @property({ type: String, attribute: false })
   public selectionBehavior!: SelectionObserverType;
 
-  @property({ type: Boolean })
+  @property({ type: Boolean, attribute: false })
   public isMobile!: boolean;
 
-  @property({ type: Number })
-  public verificationTasksCount!: number;
+  @property({ type: Boolean, attribute: false })
+  public hasVerificationTask!: boolean;
 
-  @property({ type: Number })
-  public classificationTasksCount!: number;
+  @property({ type: Array, attribute: false })
+  public classificationTasks!: Tag[];
 
   @query("#help-dialog")
   private helpDialogElement!: HTMLDialogElement;
@@ -64,12 +65,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.helpDialogElement.open;
   }
 
-  public get hasVerificationTask(): boolean {
-    return this.verificationTasksCount > 0;
-  }
-
   public get hasClassificationTask(): boolean {
-    return this.classificationTasksCount > 0;
+    return this.classificationTasks.length > 0;
   }
 
   public get decisionShortcuts(): KeyboardShortcut[] {
@@ -96,7 +93,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
+      new DecisionsSlide(this.hasVerificationTask, this.classificationTasks),
       new SelectionSlide(),
       new PagingSlide(),
     ];

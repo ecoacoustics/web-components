@@ -1341,8 +1341,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       <oe-verification-bootstrap
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
-        verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        classificationTasksCount="${this.requiredClassificationTags.length}"
+        .hasVerificationTask="${this.hasVerificationTask()}"
+        .classificationTasks="${this.requiredClassificationTags}"
+        .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
