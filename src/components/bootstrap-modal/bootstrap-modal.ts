@@ -47,6 +47,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @property({ type: String })
   public selectionBehavior!: SelectionObserverType;
 
+  @property({ type: Boolean })
+  public isMobile!: boolean;
+
   @property({ type: Number })
   public verificationTasksCount!: number;
 

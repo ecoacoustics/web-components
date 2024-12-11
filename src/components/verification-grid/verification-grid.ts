@@ -416,22 +416,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleTileInvalidation(): void {
-    // if the user doesn't explicitly define a "selection-behavior" attribute
-    // then we will infer the selection behavior based on the device type
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
+    const isMobile = this.isMobileDevice();
 
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
-    this.skipButton.selectionMode = selectionBehavior;
+    this.skipButton.isMobile = isMobile;
     for (const element of decisionElements) {
-      element.selectionMode = selectionBehavior;
+      element.isMobile = isMobile;
     }
 
-    this.helpDialog.selectionBehavior = selectionBehavior;
+    this.helpDialog.selectionBehavior = this.selectionBehavior;
+    this.helpDialog.isMobile = isMobile;
     this.helpDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails

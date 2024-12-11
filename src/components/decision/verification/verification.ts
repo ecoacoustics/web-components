@@ -108,9 +108,7 @@ export class VerificationComponent extends DecisionComponent {
 
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
-        <div>
-          ${this.selectionMode !== "tablet" ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}
-        </div>
+        <div>${!this.isMobile ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}</div>
       </button>
     `;
   }
