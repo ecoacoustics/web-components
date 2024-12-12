@@ -20,9 +20,7 @@
       I have two keyframes between 10% and 40% to make the cursor stay in the
       same position for a while, before moving to the "next page" button.
     */
-    10% {
-      transform: translate3d(-5%, 0%, 0);
-    }
+    10%,
     40% {
       transform: translate3d(-5%, 0%, 0);
     }
@@ -40,7 +38,15 @@
       transform: none;
     }
 
-    50% {
+    /*
+      I have the same transform values between 50% and 60% so that the animation
+      will stay in the same position for a while before moving back to the
+      current page.
+      This is so that the user has time to see the full page before the
+      animation loops back to the beginning.
+    */
+    50%,
+    60% {
       transform: translate3d(100%, 0, 0);
     }
 

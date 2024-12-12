@@ -18,12 +18,12 @@ export class PagingSlide extends AbstractSlide {
           ${importSprites(gridTile, progressBar, cursorSprite)}
 
           <g class="paging-pages">
+            <g class="paging-page-previous">${verificationGridSprite()}</g>
             <g class="paging-page-current">${verificationGridSprite()}</g>
-            <g class="paging-page-next">${verificationGridSprite()}</g>
           </g>
 
-          <use href="#progress-bar" class="paging-progress-bar" x="0" y="80" />
-          <use href="#cursor" class="paging-cursor" x="23" y="190" />
+          <use href="#progress-bar" class="paging-progress-bar" x="10" y="50" />
+          <use href="#cursor" class="paging-cursor" x="32" y="160" />
         </svg>
       </div>
     `;
