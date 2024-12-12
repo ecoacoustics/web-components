@@ -12,7 +12,6 @@ export class ShortcutsSlide extends AbstractSlide {
     this.shortcuts = shortcuts;
   }
 
-  public override isSvg = false;
   private shortcuts: KeyboardShortcut[];
   private selectAllCtrl: Ref<HTMLElement> = createRef();
   private selectAllA: Ref<HTMLElement> = createRef();

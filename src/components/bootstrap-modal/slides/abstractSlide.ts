@@ -1,4 +1,4 @@
-import { HTMLTemplateResult, SVGTemplateResult } from "lit";
+import { HTMLTemplateResult } from "lit";
 
 export abstract class AbstractSlide {
   public constructor(description: string) {
@@ -6,7 +6,6 @@ export abstract class AbstractSlide {
   }
 
   public description: string;
-  public isSvg = true;
 
-  public abstract render(): SVGTemplateResult | HTMLTemplateResult;
+  public abstract render(): HTMLTemplateResult;
 }

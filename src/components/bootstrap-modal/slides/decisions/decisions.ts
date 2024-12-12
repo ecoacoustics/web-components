@@ -28,7 +28,6 @@ export class DecisionsSlide extends AbstractSlide {
     this.decisionButtons = decisionButtons;
   }
 
-  public override isSvg = false;
   private decisionButtons: DecisionComponent[];
 
   public render() {

@@ -11,8 +11,6 @@ export class SelectionSlide extends AbstractSlide {
     super("You can decide about more than one subject at once");
   }
 
-  public override isSvg = false;
-
   public render() {
     return html`
       <div class="selection-slide html-slide">
