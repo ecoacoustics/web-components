@@ -49,19 +49,6 @@ sl-carousel {
   padding: 1rem;
 }
 
-.decision-buttons {
-  position: absolute;
-  top: 60%;
-
-  /*
-    We disable pointer events so that clicking on the decision buttons does not
-    emit a "decision" event.
-    removing pointer events also removes the pointer cursor, which clearly
-    indicates that the buttons are non-functional.
-  */
-  pointer-events: none;
-}
-
 .html-slide {
   position: relative;
   display: flex;

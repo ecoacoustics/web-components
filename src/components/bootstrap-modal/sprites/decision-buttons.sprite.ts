@@ -12,6 +12,16 @@ function wireframeDecisionButton(button: DecisionComponent): Node {
   const clonedNode = button.cloneNode(true) as VerificationComponent;
   clonedNode.classList.add("wireframe");
 
+  // We disable pointer events so that clicking on the decision buttons does not
+  // emit a "decision" event.
+  // removing pointer events also removes the pointer cursor, which clearly
+  // indicates that the buttons are non-functional.
+  //
+  // the verification grid should stop the propagation of decision events if the
+  // bootstrap modal is open, but we don't want to depend on this behavior
+  // as a defense in depth measure.
+  clonedNode.style.pointerEvents = "none";
+
   // we set the buttons to their mobile state which makes them simpler such as
   // removing the shortcut keys
   // we do this to not overload the user with information in the help dialog

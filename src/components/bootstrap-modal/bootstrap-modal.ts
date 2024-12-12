@@ -29,7 +29,13 @@ export interface KeyboardShortcut {
   description: string;
 }
 
-const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
+/*
+  A local storage key that when set, will cause the bootstrap modal not to open
+  on load.
+  This does not prevent the modal from being opened manually through the
+  verification grids information icon or the bootstraps open() method.
+*/
+const bypassBootstrapLocalStorageKey = "oe-bypass-bootstrap";
 
 /**
  * @description
@@ -91,7 +97,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private slides: AbstractSlide[] = [];
 
   public firstUpdated(): void {
-    const shouldShowHelpDialog = localStorage.getItem(helpPreferenceLocalStorageKey) === null;
+    const shouldShowHelpDialog = localStorage.getItem(bypassBootstrapLocalStorageKey) === null;
 
     if (shouldShowHelpDialog) {
       this.showModal();
@@ -104,11 +110,15 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new PagingSlide(),
       new SelectionSlide(),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
     ];
 
+    // if the user is on a or tablet device, we don't need to bother showing
+    // the keyboard shortcuts slide
+    // by conditionally adding it to the slides array, we can reduce the amount
+    // of information that needs to be consumed by the user
     if (!this.isMobile) {
       this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }

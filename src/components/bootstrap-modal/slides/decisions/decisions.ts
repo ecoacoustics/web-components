@@ -44,7 +44,7 @@ export class DecisionsSlide extends AbstractSlide {
           <use class="decisions-cursor" href="#cursor" x="160" y="150" />
         </svg>
 
-        ${decisionButtonsSprite(this.decisionButtons)}
+        <div class="decisions-buttons">${decisionButtonsSprite(this.decisionButtons)}</div>
       </div>
     `;
   }

@@ -110,7 +110,7 @@
       "htmlhint.vscode-htmlhint",
       "firefox-devtools.vscode-firefox-debug",
 
-      // tools used for creating svgs used in slides
+      // extensions used to create svgs
       "jock.svg",
 
       // toml is used for netlify configs

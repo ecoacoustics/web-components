@@ -55,18 +55,18 @@ input:disabled {
     - The ::before style is the top part of the key
     - the ::after style is the sloping / vertical part of the key
 
-    We give a raised effect to the key by using a radial gradient background
-    for the ::after element.
-    We make the ::before element blend into this radial gradient, using a
-    box-shadow. Using a box-shadow on the ::before element makes these two
-    elements appear as one, giving the illusion of a raised key.
+  We give a raised effect to the key by using a radial gradient background
+  for the ::after element.
+  We make the ::before element blend into this radial gradient, using a
+  box-shadow. Using a box-shadow on the ::before element makes these two
+  elements appear as one, giving the illusion of a raised key.
 
-    In a depressed state, we remove the radial gradient on the ::after element,
-    to almost zero, and reduce the box-shadow on the ::before element.
-    By doing this, there is only the box-shadow so that the key appears to blend
-    with the ::after background.
-    Removing the radial gradient on the ::after element makes the key appear
-    depressed.
+  In a depressed state, we remove the radial gradient on the ::after element,
+  to almost zero, and reduce the box-shadow on the ::before element.
+  By doing this, there is only the box-shadow so that the key appears to blend
+  with the ::after background.
+  Removing the radial gradient on the ::after element makes the key appear
+  depressed.
 */
 kbd {
   position: relative;
