@@ -1,7 +1,11 @@
-.shortcut-slide {
-  @keyframes selection-animation {
-    to {
-      --oe-panel-color: var(--oe-selected-color);
-    }
+/*
+  These keyframes are outside of the .shortcut-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+@keyframes shortcut-selection-animation {
+  to {
+    --oe-panel-color: var(--oe-selected-color);
   }
 }

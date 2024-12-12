@@ -69,11 +69,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @property({ type: Array, attribute: false })
   public classificationTasks!: Tag[];
 
-  @query("#help-dialog")
-  private helpDialogElement!: HTMLDialogElement;
+  @query("#dialog-element")
+  private dialogElement!: HTMLDialogElement;
 
   public get open(): boolean {
-    return this.helpDialogElement.open;
+    return this.dialogElement.open;
   }
 
   public get hasClassificationTask(): boolean {
@@ -115,7 +115,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public showModal() {
-    this.helpDialogElement.showModal();
+    this.dialogElement.showModal();
     this.dispatchEvent(new CustomEvent("open"));
   }
 
@@ -123,7 +123,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dispatchEvent(new CustomEvent("close"));
     // TODO: I have temporarily disabled this line for DX purposes
     // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
-    this.helpDialogElement.close();
+    this.dialogElement.close();
   }
 
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
@@ -158,7 +158,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog id="help-dialog" @pointerdown="${() => this.helpDialogElement.close()}" @close="${this.closeModal}">
+      <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <div class="dialog-header">
             <h2 class="dialog-title">Information</h2>

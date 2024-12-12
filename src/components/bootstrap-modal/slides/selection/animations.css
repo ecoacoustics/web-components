@@ -1,50 +1,56 @@
 .selection-slide {
   --animation-duration: 3s;
   --highlight-selection-start: 3s;
+}
 
-  @keyframes selection-cursor-movement {
-    from {
-      transform: translate3d(-70px, -60px, 0);
-    }
-
-    10% {
-      transform: translate3d(-100px, -80px, 0);
-    }
-
-    30% {
-      transform: translate3d(0px, -80px, 0);
-    }
-
-    50%,
-    60% {
-      transform: translate3d(-100px, 0px, 0);
-    }
-
-    /* selection highlight box animations */
-    80% {
-      transform: translate3d(-200px, -80px, 0);
-    }
-
-    to {
-      transform: none;
-    }
+/*
+  These keyframes are outside of the .selection-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+@keyframes selection-cursor-movement {
+  from {
+    transform: translate3d(-70px, -60px, 0);
   }
 
-  @keyframes highlight-box-animation {
-    80% {
-      width: 0;
-      height: 0;
-    }
-
-    to {
-      width: 451px;
-      height: 181px;
-    }
+  10% {
+    transform: translate3d(-100px, -80px, 0);
   }
 
-  @keyframes selected-animation {
-    from {
-      --oe-panel-color: var(--oe-selected-color);
-    }
+  30% {
+    transform: translate3d(0px, -80px, 0);
+  }
+
+  50%,
+  60% {
+    transform: translate3d(-100px, 0px, 0);
+  }
+
+  /* selection highlight box animations */
+  80% {
+    transform: translate3d(-200px, -80px, 0);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+@keyframes selection-highlight-box-animation {
+  80% {
+    width: 0;
+    height: 0;
+  }
+
+  to {
+    width: 451px;
+    height: 181px;
+  }
+}
+
+@keyframes selection-selected-animation {
+  from {
+    --oe-panel-color: var(--oe-selected-color);
   }
 }

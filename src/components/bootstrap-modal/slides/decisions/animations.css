@@ -1,39 +1,43 @@
-.decisions-slide {
-  @keyframes decisions-cursor-movement {
-    from {
-      transform: translate3d(8%, 0, 0);
-    }
-
-    50% {
-      transform: none;
-    }
-
-    to {
-      transform: translate3d(8%, 0, 0);
-    }
+/*
+  These keyframes are outside of the .decisions-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+@keyframes decisions-cursor-movement {
+  from {
+    transform: translate3d(8%, 0, 0);
   }
 
-  @keyframes decisions-slide-movement {
-    from {
-      transform: translate3d(100%, 0, 0);
-    }
-
-    50% {
-      transform: none;
-    }
+  50% {
+    transform: none;
   }
 
-  @keyframes decisions-slide-decisions-current {
-    from {
-      --decision-color: green;
-    }
+  to {
+    transform: translate3d(8%, 0, 0);
+  }
+}
 
-    50% {
-      --decision-color: green;
-    }
+@keyframes decisions-slide-movement {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
 
-    to {
-      --decision-color: red;
-    }
+  50% {
+    transform: none;
+  }
+}
+
+@keyframes decisions-slide-decisions-current {
+  from {
+    --decision-color: green;
+  }
+
+  50% {
+    --decision-color: green;
+  }
+
+  to {
+    --decision-color: red;
   }
 }

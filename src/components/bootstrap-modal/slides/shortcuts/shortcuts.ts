@@ -17,8 +17,8 @@ export class ShortcutsSlide extends AbstractSlide {
   private selectAllA: Ref<HTMLElement> = createRef();
   private deselectAllEsc: Ref<HTMLElement> = createRef();
 
-  private animationDurationMs = 5_000;
-  private depressedDurationMs = 1_000;
+  private animationDuration = 5 as const;
+  private depressedDuration = 1 as const;
 
   private decisionShortcutTemplate() {
     return html`
@@ -81,6 +81,9 @@ export class ShortcutsSlide extends AbstractSlide {
   // we can re-use the "depressed" state for the animation without having
   // to duplicate the styles
   private async animateKeypress(): Promise<void> {
+    const animationDurationMs = this.animationDuration * 1_000;
+    const depressedDurationMs = this.depressedDuration * 1_000;
+
     // animate the select all keypress
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -90,23 +93,23 @@ export class ShortcutsSlide extends AbstractSlide {
         setTimeout(() => {
           this.selectAllCtrl.value?.classList.remove("depressed");
           this.selectAllA.value?.classList.remove("depressed");
-        }, this.depressedDurationMs);
-      }, this.depressedDurationMs);
+        }, depressedDurationMs);
+      }, depressedDurationMs);
     });
 
     // animate the esc keypress
-    const secondOffset = this.animationDurationMs - this.depressedDurationMs;
+    const secondOffset = animationDurationMs - depressedDurationMs;
     requestAnimationFrame(() => {
       setTimeout(() => {
         this.deselectAllEsc.value?.classList.add("depressed");
 
         setTimeout(() => {
           this.deselectAllEsc.value?.classList.remove("depressed");
-        }, this.depressedDurationMs);
+        }, depressedDurationMs);
 
         setTimeout(() => {
           this.animateKeypress();
-        }, this.animationDurationMs - secondOffset);
+        }, animationDurationMs - secondOffset);
       }, secondOffset);
     });
   }
@@ -115,7 +118,7 @@ export class ShortcutsSlide extends AbstractSlide {
     this.animateKeypress();
 
     return html`
-      <div class="shortcut-slide html-slide">
+      <div class="shortcut-slide html-slide" style="--animation-duration: ${this.animationDuration}s">
         <div class="decision-shortcuts shortcut-card">
           <h3>Decision Shortcuts</h3>
           ${this.decisionShortcutTemplate()}

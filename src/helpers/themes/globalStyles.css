@@ -50,6 +50,24 @@ input:disabled {
   cursor: not-allowed;
 }
 
+/* 
+  Our kbd element has two distinct parts:
+    - The ::before style is the top part of the key
+    - the ::after style is the sloping / vertical part of the key
+
+    We give a raised effect to the key by using a radial gradient background
+    for the ::after element.
+    We make the ::before element blend into this radial gradient, using a
+    box-shadow. Using a box-shadow on the ::before element makes these two
+    elements appear as one, giving the illusion of a raised key.
+
+    In a depressed state, we remove the radial gradient on the ::after element,
+    to almost zero, and reduce the box-shadow on the ::before element.
+    By doing this, there is only the box-shadow so that the key appears to blend
+    with the ::after background.
+    Removing the radial gradient on the ::after element makes the key appear
+    depressed.
+*/
 kbd {
   position: relative;
   display: inline-flex;
@@ -93,14 +111,33 @@ kbd {
     z-index: -2;
   }
 
+  /*
+    The keys raised effect is done by adding a radial gradient to the ::after
+    element, and a box-shadow to the ::before element.
+
+    Therefore, in a depressed state, we remove the radial gradient on the
+    ::after element, and reduce the box-shadow on the ::before element.
+  */
   &.depressed {
+    --depression-depth: 0.13em;
+
+    top: var(--depression-depth);
+    left: var(--depression-depth);
+
     &::before {
-      background: radial-gradient(circle farthest-corner at top, #c8c8c8, #ededed);
-      box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0);
+      top: -var(--depression-depth);
+      left: -var(--depression-depth);
+
+      background: radial-gradient(circle farthest-corner at bottom right, #ededed, #c8c8c8);
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
     }
 
     &::after {
-      background: radial-gradient(circle farthest-corner at bottom, #cacaca, #cacaca);
+      top: -var(--depression-depth);
+      left: -var(--depression-depth);
+
+      background: #cacaca;
+      box-shadow: 0.065em 0.065em 0.13em 0.13em rgba(0, 0, 0, 0.35);
     }
   }
 }

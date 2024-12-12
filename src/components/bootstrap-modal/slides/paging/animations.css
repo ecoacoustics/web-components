@@ -12,60 +12,66 @@
   }
 
   --animation-duration: 5s;
+}
 
-  @keyframes paging-cursor-movement {
-    /*
-      At the end of this keyframe, the mouse will be over the top of the
-      "previous page" button.
-      I have two keyframes between 10% and 40% to make the cursor stay in the
-      same position for a while, before moving to the "next page" button.
-    */
-    10%,
-    40% {
-      transform: translate3d(-5%, 0%, 0);
-    }
+/*
+  These keyframes are outside of the .paging-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+@keyframes paging-cursor-movement {
+  /*
+    At the end of this keyframe, the mouse will be over the top of the
+    "previous page" button.
+    I have two keyframes between 10% and 40% to make the cursor stay in the
+    same position for a while, before moving to the "next page" button.
+  */
+  10%,
+  40% {
+    transform: translate3d(-5%, 0%, 0);
+  }
 
-    /*
+  /*
       at the end of this keyframe, the mouse will be over the "next page" button
     */
-    50% {
-      transform: none;
-    }
+  50% {
+    transform: none;
+  }
+}
+
+@keyframes paging-slide-movement {
+  10% {
+    transform: none;
   }
 
-  @keyframes paging-slide-movement {
-    10% {
-      transform: none;
-    }
-
-    /*
-      I have the same transform values between 50% and 60% so that the animation
-      will stay in the same position for a while before moving back to the
-      current page.
-      This is so that the user has time to see the full page before the
-      animation loops back to the beginning.
-    */
-    50%,
-    60% {
-      transform: translate3d(100%, 0, 0);
-    }
-
-    to {
-      transform: none;
-    }
+  /*
+    I have the same transform values between 50% and 60% so that the animation
+    will stay in the same position for a while before moving back to the
+    current page.
+    This is so that the user has time to see the full page before the
+    animation loops back to the beginning.
+  */
+  50%,
+  60% {
+    transform: translate3d(100%, 0, 0);
   }
 
-  @keyframes progress-bar-movement {
-    0% {
-      --view-head: 50%;
-    }
+  to {
+    transform: none;
+  }
+}
 
-    50% {
-      --view-head: 45%;
-    }
+@keyframes progress-bar-movement {
+  0% {
+    --view-head: 50%;
+  }
 
-    to {
-      --view-head: 50%;
-    }
+  50% {
+    --view-head: 45%;
+  }
+
+  to {
+    --view-head: 50%;
   }
 }
