@@ -83,34 +83,13 @@ kbd {
   }
 
   &.depressed {
-    @keyframes depress-animation-before {
-      from {
-        background: radial-gradient(circle farthest-corner at top right, #ededed, #c8c8c8);
-        box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0.2);
-      }
-
-      to {
-        background: radial-gradient(circle farthest-corner at top, #c8c8c8, #ededed);
-        box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0);
-      }
-    }
-
-    @keyframes depress-animation-after {
-      from {
-        background: radial-gradient(circle farthest-corner at bottom right, #cacaca, #cacaca);
-      }
-
-      to {
-        background: radial-gradient(circle farthest-corner at bottom, #cacaca, #cacaca);
-      }
-    }
-
     &::before {
-      animation: depress-animation-before 2s forwards cubic-bezier(0.5, 0.5, 0.5, 0.5);
+      background: radial-gradient(circle farthest-corner at top, #c8c8c8, #ededed);
+      box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0);
     }
 
     &::after {
-      animation: depress-animation-after 2s forwards cubic-bezier(0.5, 0.5, 0.5, 0.5);
+      background: radial-gradient(circle farthest-corner at bottom, #cacaca, #cacaca);
     }
   }
 }

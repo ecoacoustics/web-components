@@ -104,6 +104,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
+      new ShortcutsSlide(this.decisionShortcuts),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
       new PagingSlide(),
@@ -122,7 +123,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
     // TODO: I have temporarily disabled this line for DX purposes
-    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     this.helpDialogElement.close();
   }
 

@@ -1,8 +1,3 @@
-/*
-  TODO: Move this to a different place
-  TODO: This might be some of the worst CSS I've ever written. Make it better
-  before review.
-*/
 .shortcut-slide {
   h3 {
     margin: 0;
@@ -41,8 +36,8 @@
       align-self: center;
     }
   }
-}
 
-.shortcut-grid-tile {
-  animation: selection-animation 5s infinite;
+  .shortcut-grid-tile {
+    animation: selection-animation 5s infinite;
+  }
 }

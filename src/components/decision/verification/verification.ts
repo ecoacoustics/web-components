@@ -76,7 +76,6 @@ export class VerificationComponent extends DecisionComponent {
   }
 
   private additionalTagsTemplate() {
-    console.debug(this.additionalTags);
     return this.additionalTags.length ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})` : nothing;
   }
 
