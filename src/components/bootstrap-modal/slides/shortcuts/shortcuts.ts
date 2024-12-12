@@ -67,7 +67,7 @@ export class ShortcutsSlide extends AbstractSlide {
 
   public render() {
     return html`
-      <div class="shortcut-slide">
+      <div class="shortcut-slide html-slide">
         <div class="decision-shortcuts shortcut-card">
           <h3>Decision Shortcuts</h3>
           ${this.decisionShortcutTemplate()}

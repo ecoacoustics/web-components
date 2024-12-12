@@ -43,3 +43,19 @@
   height: 0.5em;
   width: 1.5em;
 }
+
+/*
+  On mobile devices, we want the decision buttons to horizontally fill their
+  container so that the touch targets are larger
+*/
+@media (max-width: 600px) {
+  :host {
+    width: 35%;
+  }
+
+  .decision-button {
+    padding: 10%;
+    padding-left: 30%;
+    padding-right: 30%;
+  }
+}

@@ -1,0 +1,6 @@
+.paging-slide {
+  .paging-cursor {
+    animation: paging-cursor-movement 3s infinite;
+    animation-delay: 1s;
+  }
+}

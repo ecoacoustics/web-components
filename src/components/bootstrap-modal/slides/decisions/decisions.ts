@@ -1,16 +1,18 @@
 import { AbstractSlide } from "../abstractSlide";
-import { svg } from "lit";
+import { html } from "lit";
 import { importSprites } from "../../../../helpers/svgs/imports";
 import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
 import { decisionButtonsSprite } from "../../sprites/decision-buttons.sprite";
-import { Tag } from "../../../../models/tag";
+import { DecisionComponent } from "decision/decision";
 import gridTile from "../../sprites/grid-tile.svg?raw";
 import cursorSprite from "../../sprites/cursor.svg?raw";
 
 export class DecisionsSlide extends AbstractSlide {
-  public constructor(hasVerificationTask: boolean, classificationTasks: Tag[]) {
-    const hasClassificationTask = classificationTasks.length > 0;
-
+  public constructor(
+    hasVerificationTask: boolean,
+    hasClassificationTask: boolean,
+    decisionButtons: DecisionComponent[],
+  ) {
     let description = "";
     if (hasVerificationTask && hasClassificationTask) {
       description = "This grid contains both verification and classification tasks";
@@ -23,26 +25,28 @@ export class DecisionsSlide extends AbstractSlide {
 
     super(description);
 
-    this.hasVerificationTask = hasVerificationTask;
-    this.classificationTasks = classificationTasks;
+    this.decisionButtons = decisionButtons;
   }
 
-  private hasVerificationTask: boolean;
-  private classificationTasks: Tag[];
+  public override isSvg = false;
+  private decisionButtons: DecisionComponent[];
 
   public render() {
-    return svg`
-      ${importSprites(gridTile, cursorSprite)}
+    return html`
+      <div class="decisions-slide html-slide">
+        <svg viewBox="0 0 390 230">
+          ${importSprites(gridTile, cursorSprite)}
 
-      <g class="decisions-pages">
-        <g class="decisions-page-1">${verificationGridSprite()}</g>
-        <g class="decisions-page-2">${verificationGridSprite()}</g>
-      </g>
+          <g class="decisions-pages">
+            <g class="decisions-page-1">${verificationGridSprite()}</g>
+            <g class="decisions-page-2">${verificationGridSprite()}</g>
+          </g>
 
-      <!-- <use href="#decision-buttons" x="125" y="140" /> -->
-      ${decisionButtonsSprite(this.hasVerificationTask, this.classificationTasks)}
+          <use class="decisions-cursor" href="#cursor" x="160" y="150" />
+        </svg>
 
-      <use class="decisions-cursor" href="#cursor" x="150" y="150" />
+        ${decisionButtonsSprite(this.decisionButtons)}
+      </div>
     `;
   }
 }

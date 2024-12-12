@@ -22,7 +22,7 @@
     calc(var(--oe-theme-lightness) - 90%)
   );
 
-  --oe-border-rounding: 1em;
+  --oe-border-rounding: 0.5em;
   --oe-border-color: hsl(
     var(--oe-theme-hue),
     calc(var(--oe-theme-saturation) - 40%),

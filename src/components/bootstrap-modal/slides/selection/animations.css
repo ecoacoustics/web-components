@@ -47,26 +47,3 @@
     }
   }
 }
-
-.selection-cursor {
-  animation: selection-cursor-movement var(--animation-duration) infinite;
-}
-
-.selection-box {
-  animation: highlight-box-animation var(--animation-duration) infinite;
-}
-
-.tile-1 {
-  animation: selected-animation var(--animation-duration) infinite;
-  animation-delay: 0.5s;
-}
-
-.tile-2 {
-  animation: selected-animation var(--animation-duration) infinite;
-  animation-delay: 1.5s;
-}
-
-.tile-5 {
-  animation: selected-animation var(--animation-duration) infinite;
-  animation-delay: 2.5s;
-}

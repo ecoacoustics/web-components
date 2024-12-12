@@ -28,7 +28,7 @@ export class VerificationComponent extends DecisionComponent {
   public verified: DecisionOptions = DecisionOptions.TRUE;
 
   /** Value that will be added to the oe-additional-tags column */
-  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter, reflect: true })
+  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter })
   public additionalTags: Tag[] = [];
 
   /** A keyboard key that when pressed will act as a click event on the button */
@@ -76,6 +76,7 @@ export class VerificationComponent extends DecisionComponent {
   }
 
   private additionalTagsTemplate() {
+    console.debug(this.additionalTags);
     return this.additionalTags.length ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})` : nothing;
   }
 

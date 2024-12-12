@@ -9,15 +9,20 @@ import { DecisionsSlide } from "./slides/decisions/decisions";
 import { PagingSlide } from "./slides/paging/paging";
 import { SelectionSlide } from "./slides/selection/selection";
 import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
+import { loop } from "../../helpers/directives";
+import { Tag } from "../../models/tag";
 import helpDialogStyles from "./css/style.css?inline";
 
 // TOOD: These should probably move somewhere else
-import decisionSlideStyles from "./slides/decisions/animations.css?inline";
-import pagingSlideStyles from "./slides/paging/animations.css?inline";
-import selectionSlideStyles from "./slides/selection/animations.css?inline";
-import shortcutSlideStyles from "./slides/shortcuts/animations.css?inline";
-import { loop } from "../../helpers/directives";
-import { Tag } from "../../models/tag";
+import decisionSlideAnimations from "./slides/decisions/animations.css?inline";
+import pagingSlideAnimations from "./slides/paging/animations.css?inline";
+import selectionSlideAnimations from "./slides/selection/animations.css?inline";
+import shortcutSlideAnimations from "./slides/shortcuts/animations.css?inline";
+
+import decisionSlideStyles from "./slides/decisions/styles.css?inline";
+import pagingSlideStyles from "./slides/paging/styles.css?inline";
+import selectionSlideStyles from "./slides/selection/styles.css?inline";
+import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -37,6 +42,12 @@ const helpPreferenceLocalStorageKey = "oe-verification-grid-dialog-preferences";
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   static styles = [
     unsafeCSS(helpDialogStyles),
+
+    unsafeCSS(decisionSlideAnimations),
+    unsafeCSS(pagingSlideAnimations),
+    unsafeCSS(selectionSlideAnimations),
+    unsafeCSS(shortcutSlideAnimations),
+
     unsafeCSS(decisionSlideStyles),
     unsafeCSS(pagingSlideStyles),
     unsafeCSS(selectionSlideStyles),
@@ -93,7 +104,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.classificationTasks),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
       new PagingSlide(),
     ];
@@ -111,7 +122,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
     // TODO: I have temporarily disabled this line for DX purposes
-    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    localStorage.setItem(helpPreferenceLocalStorageKey, "true");
     this.helpDialogElement.close();
   }
 

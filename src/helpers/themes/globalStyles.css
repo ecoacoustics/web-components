@@ -364,6 +364,10 @@ button {
   min-height: 0px;
 }
 
+.wireframe {
+  filter: grayscale(100%);
+}
+
 @keyframes fade-in {
   0% {
     opacity: 0;
