@@ -22,8 +22,8 @@ export class PagingSlide extends AbstractSlide {
             <g class="paging-page-next">${verificationGridSprite()}</g>
           </g>
 
-          <use href="#progress-bar" x="0" y="80" style="--progress: 90px" />
-          <use class="paging-cursor" href="#cursor" x="23" y="190" />
+          <use href="#progress-bar" class="paging-progress-bar" x="0" y="80" />
+          <use href="#cursor" class="paging-cursor" x="23" y="190" />
         </svg>
       </div>
     `;

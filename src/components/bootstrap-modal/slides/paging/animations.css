@@ -1,4 +1,16 @@
 .paging-slide {
+  @property --view-head {
+    syntax: "<percentage>";
+    initial-value: 50%;
+    inherits: false;
+  }
+
+  @property --verification-head {
+    syntax: "<percentage>";
+    initial-value: 50%;
+    inherits: false;
+  }
+
   --animation-duration: 5s;
 
   @keyframes paging-cursor-movement {
@@ -34,6 +46,20 @@
 
     to {
       transform: none;
+    }
+  }
+
+  @keyframes progress-bar-movement {
+    0% {
+      --view-head: 50%;
+    }
+
+    50% {
+      --view-head: 45%;
+    }
+
+    to {
+      --view-head: 50%;
     }
   }
 }
