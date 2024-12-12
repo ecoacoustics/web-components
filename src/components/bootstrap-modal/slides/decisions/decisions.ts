@@ -38,8 +38,8 @@ export class DecisionsSlide extends AbstractSlide {
           ${importSprites(gridTile, cursorSprite)}
 
           <g class="decisions-pages">
-            <g class="decisions-page-1">${verificationGridSprite()}</g>
-            <g class="decisions-page-2">${verificationGridSprite()}</g>
+            <g class="decisions-page-current">${verificationGridSprite()}</g>
+            <g class="decisions-page-next">${verificationGridSprite()}</g>
           </g>
 
           <use class="decisions-cursor" href="#cursor" x="160" y="150" />

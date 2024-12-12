@@ -1,5 +1,6 @@
 .decisions-slide {
   position: relative;
+  flex-direction: column;
 
   svg {
     position: relative;
@@ -19,12 +20,8 @@
     animation-delay: 2s;
   }
 
-  .decisions-page-1 {
-    animation: decisions-slide-decisions-1 8s infinite;
+  .decisions-page-current {
+    animation: decisions-slide-decisions-current 8s infinite;
     transform: translate3d(-100%, 0, 0);
-  }
-
-  .decisions-page-2 {
-    animation: decisions-slide-decisions-2 8s infinite;
   }
 }

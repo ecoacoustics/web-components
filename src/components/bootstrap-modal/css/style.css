@@ -1,5 +1,12 @@
 :host {
   --decision-color: var(--oe-panel-color);
+
+  --keyframe-0: 0%;
+  --keyframe-1: 20%;
+  --keyframe-2: 40%;
+  --keyframe-3: 60%;
+  --keyframe-4: 80%;
+  --keyframe-5: 100%;
 }
 
 sl-carousel {
