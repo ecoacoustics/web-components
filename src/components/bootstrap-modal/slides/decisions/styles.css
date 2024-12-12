@@ -1,16 +1,4 @@
 .decisions-slide {
-  position: relative;
-  flex-direction: column;
-
-  svg {
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 33%;
-    height: 80%;
-    scale: 2;
-  }
-
   .decisions-cursor {
     animation: decisions-cursor-movement 8s infinite;
   }

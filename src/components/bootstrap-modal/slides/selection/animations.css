@@ -1,5 +1,7 @@
 .selection-slide {
-  --animation-duration: 5s;
+  --animation-duration: 4s;
+
+  --highlight-selection-start: 3s;
 
   @keyframes selection-cursor-movement {
     from {
@@ -30,18 +32,19 @@
   }
 
   @keyframes highlight-box-animation {
+    80% {
+      width: 0;
+      height: 0;
+    }
+
     to {
-      width: 100%;
+      width: 0;
+      width: 451px;
+      height: 181px;
     }
   }
 
   @keyframes selected-animation {
-    from {
-      --oe-panel-color: var(--oe-selected-color);
-    }
-  }
-
-  @keyframes selected-animation-highlight {
     from {
       --oe-panel-color: var(--oe-selected-color);
     }

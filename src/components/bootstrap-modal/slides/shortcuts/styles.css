@@ -1,4 +1,6 @@
 .shortcut-slide {
+  flex-direction: row;
+
   h3 {
     margin: 0;
   }

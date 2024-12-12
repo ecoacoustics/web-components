@@ -104,8 +104,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new PagingSlide(),
     ];
 
@@ -128,12 +128,14 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
     return html`
-      <p>${slide.description}</p>
-      ${when(
-        slide.isSvg,
-        () => html`<svg class="slide" viewBox="-10 0 390 230">${slide.render()}</svg>`,
-        () => slide.render(),
-      )}
+      <div class="slide-content">
+        <p class="slide-description">${slide.description}</p>
+        ${when(
+          slide.isSvg,
+          () => html`<svg class="slide" viewBox="-10 0 390 230">${slide.render()}</svg>`,
+          () => slide.render(),
+        )}
+      </div>
     `;
   }
 
