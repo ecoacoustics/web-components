@@ -1,11 +1,35 @@
 .paging-slide {
+  --animation-duration: 5s;
+
   @keyframes paging-cursor-movement {
-    from {
-      transform: translate3d(50%, -50%, 0);
+    /*
+      At the end of this keyframe, the mouse will be over the top of the
+      "previous page" button.
+      I have two keyframes between 10% and 40% to make the cursor stay in the
+      same position for a while, before moving to the "next page" button.
+    */
+    10% {
+      transform: translate3d(-5%, 0%, 0);
+    }
+    40% {
+      transform: translate3d(-5%, 0%, 0);
     }
 
-    60% {
-      transform: translate3d(-5%, 0%, 0);
+    /*
+      at the end of this keyframe, the mouse will be over the "next page" button
+    */
+    50% {
+      transform: none;
+    }
+  }
+
+  @keyframes paging-slide-movement {
+    10% {
+      transform: none;
+    }
+
+    50% {
+      transform: translate3d(100%, 0, 0);
     }
 
     to {
