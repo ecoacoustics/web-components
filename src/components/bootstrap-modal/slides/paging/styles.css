@@ -25,6 +25,8 @@
 
   .paging-progress-bar {
     --verification-head: 50%;
-    animation: progress-bar-movement var(--animation-duration) infinite;
+    animation:
+      progress-bar-movement var(--animation-duration) infinite,
+      progress-bar-button-depression var(--animation-duration) infinite;
   }
 }

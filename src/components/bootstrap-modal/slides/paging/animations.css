@@ -97,3 +97,25 @@
     --view-head: 50%;
   }
 }
+
+@keyframes progress-bar-button-depression {
+  8% {
+    --chevron-previous-color: var(--oe-primary-color);
+  }
+  13% {
+    --chevron-previous-color: var(--oe-selected-color);
+  }
+  18% {
+    --chevron-previous-color: var(--oe-primary-color);
+  }
+
+  55% {
+    --chevron-next-color: var(--oe-primary-color);
+  }
+  60% {
+    --chevron-next-color: var(--oe-selected-color);
+  }
+  65% {
+    --chevron-next-color: var(--oe-primary-color);
+  }
+}
