@@ -40,6 +40,28 @@
   }
 }
 
+@keyframes paging-cursor-clicks {
+  8% {
+    r: 0px;
+  }
+  13% {
+    r: 6px;
+  }
+  18% {
+    r: 0px;
+  }
+
+  55% {
+    r: 0px;
+  }
+  60% {
+    r: 6px;
+  }
+  65% {
+    r: 0px;
+  }
+}
+
 @keyframes paging-slide-movement {
   10% {
     transform: none;
