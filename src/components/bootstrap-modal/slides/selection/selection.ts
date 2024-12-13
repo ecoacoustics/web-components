@@ -3,8 +3,8 @@ import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
 import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
 import { selectionBoxSprite } from "../../sprites/selection-box.sprite";
+import { cursorSprite } from "../../sprites/cursor.sprite";
 import gridTileSprite from "../../sprites/grid-tile.svg?raw";
-import cursorSprite from "../../sprites/cursor.svg?raw";
 
 export class SelectionSlide extends AbstractSlide {
   public constructor() {
@@ -15,9 +15,11 @@ export class SelectionSlide extends AbstractSlide {
     return html`
       <div class="selection-slide html-slide">
         <svg viewBox="0 0 390 230">
-          ${importSprites(gridTileSprite, cursorSprite)} ${verificationGridSprite()}
+          ${importSprites(gridTileSprite)}
 
-          <use href="#cursor" class="selection-cursor" x="225" y="100" />
+          <g>${verificationGridSprite()}</g>
+
+          ${cursorSprite("selection-cursor", 223, 96)}
         </svg>
 
         ${selectionBoxSprite()}
