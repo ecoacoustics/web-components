@@ -2,9 +2,9 @@ import { svg } from "lit";
 import { SvgSprite } from "./types";
 import { Pixel } from "../../../models/unitConverters";
 
-export function cursorSprite(className: string, x: Pixel, y: Pixel): SvgSprite {
+export function cursorSprite(x: Pixel, y: Pixel): SvgSprite {
   return svg`
-    <svg class="${className}" x="${x}" y="${y}">
+    <svg class="cursor" x="${x}" y="${y}">
       <defs>
         <radialGradient id="click-gradient">
           <stop offset="0%" stop-color="red" />
@@ -14,7 +14,7 @@ export function cursorSprite(className: string, x: Pixel, y: Pixel): SvgSprite {
 
 
       <circle
-        class="${className}-clicks click-animation"
+        class="click-animation"
         cx="8"
         cy="6"
         fill="url(#click-gradient)"

@@ -16,11 +16,6 @@
     margin-top: 2em;
   }
 
-  .shortcut-keys {
-    display: flex;
-    justify-content: center;
-  }
-
   .shortcut-card {
     display: flex;
     flex-direction: column;
@@ -35,11 +30,13 @@
 
     .shortcut,
     .shortcut-animation {
+      display: flex;
+      justify-content: center;
       align-self: center;
     }
   }
 
-  .shortcut-grid-tile {
+  .grid-tile {
     animation: shortcut-selection-animation var(--animation-duration) infinite;
   }
 }

@@ -1,29 +1,29 @@
 .paging-slide {
-  .paging-cursor {
+  .cursor {
     animation: paging-cursor-movement var(--animation-duration) infinite;
   }
 
-  .paging-cursor-clicks {
+  .click-animation {
     animation: paging-cursor-clicks var(--animation-duration) infinite;
   }
 
-  .paging-pages {
+  .pages {
     animation: paging-slide-movement var(--animation-duration) infinite;
+
+    .previous-page {
+      /*
+        I have added a decision color to the previous page of results so that the
+        two different pages can clearly be distinguished when pressing the "next"
+        and "previous" buttons.
+      */
+      --decision-color: green;
+
+      animation: paging-slide-decisions-current var(--animation-duration) infinite;
+      transform: translate3d(-100%, 0, 0);
+    }
   }
 
-  .paging-page-previous {
-    /*
-      I have added a decision color to the previous page of results so that the
-      two different pages can clearly be distinguished when pressing the "next"
-      and "previous" buttons.
-    */
-    --decision-color: green;
-
-    animation: paging-slide-decisions-current var(--animation-duration) infinite;
-    transform: translate3d(-100%, 0, 0);
-  }
-
-  .paging-progress-bar {
+  .progress-bar {
     --verification-head: 50%;
     animation:
       progress-bar-movement var(--animation-duration) infinite,

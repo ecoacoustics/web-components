@@ -4,11 +4,11 @@
 */
 /* prettier-ignore */
 .selection-slide {
-  .selection-cursor {
+  .cursor {
     animation: selection-cursor-movement var(--animation-duration) infinite;
   }
 
-  .selection-cursor-clicks {
+  .click-animation {
     animation: selection-cursor-clicks var(--animation-duration) infinite;
   }
 
@@ -17,7 +17,7 @@
     position: absolute;
     display: inline-block;
 
-    left: 22.2%;
+    left: 222px;
     top: 9.5%;
 
     animation: selection-highlight-box-animation var(--animation-duration) infinite;

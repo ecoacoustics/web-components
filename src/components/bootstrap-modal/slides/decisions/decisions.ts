@@ -1,7 +1,7 @@
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
 import { importSprites } from "../../../../helpers/svgs/imports";
-import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
+import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { decisionButtonsSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
@@ -36,12 +36,12 @@ export class DecisionsSlide extends AbstractSlide {
         <svg viewBox="0 0 390 230">
           ${importSprites(gridTile)}
 
-          <g class="decisions-pages">
-            <g class="decisions-page-current">${verificationGridSprite()}</g>
-            <g class="decisions-page-next">${verificationGridSprite()}</g>
+          <g class="pages">
+            <g class="current-page">${verificationGridPageSprite()}</g>
+            <g class="next-page">${verificationGridPageSprite()}</g>
           </g>
 
-          ${cursorSprite("decisions-cursor", 160, 150)}
+          ${cursorSprite(160, 150)}
         </svg>
 
         <div class="decisions-buttons">${decisionButtonsSprite(this.decisionButtons)}</div>

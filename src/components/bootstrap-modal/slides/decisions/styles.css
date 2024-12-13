@@ -1,16 +1,16 @@
 .decisions-slide {
-  .decisions-cursor {
+  .cursor {
     animation: decisions-cursor-movement 8s infinite;
   }
 
-  .decisions-pages {
+  .pages {
     animation: decisions-slide-movement 4s infinite;
     animation-delay: 2s;
-  }
 
-  .decisions-page-current {
-    animation: decisions-slide-decisions-current 8s infinite;
-    transform: translate3d(-100%, 0, 0);
+    .current-page {
+      animation: decisions-slide-decisions-current 8s infinite;
+      transform: translate3d(-100%, 0, 0);
+    }
   }
 
   .decision-buttons {

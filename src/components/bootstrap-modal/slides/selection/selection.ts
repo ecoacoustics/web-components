@@ -1,7 +1,7 @@
 import { importSprites } from "../../../../helpers/svgs/imports";
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
-import { verificationGridSprite } from "../../sprites/verification-grid.sprite";
+import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { selectionBoxSprite } from "../../sprites/selection-box.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import gridTileSprite from "../../sprites/grid-tile.svg?raw";
@@ -17,9 +17,9 @@ export class SelectionSlide extends AbstractSlide {
         <svg viewBox="0 0 390 230">
           ${importSprites(gridTileSprite)}
 
-          <g>${verificationGridSprite()}</g>
+          <g>${verificationGridPageSprite()}</g>
 
-          ${cursorSprite("selection-cursor", 223, 96)}
+          ${cursorSprite(223, 96)}
         </svg>
 
         ${selectionBoxSprite()}

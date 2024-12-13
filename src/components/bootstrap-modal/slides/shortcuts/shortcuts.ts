@@ -39,13 +39,13 @@ export class ShortcutsSlide extends AbstractSlide {
     return svg`
       ${importSprites(gridTile)}
 
-      <use class="shortcut-grid-tile" href="#grid-tile" x="10" y="10" />
-      <use class="shortcut-grid-tile" href="#grid-tile" x="100" y="10" />
-      <use class="shortcut-grid-tile" href="#grid-tile" x="190" y="10" />
+      <use class="grid-tile" href="#grid-tile" x="10" y="10" />
+      <use class="grid-tile" href="#grid-tile" x="100" y="10" />
+      <use class="grid-tile" href="#grid-tile" x="190" y="10" />
 
-      <use class="shortcut-grid-tile" href="#grid-tile" x="10" y="80" />
-      <use class="shortcut-grid-tile" href="#grid-tile" x="100" y="80" />
-      <use class="shortcut-grid-tile" href="#grid-tile" x="190" y="80" />
+      <use class="grid-tile" href="#grid-tile" x="10" y="80" />
+      <use class="grid-tile" href="#grid-tile" x="100" y="80" />
+      <use class="grid-tile" href="#grid-tile" x="190" y="80" />
     `;
   }
 
@@ -54,24 +54,20 @@ export class ShortcutsSlide extends AbstractSlide {
     return html`
       <svg viewBox="0 0 270 140">${this.gridAnimation()}</svg>
       <div class="selection-shortcut-keys">
-        <div>
+        <section>
           <h3 class="shortcut-template-title">Select all</h3>
           <div class="shortcut">
-            <div class="shortcut-keys">
-              <kbd ${ref(this.selectAllCtrl)}>Ctrl</kbd>
-              <kbd ${ref(this.selectAllA)}>A</kbd>
-            </div>
+            <kbd ${ref(this.selectAllCtrl)}>Ctrl</kbd>
+            <kbd ${ref(this.selectAllA)}>A</kbd>
           </div>
-        </div>
+        </section>
 
-        <div>
+        <section>
           <h3 class="shortcut-template-title">De-select all</h3>
           <div class="shortcut">
-            <div class="shortcut-keys">
-              <kbd ${ref(this.deselectAllEsc)}>Esc</kbd>
-            </div>
+            <kbd ${ref(this.deselectAllEsc)}>Esc</kbd>
           </div>
-        </div>
+        </section>
       </div>
     `;
   }

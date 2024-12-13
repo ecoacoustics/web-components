@@ -1,6 +1,6 @@
 import { svg, SVGTemplateResult } from "lit";
 
-export function verificationGridSprite(): SVGTemplateResult {
+export function verificationGridPageSprite(): SVGTemplateResult {
   const gridTileSize = 80;
   const gridTileHeight = 50;
   const gridTileGap = 20;
