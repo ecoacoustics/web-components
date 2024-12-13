@@ -37,6 +37,38 @@
   }
 }
 
+@keyframes selection-cursor-clicks {
+  5% {
+    r: 0px;
+  }
+  10% {
+    r: 6px;
+  }
+  15% {
+    r: 0px;
+  }
+
+  25% {
+    r: 0px;
+  }
+  30% {
+    r: 6px;
+  }
+  35% {
+    r: 0px;
+  }
+
+  50% {
+    r: 0px;
+  }
+  55% {
+    r: 6px;
+  }
+  60% {
+    r: 0px;
+  }
+}
+
 @keyframes selection-highlight-box-animation {
   80% {
     width: 0;

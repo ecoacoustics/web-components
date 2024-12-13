@@ -8,6 +8,10 @@
     animation: selection-cursor-movement var(--animation-duration) infinite;
   }
 
+  .selection-cursor-clicks {
+    animation: selection-cursor-clicks var(--animation-duration) infinite;
+  }
+
   /* Absolute positions are relative to the top-left of the slide content */
   .highlight-box {
     position: absolute;

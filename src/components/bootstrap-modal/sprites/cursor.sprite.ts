@@ -14,7 +14,7 @@ export function cursorSprite(className: string, x: Pixel, y: Pixel): SvgSprite {
 
 
       <circle
-        class="${className}-click-animation click-animation"
+        class="${className}-clicks click-animation"
         cx="8"
         cy="6"
         fill="url(#click-gradient)"

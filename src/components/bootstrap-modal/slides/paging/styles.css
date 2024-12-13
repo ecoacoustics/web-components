@@ -3,7 +3,7 @@
     animation: paging-cursor-movement var(--animation-duration) infinite;
   }
 
-  .paging-cursor-click-animation {
+  .paging-cursor-clicks {
     animation: paging-cursor-clicks var(--animation-duration) infinite;
   }
 
