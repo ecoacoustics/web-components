@@ -3,15 +3,22 @@ import { SvgSprite } from "./types";
 import { Pixel } from "../../../models/unitConverters";
 
 export function cursorSprite(x: Pixel, y: Pixel): SvgSprite {
+  // the view box of this svg is 21x26, reflecting the total size of the cursor
   return svg`
-    <svg class="cursor" x="${x}" y="${y}">
+    <svg
+      viewBox="0 0 26 31"
+      class="cursor"
+      x="${x}"
+      y="${y}"
+      width="21"
+      height="26"
+    >
       <defs>
         <radialGradient id="click-gradient">
           <stop offset="0%" stop-color="red" />
           <stop offset="100%" stop-color="pink" />
         </radialGradient>
       </defs>
-
 
       <circle
         class="click-animation"

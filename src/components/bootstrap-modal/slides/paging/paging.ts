@@ -1,10 +1,8 @@
-import { importSprites } from "../../../../helpers/svgs/imports";
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
 import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
-import gridTile from "../../sprites/grid-tile.svg?raw";
-import progressBar from "../../sprites/progress-bar.svg?raw";
+import { progressBarSprite } from "../../sprites/progress-bar.sprite";
 
 export class PagingSlide extends AbstractSlide {
   public constructor() {
@@ -14,16 +12,13 @@ export class PagingSlide extends AbstractSlide {
   public render() {
     return html`
       <div class="paging-slide html-slide">
-        <svg viewBox="0 0 390 230">
-          ${importSprites(gridTile, progressBar)}
-
+        <svg viewBox="0 0 300 230">
           <g class="pages">
             <g class="previous-page">${verificationGridPageSprite()}</g>
             <g class="current-page">${verificationGridPageSprite()}</g>
           </g>
 
-          <use href="#progress-bar" class="progress-bar" x="10" y="50" />
-          ${cursorSprite(30, 156)}
+          ${progressBarSprite(10, 50)} ${cursorSprite(32, 157)}
         </svg>
       </div>
     `;

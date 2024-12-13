@@ -2,15 +2,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 
 /*
-  We add a bunch of default non-linear animation-timing functions that
-  components can use.
-  This allows our animations to feel less robotic, and consistent 
-*/
-:host {
-  --default-non-linear: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/*
   Because some of our web component support going into fullscreen mode, we
   theme the backdrop color of the fullscreen mode to our custom background color
   This means that if the component doesn't fully fill up the screen when in
@@ -26,8 +17,6 @@
 
   /* CSS Resets */
   font-weight: normal;
-
-  animation-timing-function: var(--default-non-linear);
 }
 
 sl-icon {
@@ -50,7 +39,7 @@ input:disabled {
   cursor: not-allowed;
 }
 
-/* 
+/*
   Our kbd element has two distinct parts:
     - The ::before style is the top part of the key
     - the ::after style is the sloping / vertical part of the key
@@ -169,8 +158,8 @@ dialog {
     By setting a minimum width and height of 50%, we ensure that the dialog will
     always look raised against the main content.
   */
-  min-width: 50%;
-  min-height: 50%;
+  min-width: 60%;
+  min-height: 60%;
 
   /*
     Similar to the minimum width and height, we set a maximum width and height

@@ -3,12 +3,11 @@ import { map } from "lit/directives/map.js";
 import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { AbstractSlide } from "../abstractSlide";
-import { importSprites } from "../../../../helpers/svgs/imports";
-import gridTile from "../../sprites/grid-tile.svg?raw";
+import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
-    super("You can use the following shortcuts to complete your tasks");
+    super("You can use the following keyboard shortcuts");
     this.shortcuts = shortcuts;
   }
 
@@ -37,25 +36,19 @@ export class ShortcutsSlide extends AbstractSlide {
 
   private gridAnimation() {
     return svg`
-      ${importSprites(gridTile)}
-
-      <use class="grid-tile" href="#grid-tile" x="10" y="10" />
-      <use class="grid-tile" href="#grid-tile" x="100" y="10" />
-      <use class="grid-tile" href="#grid-tile" x="190" y="10" />
-
-      <use class="grid-tile" href="#grid-tile" x="10" y="80" />
-      <use class="grid-tile" href="#grid-tile" x="100" y="80" />
-      <use class="grid-tile" href="#grid-tile" x="190" y="80" />
+      ${gridTileSprite(10, 0)}
+      ${gridTileSprite(100, 0)}
+      ${gridTileSprite(190, 0)}
     `;
   }
 
   private selectionShortcutsTemplate() {
     // prettier-ignore
     return html`
-      <svg viewBox="0 0 270 140">${this.gridAnimation()}</svg>
+      <svg viewBox="0 0 270 60">${this.gridAnimation()}</svg>
       <div class="selection-shortcut-keys">
         <section>
-          <h3 class="shortcut-template-title">Select all</h3>
+          <h3 class="shortcut-card-title">Select all</h3>
           <div class="shortcut">
             <kbd ${ref(this.selectAllCtrl)}>Ctrl</kbd>
             <kbd ${ref(this.selectAllA)}>A</kbd>
@@ -63,7 +56,7 @@ export class ShortcutsSlide extends AbstractSlide {
         </section>
 
         <section>
-          <h3 class="shortcut-template-title">De-select all</h3>
+          <h3 class="shortcut-card-title">De-select all</h3>
           <div class="shortcut">
             <kbd ${ref(this.deselectAllEsc)}>Esc</kbd>
           </div>

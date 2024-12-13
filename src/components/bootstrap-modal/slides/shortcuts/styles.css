@@ -1,10 +1,6 @@
 .shortcut-slide {
   flex-direction: row;
 
-  h3 {
-    margin: 0;
-  }
-
   .selection-shortcuts {
     display: flex;
     flex-direction: column;
@@ -24,8 +20,16 @@
 
     padding: var(--oe-spacing);
 
-    .shortcut-template-title {
+    .shortcut-card-title {
       text-align: center;
+
+      /*
+        While most user agents will add margin to heading elements.
+        I have explicitly added a margin to the card headings to ensure
+        consistency across all user agents, and to safe-guard against any
+        future changes to the default styles, or template changes.
+      */
+      margin: 0.5em;
     }
 
     .shortcut,

@@ -69,3 +69,17 @@ sl-carousel {
 .slide-description {
   text-align: center;
 }
+
+.click-animation {
+  /* animation-timing-function: cubic-bezier(0, 0.175, 0.4, 0.9) !important; */
+  animation-timing-function: cubic-bezier(0, 1.5, 1, 1.5) !important;
+}
+
+.pages {
+  /*
+    I chose "Ease-out quadratic based on the power of 3" over my second pick
+    "Ease-out quintic based on the power of 4" because it has a softer start
+    meaning that it doesn't look as laggy when the animation starts
+  */
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1) !important;
+}

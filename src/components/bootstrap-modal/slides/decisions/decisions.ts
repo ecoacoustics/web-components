@@ -1,11 +1,9 @@
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
-import { importSprites } from "../../../../helpers/svgs/imports";
 import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { decisionButtonsSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
-import gridTile from "../../sprites/grid-tile.svg?raw";
 
 export class DecisionsSlide extends AbstractSlide {
   public constructor(
@@ -33,9 +31,7 @@ export class DecisionsSlide extends AbstractSlide {
   public render() {
     return html`
       <div class="decisions-slide html-slide">
-        <svg viewBox="0 0 390 230">
-          ${importSprites(gridTile)}
-
+        <svg viewBox="0 0 300 230">
           <g class="pages">
             <g class="current-page">${verificationGridPageSprite()}</g>
             <g class="next-page">${verificationGridPageSprite()}</g>

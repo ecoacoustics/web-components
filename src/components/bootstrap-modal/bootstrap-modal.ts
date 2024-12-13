@@ -106,14 +106,14 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public updated(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask),
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      new ShortcutsSlide(this.decisionShortcuts),
       new PagingSlide(),
+      new ShortcutsSlide(this.decisionShortcuts),
       new SelectionSlide(),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing

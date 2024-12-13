@@ -51,13 +51,13 @@
     r: 0px;
   }
 
-  55% {
+  60% {
     r: 0px;
   }
-  60% {
+  65% {
     r: 6px;
   }
-  65% {
+  70% {
     r: 0px;
   }
 }
@@ -86,18 +86,24 @@
 
 @keyframes progress-bar-movement {
   0% {
-    --view-head: 50%;
+    --view-head: var(--verification-head);
   }
 
+  /* After the next */
   50% {
-    --view-head: 45%;
+    --view-head: calc(var(--verification-head) - 5%);
   }
 
   to {
-    --view-head: 50%;
+    --view-head: var(--verification-head);
   }
 }
 
+/*
+    When the "previous" and "next" buttons are clicked in the animation, we want
+    to clearly indicate that the buttons have been pressed.
+    To accomplish this, we use the click
+*/
 @keyframes progress-bar-button-depression {
   8% {
     --chevron-previous-color: var(--oe-primary-color);
@@ -109,13 +115,13 @@
     --chevron-previous-color: var(--oe-primary-color);
   }
 
-  55% {
+  60% {
     --chevron-next-color: var(--oe-primary-color);
   }
-  60% {
+  65% {
     --chevron-next-color: var(--oe-selected-color);
   }
-  65% {
+  70% {
     --chevron-next-color: var(--oe-primary-color);
   }
 }

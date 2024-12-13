@@ -24,7 +24,14 @@
   }
 
   .progress-bar {
+    /*
+      The animation played on the progress bar demonstrates moving the view
+      head backwards and forwards using the pagination buttons.
+      This means that throughout the duration of the animation, the verification
+      head will not change.
+    */
     --verification-head: 50%;
+
     animation:
       progress-bar-movement var(--animation-duration) infinite,
       progress-bar-button-depression var(--animation-duration) infinite;

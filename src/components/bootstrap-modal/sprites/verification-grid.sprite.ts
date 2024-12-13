@@ -1,10 +1,11 @@
 import { svg, SVGTemplateResult } from "lit";
+import { gridTileSprite } from "./grid-tile.sprite";
 
 export function verificationGridPageSprite(): SVGTemplateResult {
   const gridTileSize = 80;
   const gridTileHeight = 50;
   const gridTileGap = 20;
-  const gridTileRowCount = 4;
+  const gridTileRowCount = 3;
   const gridTileColumnCount = 2;
   const gridTileCount = gridTileRowCount * gridTileColumnCount;
 
@@ -21,8 +22,8 @@ export function verificationGridPageSprite(): SVGTemplateResult {
   return svg`
     <g class="grid-tiles">
       ${Array.from({ length: gridTileCount }).map((_, index) => {
-        const position = gridTilePosition(index);
-        return svg`<use class="tile-${index}" href="#grid-tile" x="${position.x}" y="${position.y}" />`;
+        const { x, y } = gridTilePosition(index);
+        return gridTileSprite(x, y);
       })}
     </g>
   `;
