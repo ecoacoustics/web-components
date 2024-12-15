@@ -107,7 +107,7 @@ export class ShortcutsSlide extends AbstractSlide {
     this.animateKeypress();
 
     return html`
-      <div class="shortcut-slide html-slide" style="--animation-duration: ${this.animationDuration}s">
+      <div class="shortcut-slide slide" style="--animation-duration: ${this.animationDuration}s">
         <div class="decision-shortcuts shortcut-card">
           <h3>Decision Shortcuts</h3>
           ${this.decisionShortcutTemplate()}

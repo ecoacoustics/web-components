@@ -1,5 +1,5 @@
 .shortcut-slide {
-  flex-direction: row;
+  flex-direction: row !important;
 
   .selection-shortcuts {
     display: flex;

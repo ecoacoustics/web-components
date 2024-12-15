@@ -11,10 +11,9 @@ export class SelectionSlide extends AbstractSlide {
 
   public render() {
     return html`
-      <div class="selection-slide html-slide">
-        <svg viewBox="0 0 280 230">
+      <div class="selection-slide slide">
+        <svg viewBox="0 0 280 230" class="vertically-fill">
           <g>${verificationGridPageSprite()}</g>
-
           ${cursorSprite(223, 96)}
         </svg>
 

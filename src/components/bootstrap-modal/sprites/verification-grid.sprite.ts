@@ -21,9 +21,9 @@ export function verificationGridPageSprite(): SVGTemplateResult {
 
   return svg`
     <g class="grid-tiles">
-      ${Array.from({ length: gridTileCount }).map((_, index) => {
-        const { x, y } = gridTilePosition(index);
-        return gridTileSprite(x, y);
+      ${Array.from({ length: gridTileCount }).map((_, i) => {
+        const { x, y } = gridTilePosition(i);
+        return gridTileSprite(x, y, `tile-${i}`);
       })}
     </g>
   `;

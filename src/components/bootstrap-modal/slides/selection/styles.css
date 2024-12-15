@@ -53,12 +53,12 @@
     animation-delay: var(--highlight-selection-start);
   }
 
-  .tile-4 {
+  .tile-3 {
     animation: selection-selected-animation var(--animation-duration) infinite;
     animation-delay: calc(var(--highlight-selection-start) + 0.4s);
   }
 
-  .tile-6 {
+  .tile-5 {
     animation: selection-selected-animation var(--animation-duration) infinite;
     animation-delay: calc(var(--highlight-selection-start) + 0.7s);
   }

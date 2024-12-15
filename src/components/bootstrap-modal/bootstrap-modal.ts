@@ -111,9 +111,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new PagingSlide(),
 
       new PagingSlide(),
-      new ShortcutsSlide(this.decisionShortcuts),
       new SelectionSlide(),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -148,11 +147,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private slidesTemplate(): HTMLTemplateResult {
     return html`
-      <sl-carousel navigation pagination mouse-dragging>
+      <sl-carousel class="carousel" navigation pagination mouse-dragging>
         ${loop(
           this.slides,
           (slide, { last }) => html`
-            <sl-carousel-item>
+            <sl-carousel-item class="carousel-item">
               ${this.renderSlide(slide)}
               <div class="slide-footer">
                 ${when(
@@ -170,14 +169,14 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public render(): HTMLTemplateResult {
     return html`
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
-        <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
-          <div class="dialog-header">
+        <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+          <header class="dialog-header">
             <h2 class="dialog-title">Information</h2>
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
-          </div>
+          </header>
 
           <div class="dialog-content">${this.slidesTemplate()}</div>
-        </div>
+        </section>
       </dialog>
     `;
   }

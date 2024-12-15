@@ -30,7 +30,7 @@ export class DecisionsSlide extends AbstractSlide {
 
   public render() {
     return html`
-      <div class="decisions-slide html-slide">
+      <div class="decisions-slide slide">
         <svg viewBox="0 0 300 230">
           <g class="pages">
             <g class="current-page">${verificationGridPageSprite()}</g>

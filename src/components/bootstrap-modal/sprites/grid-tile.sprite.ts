@@ -2,9 +2,16 @@ import { svg } from "lit";
 import { SvgSprite } from "./types";
 import { Pixel } from "../../../models/unitConverters";
 
-export function gridTileSprite(x: Pixel, y: Pixel): SvgSprite {
+export function gridTileSprite(x: Pixel, y: Pixel, classNames?: string): SvgSprite {
   return svg`
-    <svg xmlns="http://www.w3.org/2000/svg" x="${x}" y="${y}">
+    <svg
+      viewBox="0 0 80 60"
+      width="80"
+      height="60"
+      class="grid-tile ${classNames}"
+      x="${x}"
+      y="${y}"
+    >
       <rect
         class="grid-tile-background"
         width="80"

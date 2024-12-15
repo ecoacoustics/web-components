@@ -1,75 +1,103 @@
-:host {
-  --decision-color: var(--oe-panel-color);
-
-  --keyframe-0: 0%;
-  --keyframe-1: 20%;
-  --keyframe-2: 40%;
-  --keyframe-3: 60%;
-  --keyframe-4: 80%;
-  --keyframe-5: 100%;
-}
-
-sl-carousel {
-  max-height: 550px;
-}
-
-.dialog-container {
-  position: relative;
-  height: calc(100% - 4rem);
-}
-
-.dialog-header {
-  display: flex;
-  background-color: var(--oe-panel-color);
-  padding: 0.5rem;
-  padding-left: 1.5rem;
-
-  /* create a box shadow at the bottom */
-  box-shadow: var(--oe-box-shadow);
-
-  justify-content: space-between;
-  align-items: center;
-
-  .dialog-title {
-    margin: 0;
-  }
-
-  .close-button {
-    line-height: 1;
-  }
-}
-
-.dialog-content {
-  position: relative;
-  height: fit-content;
-  padding: 2rem;
-}
-
-.dialog-footer {
-  padding: 1rem;
-}
-
-.html-slide {
-  position: relative;
+#dialog-element {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
+}
 
-  width: 100%;
+/*
+  We use a section so that <header> and <footer> elements can be semantically
+  scoped to the dialog content.
+*/
+.dialog-section {
+  position: relative;
   height: 100%;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  .dialog-header {
+    display: flex;
+    background-color: var(--oe-panel-color);
+    padding: 0.5rem;
+    padding-left: 1.5rem;
+
+    /* create a box shadow at the bottom */
+    box-shadow: var(--oe-box-shadow);
+
+    justify-content: space-between;
+    align-items: center;
+
+    .dialog-title {
+      margin: 0;
+    }
+
+    .close-button {
+      line-height: 1;
+    }
+  }
+
+  .dialog-content {
+    position: relative;
+    height: fit-content;
+    padding: min(2em, 2vw);
+    flex: 1 1;
+
+    display: flex;
+
+    .carousel {
+      /*
+        we cannot modify if this element is inside a flexbox or not because it
+        will be inside the shadow-dom of the sl-carousel shoelace web component
+      */
+      .carousel-item {
+        position: relative;
+        height: 100%;
+      }
+    }
+  }
 }
 
 .slide-content {
   position: relative;
   width: 100%;
   height: 100%;
+
+  /* Vertically fill the flexbox that we are inside of */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  .slide-description {
+    text-align: center;
+  }
+
+  .slide {
+    position: relative;
+    flex: 1 1;
+    min-height: 0px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+
+    /*
+      In some very extreme breakage cases, elements from the previous/next
+      slide can overflow into their neighbors.
+      As a defensive programming measure, I have hidden all overflow of the
+      slides so in the rare case that this will occur while a user is using
+      the web components, they will not see multiple slides at once, but they
+      will still have a half-visible slide.
+
+      This functionality should not be relied upon, and is not a feature.
+      I have only disabled overflow so that in untested scenarios, the user
+      will only see broken content, not incorrect content/information.
+    */
+    overflow: hidden;
+  }
 }
 
-.slide-description {
-  text-align: center;
-}
-
+/* TODO: sprite selectors (below) should probably be inlined into the sprites */
 .click-animation {
   /* animation-timing-function: cubic-bezier(0, 0.175, 0.4, 0.9) !important; */
   animation-timing-function: cubic-bezier(0, 1.5, 1, 1.5) !important;
@@ -82,4 +110,8 @@ sl-carousel {
     meaning that it doesn't look as laggy when the animation starts
   */
   animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1) !important;
+}
+
+:host {
+  --decision-color: var(--oe-panel-color);
 }
