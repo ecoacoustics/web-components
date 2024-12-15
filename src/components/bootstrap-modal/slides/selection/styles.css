@@ -6,6 +6,7 @@
 .selection-slide {
   .cursor {
     animation: selection-cursor-movement var(--animation-duration) infinite;
+    will-change: transform;
   }
 
   .click-animation {

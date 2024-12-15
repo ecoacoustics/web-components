@@ -2,7 +2,7 @@ import { svg } from "lit";
 import { SvgSprite } from "./types";
 import { Pixel } from "../../../models/unitConverters";
 
-export function gridTileSprite(x: Pixel, y: Pixel, classNames?: string): SvgSprite {
+export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, classNames?: string): SvgSprite {
   return svg`
     <svg
       viewBox="0 0 80 60"
@@ -31,17 +31,39 @@ export function gridTileSprite(x: Pixel, y: Pixel, classNames?: string): SvgSpri
       />
 
       <text x="7" y="12" font-size="6">Tag Name</text>
-
-      <rect
-        x="10"
-        y="50"
-        width="60"
-        height="4"
-        rx="2"
-        stroke-width="0.5"
-        fill="var(--decision-color)"
-        stroke="var(--oe-border-color)"
-      />
+      ${hasClassification ? gridProgressClassification() : gridProgressVerification()}
     </svg>
+  `;
+}
+
+function gridProgressVerification(): SvgSprite {
+  return svg`
+    <rect
+      x="10"
+      y="50"
+      width="60"
+      height="4"
+      rx="2"
+      stroke-width="0.5"
+      fill="var(--decision-color)"
+      stroke="var(--oe-border-color)"
+    />
+  `;
+}
+
+// TODO: we should show a classification task progress bar if the task is a
+// classification task
+function gridProgressClassification(): SvgSprite {
+  return svg`
+    <rect
+      x="10"
+      y="50"
+      width="60"
+      height="4"
+      rx="2"
+      stroke-width="0.5"
+      fill="var(--decision-color)"
+      stroke="var(--oe-border-color)"
+    />
   `;
 }

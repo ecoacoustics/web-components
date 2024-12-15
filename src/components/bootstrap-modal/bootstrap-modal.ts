@@ -136,9 +136,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
+      new SelectionSlide(),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new PagingSlide(),
-      new SelectionSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing

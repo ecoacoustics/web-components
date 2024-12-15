@@ -8,28 +8,31 @@
   cannot be lexically scoped to a class.
   To subvert this limitation, I have prefixed the keyframes with the name of
   the slide they are intended for.
+
+  It is fine to use px units in these animations because the svg viewBox is set
+  meaning that the svg will dynamically scale to all screen resolutions.
 */
 @keyframes selection-cursor-movement {
   from {
-    transform: translate3d(-70px, -60px, 0);
+    transform: translate(-70px, -60px);
   }
 
   10% {
-    transform: translate3d(-100px, -80px, 0);
+    transform: translate(-100px, -80px);
   }
 
   30% {
-    transform: translate3d(0px, -80px, 0);
+    transform: translate(0px, -80px);
   }
 
   50%,
   60% {
-    transform: translate3d(-100px, 0px, 0);
+    transform: translate(-100px, 0px);
   }
 
   /* selection highlight box animations */
   80% {
-    transform: translate3d(-200px, -80px, 0);
+    transform: translate(-200px, -80px);
   }
 
   to {

@@ -26,17 +26,19 @@ export class DecisionsSlide extends AbstractSlide {
     super(description);
 
     this.decisionButtons = decisionButtons;
+    this.hasClassificationTask = hasClassificationTask;
   }
 
   private decisionButtons: DecisionComponent[];
+  private hasClassificationTask: boolean;
 
   public render() {
     return html`
       <div class="decisions-slide slide">
         <svg viewBox="0 0 300 230">
           <g class="pages">
-            <g class="current-page">${verificationGridPageSprite()}</g>
-            <g class="next-page">${verificationGridPageSprite()}</g>
+            <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
+            <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>
 
           ${cursorSprite(160, 150)}

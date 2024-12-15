@@ -12,6 +12,8 @@ export class ShortcutsSlide extends AbstractSlide {
   }
 
   private shortcuts: KeyboardShortcut[];
+
+  // TOOD: Refactor this
   private selectAllCtrl: Ref<HTMLElement> = createRef();
   private selectAllA: Ref<HTMLElement> = createRef();
   private deselectAllEsc: Ref<HTMLElement> = createRef();
