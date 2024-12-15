@@ -41,7 +41,7 @@ export class DecisionsSlide extends AbstractSlide {
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>
 
-          ${cursorSprite(160, 150)}
+          ${cursorSprite(135, 150)}
         </svg>
 
         ${decisionButtonsSprite(this.decisionButtons)}
