@@ -10,6 +10,8 @@ export function decisionButtonsSprite(decisionButtons: DecisionComponent[]): Htm
 
 function wireframeDecisionButton(button: DecisionComponent): Node {
   const clonedNode = button.cloneNode(true) as VerificationComponent;
+
+  // "wireframe" is a helper class defined in our global styles
   clonedNode.classList.add("wireframe");
 
   // We disable pointer events so that clicking on the decision buttons does not

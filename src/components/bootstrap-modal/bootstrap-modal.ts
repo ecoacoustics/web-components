@@ -112,7 +112,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
       new PagingSlide(),
       new SelectionSlide(),
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -120,7 +120,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
     if (!this.isMobile) {
-      this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
+      // this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }
   }
 

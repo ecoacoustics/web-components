@@ -1,15 +1,11 @@
-#dialog-element {
-  display: flex;
-  flex-direction: column;
-}
-
 /*
   We use a section so that <header> and <footer> elements can be semantically
   scoped to the dialog content.
 */
 .dialog-section {
-  position: relative;
+  position: absolute;
   height: 100%;
+  width: 100%;
   flex: 1;
 
   display: flex;
@@ -38,11 +34,12 @@
 
   .dialog-content {
     position: relative;
-    height: fit-content;
+    min-height: 0px;
     padding: min(2em, 2vw);
     flex: 1 1;
 
     display: flex;
+    justify-content: center;
 
     .carousel {
       /*
@@ -94,6 +91,11 @@
       will only see broken content, not incorrect content/information.
     */
     overflow: hidden;
+
+    /* TODO: This is a hack to get the svgs to fit in the mobile window */
+    svg {
+      max-width: 100%;
+    }
   }
 }
 

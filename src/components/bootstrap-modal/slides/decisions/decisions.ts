@@ -18,8 +18,10 @@ export class DecisionsSlide extends AbstractSlide {
       description = "This grid contains a verification task";
     } else if (hasClassificationTask) {
       description = "This grid contains a classification task";
+    } else {
+      console.warn("Could not determine the type of task in the grid. Falling back to verification task prompt.");
+      description = "This grid contains a verification task";
     }
-    description = "This grid contains a verification task";
 
     super(description);
 
