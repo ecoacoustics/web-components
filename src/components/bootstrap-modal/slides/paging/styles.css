@@ -19,7 +19,7 @@
       --decision-color: green;
 
       animation: paging-slide-decisions-current var(--animation-duration) infinite;
-      transform: translate3d(-100%, 0, 0);
+      transform: translate(-100%, 0);
     }
   }
 
@@ -32,8 +32,14 @@
     */
     --verification-head: 50%;
 
-    animation:
-      progress-bar-movement var(--animation-duration) infinite,
-      progress-bar-button-depression var(--animation-duration) infinite;
+    animation: progress-bar-button-depression var(--animation-duration) infinite;
+
+    .view-head-segment {
+      animation: progress-bar-view-head-movement var(--animation-duration) infinite;
+    }
+
+    .verification-head-segment {
+      width: var(--verification-head);
+    }
   }
 }

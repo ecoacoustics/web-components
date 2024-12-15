@@ -37,20 +37,20 @@ export function progressBarSprite(x: Pixel, y: Pixel): SvgSprite {
           fill="var(--oe-panel-color)"
         />
         <rect
+          class="verification-head-segment"
           x="40"
-          width="var(--verification-head)"
           height="5"
           rx="5"
           fill="var(--oe-selected-color)"
         />
         <rect
+          class="view-head-segment"
           x="40"
-          width="var(--view-head)"
           height="5"
           rx="5"
           fill="var(--oe-secondary-color)"
         />
-      </symbol>
+      </svg>
     </svg>
   `;
 }

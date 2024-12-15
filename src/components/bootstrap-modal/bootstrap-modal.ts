@@ -35,7 +35,7 @@ export interface KeyboardShortcut {
   This does not prevent the modal from being opened manually through the
   verification grids information icon or the bootstraps open() method.
 */
-const autoDismissBootstrapStorageKey = "oe-bypass-bootstrap";
+const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 
 /**
  * @description
@@ -125,15 +125,19 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
   }
 
   private updateSlides(): void {
     this.slides = [
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      // new SelectionSlide(),
+      // new PagingSlide(),
+
+      new PagingSlide(),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
-      new PagingSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing

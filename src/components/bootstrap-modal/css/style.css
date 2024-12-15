@@ -105,6 +105,10 @@
   animation-timing-function: cubic-bezier(0, 1.5, 1, 1.5) !important;
 }
 
+/*
+  Pages and the progress bar should use the same timing function so that it
+  looks like the progress bar moves with the paging animations.
+*/
 .pages {
   /*
     I chose "Ease-out quadratic based on the power of 3" over my second pick

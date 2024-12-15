@@ -1,16 +1,4 @@
 .paging-slide {
-  @property --view-head {
-    syntax: "<percentage>";
-    initial-value: 50%;
-    inherits: false;
-  }
-
-  @property --verification-head {
-    syntax: "<percentage>";
-    initial-value: 50%;
-    inherits: false;
-  }
-
   --animation-duration: 5s;
 }
 
@@ -29,35 +17,37 @@
   */
   10%,
   40% {
-    transform: translate3d(-5%, 0%, 0);
+    transform: translate(-5%, 0%);
   }
 
   /*
-      at the end of this keyframe, the mouse will be over the "next page" button
-    */
+    At the end of this keyframe, the mouse will be over the "next page" button.
+    This is because its starting position set by the svgs "x" and "y" properties
+    are over the "next page" button.
+  */
   50% {
     transform: none;
   }
 }
 
 @keyframes paging-cursor-clicks {
+  from,
   8% {
     r: 0px;
   }
   13% {
     r: 6px;
   }
-  18% {
-    r: 0px;
-  }
-
+  18%,
   60% {
     r: 0px;
   }
+
   65% {
     r: 6px;
   }
-  70% {
+  70%,
+  to {
     r: 0px;
   }
 }
@@ -84,18 +74,20 @@
   }
 }
 
-@keyframes progress-bar-movement {
-  0% {
-    --view-head: var(--verification-head);
+@keyframes progress-bar-view-head-movement {
+  0%,
+  10% {
+    width: var(--verification-head);
   }
 
   /* After the next */
-  50% {
-    --view-head: calc(var(--verification-head) - 5%);
+  50%,
+  60% {
+    width: calc(var(--verification-head) - 5%);
   }
 
   to {
-    --view-head: var(--verification-head);
+    width: var(--verification-head);
   }
 }
 
