@@ -35,7 +35,7 @@ export interface KeyboardShortcut {
   This does not prevent the modal from being opened manually through the
   verification grids information icon or the bootstraps open() method.
 */
-const bypassBootstrapLocalStorageKey = "oe-bypass-bootstrap";
+const autoDismissBootstrapStorageKey = "oe-bypass-bootstrap";
 
 /**
  * @description
@@ -97,7 +97,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private slides: AbstractSlide[] = [];
 
   public firstUpdated(): void {
-    const shouldShowHelpDialog = localStorage.getItem(bypassBootstrapLocalStorageKey) === null;
+    const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
 
     if (shouldShowHelpDialog) {
       this.showModal();
@@ -125,17 +125,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    // TODO: I have temporarily disabled this line for DX purposes
-    // localStorage.setItem(helpPreferenceLocalStorageKey, "true");
+    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
   }
 
   private updateSlides(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      // new SelectionSlide(),
-      // new PagingSlide(),
-
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
       new PagingSlide(),

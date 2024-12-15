@@ -2,6 +2,8 @@ import { svg } from "lit";
 import { SvgSprite } from "./types";
 
 export function selectionBoxSprite(): SvgSprite {
+  // Chrome doesn't like it if we use the var(--oe-border-rounding) theming
+  // variable here, therefore, I have hard-coded the rx value to 2.
   return svg`
     <rect
       class="highlight-box"
@@ -11,7 +13,7 @@ export function selectionBoxSprite(): SvgSprite {
       height="0"
       opacity="0.3"
       stroke-width="1"
-      rx="var(--oe-border-rounding)"
+      rx="2"
       stroke="var(--oe-border-color)"
       fill="var(--oe-selected-color)"
     />
