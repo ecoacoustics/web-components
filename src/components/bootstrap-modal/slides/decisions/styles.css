@@ -14,7 +14,9 @@
   }
 
   .decision-buttons {
+    position: absolute;
+    top: 60%;
+
     display: flex;
-    width: 100%;
   }
 }

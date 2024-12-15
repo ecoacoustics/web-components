@@ -162,7 +162,7 @@ export class ClassificationComponent extends DecisionComponent {
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
         <div class="button-text">${decision}</div>
-        ${this.isMobile && shortcut ? this.keyboardShortcutTemplate(shortcut) : nothing}
+        ${!this.isMobile && shortcut ? this.keyboardShortcutTemplate(shortcut) : nothing}
       </button>
     `;
   }

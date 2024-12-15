@@ -1,6 +1,6 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
 import { AbstractSlide } from "./slides/abstractSlide";
@@ -104,23 +104,17 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     }
   }
 
-  public updated(): void {
-    this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      // new SelectionSlide(),
-      // new PagingSlide(),
-
-      new PagingSlide(),
-      new SelectionSlide(),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+  public updated(change: PropertyValues<this>): void {
+    const invalidationKeys: (keyof this)[] = [
+      "hasVerificationTask",
+      "classificationTasks",
+      "isMobile",
+      "selectionBehavior",
+      "decisionElements",
     ];
 
-    // if the user is on a or tablet device, we don't need to bother showing
-    // the keyboard shortcuts slide
-    // by conditionally adding it to the slides array, we can reduce the amount
-    // of information that needs to be consumed by the user
-    if (!this.isMobile) {
-      // this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
+    if (invalidationKeys.some((key) => change.has(key as any))) {
+      this.updateSlides();
     }
   }
 
@@ -136,6 +130,28 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dialogElement.close();
   }
 
+  private updateSlides(): void {
+    this.slides = [
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      // new SelectionSlide(),
+      // new PagingSlide(),
+
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      new PagingSlide(),
+      new SelectionSlide(),
+    ];
+
+    // if the user is on a or tablet device, we don't need to bother showing
+    // the keyboard shortcuts slide
+    // by conditionally adding it to the slides array, we can reduce the amount
+    // of information that needs to be consumed by the user
+    if (!this.isMobile) {
+      this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
+    }
+
+    this.requestUpdate();
+  }
+
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
     return html`
       <div class="slide-content">
@@ -143,6 +159,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
         ${slide.render()}
       </div>
     `;
+  }
+
+  private slideFooterTemplate(): HTMLTemplateResult {
+    return html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Begin</button>`;
   }
 
   private slidesTemplate(): HTMLTemplateResult {
@@ -153,12 +173,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           (slide, { last }) => html`
             <sl-carousel-item class="carousel-item">
               ${this.renderSlide(slide)}
-              <div class="slide-footer">
-                ${when(
-                  last,
-                  () => html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Begin</button>`,
-                )}
-              </div>
+              <div class="slide-footer">${when(last, () => this.slideFooterTemplate())}</div>
             </sl-carousel-item>
           `,
         )}
