@@ -6,7 +6,7 @@
 */
 @keyframes decisions-cursor-movement {
   from {
-    transform: translate3d(8%, 0, 0);
+    transform: translate(8%, 0);
   }
 
   50% {
@@ -14,7 +14,7 @@
   }
 
   to {
-    transform: translate3d(8%, 0, 0);
+    transform: translate(8%, 0);
   }
 }
 

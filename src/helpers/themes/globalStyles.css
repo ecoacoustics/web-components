@@ -401,23 +401,6 @@ button {
   filter: grayscale(100%);
 }
 
-.highlight-box {
-  position: absolute;
-  display: none;
-  top: 0px;
-  left: 0px;
-  width: 0px;
-  height: 0px;
-  background-color: var(--oe-selected-color);
-  border: solid 2px var(--oe-border-color);
-  border-radius: var(--oe-border-rounding);
-  opacity: 0.3;
-  z-index: 5;
-
-  /* TODO: this isn't working, we should probably bubble events */
-  pointer-events: none;
-}
-
 @keyframes fade-in {
   0% {
     opacity: 0;

@@ -1,6 +1,7 @@
 .decisions-slide {
   .cursor {
     animation: decisions-cursor-movement 8s infinite;
+    will-change: transform;
   }
 
   .pages {
