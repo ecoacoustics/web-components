@@ -60,7 +60,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public isMobile = false;
 
   @state()
-  public verificationGrid!: VerificationGridComponent;
+  public verificationGrid?: VerificationGridComponent;
 
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
@@ -73,13 +73,17 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   }
 
   public disconnectedCallback(): void {
+    if (!this.verificationGrid) {
+      return;
+    }
+
     this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
     this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);
     super.disconnectedCallback();
   }
 
   public willUpdate(change: PropertyValues<this>): void {
-    if (change.has("verificationGrid")) {
+    if (change.has("verificationGrid") && this.verificationGrid) {
       // if we are currently attached to a verification grid, we should remove
       // the event listeners from the old grid
       if (change.get("verificationGrid")) {

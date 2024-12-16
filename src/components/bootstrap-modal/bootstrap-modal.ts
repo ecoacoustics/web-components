@@ -1,4 +1,4 @@
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -75,6 +75,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @property({ type: Array, attribute: false })
   public classificationTasks!: Tag[];
 
+  @state()
+  private currentSlide?: AbstractSlide;
+
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
@@ -129,6 +132,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dialogElement.close();
   }
 
+  private updateDialogContent(index: number): void {
+    this.currentSlide = this.slides[index];
+  }
+
   private updateSlides(): void {
     this.slides = [
       // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
@@ -148,7 +155,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }
 
-    this.requestUpdate();
+    this.updateDialogContent(0);
   }
 
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
@@ -166,7 +173,13 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private slidesTemplate(): HTMLTemplateResult {
     return html`
-      <sl-carousel class="carousel" navigation pagination mouse-dragging>
+      <sl-carousel
+        @sl-slide-change="${(event: CustomEvent<{ index: number }>) => this.updateDialogContent(event.detail.index)}"
+        class="carousel"
+        navigation
+        pagination
+        mouse-dragging
+      >
         ${loop(
           this.slides,
           (slide, { last }) => html`
@@ -185,7 +198,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
-            <h2 class="dialog-title">Information</h2>
+            <h2 class="dialog-title">${this.currentSlide?.title}</h2>
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </header>
 
