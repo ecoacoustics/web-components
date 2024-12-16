@@ -1,3 +1,7 @@
+.decisions-slide {
+  --animation-duration: 5s;
+}
+
 /*
   These keyframes are outside of the .decisions-slide class because keyframes
   cannot be lexically scoped to a class.
@@ -6,21 +10,54 @@
 */
 @keyframes decisions-cursor-movement {
   from {
-    transform: translate(15px, 0);
-  }
-
-  50% {
     transform: none;
   }
 
+  /* move and hold on the true decision */
+  30%,
+  50% {
+    transform: translate(-18px, 0);
+  }
+
+  80%,
   to {
-    transform: translate(15px, 0);
+    transform: none;
   }
 }
 
+@keyframes decisions-cursor-clicks {
+  from,
+  40% {
+    r: 0px;
+  }
+  45% {
+    r: 6px;
+  }
+  50% {
+    r: 0px;
+  }
+
+  56%,
+  90% {
+    r: 0px;
+  }
+  95% {
+    r: 6px;
+  }
+  to {
+    r: 0px;
+  }
+}
+
+/*
+  The duration of the decision slides animation is half of the rest of the
+  animations.
+  This allows us to simplify the decision slide animations, as we only need two
+  keyframes.
+*/
 @keyframes decisions-slide-movement {
   from {
-    transform: translate3d(100%, 0, 0);
+    transform: translate(100%, 0);
   }
 
   50% {

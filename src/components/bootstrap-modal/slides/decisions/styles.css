@@ -1,16 +1,21 @@
 .decisions-slide {
   .cursor {
-    animation: decisions-cursor-movement 8s infinite;
+    animation: decisions-cursor-movement var(--animation-duration) infinite;
     will-change: transform;
   }
 
+  .click-animation {
+    animation: decisions-cursor-clicks var(--animation-duration) infinite;
+  }
+
   .pages {
-    animation: decisions-slide-movement 4s infinite;
+    animation: decisions-slide-movement calc(var(--animation-duration) / 2) infinite;
     animation-delay: 2s;
+    will-change: transform;
 
     .current-page {
-      animation: decisions-slide-decisions-current 8s infinite;
-      transform: translate3d(-100%, 0, 0);
+      animation: decisions-slide-decisions-current var(--animation-duration) infinite;
+      transform: translate(-100%, 0);
     }
   }
 

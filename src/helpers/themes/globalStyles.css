@@ -397,8 +397,8 @@ button {
   min-height: 0px;
 }
 
+/* TODO: We need to figure out what a wireframe class would do */
 .wireframe {
-  filter: grayscale(100%);
 }
 
 @keyframes fade-in {
