@@ -27,8 +27,26 @@
       if we do not set the z-index to -1, the content (text and borders) will be
       placed above the cursor element
     */
+    /* TODO: there should probably be a better solution to this */
     z-index: -1;
 
     display: flex;
+
+    .decision-button {
+      position: relative;
+    }
+
+    /*
+        during the animation, we simulate using the two starting buttons
+        therefore, we only have to animate the depressed state of the first two
+        buttons
+    */
+    .decision-button-0 {
+      animation: decisions-button-0-depress var(--animation-duration) infinite;
+    }
+
+    .decision-button-1 {
+      animation: decisions-button-1-depress var(--animation-duration) infinite;
+    }
   }
 }

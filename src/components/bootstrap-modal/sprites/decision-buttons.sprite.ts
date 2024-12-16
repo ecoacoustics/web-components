@@ -5,14 +5,18 @@ import { map } from "lit/directives/map.js";
 import { VerificationComponent } from "decision/verification/verification";
 
 export function decisionButtonsSprite(decisionButtons: DecisionComponent[]): HtmlSprite {
-  return html`<div class="decision-buttons">${map(decisionButtons, (node) => wireframeDecisionButton(node))}</div>`;
+  return html`<div class="decision-buttons">
+    ${map(decisionButtons, (node, i) => wireframeDecisionButton(node, i))}
+  </div>`;
 }
 
-function wireframeDecisionButton(button: DecisionComponent): Node {
+function wireframeDecisionButton(button: DecisionComponent, index: number): Node {
   const clonedNode = button.cloneNode(true) as VerificationComponent;
 
   // "wireframe" is a helper class defined in our global styles
   clonedNode.classList.add("wireframe");
+  clonedNode.classList.add(`decision-button`);
+  clonedNode.classList.add(`decision-button-${index}`);
 
   // We disable pointer events so that clicking on the decision buttons does not
   // emit a "decision" event.

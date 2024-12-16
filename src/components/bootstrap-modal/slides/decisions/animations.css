@@ -1,5 +1,10 @@
 .decisions-slide {
   --animation-duration: 5s;
+
+  /* Depress animation properties */
+  /* TODO: this is a smell that this should be somewhere else */
+  --depress-top: 2px;
+  --depress-left: 2px;
 }
 
 /*
@@ -76,5 +81,39 @@
 
   to {
     --decision-color: red;
+  }
+}
+
+@keyframes decisions-button-0-depress {
+  from,
+  39% {
+    top: 0;
+    left: 0;
+  }
+
+  40%,
+  50% {
+    top: var(--depress-top);
+    left: var(--depress-left);
+  }
+
+  51%,
+  to {
+    top: 0;
+    left: 0;
+  }
+}
+
+@keyframes decisions-button-1-depress {
+  from,
+  89% {
+    top: 0;
+    left: 0;
+  }
+
+  90%,
+  to {
+    top: var(--depress-top);
+    left: var(--depress-left);
   }
 }
