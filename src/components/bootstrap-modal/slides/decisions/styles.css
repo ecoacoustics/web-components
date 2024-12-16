@@ -23,6 +23,12 @@
     position: absolute;
     top: 60%;
 
+    /*
+      if we do not set the z-index to -1, the content (text and borders) will be
+      placed above the cursor element
+    */
+    z-index: -1;
+
     display: flex;
   }
 }
