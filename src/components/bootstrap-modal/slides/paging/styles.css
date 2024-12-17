@@ -1,14 +1,14 @@
 .paging-slide {
   .cursor {
-    animation: paging-cursor-movement var(--animation-duration) infinite;
+    animation: paging-cursor-movement var(--animation-duration);
   }
 
   .click-animation {
-    animation: paging-cursor-clicks var(--animation-duration) infinite;
+    animation: paging-cursor-clicks var(--animation-duration);
   }
 
   .pages {
-    animation: paging-slide-movement var(--animation-duration) infinite;
+    animation: paging-slide-movement var(--animation-duration);
 
     .previous-page {
       /*
@@ -18,7 +18,7 @@
       */
       --decision-color: green;
 
-      animation: paging-slide-decisions-current var(--animation-duration) infinite;
+      animation: paging-slide-decisions-current var(--animation-duration);
       transform: translate(-100%, 0);
     }
   }
@@ -32,10 +32,10 @@
     */
     --verification-head: 50%;
 
-    animation: progress-bar-button-depression var(--animation-duration) infinite;
+    animation: progress-bar-button-depression var(--animation-duration);
 
     .view-head-segment {
-      animation: progress-bar-view-head-movement var(--animation-duration) infinite;
+      animation: progress-bar-view-head-movement var(--animation-duration);
     }
 
     .verification-head-segment {

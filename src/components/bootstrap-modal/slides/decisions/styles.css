@@ -2,21 +2,21 @@
   position: relative;
 
   .cursor {
-    animation: decisions-cursor-movement var(--animation-duration) infinite;
+    animation: decisions-cursor-movement var(--animation-duration);
     will-change: transform;
   }
 
   .click-animation {
-    animation: decisions-cursor-clicks var(--animation-duration) infinite;
+    animation: decisions-cursor-clicks var(--animation-duration);
   }
 
   .pages {
-    animation: decisions-slide-movement calc(var(--animation-duration) / 2) infinite;
+    animation: decisions-slide-movement calc(var(--animation-duration) / 2);
     animation-delay: 2s;
     will-change: transform;
 
     .current-page {
-      animation: decisions-slide-decisions-current var(--animation-duration) infinite;
+      animation: decisions-slide-decisions-current var(--animation-duration);
       transform: translate(-100%, 0);
     }
   }
@@ -44,11 +44,11 @@
         buttons
     */
     .decision-button-0 {
-      animation: decisions-button-0-depress var(--animation-duration) infinite;
+      animation: decisions-button-0-depress var(--animation-duration);
     }
 
     .decision-button-1 {
-      animation: decisions-button-1-depress var(--animation-duration) infinite;
+      animation: decisions-button-1-depress var(--animation-duration);
     }
   }
 }

@@ -10,12 +10,12 @@
   }
 
   .cursor {
-    animation: selection-cursor-movement var(--animation-duration) infinite;
+    animation: selection-cursor-movement var(--animation-duration);
     will-change: transform;
   }
 
   .click-animation {
-    animation: selection-cursor-clicks var(--animation-duration) infinite;
+    animation: selection-cursor-clicks var(--animation-duration);
   }
 
   /* Absolute positions are relative to the top-left of the slide content */
@@ -26,7 +26,7 @@
     left: 222px;
     top: 9.5%;
 
-    animation: selection-highlight-box-animation var(--animation-duration) infinite;
+    animation: selection-highlight-box-animation var(--animation-duration);
   }
 
   .grid-tile {
@@ -40,26 +40,26 @@
 
   /* Highlight box selection animations */
   .tile-0 .grid-tile-background {
-    animation: selection-tile-0 var(--animation-duration) infinite;
+    animation: selection-tile-0 var(--animation-duration);
   }
 
   .tile-1 .grid-tile-background {
-    animation: selection-tile-1 var(--animation-duration) infinite;
+    animation: selection-tile-1 var(--animation-duration);
   }
 
   .tile-2 .grid-tile-background {
-    animation: selection-tile-2 var(--animation-duration) infinite;
+    animation: selection-tile-2 var(--animation-duration);
   }
 
   .tile-3 .grid-tile-background {
-    animation: selection-tile-3 var(--animation-duration) infinite;
+    animation: selection-tile-3 var(--animation-duration);
   }
 
   .tile-4 .grid-tile-background {
-    animation: selection-tile-4 var(--animation-duration) infinite;
+    animation: selection-tile-4 var(--animation-duration);
   }
 
   .tile-5 .grid-tile-background {
-    animation: selection-tile-5 var(--animation-duration) infinite;
+    animation: selection-tile-5 var(--animation-duration);
   }
 }

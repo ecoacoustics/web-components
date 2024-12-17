@@ -41,6 +41,6 @@
   }
 
   .grid-tile {
-    animation: shortcut-selection-animation var(--animation-duration) infinite;
+    animation: shortcut-selection-animation var(--animation-duration);
   }
 }
