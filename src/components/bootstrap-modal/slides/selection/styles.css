@@ -4,6 +4,11 @@
 */
 /* prettier-ignore */
 .selection-slide {
+  svg {
+    position: relative;
+    height: 70%;
+  }
+
   .cursor {
     animation: selection-cursor-movement var(--animation-duration) infinite;
     will-change: transform;

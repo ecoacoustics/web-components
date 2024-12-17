@@ -15,13 +15,13 @@ export class PagingSlide extends AbstractSlide {
   public render() {
     return html`
       <div class="paging-slide slide">
-        <svg viewBox="0 0 300 230" class="vertically-fill">
+        <svg viewBox="0 0 300 180">
           <g class="pages">
             <g class="previous-page">${verificationGridPageSprite()}</g>
             <g class="current-page">${verificationGridPageSprite()}</g>
           </g>
 
-          ${progressBarSprite(10, 50)} ${cursorSprite(32, 157)}
+          ${progressBarSprite(10, 75)} ${cursorSprite(32, 157)}
         </svg>
       </div>
     `;

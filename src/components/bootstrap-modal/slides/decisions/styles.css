@@ -1,4 +1,6 @@
 .decisions-slide {
+  position: relative;
+
   .cursor {
     animation: decisions-cursor-movement var(--animation-duration) infinite;
     will-change: transform;
@@ -21,7 +23,7 @@
 
   .decision-buttons {
     position: absolute;
-    top: 60%;
+    top: 75%;
 
     /*
       if we do not set the z-index to -1, the content (text and borders) will be

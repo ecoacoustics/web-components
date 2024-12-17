@@ -72,6 +72,10 @@
 
 @keyframes decisions-slide-decisions-current {
   from {
+    --decision-color: red;
+  }
+
+  10% {
     --decision-color: green;
   }
 

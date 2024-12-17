@@ -166,7 +166,7 @@ dialog {
   position: relative;
 
   height: max-content;
-  height: max-content;
+  width: max-content;
 
   /*
     We have a minimum width and height so that all dialogs are clearly not a
@@ -190,8 +190,8 @@ dialog {
     the main content.
   */
   /* TODO: This should probably be max-width and max-height */
-  width: 80%;
-  height: 80%;
+  width: fit-content;
+  height: fit-content;
 
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);

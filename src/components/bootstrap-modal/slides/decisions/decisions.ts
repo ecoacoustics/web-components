@@ -37,7 +37,7 @@ export class DecisionsSlide extends AbstractSlide {
   public render() {
     return html`
       <div class="decisions-slide slide">
-        <svg viewBox="0 0 300 230">
+        <svg viewBox="0 0 300 180">
           <g class="pages">
             <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
