@@ -1,3 +1,7 @@
+.shortcut-slide {
+  --animation-duration: 5s;
+}
+
 /*
   These keyframes are outside of the .shortcut-slide class because keyframes
   cannot be lexically scoped to a class.

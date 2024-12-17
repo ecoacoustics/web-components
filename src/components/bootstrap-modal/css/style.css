@@ -3,7 +3,8 @@
     We only want to repeat the animation three times so that the user doesn't
     get stuck watching a looping animation; not knowing that it has ended.
   */
-  --animation-repeats: 3;
+  --animation-repeats: infinite;
+  /* --animation-repeats: 3; */
 }
 
 /*

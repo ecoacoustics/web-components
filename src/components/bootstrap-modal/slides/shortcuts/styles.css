@@ -1,12 +1,7 @@
 .shortcut-slide {
   flex-direction: row !important;
 
-  .selection-shortcuts {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .selection-shortcut-keys {
+  .shortcut-keys {
     display: flex;
     justify-content: space-evenly;
     margin-top: 2em;
