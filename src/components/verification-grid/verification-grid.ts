@@ -533,6 +533,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   //#endregion
 
   //#region EventHandlers
+
   private handleKeyDown(event: KeyboardEvent): void {
     // most browsers scroll a page width when the user presses the space bar
     // however, since space bar can also be used to play spectrograms, we don't
@@ -598,7 +599,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "?": {
-        this.helpDialog.showModal();
+        this.handleHelpRequest();
         break;
       }
     }
@@ -639,6 +640,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleWindowBlur(): void {
     this.hideSelectionShortcuts();
     this.hideHighlightBox();
+  }
+
+  private handleHelpRequest(): void {
+    this.helpDialog.showAdvancedModal();
   }
 
   private handleHelpDialogOpen(): void {
@@ -1385,7 +1390,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
             <button
               data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal()}"
+              @click="${() => this.handleHelpRequest()}"
               class="oe-btn-info"
               rel="help"
             >

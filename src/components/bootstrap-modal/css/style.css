@@ -23,6 +23,9 @@
     position: absolute;
     width: 100%;
 
+    /* TOOD: Using z-index is obviously a hack that I want to remove */
+    z-index: 1;
+
     display: flex;
     justify-content: end;
     align-items: center;
@@ -31,11 +34,20 @@
       margin: 0;
     }
 
+    .repeat-prompt {
+      display: flex;
+
+      .repeat-icon {
+        margin-right: 0.5em;
+      }
+    }
+
     .close-button {
       line-height: 1;
+    }
 
-      /* TOOD: Using z-index is obviously a hack that I want to remove */
-      z-index: 1;
+    ::not(:last-child) {
+      border-right: var(--or-border-width) solid var(--oe-border-color);
     }
   }
 
@@ -63,42 +75,6 @@
       .carousel-item {
         position: relative;
         height: 100%;
-      }
-    }
-
-    .slide-overlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-
-      display: inline flex;
-      place-content: center;
-      place-items: center;
-
-      opacity: 0;
-      animation: bootstrap-repeat-animation 2s forwards;
-      animation-delay: calc(5s * var(--animation-repeats));
-
-      .repeat-prompt {
-        background-color: var(--oe-panel-color);
-        box-shadow: var(--oe-backdrop-shadow);
-        padding: var(--oe-spacing-large);
-
-        border: var(--oe-border-width) solid var(--oe-border-color);
-        border-radius: var(--oe-border-rounding);
-
-        display: flex;
-        flex-direction: column;
-        place-content: center;
-        place-items: center;
-
-        .repeat-prompt-title {
-          margin: 0;
-        }
-
-        .repeat-icon {
-          font-size: 6em;
-        }
       }
     }
   }

@@ -1,4 +1,4 @@
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -11,8 +11,8 @@ import { SelectionSlide } from "./slides/selection/selection";
 import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import { loop } from "../../helpers/directives";
 import { Tag } from "../../models/tag";
+import { AdvancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
-import helpDialogAnimations from "./css/animations.css?inline";
 
 // TOOD: These should probably move somewhere else
 import decisionSlideAnimations from "./slides/decisions/animations.css?inline";
@@ -24,6 +24,9 @@ import decisionSlideStyles from "./slides/decisions/styles.css?inline";
 import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
+
+import advancedShortcutAnimations from "./slides/advanced-shortcuts/animations.css?inline";
+import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -49,7 +52,6 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   static styles = [
     unsafeCSS(helpDialogStyles),
-    unsafeCSS(helpDialogAnimations),
 
     unsafeCSS(decisionSlideAnimations),
     unsafeCSS(pagingSlideAnimations),
@@ -60,6 +62,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(pagingSlideStyles),
     unsafeCSS(selectionSlideStyles),
     unsafeCSS(shortcutSlideStyles),
+
+    unsafeCSS(advancedShortcutAnimations),
+    unsafeCSS(advancedShortcutStyles),
   ];
 
   @property({ type: Array, attribute: false })
@@ -76,6 +81,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   @property({ type: Array, attribute: false })
   public classificationTasks!: Tag[];
+
+  @state()
+  private slides: AbstractSlide[] = [];
 
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
@@ -96,13 +104,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
-  private slides: AbstractSlide[] = [];
-
   public firstUpdated(): void {
     const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
 
     if (shouldShowHelpDialog) {
-      this.showModal();
+      this.showTutorialModal();
+      // this.showAdvancedModal();
     }
   }
 
@@ -120,18 +127,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     }
   }
 
-  public showModal() {
-    this.dialogElement.showModal();
-    this.dispatchEvent(new CustomEvent("open"));
+  public showAdvancedModal(): void {
+    this.slides = [new AdvancedShortcutsSlide()];
+    this.showModal();
   }
 
-  public closeModal(): void {
-    this.dispatchEvent(new CustomEvent("close"));
-    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
-    this.dialogElement.close();
-  }
-
-  private updateSlides(): void {
+  public showTutorialModal(): void {
     this.slides = [
       // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       // new SelectionSlide(),
@@ -150,6 +151,23 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }
 
+    this.showModal();
+  }
+
+  public closeModal(): void {
+    this.dispatchEvent(new CustomEvent("close"));
+    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    this.dialogElement.close();
+  }
+
+  // this method is private because you should be explicitly opening the modal
+  // through the showAdvancedModal
+  private showModal(): void {
+    this.dialogElement.showModal();
+    this.dispatchEvent(new CustomEvent("open"));
+  }
+
+  private updateSlides(): void {
     this.requestUpdate();
   }
 
@@ -164,17 +182,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private repeatPromptTemplate(): HTMLTemplateResult {
     return html`
-      <div class="repeat-prompt">
-        <h3 class="repeat-prompt-title">Animation ended</h3>
-        <button class="oe-btn-secondary">
-          <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
-        </button>
-      </div>
+      <button class="repeat-prompt oe-btn-secondary">
+        <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
+        Repeat Animation
+      </button>
     `;
-  }
-
-  private slideOverlayTemplate(): HTMLTemplateResult {
-    return this.repeatPromptTemplate();
   }
 
   private slideFooterTemplate(): HTMLTemplateResult {
@@ -194,8 +206,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           `,
         )}
       </sl-carousel>
-
-      <div class="slide-overlay">${this.slideOverlayTemplate()}</div>
     `;
   }
 
@@ -204,6 +214,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
+            ${this.repeatPromptTemplate()}
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </header>
 

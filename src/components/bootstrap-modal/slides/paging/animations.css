@@ -75,7 +75,7 @@
 }
 
 @keyframes progress-bar-view-head-movement {
-  0%,
+  from,
   10% {
     width: var(--verification-head);
   }
