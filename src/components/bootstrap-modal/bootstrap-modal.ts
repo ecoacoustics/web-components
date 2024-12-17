@@ -12,6 +12,7 @@ import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import { loop } from "../../helpers/directives";
 import { Tag } from "../../models/tag";
 import helpDialogStyles from "./css/style.css?inline";
+import helpDialogAnimations from "./css/animations.css?inline";
 
 // TOOD: These should probably move somewhere else
 import decisionSlideAnimations from "./slides/decisions/animations.css?inline";
@@ -48,6 +49,7 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   static styles = [
     unsafeCSS(helpDialogStyles),
+    unsafeCSS(helpDialogAnimations),
 
     unsafeCSS(decisionSlideAnimations),
     unsafeCSS(pagingSlideAnimations),
@@ -160,6 +162,21 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     `;
   }
 
+  private repeatPromptTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="repeat-prompt">
+        <h3 class="repeat-prompt-title">Animation ended</h3>
+        <button class="oe-btn-secondary">
+          <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
+        </button>
+      </div>
+    `;
+  }
+
+  private slideOverlayTemplate(): HTMLTemplateResult {
+    return this.repeatPromptTemplate();
+  }
+
   private slideFooterTemplate(): HTMLTemplateResult {
     return html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Get Started</button>`;
   }
@@ -177,6 +194,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           `,
         )}
       </sl-carousel>
+
+      <div class="slide-overlay">${this.slideOverlayTemplate()}</div>
     `;
   }
 

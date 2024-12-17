@@ -9,6 +9,7 @@ import questionCircleIcon from "../../node_modules/@shoelace-style/shoelace/dist
 import fullscreenExitIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/fullscreen-exit.svg?raw";
 import arrowsFullscreenIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/arrows-fullscreen.svg?raw";
 import gridIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/grid.svg?raw";
+import arrowRepeatIcon from "../../node_modules/@shoelace-style/shoelace/dist/assets/icons/arrow-repeat.svg?raw";
 
 type InlineSvg = `data:image/svg+xml,${string}`;
 
@@ -20,6 +21,7 @@ const registeredIcons: Record<string, string> = {
   "question-circle": questionCircleIcon,
   "fullscreen-exit": fullscreenExitIcon,
   "arrows-fullscreen": arrowsFullscreenIcon,
+  "arrow-repeat": arrowRepeatIcon,
   play: playIcon,
   pause: pauseIcon,
   palette: paletteIcon,
