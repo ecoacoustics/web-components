@@ -1,11 +1,11 @@
 import { HTMLTemplateResult } from "lit";
 
 export abstract class AbstractSlide {
-  public constructor(title: string) {
-    this.title = title;
+  public constructor(description: string) {
+    this.description = description;
   }
 
-  public title: string;
+  public description: string;
 
   public abstract render(): HTMLTemplateResult;
 }

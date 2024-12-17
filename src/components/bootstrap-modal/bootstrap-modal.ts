@@ -125,7 +125,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
   }
 
@@ -154,7 +154,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
     return html`
       <div class="slide-content">
-        <p class="slide-description">${slide.title}</p>
+        <h2 class="slide-description">${slide.description}</h2>
         ${slide.render()}
       </div>
     `;

@@ -41,6 +41,10 @@ sl-icon {
   navigational actions can be used on these smaller devices.
 */
 sl-carousel {
+  &::part(navigation-button) {
+    color: var(--oe-primary-color);
+  }
+
   @media (max-width: 600px) {
     &::part(navigation) {
       display: none;

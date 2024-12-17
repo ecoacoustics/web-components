@@ -11,19 +11,19 @@ export class DecisionsSlide extends AbstractSlide {
     hasClassificationTask: boolean,
     decisionButtons: DecisionComponent[],
   ) {
-    let title = "";
+    let description = "";
     if (hasVerificationTask && hasClassificationTask) {
-      title = "This grid contains both verification and classification tasks";
+      description = "This grid contains both verification and classification tasks";
     } else if (hasVerificationTask) {
-      title = "This grid contains a verification task";
+      description = "This grid contains a verification task";
     } else if (hasClassificationTask) {
-      title = "This grid contains a classification task";
+      description = "This grid contains a classification task";
     } else {
       console.warn("Could not determine the type of task in the grid. Falling back to verification task prompt.");
-      title = "This grid contains a verification task";
+      description = "This grid contains a verification task";
     }
 
-    super(title);
+    super(description);
 
     this.decisionButtons = decisionButtons;
     this.hasClassificationTask = hasClassificationTask;

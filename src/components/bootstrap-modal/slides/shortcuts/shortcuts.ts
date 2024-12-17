@@ -53,7 +53,7 @@ export class ShortcutsSlide extends AbstractSlide {
         <section>
           <h3 class="shortcut-card-title">Select all</h3>
           <div class="shortcut">
-            <kbd ${ref(this.selectAllCtrl)}>Ctrl</kbd>
+            <kbd ${ref(this.selectAllCtrl)}>Ctrl</kbd> +
             <kbd ${ref(this.selectAllA)}>A</kbd>
           </div>
         </section>
