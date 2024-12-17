@@ -6,10 +6,7 @@ import { progressBarSprite } from "../../sprites/progress-bar.sprite";
 
 export class PagingSlide extends AbstractSlide {
   public constructor() {
-    const title = "You can navigate through pages using the arrow buttons";
-    const description = "This is a placeholder description";
-
-    super(title, description);
+    super("You can navigate through pages using the arrow buttons");
   }
 
   public render() {

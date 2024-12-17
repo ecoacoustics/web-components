@@ -23,9 +23,7 @@ export class DecisionsSlide extends AbstractSlide {
       title = "This grid contains a verification task";
     }
 
-    const description = "You can use the buttons to apply a decision";
-
-    super(title, description);
+    super(title);
 
     this.decisionButtons = decisionButtons;
     this.hasClassificationTask = hasClassificationTask;

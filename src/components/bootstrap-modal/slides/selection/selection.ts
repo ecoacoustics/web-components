@@ -6,10 +6,7 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 
 export class SelectionSlide extends AbstractSlide {
   public constructor() {
-    const title = "You can decide about more than one subject at once";
-    const description = "this is a placeholder description";
-
-    super(title, description);
+    super("You can decide about more than one subject at once");
   }
 
   public render() {

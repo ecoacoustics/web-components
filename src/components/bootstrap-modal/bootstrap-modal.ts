@@ -1,4 +1,4 @@
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -75,9 +75,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @property({ type: Array, attribute: false })
   public classificationTasks!: Tag[];
 
-  @state()
-  private currentSlide?: AbstractSlide;
-
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
@@ -128,12 +125,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
-  }
-
-  private updateDialogContent(index: number): void {
-    this.currentSlide = this.slides[index];
   }
 
   private updateSlides(): void {
@@ -142,8 +135,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new PagingSlide(),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
     ];
 
@@ -155,31 +148,25 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
     }
 
-    this.updateDialogContent(0);
+    this.requestUpdate();
   }
 
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
     return html`
       <div class="slide-content">
-        <p class="slide-description">${slide.description}</p>
+        <p class="slide-description">${slide.title}</p>
         ${slide.render()}
       </div>
     `;
   }
 
   private slideFooterTemplate(): HTMLTemplateResult {
-    return html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Begin</button>`;
+    return html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Get Started</button>`;
   }
 
   private slidesTemplate(): HTMLTemplateResult {
     return html`
-      <sl-carousel
-        @sl-slide-change="${(event: CustomEvent<{ index: number }>) => this.updateDialogContent(event.detail.index)}"
-        class="carousel"
-        navigation
-        pagination
-        mouse-dragging
-      >
+      <sl-carousel class="carousel" navigation pagination mouse-dragging>
         ${loop(
           this.slides,
           (slide, { last }) => html`
@@ -198,7 +185,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
-            <h2 class="dialog-title">${this.currentSlide?.title}</h2>
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </header>
 

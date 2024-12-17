@@ -7,10 +7,8 @@ import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
-    const title = "Shortcuts";
-    const description = "You can use the following keyboard shortcuts";
+    super("You can use the following keyboard shortcuts");
 
-    super(title, description);
     this.shortcuts = shortcuts;
   }
 
