@@ -43,6 +43,13 @@
 
     .carousel {
       /*
+        We always want to extend the carousel to the edge of the dialog window
+        so that the navigation icons will always be on the edge of the dialog
+        even if the content doesn't reach the edge.
+      */
+      min-width: 100%;
+
+      /*
         we cannot modify if this element is inside a flexbox or not because it
         will be inside the shadow-dom of the sl-carousel shoelace web component
       */
