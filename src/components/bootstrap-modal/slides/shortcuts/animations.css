@@ -1,15 +1,83 @@
-.shortcut-slide {
-  --animation-duration: 5s;
-}
-
 /*
   These keyframes are outside of the .shortcut-slide class because keyframes
   cannot be lexically scoped to a class.
   To subvert this limitation, I have prefixed the keyframes with the name of
   the slide they are intended for.
 */
-@keyframes shortcut-selection-animation {
+.shortcut-slide {
+  --animation-duration: 8s;
+}
+
+/* selection animations */
+
+@keyframes shortcut-slide-0-selection-animation {
+  from,
+  9% {
+    fill: var(--oe-panel-color);
+  }
+
+  /* ctrl + A selection */
+  10%,
+  39% {
+    fill: var(--oe-selected-color);
+  }
+
+  40%,
   to {
-    --oe-panel-color: var(--oe-selected-color);
+    fill: var(--oe-panel-color);
+  }
+}
+
+@keyframes shortcut-slide-1-selection-animation {
+  from,
+  9% {
+    fill: var(--oe-panel-color);
+  }
+
+  /* ctrl + A selection */
+  10%,
+  19% {
+    fill: var(--oe-selected-color);
+  }
+
+  /* Showing that you can toggle a single tile using ctrl */
+  20%,
+  49% {
+    fill: var(--oe-panel-color);
+  }
+
+  50%,
+  69% {
+    fill: var(--oe-selected-color);
+  }
+
+  70%,
+  to {
+    fill: var(--oe-panel-color);
+  }
+}
+/* decision animations */
+
+@keyframes shortcut-slide-0-decision-animation {
+  from,
+  29% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  30%,
+  to {
+    --decision-color: green;
+  }
+}
+
+@keyframes shortcut-slide-1-decision-animation {
+  from,
+  59% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  60%,
+  to {
+    --decision-color: red;
   }
 }

@@ -47,6 +47,7 @@ function gridProgressVerification(): SvgSprite {
       stroke-width="0.5"
       fill="var(--decision-color)"
       stroke="var(--oe-border-color)"
+      class="decision-meter"
     />
   `;
 }
@@ -64,6 +65,7 @@ function gridProgressClassification(): SvgSprite {
       stroke-width="0.5"
       fill="var(--decision-color)"
       stroke="var(--oe-border-color)"
+      class="decision-meter"
     />
   `;
 }

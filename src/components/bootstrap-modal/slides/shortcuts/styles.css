@@ -35,7 +35,27 @@
     }
   }
 
-  .grid-tile {
-    animation: shortcut-selection-animation var(--animation-duration);
+  .slide-0 {
+    animation: shortcut-slide-0-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-slide-0-selection-animation var(--animation-duration);
+    }
+  }
+
+  .slide-1 {
+    animation: shortcut-slide-1-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-slide-1-selection-animation var(--animation-duration);
+    }
+  }
+
+  .slide-2 {
+    animation: shortcut-slide-0-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-slide-0-selection-animation var(--animation-duration);
+    }
   }
 }

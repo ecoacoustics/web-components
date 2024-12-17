@@ -185,7 +185,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return html`
       <button class="repeat-prompt oe-btn-secondary">
         <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
-        Repeat Animation
+        Repeat
       </button>
     `;
   }

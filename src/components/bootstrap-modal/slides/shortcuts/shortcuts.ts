@@ -18,15 +18,16 @@ export class ShortcutsSlide extends AbstractSlide {
   // TOOD: Refactor this
   private gridAnimation() {
     return svg`
-      ${gridTileSprite(10, 0)}
-      ${gridTileSprite(100, 0)}
-      ${gridTileSprite(190, 0)}
+      ${gridTileSprite(10, 0, false, "slide-0")}
+      ${gridTileSprite(100, 0, false, "slide-1")}
+      ${gridTileSprite(190, 0, false, "slide-2")}
     `;
   }
 
   public render() {
     const displayedShortcuts = [
       ...this.shortcuts,
+      { keys: ["Ctrl", "Click"], description: "" },
       { keys: ["Ctrl", "A"], description: "Select All" },
       { keys: ["Esc"], description: "De-select All" },
     ] satisfies KeyboardShortcut[];
@@ -38,7 +39,7 @@ export class ShortcutsSlide extends AbstractSlide {
           <div class="shortcut-keys">
             ${map(
               displayedShortcuts,
-              (shortcut) => html`
+              (shortcut: KeyboardShortcut) => html`
                 <section class="shortcut-card">
                   <h3 class="shortcut-card-title">${shortcut.description}</h3>
                   <div class="shortcut">
