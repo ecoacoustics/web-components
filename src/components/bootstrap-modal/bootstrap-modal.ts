@@ -19,7 +19,6 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
-import sharedAnimations from "./css/sharedAnimations.css?inline";
 
 export interface KeyboardShortcut {
   keys: string[];
@@ -51,8 +50,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(selectionSlideStyles),
     unsafeCSS(shortcutSlideStyles),
     unsafeCSS(advancedShortcutStyles),
-
-    unsafeCSS(sharedAnimations),
   ];
 
   @property({ type: Array, attribute: false })

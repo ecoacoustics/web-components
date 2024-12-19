@@ -10,7 +10,11 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
     super("You can use the following keyboard shortcuts");
-    this.shortcuts = shortcuts;
+
+    // in this short tutorial dialog, we demonstrate using the keyboard
+    // shortcuts for the first two decision buttons
+    // because we do not use
+    this.shortcuts = shortcuts.slice(0, 2);
   }
 
   private shortcuts: KeyboardShortcut[];

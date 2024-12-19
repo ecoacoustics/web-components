@@ -64,4 +64,29 @@
       animation: shortcut-tile-0-selection-animation var(--animation-duration);
     }
   }
+
+  /* Positive decision */
+  .shortcut-0 {
+    animation: shortcut-0-animation var(--animation-duration);
+  }
+
+  /* Negative decision */
+  .shortcut-1 {
+    animation: shortcut-1-animation var(--animation-duration);
+  }
+
+  /* Ctrl + Click */
+  .shortcut-2 {
+    animation: shortcut-2-animation var(--animation-duration);
+  }
+
+  /* Select All */
+  .shortcut-3 {
+    animation: shortcut-3-animation var(--animation-duration);
+  }
+
+  /* Deselect All */
+  .shortcut-4 {
+    animation: shortcut-4-animation var(--animation-duration);
+  }
 }
