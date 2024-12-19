@@ -56,7 +56,7 @@
 
   .shortcut-3 {
     &.keyframe-0 {
-      animation: shortcut-button-depression-animation 1s;
+      animation: bootstrap-button-depression 1s;
     }
   }
 

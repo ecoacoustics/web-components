@@ -60,7 +60,7 @@ and [code-workspace](/webcomponents.code-workspace).
 
 ## CSS Structure
 
-## Ordering of CSS Properties
+### Ordering of CSS Properties
 
 - Positioning effecting the position of the host element
   - `position`
@@ -85,7 +85,7 @@ and [code-workspace](/webcomponents.code-workspace).
   - `list`
   - `text-align`
 
-## CSS Parts
+### CSS Parts
 
 Default styles that can be overwritten by css parts should be set in the
 following format:
@@ -101,6 +101,13 @@ following format:
 
 This ensure that the user can change the default styles of css part targeted
 elements.
+
+### CSS Animations
+
+Because `@keyframe` declarations cannot be lexically scoped in CSS, you should
+**always** prefix keyframe identifiers with their scoping.
+
+Example: For a grid tile animation, the scoping prefix "`grid-tile`" could be used like `grid-tile-selection-animation`
 
 ## JsDoc
 
