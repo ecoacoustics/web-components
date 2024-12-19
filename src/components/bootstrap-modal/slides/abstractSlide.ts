@@ -8,4 +8,6 @@ export abstract class AbstractSlide {
   public description: string;
 
   public abstract render(): HTMLTemplateResult;
+
+  public start(): void {}
 }

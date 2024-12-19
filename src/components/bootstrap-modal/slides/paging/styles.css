@@ -1,3 +1,5 @@
+@import url("./animations.css");
+
 .paging-slide {
   .cursor {
     animation: paging-cursor-movement var(--animation-duration);

@@ -10,74 +10,56 @@
 
 /* selection animations */
 
-@keyframes shortcut-slide-0-selection-animation {
-  from,
-  9% {
+@keyframes shortcut-selection-animation {
+  from {
     fill: var(--oe-panel-color);
   }
 
-  /* ctrl + A selection */
-  10%,
-  39% {
+  to {
+    fill: var(--oe-selected-color);
+  }
+}
+
+@keyframes shortcut-deselection-animation {
+  from {
     fill: var(--oe-selected-color);
   }
 
-  40%,
   to {
     fill: var(--oe-panel-color);
   }
 }
 
-@keyframes shortcut-slide-1-selection-animation {
-  from,
-  9% {
-    fill: var(--oe-panel-color);
-  }
-
-  /* ctrl + A selection */
-  10%,
-  19% {
-    fill: var(--oe-selected-color);
-  }
-
-  /* Showing that you can toggle a single tile using ctrl */
-  20%,
-  49% {
-    fill: var(--oe-panel-color);
-  }
-
-  50%,
-  69% {
-    fill: var(--oe-selected-color);
-  }
-
-  70%,
-  to {
-    fill: var(--oe-panel-color);
-  }
-}
-/* decision animations */
-
-@keyframes shortcut-slide-0-decision-animation {
-  from,
-  29% {
+@keyframes shortcut-positive-decision-animation {
+  from {
     --decision-color: var(--oe-panel-color);
   }
 
-  30%,
   to {
     --decision-color: green;
   }
 }
 
-@keyframes shortcut-slide-1-decision-animation {
-  from,
-  59% {
+@keyframes shortcut-negative-decision-animation {
+  from {
     --decision-color: var(--oe-panel-color);
   }
 
-  60%,
   to {
     --decision-color: red;
+  }
+}
+
+@keyframes shortcut-button-depression-animation {
+  from {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  to {
+    transform: translate(0, 0);
   }
 }

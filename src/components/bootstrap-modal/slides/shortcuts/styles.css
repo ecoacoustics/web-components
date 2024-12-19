@@ -1,3 +1,5 @@
+@import url("./animations.css");
+
 .shortcut-slide {
   flex-direction: row !important;
 
@@ -27,8 +29,7 @@
       margin: 0.5em;
     }
 
-    .shortcut,
-    .shortcut-animation {
+    .shortcut {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -36,26 +37,29 @@
   }
 
   .slide-0 {
-    animation: shortcut-slide-0-decision-animation var(--animation-duration);
-
-    & > .grid-tile-background {
-      animation: shortcut-slide-0-selection-animation var(--animation-duration);
-    }
   }
 
   .slide-1 {
-    animation: shortcut-slide-1-decision-animation var(--animation-duration);
-
-    & > .grid-tile-background {
-      animation: shortcut-slide-1-selection-animation var(--animation-duration);
-    }
   }
 
   .slide-2 {
-    animation: shortcut-slide-0-decision-animation var(--animation-duration);
+  }
 
-    & > .grid-tile-background {
-      animation: shortcut-slide-0-selection-animation var(--animation-duration);
+  .shortcut-0 {
+  }
+
+  .shortcut-1 {
+  }
+
+  .shortcut-2 {
+  }
+
+  .shortcut-3 {
+    &.keyframe-0 {
+      animation: shortcut-button-depression-animation 1s;
     }
+  }
+
+  .shortcut-4 {
   }
 }

@@ -1,5 +1,5 @@
 import { svg } from "lit";
-import { SvgSprite } from "./types";
+import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
 
 export function progressBarSprite(x: Pixel, y: Pixel): SvgSprite {

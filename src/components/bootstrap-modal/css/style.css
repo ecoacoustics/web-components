@@ -126,6 +126,7 @@
 
     * {
       animation-iteration-count: var(--animation-repeats) !important;
+      /* animation-iteration-count: var(--animation-repeats); */
     }
   }
 }

@@ -1,8 +1,20 @@
 import { svg } from "lit";
-import { SvgSprite } from "./types";
+import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
+import { ref, Ref } from "lit/directives/ref.js";
 
-export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, classNames?: string): SvgSprite {
+export interface GridTileSpriteRefs {
+  background?: Ref<SVGRectElement>;
+  decisionMeter?: Ref<SVGRectElement>;
+}
+
+export function gridTileSprite(
+  x: Pixel,
+  y: Pixel,
+  hasClassification = false,
+  classNames?: string,
+  refs?: GridTileSpriteRefs,
+): SvgSprite {
   return svg`
     <svg
       viewBox="0 0 80 60"
@@ -19,6 +31,7 @@ export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, cl
         rx="5"
         stroke-width="2"
         fill="var(--oe-panel-color)"
+        ${ref(refs?.background)}
       />
 
       <rect
@@ -28,6 +41,7 @@ export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, cl
         width="60"
         height="30"
         fill="#ccc"
+        ${ref(refs?.decisionMeter)}
       />
 
       <text x="7" y="12" font-size="6">Tag Name</text>

@@ -1,5 +1,5 @@
 import { DecisionComponent } from "decision/decision";
-import { HtmlSprite } from "./types";
+import { HtmlSprite } from "../../../helpers/animations/sprites";
 import { html } from "lit";
 import { map } from "lit/directives/map.js";
 import { VerificationComponent } from "decision/verification/verification";

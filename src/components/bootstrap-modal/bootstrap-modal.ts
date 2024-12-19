@@ -14,18 +14,10 @@ import { Tag } from "../../models/tag";
 import { AdvancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
 
-// TOOD: These should probably move somewhere else
-import decisionSlideAnimations from "./slides/decisions/animations.css?inline";
-import pagingSlideAnimations from "./slides/paging/animations.css?inline";
-import selectionSlideAnimations from "./slides/selection/animations.css?inline";
-import shortcutSlideAnimations from "./slides/shortcuts/animations.css?inline";
-
 import decisionSlideStyles from "./slides/decisions/styles.css?inline";
 import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
-
-import advancedShortcutAnimations from "./slides/advanced-shortcuts/animations.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
 
 export interface KeyboardShortcut {
@@ -53,17 +45,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   static styles = [
     unsafeCSS(helpDialogStyles),
 
-    unsafeCSS(decisionSlideAnimations),
-    unsafeCSS(pagingSlideAnimations),
-    unsafeCSS(selectionSlideAnimations),
-    unsafeCSS(shortcutSlideAnimations),
-
     unsafeCSS(decisionSlideStyles),
     unsafeCSS(pagingSlideStyles),
     unsafeCSS(selectionSlideStyles),
     unsafeCSS(shortcutSlideStyles),
-
-    unsafeCSS(advancedShortcutAnimations),
     unsafeCSS(advancedShortcutStyles),
   ];
 
@@ -110,6 +95,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     if (shouldShowHelpDialog) {
       this.showTutorialModal();
       // this.showAdvancedModal();
+
+      // TODO: Don't keep this hack in after review
+      setTimeout(() => {
+        this.slides[0].start();
+      }, 500);
     }
   }
 
@@ -161,6 +151,16 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dialogElement.close();
   }
 
+  private handleSlideChange(event: CustomEvent<{ index: number }>): void {
+    const index = event.detail.index;
+    if (index >= 0 && index < this.slides.length) {
+      console.warn("Invalid slide index", index);
+    }
+
+    const slide = this.slides[index];
+    slide.start();
+  }
+
   // this method is private because you should be explicitly opening the modal
   // through the showAdvancedModal
   private showModal(): void {
@@ -196,7 +196,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private slidesTemplate(): HTMLTemplateResult {
     return html`
-      <sl-carousel class="carousel" navigation pagination mouse-dragging>
+      <sl-carousel @sl-slide-change="${this.handleSlideChange}" class="carousel" navigation pagination mouse-dragging>
         ${loop(
           this.slides,
           (slide, { last }) => html`

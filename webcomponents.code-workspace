@@ -108,6 +108,7 @@
       "pushqrdx.inline-html",
       "hediet.vscode-drawio",
       "htmlhint.vscode-htmlhint",
+      "stylelint.vscode-stylelint",
       "firefox-devtools.vscode-firefox-debug",
 
       // extensions used to create svgs

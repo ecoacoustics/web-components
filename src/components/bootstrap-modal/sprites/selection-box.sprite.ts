@@ -1,5 +1,5 @@
 import { svg } from "lit";
-import { SvgSprite } from "./types";
+import { SvgSprite } from "../../../helpers/animations/sprites";
 
 export function selectionBoxSprite(): SvgSprite {
   // Chrome doesn't like it if we use the var(--oe-border-rounding) theming
