@@ -88,36 +88,31 @@
   }
 }
 
-@keyframes decisions-button-0-depress {
+@keyframes decisions-true-click {
   from,
   39% {
-    top: 0;
-    left: 0;
+    transform: translate(0, 0);
   }
 
   40%,
   50% {
-    top: var(--depress-top);
-    left: var(--depress-left);
+    transform: translate(var(--depress-left), var(--depress-top));
   }
 
   51%,
   to {
-    top: 0;
-    left: 0;
+    transform: translate(0, 0);
   }
 }
 
-@keyframes decisions-button-1-depress {
+@keyframes decisions-false-click {
   from,
   89% {
-    top: 0;
-    left: 0;
+    transform: translate(0, 0);
   }
 
   90%,
   to {
-    top: var(--depress-top);
-    left: var(--depress-left);
+    transform: translate(var(--depress-left), var(--depress-top));
   }
 }

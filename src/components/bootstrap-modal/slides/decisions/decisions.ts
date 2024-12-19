@@ -1,7 +1,7 @@
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
 import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
-import { decisionButtonsSprite } from "../../sprites/decision-buttons.sprite";
+import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 
@@ -41,14 +41,14 @@ export class DecisionsSlide extends AbstractSlide {
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>
 
+          ${decisionButtonSprite(130, 140, this.decisionButtons[0])}
+
           <!--
             I purposely place the cursors pointer tip low in the decision
             buttons so that you can see all of the decision buttons content.
           -->
           ${cursorSprite(153, 155)}
         </svg>
-
-        ${decisionButtonsSprite(this.decisionButtons)}
       </div>
     `;
   }
