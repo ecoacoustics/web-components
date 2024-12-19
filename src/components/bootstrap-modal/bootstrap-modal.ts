@@ -97,12 +97,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     if (shouldShowHelpDialog) {
       this.showTutorialModal();
-      // this.showAdvancedModal();
-
-      // TODO: Don't keep this hack in after review
-      setTimeout(() => {
-        this.slides[0].start();
-      }, 500);
+      this.slides[0].start();
     }
   }
 
