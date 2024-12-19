@@ -4,15 +4,17 @@ import { loop } from "../helpers/directives";
 
 export interface KeyboardShortcut {
   keys: string[];
-  description: string;
+  description?: string;
   hasMouse?: boolean;
 }
 
-export function shortcutTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
-  const hasUpperCase = shortcut.keys.some((key) => key === key.toUpperCase());
+export function keyboardTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
+  const isAscii = shortcut.keys.every((key) => key.charCodeAt(0) < 128);
+  const hasUpperCase = shortcut.keys.some((key: string) => key === key.toUpperCase());
+  const shouldShowShift = hasUpperCase && isAscii;
 
   return html`
-    ${when(hasUpperCase, () => html`<kbd class="shortcut-legend">Shift</kbd> +`)}
+    ${when(shouldShowShift, () => html`<kbd class="shortcut-legend">Shift</kbd> +`)}
     ${loop(shortcut.keys, (key, { last }) => html`<kbd>${key}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`)}
     ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse"></sl-icon>`)}
   `;

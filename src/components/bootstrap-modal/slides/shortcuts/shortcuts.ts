@@ -3,7 +3,7 @@ import { map } from "lit/directives/map.js";
 import { AbstractSlide } from "../abstractSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
-import { KeyboardShortcut, shortcutTemplate } from "../../../../templates/shortcuts";
+import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
@@ -39,7 +39,7 @@ export class ShortcutsSlide extends AbstractSlide {
         (shortcut: KeyboardShortcut, index: number) => html`
           <section class="shortcut-card">
             <h3 class="shortcut-card-title">${shortcut.description}</h3>
-            <div class="shortcut shortcut-${index}">${shortcutTemplate(shortcut)}</div>
+            <div class="shortcut shortcut-${index}">${keyboardTemplate(shortcut)}</div>
           </section>
         `,
       )}

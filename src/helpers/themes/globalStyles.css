@@ -37,7 +37,7 @@ sl-icon {
   on the side of carousel does not provide little functionality, but they take
   up a lot of horizontal space (which is prime real-estate on mobile devices)
   Therefore, I disable the navigation buttons on small width screens such as
-  mobile devices to concerve space, when alternative, more intuitive and compact
+  mobile devices to conserve space, when alternative, more intuitive and compact
   navigational actions can be used on these smaller devices.
 */
 sl-carousel {

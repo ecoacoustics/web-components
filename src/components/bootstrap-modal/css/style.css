@@ -131,6 +131,12 @@
   }
 }
 
+.slide-footer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 /* TODO: sprite selectors (below) should probably be inlined into the sprites */
 .click-animation {
   /* animation-timing-function: cubic-bezier(0, 0.175, 0.4, 0.9) !important; */

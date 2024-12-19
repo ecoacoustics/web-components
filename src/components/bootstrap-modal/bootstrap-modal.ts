@@ -12,7 +12,7 @@ import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import { loop } from "../../helpers/directives";
 import { Tag } from "../../models/tag";
 import { AdvancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
-import { KeyboardShortcut } from "../../templates/shortcuts";
+import { KeyboardShortcut } from "../../templates/keyboard";
 import helpDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -91,7 +91,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     if (shouldShowHelpDialog) {
       this.showTutorialModal();
-      this.slides[0].start();
     }
   }
 
@@ -148,9 +147,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     if (index >= 0 && index < this.slides.length) {
       console.warn("Invalid slide index", index);
     }
-
-    const slide = this.slides[index];
-    slide.start();
   }
 
   // this method is private because you should be explicitly opening the modal
@@ -183,10 +179,32 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   private slideFooterTemplate(): HTMLTemplateResult {
-    return html`<button class="oe-btn-primary begin-button" @click="${this.closeModal}">Get Started</button>`;
+    // TODO: Find a better way to do this
+    if (this.slides.length === 1) {
+      return html`<button class="oe-btn-secondary" @click="${this.showTutorialModal}">Replay tutorial</button>`;
+    }
+
+    return html`<button class="oe-btn-primary" @click="${this.closeModal}">Get started</button>`;
   }
 
   private slidesTemplate(): HTMLTemplateResult {
+    if (!this.slides?.length) {
+      return html`<strong>No slides to display</strong>`;
+    }
+
+    // we do not need a carousel if there is only one slide
+    if (this.slides.length === 1) {
+      const slide = this.slides[0];
+      return html`
+        <div class="carousel">
+          <div class="carousel-item">
+            ${this.renderSlide(slide)}
+            <div class="slide-footer">${this.slideFooterTemplate()}</div>
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <sl-carousel @sl-slide-change="${this.handleSlideChange}" class="carousel" navigation pagination mouse-dragging>
         ${loop(
