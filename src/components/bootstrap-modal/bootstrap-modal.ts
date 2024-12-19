@@ -23,6 +23,7 @@ import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inlin
 export interface KeyboardShortcut {
   keys: string[];
   description: string;
+  hasMouse?: boolean;
 }
 
 /*

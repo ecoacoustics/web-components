@@ -30,9 +30,9 @@ export class ShortcutsSlide extends AbstractSlide {
   private keyboardButtonsTemplate(): TemplateResult {
     const displayedShortcuts = [
       ...this.shortcuts,
-      { keys: ["Ctrl", "Click"], description: "" },
-      { keys: ["Ctrl", "A"], description: "Select All" },
-      { keys: ["Esc"], description: "De-select All" },
+      { keys: ["Ctrl"], hasMouse: true, description: "Toggle selection" },
+      { keys: ["Ctrl", "A"], description: "Select all" },
+      { keys: ["Esc"], description: "De-select all" },
     ] satisfies KeyboardShortcut[];
 
     return html`
@@ -42,7 +42,11 @@ export class ShortcutsSlide extends AbstractSlide {
           <section class="shortcut-card">
             <h3 class="shortcut-card-title">${shortcut.description}</h3>
             <div class="shortcut shortcut-${index}">
-              ${loop(shortcut.keys, (key, { last }) => html`<kbd>${key}</kbd> ${when(!last, () => "+")}`)}
+              ${loop(
+                shortcut.keys,
+                (key, { last }) => html`<kbd>${key}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`,
+              )}
+              ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse"></sl-icon>`)}
             </div>
           </section>
         `,

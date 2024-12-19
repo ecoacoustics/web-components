@@ -3,8 +3,9 @@
 .shortcut-slide {
   flex-direction: row !important;
 
-  .click-animation {
-    animation: shortcut-cursor-clicks var(--animation-duration);
+  sl-icon[name="mouse"] {
+    font-size: 1.5em;
+    padding: 0em;
   }
 
   .shortcut-keys {
@@ -41,6 +42,10 @@
     }
   }
 
+  .click-animation {
+    animation: shortcut-cursor-clicks var(--animation-duration);
+  }
+
   .tile-0 {
     animation: shortcut-tile-0-decision-animation var(--animation-duration);
 
@@ -66,27 +71,27 @@
   }
 
   /* Positive decision */
-  .shortcut-0 {
+  .shortcut-0 > kbd {
     animation: shortcut-0-animation var(--animation-duration);
   }
 
   /* Negative decision */
-  .shortcut-1 {
+  .shortcut-1 > kbd {
     animation: shortcut-1-animation var(--animation-duration);
   }
 
   /* Ctrl + Click */
-  .shortcut-2 {
+  .shortcut-2 > kbd {
     animation: shortcut-2-animation var(--animation-duration);
   }
 
   /* Select All */
-  .shortcut-3 {
+  .shortcut-3 > kbd {
     animation: shortcut-3-animation var(--animation-duration);
   }
 
   /* Deselect All */
-  .shortcut-4 {
+  .shortcut-4 > kbd {
     animation: shortcut-4-animation var(--animation-duration);
   }
 }
