@@ -1,10 +1,8 @@
 .decisions-slide {
   --animation-duration: 5s;
 
-  /* Depress animation properties */
-  /* TODO: this is a smell that this should be somewhere else */
-  --depress-top: 2px;
-  --depress-left: 2px;
+  --depress-top: 0.75px;
+  --depress-left: 0.75px;
 }
 
 /*
