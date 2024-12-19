@@ -1,0 +1,161 @@
+:host {
+  /*
+    We only want to repeat the animation three times so that the user doesn't
+    get stuck watching a looping animation; not knowing that it has ended.
+  */
+  --animation-repeats: infinite;
+  /* --animation-repeats: 3; */
+}
+
+/*
+  We use a section so that <header> and <footer> elements can be semantically
+  scoped to the dialog content.
+*/
+.dialog-section {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  .dialog-header {
+    position: absolute;
+    width: 100%;
+
+    /* TOOD: Using z-index is obviously a hack that I want to remove */
+    z-index: 1;
+
+    display: flex;
+    justify-content: end;
+    align-items: center;
+
+    .dialog-title {
+      margin: 0;
+    }
+
+    .repeat-prompt {
+      display: flex;
+
+      .repeat-icon {
+        margin-right: 0.5em;
+      }
+    }
+
+    .close-button {
+      line-height: 1;
+    }
+
+    ::not(:last-child) {
+      border-right: var(--or-border-width) solid var(--oe-border-color);
+    }
+  }
+
+  .dialog-content {
+    position: relative;
+    min-height: 0px;
+    padding: min(2em, 2vw);
+    flex: 1 1;
+
+    display: flex;
+    justify-content: center;
+
+    .carousel {
+      /*
+        We always want to extend the carousel to the edge of the dialog window
+        so that the navigation icons will always be on the edge of the dialog
+        even if the content doesn't reach the edge.
+      */
+      min-width: 100%;
+
+      /*
+        we cannot modify if this element is inside a flexbox or not because it
+        will be inside the shadow-dom of the sl-carousel shoelace web component
+      */
+      .carousel-item {
+        position: relative;
+        height: 100%;
+      }
+    }
+  }
+}
+
+.slide-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  /* Vertically fill the flexbox that we are inside of */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  .slide-description {
+    text-align: center;
+  }
+
+  .slide {
+    position: relative;
+    flex: 1 1;
+    min-height: 0px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+
+    /*
+      In some very extreme breakage cases, elements from the previous/next
+      slide can overflow into their neighbors.
+      As a defensive programming measure, I have hidden all overflow of the
+      slides so in the rare case that this will occur while a user is using
+      the web components, they will not see multiple slides at once, but they
+      will still have a half-visible slide.
+
+      This functionality should not be relied upon, and is not a feature.
+      I have only disabled overflow so that in untested scenarios, the user
+      will only see broken content, not incorrect content/information.
+    */
+    overflow: hidden;
+
+    /* TODO: This is a hack to get the svgs to fit in the mobile window */
+    svg {
+      max-width: 100%;
+    }
+
+    * {
+      animation-iteration-count: var(--animation-repeats) !important;
+      /* animation-iteration-count: var(--animation-repeats); */
+    }
+  }
+}
+
+.slide-footer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* TODO: sprite selectors (below) should probably be inlined into the sprites */
+.click-animation {
+  /* animation-timing-function: cubic-bezier(0, 0.175, 0.4, 0.9) !important; */
+  animation-timing-function: cubic-bezier(0, 1.5, 1, 1.5) !important;
+}
+
+/*
+  Pages and the progress bar should use the same timing function so that it
+  looks like the progress bar moves with the paging animations.
+*/
+.pages {
+  /*
+    I chose "Ease-out quadratic based on the power of 3" over my second pick
+    "Ease-out quintic based on the power of 4" because it has a softer start
+    meaning that it doesn't look as laggy when the animation starts
+  */
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1) !important;
+}
+
+:host {
+  --decision-color: var(--oe-panel-color);
+}

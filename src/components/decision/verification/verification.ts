@@ -7,8 +7,8 @@ import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { Tag } from "../../../models/tag";
+import { KeyboardShortcut } from "../../../templates/keyboard";
 
 /**
  * @description
@@ -28,7 +28,7 @@ export class VerificationComponent extends DecisionComponent {
   public verified: DecisionOptions = DecisionOptions.TRUE;
 
   /** Value that will be added to the oe-additional-tags column */
-  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter, reflect: true })
+  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter })
   public additionalTags: Tag[] = [];
 
   /** A keyboard key that when pressed will act as a click event on the button */
@@ -45,7 +45,7 @@ export class VerificationComponent extends DecisionComponent {
       description += ` and also these tags: ${additionalTagText}`;
     }
 
-    return [{ key: this.shortcut, description }];
+    return [{ keys: [this.shortcut], description }];
   }
 
   protected override handleShortcutKey(event: KeyboardEvent): void {
@@ -108,9 +108,7 @@ export class VerificationComponent extends DecisionComponent {
 
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
-        <div>
-          ${this.selectionMode !== "tablet" ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}
-        </div>
+        <div>${!this.isMobile ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}</div>
       </button>
     `;
   }

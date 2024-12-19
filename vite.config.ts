@@ -73,7 +73,7 @@ export default defineConfig({
         "components/verification-grid-tile": "./src/components/verification-grid-tile/verification-grid-tile.ts",
         "components/info-card": "./src/components/info-card/info-card.ts",
         "components/data-source": "./src/components/data-source/data-source.ts",
-        "components/help-dialog": "./src/components/verification-grid/help-dialog.ts",
+        "components/bootstrap-modal": "./src/components/bootstrap-modal/bootstrap-modal.ts",
         "components/decision": "./src/components/decision/decision.ts",
         "components/classification": "./src/components/decision/classification/classification.ts",
         "components/verification": "./src/components/decision/verification/verification.ts",

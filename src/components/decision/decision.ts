@@ -5,17 +5,13 @@ import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Decision } from "../../models/decisions/decision";
-import {
-  SelectionObserverType,
-  VerificationGridComponent,
-  VerificationGridInjector,
-} from "../verification-grid/verification-grid";
+import { VerificationGridComponent, VerificationGridInjector } from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
 import { decisionColor } from "../../services/colors";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { injectionContext } from "../../helpers/constants/contextTokens";
+import { KeyboardShortcut } from "../../templates/keyboard";
 import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {
@@ -55,12 +51,16 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   // updated from outside the component in Lit, the state decorator is used for
   // internal state, while the property decorator is used for state that other
   // components can interact with
-  /** The selection mode of the verification grid */
+  /**
+   * Toggles the decision button in and out of mobile compatibility
+   * when decision buttons are rendered in a mobile context, they should be
+   * larger, and without shortcut keys
+   */
   @property({ attribute: false })
-  public selectionMode: SelectionObserverType = "desktop";
+  public isMobile = false;
 
   @state()
-  public verificationGrid!: VerificationGridComponent;
+  public verificationGrid?: VerificationGridComponent;
 
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
@@ -73,13 +73,17 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   }
 
   public disconnectedCallback(): void {
+    if (!this.verificationGrid) {
+      return;
+    }
+
     this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
     this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);
     super.disconnectedCallback();
   }
 
   public willUpdate(change: PropertyValues<this>): void {
-    if (change.has("verificationGrid")) {
+    if (change.has("verificationGrid") && this.verificationGrid) {
       // if we are currently attached to a verification grid, we should remove
       // the event listeners from the old grid
       if (change.get("verificationGrid")) {

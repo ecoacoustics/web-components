@@ -1,0 +1,95 @@
+@import url("./animations.css");
+
+.shortcut-slide {
+  sl-icon[name="mouse"] {
+    font-size: 1.5em;
+    padding: 0em;
+  }
+
+  .shortcut-keys {
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 2em;
+  }
+
+  .shortcut-card {
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    flex: 1;
+
+    padding: var(--oe-spacing);
+
+    .shortcut-card-title {
+      text-align: center;
+
+      /*
+        While most user agents will add margin to heading elements.
+        I have explicitly added a margin to the card headings to ensure
+        consistency across all user agents, and to safe-guard against any
+        future changes to the default styles, or template changes.
+      */
+      margin: 0.5em;
+    }
+
+    .shortcut,
+    .shortcut-animation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .click-animation {
+    animation: shortcut-cursor-clicks var(--animation-duration);
+  }
+
+  .tile-0 {
+    animation: shortcut-tile-0-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-tile-0-selection-animation var(--animation-duration);
+    }
+  }
+
+  .tile-1 {
+    animation: shortcut-tile-1-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-tile-1-selection-animation var(--animation-duration);
+    }
+  }
+
+  .tile-2 {
+    animation: shortcut-tile-0-decision-animation var(--animation-duration);
+
+    & > .grid-tile-background {
+      animation: shortcut-tile-0-selection-animation var(--animation-duration);
+    }
+  }
+
+  /* Positive decision */
+  .shortcut-0 > kbd {
+    animation: shortcut-0-animation var(--animation-duration);
+  }
+
+  /* Negative decision */
+  .shortcut-1 > kbd {
+    animation: shortcut-1-animation var(--animation-duration);
+  }
+
+  /* Ctrl + Click */
+  .shortcut-2 > kbd {
+    animation: shortcut-2-animation var(--animation-duration);
+  }
+
+  /* Select All */
+  .shortcut-3 > kbd {
+    animation: shortcut-3-animation var(--animation-duration);
+  }
+
+  /* Deselect All */
+  .shortcut-4 > kbd {
+    animation: shortcut-4-animation var(--animation-duration);
+  }
+}

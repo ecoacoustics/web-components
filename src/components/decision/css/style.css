@@ -29,14 +29,6 @@
   .additional-tags {
     font-size: var(--oe-font-size);
   }
-
-  & > * {
-    /*
-      We disable pointer events on all su!b-elements so that the main button
-      will directly receive the pointer and focus events
-    */
-    pointer-events: none;
-  }
 }
 
 .decision-color-pill {
