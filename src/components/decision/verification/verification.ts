@@ -8,7 +8,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
 import { Tag } from "../../../models/tag";
-import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
+import { KeyboardShortcut } from "../../../templates/shortcuts";
 
 /**
  * @description

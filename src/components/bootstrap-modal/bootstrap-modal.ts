@@ -12,19 +12,15 @@ import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import { loop } from "../../helpers/directives";
 import { Tag } from "../../models/tag";
 import { AdvancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
+import { KeyboardShortcut } from "../../templates/shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
 
+// styles for individual slides
 import decisionSlideStyles from "./slides/decisions/styles.css?inline";
 import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
-
-export interface KeyboardShortcut {
-  keys: string[];
-  description: string;
-  hasMouse?: boolean;
-}
 
 /*
   A local storage key that when set, will cause the bootstrap modal not to open

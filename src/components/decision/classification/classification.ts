@@ -8,7 +8,7 @@ import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
-import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
+import { KeyboardShortcut } from "../../../templates/shortcuts";
 import classificationStyles from "./css/style.css?inline";
 
 /**

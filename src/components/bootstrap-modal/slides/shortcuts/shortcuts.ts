@@ -1,11 +1,9 @@
 import { html, svg, TemplateResult } from "lit";
 import { map } from "lit/directives/map.js";
-import { KeyboardShortcut } from "bootstrap-modal/bootstrap-modal";
 import { AbstractSlide } from "../abstractSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
-import { loop } from "../../../../helpers/directives";
-import { when } from "lit/directives/when.js";
 import { cursorSprite } from "../../sprites/cursor.sprite";
+import { KeyboardShortcut, shortcutTemplate } from "../../../../templates/shortcuts";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
@@ -31,7 +29,7 @@ export class ShortcutsSlide extends AbstractSlide {
     const displayedShortcuts = [
       ...this.shortcuts,
       { keys: ["Ctrl"], hasMouse: true, description: "Toggle selection" },
-      { keys: ["Ctrl", "A"], description: "Select all" },
+      { keys: ["Ctrl", "a"], description: "Select all" },
       { keys: ["Esc"], description: "De-select all" },
     ] satisfies KeyboardShortcut[];
 
@@ -41,13 +39,7 @@ export class ShortcutsSlide extends AbstractSlide {
         (shortcut: KeyboardShortcut, index: number) => html`
           <section class="shortcut-card">
             <h3 class="shortcut-card-title">${shortcut.description}</h3>
-            <div class="shortcut shortcut-${index}">
-              ${loop(
-                shortcut.keys,
-                (key, { last }) => html`<kbd>${key}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`,
-              )}
-              ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse"></sl-icon>`)}
-            </div>
+            <div class="shortcut shortcut-${index}">${shortcutTemplate(shortcut)}</div>
           </section>
         `,
       )}
