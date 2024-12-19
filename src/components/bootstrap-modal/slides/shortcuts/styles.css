@@ -3,6 +3,10 @@
 .shortcut-slide {
   flex-direction: row !important;
 
+  .click-animation {
+    animation: shortcut-cursor-clicks var(--animation-duration);
+  }
+
   .shortcut-keys {
     display: flex;
     justify-content: space-evenly;

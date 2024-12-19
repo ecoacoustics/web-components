@@ -5,6 +5,7 @@ import { AbstractSlide } from "../abstractSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { loop } from "../../../../helpers/directives";
 import { when } from "lit/directives/when.js";
+import { cursorSprite } from "../../sprites/cursor.sprite";
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[]) {
@@ -49,7 +50,7 @@ export class ShortcutsSlide extends AbstractSlide {
     return html`
       <div class="shortcut-slide slide">
         <div class="shortcut-card">
-          <svg viewBox="0 0 270 60">${this.verificationGrid()}</svg>
+          <svg viewBox="0 0 270 60">${this.verificationGrid()} ${cursorSprite(135, 25)}</svg>
           <div class="shortcut-keys">${this.keyboardButtonsTemplate()}</div>
         </div>
       </div>

@@ -8,6 +8,28 @@
   --animation-duration: 8s;
 }
 
+@keyframes shortcut-cursor-clicks {
+  20% {
+    r: 0px;
+  }
+  22% {
+    r: 6px;
+  }
+  24% {
+    r: 0px;
+  }
+
+  50% {
+    r: 0px;
+  }
+  52% {
+    r: 6px;
+  }
+  54% {
+    r: 0px;
+  }
+}
+
 /* selection animations */
 
 @keyframes shortcut-tile-0-selection-animation {
