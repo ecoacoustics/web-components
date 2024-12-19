@@ -90,8 +90,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
 
     if (shouldShowHelpDialog) {
-      // this.showTutorialModal();
-      this.showAdvancedModal();
+      this.showTutorialModal();
+      // this.showAdvancedModal();
     }
   }
 

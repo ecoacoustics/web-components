@@ -2,6 +2,7 @@ import { svg } from "lit";
 import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
 import { Ref } from "lit/directives/ref.js";
+import { when } from "lit/directives/when.js";
 
 export interface GridTileSpriteRefs {
   background?: Ref<SVGRectElement>;
@@ -36,7 +37,7 @@ export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, cl
         fill="#ccc"
       />
 
-      <text x="7" y="12" font-size="6">Tag Name</text>
+      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">Tag Name</text>`)}
       ${hasClassification ? gridProgressClassification() : gridProgressVerification()}
     </svg>
   `;

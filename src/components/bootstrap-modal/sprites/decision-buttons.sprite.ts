@@ -4,9 +4,14 @@ import { html } from "lit";
 import { map } from "lit/directives/map.js";
 import { VerificationComponent } from "decision/verification/verification";
 
-export function decisionButtonsSprite(decisionButtons: DecisionComponent[]): HtmlSprite {
+// we have a limit parameter so that we can only select a subset of the decision
+// buttons to use as a sprite.
+// this is useful for the tutorial bootstrap where we don't want to overwhelm
+// the user with all of the options at once.
+export function decisionButtonsSprite(decisionButtons: DecisionComponent[], limit = 1): HtmlSprite {
+  const tutorialButtons = decisionButtons.slice(0, limit);
   return html`<div class="decision-buttons">
-    ${map(decisionButtons, (node, i) => wireframeDecisionButton(node, i))}
+    ${map(tutorialButtons, (node, i) => wireframeDecisionButton(node, i))}
   </div>`;
 }
 
