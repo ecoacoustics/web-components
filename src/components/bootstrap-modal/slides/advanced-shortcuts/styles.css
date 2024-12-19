@@ -1,6 +1,8 @@
 .advanced-shortcuts-slide {
-  flex-direction: row !important;
-  align-content: space-between;
+  .shortcuts-container {
+    display: flex;
+    align-content: space-between;
+  }
 
   section {
     display: flex;
@@ -8,7 +10,6 @@
     align-items: start;
     justify-content: start;
     flex: 1;
-    min-height: 100%;
     padding: var(--oe-spacing);
 
     &:not(:last-child) {

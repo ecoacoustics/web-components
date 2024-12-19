@@ -90,7 +90,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
 
     if (shouldShowHelpDialog) {
-      this.showTutorialModal();
+      // this.showTutorialModal();
+      this.showAdvancedModal();
     }
   }
 
@@ -115,14 +116,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      // new SelectionSlide(),
-      // new PagingSlide(),
-
-      new ShortcutsSlide(this.decisionShortcuts),
-      new PagingSlide(),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
+      new PagingSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -197,10 +193,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       const slide = this.slides[0];
       return html`
         <div class="carousel">
-          <div class="carousel-item">
+          <sl-carousel-item class="carousel-item">
             ${this.renderSlide(slide)}
             <div class="slide-footer">${this.slideFooterTemplate()}</div>
-          </div>
+          </sl-carousel-item>
         </div>
       `;
     }

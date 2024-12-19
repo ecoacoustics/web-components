@@ -1,8 +1,6 @@
 @import url("./animations.css");
 
 .shortcut-slide {
-  flex-direction: row !important;
-
   sl-icon[name="mouse"] {
     font-size: 1.5em;
     padding: 0em;
