@@ -105,44 +105,26 @@
   }
 }
 
-/* Positive decision */
+/* Select all */
 @keyframes shortcut-0-animation {
   from,
-  28% {
+  9% {
     transform: translate(0, 0);
   }
 
-  29%,
-  31% {
+  11%,
+  13% {
     transform: translate(0.13em, 0.13em);
   }
 
-  32%,
+  14%,
   to {
     transform: translate(0, 0);
   }
 }
 
-/* Negative decision */
+/* Ctrl + click */
 @keyframes shortcut-1-animation {
-  from,
-  58% {
-    transform: translate(0, 0);
-  }
-
-  59%,
-  61% {
-    transform: translate(0.13em, 0.13em);
-  }
-
-  62%,
-  to {
-    transform: translate(0, 0);
-  }
-}
-
-/* Ctrl + Click */
-@keyframes shortcut-2-animation {
   from,
   19% {
     transform: translate(0, 0);
@@ -167,26 +149,26 @@
   }
 }
 
-/* Select All */
-@keyframes shortcut-3-animation {
+/* Positive decision */
+@keyframes shortcut-2-animation {
   from,
-  9% {
+  28% {
     transform: translate(0, 0);
   }
 
-  11%,
-  13% {
+  29%,
+  31% {
     transform: translate(0.13em, 0.13em);
   }
 
-  14%,
+  32%,
   to {
     transform: translate(0, 0);
   }
 }
 
-/* Deselect All */
-@keyframes shortcut-4-animation {
+/* Deselect all*/
+@keyframes shortcut-3-animation {
   from,
   39% {
     transform: translate(0, 0);
@@ -208,6 +190,24 @@
   }
 
   73%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/* Negative decision */
+@keyframes shortcut-4-animation {
+  from,
+  58% {
+    transform: translate(0, 0);
+  }
+
+  59%,
+  61% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  62%,
   to {
     transform: translate(0, 0);
   }

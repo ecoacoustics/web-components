@@ -68,27 +68,27 @@
     }
   }
 
-  /* Positive decision */
+  /* Select all */
   .shortcut-0 > kbd {
     animation: shortcut-0-animation var(--animation-duration);
   }
 
-  /* Negative decision */
+  /* Ctrl + Click */
   .shortcut-1 > kbd {
     animation: shortcut-1-animation var(--animation-duration);
   }
 
-  /* Ctrl + Click */
+  /* Positive decision */
   .shortcut-2 > kbd {
     animation: shortcut-2-animation var(--animation-duration);
   }
 
-  /* Select All */
+  /* Deselect all */
   .shortcut-3 > kbd {
     animation: shortcut-3-animation var(--animation-duration);
   }
 
-  /* Deselect All */
+  /* Negative decision */
   .shortcut-4 > kbd {
     animation: shortcut-4-animation var(--animation-duration);
   }
