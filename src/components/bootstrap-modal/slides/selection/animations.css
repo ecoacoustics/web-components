@@ -14,7 +14,7 @@
 */
 
 .selection-slide {
-  --animation-duration: 6s;
+  --animation-duration: 8s;
 }
 
 /*
@@ -31,57 +31,113 @@
     transform: translate(-70px, -60px);
   }
 
-  10% {
+  10%,
+  15% {
     transform: translate(-40px, -80px);
   }
 
-  30% {
+  20%,
+  25% {
+    transform: translate(-10px, 60px);
+  }
+
+  30%,
+  35% {
     transform: translate(60px, -80px);
   }
 
-  50%,
-  60% {
-    transform: translate(-40px, 0px);
+  40%,
+  45% {
+    transform: translate(-10px, 60px);
   }
 
-  /* selection highlight box animations */
+  50%,
+  55% {
+    transform: translate(-30px, -10px);
+  }
+
+  60%,
+  70% {
+    transform: translate(-30px, 60px);
+  }
+
   80% {
     transform: translate(-140px, -80px);
   }
 
-  to {
-    transform: none;
+  90% {
+    transform: translate(-70px, -60px);
   }
 }
 
 @keyframes selection-cursor-clicks {
-  5% {
+  10% {
     r: 0px;
   }
-  10% {
+  12% {
     r: 6px;
   }
-  15% {
+  14% {
     r: 0px;
   }
 
-  25% {
+  20% {
     r: 0px;
   }
-  30% {
+  22% {
     r: 6px;
   }
-  35% {
+  24% {
+    r: 0px;
+  }
+
+  30% {
+    r: 0px;
+  }
+  32% {
+    r: 6px;
+  }
+  34% {
+    r: 0px;
+  }
+
+  40% {
+    r: 0px;
+  }
+  42% {
+    r: 6px;
+  }
+  44% {
     r: 0px;
   }
 
   50% {
     r: 0px;
   }
-  55% {
+  52% {
     r: 6px;
   }
+  54% {
+    r: 0px;
+  }
+
   60% {
+    r: 0px;
+  }
+  62% {
+    r: 6px;
+  }
+  64% {
+    r: 0px;
+  }
+
+  90% {
+    r: 0px;
+  }
+  92% {
+    r: 6px;
+  }
+  94% {
     r: 0px;
   }
 }
@@ -98,9 +154,13 @@
     an svg container, meaning that the svg viewBox will scale the svg to all
     screen resolutions, including mobile devices.
   */
-  to {
+  90% {
     width: 140px;
     height: 80px;
+  }
+  90.4% {
+    width: 0;
+    height: 0;
   }
 }
 
