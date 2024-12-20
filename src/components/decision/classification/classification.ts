@@ -7,8 +7,8 @@ import { Tag } from "../../../models/tag";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
 import { map } from "lit/directives/map.js";
+import { KeyboardShortcut } from "../../../templates/keyboard";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -82,15 +82,15 @@ export class ClassificationComponent extends DecisionComponent {
 
     if (this.derivedTrueShortcut) {
       shortcuts.push({
-        key: this.derivedTrueShortcut,
-        description: `Add a 'true' ${this.tag.text} classification`,
+        keys: [this.derivedTrueShortcut],
+        description: `Is a ${this.tag.text}`,
       });
     }
 
     if (this.derivedFalseShortcut) {
       shortcuts.push({
-        key: this.derivedFalseShortcut,
-        description: `Add a 'false' ${this.tag.text} classification`,
+        keys: [this.derivedFalseShortcut],
+        description: `Not a ${this.tag.text}`,
       });
     }
 
@@ -162,7 +162,7 @@ export class ClassificationComponent extends DecisionComponent {
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
         <div class="button-text">${decision}</div>
-        ${this.selectionMode !== "tablet" && shortcut ? this.keyboardShortcutTemplate(shortcut) : nothing}
+        ${!this.isMobile && shortcut ? this.keyboardShortcutTemplate(shortcut) : nothing}
       </button>
     `;
   }

@@ -1,0 +1,28 @@
+.advanced-shortcuts-slide {
+  .shortcuts-container {
+    width: 100%;
+
+    display: flex;
+    align-content: space-between;
+
+    overflow-y: auto;
+  }
+
+  .shortcuts-table {
+    width: 100%;
+  }
+
+  .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: var(--oe-spacing-small);
+    padding-left: var(--oe-spacing-large);
+    padding-right: var(--oe-spacing-large);
+
+    &:nth-child(odd) {
+      background-color: var(--oe-panel-color);
+    }
+  }
+}

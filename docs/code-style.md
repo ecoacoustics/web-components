@@ -58,7 +58,34 @@ and [code-workspace](/webcomponents.code-workspace).
 7. All methods on a web component that returns a HTML, or SVG template must be
    prepended with "Template"(e.g. `private decisionPromptTemplate(): TemplateResult<1>`)
 
-## CSS Parts
+## CSS Structure
+
+### Ordering of CSS Properties
+
+- Positioning effecting the position of the host element
+  - `position`
+  - `top`
+- Properties effecting the box model of the host element
+  - `width`
+  - `height`
+  - `margin`
+  - `padding`
+  - `border`
+  - `flex` (not flexbox)
+- Properties effecting the position of child elements
+  - `display`
+  - `grid`
+  - `align-items`
+  - `justify-content`
+- Properties effecting the content (e.g. text) of the host element
+  - `color`
+  - `background`
+  - `font`
+  - `text`
+  - `list`
+  - `text-align`
+
+### CSS Parts
 
 Default styles that can be overwritten by css parts should be set in the
 following format:
@@ -74,6 +101,13 @@ following format:
 
 This ensure that the user can change the default styles of css part targeted
 elements.
+
+### CSS Animations
+
+Because `@keyframe` declarations cannot be lexically scoped in CSS, you should
+**always** prefix keyframe identifiers with their scoping.
+
+Example: For a grid tile animation, the scoping prefix "`grid-tile`" could be used like `grid-tile-selection-animation`
 
 ## JsDoc
 

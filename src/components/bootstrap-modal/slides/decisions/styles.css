@@ -1,0 +1,42 @@
+@import url("./animations.css");
+
+.decisions-slide {
+  .cursor {
+    animation: decisions-cursor-movement var(--animation-duration);
+    will-change: transform;
+  }
+
+  .click-animation {
+    animation: decisions-cursor-clicks var(--animation-duration);
+  }
+
+  .pages {
+    animation: decisions-slide-movement calc(var(--animation-duration) / 2);
+    animation-delay: 2s;
+    will-change: transform;
+
+    .current-page {
+      animation: decisions-slide-decisions var(--animation-duration);
+      transform: translate(-100%, 0);
+    }
+  }
+
+  .decision-buttons {
+    position: absolute;
+    top: 75%;
+
+    display: flex;
+
+    .decision-button {
+      position: relative;
+    }
+
+    .true-decision {
+      animation: decisions-true-click var(--animation-duration);
+    }
+
+    .false-decision {
+      animation: decisions-false-click var(--animation-duration);
+    }
+  }
+}

@@ -8,7 +8,6 @@ import {
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
-import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
@@ -31,6 +30,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser";
+import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -166,8 +166,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
-  @query("oe-verification-help-dialog")
-  private helpDialog!: VerificationHelpDialogComponent;
+  @query("oe-verification-bootstrap")
+  private helpDialog!: VerificationBootstrapComponent;
 
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
@@ -416,22 +416,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleTileInvalidation(): void {
-    // if the user doesn't explicitly define a "selection-behavior" attribute
-    // then we will infer the selection behavior based on the device type
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
+    const isMobile = this.isMobileDevice();
 
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
-    this.skipButton.selectionMode = selectionBehavior;
+    this.skipButton.isMobile = isMobile;
     for (const element of decisionElements) {
-      element.selectionMode = selectionBehavior;
+      element.isMobile = isMobile;
     }
 
-    this.helpDialog.selectionBehavior = selectionBehavior;
+    this.helpDialog.selectionBehavior = this.selectionBehavior;
+    this.helpDialog.isMobile = isMobile;
     this.helpDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails
@@ -537,6 +533,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   //#endregion
 
   //#region EventHandlers
+
   private handleKeyDown(event: KeyboardEvent): void {
     // most browsers scroll a page width when the user presses the space bar
     // however, since space bar can also be used to play spectrograms, we don't
@@ -602,7 +599,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "?": {
-        this.helpDialog.showModal(false);
+        this.handleHelpRequest();
         break;
       }
     }
@@ -643,6 +640,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private handleWindowBlur(): void {
     this.hideSelectionShortcuts();
     this.hideHighlightBox();
+  }
+
+  private handleHelpRequest(): void {
+    this.helpDialog.showAdvancedModal();
   }
 
   private handleHelpDialogOpen(): void {
@@ -1342,12 +1343,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     return html`
-      <oe-verification-help-dialog
+      <oe-verification-bootstrap
         @open="${this.handleHelpDialogOpen}"
         @close="${this.handleHelpDialogClose}"
-        verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        classificationTasksCount="${this.requiredClassificationTags.length}"
-      ></oe-verification-help-dialog>
+        .hasVerificationTask="${this.hasVerificationTask()}"
+        .classificationTasks="${this.requiredClassificationTags}"
+        .isMobile="${this.isMobileDevice()}"
+      ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
@@ -1388,7 +1390,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
             <button
               data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal(false)}"
+              @click="${() => this.handleHelpRequest()}"
               class="oe-btn-info"
               rel="help"
             >
