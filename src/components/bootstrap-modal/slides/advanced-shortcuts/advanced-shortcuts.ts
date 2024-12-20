@@ -14,11 +14,11 @@ export class AdvancedShortcutsSlide extends AbstractSlide {
       { keys: ["Space"], description: "Play selected spectrograms" },
       { keys: ["Alt"], description: "Keyboard selection" },
       { keys: ["f11"], description: "Fullscreen" },
-      { keys: ["Ctrl"], description: "Toggle selection", hasMouse: true },
-      { keys: ["Shift"], description: "Exclusive range selection" },
-      { keys: ["Ctrl", "Shift"], description: "Additive range selection" },
       { keys: ["Ctrl", "a"], description: "Select all" },
       { keys: ["Esc"], description: "Deselect all" },
+      { keys: ["Ctrl"], description: "Toggle selection", hasMouse: true },
+      { keys: ["Shift"], description: "Exclusive range selection", hasMouse: true },
+      { keys: ["Ctrl", "Shift"], description: "Additive range selection", hasMouse: true },
     ] satisfies KeyboardShortcut[];
 
     return html`
@@ -30,7 +30,7 @@ export class AdvancedShortcutsSlide extends AbstractSlide {
                 (shortcut) => html`
                   <tr class="shortcut-row">
                     <td>${shortcut.description}</td>
-                    <td>${keyboardTemplate({ keys: shortcut.keys })}</td>
+                    <td>${keyboardTemplate(shortcut)}</td>
                   </tr>
                 `,
               )}

@@ -35,27 +35,51 @@
   }
 
   /* Highlight box selection animations */
-  .tile-0 .grid-tile-background {
-    animation: selection-tile-0 var(--animation-duration);
+  .tile-0 {
+    animation: selection-tile-0-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-0 var(--animation-duration);
+    }
   }
 
-  .tile-1 .grid-tile-background {
-    animation: selection-tile-1 var(--animation-duration);
+  .tile-1 {
+    animation: selection-tile-1-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-1 var(--animation-duration);
+    }
   }
 
-  .tile-2 .grid-tile-background {
-    animation: selection-tile-2 var(--animation-duration);
+  .tile-2 {
+    animation: selection-tile-2-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-2 var(--animation-duration);
+    }
   }
 
-  .tile-3 .grid-tile-background {
-    animation: selection-tile-3 var(--animation-duration);
+  .tile-3 {
+    animation: selection-tile-3-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-3 var(--animation-duration);
+    }
   }
 
-  .tile-4 .grid-tile-background {
-    animation: selection-tile-4 var(--animation-duration);
+  .tile-4 {
+    animation: selection-tile-4-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-4 var(--animation-duration);
+    }
   }
 
-  .tile-5 .grid-tile-background {
-    animation: selection-tile-5 var(--animation-duration);
+  .tile-5 {
+    animation: selection-tile-5-decisions var(--animation-duration);
+
+    .grid-tile-background {
+      animation: selection-tile-5 var(--animation-duration);
+    }
   }
 }

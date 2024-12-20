@@ -1,11 +1,3 @@
-@property --positive-color {
-  syntax: "<color>";
-}
-
-@property --negative-color {
-  syntax: "<color>";
-}
-
 .decisions-slide {
   --animation-duration: 5s;
 

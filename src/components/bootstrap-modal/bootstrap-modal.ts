@@ -103,7 +103,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public updated(change: PropertyValues<this>): void {
-    const invalidationKeys: (keyof this)[] = [
+    const invalidationKeys: (keyof VerificationBootstrapComponent)[] = [
       "hasVerificationTask",
       "classificationTasks",
       "isMobile",
@@ -111,7 +111,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       "decisionElements",
     ];
 
-    if (invalidationKeys.some((key) => change.has(key as any))) {
+    if (invalidationKeys.some((key) => change.has(key))) {
       this.updateSlides();
 
       // TODO: DON'T REVIEW THIS
@@ -130,8 +130,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(this.demoDecisionButton),
       // new PagingSlide(),
 
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       new SelectionSlide(this.demoDecisionButton),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       new ShortcutsSlide(this.decisionShortcuts),
       new PagingSlide(),
     ];
@@ -175,9 +175,23 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.requestUpdate();
   }
 
+  public positiveDecisionColor(): string {
+    return this.hasClassificationTask ? "red" : "green";
+  }
+
+  public negativeDecisionColor(): string {
+    return this.hasClassificationTask ? "maroon" : "red";
+  }
+
   private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
     return html`
-      <div class="slide-content">
+      <div
+        class="slide-content"
+        style="
+          --positive-color: ${this.positiveDecisionColor()};
+          --negative-color: ${this.negativeDecisionColor()};
+        "
+      >
         <h2 class="slide-description">${slide.description}</h2>
         ${slide.render()}
       </div>

@@ -34,25 +34,11 @@ export class DecisionsSlide extends AbstractSlide {
   private demoDecisionButton: DecisionComponent;
   private hasClassificationTask: boolean;
 
-  public positiveDecisionColor(): string {
-    return this.hasClassificationTask ? "red" : "green";
-  }
-
-  public negativeDecisionColor(): string {
-    return this.hasClassificationTask ? "maroon" : "red";
-  }
-
   public render() {
     return html`
       <div class="decisions-slide slide">
         <svg viewBox="0 0 280 180">
-          <g
-            class="pages"
-            style="
-              --positive-color: ${this.positiveDecisionColor()};
-              --negative-color: ${this.negativeDecisionColor()}
-            "
-          >
+          <g class="pages">
             <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>

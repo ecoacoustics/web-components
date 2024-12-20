@@ -216,3 +216,29 @@
     fill: var(--oe-selected-color);
   }
 }
+
+@keyframes selection-tile-0-decisions {
+}
+
+@keyframes selection-tile-1-decisions {
+  from,
+  19% {
+  }
+
+  20%,
+  to {
+    --decision-color: red;
+  }
+}
+
+@keyframes selection-tile-2-decisions {
+}
+
+@keyframes selection-tile-3-decisions {
+}
+
+@keyframes selection-tile-4-decisions {
+}
+
+@keyframes selection-tile-5-decisions {
+}

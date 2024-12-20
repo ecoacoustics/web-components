@@ -1,3 +1,15 @@
+@property --positive-color {
+  syntax: "<color>";
+}
+
+@property --negative-color {
+  syntax: "<color>";
+}
+
+@property --decision-color {
+  syntax: "<color>";
+}
+
 :host {
   /*
     We only want to repeat the animation three times so that the user doesn't
