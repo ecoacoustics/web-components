@@ -10,7 +10,7 @@ import { ClassificationComponent } from "../../decision/classification/classific
 export function decisionButtonSprite(x: number, y: number, decisionButton: DecisionComponent): SvgSprite {
   const isClassification = decisionButton instanceof ClassificationComponent;
   const width = 40 as const;
-  const height = 40 as const;
+  const height = 42 as const;
 
   return svg`
     <svg viewbox="0 0 ${width} ${height}" x="${x}" y="${y}" width="${width}" height="${height}">

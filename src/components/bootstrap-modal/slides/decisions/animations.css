@@ -1,3 +1,11 @@
+@property --positive-color {
+  syntax: "<color>";
+}
+
+@property --negative-color {
+  syntax: "<color>";
+}
+
 .decisions-slide {
   --animation-duration: 5s;
 
@@ -68,22 +76,19 @@
   }
 }
 
-@keyframes decisions-slide-decisions-current {
+@keyframes decisions-slide-decisions {
   from,
   9% {
-    --decision-color: red;
+    --decision-color: var(--negative-color);
   }
 
-  10% {
-    --decision-color: green;
-  }
-
+  10%,
   50% {
-    --decision-color: green;
+    --decision-color: var(--positive-color);
   }
 
   to {
-    --decision-color: red;
+    --decision-color: var(--negative-color);
   }
 }
 

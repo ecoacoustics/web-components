@@ -4,6 +4,7 @@ import { verificationGridPageSprite } from "../../sprites/verification-grid.spri
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
+import { ClassificationComponent } from "../../../decision/classification/classification";
 
 export class DecisionsSlide extends AbstractSlide {
   public constructor(
@@ -26,17 +27,32 @@ export class DecisionsSlide extends AbstractSlide {
     super(description);
 
     this.demoDecisionButton = demoDecisionButton;
-    this.hasClassificationTask = hasClassificationTask;
+    // this.hasClassificationTask = hasClassificationTask;
+    this.hasClassificationTask = this.demoDecisionButton instanceof ClassificationComponent;
   }
 
   private demoDecisionButton: DecisionComponent;
   private hasClassificationTask: boolean;
 
+  public positiveDecisionColor(): string {
+    return this.hasClassificationTask ? "red" : "green";
+  }
+
+  public negativeDecisionColor(): string {
+    return this.hasClassificationTask ? "maroon" : "red";
+  }
+
   public render() {
     return html`
       <div class="decisions-slide slide">
         <svg viewBox="0 0 280 180">
-          <g class="pages">
+          <g
+            class="pages"
+            style="
+              --positive-color: ${this.positiveDecisionColor()};
+              --negative-color: ${this.negativeDecisionColor()}
+            "
+          >
             <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>

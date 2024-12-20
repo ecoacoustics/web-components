@@ -16,7 +16,7 @@
     will-change: transform;
 
     .current-page {
-      animation: decisions-slide-decisions-current var(--animation-duration);
+      animation: decisions-slide-decisions var(--animation-duration);
       transform: translate(-100%, 0);
     }
   }
