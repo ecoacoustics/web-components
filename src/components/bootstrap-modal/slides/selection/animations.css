@@ -14,7 +14,7 @@
 */
 
 .selection-slide {
-  --animation-duration: 3.5s;
+  --animation-duration: 6s;
 }
 
 /*
@@ -32,21 +32,21 @@
   }
 
   10% {
-    transform: translate(-100px, -80px);
+    transform: translate(-40px, -80px);
   }
 
   30% {
-    transform: translate(0px, -80px);
+    transform: translate(60px, -80px);
   }
 
   50%,
   60% {
-    transform: translate(-100px, 0px);
+    transform: translate(-40px, 0px);
   }
 
   /* selection highlight box animations */
   80% {
-    transform: translate(-200px, -80px);
+    transform: translate(-140px, -80px);
   }
 
   to {
@@ -99,7 +99,7 @@
     screen resolutions, including mobile devices.
   */
   to {
-    width: 200px;
+    width: 140px;
     height: 80px;
   }
 }
@@ -160,13 +160,8 @@
   }
 
   50%,
-  91% {
-    fill: var(--oe-panel-color);
-  }
-  /* end of individual seletion */
-  92%,
   to {
-    fill: var(--oe-selected-color);
+    fill: var(--oe-panel-color);
   }
 }
 
@@ -205,40 +200,72 @@
   }
 }
 
-@keyframes selection-tile-5 {
-  from,
-  91% {
-    fill: var(--oe-panel-color);
-  }
-
-  92%,
-  to {
-    fill: var(--oe-selected-color);
-  }
-}
-
 @keyframes selection-tile-0-decisions {
+  from,
+  89% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
 }
 
 @keyframes selection-tile-1-decisions {
   from,
   19% {
+    --decision-color: var(--oe-panel-color);
   }
 
   20%,
+  89% {
+    --decision-color: var(--negative-color);
+  }
+
+  90%,
   to {
-    --decision-color: red;
+    --decision-color: var(--positive-color);
   }
 }
 
 @keyframes selection-tile-2-decisions {
+  from,
+  19% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  20%,
+  to {
+    --decision-color: var(--negative-color);
+  }
 }
 
 @keyframes selection-tile-3-decisions {
+  from,
+  89% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
 }
 
 @keyframes selection-tile-4-decisions {
-}
+  from,
+  19% {
+    --decision-color: var(--oe-panel-color);
+  }
 
-@keyframes selection-tile-5-decisions {
+  20%,
+  89% {
+    --decision-color: var(--positive-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
 }

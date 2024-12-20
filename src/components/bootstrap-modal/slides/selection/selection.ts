@@ -20,7 +20,7 @@ export class SelectionSlide extends AbstractSlide {
       <div class="selection-slide slide">
         <svg viewBox="0 0 280 180">
           <g>${verificationGridPageSprite()}</g>
-          ${decisionButtonSprite(130, 140, this.demoDecisionButton)} ${cursorSprite(223, 96)} ${selectionBoxSprite()}
+          ${decisionButtonSprite(130, 140, this.demoDecisionButton)} ${cursorSprite(163, 96)} ${selectionBoxSprite()}
         </svg>
       </div>
     `;

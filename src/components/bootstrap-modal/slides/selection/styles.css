@@ -74,12 +74,4 @@
       animation: selection-tile-4 var(--animation-duration);
     }
   }
-
-  .tile-5 {
-    animation: selection-tile-5-decisions var(--animation-duration);
-
-    .grid-tile-background {
-      animation: selection-tile-5 var(--animation-duration);
-    }
-  }
 }
