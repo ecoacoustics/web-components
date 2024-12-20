@@ -10,7 +10,7 @@ import { ClassificationComponent } from "../../decision/classification/classific
 export function decisionButtonSprite(x: number, y: number, decisionButton: DecisionComponent): SvgSprite {
   const isClassification = decisionButton instanceof ClassificationComponent;
   const width = 40 as const;
-  const height = 32 as const;
+  const height = 40 as const;
 
   return svg`
     <svg viewbox="0 0 ${width} ${height}" x="${x}" y="${y}" width="${width}" height="${height}">
@@ -69,10 +69,13 @@ function classificationButtonSprite(): SvgSprite {
     <g class="classification-tag-label">
       <path
         d="
-          M 1 13
-          Q 1 4 4 1
-          L 36 1
-          Q 36 0 39 13
+          M 5 1
+          L 35 1
+          Q 39 1 39 5
+          L 39 13
+          L 1 13
+          L 1 5
+          Q 1 1 5 1
           Z
         "
         fill="var(--oe-background-color)"
@@ -89,7 +92,9 @@ function classificationButtonSprite(): SvgSprite {
           M 1 13
           L 20 13
           L 20 39
-          Q -2 40 1 13
+          L 5 39
+          Q 1 38 1 34
+          Z
         "
         fill="var(--oe-background-color)"
         stroke="var(--oe-primary-color)"
@@ -108,7 +113,9 @@ function classificationButtonSprite(): SvgSprite {
           M 39 13
           L 20 13
           L 20 39
-          Q 39 39 39 13
+          L 35 39
+          Q 39 39 39 34
+          Z
         "
         fill="var(--oe-background-color)"
         stroke="var(--oe-primary-color)"
