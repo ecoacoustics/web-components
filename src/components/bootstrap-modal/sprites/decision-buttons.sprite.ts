@@ -61,11 +61,20 @@ function verificationButtonSprite(): SvgSprite {
   `;
 }
 
+// we use path elements for the classification tag container and the decision
+// buttons so that we can easily round a subset of the corners using bezier
+// curves
 function classificationButtonSprite(): SvgSprite {
   return svg`
-    <g>
+    <g class="classification-tag-label">
       <path
-        d="M 1 1 L 39 1 L 39 13 C 1 13 1 13 1 13 Z"
+        d="
+          M 1 13
+          Q 1 4 4 1
+          L 36 1
+          Q 36 0 39 13
+          Z
+        "
         fill="var(--oe-background-color)"
         stroke="var(--oe-primary-color)"
         stroke-width="0.5"
@@ -76,7 +85,12 @@ function classificationButtonSprite(): SvgSprite {
 
     <g class="true-decision">
       <path
-        d="M 1 13 L 20 13 L 20 39 L 1 39 Z"
+        d="
+          M 1 13
+          L 20 13
+          L 20 39
+          Q -2 40 1 13
+        "
         fill="var(--oe-background-color)"
         stroke="var(--oe-primary-color)"
         stroke-width="0.5"
@@ -90,7 +104,12 @@ function classificationButtonSprite(): SvgSprite {
 
     <g class="false-decision">
       <path
-        d="M 20 13 L 39 13 L 39 39 L 20 39 Z"
+        d="
+          M 39 13
+          L 20 13
+          L 20 39
+          Q 39 39 39 13
+        "
         fill="var(--oe-background-color)"
         stroke="var(--oe-primary-color)"
         stroke-width="0.5"

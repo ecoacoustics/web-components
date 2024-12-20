@@ -11,9 +11,5 @@
     justify-content: start;
     flex: 1;
     padding: var(--oe-spacing);
-
-    &:not(:last-child) {
-      border-right: var(--oe-border-width) solid var(--oe-border-color);
-    }
   }
 }

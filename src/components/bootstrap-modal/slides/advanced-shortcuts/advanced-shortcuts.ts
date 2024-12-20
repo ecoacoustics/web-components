@@ -4,21 +4,18 @@ import { keyboardTemplate } from "../../../../templates/keyboard";
 
 export class AdvancedShortcutsSlide extends AbstractSlide {
   public constructor() {
-    super("Advanced keyboard shortcuts");
+    super("Keyboard shortcuts");
   }
 
-  // TODO: This page will probably have to be updated when we change the paging
-  // keyboard shortcuts to page up and page down.
-  // see: https://github.com/ecoacoustics/web-components/issues/129
   public render() {
     return html`
       <div class="advanced-shortcuts-slide slide">
         <div class="shortcuts-container">
           <section>
-            <h3>Space to play</h3>
+            <h3>Playback</h3>
             <p>
-              You can play a single spectrogram by selecting it and pressing the ${keyboardTemplate({ keys: ["Space"] })}
-              key.
+              You can play a single spectrogram by selecting it and pressing the
+              ${keyboardTemplate({ keys: ["Space"] })} key.
             </p>
 
             <p>
@@ -28,35 +25,15 @@ export class AdvancedShortcutsSlide extends AbstractSlide {
           </section>
 
           <section>
-            <h3>Arrow keys to navigate</h3>
+            <h3>Keyboard Selection</h3>
 
-            <p>You can navigate through pages of history using shortcut keys.</p>
-
-            <div class="keyboard-legend">
-              <div>
-                ${keyboardTemplate({ keys: ["←"] })}
-                <span>Navigate previous</span>
-              </div>
-
-              <div>
-                ${keyboardTemplate({ keys: ["→"] })}
-                <span>Navigate next</span>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3>Alt Keyboard Selection</h3>
-
-            <p>You can select multiple spectrograms by holding the ${keyboardTemplate({ keys: ["Alt"] })} key.</p>
+            <p>You can select subjects by holding the ${keyboardTemplate({ keys: ["Alt"] })} key.</p>
           </section>
 
           <section>
             <h3>Fullscreen</h3>
 
-            <p>You can enter fullscreen mode by clicking the "fullscreen" icon at the bottom of the verification grid, or by pressing
-              ${keyboardTemplate({ keys: ["f11"] })}.</p>
-            </p>
+            <p>Use ${keyboardTemplate({ keys: ["F11"] })} to go into full screen.</p>
           </section>
         </div>
       </div>

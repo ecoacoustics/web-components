@@ -83,14 +83,14 @@ export class ClassificationComponent extends DecisionComponent {
     if (this.derivedTrueShortcut) {
       shortcuts.push({
         keys: [this.derivedTrueShortcut],
-        description: `Add a 'true' ${this.tag.text} classification`,
+        description: `Is a ${this.tag.text}`,
       });
     }
 
     if (this.derivedFalseShortcut) {
       shortcuts.push({
         keys: [this.derivedFalseShortcut],
-        description: `Add a 'false' ${this.tag.text} classification`,
+        description: `Not a ${this.tag.text}`,
       });
     }
 

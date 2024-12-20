@@ -116,6 +116,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
+      new ShortcutsSlide(this.decisionShortcuts),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
       new SelectionSlide(),
       new PagingSlide(),
@@ -169,7 +170,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return html`
       <button class="repeat-prompt oe-btn-secondary">
         <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
-        Repeat
+        Replay
       </button>
     `;
   }

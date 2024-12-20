@@ -26,11 +26,15 @@ export class ShortcutsSlide extends AbstractSlide {
   }
 
   private keyboardButtonsTemplate(): TemplateResult {
+    const positiveShortcut = this.shortcuts[0];
+    const negativeShortcut = this.shortcuts[1];
+
     const displayedShortcuts = [
-      ...this.shortcuts,
-      { keys: ["Ctrl"], hasMouse: true, description: "Toggle selection" },
       { keys: ["Ctrl", "a"], description: "Select all" },
-      { keys: ["Esc"], description: "De-select all" },
+      { keys: ["Ctrl"], hasMouse: true, description: "Toggle selection" },
+      positiveShortcut,
+      { keys: ["Esc"], description: "Deselect all" },
+      negativeShortcut,
     ] satisfies KeyboardShortcut[];
 
     return html`
