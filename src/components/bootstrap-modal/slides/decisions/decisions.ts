@@ -9,7 +9,7 @@ export class DecisionsSlide extends AbstractSlide {
   public constructor(
     hasVerificationTask: boolean,
     hasClassificationTask: boolean,
-    decisionButtons: DecisionComponent[],
+    demoDecisionButton: DecisionComponent,
   ) {
     let description = "";
     if (hasVerificationTask && hasClassificationTask) {
@@ -25,23 +25,23 @@ export class DecisionsSlide extends AbstractSlide {
 
     super(description);
 
-    this.decisionButtons = decisionButtons;
+    this.demoDecisionButton = demoDecisionButton;
     this.hasClassificationTask = hasClassificationTask;
   }
 
-  private decisionButtons: DecisionComponent[];
+  private demoDecisionButton: DecisionComponent;
   private hasClassificationTask: boolean;
 
   public render() {
     return html`
       <div class="decisions-slide slide">
-        <svg viewBox="0 0 300 180">
+        <svg viewBox="0 0 280 180">
           <g class="pages">
             <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
           </g>
 
-          ${decisionButtonSprite(130, 140, this.decisionButtons[0])}
+          ${decisionButtonSprite(130, 140, this.demoDecisionButton)}
 
           <!--
             I purposely place the cursors pointer tip low in the decision

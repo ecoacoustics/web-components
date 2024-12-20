@@ -4,13 +4,7 @@
   We ignore prettier here because it wants to break the animations onto multiple
   lines, which is not valid CSS
 */
-/* prettier-ignore */
 .selection-slide {
-  svg {
-    position: relative;
-    height: 70%;
-  }
-
   .cursor {
     animation: selection-cursor-movement var(--animation-duration);
     will-change: transform;
@@ -32,12 +26,12 @@
   }
 
   .grid-tile {
-      /*
-        Because selection is a boolean event, out animation timing function
-        immediately applies the fill color to the grid tile without any
-        animation.
-      */
-      animation-timing-function: step-start;
+    /*
+      Because selection is a boolean event, out animation timing function
+      immediately applies the fill color to the grid tile without any
+      animation.
+    */
+    animation-timing-function: step-start;
   }
 
   /* Highlight box selection animations */

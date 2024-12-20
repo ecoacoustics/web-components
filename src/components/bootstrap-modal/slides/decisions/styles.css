@@ -1,8 +1,6 @@
 @import url("./animations.css");
 
 .decisions-slide {
-  position: relative;
-
   .cursor {
     animation: decisions-cursor-movement var(--animation-duration);
     will-change: transform;

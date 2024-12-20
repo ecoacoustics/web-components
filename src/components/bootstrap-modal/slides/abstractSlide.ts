@@ -6,6 +6,7 @@ export abstract class AbstractSlide {
   }
 
   public description: string;
+  public hasAnimations = false;
 
   public abstract render(): HTMLTemplateResult;
 }

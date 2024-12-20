@@ -15,7 +15,10 @@ export function keyboardTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult
 
   return html`
     ${when(shouldShowShift, () => html`<kbd class="shortcut-legend">Shift</kbd> +`)}
-    ${loop(shortcut.keys, (key, { last }) => html`<kbd>${key}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`)}
+    ${loop(
+      shortcut.keys,
+      (key, { last }) => html`<kbd>${key.toLocaleUpperCase()}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`,
+    )}
     ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse"></sl-icon>`)}
   `;
 }

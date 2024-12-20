@@ -67,6 +67,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @state()
   private slides: AbstractSlide[] = [];
 
+  @state()
+  private showReplayButton = false;
+
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
@@ -86,12 +89,16 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
+  private get demoDecisionButton(): DecisionComponent {
+    return this.decisionElements[0];
+  }
+
   public firstUpdated(): void {
     const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
 
     if (shouldShowHelpDialog) {
-      this.showTutorialModal();
-      // this.showAdvancedModal();
+      // this.showTutorialModal();
+      this.showAdvancedModal();
     }
   }
 
@@ -106,6 +113,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     if (invalidationKeys.some((key) => change.has(key as any))) {
       this.updateSlides();
+
+      // TODO: DON'T REVIEW THIS
+      this.handleSlideChange({ detail: { index: 0 } } as CustomEvent<{ index: number }>);
     }
   }
 
@@ -116,9 +126,13 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
+      // new SelectionSlide(this.demoDecisionButton),
+      // new PagingSlide(),
+
+      new SelectionSlide(this.demoDecisionButton),
       new ShortcutsSlide(this.decisionShortcuts),
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      new SelectionSlide(),
+      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       new PagingSlide(),
     ];
 
@@ -141,9 +155,13 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private handleSlideChange(event: CustomEvent<{ index: number }>): void {
     const index = event.detail.index;
-    if (index >= 0 && index < this.slides.length) {
+    if (index < 0 && index < this.slides.length) {
       console.warn("Invalid slide index", index);
+      return;
     }
+
+    const slide = this.slides[index];
+    this.showReplayButton = slide.hasAnimations;
   }
 
   // this method is private because you should be explicitly opening the modal
@@ -222,7 +240,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
-            ${this.repeatPromptTemplate()}
+            ${when(this.showReplayButton, () => this.repeatPromptTemplate())}
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </header>
 

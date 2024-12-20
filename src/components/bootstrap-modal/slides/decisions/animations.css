@@ -69,7 +69,8 @@
 }
 
 @keyframes decisions-slide-decisions-current {
-  from {
+  from,
+  9% {
     --decision-color: red;
   }
 
