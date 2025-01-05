@@ -57,16 +57,23 @@
   }
 
   60%,
-  70% {
+  65% {
     transform: translate(-30px, 60px);
   }
 
-  80% {
+  70%,
+  75% {
     transform: translate(-140px, -80px);
   }
 
-  90% {
-    transform: translate(-70px, -60px);
+  80%,
+  85% {
+    transform: translate(0px, 0px);
+  }
+
+  90%,
+  95% {
+    transform: translate(-30px, 60px);
   }
 }
 
@@ -144,7 +151,7 @@
 
 @keyframes selection-highlight-box-animation {
   from,
-  80% {
+  75% {
     width: 0;
     height: 0;
   }
@@ -154,11 +161,11 @@
     an svg container, meaning that the svg viewBox will scale the svg to all
     screen resolutions, including mobile devices.
   */
-  90% {
+  80% {
     width: 140px;
     height: 80px;
   }
-  90.4% {
+  80.01% {
     width: 0;
     height: 0;
   }
@@ -187,22 +194,23 @@
 }
 
 @keyframes selection-tile-1 {
-  from {
+  from,
+  9% {
     fill: var(--oe-panel-color);
   }
 
-  5%,
+  10%,
   24% {
     fill: var(--oe-selected-color);
   }
 
   25%,
-  84% {
+  76% {
     fill: var(--oe-panel-color);
   }
   /* end of individual seletion */
 
-  85%,
+  77%,
   to {
     fill: var(--oe-selected-color);
   }
@@ -210,11 +218,11 @@
 
 @keyframes selection-tile-2 {
   from,
-  24% {
+  29% {
     fill: var(--oe-panel-color);
   }
 
-  25%,
+  30%,
   49% {
     fill: var(--oe-selected-color);
   }
@@ -227,11 +235,11 @@
 
 @keyframes selection-tile-3 {
   from,
-  87% {
+  76% {
     fill: var(--oe-panel-color);
   }
 
-  88%,
+  77%,
   to {
     fill: var(--oe-selected-color);
   }
@@ -249,12 +257,12 @@
   }
 
   75%,
-  87% {
+  77% {
     fill: var(--oe-panel-color);
   }
   /* end of individual seletion */
 
-  88%,
+  78%,
   to {
     fill: var(--oe-selected-color);
   }
@@ -291,11 +299,11 @@
 
 @keyframes selection-tile-2-decisions {
   from,
-  19% {
+  39% {
     --decision-color: var(--oe-panel-color);
   }
 
-  20%,
+  40%,
   to {
     --decision-color: var(--negative-color);
   }
@@ -315,11 +323,11 @@
 
 @keyframes selection-tile-4-decisions {
   from,
-  19% {
+  59% {
     --decision-color: var(--oe-panel-color);
   }
 
-  20%,
+  60%,
   89% {
     --decision-color: var(--positive-color);
   }
