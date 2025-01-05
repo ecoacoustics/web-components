@@ -53,10 +53,8 @@ export class ShortcutsSlide extends AbstractSlide {
   public render() {
     return html`
       <div class="shortcut-slide slide">
-        <div class="shortcut-card">
-          <svg viewBox="0 0 270 60">${this.verificationGrid()} ${cursorSprite(135, 25)}</svg>
-          <div class="shortcut-keys">${this.keyboardButtonsTemplate()}</div>
-        </div>
+        <svg viewBox="0 0 270 60">${this.verificationGrid()} ${cursorSprite(135, 25)}</svg>
+        <div class="shortcut-keys">${this.keyboardButtonsTemplate()}</div>
       </div>
     `;
   }
