@@ -34,6 +34,10 @@ export class DecisionsSlide extends AbstractSlide {
   private demoDecisionButton: DecisionComponent;
   private hasClassificationTask: boolean;
 
+  public play(): void {}
+
+  public stop(): void {}
+
   public render() {
     return html`
       <div class="decisions-slide slide">

@@ -6,7 +6,15 @@ export abstract class AbstractSlide {
   }
 
   public description: string;
-  public hasAnimations = false;
+  public hasAnimations = true;
 
+  // by stopping the animation, the animations time will reset back to the start
+  public restart(): void {
+    this.stop();
+    this.play();
+  }
+
+  public abstract play(): void;
+  public abstract stop(): void;
   public abstract render(): HTMLTemplateResult;
 }

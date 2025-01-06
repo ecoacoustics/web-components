@@ -130,10 +130,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(this.demoDecisionButton),
       // new PagingSlide(),
 
+      new PagingSlide(),
       new SelectionSlide(this.demoDecisionButton),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       new ShortcutsSlide(this.decisionShortcuts),
-      new PagingSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -162,6 +162,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     const slide = this.slides[index];
     this.showReplayButton = slide.hasAnimations;
+
+    if (slide.hasAnimations) {
+      slide.restart();
+    }
   }
 
   // this method is private because you should be explicitly opening the modal

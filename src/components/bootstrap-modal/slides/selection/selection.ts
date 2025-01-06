@@ -15,6 +15,10 @@ export class SelectionSlide extends AbstractSlide {
 
   private demoDecisionButton: DecisionComponent;
 
+  public play(): void {}
+
+  public stop(): void {}
+
   public render() {
     return html`
       <div class="selection-slide slide">

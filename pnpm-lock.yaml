@@ -23,6 +23,9 @@ importers:
       '@shoelace-style/shoelace':
         specifier: ^2.15.1
         version: 2.16.0(@types/react@18.3.5)
+      animejs:
+        specifier: ^3.2.2
+        version: 3.2.2
       change-case:
         specifier: ^5.4.4
         version: 5.4.4
@@ -63,6 +66,9 @@ importers:
       '@sand4rt/experimental-ct-web':
         specifier: 1.46.0
         version: 1.46.0(@types/node@20.16.4)(terser@5.31.6)
+      '@types/animejs':
+        specifier: ^3.1.12
+        version: 3.1.12
       '@types/audioworklet':
         specifier: ^0.0.55
         version: 0.0.55
@@ -714,6 +720,9 @@ packages:
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
 
+  '@types/animejs@3.1.12':
+    resolution: {integrity: sha512-fpdH+ZtlO0kqjTOqRaBdsEmvpRNOayI8k4EVkEtitL5l6wducDOXk0rgQgfZqWf/ZX9DzXrHf257S5i9xTcISQ==}
+
   '@types/audioworklet@0.0.55':
     resolution: {integrity: sha512-tL7tMCKPjsAVt2ywgoRhkBIOKHKSf0e9K3+3PTRp1tpUiHyrqA0EOdVeVg4j4bul6zHed3T4hRt0K1E7X5hXQQ==}
 
@@ -858,6 +867,9 @@ packages:
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
+
+  animejs@3.2.2:
+    resolution: {integrity: sha512-Ao95qWLpDPXXM+WrmwcKbl6uNlC5tjnowlaRYtuVDHHoygjtIPfDUoK9NthrlZsQSKjZXlmji2TrBUAVbiH0LQ==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -3334,6 +3346,8 @@ snapshots:
 
   '@trysound/sax@0.2.0': {}
 
+  '@types/animejs@3.1.12': {}
+
   '@types/audioworklet@0.0.55': {}
 
   '@types/chroma-js@2.4.4': {}
@@ -3520,6 +3534,8 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
+
+  animejs@3.2.2: {}
 
   ansi-regex@5.0.1: {}
 

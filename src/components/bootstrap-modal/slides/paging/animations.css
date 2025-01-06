@@ -74,23 +74,6 @@
   }
 }
 
-@keyframes progress-bar-view-head-movement {
-  from,
-  10% {
-    width: var(--verification-head);
-  }
-
-  /* After the next */
-  50%,
-  60% {
-    width: calc(var(--verification-head) - 5%);
-  }
-
-  to {
-    width: var(--verification-head);
-  }
-}
-
 /*
     When the "previous" and "next" buttons are clicked in the animation, we want
     to clearly indicate that the buttons have been pressed.

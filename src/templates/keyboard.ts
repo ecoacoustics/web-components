@@ -13,8 +13,6 @@ export function keyboardTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult
   const hasUpperCase = shortcut.keys.some((key: string) => key === key.toUpperCase());
   const shouldShowShift = hasUpperCase && isAscii;
 
-  console.debug(shortcut);
-
   return html`
     ${when(shouldShowShift, () => html`<kbd class="shortcut-legend">Shift</kbd> +`)}
     ${loop(
