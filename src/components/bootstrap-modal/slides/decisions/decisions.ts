@@ -27,7 +27,6 @@ export class DecisionsSlide extends AbstractSlide {
     super(description);
 
     this.demoDecisionButton = demoDecisionButton;
-    // this.hasClassificationTask = hasClassificationTask;
     this.hasClassificationTask = this.demoDecisionButton instanceof ClassificationComponent;
   }
 
@@ -39,8 +38,8 @@ export class DecisionsSlide extends AbstractSlide {
       <div class="decisions-slide slide">
         <svg viewBox="0 0 280 180">
           <g class="pages">
-            <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
-            <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask)}</g>
+            <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask, true)}</g>
+            <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask, false)}</g>
           </g>
 
           ${decisionButtonSprite(130, 140, this.demoDecisionButton)}

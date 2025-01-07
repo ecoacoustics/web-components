@@ -4,24 +4,28 @@ import { AbstractSlide } from "../abstractSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
+import { DecisionComponent } from "decision/decision";
+import { ClassificationComponent } from "../../../decision/classification/classification";
 
 export class ShortcutsSlide extends AbstractSlide {
-  public constructor(shortcuts: KeyboardShortcut[]) {
+  public constructor(shortcuts: KeyboardShortcut[], demoDecisionButton: DecisionComponent) {
     super("You can use the following keyboard shortcuts");
 
     // in this short tutorial dialog, we demonstrate using the keyboard
     // shortcuts for the first two decision buttons
     // because we do not use
     this.shortcuts = shortcuts.slice(0, 2);
+    this.hasClassificationTask = demoDecisionButton instanceof ClassificationComponent;
   }
 
   private shortcuts: KeyboardShortcut[];
+  private hasClassificationTask: boolean;
 
   private verificationGrid() {
     return svg`
-      ${gridTileSprite(10, 0, false, "tile-0")}
-      ${gridTileSprite(100, 0, false, "tile-1")}
-      ${gridTileSprite(190, 0, false, "tile-2")}
+      ${gridTileSprite(10, 0, this.hasClassificationTask, true, "tile-0")}
+      ${gridTileSprite(100, 0, this.hasClassificationTask, false, "tile-1")}
+      ${gridTileSprite(190, 0, this.hasClassificationTask, true, "tile-2")}
     `;
   }
 

@@ -9,7 +9,15 @@ export interface GridTileSpriteRefs {
   decisionMeter?: Ref<SVGRectElement>;
 }
 
-export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, classNames?: string): SvgSprite {
+export function gridTileSprite(
+  x: Pixel,
+  y: Pixel,
+  hasClassification = false,
+  hasAnimal: boolean,
+  classNames?: string,
+): SvgSprite {
+  const tagName = hasAnimal ? "Kookaburra" : "Car";
+
   return svg`
     <svg
       viewBox="0 0 80 60"
@@ -37,13 +45,13 @@ export function gridTileSprite(x: Pixel, y: Pixel, hasClassification = false, cl
         fill="#ccc"
       />
 
-      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">Tag Name</text>`)}
-      ${hasClassification ? gridProgressClassification() : gridProgressVerification()}
+      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">${tagName}</text>`)}
+      ${hasClassification ? gridProgressClassification(hasAnimal) : gridProgressVerification(hasAnimal)}
     </svg>
   `;
 }
 
-function gridProgressVerification(): SvgSprite {
+function gridProgressVerification(hasAnimal: boolean): SvgSprite {
   return svg`
     <rect
       x="10"
@@ -59,9 +67,7 @@ function gridProgressVerification(): SvgSprite {
   `;
 }
 
-// TODO: we should show a classification task progress bar if the task is a
-// classification task
-function gridProgressClassification(): SvgSprite {
+function gridProgressClassification(hasAnimal: boolean): SvgSprite {
   return svg`
     <rect
       x="10"

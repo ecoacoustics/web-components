@@ -1,7 +1,7 @@
 import { svg, SVGTemplateResult } from "lit";
 import { gridTileSprite } from "./grid-tile.sprite";
 
-export function verificationGridPageSprite(hasClassification = false): SVGTemplateResult {
+export function verificationGridPageSprite(hasClassification = false, hasAnimal = true): SVGTemplateResult {
   const gridTileSize = 80;
   const gridTileHeight = 50;
   const gridTileGap = 20;
@@ -23,7 +23,7 @@ export function verificationGridPageSprite(hasClassification = false): SVGTempla
     <g class="grid-tiles">
       ${Array.from({ length: gridTileCount }).map((_, i) => {
         const { x, y } = gridTilePosition(i);
-        return gridTileSprite(x, y, hasClassification, `grid-tile tile-${i}`);
+        return gridTileSprite(x, y, hasClassification, hasAnimal, `grid-tile tile-${i}`);
       })}
     </g>
   `;

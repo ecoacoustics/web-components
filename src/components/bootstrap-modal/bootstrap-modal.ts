@@ -132,7 +132,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
     if (!this.isMobile) {
-      this.slides.push(new ShortcutsSlide(this.decisionShortcuts));
+      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this.demoDecisionButton));
     }
 
     this.showModal();
