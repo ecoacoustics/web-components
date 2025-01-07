@@ -56,34 +56,7 @@ and [code-workspace](/webcomponents.code-workspace).
       e.g. `@query("#selector") private element!: Readonly<Element>`
 6. Prefer to use internal state
 7. All methods on a web component that returns a HTML, or SVG template must be
-   prepended with "Template"(e.g. `private decisionPromptTemplate(): TemplateResult<1>`)
-
-## CSS Structure
-
-### Ordering of CSS Properties
-
-- Positioning effecting the position of the host element
-  - `position`
-  - `top`
-- Properties effecting the box model of the host element
-  - `width`
-  - `height`
-  - `margin`
-  - `padding`
-  - `border`
-  - `flex` (not flexbox)
-- Properties effecting the position of child elements
-  - `display`
-  - `grid`
-  - `align-items`
-  - `justify-content`
-- Properties effecting the content (e.g. text) of the host element
-  - `color`
-  - `background`
-  - `font`
-  - `text`
-  - `list`
-  - `text-align`
+   prepended with "Template" (e.g. `private decisionPromptTemplate(): TemplateResult`)
 
 ### CSS Parts
 
@@ -107,7 +80,9 @@ elements.
 Because `@keyframe` declarations cannot be lexically scoped in CSS, you should
 **always** prefix keyframe identifiers with their scoping.
 
-Example: For a grid tile animation, the scoping prefix "`grid-tile`" could be used like `grid-tile-selection-animation`
+Example: For an animation that targets a grid tile element, the scoping prefix
+"`grid-tile`" could be used in a keyframe declaration such as
+`@keyframe grid-tile-selection-animation`.
 
 ## JsDoc
 

@@ -48,8 +48,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(advancedShortcutStyles),
   ];
 
-  public static animationRepeats = 3 as const;
-
   // because this is an internal web component, we can use the state decorator
   // because it doesn't matter if the property name is minified
   // we would usually use a property decorator for public properties because the

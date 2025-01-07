@@ -2,24 +2,24 @@
 
 .decisions-slide {
   .cursor {
-    animation: decisions-cursor-movement var(--animation-duration);
+    animation: decisions-cursor-movement var(--animation-duration) infinite;
     will-change: transform;
   }
 
   .click-animation {
-    animation: decisions-cursor-clicks var(--animation-duration);
+    animation: decisions-cursor-clicks var(--animation-duration) infinite;
   }
 
   .pages {
-    animation: decisions-slide-movement var(--animation-duration);
+    animation: decisions-slide-movement var(--animation-duration) infinite;
     will-change: transform;
 
     .current-page {
-      animation: decisions-current-slide-decisions var(--animation-duration);
+      animation: decisions-current-slide-decisions var(--animation-duration) infinite;
     }
 
     .next-page {
-      animation: decisions-next-slide-decisions var(--animation-duration);
+      animation: decisions-next-slide-decisions var(--animation-duration) infinite;
       transform: translate(calc(100% + var(--oe-spacing)), 0);
     }
 
@@ -39,11 +39,11 @@
     }
 
     .true-decision {
-      animation: decisions-true-click var(--animation-duration);
+      animation: decisions-true-click var(--animation-duration) infinite;
     }
 
     .false-decision {
-      animation: decisions-false-click var(--animation-duration);
+      animation: decisions-false-click var(--animation-duration) infinite;
     }
   }
 }
