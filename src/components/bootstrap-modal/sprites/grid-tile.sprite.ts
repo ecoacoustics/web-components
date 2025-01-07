@@ -3,6 +3,7 @@ import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
 import { Ref } from "lit/directives/ref.js";
 import { when } from "lit/directives/when.js";
+import noisyMinerSpectrogramImage from "../../../static/xc_noisy_miner.png";
 
 export interface GridTileSpriteRefs {
   background?: Ref<SVGRectElement>;
@@ -16,7 +17,7 @@ export function gridTileSprite(
   hasAnimal: boolean,
   classNames?: string,
 ): SvgSprite {
-  const tagName = hasAnimal ? "Kookaburra" : "Car";
+  const tagName = hasAnimal ? "Noisy Miner" : "Kookaburra";
 
   return svg`
     <svg
@@ -36,22 +37,25 @@ export function gridTileSprite(
         fill="var(--oe-panel-color)"
       />
 
-      <rect
+      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">${tagName}</text>`)}
+
+      <image
         x="10"
         y="15"
-        rx="2"
-        width="60"
-        height="30"
-        fill="#ccc"
+        width="100%"
+        height="100%"
+        preserveAspectRatio="none"
+        href="${noisyMinerSpectrogramImage}"
+        decoding="async"
+        style="width: 60px; height: 30px;"
       />
 
-      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">${tagName}</text>`)}
-      ${hasClassification ? gridProgressClassification(hasAnimal) : gridProgressVerification(hasAnimal)}
+      ${hasClassification ? gridProgressClassification() : gridProgressVerification()}
     </svg>
   `;
 }
 
-function gridProgressVerification(hasAnimal: boolean): SvgSprite {
+function gridProgressVerification(): SvgSprite {
   return svg`
     <rect
       x="10"
@@ -67,7 +71,7 @@ function gridProgressVerification(hasAnimal: boolean): SvgSprite {
   `;
 }
 
-function gridProgressClassification(hasAnimal: boolean): SvgSprite {
+function gridProgressClassification(): SvgSprite {
   return svg`
     <rect
       x="10"

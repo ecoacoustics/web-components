@@ -122,7 +122,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
+      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
+      // new SelectionSlide(this.demoDecisionButton),
+      // new PagingSlide(),
+
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
+      new ShortcutsSlide(this.decisionShortcuts, this.demoDecisionButton),
       new SelectionSlide(this.demoDecisionButton),
       new PagingSlide(),
     ];
