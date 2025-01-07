@@ -7,16 +7,6 @@ export class AdvancedShortcutsSlide extends AbstractSlide {
     super("Keyboard shortcuts");
   }
 
-  public override hasAnimations = false;
-
-  public play(): void {
-    throw new Error("Method not implemented.");
-  }
-
-  public stop(): void {
-    throw new Error("Method not implemented.");
-  }
-
   public render() {
     const keyboardShortcuts = [
       { keys: ["Space"], description: "Play selected spectrograms" },

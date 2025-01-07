@@ -69,9 +69,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @state()
   private slides: AbstractSlide[] = [];
 
-  @state()
-  private showReplayButton = false;
-
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
@@ -115,9 +112,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     if (invalidationKeys.some((key) => change.has(key))) {
       this.updateSlides();
-
-      // TODO: DON'T REVIEW THIS
-      this.handleSlideChange({ detail: { index: 0 } } as CustomEvent<{ index: number }>);
     }
   }
 
@@ -128,14 +122,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.decisionElements),
-      // new SelectionSlide(this.demoDecisionButton),
-      // new PagingSlide(),
-
-      new PagingSlide(),
-      new SelectionSlide(this.demoDecisionButton),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      new ShortcutsSlide(this.decisionShortcuts),
+      new SelectionSlide(this.demoDecisionButton),
+      new PagingSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -153,21 +142,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dispatchEvent(new CustomEvent("close"));
     // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
-  }
-
-  private handleSlideChange(event: CustomEvent<{ index: number }>): void {
-    const index = event.detail.index;
-    if (index < 0 && index < this.slides.length) {
-      console.warn("Invalid slide index", index);
-      return;
-    }
-
-    const slide = this.slides[index];
-    this.showReplayButton = slide.hasAnimations;
-
-    if (slide.hasAnimations) {
-      slide.restart();
-    }
   }
 
   // this method is private because you should be explicitly opening the modal
@@ -204,15 +178,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     `;
   }
 
-  private repeatPromptTemplate(): HTMLTemplateResult {
-    return html`
-      <button class="repeat-prompt oe-btn-secondary">
-        <sl-icon name="arrow-repeat" class="repeat-icon large-icon"></sl-icon>
-        Replay
-      </button>
-    `;
-  }
-
   private slideFooterTemplate(): HTMLTemplateResult {
     // TODO: Find a better way to do this
     if (this.slides.length === 1) {
@@ -241,7 +206,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     }
 
     return html`
-      <sl-carousel @sl-slide-change="${this.handleSlideChange}" class="carousel" navigation pagination mouse-dragging>
+      <sl-carousel class="carousel" navigation pagination mouse-dragging>
         ${loop(
           this.slides,
           (slide, { last }) => html`
@@ -260,7 +225,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
-            ${when(this.showReplayButton, () => this.repeatPromptTemplate())}
             <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
           </header>
 

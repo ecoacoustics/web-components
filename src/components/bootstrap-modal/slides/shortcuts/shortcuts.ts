@@ -17,10 +17,6 @@ export class ShortcutsSlide extends AbstractSlide {
 
   private shortcuts: KeyboardShortcut[];
 
-  public play(): void {}
-
-  public stop(): void {}
-
   private verificationGrid() {
     return svg`
       ${gridTileSprite(10, 0, false, "tile-0")}

@@ -15,7 +15,7 @@
   .shortcut-card {
     display: flex;
     flex-direction: column;
-    align-self: flex-start;
+    align-self: end;
     flex: 1;
 
     padding: var(--oe-spacing);

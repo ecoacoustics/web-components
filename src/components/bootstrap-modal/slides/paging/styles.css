@@ -38,6 +38,7 @@
 
     .view-head-segment {
       width: var(--verification-head);
+      animation: progress-bar-view-head-movement var(--animation-duration);
     }
 
     .verification-head-segment {
