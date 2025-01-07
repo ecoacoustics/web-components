@@ -3,16 +3,16 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
-import { AbstractSlide } from "./slides/abstractSlide";
 import { when } from "lit/directives/when.js";
-import { DecisionsSlide } from "./slides/decisions/decisions";
-import { PagingSlide } from "./slides/paging/paging";
-import { SelectionSlide } from "./slides/selection/selection";
-import { ShortcutsSlide } from "./slides/shortcuts/shortcuts";
 import { loop } from "../../helpers/directives";
 import { Tag } from "../../models/tag";
-import { AdvancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import { KeyboardShortcut } from "../../templates/keyboard";
+import { BootstrapSlide } from "./slides/abstractSlide";
+import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
+import { decisionsSlide } from "./slides/decisions/decisions";
+import { selectionSlide } from "./slides/selection/selection";
+import { pagingSlide } from "./slides/paging/paging";
+import { shortcutsSlide } from "./slides/shortcuts/shortcuts";
 import helpDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -21,7 +21,6 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
-
 /*
   A local storage key that when set, will cause the bootstrap modal not to open
   on load.
@@ -75,7 +74,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public isMobile!: boolean;
 
   @state()
-  private slides: AbstractSlide[] = [];
+  private slides: BootstrapSlide[] = [];
 
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
@@ -105,15 +104,15 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public showAdvancedModal(): void {
-    this.slides = [new AdvancedShortcutsSlide()];
+    this.slides = [advancedShortcutsSlide()];
     this.showModal();
   }
 
   public showTutorialModal(): void {
     this.slides = [
-      new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      new SelectionSlide(this.demoDecisionButton, this.hasClassificationTask),
-      new PagingSlide(),
+      decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
+      selectionSlide(this.demoDecisionButton, this.hasClassificationTask),
+      pagingSlide(),
     ];
 
     // if the user is on a or tablet device, we don't need to bother showing
@@ -121,7 +120,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
     if (!this.isMobile) {
-      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
+      this.slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
     this.showModal();
@@ -148,7 +147,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.hasClassificationTask ? "maroon" : "red";
   }
 
-  private renderSlide(slide: AbstractSlide): HTMLTemplateResult {
+  private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
     return html`
       <div
         class="slide-content"
@@ -158,7 +157,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
         "
       >
         <h2 class="slide-description">${slide.description}</h2>
-        ${slide.render()}
+        ${slide.slideTemplate}
       </div>
     `;
   }

@@ -1,4 +1,4 @@
-import { AbstractSlide } from "../abstractSlide";
+import { BootstrapSlide } from "../abstractSlide";
 import { html } from "lit";
 import { TempAnimalPresenceArray, verificationGridPageSpriteArray } from "../../sprites/verification-grid.sprite";
 import { selectionBoxSprite } from "../../sprites/selection-box.sprite";
@@ -6,27 +6,18 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 
-export class SelectionSlide extends AbstractSlide {
-  public constructor(demoDecisionButton: DecisionComponent, hasClassificationTask: boolean) {
-    super("You can decide about more than one subject");
+export function selectionSlide(demoDecisionButton: DecisionComponent, hasClassificationTask: boolean): BootstrapSlide {
+  const description = "You can decide about more than one subject";
 
-    this.demoDecisionButton = demoDecisionButton;
-    this.hasClassificationTask = hasClassificationTask;
-  }
+  const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;
+  const slideTemplate = html`
+    <div class="selection-slide slide">
+      <svg viewBox="0 0 280 180">
+        <g>${verificationGridPageSpriteArray(hasClassificationTask, animalPresence)}</g>
+        ${decisionButtonSprite(120, 140, demoDecisionButton)} ${cursorSprite(163, 96)} ${selectionBoxSprite()}
+      </svg>
+    </div>
+  `;
 
-  private demoDecisionButton: DecisionComponent;
-  private hasClassificationTask: boolean;
-
-  public render() {
-    const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;
-
-    return html`
-      <div class="selection-slide slide">
-        <svg viewBox="0 0 280 180">
-          <g>${verificationGridPageSpriteArray(this.hasClassificationTask, animalPresence)}</g>
-          ${decisionButtonSprite(120, 140, this.demoDecisionButton)} ${cursorSprite(163, 96)} ${selectionBoxSprite()}
-        </svg>
-      </div>
-    `;
-  }
+  return { slideTemplate, description };
 }

@@ -1,11 +1,6 @@
-import { HTMLTemplateResult } from "lit";
+import { TemplateResult } from "lit";
 
-export abstract class AbstractSlide {
-  public constructor(description: string) {
-    this.description = description;
-  }
-
-  public description: string;
-
-  public abstract render(): HTMLTemplateResult;
+export interface BootstrapSlide {
+  slideTemplate: TemplateResult;
+  description: string;
 }
