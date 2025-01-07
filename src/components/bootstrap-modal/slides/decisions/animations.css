@@ -60,12 +60,12 @@
 */
 @keyframes decisions-slide-movement {
   from,
-  30% {
+  25% {
     transform: none;
   }
 
-  50%,
-  60% {
+  45%,
+  70% {
     transform: translate(calc(-100% - var(--oe-spacing)), 0);
   }
 
@@ -89,11 +89,11 @@
 
 @keyframes decisions-next-slide-decisions {
   from,
-  54% {
+  49% {
     --decision-color: var(--oe-panel-color);
   }
 
-  55%,
+  50%,
   to {
     --decision-color: var(--negative-color);
   }
@@ -118,16 +118,16 @@
 
 @keyframes decisions-false-click {
   from,
-  44% {
+  49% {
     transform: translate(0, 0);
   }
 
-  45%,
-  55% {
+  50%,
+  60% {
     transform: translate(var(--depress-left), var(--depress-top));
   }
 
-  56%,
+  61%,
   to {
     transform: translate(0, 0);
   }
