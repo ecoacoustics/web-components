@@ -51,7 +51,7 @@ test.describe("Verification Component", () => {
   test("should show keyboard shortcuts when in explicit desktop selection mode", async ({ fixture }) => {
     const testedKeyboardShortcut = "k";
     await fixture.changeShortcut(testedKeyboardShortcut);
-    await fixture.changeSelectionMode("desktop");
+    await fixture.changeIsMobile(false);
 
     const realizedKeyboardShortcut = await fixture.shortcutText();
     expect(realizedKeyboardShortcut).toBe(testedKeyboardShortcut);
@@ -60,7 +60,7 @@ test.describe("Verification Component", () => {
   test("should not show keyboard shortcuts when in tablet selection mode", async ({ fixture }) => {
     const testedKeyboardShortcut = "k";
     await fixture.changeShortcut(testedKeyboardShortcut);
-    await fixture.changeSelectionMode("tablet");
+    await fixture.changeIsMobile(true);
 
     const isShortcutVisible = await fixture.isShortcutLegendVisible();
     expect(isShortcutVisible).toBe(false);

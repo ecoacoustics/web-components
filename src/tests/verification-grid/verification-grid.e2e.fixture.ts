@@ -27,8 +27,8 @@ import {
   ProgressBar,
   SpectrogramCanvasScale,
   SpectrogramComponent,
+  VerificationBootstrapComponent,
   VerificationGridTileComponent,
-  VerificationHelpDialogComponent,
 } from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
@@ -57,7 +57,7 @@ class TestPage {
   public helpDialogPreference = () => this.page.locator("#dialog-preference").first();
   public helpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public openHelpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
   public verificationDecisions = () => this.page.locator("oe-verification").all();
   public classificationDecisions = () => this.page.locator("oe-classification").all();
@@ -479,7 +479,7 @@ class TestPage {
   }
 
   public async isHelpDialogOpen(): Promise<boolean> {
-    return await this.helpDialog().evaluate((element: VerificationHelpDialogComponent) => element.open);
+    return await this.helpDialog().evaluate((element: VerificationBootstrapComponent) => element.open);
   }
 
   // actions

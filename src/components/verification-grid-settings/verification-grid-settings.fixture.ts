@@ -20,7 +20,7 @@ class TestPage {
   public gridSizeTriggerButton = () => this.page.locator("#grid-size-trigger").first();
   public gridSizeInput = () => this.page.locator("#grid-size-input").first();
   public gridSizeLabel = () => this.page.locator("#grid-size-label").first();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
   public templateSettingsDropdown = () => this.page.getByTestId("template-dropdown").first();
   public templateTriggerButton = () => this.page.locator("#settings-template-trigger").first();
   public templateCheckboxes = () => this.page.locator(".template-change-input").all();

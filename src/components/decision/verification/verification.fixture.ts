@@ -7,7 +7,6 @@ import {
   waitForContentReady,
 } from "../../../tests/helpers";
 import { VerificationComponent } from "./verification";
-import { SelectionObserverType } from "../../verification-grid/verification-grid";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
 import { test } from "../../../tests/assertions";
@@ -76,8 +75,8 @@ class VerificationComponentFixture {
     );
   }
 
-  public async changeSelectionMode(tabletSelection: SelectionObserverType) {
-    await setBrowserValue<VerificationComponent>(this.component(), "selectionMode", tabletSelection);
+  public async changeIsMobile(tabletSelection: boolean) {
+    await setBrowserValue<VerificationComponent>(this.component(), "isMobile", tabletSelection);
   }
 
   public async changeVerified(verified: DecisionOptions) {

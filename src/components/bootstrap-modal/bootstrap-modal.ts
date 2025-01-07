@@ -208,7 +208,13 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
-            <button class="oe-btn-secondary close-button" @click="${this.closeModal}">x</button>
+            <button
+              class="oe-btn-secondary close-button"
+              @click="${this.closeModal}"
+              data-testid="dismiss-bootstrap-dialog-btn"
+            >
+              x
+            </button>
           </header>
 
           <div class="dialog-content">${this.slidesTemplate()}</div>
