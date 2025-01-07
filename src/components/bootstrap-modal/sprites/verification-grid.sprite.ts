@@ -30,9 +30,11 @@ export function verificationGridPageSprite(hasClassification = false, hasAnimal 
   `;
 }
 
+export type TempAnimalPresenceArray = Tuple<boolean, 6>;
+
 export function verificationGridPageSpriteArray(
   hasClassification = false,
-  hasAnimal: Tuple<boolean, 6>,
+  hasAnimal: TempAnimalPresenceArray,
 ): SVGTemplateResult {
   const gridTileSize = 80;
   const gridTileHeight = 50;

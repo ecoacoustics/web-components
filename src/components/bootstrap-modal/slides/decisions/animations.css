@@ -1,5 +1,5 @@
 .decisions-slide {
-  --animation-duration: 5s;
+  --animation-duration: 6s;
 
   --depress-top: 0.75px;
   --depress-left: 0.75px;
@@ -22,7 +22,7 @@
     transform: translate(-18px, 0);
   }
 
-  80%,
+  70%,
   to {
     transform: none;
   }
@@ -41,13 +41,13 @@
   }
 
   56%,
-  90% {
+  75% {
     r: 0px;
   }
-  95% {
+  80% {
     r: 6px;
   }
-  to {
+  85% {
     r: 0px;
   }
 }
@@ -59,24 +59,37 @@
   keyframes.
 */
 @keyframes decisions-slide-movement {
-  from {
-    transform: translate(100%, 0);
-  }
-
+  from,
   50% {
     transform: none;
   }
-}
 
-@keyframes decisions-slide-decisions {
-  from,
-  9% {
-    --decision-color: var(--negative-color);
+  60%,
+  85% {
+    transform: translate(-100%, 0);
   }
 
-  10%,
-  50% {
+  95%,
+  to {
+    transform: translate(-200%, 0);
+  }
+}
+
+@keyframes decisions-current-slide-decisions {
+  from,
+  39% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  40% {
     --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes decisions-next-slide-decisions {
+  from,
+  75% {
+    --decision-color: var(--oe-panel-color);
   }
 
   to {
@@ -103,12 +116,17 @@
 
 @keyframes decisions-false-click {
   from,
-  89% {
+  74% {
     transform: translate(0, 0);
   }
 
-  90%,
-  to {
+  75%,
+  85% {
     transform: translate(var(--depress-left), var(--depress-top));
+  }
+
+  86%,
+  to {
+    transform: translate(0, 0);
   }
 }

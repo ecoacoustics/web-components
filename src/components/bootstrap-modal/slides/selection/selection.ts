@@ -1,12 +1,11 @@
 import { AbstractSlide } from "../abstractSlide";
 import { html } from "lit";
-import { verificationGridPageSpriteArray } from "../../sprites/verification-grid.sprite";
+import { TempAnimalPresenceArray, verificationGridPageSpriteArray } from "../../sprites/verification-grid.sprite";
 import { selectionBoxSprite } from "../../sprites/selection-box.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { ClassificationComponent } from "../../../decision/classification/classification";
-import { Tuple } from "../../../../helpers/types/advancedTypes";
 
 export class SelectionSlide extends AbstractSlide {
   public constructor(demoDecisionButton: DecisionComponent) {
@@ -20,7 +19,7 @@ export class SelectionSlide extends AbstractSlide {
   private hasClassificationTask: boolean;
 
   public render() {
-    const animalPresence = [true, true, false, true, true, true] satisfies Tuple<boolean, 6>;
+    const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;
 
     return html`
       <div class="selection-slide slide">

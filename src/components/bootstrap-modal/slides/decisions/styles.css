@@ -11,13 +11,20 @@
   }
 
   .pages {
-    animation: decisions-slide-movement calc(var(--animation-duration) / 2);
-    animation-delay: 2s;
+    animation: decisions-slide-movement var(--animation-duration);
     will-change: transform;
 
     .current-page {
-      animation: decisions-slide-decisions var(--animation-duration);
-      transform: translate(-100%, 0);
+      animation: decisions-current-slide-decisions var(--animation-duration);
+    }
+
+    .next-page {
+      animation: decisions-next-slide-decisions var(--animation-duration);
+      transform: translate(100%, 0);
+    }
+
+    .current-page-2 {
+      transform: translate(200%, 0);
     }
   }
 

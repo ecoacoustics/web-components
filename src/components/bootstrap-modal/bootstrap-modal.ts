@@ -126,8 +126,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       // new SelectionSlide(this.demoDecisionButton),
       // new PagingSlide(),
 
-      new SelectionSlide(this.demoDecisionButton),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
+      new SelectionSlide(this.demoDecisionButton),
       new ShortcutsSlide(this.decisionShortcuts, this.demoDecisionButton),
       new PagingSlide(),
     ];
