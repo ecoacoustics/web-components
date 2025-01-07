@@ -1,18 +1,3 @@
-/*
-    HN (16/12/2024):
-    I originally tried to do these animations using animations with multiple
-    keyframes, different animation-delay's, and animation-duration's.
-    However, I found that it was MUCH harder to develop and maintain because you
-    had to keep the all of the above information in our head at all times.
-
-    I found that having one place full of relative keyframes that all used the
-    same time frame/space was easier to develop.
-
-    I don't believe that this is the "most correct" solution, but my practical
-    experience has showed me that animating selection in this format was
-    (subjectively) best.
-*/
-
 .selection-slide {
   --animation-duration: 8s;
 }
@@ -200,11 +185,11 @@
   }
 
   10%,
-  24% {
+  29% {
     fill: var(--oe-selected-color);
   }
 
-  25%,
+  30%,
   76% {
     fill: var(--oe-panel-color);
   }

@@ -643,7 +643,15 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleHelpRequest(): void {
-    this.helpDialog.showAdvancedModal();
+    // if the user is on a mobile device, there is no use showing the advanced
+    // shortcuts because the user cannot use them
+    // therefore, if the user clicks the help button on a mobile device
+    // we take them directly to the onboarding modal
+    if (this.isMobileDevice()) {
+      this.helpDialog.showTutorialModal();
+    } else {
+      this.helpDialog.showAdvancedModal();
+    }
   }
 
   private handleHelpDialogOpen(): void {

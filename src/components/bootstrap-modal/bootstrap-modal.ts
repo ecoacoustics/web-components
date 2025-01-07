@@ -51,20 +51,25 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public static animationRepeats = 3 as const;
 
-  @property({ type: Array, attribute: false })
+  // because this is an internal web component, we can use the state decorator
+  // because it doesn't matter if the property name is minified
+  // we would usually use a property decorator for public properties because the
+  // property name is important to people using the web component
+  // however, in this case we are not exposing the properties to the client host
+  @state()
   public decisionElements!: DecisionComponent[];
 
-  @property({ type: String, attribute: false })
+  @state()
   public selectionBehavior!: SelectionObserverType;
+
+  @state()
+  public hasVerificationTask!: boolean;
+
+  @state()
+  public classificationTasks!: Tag[];
 
   @property({ type: Boolean, attribute: false })
   public isMobile!: boolean;
-
-  @property({ type: Boolean, attribute: false })
-  public hasVerificationTask!: boolean;
-
-  @property({ type: Array, attribute: false })
-  public classificationTasks!: Tag[];
 
   @state()
   private slides: AbstractSlide[] = [];
@@ -122,13 +127,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      // new SelectionSlide(this.demoDecisionButton),
-      // new PagingSlide(),
-
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       new SelectionSlide(this.demoDecisionButton),
-      new ShortcutsSlide(this.decisionShortcuts, this.demoDecisionButton),
       new PagingSlide(),
     ];
 
