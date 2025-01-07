@@ -1,8 +1,8 @@
 /*
-  We use a section so that <header> and <footer> elements can be semantically
+  We use a section so that elements as <header> are can be semantically
   scoped to the dialog content.
 */
-.dialog-section {
+section.dialog-section {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -11,43 +11,30 @@
   display: flex;
   flex-direction: column;
 
-  .dialog-header {
-    position: absolute;
+  header.dialog-header {
+    position: relative;
     width: 100%;
-
-    /* TOOD: Using z-index is obviously a hack that I want to remove */
-    z-index: 1;
 
     display: flex;
     justify-content: end;
     align-items: center;
 
-    .dialog-title {
-      margin: 0;
-    }
-
-    .repeat-prompt {
-      display: flex;
-
-      .repeat-icon {
-        margin-right: 0.5em;
-      }
-    }
-
     .close-button {
       line-height: 1;
-    }
-
-    ::not(:last-child) {
-      border-right: var(--or-border-width) solid var(--oe-border-color);
     }
   }
 
   .dialog-content {
     position: relative;
     min-height: 0px;
-    padding: min(2em, 2vw);
     flex: 1 1;
+
+    /* 
+      We don't need padding on the top of the dialog content because the dialog
+      header ensures that the content is not touching the edge of the dialog.
+    */
+    padding: min(2em, 2vw);
+    padding-top: 0;
 
     display: flex;
     justify-content: center;
@@ -84,7 +71,7 @@
 
   .slide-description {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
   }
 
   .slide {
