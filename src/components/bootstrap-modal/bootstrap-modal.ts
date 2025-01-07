@@ -127,12 +127,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public showTutorialModal(): void {
     this.slides = [
-      // new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      // new SelectionSlide(this.demoDecisionButton),
-      // new PagingSlide(),
-
-      new SelectionSlide(this.demoDecisionButton),
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
+      new SelectionSlide(this.demoDecisionButton),
       new PagingSlide(),
     ];
 
@@ -149,7 +145,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public closeModal(): void {
     this.dispatchEvent(new CustomEvent("close"));
-    // localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
   }
 
