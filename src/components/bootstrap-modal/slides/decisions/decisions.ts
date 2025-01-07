@@ -40,7 +40,7 @@ export class DecisionsSlide extends AbstractSlide {
           <g class="pages">
             <g class="current-page">${verificationGridPageSprite(this.hasClassificationTask, true)}</g>
             <g class="next-page">${verificationGridPageSprite(this.hasClassificationTask, false)}</g>
-            <g class="current-page-2">${verificationGridPageSprite(this.hasClassificationTask, true)}</g>
+            <g class="next-page-2">${verificationGridPageSprite(this.hasClassificationTask, true)}</g>
           </g>
 
           ${decisionButtonSprite(130, 140, this.demoDecisionButton)}

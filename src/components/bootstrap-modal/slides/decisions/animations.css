@@ -1,5 +1,5 @@
 .decisions-slide {
-  --animation-duration: 7s;
+  --animation-duration: 8s;
 
   --depress-top: 0.75px;
   --depress-left: 0.75px;
@@ -17,12 +17,12 @@
   }
 
   /* move and hold on the true decision */
-  30%,
-  50% {
+  5%,
+  35% {
     transform: translate(-18px, 0);
   }
 
-  70%,
+  40%,
   to {
     transform: none;
   }
@@ -30,24 +30,24 @@
 
 @keyframes decisions-cursor-clicks {
   from,
-  40% {
+  10% {
     r: 0px;
   }
-  45% {
+  15% {
     r: 6px;
   }
-  50% {
+  20% {
     r: 0px;
   }
 
-  56%,
-  75% {
+  49%,
+  50% {
     r: 0px;
   }
-  80% {
+  55% {
     r: 6px;
   }
-  85% {
+  60% {
     r: 0px;
   }
 }
@@ -60,27 +60,28 @@
 */
 @keyframes decisions-slide-movement {
   from,
-  50% {
+  30% {
     transform: none;
   }
 
-  60%,
-  85% {
-    transform: translate(-100%, 0);
+  50%,
+  60% {
+    transform: translate(calc(-100% - var(--oe-spacing)), 0);
   }
 
-  95%,
+  90%,
   to {
-    transform: translate(-200%, 0);
+    transform: translate(calc(-200% - var(--oe-spacing) * 2), 0);
   }
 }
 
 @keyframes decisions-current-slide-decisions {
   from,
-  39% {
+  9% {
     --decision-color: var(--oe-panel-color);
   }
 
+  10%,
   40% {
     --decision-color: var(--positive-color);
   }
@@ -88,10 +89,11 @@
 
 @keyframes decisions-next-slide-decisions {
   from,
-  75% {
+  54% {
     --decision-color: var(--oe-panel-color);
   }
 
+  55%,
   to {
     --decision-color: var(--negative-color);
   }
@@ -99,16 +101,16 @@
 
 @keyframes decisions-true-click {
   from,
-  39% {
+  9% {
     transform: translate(0, 0);
   }
 
-  40%,
-  50% {
+  10%,
+  20% {
     transform: translate(var(--depress-left), var(--depress-top));
   }
 
-  51%,
+  21%,
   to {
     transform: translate(0, 0);
   }
@@ -116,16 +118,16 @@
 
 @keyframes decisions-false-click {
   from,
-  74% {
+  44% {
     transform: translate(0, 0);
   }
 
-  75%,
-  85% {
+  45%,
+  55% {
     transform: translate(var(--depress-left), var(--depress-top));
   }
 
-  86%,
+  56%,
   to {
     transform: translate(0, 0);
   }
