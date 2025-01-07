@@ -9,7 +9,7 @@ import { ClassificationComponent } from "../../../decision/classification/classi
 
 export class SelectionSlide extends AbstractSlide {
   public constructor(demoDecisionButton: DecisionComponent) {
-    super("You can decide about more than one subject at once");
+    super("You can decide about more than one subject");
 
     this.demoDecisionButton = demoDecisionButton;
     this.hasClassificationTask = this.demoDecisionButton instanceof ClassificationComponent;
@@ -25,7 +25,7 @@ export class SelectionSlide extends AbstractSlide {
       <div class="selection-slide slide">
         <svg viewBox="0 0 280 180">
           <g>${verificationGridPageSpriteArray(this.hasClassificationTask, animalPresence)}</g>
-          ${decisionButtonSprite(130, 140, this.demoDecisionButton)} ${cursorSprite(163, 96)} ${selectionBoxSprite()}
+          ${decisionButtonSprite(120, 140, this.demoDecisionButton)} ${cursorSprite(163, 96)} ${selectionBoxSprite()}
         </svg>
       </div>
     `;

@@ -9,7 +9,7 @@ import { ClassificationComponent } from "../../../decision/classification/classi
 
 export class ShortcutsSlide extends AbstractSlide {
   public constructor(shortcuts: KeyboardShortcut[], demoDecisionButton: DecisionComponent) {
-    super("You can use the following keyboard shortcuts");
+    super("You can use keyboard shortcuts");
 
     // in this short tutorial dialog, we demonstrate using the keyboard
     // shortcuts for the first two decision buttons

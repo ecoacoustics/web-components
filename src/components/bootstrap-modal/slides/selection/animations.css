@@ -21,9 +21,10 @@
     transform: translate(-40px, -80px);
   }
 
+  /* Make first negative decision */
   20%,
   25% {
-    transform: translate(-10px, 60px);
+    transform: translate(-20px, 60px);
   }
 
   30%,
@@ -31,9 +32,10 @@
     transform: translate(60px, -80px);
   }
 
+  /* Make second negative decision */
   40%,
   45% {
-    transform: translate(-10px, 60px);
+    transform: translate(-20px, 60px);
   }
 
   50%,
@@ -41,9 +43,10 @@
     transform: translate(-30px, -10px);
   }
 
+  /* Make positive decision */
   60%,
   65% {
-    transform: translate(-30px, 60px);
+    transform: translate(-40px, 60px);
   }
 
   70%,
@@ -56,9 +59,10 @@
     transform: translate(0px, 0px);
   }
 
+  /* Make positive decision about highlight selected */
   90%,
   95% {
-    transform: translate(-30px, 60px);
+    transform: translate(-40px, 60px);
   }
 }
 
@@ -150,7 +154,7 @@
     width: 140px;
     height: 80px;
   }
-  80.01% {
+  80.001% {
     width: 0;
     height: 0;
   }

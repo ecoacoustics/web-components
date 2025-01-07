@@ -43,13 +43,13 @@ export class DecisionsSlide extends AbstractSlide {
             <g class="next-page-2">${verificationGridPageSprite(this.hasClassificationTask, true)}</g>
           </g>
 
-          ${decisionButtonSprite(130, 140, this.demoDecisionButton)}
+          ${decisionButtonSprite(120, 140, this.demoDecisionButton)}
 
           <!--
             I purposely place the cursors pointer tip low in the decision
             buttons so that you can see all of the decision buttons content.
           -->
-          ${cursorSprite(153, 155)}
+          ${cursorSprite(143, 155)}
         </svg>
       </div>
     `;

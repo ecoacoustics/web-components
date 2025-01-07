@@ -222,8 +222,10 @@ dialog {
 
   /* Styles applied to mobile devices */
   @media (max-width: 600px) {
-    width: calc(100dvw - 3rem);
-    height: calc(100dvw - 3rem);
+    position: sticky;
+    min-width: 100dvw;
+    min-height: 100dvh;
+    margin: 0;
   }
 }
 
