@@ -39,7 +39,7 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
  */
 @customElement("oe-verification-bootstrap")
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
-  static styles = [
+  public static styles = [
     unsafeCSS(helpDialogStyles),
 
     unsafeCSS(decisionSlideStyles),
@@ -48,6 +48,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(shortcutSlideStyles),
     unsafeCSS(advancedShortcutStyles),
   ];
+
+  public static animationRepeats = 3 as const;
 
   @property({ type: Array, attribute: false })
   public decisionElements!: DecisionComponent[];

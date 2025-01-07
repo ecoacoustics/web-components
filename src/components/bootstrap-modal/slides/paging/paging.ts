@@ -3,7 +3,8 @@ import { html } from "lit";
 import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { progressBarSprite } from "../../sprites/progress-bar.sprite";
-import anime from "animejs";
+import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
+import { animate, AnimationSequence } from "motion";
 
 export class PagingSlide extends AbstractSlide {
   public constructor() {
@@ -14,26 +15,15 @@ export class PagingSlide extends AbstractSlide {
     const animationDurationMs = 5_000;
     const halfTime = animationDurationMs / 2;
 
-    const progressBarTimeline = anime.timeline({
-      targets: ".view-head-segment",
+    const sequence = [
+      [".view-head-segment", { width: "var(--verification-head)" }, { duration: halfTime }],
+      [".view-head-segment", { width: "var(--verification-head) - 5%" }, { duration: halfTime }],
+    ] satisfies AnimationSequence;
+
+    animate(sequence, {
       duration: animationDurationMs,
-      autoplay: false,
+      repeat: VerificationBootstrapComponent.animationRepeats,
     });
-
-    // prettier-ignore
-    progressBarTimeline
-      .add({
-        width: "var(--verification-head)",
-        duration: halfTime,
-      })
-      .add({
-        width: "calc(var(--verification-head) - 5%)",
-        duration: halfTime,
-      }, `+=${halfTime}`);
-
-    setTimeout(() => {
-      progressBarTimeline.play();
-    }, 500);
   }
 
   public stop(): void {}
