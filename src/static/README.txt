@@ -3,8 +3,7 @@ Spectrograms are excerpt's from XenoCanto licensed under CC BY-NC-SA 4.0 "Attrib
 https://creativecommons.org/licenses/by-nc-sa/4.0/
 https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.en
 
-Kookaburra: https://xeno-canto.org/937218
-Noisy Miner: https://xeno-canto.org/98301
+xc_whipbird: https://xeno-canto.org/235272
 
 ---
 

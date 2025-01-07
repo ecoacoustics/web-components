@@ -69,6 +69,7 @@
       "pageerror",
       "spacebar",
       "appender",
+      "whipbird",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

@@ -32,3 +32,5 @@ export type ChangeEvent<T extends HTMLElement> = Event & {
 
 /** A type that can be used to represent a stringified css variable */
 export type CssVariable = `--${string}`;
+
+export type Tuple<T, Length> = Array<T> & { length: Length };

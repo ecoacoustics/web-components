@@ -3,7 +3,7 @@ import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
 import { Ref } from "lit/directives/ref.js";
 import { when } from "lit/directives/when.js";
-import noisyMinerSpectrogramImage from "../../../static/xc_noisy_miner.png";
+import whipbirdSpectrogramImage from "../../../static/xc_whipbird.png";
 
 export interface GridTileSpriteRefs {
   background?: Ref<SVGRectElement>;
@@ -17,7 +17,7 @@ export function gridTileSprite(
   hasAnimal: boolean,
   classNames?: string,
 ): SvgSprite {
-  const tagName = hasAnimal ? "Noisy Miner" : "Kookaburra";
+  const tagName = hasAnimal ? "Whipbird" : "Kookaburra";
 
   return svg`
     <svg
@@ -45,7 +45,7 @@ export function gridTileSprite(
         width="100%"
         height="100%"
         preserveAspectRatio="none"
-        href="${noisyMinerSpectrogramImage}"
+        href="${whipbirdSpectrogramImage}"
         decoding="async"
         style="width: 60px; height: 30px;"
       />
