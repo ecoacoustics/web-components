@@ -1,6 +1,6 @@
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { SelectionObserverType } from "verification-grid/verification-grid";
 import { AbstractSlide } from "./slides/abstractSlide";
@@ -66,9 +66,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public hasVerificationTask!: boolean;
 
   @state()
+  public hasClassificationTask!: boolean;
+
+  @state()
   public classificationTasks!: Tag[];
 
-  @property({ type: Boolean, attribute: false })
+  @state()
   public isMobile!: boolean;
 
   @state()
@@ -79,10 +82,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   public get open(): boolean {
     return this.dialogElement.open;
-  }
-
-  public get hasClassificationTask(): boolean {
-    return this.classificationTasks.length > 0;
   }
 
   public get decisionShortcuts(): KeyboardShortcut[] {
@@ -102,21 +101,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     if (shouldShowHelpDialog) {
       this.showTutorialModal();
-      // this.showAdvancedModal();
-    }
-  }
-
-  public updated(change: PropertyValues<this>): void {
-    const invalidationKeys: (keyof VerificationBootstrapComponent)[] = [
-      "hasVerificationTask",
-      "classificationTasks",
-      "isMobile",
-      "selectionBehavior",
-      "decisionElements",
-    ];
-
-    if (invalidationKeys.some((key) => change.has(key))) {
-      this.updateSlides();
     }
   }
 
@@ -128,7 +112,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public showTutorialModal(): void {
     this.slides = [
       new DecisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      new SelectionSlide(this.demoDecisionButton),
+      new SelectionSlide(this.demoDecisionButton, this.hasClassificationTask),
       new PagingSlide(),
     ];
 
@@ -137,7 +121,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
     if (!this.isMobile) {
-      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this.demoDecisionButton));
+      this.slides.push(new ShortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
     this.showModal();
@@ -154,10 +138,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private showModal(): void {
     this.dialogElement.showModal();
     this.dispatchEvent(new CustomEvent("open"));
-  }
-
-  private updateSlides(): void {
-    this.requestUpdate();
   }
 
   public positiveDecisionColor(): string {
@@ -226,6 +206,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public render(): HTMLTemplateResult {
+    console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
       <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">

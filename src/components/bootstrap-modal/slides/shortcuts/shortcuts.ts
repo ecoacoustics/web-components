@@ -4,18 +4,16 @@ import { AbstractSlide } from "../abstractSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
-import { DecisionComponent } from "decision/decision";
-import { ClassificationComponent } from "../../../decision/classification/classification";
 
 export class ShortcutsSlide extends AbstractSlide {
-  public constructor(shortcuts: KeyboardShortcut[], demoDecisionButton: DecisionComponent) {
+  public constructor(shortcuts: KeyboardShortcut[], hasClassificationTask: boolean) {
     super("You can use keyboard shortcuts");
 
     // in this short tutorial dialog, we demonstrate using the keyboard
     // shortcuts for the first two decision buttons
     // because we do not use
     this.shortcuts = shortcuts.slice(0, 2);
-    this.hasClassificationTask = demoDecisionButton instanceof ClassificationComponent;
+    this.hasClassificationTask = hasClassificationTask;
   }
 
   private shortcuts: KeyboardShortcut[];

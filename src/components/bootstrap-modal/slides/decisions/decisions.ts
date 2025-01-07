@@ -4,7 +4,6 @@ import { verificationGridPageSprite } from "../../sprites/verification-grid.spri
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
-import { ClassificationComponent } from "../../../decision/classification/classification";
 
 export class DecisionsSlide extends AbstractSlide {
   public constructor(
@@ -27,7 +26,7 @@ export class DecisionsSlide extends AbstractSlide {
     super(description);
 
     this.demoDecisionButton = demoDecisionButton;
-    this.hasClassificationTask = this.demoDecisionButton instanceof ClassificationComponent;
+    this.hasClassificationTask = hasClassificationTask;
   }
 
   private demoDecisionButton: DecisionComponent;

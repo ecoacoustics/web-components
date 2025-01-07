@@ -5,14 +5,13 @@ import { selectionBoxSprite } from "../../sprites/selection-box.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
-import { ClassificationComponent } from "../../../decision/classification/classification";
 
 export class SelectionSlide extends AbstractSlide {
-  public constructor(demoDecisionButton: DecisionComponent) {
+  public constructor(demoDecisionButton: DecisionComponent, hasClassificationTask: boolean) {
     super("You can decide about more than one subject");
 
     this.demoDecisionButton = demoDecisionButton;
-    this.hasClassificationTask = this.demoDecisionButton instanceof ClassificationComponent;
+    this.hasClassificationTask = hasClassificationTask;
   }
 
   private demoDecisionButton: DecisionComponent;
