@@ -222,7 +222,7 @@ dialog {
 
   /* Styles applied to mobile devices */
   @media (max-width: 600px) {
-    position: sticky;
+    position: fixed;
     min-width: 100dvw;
     min-height: 100dvh;
     margin: 0;
