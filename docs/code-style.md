@@ -58,7 +58,7 @@ and [code-workspace](/webcomponents.code-workspace).
 7. All methods on a web component that returns a HTML, or SVG template must be
    prepended with "Template" (e.g. `private decisionPromptTemplate(): TemplateResult`)
 
-### CSS Parts
+## CSS Parts
 
 Default styles that can be overwritten by css parts should be set in the
 following format:
@@ -75,7 +75,7 @@ following format:
 This ensure that the user can change the default styles of css part targeted
 elements.
 
-### CSS Animations
+## CSS Animations
 
 Because `@keyframe` declarations cannot be lexically scoped in CSS, you should
 **always** prefix keyframe identifiers with their scoping.

@@ -5,7 +5,10 @@ import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
 
-export function shortcutsSlide(decisionShortcuts: KeyboardShortcut[], hasClassificationTask: boolean): BootstrapSlide {
+export function shortcutsSlide(
+  decisionShortcuts: ReadonlyArray<KeyboardShortcut>,
+  hasClassificationTask: boolean,
+): BootstrapSlide {
   const title = "You can use keyboard shortcuts";
 
   // in this short tutorial dialog, we demonstrate using the keyboard
@@ -21,7 +24,7 @@ export function shortcutsSlide(decisionShortcuts: KeyboardShortcut[], hasClassif
   return { slideTemplate, title };
 }
 
-function keyboardButtonsTemplate(shortcuts: KeyboardShortcut[]): TemplateResult {
+function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): TemplateResult {
   const positiveShortcut = shortcuts[0];
   const negativeShortcut = shortcuts[1];
 

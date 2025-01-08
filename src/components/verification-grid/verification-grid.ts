@@ -210,10 +210,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // if we receive a value that is larger than the subjects buffer, we emit
     // a warning so that we can catch it in dev, and use the subject arrays
     // length as a fallback to prevent hard-failing.
-    const avaliableSubjectsCount = this.subjects.length;
-    if (clampedHead > avaliableSubjectsCount) {
+    const availableSubjectsCount = this.subjects.length;
+    if (clampedHead > availableSubjectsCount) {
       console.warn("Attempted to set the viewHead to a value larger than the subjects array");
-      clampedHead = avaliableSubjectsCount;
+      clampedHead = availableSubjectsCount;
     }
 
     this.viewHeadIndex = clampedHead;
@@ -426,7 +426,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       element.isMobile = isMobile;
     }
 
-    this.helpDialog.selectionBehavior = this.selectionBehavior;
     this.helpDialog.isMobile = isMobile;
     this.helpDialog.decisionElements = decisionElements;
 

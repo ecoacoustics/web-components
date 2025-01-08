@@ -10,7 +10,7 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 export function decisionsSlide(
   hasVerificationTask: boolean,
   hasClassificationTask: boolean,
-  demoDecisionButton: DecisionComponent | undefined,
+  demoDecisionButton: Readonly<DecisionComponent | undefined>,
 ): BootstrapSlide {
   let title = "";
   if (hasVerificationTask && hasClassificationTask) {

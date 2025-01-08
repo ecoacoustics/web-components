@@ -10,7 +10,7 @@ import { DecisionComponent } from "decision/decision";
 // grid with no decision buttons
 export function selectionSlide(
   hasClassificationTask: boolean,
-  demoDecisionButton: DecisionComponent | undefined,
+  demoDecisionButton: Readonly<DecisionComponent | undefined>,
 ): BootstrapSlide {
   const title = "You can decide about more than one subject";
 

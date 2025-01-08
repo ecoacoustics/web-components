@@ -2,10 +2,8 @@ import { customElement, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
-import { SelectionObserverType } from "verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { loop } from "../../helpers/directives";
-import { Tag } from "../../models/tag";
 import { KeyboardShortcut } from "../../templates/keyboard";
 import { BootstrapSlide } from "./slides/abstractSlide";
 import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
@@ -13,6 +11,11 @@ import { decisionsSlide } from "./slides/decisions/decisions";
 import { selectionSlide } from "./slides/selection/selection";
 import { pagingSlide } from "./slides/paging/paging";
 import { shortcutsSlide } from "./slides/shortcuts/shortcuts";
+import { ClassificationComponent } from "../decision/classification/classification";
+import { consume } from "@lit/context";
+import { VerificationGridInjector } from "verification-grid/verification-grid";
+import { injectionContext } from "../../helpers/constants/contextTokens";
+import { decisionColors } from "../../helpers/themes/decisionColors";
 import helpDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -21,9 +24,10 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
+
 /*
-  A local storage key that when set, will cause the bootstrap modal not to open
-  on load.
+  A local storage key that when set, will cause the bootstrap modal to not
+  automatically open on load.
   This does not prevent the modal from being opened manually through the
   verification grids information icon or the bootstraps open() method.
 */
@@ -31,7 +35,8 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 
 /**
  * @description
- * A dialog that provides information about the verification grid and how to use it.
+ * A dialog that contains informative animations about the verification grid and
+ * how to use it.
  *
  * @event open - Dispatched when the dialog is opened
  * @event close - Dispatched when the dialog is closed
@@ -40,6 +45,7 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   public static styles = [
     unsafeCSS(helpDialogStyles),
+    decisionColors,
 
     unsafeCSS(decisionSlideStyles),
     unsafeCSS(pagingSlideStyles),
@@ -47,6 +53,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     unsafeCSS(shortcutSlideStyles),
     unsafeCSS(advancedShortcutStyles),
   ];
+
+  @consume({ context: injectionContext, subscribe: true })
+  @state()
+  protected injector!: VerificationGridInjector;
 
   // because this is an internal web component, we can use the state decorator
   // because it doesn't matter if the property name is minified
@@ -57,16 +67,10 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public decisionElements!: DecisionComponent[];
 
   @state()
-  public selectionBehavior!: SelectionObserverType;
-
-  @state()
   public hasVerificationTask!: boolean;
 
   @state()
   public hasClassificationTask!: boolean;
-
-  @state()
-  public classificationTasks!: Tag[];
 
   @state()
   public isMobile!: boolean;
@@ -77,41 +81,48 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
-  public get open(): boolean {
+  public get open(): Readonly<boolean> {
     return this.dialogElement.open;
   }
 
-  public get decisionShortcuts(): KeyboardShortcut[] {
+  private get decisionShortcuts(): ReadonlyArray<KeyboardShortcut> {
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
   // the demo decision button can be undefined if the user creates a verification
   // grid with no decision buttons
-  private get demoDecisionButton(): DecisionComponent | undefined {
+  private get demoDecisionButton(): Readonly<DecisionComponent | undefined> {
+    // In the bootstrap slide animations, we show how to use a decision button
+    // by displaying the first decision button inside the bootstrap animations.
+    //
+    // We do not show all the decision elements inside the bootstrap animations
+    // in an attempt to reduce clutter, and make the animations easier to code.
+    //
+    // Only having one decision button is easier because we always know where it
+    // will be inside the svg animation, meaning that when we animate the mouse
+    // clicking on the decision button, we always know where it will be.
     return this.decisionElements[0];
+  }
+
+  private get isClassificationDemo(): Readonly<boolean> {
+    return this.demoDecisionButton instanceof ClassificationComponent;
   }
 
   public firstUpdated(): void {
     const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
-
     if (shouldShowHelpDialog) {
       this.showTutorialModal();
     }
   }
 
-  public showAdvancedModal(): void {
-    this.slides = [advancedShortcutsSlide()];
-    this.showModal();
-  }
-
   public showTutorialModal(): void {
-    this.slides = [
+    const slides: BootstrapSlide[] = [
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
       pagingSlide(),
     ];
 
-    // if the user is on a or tablet device, we don't need to bother showing
+    // if the user is on a mobile device, we don't need to bother showing
     // the keyboard shortcuts slide
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
@@ -119,28 +130,34 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       this.slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
-    this.showModal();
+    this.showModal(slides);
   }
 
-  public closeModal(): void {
-    this.dispatchEvent(new CustomEvent("close"));
+  public showAdvancedModal(): void {
+    const slides = [advancedShortcutsSlide()];
+    this.showModal(slides);
+  }
+
+  private closeModal(): void {
     localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
+    this.dispatchEvent(new CustomEvent("close"));
   }
 
   // this method is private because you should be explicitly opening the modal
-  // through the showAdvancedModal
-  private showModal(): void {
+  // through the showTutorialModal() and showAdvancedModal() methods
+  private showModal(slides: BootstrapSlide[]): void {
+    this.slides = slides;
     this.dialogElement.showModal();
     this.dispatchEvent(new CustomEvent("open"));
   }
 
-  public positiveDecisionColor(): string {
-    return this.hasClassificationTask ? "red" : "green";
+  private positiveDecisionColor(): Readonly<string> {
+    return this.isClassificationDemo ? "var(--class-0-true)" : "var(--verification-true)";
   }
 
-  public negativeDecisionColor(): string {
-    return this.hasClassificationTask ? "maroon" : "red";
+  private negativeDecisionColor(): Readonly<string> {
+    return this.isClassificationDemo ? "var(--class-0-false)" : "var(--verification-false)";
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
@@ -172,21 +189,21 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       return html`<strong>No slides to display</strong>`;
     }
 
-    // we do not need a carousel if there is only one slide
-    if (this.slides.length === 1) {
-      const slide = this.slides[0];
-      return html`
-        <div class="carousel">
-          <sl-carousel-item class="carousel-item">
-            ${this.renderSlide(slide)}
-            <div class="slide-footer">${this.slideFooterTemplate()}</div>
-          </sl-carousel-item>
-        </div>
-      `;
-    }
+    // If there is only one slide in the carousel, we don't need to show the
+    // navigation arrows, the pagination bubbles, or enable mouse dragging
+    // support.
+    // By disabling these features, we get more room on smaller screens and
+    // remove UI elements that can cause confusion when there is only one
+    // bootstrap slide.
+    const showCarouselPagination = this.slides.length > 1;
 
     return html`
-      <sl-carousel class="carousel" navigation pagination mouse-dragging>
+      <sl-carousel
+        class="carousel"
+        ?navigation="${showCarouselPagination}"
+        ?pagination="${showCarouselPagination}"
+        ?mouse-dragging="${showCarouselPagination}"
+      >
         ${loop(
           this.slides,
           (slide, { last }) => html`
@@ -204,7 +221,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
       <dialog id="dialog-element" @pointerdown="${() => this.closeModal()}">
-        <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+        <div class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"
@@ -216,7 +233,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           </header>
 
           <div class="dialog-content">${this.slidesTemplate()}</div>
-        </section>
+        </div>
       </dialog>
     `;
   }
