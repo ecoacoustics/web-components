@@ -27,7 +27,10 @@ class TestPage {
 
   public async create() {
     await this.page.setContent(`
-      <oe-verification-grid id="verification-grid" grid-size="0"></oe-verification-grid>
+      <oe-verification-grid
+        id="verification-grid"
+        grid-size="0"
+      ></oe-verification-grid>
     `);
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
 
