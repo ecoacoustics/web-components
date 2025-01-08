@@ -5,10 +5,12 @@ import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 
+// the demo decision button can be undefined if the user creates a verification
+// grid with no decision buttons
 export function decisionsSlide(
   hasVerificationTask: boolean,
   hasClassificationTask: boolean,
-  demoDecisionButton: DecisionComponent,
+  demoDecisionButton: DecisionComponent | undefined,
 ): BootstrapSlide {
   let description = "";
   if (hasVerificationTask && hasClassificationTask) {

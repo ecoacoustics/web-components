@@ -6,7 +6,12 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";
 import { DecisionComponent } from "decision/decision";
 
-export function selectionSlide(demoDecisionButton: DecisionComponent, hasClassificationTask: boolean): BootstrapSlide {
+// the demo decision button can be undefined if the user creates a verification
+// grid with no decision buttons
+export function selectionSlide(
+  hasClassificationTask: boolean,
+  demoDecisionButton: DecisionComponent | undefined,
+): BootstrapSlide {
   const description = "You can decide about more than one subject";
 
   const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;

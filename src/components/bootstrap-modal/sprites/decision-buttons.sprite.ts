@@ -7,7 +7,7 @@ import { ClassificationComponent } from "../../decision/classification/classific
 // buttons to use as a sprite.
 // this is useful for the tutorial bootstrap where we don't want to overwhelm
 // the user with all of the options at once.
-export function decisionButtonSprite(x: number, y: number, decisionButton: DecisionComponent): SvgSprite {
+export function decisionButtonSprite(x: number, y: number, decisionButton: DecisionComponent | undefined): SvgSprite {
   const isClassification = decisionButton instanceof ClassificationComponent;
   const width = 40 as const;
   const height = 42 as const;

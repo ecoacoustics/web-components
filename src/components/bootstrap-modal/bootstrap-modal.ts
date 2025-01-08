@@ -89,7 +89,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
-  private get demoDecisionButton(): DecisionComponent {
+  // the demo decision button can be undefined if the user creates a verification
+  // grid with no decision buttons
+  private get demoDecisionButton(): DecisionComponent | undefined {
     return this.decisionElements[0];
   }
 
@@ -109,7 +111,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public showTutorialModal(): void {
     this.slides = [
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
-      selectionSlide(this.demoDecisionButton, this.hasClassificationTask),
+      selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
       pagingSlide(),
     ];
 
