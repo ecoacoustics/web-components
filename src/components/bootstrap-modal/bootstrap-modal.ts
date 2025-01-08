@@ -82,10 +82,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public get decisionShortcuts(): KeyboardShortcut[] {
-    if (!this.decisionElements) {
-      return [];
-    }
-
     return this.decisionElements.flatMap((element) => element.shortcutKeys());
   }
 
@@ -119,7 +115,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // the keyboard shortcuts slide
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
-    if (!this.isMobile) {
+    if (!this.isMobile && this.decisionShortcuts.length > 0) {
       this.slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
