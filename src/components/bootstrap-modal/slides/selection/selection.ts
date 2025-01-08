@@ -12,7 +12,7 @@ export function selectionSlide(
   hasClassificationTask: boolean,
   demoDecisionButton: DecisionComponent | undefined,
 ): BootstrapSlide {
-  const description = "You can decide about more than one subject";
+  const title = "You can decide about more than one subject";
 
   const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;
   const slideTemplate = html`
@@ -24,5 +24,5 @@ export function selectionSlide(
     </div>
   `;
 
-  return { slideTemplate, description };
+  return { slideTemplate, title };
 }

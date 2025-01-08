@@ -3,7 +3,7 @@ import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboa
 import { BootstrapSlide } from "../abstractSlide";
 
 export function advancedShortcutsSlide(): BootstrapSlide {
-  const description = "Keyboard shortcuts";
+  const title = "Keyboard shortcuts";
 
   const keyboardShortcuts = [
     { keys: ["Space"], description: "Play selected spectrograms" },
@@ -35,5 +35,5 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     </div>
   `;
 
-  return { slideTemplate, description };
+  return { slideTemplate, title };
 }

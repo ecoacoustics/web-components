@@ -34,6 +34,8 @@ class TestPage {
     `);
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
 
+    console.log("creating");
+
     // because the help dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component
     await this.dismissHelpDialogButton().click();
@@ -95,7 +97,6 @@ class TestPage {
 export const settingsFixture = test.extend<{ fixture: TestPage }>({
   fixture: async ({ page }, run) => {
     const fixture = new TestPage(page);
-    await fixture.create();
     await run(fixture);
   },
 });

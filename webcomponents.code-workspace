@@ -7,7 +7,6 @@
   "settings": {
     "files.insertFinalNewline": true,
     "workbench.iconTheme": "material-icon-theme",
-    "editor.inlineSuggest.enabled": true,
     "editor.renderWhitespace": "trailing",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "eslint.lintTask.enable": true,

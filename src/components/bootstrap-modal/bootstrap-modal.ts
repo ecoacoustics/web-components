@@ -152,7 +152,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           --negative-color: ${this.negativeDecisionColor()};
         "
       >
-        <h2 class="slide-description">${slide.description}</h2>
+        <h2 class="slide-title">${slide.title}</h2>
         ${slide.slideTemplate}
       </div>
     `;
@@ -203,12 +203,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public render(): HTMLTemplateResult {
     console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
-      <dialog id="dialog-element" @pointerdown="${() => this.dialogElement.close()}" @close="${this.closeModal}">
+      <dialog id="dialog-element" @pointerdown="${() => this.closeModal()}">
         <section class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"
-              @click="${this.closeModal}"
+              @click="${() => this.closeModal()}"
               data-testid="dismiss-bootstrap-dialog-btn"
             >
               x

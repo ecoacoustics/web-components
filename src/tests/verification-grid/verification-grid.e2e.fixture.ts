@@ -52,12 +52,10 @@ class TestPage {
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
   public skipDecisionButton = () => this.page.locator("#skip-button").first();
 
-  public helpDialog = () => this.page.locator("oe-verification-bootstrap").first();
-  public helpDialogContainer = () => this.page.locator("#help-dialog").first();
-  public helpDialogPreference = () => this.page.locator("#dialog-preference").first();
-  public helpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
-  public openHelpDialogButton = () => this.page.getByTestId("help-dialog-button").first();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
+  public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
+  public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
+  public bootstrapDialogButton = () => this.page.getByTestId("help-dialog-button").first();
+  public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
   public verificationDecisions = () => this.page.locator("oe-verification").all();
   public classificationDecisions = () => this.page.locator("oe-classification").all();
@@ -478,8 +476,8 @@ class TestPage {
     });
   }
 
-  public async isHelpDialogOpen(): Promise<boolean> {
-    return await this.helpDialog().evaluate((element: VerificationBootstrapComponent) => element.open);
+  public async isBootstrapDialogOpen(): Promise<boolean> {
+    return await this.bootstrapDialog().evaluate((element: VerificationBootstrapComponent) => element.open);
   }
 
   // actions
@@ -524,12 +522,17 @@ class TestPage {
     await dragSlider(this.page, input, value);
   }
 
-  public async openHelpDialog() {
-    await this.openHelpDialogButton().click({ force: true });
+  public async openBootstrapDialog() {
+    await this.bootstrapDialogButton().click({ force: true });
   }
 
-  public async dismissHelpDialog() {
-    await this.dismissHelpDialogButton().click();
+  public async dismissBootstrapDialog() {
+    await this.dismissBootstrapDialogButton().click();
+  }
+
+  public async bootstrapDialogSlideTitle(): Promise<string> {
+    const slideTitle = await this.bootstrapSlideTitleElement().textContent();
+    return slideTitle ?? "";
   }
 
   public async createSubSelection(items: number[], modifiers?: KeyboardModifiers) {

@@ -6,7 +6,7 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
 
 export function shortcutsSlide(decisionShortcuts: KeyboardShortcut[], hasClassificationTask: boolean): BootstrapSlide {
-  const description = "You can use keyboard shortcuts";
+  const title = "You can use keyboard shortcuts";
 
   // in this short tutorial dialog, we demonstrate using the keyboard
   // shortcuts for the first two decision buttons
@@ -18,7 +18,7 @@ export function shortcutsSlide(decisionShortcuts: KeyboardShortcut[], hasClassif
     </div>
   `;
 
-  return { slideTemplate, description };
+  return { slideTemplate, title };
 }
 
 function keyboardButtonsTemplate(shortcuts: KeyboardShortcut[]): TemplateResult {
