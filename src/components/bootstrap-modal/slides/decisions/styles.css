@@ -28,13 +28,13 @@
     }
   }
 
-  .decision-buttons {
+  .bootstrap-decision-buttons {
     position: absolute;
     top: 75%;
 
     display: flex;
 
-    .decision-button {
+    .bootstrap-decision-button {
       position: relative;
     }
 

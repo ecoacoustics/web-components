@@ -14,7 +14,7 @@ export function decisionButtonSprite(x: number, y: number, decisionButton: Decis
 
   return svg`
     <svg viewbox="0 0 ${width} ${height}" x="${x}" y="${y}" width="${width}" height="${height}">
-      <g class="decision-buttons">
+      <g class="bootstrap-decision-buttons">
         ${isClassification ? classificationButtonSprite() : verificationButtonSprite()}
       </g>
     </svg>
@@ -23,7 +23,7 @@ export function decisionButtonSprite(x: number, y: number, decisionButton: Decis
 
 function verificationButtonSprite(): SvgSprite {
   return svg`
-    <g class="decision-button true-decision">
+    <g class="bootstrap-decision-button true-decision">
       <rect
         x="1"
         y="1"
@@ -41,7 +41,7 @@ function verificationButtonSprite(): SvgSprite {
       </g>
     </g>
 
-    <g class="decision-button false-decision">
+    <g class="bootstrap-decision-button false-decision">
       <rect
         x="21"
         y="1"
