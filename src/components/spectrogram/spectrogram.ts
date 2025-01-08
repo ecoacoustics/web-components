@@ -50,6 +50,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public static readonly playEventName = "play" as const;
   public static readonly loadingEventName = "loading" as const;
   public static readonly loadedEventName = "loaded" as const;
+  public static readonly optionsChangeEventName = "options-change" as const;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -78,15 +79,15 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public scaling: SpectrogramCanvasScale = "stretch";
 
   /** The size of the fft window */
-  @property({ type: Number, attribute: "window-size" })
+  @property({ type: Number, attribute: "window-size", reflect: true })
   public windowSize = 512;
 
   /** The window function to use for the spectrogram */
-  @property({ type: String, attribute: "window-function" })
+  @property({ type: String, attribute: "window-function", reflect: true })
   public windowFunction: WindowFunctionName = "hann";
 
   /** The amount of overlap between fft windows */
-  @property({ type: Number, attribute: "window-overlap" })
+  @property({ type: Number, attribute: "window-overlap", reflect: true })
   public windowOverlap = 0;
 
   /** A boolean attribute representing if the spectrogram should be shown in mel-scale */
@@ -94,19 +95,19 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
   public melScale = false;
 
   /** A color map to use for the spectrogram */
-  @property({ type: String, attribute: "color-map" })
+  @property({ type: String, attribute: "color-map", reflect: true })
   public colorMap = "";
 
   /** An offset (seconds) from the start of a larger audio recording */
-  @property({ type: Number })
+  @property({ type: Number, reflect: true })
   public offset = 0;
 
   /** An increase in brightness */
-  @property({ type: Number })
+  @property({ type: Number, reflect: true })
   public brightness = 0;
 
   /** A scalar multiplier that should be applied to fft values */
-  @property({ type: Number })
+  @property({ type: Number, reflect: true })
   public contrast = 1;
 
   @queryAssignedElements()
@@ -322,6 +323,13 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     if (!this.doneFirstRender || !this.renderedSource) {
       return;
     }
+
+    this.dispatchEvent(
+      new CustomEvent<SpectrogramOptions>(SpectrogramComponent.optionsChangeEventName, {
+        detail: this.spectrogramOptions,
+        bubbles: true,
+      }),
+    );
 
     this.audioHelper.regenerateSpectrogram(this.spectrogramOptions).then(() => {
       this.dispatchEvent(

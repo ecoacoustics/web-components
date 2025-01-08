@@ -73,10 +73,16 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private spectrogramElement?: SpectrogramComponent | null;
   private playHandler = this.handleUpdatePlaying.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
+  private optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
 
   public disconnectedCallback(): void {
     this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
+    this.spectrogramElement?.removeEventListener(
+      SpectrogramComponent.optionsChangeEventName,
+      this.optionsChangeHandler,
+    );
     document.removeEventListener("keydown", this.keyDownHandler);
+
     super.disconnectedCallback();
   }
 
@@ -105,6 +111,10 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     if (changedProperties.has("for")) {
       // unbind the previous spectrogram element from the playing
       this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
+      this.spectrogramElement?.removeEventListener(
+        SpectrogramComponent.optionsChangeEventName,
+        this.optionsChangeHandler,
+      );
 
       if (!this.for) {
         this.spectrogramElement = null;
@@ -118,14 +128,25 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       // we need to use the getRootNode method to get the shadow root
       const rootNode = this.getRootNode() as HTMLElement;
       this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(`#${this.for}`);
-      this.spectrogramElement?.addEventListener(SpectrogramComponent.playEventName, this.playHandler);
-
       if (!this.spectrogramElement) {
         return;
       }
 
+      this.spectrogramElement.addEventListener(SpectrogramComponent.playEventName, this.playHandler);
+      this.spectrogramElement.addEventListener(SpectrogramComponent.optionsChangeEventName, this.optionsChangeHandler);
+
       this.axesElement = MediaControlsComponent.recursiveAxesSearch(this.spectrogramElement);
     }
+  }
+
+  // because the spectrogram rendering options can change outside of the media
+  // controls component
+  // e.g. an attribute changes, or the host application has custom input fields
+  // to change the options
+  // we need to listen for these changes and update the settings in the media
+  // controls to reflect the external changes
+  private handleSpectrogramOptionsChange(): void {
+    this.requestUpdate();
   }
 
   // the handlePointerDown method is attached to the top-most container of this

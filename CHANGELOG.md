@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.6...web-components-v1.3.0) (2024-11-29)
+
+
+### Features
+
+* Spectrogram now emit options-change event ([f45e2a9](https://github.com/ecoacoustics/web-components/commit/f45e2a959b2c2726a72784bc803a50a25ed46357)), closes [#253](https://github.com/ecoacoustics/web-components/issues/253)
+
+
+### Bug Fixes
+
+* Axes breaks layout when outside flexbox ([cfde6bc](https://github.com/ecoacoustics/web-components/commit/cfde6bcf772f04b0b444346f73dffe325344b811)), closes [#214](https://github.com/ecoacoustics/web-components/issues/214)
+
 ## [1.2.6](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.5...web-components-v1.2.6) (2024-11-27)
 
 

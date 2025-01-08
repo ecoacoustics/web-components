@@ -526,8 +526,10 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   public render() {
     return html`
-      ${this.unitConverter ? this.axesTemplate() : nothing}
-      <slot @slotchange="${this.handleSlotChange}"></slot>
+      <div id="wrapped-element" class="vertically-fill">
+        ${this.unitConverter ? this.axesTemplate() : nothing}
+        <slot @slotchange="${this.handleSlotChange}"></slot>
+      </div>
     `;
   }
 }
