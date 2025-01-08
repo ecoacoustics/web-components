@@ -5,7 +5,7 @@ import { DecisionComponent } from "../decision/decision";
 import { when } from "lit/directives/when.js";
 import { loop } from "../../helpers/directives";
 import { KeyboardShortcut } from "../../templates/keyboard";
-import { BootstrapSlide } from "./slides/abstractSlide";
+import { BootstrapSlide } from "./slides/bootstrapSlide";
 import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import { decisionsSlide } from "./slides/decisions/decisions";
 import { selectionSlide } from "./slides/selection/selection";
@@ -221,7 +221,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
       <dialog id="dialog-element" @pointerdown="${() => this.closeModal()}">
-        <div class="dialog-section" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+        <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"

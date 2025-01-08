@@ -1,6 +1,6 @@
 import { html, svg, TemplateResult } from "lit";
 import { map } from "lit/directives/map.js";
-import { BootstrapSlide } from "../abstractSlide";
+import { BootstrapSlide } from "../bootstrapSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";

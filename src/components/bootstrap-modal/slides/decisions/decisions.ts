@@ -1,4 +1,4 @@
-import { BootstrapSlide } from "../abstractSlide";
+import { BootstrapSlide } from "../bootstrapSlide";
 import { html } from "lit";
 import { verificationGridPageSprite } from "../../sprites/verification-grid.sprite";
 import { decisionButtonSprite } from "../../sprites/decision-buttons.sprite";

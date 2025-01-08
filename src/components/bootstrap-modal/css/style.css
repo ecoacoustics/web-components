@@ -1,4 +1,8 @@
-.dialog-section {
+:host {
+  --decision-color: var(--oe-panel-color);
+}
+
+.dialog-container {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -130,8 +134,4 @@
     meaning that it doesn't look as laggy when the animation starts
   */
   animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1) !important;
-}
-
-:host {
-  --decision-color: var(--oe-panel-color);
 }

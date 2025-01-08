@@ -1,4 +1,4 @@
-import { BootstrapSlide } from "../abstractSlide";
+import { BootstrapSlide } from "../bootstrapSlide";
 import { html } from "lit";
 import { TempAnimalPresenceArray, verificationGridPageSpriteArray } from "../../sprites/verification-grid.sprite";
 import { selectionBoxSprite } from "../../sprites/selection-box.sprite";

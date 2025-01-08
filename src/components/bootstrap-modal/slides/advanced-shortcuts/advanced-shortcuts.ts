@@ -1,6 +1,6 @@
 import { html } from "lit";
 import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
-import { BootstrapSlide } from "../abstractSlide";
+import { BootstrapSlide } from "../bootstrapSlide";
 
 export function advancedShortcutsSlide(): BootstrapSlide {
   const title = "Keyboard shortcuts";
