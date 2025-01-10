@@ -4,7 +4,7 @@ import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
-import { Pixel, UnitConverter } from "../../models/unitConverters";
+import { UnitConverter } from "../../models/unitConverters";
 import { Size } from "../../models/rendering";
 import { AnnotationComponent } from "annotation/annotation";
 import { Annotation } from "../../models/annotation";
@@ -70,11 +70,9 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency));
     const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value);
 
-    console.debug(model, { left, top, width, height });
-
     return html`
       <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">
-        <h2 class="bounding-box-label">${annotationTags.join(",")}</h2>
+        <h2 class="bounding-box-label">${annotationTags.join(", ")}</h2>
         <div class="bounding-box" style="width: ${watch(width)}px; height: ${watch(height)}px;"></div>
       </aside>
     `;
