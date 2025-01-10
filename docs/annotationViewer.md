@@ -59,9 +59,9 @@ All annotation events are bubbled through the `oe-annotate` component,
 meaning that all of these events should also be documented inside the
 `oe-annotate` component.
 
-### Annotation CSS Parts
+### Annotation CSS Variables
 
-- `::part(color)` - Changes the color of the annotations bounding box (defaults to `--oe-primary-color`)
+- `--oe-annotation-color` - Changes the color of the annotations bounding box (defaults to `--oe-primary-color`)
 
 ## Usage
 

@@ -20,6 +20,9 @@ export * from "./decision/classification/classification";
 export * from "./decision/verification/verification";
 export * from "./verification-grid-settings/verification-grid-settings";
 export * from "./progress-bar/progress-bar";
+export * from "./annotate/annotate";
+export * from "./annotation/annotation";
+export * from "./tag/tag";
 
 export * from "../helpers/constants/contextTokens";
 
