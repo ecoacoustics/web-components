@@ -1,0 +1,26 @@
+:host {
+  position: absolute;
+
+  /* TODO: remove this */
+  left: 100px;
+  top: 100px;
+
+  z-index: 1;
+}
+
+#annotation-container {
+  & > .bounding-box-label {
+    width: fit-content;
+    margin: 0;
+    font-size: var(--oe-font-size);
+
+    color: white;
+    background-color: var(--oe-annotation-color);
+  }
+
+  & > .bounding-box {
+    width: 100px;
+    height: 100px;
+    border: 1px solid var(--oe-annotation-color);
+  }
+}
