@@ -4,7 +4,7 @@ import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
-import { UnitConverter } from "../../models/unitConverters";
+import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { Size } from "../../models/rendering";
 import { AnnotationComponent } from "annotation/annotation";
 import { Annotation } from "../../models/annotation";
@@ -63,12 +63,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     }
 
     const annotationTags = model.tags.map((tag: Tag) => tag.text);
+    const textHeight: Pixel = 14.5;
 
     const left = computed(() => this.unitConverter!.scaleX.value(model.startOffset));
     const width = computed(() => this.unitConverter!.scaleX.value(model.endOffset) - left.value);
 
-    const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency));
-    const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value);
+    const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency) - textHeight);
+    const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value - textHeight);
 
     return html`
       <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Components - Spectrogram + Axes + Indicator</title>
+    <title>Web Components - Spectrogram + Axes + Indicator + Annotation</title>
     <script type="module" src="/src/components/index.ts"></script>
   </head>
 
@@ -16,7 +16,7 @@
             class="large"
             window-size="1024"
             color-map="magma"
-            brightness="-0.5"
+            brightness="-0.4"
             contrast="2"
             scaling="stretch"
           >
@@ -30,6 +30,11 @@
             low-frequency="2500"
             high-frequency="3500"
           ></oe-annotation>
+
+          <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
+            <oe-tag>Bat</oe-tag>
+            <oe-tag>Ultrasonic</oe-tag>
+          </oe-annotation>
         </oe-annotate>
       </oe-indicator>
     </oe-axes>
