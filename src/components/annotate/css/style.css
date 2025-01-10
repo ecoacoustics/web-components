@@ -3,3 +3,29 @@
   display: inline-block;
   width: 100%;
 }
+
+#wrapper-element {
+  position: relative;
+}
+
+.annotation-surface {
+  position: absolute;
+  z-index: 1;
+}
+
+.annotation-container {
+  position: absolute;
+
+  & > .bounding-box-label {
+    width: fit-content;
+    margin: 0;
+    font-size: var(--oe-font-size);
+
+    color: white;
+    background-color: var(--oe-annotation-color);
+  }
+
+  & > .bounding-box {
+    border: 1px solid var(--oe-annotation-color);
+  }
+}

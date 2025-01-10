@@ -1,13 +1,17 @@
-import { html, LitElement, unsafeCSS } from "lit";
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
-import { UnitConverter } from "../../models/unitConverters";
+import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { Size } from "../../models/rendering";
 import { AnnotationComponent } from "annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
+import { map } from "lit/directives/map.js";
+import { Tag } from "../../models/tag";
+import { computed, watch } from "@lit-labs/preact-signals";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -53,9 +57,33 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     console.debug(value, this.annotationModels);
   }
 
+  private annotationTemplate(model: Annotation): HTMLTemplateResult {
+    if (!this.unitConverter) {
+      return html`An error occurred`;
+    }
+
+    const annotationTags = model.tags.map((tag: Tag) => tag.text);
+
+    const left = computed(() => this.unitConverter!.scaleX.value(model.startOffset));
+    const width = computed(() => this.unitConverter!.scaleX.value(model.endOffset) - left.value);
+
+    const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency));
+    const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value);
+
+    console.debug(model, { left, top, width, height });
+
+    return html`
+      <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">
+        <h2 class="bounding-box-label">${annotationTags.join(",")}</h2>
+        <div class="bounding-box" style="width: ${watch(width)}px; height: ${watch(height)}px;"></div>
+      </aside>
+    `;
+  }
+
   public render() {
     return html`
-      <div class="vertically-fill">
+      <div id="wrapper-element" class="vertically-fill">
+        <div class="annotation-surface">${map(this.annotationModels, (model) => this.annotationTemplate(model))}</div>
         <slot @slotchange="${() => this.handleSlotChange()}"></slot>
       </div>
     `;
