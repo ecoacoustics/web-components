@@ -3,11 +3,6 @@
   height: 100dvh;
 }
 
-#skip-button {
-  height: min-content;
-  align-self: center;
-}
-
 #highlight-box {
   position: absolute;
   display: none;
@@ -23,6 +18,11 @@
 
   /* TODO: this isn't working, we should probably bubble events */
   pointer-events: none;
+}
+
+#skip-button {
+  height: min-content;
+  align-self: center;
 }
 
 /* TODO: fix placement */

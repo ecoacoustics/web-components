@@ -426,7 +426,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       element.isMobile = isMobile;
     }
 
-    this.bootstrapDialog.isMobile = isMobile;
     this.bootstrapDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails

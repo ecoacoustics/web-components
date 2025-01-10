@@ -8,6 +8,11 @@ export interface KeyboardShortcut {
   hasMouse?: boolean;
 }
 
+/**
+ * @description
+ * A standardized template to display keyboard shortcuts and shortcut
+ * combinations
+ */
 export function keyboardShortcutTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
   const isAscii = shortcut.keys.every((key) => key.charCodeAt(0) < 128);
   const hasUpperCase = shortcut.keys.some((key: string) => key === key.toUpperCase());
