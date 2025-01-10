@@ -4,6 +4,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { required } from "../../helpers/decorators";
 import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
+import { tagArrayConverter } from "../../helpers/attributes";
 import annotationStyles from "./css/style.css?inline";
 
 @customElement("oe-annotation")
@@ -26,11 +27,11 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   @property({ attribute: "end-time", type: Number })
   public endTime!: number;
 
-  @property({ type: Array })
-  public tags: string[] = [];
+  @property({ type: Array, converter: tagArrayConverter })
+  public tags: Tag[] = [];
 
   public get tagModels(): Tag[] {
-    return [{ text: "koala" }];
+    return this.tags;
   }
 
   public get model(): Readonly<Annotation> {
