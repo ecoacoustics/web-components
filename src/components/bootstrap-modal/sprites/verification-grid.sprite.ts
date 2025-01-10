@@ -1,6 +1,7 @@
 import { svg, SVGTemplateResult } from "lit";
 import { gridTileSprite } from "./grid-tile.sprite";
 import { Tuple } from "../../../helpers/types/advancedTypes";
+import { repeatCount } from "../../../helpers/directives";
 
 export function verificationGridPageSprite(hasClassification = false, hasAnimal = true): SVGTemplateResult {
   const gridTileSize = 80;
@@ -55,7 +56,7 @@ export function verificationGridPageSpriteArray(
 
   return svg`
     <g class="grid-tiles">
-      ${Array.from({ length: gridTileCount }).map((_, i) => {
+      ${repeatCount(gridTileCount, (i: number) => {
         const { x, y } = gridTilePosition(i);
         const hasAnimalValue = hasAnimal[i];
         return gridTileSprite(x, y, hasClassification, hasAnimalValue, `grid-tile tile-${i}`);

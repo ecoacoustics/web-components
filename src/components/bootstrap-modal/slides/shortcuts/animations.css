@@ -105,8 +105,7 @@
   }
 }
 
-/* Select all */
-@keyframes shortcut-0-animation {
+@keyframes select-all-animation {
   from,
   9% {
     transform: translate(0, 0);
@@ -123,8 +122,7 @@
   }
 }
 
-/* Ctrl + click */
-@keyframes shortcut-1-animation {
+@keyframes ctrl-click-animation {
   from,
   19% {
     transform: translate(0, 0);
@@ -149,8 +147,7 @@
   }
 }
 
-/* Positive decision */
-@keyframes shortcut-2-animation {
+@keyframes positive-decision-animation {
   from,
   28% {
     transform: translate(0, 0);
@@ -167,8 +164,7 @@
   }
 }
 
-/* Deselect all*/
-@keyframes shortcut-3-animation {
+@keyframes deselect-all-animation {
   from,
   39% {
     transform: translate(0, 0);
@@ -195,8 +191,7 @@
   }
 }
 
-/* Negative decision */
-@keyframes shortcut-4-animation {
+@keyframes negative-decision-animation {
   from,
   58% {
     transform: translate(0, 0);

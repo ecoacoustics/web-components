@@ -1,3 +1,7 @@
+import { html, TemplateResult } from "lit";
+
+type TimesReturn = (iteration: number) => TemplateResult;
+
 /**
  * A generator function that iterates over an array and yields the result of applying a callback function to each item
  * with additional metadata about the iteration.
@@ -52,4 +56,12 @@ export function* loop<T>(
       yield f(value, { index: i++, first, last, even, odd });
     }
   }
+}
+
+/**
+ * @description
+ * Repeats a template a certain number of times
+ */
+export function repeatCount(repetitions: number, template: TimesReturn): TemplateResult {
+  return html`${Array.from({ length: repetitions }).map((_, i: number) => template(i))}`;
 }

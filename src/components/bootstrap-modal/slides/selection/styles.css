@@ -1,20 +1,15 @@
 @import url("./animations.css");
 
-/*
-  We ignore prettier here because it wants to break the animations onto multiple
-  lines, which is not valid CSS
-*/
 .selection-slide {
   .cursor {
     animation: selection-cursor-movement var(--animation-duration) infinite;
     will-change: transform;
+
+    .click-animation {
+      animation: selection-cursor-clicks var(--animation-duration) infinite;
+    }
   }
 
-  .click-animation {
-    animation: selection-cursor-clicks var(--animation-duration) infinite;
-  }
-
-  /* Absolute positions are relative to the top-left of the slide content */
   .highlight-box {
     position: absolute;
     display: inline-block;
@@ -27,14 +22,13 @@
 
   .grid-tile {
     /*
-      Because selection is a boolean event, out animation timing function
-      immediately applies the fill color to the grid tile without any
-      animation.
+      Because selection is a boolean event, we want our animation timing
+      function to immediately applies the fill color to the grid tile without
+      any transition.
     */
     animation-timing-function: step-start;
   }
 
-  /* Highlight box selection animations */
   .tile-0 {
     animation: selection-tile-0-decisions var(--animation-duration) infinite;
 

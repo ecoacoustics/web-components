@@ -65,28 +65,23 @@
     }
   }
 
-  /* Select all */
   .shortcut-0 > kbd {
-    animation: shortcut-0-animation var(--animation-duration) infinite;
+    animation: select-all-animation var(--animation-duration) infinite;
   }
 
-  /* Ctrl + Click */
   .shortcut-1 > kbd {
-    animation: shortcut-1-animation var(--animation-duration) infinite;
+    animation: ctrl-click-animation var(--animation-duration) infinite;
   }
 
-  /* Positive decision */
   .shortcut-2 > kbd {
-    animation: shortcut-2-animation var(--animation-duration) infinite;
+    animation: positive-decision-animation var(--animation-duration) infinite;
   }
 
-  /* Deselect all */
   .shortcut-3 > kbd {
-    animation: shortcut-3-animation var(--animation-duration) infinite;
+    animation: deselect-all-animation var(--animation-duration) infinite;
   }
 
-  /* Negative decision */
   .shortcut-4 > kbd {
-    animation: shortcut-4-animation var(--animation-duration) infinite;
+    animation: negative-decision-animation var(--animation-duration) infinite;
   }
 }
