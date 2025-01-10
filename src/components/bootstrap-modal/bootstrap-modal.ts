@@ -16,6 +16,7 @@ import { consume } from "@lit/context";
 import { VerificationGridInjector } from "verification-grid/verification-grid";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { decisionColors } from "../../helpers/themes/decisionColors";
+import { SlCarousel } from "@shoelace-style/shoelace";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -81,6 +82,9 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
+  @query("#tutorial-slide-carousel")
+  private tutorialSlideCarouselElement!: SlCarousel;
+
   public get open(): Readonly<boolean> {
     return this.dialogElement.open;
   }
@@ -133,15 +137,25 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
-    this.showModal(slides);
+    this.showDialog(slides);
   }
 
   public showAdvancedModal(): void {
     const slides = [advancedShortcutsSlide()];
-    this.showModal(slides);
+    this.showDialog(slides);
   }
 
-  private closeModal(): void {
+  private handleDialogOpen(): void {
+    // Whenever the dialog is opened, we want to reset the slide carousel back
+    // to the start so that if the user re-opens the bootstrap modal through the
+    // verification grids "help" button or the "showTutorialModal()" method,
+    // the tutorial will start from the beginning again.
+    // If we did not reset the tutorial carousel back to the start, the tutorial
+    // would start from the slide they close it on.
+    this.tutorialSlideCarouselElement.goToSlide(0);
+  }
+
+  private closeDialog(): void {
     localStorage.setItem(autoDismissBootstrapStorageKey, "true");
     this.dialogElement.close();
     this.dispatchEvent(new CustomEvent("close"));
@@ -149,7 +163,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   // this method is private because you should be explicitly opening the modal
   // through the showTutorialModal() and showAdvancedModal() methods
-  private showModal(slides: BootstrapSlide[]): void {
+  private showDialog(slides: BootstrapSlide[]): void {
     this.slides = slides;
     this.dialogElement.showModal();
     this.dispatchEvent(new CustomEvent("open"));
@@ -184,7 +198,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       return html`<button class="oe-btn-secondary" @click="${this.showTutorialModal}">Replay tutorial</button>`;
     }
 
-    return html`<button class="oe-btn-primary" @click="${this.closeModal}">Get started</button>`;
+    return html`<button class="oe-btn-primary" @click="${this.closeDialog}">Get started</button>`;
   }
 
   private slidesTemplate(): HTMLTemplateResult {
@@ -202,6 +216,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
     return html`
       <sl-carousel
+        id="tutorial-slide-carousel"
         class="carousel"
         ?navigation="${showCarouselPagination}"
         ?pagination="${showCarouselPagination}"
@@ -223,12 +238,12 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public render(): HTMLTemplateResult {
     console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
-      <dialog id="dialog-element" @pointerdown="${() => this.closeModal()}">
+      <dialog id="dialog-element" @open="${() => this.handleDialogOpen()}" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"
-              @click="${() => this.closeModal()}"
+              @click="${() => this.closeDialog()}"
               data-testid="dismiss-bootstrap-dialog-btn"
             >
               x
