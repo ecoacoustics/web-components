@@ -1,4 +1,4 @@
-import { html, LitElement, unsafeCSS } from "lit";
+import { LitElement, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { required } from "../../helpers/decorators";
@@ -30,7 +30,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   public tags: string[] = [];
 
   public get tagModels(): Tag[] {
-    return [];
+    return [{ text: "koala" }];
   }
 
   public get model(): Readonly<Annotation> {
@@ -43,14 +43,5 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
       this,
       [],
     );
-  }
-
-  public render() {
-    return html`
-      <aside id="annotation-container">
-        <h2 class="bounding-box-label">Tag Name</h2>
-        <div class="bounding-box"></div>
-      </aside>
-    `;
   }
 }
