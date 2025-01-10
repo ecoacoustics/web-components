@@ -1,10 +1,11 @@
-import { LitElement, unsafeCSS } from "lit";
+import { html, LitElement, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { required } from "../../helpers/decorators";
+import { queryAllDeeplyAssignedElements, required } from "../../helpers/decorators";
 import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
 import { tagArrayConverter } from "../../helpers/attributes";
+import { TagComponent } from "tag/tag";
 import annotationStyles from "./css/style.css?inline";
 
 @customElement("oe-annotation")
@@ -30,8 +31,16 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   @property({ type: Array, converter: tagArrayConverter })
   public tags: Tag[] = [];
 
+  @queryAllDeeplyAssignedElements({ selector: "oe-tag" })
+  private tagComponents?: TagComponent[];
+
   public get tagModels(): Tag[] {
-    return this.tags;
+    const attributeTags = this.tags;
+    const componentTags = this.tagComponents
+      ? this.tagComponents.flatMap((element: TagComponent) => element.model)
+      : [];
+
+    return [...attributeTags, ...componentTags];
   }
 
   public get model(): Readonly<Annotation> {
@@ -44,5 +53,9 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
       this,
       [],
     );
+  }
+
+  public render() {
+    return html`<slot></slot>`;
   }
 }
