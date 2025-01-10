@@ -26,14 +26,14 @@ import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
 
-test.describe("while the initial help dialog is open", () => {
+test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  test("should show an initial help dialog", async ({ fixture }) => {
-    const isHelpDialogOpen = await fixture.isBootstrapDialogOpen();
-    expect(isHelpDialogOpen).toBe(true);
+  test("should show an initial bootstrap dialog", async ({ fixture }) => {
+    const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+    expect(isBootstrapDialogOpen).toBe(true);
   });
 
   test("should not be able to sub-select grid tiles with keyboard shortcuts", async ({ fixture }) => {
@@ -58,7 +58,7 @@ test.describe("single verification grid", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
     // because the user should not be able to start interacting with the
-    // verification grid while the help dialog is open, we need to dismiss it
+    // verification grid while the bootstrap dialog is open, we need to dismiss it
     // before we start asserting the functionality of the verification grid
     await fixture.dismissBootstrapDialog();
   });
@@ -106,7 +106,7 @@ test.describe("single verification grid", () => {
     test("should not have any applied decisions", () => {});
   });
 
-  // unlike the initial help dialog, these tests assert that the help dialog
+  // unlike the initial bootstrap dialog, these tests assert that the bootstrap dialog
   // explicitly opened by the user (through the question mark button) behaves
   // correctly
   test.describe("bootstrap dialog", () => {
@@ -116,23 +116,23 @@ test.describe("single verification grid", () => {
       await changeToMobile(page);
       await fixture.openBootstrapDialog();
 
-      const isHelpDialogOpen = await fixture.isBootstrapDialogOpen();
-      expect(isHelpDialogOpen).toBe(true);
+      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+      expect(isBootstrapDialogOpen).toBe(true);
 
       const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
       expect(realizedSlideTitle).not.toBe(advancedShortcutSlideTitle);
     });
 
     // If the user is on a mobile device, there is no purpose in opening the
-    // advanced shortcuts help dialog because they cannot use the keyboard
+    // advanced shortcuts bootstrap dialog because they cannot use the keyboard
     // therefore, if the user clicks on the help button while on a mobile, we
     // expect that the user is taken straight to the tutorial modal
     test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture, page }) => {
       await changeToDesktop(page);
       await fixture.openBootstrapDialog();
 
-      const isHelpDialogOpen = await fixture.isBootstrapDialogOpen();
-      expect(isHelpDialogOpen).toBe(true);
+      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+      expect(isBootstrapDialogOpen).toBe(true);
 
       const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
       expect(realizedSlideTitle).toBe(advancedShortcutSlideTitle);

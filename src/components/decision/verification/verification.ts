@@ -7,8 +7,8 @@ import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
+import { KeyboardShortcut } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
-import { KeyboardShortcut } from "../../../templates/keyboard";
 
 /**
  * @description
@@ -28,7 +28,7 @@ export class VerificationComponent extends DecisionComponent {
   public verified: DecisionOptions = DecisionOptions.TRUE;
 
   /** Value that will be added to the oe-additional-tags column */
-  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter })
+  @property({ attribute: "additional-tags", type: Array, converter: tagArrayConverter, reflect: true })
   public additionalTags: Tag[] = [];
 
   /** A keyboard key that when pressed will act as a click event on the button */

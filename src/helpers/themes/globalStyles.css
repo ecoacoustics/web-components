@@ -31,6 +31,11 @@ sl-icon {
     padding: 0;
   }
 
+  &.xl-icon {
+    font-size: calc(var(--oe-font-size) * 2.25);
+    padding: 0;
+  }
+
   &.inline-icon {
     display: inline-block;
   }

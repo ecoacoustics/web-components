@@ -3,10 +3,10 @@ import { SvgSprite } from "../../../helpers/animations/sprites";
 import { svg } from "lit";
 import { ClassificationComponent } from "../../decision/classification/classification";
 
-// we have a limit parameter so that we can only select a subset of the decision
-// buttons to use as a sprite.
-// this is useful for the tutorial bootstrap where we don't want to overwhelm
-// the user with all of the options at once.
+// In the case that the verification grid does not have any decision buttons
+// "decisionButton" will be undefined.
+// If the verification grid does not have any decision buttons we fallback to
+// displaying a two verification buttons (true and false).
 export function decisionButtonSprite(
   x: number,
   y: number,

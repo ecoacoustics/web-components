@@ -1,11 +1,6 @@
 @import url("./animations.css");
 
 .shortcut-slide {
-  sl-icon[name="mouse"] {
-    font-size: 1.5em;
-    padding: 0em;
-  }
-
   .shortcut-keys {
     display: flex;
     justify-content: space-evenly;
@@ -43,55 +38,55 @@
   }
 
   .click-animation {
-    animation: shortcut-cursor-clicks var(--animation-duration) !important;
+    animation: shortcut-cursor-clicks var(--animation-duration) infinite;
   }
 
   .tile-0 {
-    animation: shortcut-tile-0-decision-animation var(--animation-duration) !important;
+    animation: shortcut-tile-0-decision-animation var(--animation-duration) infinite;
 
     & > .grid-tile-background {
-      animation: shortcut-tile-0-selection-animation var(--animation-duration) !important;
+      animation: shortcut-tile-0-selection-animation var(--animation-duration) infinite;
     }
   }
 
   .tile-1 {
-    animation: shortcut-tile-1-decision-animation var(--animation-duration) !important;
+    animation: shortcut-tile-1-decision-animation var(--animation-duration) infinite;
 
     & > .grid-tile-background {
-      animation: shortcut-tile-1-selection-animation var(--animation-duration) !important;
+      animation: shortcut-tile-1-selection-animation var(--animation-duration) infinite;
     }
   }
 
   .tile-2 {
-    animation: shortcut-tile-0-decision-animation var(--animation-duration) !important;
+    animation: shortcut-tile-0-decision-animation var(--animation-duration) infinite;
 
     & > .grid-tile-background {
-      animation: shortcut-tile-0-selection-animation var(--animation-duration) !important;
+      animation: shortcut-tile-0-selection-animation var(--animation-duration) infinite;
     }
   }
 
   /* Select all */
   .shortcut-0 > kbd {
-    animation: shortcut-0-animation var(--animation-duration) !important;
+    animation: shortcut-0-animation var(--animation-duration) infinite;
   }
 
   /* Ctrl + Click */
   .shortcut-1 > kbd {
-    animation: shortcut-1-animation var(--animation-duration) !important;
+    animation: shortcut-1-animation var(--animation-duration) infinite;
   }
 
   /* Positive decision */
   .shortcut-2 > kbd {
-    animation: shortcut-2-animation var(--animation-duration) !important;
+    animation: shortcut-2-animation var(--animation-duration) infinite;
   }
 
   /* Deselect all */
   .shortcut-3 > kbd {
-    animation: shortcut-3-animation var(--animation-duration) !important;
+    animation: shortcut-3-animation var(--animation-duration) infinite;
   }
 
   /* Negative decision */
   .shortcut-4 > kbd {
-    animation: shortcut-4-animation var(--animation-duration) !important;
+    animation: shortcut-4-animation var(--animation-duration) infinite;
   }
 }

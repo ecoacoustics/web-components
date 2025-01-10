@@ -1,5 +1,5 @@
 import { html } from "lit";
-import { KeyboardShortcut, keyboardTemplate } from "../../../../templates/keyboard";
+import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../../templates/keyboardShortcut";
 import { BootstrapSlide } from "../bootstrapSlide";
 
 export function advancedShortcutsSlide(): BootstrapSlide {
@@ -25,7 +25,7 @@ export function advancedShortcutsSlide(): BootstrapSlide {
               (shortcut) => html`
                 <tr class="shortcut-row">
                   <td>${shortcut.description}</td>
-                  <td>${keyboardTemplate(shortcut)}</td>
+                  <td>${keyboardShortcutTemplate(shortcut)}</td>
                 </tr>
               `,
             )}

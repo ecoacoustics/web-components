@@ -18,7 +18,7 @@
         two different pages can clearly be distinguished when pressing the "next"
         and "previous" buttons.
       */
-      --decision-color: green;
+      --decision-color: var(--positive-color);
 
       animation: paging-slide-decisions-current var(--animation-duration) infinite;
       transform: translate(-100%, 0);

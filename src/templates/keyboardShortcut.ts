@@ -8,7 +8,7 @@ export interface KeyboardShortcut {
   hasMouse?: boolean;
 }
 
-export function keyboardTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
+export function keyboardShortcutTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
   const isAscii = shortcut.keys.every((key) => key.charCodeAt(0) < 128);
   const hasUpperCase = shortcut.keys.some((key: string) => key === key.toUpperCase());
   const shouldShowShift = hasUpperCase && isAscii;
@@ -19,6 +19,6 @@ export function keyboardTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult
       shortcut.keys,
       (key, { last }) => html`<kbd>${key.toLocaleUpperCase()}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`,
     )}
-    ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse" class="inline-icon large-icon"></sl-icon>`)}
+    ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse" class="inline-icon xl-icon"></sl-icon>`)}
   `;
 }

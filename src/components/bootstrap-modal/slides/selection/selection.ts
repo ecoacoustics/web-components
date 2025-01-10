@@ -14,6 +14,10 @@ export function selectionSlide(
 ): BootstrapSlide {
   const title = "You can decide about more than one subject";
 
+  // this animal presence array specifies if each tile in the verification grid
+  // has the correct tag associated with the spectrogram
+  // a true value will cause the grid tile to have the correct label, while a
+  // false value will cause the grid tile to have an incorrect label
   const animalPresence = [true, true, false, true, true, true] satisfies TempAnimalPresenceArray;
   const slideTemplate = html`
     <div class="selection-slide slide">

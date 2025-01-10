@@ -13,7 +13,7 @@ class DataSourceFixture {
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
   public decisionButtons = () => this.page.locator(".decision-button").all();
   public gridTiles = () => this.page.locator(".tile-container").all();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
+  public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
   public testJsonInput = "http://localhost:3000/test-items.json";
 
@@ -94,8 +94,8 @@ class DataSourceFixture {
     }
   }
 
-  public async dismissHelpDialog(): Promise<void> {
-    await this.dismissHelpDialogButton().click();
+  public async dismissBootstrapDialog(): Promise<void> {
+    await this.dismissBootstrapDialogButton().click();
   }
 
   public async sendDecision(decisionIndex: number): Promise<void> {

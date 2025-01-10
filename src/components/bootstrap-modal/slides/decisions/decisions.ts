@@ -30,7 +30,7 @@ export function decisionsSlide(
         <g class="pages">
           <g class="current-page">${verificationGridPageSprite(hasClassificationTask, true)}</g>
           <g class="next-page">${verificationGridPageSprite(hasClassificationTask, false)}</g>
-          <g class="next-page-2">${verificationGridPageSprite(hasClassificationTask, true)}</g>
+          <g class="final-page">${verificationGridPageSprite(hasClassificationTask, true)}</g>
         </g>
 
         ${decisionButtonSprite(120, 140, demoDecisionButton)}

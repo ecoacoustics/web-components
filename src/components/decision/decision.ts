@@ -11,7 +11,7 @@ import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
 import { decisionColor } from "../../services/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
-import { KeyboardShortcut } from "../../templates/keyboard";
+import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {

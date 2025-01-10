@@ -3,11 +3,6 @@ import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
 
 export function progressBarSprite(x: Pixel, y: Pixel): SvgSprite {
-  // css variables:
-  //   --progress
-  //     A value that represents the progress of the progress bar.
-  //     Example: 10px
-  //     Default: 0px
   return svg`
     <svg>
       <style>

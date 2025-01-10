@@ -23,21 +23,12 @@
       transform: translate(calc(100% + var(--oe-spacing)), 0);
     }
 
-    .next-page-2 {
+    .final-page {
       transform: translate(calc(200% + var(--oe-spacing) * 2), 0);
     }
   }
 
   .bootstrap-decision-buttons {
-    position: absolute;
-    top: 75%;
-
-    display: flex;
-
-    .bootstrap-decision-button {
-      position: relative;
-    }
-
     .true-decision {
       animation: decisions-true-click var(--animation-duration) infinite;
     }

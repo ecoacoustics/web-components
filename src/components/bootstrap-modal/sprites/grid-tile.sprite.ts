@@ -1,19 +1,13 @@
 import { svg } from "lit";
 import { SvgSprite } from "../../../helpers/animations/sprites";
 import { Pixel } from "../../../models/unitConverters";
-import { Ref } from "lit/directives/ref.js";
 import { when } from "lit/directives/when.js";
-import whipbirdSpectrogramImage from "../../../static/xc_whipbird.png";
-
-export interface GridTileSpriteRefs {
-  background?: Ref<SVGRectElement>;
-  decisionMeter?: Ref<SVGRectElement>;
-}
+import whipbirdSpectrogramImage from "../../../static/xc_whipbird.png?inline";
 
 export function gridTileSprite(
   x: Pixel,
   y: Pixel,
-  hasClassification = false,
+  isClassification = false,
   hasAnimal: boolean,
   classNames?: string,
 ): SvgSprite {
@@ -37,7 +31,7 @@ export function gridTileSprite(
         fill="var(--oe-panel-color)"
       />
 
-      ${when(!hasClassification, () => svg`<text x="7" y="12" font-size="6">${tagName}</text>`)}
+      ${when(!isClassification, () => svg`<text x="7" y="12" font-size="6">${tagName}</text>`)}
 
       <image
         x="10"
@@ -50,39 +44,17 @@ export function gridTileSprite(
         style="width: 60px; height: 30px;"
       />
 
-      ${hasClassification ? gridProgressClassification() : gridProgressVerification()}
+      <rect
+        x="10"
+        y="50"
+        width="60"
+        height="4"
+        rx="2"
+        stroke-width="0.5"
+        fill="var(--decision-color)"
+        stroke="var(--oe-border-color)"
+        class="decision-meter"
+      />
     </svg>
-  `;
-}
-
-function gridProgressVerification(): SvgSprite {
-  return svg`
-    <rect
-      x="10"
-      y="50"
-      width="60"
-      height="4"
-      rx="2"
-      stroke-width="0.5"
-      fill="var(--decision-color)"
-      stroke="var(--oe-border-color)"
-      class="decision-meter"
-    />
-  `;
-}
-
-function gridProgressClassification(): SvgSprite {
-  return svg`
-    <rect
-      x="10"
-      y="50"
-      width="60"
-      height="4"
-      rx="2"
-      stroke-width="0.5"
-      fill="var(--decision-color)"
-      stroke="var(--oe-border-color)"
-      class="decision-meter"
-    />
   `;
 }

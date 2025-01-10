@@ -167,7 +167,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
   @query("oe-verification-bootstrap")
-  private helpDialog!: VerificationBootstrapComponent;
+  private bootstrapDialog!: VerificationBootstrapComponent;
 
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
@@ -315,8 +315,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public isHelpDialogOpen(): boolean {
-    return this.helpDialog.open;
+  public isBootstrapDialogOpen(): boolean {
+    return this.bootstrapDialog.open;
   }
 
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
@@ -426,8 +426,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       element.isMobile = isMobile;
     }
 
-    this.helpDialog.isMobile = isMobile;
-    this.helpDialog.decisionElements = decisionElements;
+    this.bootstrapDialog.isMobile = isMobile;
+    this.bootstrapDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
@@ -647,18 +647,18 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, if the user clicks the help button on a mobile device
     // we take them directly to the onboarding modal
     if (this.isMobileDevice()) {
-      this.helpDialog.showTutorialModal();
+      this.bootstrapDialog.showTutorialModal();
     } else {
-      this.helpDialog.showAdvancedModal();
+      this.bootstrapDialog.showAdvancedModal();
     }
   }
 
-  private handleHelpDialogOpen(): void {
+  private handleBootstrapDialogOpen(): void {
     this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
   }
 
-  private handleHelpDialogClose(): void {
+  private handleBootstrapDialogClose(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
   }
@@ -810,10 +810,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canSubSelect(): boolean {
-    // we check that the help dialog is not open so that the user doesn't
+    // we check that the bootstrap dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.populatedTileCount > 1 && !this.isHelpDialogOpen();
+    return this.populatedTileCount > 1 && !this.isBootstrapDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -1037,8 +1037,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private async handleDecision(event: DecisionEvent) {
     // if the dialog box is open, we don't want to catch events
     // because the user could accidentally create a decision by using the
-    // decision keyboard shortcuts while the help dialog is open
-    if (this.isHelpDialogOpen()) {
+    // decision keyboard shortcuts while the bootstrap dialog is open
+    if (this.isBootstrapDialogOpen()) {
       return;
     }
 
@@ -1351,8 +1351,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
     return html`
       <oe-verification-bootstrap
-        @open="${this.handleHelpDialogOpen}"
-        @close="${this.handleHelpDialogClose}"
+        @open="${this.handleBootstrapDialogOpen}"
+        @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"

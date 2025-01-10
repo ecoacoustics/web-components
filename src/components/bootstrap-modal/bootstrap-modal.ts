@@ -4,7 +4,7 @@ import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { when } from "lit/directives/when.js";
 import { loop } from "../../helpers/directives";
-import { KeyboardShortcut } from "../../templates/keyboard";
+import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { BootstrapSlide } from "./slides/bootstrapSlide";
 import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import { decisionsSlide } from "./slides/decisions/decisions";
@@ -16,7 +16,7 @@ import { consume } from "@lit/context";
 import { VerificationGridInjector } from "verification-grid/verification-grid";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { decisionColors } from "../../helpers/themes/decisionColors";
-import helpDialogStyles from "./css/style.css?inline";
+import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
 import decisionSlideStyles from "./slides/decisions/styles.css?inline";
@@ -44,7 +44,7 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
 @customElement("oe-verification-bootstrap")
 export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
   public static styles = [
-    unsafeCSS(helpDialogStyles),
+    unsafeCSS(bootstrapDialogStyles),
     decisionColors,
 
     unsafeCSS(decisionSlideStyles),
@@ -109,8 +109,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public firstUpdated(): void {
-    const shouldShowHelpDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
-    if (shouldShowHelpDialog) {
+    const shouldOpenDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
+    if (shouldOpenDialog) {
       this.showTutorialModal();
     }
   }
@@ -126,8 +126,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // the keyboard shortcuts slide
     // by conditionally adding it to the slides array, we can reduce the amount
     // of information that needs to be consumed by the user
+    //
+    // additionally, if there are no decision shortcut keys, we don't display
+    // the shortcut bootstrap slide
     if (!this.isMobile && this.decisionShortcuts.length > 0) {
-      this.slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
+      slides.push(shortcutsSlide(this.decisionShortcuts, this.hasClassificationTask));
     }
 
     this.showModal(slides);

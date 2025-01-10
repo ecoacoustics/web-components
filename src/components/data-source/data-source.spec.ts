@@ -5,7 +5,7 @@ import { expect } from "../../tests/assertions";
 test.describe("data source", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
-    await fixture.dismissHelpDialog();
+    await fixture.dismissBootstrapDialog();
   });
 
   [false, true].forEach((localFile: boolean) => {

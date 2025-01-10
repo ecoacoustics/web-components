@@ -89,7 +89,7 @@
 
   30%,
   to {
-    --decision-color: green;
+    --decision-color: var(--positive-color);
   }
 }
 
@@ -101,7 +101,7 @@
 
   60%,
   to {
-    --decision-color: red;
+    --decision-color: var(--negative-color);
   }
 }
 

@@ -20,7 +20,7 @@ class TestPage {
   public gridSizeTriggerButton = () => this.page.locator("#grid-size-trigger").first();
   public gridSizeInput = () => this.page.locator("#grid-size-input").first();
   public gridSizeLabel = () => this.page.locator("#grid-size-label").first();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
+  public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
   public templateSettingsDropdown = () => this.page.getByTestId("template-dropdown").first();
   public templateTriggerButton = () => this.page.locator("#settings-template-trigger").first();
   public templateCheckboxes = () => this.page.locator(".template-change-input").all();
@@ -34,11 +34,9 @@ class TestPage {
     `);
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
 
-    console.log("creating");
-
-    // because the help dialog is shown over all elements, we have to dismiss
+    // because the bootstrap dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component
-    await this.dismissHelpDialogButton().click();
+    await this.dismissBootstrapDialogButton().click();
   }
 
   public async isFullscreen(): Promise<boolean> {
