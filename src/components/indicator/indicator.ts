@@ -30,7 +30,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
 
-  public handleSlotChange(): void {
+  private handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
 
@@ -67,7 +67,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
             <circle id="seek-icon" part="seek-icon" cy="100%" r="5" />
           </g>
         </svg>
-        <slot @slotchange="${this.handleSlotChange}"></slot>
+        <slot @slotchange="${() => this.handleSlotChange()}"></slot>
       </div>
     `;
   }
