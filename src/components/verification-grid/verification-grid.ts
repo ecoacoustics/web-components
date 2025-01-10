@@ -646,9 +646,9 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, if the user clicks the help button on a mobile device
     // we take them directly to the onboarding modal
     if (this.isMobileDevice()) {
-      this.bootstrapDialog.showTutorialModal();
+      this.bootstrapDialog.showTutorialDialog();
     } else {
-      this.bootstrapDialog.showAdvancedModal();
+      this.bootstrapDialog.showAdvancedDialog();
     }
   }
 

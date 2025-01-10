@@ -115,11 +115,11 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public firstUpdated(): void {
     const shouldOpenDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
     if (shouldOpenDialog) {
-      this.showTutorialModal();
+      this.showTutorialDialog();
     }
   }
 
-  public showTutorialModal(): void {
+  public showTutorialDialog(): void {
     const slides: BootstrapSlide[] = [
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
@@ -138,21 +138,19 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     }
 
     this.showDialog(slides);
-  }
 
-  public showAdvancedModal(): void {
-    const slides = [advancedShortcutsSlide()];
-    this.showDialog(slides);
-  }
-
-  private handleDialogOpen(): void {
     // Whenever the dialog is opened, we want to reset the slide carousel back
     // to the start so that if the user re-opens the bootstrap modal through the
-    // verification grids "help" button or the "showTutorialModal()" method,
+    // verification grids "help" button or the "showTutorialDialog()" method,
     // the tutorial will start from the beginning again.
     // If we did not reset the tutorial carousel back to the start, the tutorial
     // would start from the slide they close it on.
     this.tutorialSlideCarouselElement.goToSlide(0);
+  }
+
+  public showAdvancedDialog(): void {
+    const slides = [advancedShortcutsSlide()];
+    this.showDialog(slides);
   }
 
   private closeDialog(): void {
@@ -162,7 +160,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   // this method is private because you should be explicitly opening the modal
-  // through the showTutorialModal() and showAdvancedModal() methods
+  // through the showTutorialDialog() and showAdvancedDialog() methods
   private showDialog(slides: BootstrapSlide[]): void {
     this.slides = slides;
     this.dialogElement.showModal();
@@ -195,7 +193,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   private slideFooterTemplate(): HTMLTemplateResult {
     // TODO: Find a better way to do this
     if (this.slides.length === 1) {
-      return html`<button class="oe-btn-secondary" @click="${this.showTutorialModal}">Replay tutorial</button>`;
+      return html`<button class="oe-btn-secondary" @click="${this.showTutorialDialog}">Replay tutorial</button>`;
     }
 
     return html`<button class="oe-btn-primary" @click="${this.closeDialog}">Get started</button>`;
@@ -238,7 +236,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   public render(): HTMLTemplateResult {
     console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
-      <dialog id="dialog-element" @open="${() => this.handleDialogOpen()}" @pointerdown="${() => this.closeDialog()}">
+      <dialog id="dialog-element" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
