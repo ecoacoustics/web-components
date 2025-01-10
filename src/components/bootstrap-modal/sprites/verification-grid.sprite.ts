@@ -2,6 +2,9 @@ import { svg, SVGTemplateResult } from "lit";
 import { gridTileSprite } from "./grid-tile.sprite";
 import { Tuple } from "../../../helpers/types/advancedTypes";
 import { repeatCount } from "../../../helpers/directives";
+import { Pixel } from "../../../models/unitConverters";
+
+export type TempAnimalPresenceArray = Tuple<boolean, 6>;
 
 export function verificationGridPageSprite(hasClassification = false, hasAnimal = true): SVGTemplateResult {
   const gridTileSize = 80;
@@ -31,15 +34,18 @@ export function verificationGridPageSprite(hasClassification = false, hasAnimal 
   `;
 }
 
-export type TempAnimalPresenceArray = Tuple<boolean, 6>;
-
 export function verificationGridPageSpriteArray(
   hasClassification = false,
   hasAnimal: TempAnimalPresenceArray,
 ): SVGTemplateResult {
-  const gridTileSize = 80;
-  const gridTileHeight = 50;
-  const gridTileGap = 20;
+  // Although using pixel values here seems like a bad hacky idea, it is not too
+  // bad since we are using the pixel values inside an SVG viewBox.
+  // This means that the pixel values will dynamically react to screen size
+  // changes as the svg viewBox changes
+  const gridTileSize: Pixel = 80;
+  const gridTileHeight: Pixel = 50;
+  const gridTileGap: Pixel = 20;
+
   const gridTileRowCount = 3;
   const gridTileColumnCount = 2;
   const gridTileCount = gridTileRowCount * gridTileColumnCount;
