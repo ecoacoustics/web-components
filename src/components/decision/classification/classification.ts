@@ -8,7 +8,13 @@ import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
-import { KeyboardShortcut, shiftSymbol } from "../../../templates/keyboardShortcut";
+import {
+  KeyboardShortcut,
+  KeyboardShortcutKey,
+  keyboardShortcutTemplate,
+  shiftSymbol,
+  ShiftSymbolVariant,
+} from "../../../templates/keyboardShortcut";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -57,47 +63,41 @@ export class ClassificationComponent extends DecisionComponent {
 
   private _decisionModels: Partial<DecisionModels<Classification>> = {};
 
-  protected get derivedTrueShortcut(): string | undefined {
-    if (this.trueShortcut) {
-      return this.trueShortcut;
-    } else if (!this.falseShortcut) {
-      // if there is no false shortcut to derive a shortcut from, then we need
-      // cannot derive a true shortcut
-      return;
-    }
+  private get trueKeyboardShortcut(): KeyboardShortcut | undefined {
+    const shortcut = this.deriveTrueShortcutKey();
+    if (shortcut) {
+      const keys: KeyboardShortcutKey[] = [shortcut];
+      if (this.isShortcutUppercase(shortcut)) {
+        keys.unshift(shiftSymbol);
+      }
 
-    return this.falseShortcut === this.falseShortcut.toUpperCase()
-      ? this.falseShortcut.toLowerCase()
-      : this.falseShortcut.toUpperCase();
+      return { keys, description: `Is ${this.tag.text}` };
+    }
   }
 
-  protected get derivedFalseShortcut(): string | undefined {
-    if (this.falseShortcut) {
-      return this.falseShortcut;
-    } else if (!this.trueShortcut) {
-      return;
-    }
+  private get falseKeyboardShortcut(): KeyboardShortcut | undefined {
+    const shortcut = this.deriveFalseShortcutKey();
+    if (shortcut) {
+      const keys: KeyboardShortcutKey[] = [shortcut];
+      if (this.isShortcutUppercase(shortcut)) {
+        keys.unshift(shiftSymbol);
+      }
 
-    return this.trueShortcut === this.trueShortcut.toUpperCase()
-      ? this.trueShortcut.toLowerCase()
-      : this.trueShortcut.toUpperCase();
+      return { keys, description: `Is ${this.tag.text}` };
+    }
   }
 
   public override shortcutKeys(): KeyboardShortcut[] {
     const shortcuts: KeyboardShortcut[] = [];
 
-    if (this.derivedTrueShortcut) {
-      shortcuts.push({
-        keys: [this.derivedTrueShortcut],
-        description: `Is ${this.tag.text}`,
-      });
+    const trueShortcut = this.trueKeyboardShortcut;
+    if (trueShortcut) {
+      shortcuts.push(trueShortcut);
     }
 
-    if (this.derivedFalseShortcut) {
-      shortcuts.push({
-        keys: [this.derivedFalseShortcut],
-        description: `Not ${this.tag.text}`,
-      });
+    const falseShortcut = this.falseKeyboardShortcut;
+    if (falseShortcut) {
+      shortcuts.push(falseShortcut);
     }
 
     return shortcuts;
@@ -120,27 +120,64 @@ export class ClassificationComponent extends DecisionComponent {
     return this.isTrueShortcutKey(event) || this.isFalseShortcutKey(event);
   }
 
+  /**
+   * Returns a true shortcut key from the "true-shortcut" attribute.
+   * If there is no true shortcut, this function will derive a shortcut key from
+   * the false shortcut key if a false shortcut key is defined without a true
+   * shortcut key.
+   */
+  private deriveTrueShortcutKey(): string | undefined {
+    if (this.trueShortcut) {
+      return this.trueShortcut;
+    } else if (!this.falseShortcut) {
+      // if there is no false shortcut to derive a shortcut from, then we need
+      // cannot derive a true shortcut
+      return;
+    }
+
+    return this.falseShortcut === this.falseShortcut.toUpperCase()
+      ? this.falseShortcut.toLowerCase()
+      : this.falseShortcut.toUpperCase();
+  }
+
+  /**
+   * Returns a false shortcut key from the "false-shortcut" attribute.
+   * If there is no true shortcut, this function will derive a shortcut key from
+   * the true shortcut key if a true shortcut key is defined without a false
+   * shortcut key.
+   */
+  private deriveFalseShortcutKey(): string | undefined {
+    if (this.falseShortcut) {
+      return this.falseShortcut;
+    } else if (!this.trueShortcut) {
+      return;
+    }
+
+    return this.trueShortcut === this.trueShortcut.toUpperCase()
+      ? this.trueShortcut.toLowerCase()
+      : this.trueShortcut.toUpperCase();
+  }
+
+  private isShortcutUppercase(key: string) {
+    return key === key.toUpperCase();
+  }
+
   private isTrueShortcutKey(event: KeyboardEvent): boolean {
-    if (!this.derivedTrueShortcut) {
+    const shortcut = this.deriveTrueShortcutKey();
+    if (!shortcut) {
       return false;
     }
 
-    return event.key === this.derivedTrueShortcut;
+    return event.key === shortcut;
   }
 
   private isFalseShortcutKey(event: KeyboardEvent): boolean {
-    if (!this.derivedFalseShortcut) {
+    const shortcut = this.deriveFalseShortcutKey();
+    if (!shortcut) {
       return false;
     }
 
-    return event.key === this.derivedFalseShortcut;
-  }
-
-  private keyboardShortcutTemplate(shortcut: string): TemplateResult {
-    const isShortcutUpperCase = shortcut === shortcut.toUpperCase();
-    const shiftKey = isShortcutUpperCase ? shiftSymbol : "";
-
-    return html` <kbd class="shortcut-legend">${shiftKey}${shortcut}</kbd> `;
+    return event.key === shortcut;
   }
 
   private decisionButtonTemplate(decision: DecisionOptions): TemplateResult {
@@ -150,7 +187,7 @@ export class ClassificationComponent extends DecisionComponent {
       "oe-btn-secondary": decision === DecisionOptions.UNSURE || decision === DecisionOptions.SKIP,
     });
 
-    const shortcut = decision === DecisionOptions.TRUE ? this.derivedTrueShortcut : this.derivedFalseShortcut;
+    const shortcut = decision === DecisionOptions.TRUE ? this.trueKeyboardShortcut : this.falseKeyboardShortcut;
     const decisionModel = new Classification(decision, this.tag);
     const color = this.injector.colorService(decisionModel);
 
@@ -161,7 +198,6 @@ export class ClassificationComponent extends DecisionComponent {
         id="${decision}-decision-button"
         class="decision-button ${buttonClasses}"
         part="${decision}-decision-button"
-        title="Shortcut: ${shortcut}"
         style="--ripple-color: var(${color})"
         aria-label="${decision} decision for ${this.tag.text}"
         aria-disabled="${this.disabled}"
@@ -170,7 +206,9 @@ export class ClassificationComponent extends DecisionComponent {
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
         <div class="button-text">${decision}</div>
-        ${!this.isMobile && shortcut ? this.keyboardShortcutTemplate(shortcut) : nothing}
+        <div>
+          ${!this.isMobile && shortcut ? keyboardShortcutTemplate(shortcut, ShiftSymbolVariant.inline) : nothing}
+        </div>
       </button>
     `;
   }

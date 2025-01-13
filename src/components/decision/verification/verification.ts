@@ -7,7 +7,7 @@ import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
-import { KeyboardShortcut } from "../../../templates/keyboardShortcut";
+import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
 
 /**
@@ -103,7 +103,6 @@ export class VerificationComponent extends DecisionComponent {
         id="decision-button"
         class="oe-btn-primary decision-button ${buttonClasses}"
         part="decision-button"
-        title="Shortcut: ${this.shortcut}"
         style="--ripple-color: var(${color})"
         aria-disabled="${this.disabled}"
         @click="${() => this.handleDecision()}"
@@ -116,7 +115,9 @@ export class VerificationComponent extends DecisionComponent {
 
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
-        <div>${!this.isMobile ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}</div>
+        <div class="shortcut-legend">
+          ${!this.isMobile ? keyboardShortcutTemplate({ keys: [this.shortcut] }) : nothing}
+        </div>
       </button>
     `;
   }
