@@ -73,7 +73,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
     return html`
       <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">
-        <h2 class="bounding-box-label">${annotationTags.join(", ")}</h2>
+        <h2 class="bounding-box-heading">${annotationTags.join(", ")}</h2>
         <div class="bounding-box" style="width: ${watch(width)}px; height: ${watch(height)}px;"></div>
       </aside>
     `;
