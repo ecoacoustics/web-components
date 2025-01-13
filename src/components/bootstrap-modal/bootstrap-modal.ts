@@ -57,7 +57,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   @consume({ context: injectionContext, subscribe: true })
   @state()
-  protected injector!: VerificationGridInjector;
+  private injector!: VerificationGridInjector;
 
   // because this is an internal web component, we can use the state decorator
   // because it doesn't matter if the property name is minified
@@ -85,8 +85,18 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   @query("#tutorial-slide-carousel")
   private tutorialSlideCarouselElement!: SlCarousel;
 
+  private isAdvancedDialog = false;
+
   public get open(): Readonly<boolean> {
     return this.dialogElement.open;
+  }
+
+  private get autoDismissPreference(): boolean {
+    return localStorage.getItem(autoDismissBootstrapStorageKey) === null;
+  }
+
+  private set autoDismissPreference(value: string) {
+    localStorage.setItem(autoDismissBootstrapStorageKey, value);
   }
 
   private get decisionShortcuts(): ReadonlyArray<KeyboardShortcut> {
@@ -113,13 +123,14 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public firstUpdated(): void {
-    const shouldOpenDialog = localStorage.getItem(autoDismissBootstrapStorageKey) === null;
-    if (shouldOpenDialog) {
+    if (this.autoDismissPreference) {
       this.showTutorialDialog();
     }
   }
 
   public showTutorialDialog(): void {
+    this.isAdvancedDialog = false;
+
     const slides: BootstrapSlide[] = [
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
@@ -149,12 +160,14 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public showAdvancedDialog(): void {
+    this.isAdvancedDialog = true;
+
     const slides = [advancedShortcutsSlide()];
     this.showDialog(slides);
   }
 
   private closeDialog(): void {
-    localStorage.setItem(autoDismissBootstrapStorageKey, "true");
+    this.autoDismissPreference = "true";
     this.dialogElement.close();
     this.dispatchEvent(new CustomEvent("close"));
   }
@@ -184,15 +197,17 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
           --negative-color: ${this.negativeDecisionColor()};
         "
       >
-        <h2 class="slide-title">${slide.title}</h2>
+        <div class="slide-header">
+          <h2 class="slide-title">${slide.title}</h2>
+          ${when(slide.description, () => html`<p class="slide-description">${slide.description}</p>`)}
+        </div>
         ${slide.slideTemplate}
       </div>
     `;
   }
 
   private slideFooterTemplate(): HTMLTemplateResult {
-    // TODO: Find a better way to do this
-    if (this.slides.length === 1) {
+    if (this.isAdvancedDialog) {
       return html`<button class="oe-btn-secondary" @click="${this.showTutorialDialog}">Replay tutorial</button>`;
     }
 

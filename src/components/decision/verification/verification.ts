@@ -39,7 +39,7 @@ export class VerificationComponent extends DecisionComponent {
   private decisionButton!: HTMLButtonElement;
 
   public override shortcutKeys(): KeyboardShortcut[] {
-    let description = `Apply a ${this.verified} verification`;
+    let description = `Decide ${this.verified}`;
     if (this.additionalTags.length) {
       const additionalTagText = this.additionalTags.map((tag) => tag.text).join(", ");
       description += ` and also these tags: ${additionalTagText}`;

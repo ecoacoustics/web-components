@@ -11,7 +11,7 @@ export function gridTileSprite(
   hasAnimal: boolean,
   classNames?: string,
 ): SvgSprite {
-  const tagName = hasAnimal ? "Whipbird" : "Incorrect-Tag";
+  const tagName = hasAnimal ? "Whipbird" : "Car";
 
   return svg`
     <svg

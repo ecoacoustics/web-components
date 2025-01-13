@@ -12,7 +12,7 @@ export function selectionSlide(
   hasClassificationTask: boolean,
   demoDecisionButton: Readonly<DecisionComponent | undefined>,
 ): BootstrapSlide {
-  const title = "You can decide about more than one subject";
+  const title = "Decisions will apply to all selected subjects";
 
   // this animal presence array specifies if each tile in the verification grid
   // has the correct tag associated with the spectrogram

@@ -13,15 +13,21 @@ export function decisionsSlide(
   demoDecisionButton: Readonly<DecisionComponent | undefined>,
 ): BootstrapSlide {
   let title = "";
+  let description = "";
+
   if (hasVerificationTask && hasClassificationTask) {
     title = "This grid contains both verification and classification tasks";
+    description = "Decide if the tag matches the subject and add tags";
   } else if (hasVerificationTask) {
     title = "This grid contains a verification task";
+    description = "Decide if the tag matches the subject";
   } else if (hasClassificationTask) {
     title = "This grid contains a classification task";
+    description = "Add tags to the subject";
   } else {
     console.warn("Could not determine the type of task in the grid. Falling back to verification task prompt.");
     title = "This grid contains a verification task";
+    description = "Decide if the tag matches the subject";
   }
 
   const slideTemplate = html`
@@ -44,5 +50,5 @@ export function decisionsSlide(
     </div>
   `;
 
-  return { slideTemplate, title };
+  return { slideTemplate, title, description };
 }

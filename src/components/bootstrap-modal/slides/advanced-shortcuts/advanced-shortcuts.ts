@@ -7,7 +7,7 @@ export function advancedShortcutsSlide(): BootstrapSlide {
 
   const keyboardShortcuts = [
     { keys: ["Space"], description: "Play selected spectrograms" },
-    { keys: ["Alt"], description: "Keyboard selection" },
+    { keys: ["Alt", "number"], description: "Keyboard selection" },
     { keys: ["f11"], description: "Fullscreen" },
     { keys: ["Ctrl", "a"], description: "Select all" },
     { keys: ["Esc"], description: "Deselect all" },

@@ -1,10 +1,11 @@
 import { svg, SVGTemplateResult } from "lit";
 import { gridTileSprite } from "./grid-tile.sprite";
-import { Tuple } from "../../../helpers/types/advancedTypes";
-import { repeatCount } from "../../../helpers/directives";
+import { FixedLengthArray } from "../../../helpers/types/advancedTypes";
 import { Pixel } from "../../../models/unitConverters";
+import { range } from "lit/directives/range.js";
+import { map } from "lit/directives/map.js";
 
-export type TempAnimalPresenceArray = Tuple<boolean, 6>;
+export type TempAnimalPresenceArray = FixedLengthArray<boolean, 6>;
 
 export function verificationGridPageSprite(hasClassification = false, hasAnimal = true): SVGTemplateResult {
   const gridTileSize = 80;
@@ -62,7 +63,7 @@ export function verificationGridPageSpriteArray(
 
   return svg`
     <g class="grid-tiles">
-      ${repeatCount(gridTileCount, (i: number) => {
+      ${map(range(0, gridTileCount), (i: number) => {
         const { x, y } = gridTilePosition(i);
         const hasAnimalValue = hasAnimal[i];
         return gridTileSprite(x, y, hasClassification, hasAnimalValue, `grid-tile tile-${i}`);

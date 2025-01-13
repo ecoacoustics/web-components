@@ -139,8 +139,8 @@ dialog {
     By setting a minimum width and height of 50%, we ensure that the dialog will
     always look raised against the main content.
   */
-  min-width: 60%;
-  min-height: 60%;
+  min-width: 80%;
+  min-height: 80%;
 
   /*
     Similar to the minimum width and height, we set a maximum width and height

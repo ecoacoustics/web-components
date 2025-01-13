@@ -8,18 +8,15 @@ export interface KeyboardShortcut {
   hasMouse?: boolean;
 }
 
+export const shiftSymbol = "⇧" as const;
+
 /**
  * @description
  * A standardized template to display keyboard shortcuts and shortcut
  * combinations
  */
 export function keyboardShortcutTemplate(shortcut: KeyboardShortcut): HTMLTemplateResult {
-  const isAscii = shortcut.keys.every((key) => key.charCodeAt(0) < 128);
-  const hasUpperCase = shortcut.keys.some((key: string) => key === key.toUpperCase());
-  const shouldShowShift = hasUpperCase && isAscii;
-
   return html`
-    ${when(shouldShowShift, () => html`<kbd class="shortcut-legend">Shift</kbd> +`)}
     ${loop(
       shortcut.keys,
       (key, { last }) => html`<kbd>${key.toLocaleUpperCase()}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`,

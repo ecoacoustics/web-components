@@ -69,15 +69,19 @@
   flex-direction: column;
   min-height: 0;
 
-  .slide-title {
-    text-align: center;
-
+  .slide-header {
     /*
       We can safely remove the margin from the top of the slide title because
       the dialogs header will keep it from touching the top of the bootstrap
     */
     margin-top: 0;
     margin-bottom: var(--oe-spacing);
+
+    .slide-title,
+    .slide-description {
+      text-align: center;
+      margin: 0;
+    }
   }
 
   .slide {

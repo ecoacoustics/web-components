@@ -8,7 +8,7 @@ import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
-import { KeyboardShortcut } from "../../../templates/keyboardShortcut";
+import { KeyboardShortcut, shiftSymbol } from "../../../templates/keyboardShortcut";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -83,14 +83,14 @@ export class ClassificationComponent extends DecisionComponent {
     if (this.derivedTrueShortcut) {
       shortcuts.push({
         keys: [this.derivedTrueShortcut],
-        description: `Is a ${this.tag.text}`,
+        description: `Is ${this.tag.text}`,
       });
     }
 
     if (this.derivedFalseShortcut) {
       shortcuts.push({
         keys: [this.derivedFalseShortcut],
-        description: `Not a ${this.tag.text}`,
+        description: `Not ${this.tag.text}`,
       });
     }
 
@@ -132,7 +132,7 @@ export class ClassificationComponent extends DecisionComponent {
 
   private keyboardShortcutTemplate(shortcut: string): TemplateResult {
     const isShortcutUpperCase = shortcut === shortcut.toUpperCase();
-    const shiftKey = isShortcutUpperCase ? "⇧" : "";
+    const shiftKey = isShortcutUpperCase ? shiftSymbol : "";
 
     return html` <kbd class="shortcut-legend">${shiftKey}${shortcut}</kbd> `;
   }

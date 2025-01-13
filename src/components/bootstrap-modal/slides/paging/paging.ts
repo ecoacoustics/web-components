@@ -5,7 +5,7 @@ import { cursorSprite } from "../../sprites/cursor.sprite";
 import { progressBarSprite } from "../../sprites/progress-bar.sprite";
 
 export function pagingSlide(): BootstrapSlide {
-  const title = "You can navigate through pages using the arrow buttons";
+  const title = "You can navigate through pages of subjects";
 
   const slideTemplate = html`
     <div class="paging-slide slide">
