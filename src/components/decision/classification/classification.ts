@@ -2,7 +2,7 @@ import { customElement, property, query } from "lit/decorators.js";
 import { tagConverter } from "../../../helpers/attributes";
 import { required } from "../../../helpers/decorators";
 import { Classification } from "../../../models/decisions/classification";
-import { DecisionComponent } from "../decision";
+import { DecisionComponent, DecisionModels } from "../decision";
 import { Tag } from "../../../models/tag";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { html, nothing, TemplateResult, unsafeCSS } from "lit";
@@ -50,6 +50,12 @@ export class ClassificationComponent extends DecisionComponent {
 
   @query("#false-decision-button")
   private falseDecisionButton!: HTMLButtonElement;
+
+  public get decisionModels(): Partial<DecisionModels<Classification>> {
+    return this._decisionModels;
+  }
+
+  private _decisionModels: Partial<DecisionModels<Classification>> = {};
 
   protected get derivedTrueShortcut(): string | undefined {
     if (this.trueShortcut) {
@@ -148,6 +154,8 @@ export class ClassificationComponent extends DecisionComponent {
     const decisionModel = new Classification(decision, this.tag);
     const color = this.injector.colorService(decisionModel);
 
+    this.decisionModels[decision] = decisionModel;
+
     return html`
       <button
         id="${decision}-decision-button"
@@ -168,7 +176,7 @@ export class ClassificationComponent extends DecisionComponent {
   }
 
   public override render() {
-    const buttonOptions = [DecisionOptions.TRUE, DecisionOptions.FALSE];
+    const buttonOptions = [DecisionOptions.TRUE, DecisionOptions.FALSE] satisfies DecisionOptions[];
 
     // prettier-ignore
     return html`

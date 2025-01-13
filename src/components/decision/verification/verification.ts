@@ -1,7 +1,7 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
-import { DecisionComponent } from "../decision";
+import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
 import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
@@ -37,6 +37,12 @@ export class VerificationComponent extends DecisionComponent {
 
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
+
+  public override get decisionModels(): Partial<DecisionModels<Verification>> {
+    return this._decisionModels;
+  }
+
+  private _decisionModels: Partial<DecisionModels<Verification>> = {};
 
   public override shortcutKeys(): KeyboardShortcut[] {
     let description = `Decide ${this.verified}`;
@@ -89,6 +95,8 @@ export class VerificationComponent extends DecisionComponent {
     const decisionModels = this.generateDecisionModels();
     const verificationModel: Verification = decisionModels[0];
     const color = this.injector.colorService(verificationModel);
+
+    this._decisionModels[this.verified] = verificationModel;
 
     return html`
       <button

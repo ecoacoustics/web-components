@@ -4,7 +4,7 @@ import { booleanConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Decision } from "../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { VerificationGridComponent, VerificationGridInjector } from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
@@ -16,6 +16,13 @@ import decisionStyles from "./css/style.css?inline";
 
 interface DecisionContent {
   value: Decision[];
+}
+
+export interface DecisionModels<T extends Decision> {
+  [DecisionOptions.TRUE]: T;
+  [DecisionOptions.FALSE]: T;
+  [DecisionOptions.UNSURE]: T;
+  [DecisionOptions.SKIP]: T;
 }
 
 export type DecisionEvent = CustomEvent<DecisionContent>;
@@ -61,6 +68,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
 
   @state()
   public verificationGrid?: VerificationGridComponent;
+
+  public abstract get decisionModels(): Partial<DecisionModels<Decision>>;
 
   private shouldEmitNext = true;
   private keyboardHeldDown = false;

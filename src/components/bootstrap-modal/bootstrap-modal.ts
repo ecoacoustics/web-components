@@ -6,17 +6,18 @@ import { when } from "lit/directives/when.js";
 import { loop } from "../../helpers/directives";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { BootstrapSlide } from "./slides/bootstrapSlide";
-import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import { decisionsSlide } from "./slides/decisions/decisions";
 import { selectionSlide } from "./slides/selection/selection";
 import { pagingSlide } from "./slides/paging/paging";
 import { shortcutsSlide } from "./slides/shortcuts/shortcuts";
-import { ClassificationComponent } from "../decision/classification/classification";
 import { consume } from "@lit/context";
 import { VerificationGridInjector } from "verification-grid/verification-grid";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SlCarousel } from "@shoelace-style/shoelace";
+import { DecisionOptions } from "../../models/decisions/decision";
+import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
+import { CssVariable } from "../../helpers/types/advancedTypes";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -118,10 +119,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     return this.decisionElements[0];
   }
 
-  private get isClassificationDemo(): Readonly<boolean> {
-    return this.demoDecisionButton instanceof ClassificationComponent;
-  }
-
   public firstUpdated(): void {
     if (this.autoDismissPreference) {
       this.showTutorialDialog();
@@ -156,7 +153,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     // the tutorial will start from the beginning again.
     // If we did not reset the tutorial carousel back to the start, the tutorial
     // would start from the slide they close it on.
-    this.tutorialSlideCarouselElement.goToSlide(0);
+    this.tutorialSlideCarouselElement?.goToSlide(0);
   }
 
   public showAdvancedDialog(): void {
@@ -180,12 +177,24 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
     this.dispatchEvent(new CustomEvent("open"));
   }
 
-  private positiveDecisionColor(): Readonly<string> {
-    return this.isClassificationDemo ? "var(--class-0-true)" : "var(--verification-true)";
+  private positiveDecisionColor(): Readonly<CssVariable> {
+    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
+    if (!decisionModel) {
+      console.warn("Bootstrap could not determine positive decision color. Falling back to --verification-true");
+      return "--verification-true";
+    }
+
+    return this.injector.colorService(decisionModel);
   }
 
-  private negativeDecisionColor(): Readonly<string> {
-    return this.isClassificationDemo ? "var(--class-0-false)" : "var(--verification-false)";
+  private negativeDecisionColor(): Readonly<CssVariable> {
+    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
+    if (!decisionModel) {
+      console.warn("Bootstrap could not determine negative decision color. Falling back to --verification-false");
+      return "--verification-false";
+    }
+
+    return this.injector.colorService(decisionModel);
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
@@ -193,8 +202,8 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
       <div
         class="slide-content"
         style="
-          --positive-color: ${this.positiveDecisionColor()};
-          --negative-color: ${this.negativeDecisionColor()};
+          --positive-color: var(${this.positiveDecisionColor()});
+          --negative-color: var(${this.negativeDecisionColor()});
         "
       >
         <div class="slide-header">
