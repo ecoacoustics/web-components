@@ -14,7 +14,10 @@
     end-time="32"
   ></oe-annotation>
   <oe-annotation low-frequency="100" high-frequency="600" start-time="28.11" end-time="29.2" readonly>
-    <oe-tag>Koala</oe-tag>
+    <!-- New proposal -->
+    <oe-tag value="koala"></oe-tag>
+
+    <!-- Current -->
     <oe-tag>Kookaburra</oe-tag>
   </oe-annotation>
 </oe-annotate>

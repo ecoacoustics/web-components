@@ -8,7 +8,7 @@ class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-media-controls").first();
-  public actionButton = this.page.locator("oe-media-controls #action-button").first();
+  public actionButton = () => this.page.locator("oe-media-controls #action-button").first();
   public actionButtonSlot = () => this.page.locator("oe-media-controls #action-button > slot").first();
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
 
@@ -34,7 +34,7 @@ class TestPage {
   }
 
   public async toggleAudio() {
-    const actionButtonElement = this.actionButton;
+    const actionButtonElement = this.actionButton();
     await actionButtonElement.click({ force: true });
   }
 

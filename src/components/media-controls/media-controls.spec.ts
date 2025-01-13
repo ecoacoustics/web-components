@@ -18,13 +18,13 @@ test.describe("audio element communication", () => {
 
   test("state before interaction", async ({ fixture }) => {
     const isPlaying = await fixture.isPlayingAudio();
-    await expect(isPlaying).toBe(false);
+    expect(isPlaying).toBe(false);
   });
 
   test("play functionality", async ({ fixture }) => {
     await fixture.toggleAudio();
     const isPlaying = await fixture.isPlayingAudio();
-    await expect(isPlaying).toBe(true);
+    expect(isPlaying).toBe(true);
   });
 
   test("play pause functionality", async ({ fixture }) => {
@@ -35,7 +35,7 @@ test.describe("audio element communication", () => {
 
     const isPlaying = await fixture.isPlayingAudio();
 
-    await expect(isPlaying).toBe(false);
+    expect(isPlaying).toBe(false);
   });
 });
 
@@ -92,7 +92,7 @@ test.describe("css parts", () => {
 
   test("custom styling for the default play/pause icons via css parts", async ({ fixture }) => {
     const playButtonStyles = await fixture.actionButtonStyles();
-    await expect(playButtonStyles).toEqual({
+    expect(playButtonStyles).toEqual({
       color: "rgb(255, 0, 0)",
       backgroundColor: "rgb(0, 0, 255)",
     });
@@ -100,7 +100,7 @@ test.describe("css parts", () => {
     await fixture.toggleAudio();
 
     const pauseButtonStyles = await fixture.actionButtonStyles();
-    await expect(pauseButtonStyles).toEqual({
+    expect(pauseButtonStyles).toEqual({
       color: "rgb(0, 255, 0)",
       backgroundColor: "rgb(255, 255, 0)",
     });
@@ -108,7 +108,7 @@ test.describe("css parts", () => {
 
   test("custom styling for a custom play/pause slot via css parts", async ({ fixture }) => {
     const playButtonStyles = await fixture.actionButtonStyles();
-    await expect(playButtonStyles).toEqual({
+    expect(playButtonStyles).toEqual({
       color: "rgb(255, 0, 0)",
       backgroundColor: "rgb(0, 0, 255)",
     });
@@ -116,7 +116,7 @@ test.describe("css parts", () => {
     await fixture.toggleAudio();
 
     const pauseButtonStyles = await fixture.actionButtonStyles();
-    await expect(pauseButtonStyles).toEqual({
+    expect(pauseButtonStyles).toEqual({
       color: "rgb(0, 255, 0)",
       backgroundColor: "rgb(255, 255, 0)",
     });
