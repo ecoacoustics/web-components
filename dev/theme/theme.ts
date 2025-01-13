@@ -1,4 +1,4 @@
-import theming from "../..src/helpers/themes/theming.css?inline";
+import theming from "../../src/helpers/themes/theming.css?inline";
 import globalStyles from "../../src/helpers/themes/globalStyles.css?inline";
 
 export function appendStyles(content: string): void {
