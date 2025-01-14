@@ -14,7 +14,7 @@ export * from "./verification-grid/verification-grid";
 export * from "./verification-grid-tile/verification-grid-tile";
 export * from "./info-card/info-card";
 export * from "./data-source/data-source";
-export * from "./verification-grid/help-dialog";
+export * from "./bootstrap-modal/bootstrap-modal";
 export * from "./decision/decision";
 export * from "./decision/classification/classification";
 export * from "./decision/verification/verification";

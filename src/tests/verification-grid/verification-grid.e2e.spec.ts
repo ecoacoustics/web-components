@@ -26,14 +26,14 @@ import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
 
-test.describe("while the initial help dialog is open", () => {
+test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  test("should show an initial help dialog", async ({ fixture }) => {
-    const isHelpDialogOpen = await fixture.isHelpDialogOpen();
-    expect(isHelpDialogOpen).toBe(true);
+  test("should show an initial bootstrap dialog", async ({ fixture }) => {
+    const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+    expect(isBootstrapDialogOpen).toBe(true);
   });
 
   test("should not be able to sub-select grid tiles with keyboard shortcuts", async ({ fixture }) => {
@@ -49,11 +49,6 @@ test.describe("while the initial help dialog is open", () => {
     const verificationHead = await fixture.getVerificationHead();
     expect(verificationHead).toEqual(0);
   });
-
-  test("should have an option to not show the help dialog again", async ({ fixture }) => {
-    const element = fixture.helpDialogPreference();
-    await expect(element).toBeVisible();
-  });
 });
 
 test.describe("single verification grid", () => {
@@ -63,9 +58,9 @@ test.describe("single verification grid", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
     // because the user should not be able to start interacting with the
-    // verification grid while the help dialog is open, we need to dismiss it
+    // verification grid while the bootstrap dialog is open, we need to dismiss it
     // before we start asserting the functionality of the verification grid
-    await fixture.dismissHelpDialog();
+    await fixture.dismissBootstrapDialog();
   });
 
   test.describe("initial state", () => {
@@ -111,21 +106,36 @@ test.describe("single verification grid", () => {
     test("should not have any applied decisions", () => {});
   });
 
-  // unlike the initial help dialog, these tests assert that the help dialog
+  // unlike the initial bootstrap dialog, these tests assert that the bootstrap dialog
   // explicitly opened by the user (through the question mark button) behaves
   // correctly
-  test.describe("help dialog", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.openHelpDialog();
+  test.describe("bootstrap dialog", () => {
+    const advancedShortcutSlideTitle = "Keyboard shortcuts";
+
+    test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture, page }) => {
+      await changeToMobile(page);
+      await fixture.openBootstrapDialog();
+
+      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+      expect(isBootstrapDialogOpen).toBe(true);
+
+      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
+      expect(realizedSlideTitle).not.toBe(advancedShortcutSlideTitle);
     });
 
-    test("should open when the help button is clicked", async ({ fixture }) => {
-      const isHelpDialogOpen = await fixture.isHelpDialogOpen();
-      expect(isHelpDialogOpen).toBe(true);
-    });
+    // If the user is on a mobile device, there is no purpose in opening the
+    // advanced shortcuts bootstrap dialog because they cannot use the keyboard
+    // therefore, if the user clicks on the help button while on a mobile, we
+    // expect that the user is taken straight to the tutorial modal
+    test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture, page }) => {
+      await changeToDesktop(page);
+      await fixture.openBootstrapDialog();
 
-    test("should not have an option to now show the help dialog again", async ({ fixture }) => {
-      expect(fixture.helpDialogPreference()).toBeHidden();
+      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+      expect(isBootstrapDialogOpen).toBe(true);
+
+      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
+      expect(realizedSlideTitle).toBe(advancedShortcutSlideTitle);
     });
   });
 
@@ -818,7 +828,7 @@ test.describe("single verification grid", () => {
 
         test("should select tiles correctly after scrolling", async ({ fixture }) => {
           await fixture.createWithAppChrome();
-          await fixture.dismissHelpDialog();
+          await fixture.dismissBootstrapDialog();
 
           const scrollX: Pixel = 0;
           const scrollY: Pixel = 100;
@@ -1182,7 +1192,7 @@ test.describe("single verification grid", () => {
         test(`should have the correct grid shape`, async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create();
-          await fixture.dismissHelpDialog();
+          await fixture.dismissBootstrapDialog();
 
           const realizedGridShape = await fixture.getGridShape();
           expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
@@ -1193,7 +1203,7 @@ test.describe("single verification grid", () => {
         test("should have the correct grid shape with slot content", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create(testedSlotContent);
-          await fixture.dismissHelpDialog();
+          await fixture.dismissBootstrapDialog();
 
           const realizedGridShape = await fixture.getGridShape();
           expect(realizedGridShape).toEqual(testConfig.withSlotShape);
@@ -1202,7 +1212,7 @@ test.describe("single verification grid", () => {
         test("should look correct", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create();
-          await fixture.dismissHelpDialog();
+          await fixture.dismissBootstrapDialog();
 
           await fixture.onlyShowTileOutlines();
           await expect(fixture.page).toHaveScreenshot();
@@ -1211,7 +1221,7 @@ test.describe("single verification grid", () => {
         test("should look correct with slot content", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create(testedSlotContent);
-          await fixture.dismissHelpDialog();
+          await fixture.dismissBootstrapDialog();
 
           // to reduce the maintainability burden of this test, we only check
           // the grid container for visual correctness
@@ -1232,7 +1242,7 @@ test.describe("single verification grid", () => {
 test.describe("decisions", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.changeGridSize(3);
-    await fixture.dismissHelpDialog();
+    await fixture.dismissBootstrapDialog();
   });
 
   test("should be able to add a decisions to a sub-selection", async ({ fixture }) => {
@@ -1311,7 +1321,7 @@ test.describe("decision meter", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithClassificationTask();
       await fixture.changeGridSize(3);
-      await fixture.dismissHelpDialog();
+      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
@@ -1436,7 +1446,7 @@ test.describe("decision meter", () => {
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithVerificationTask();
-      await fixture.dismissHelpDialog();
+      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
@@ -1475,7 +1485,7 @@ test.describe("decision meter", () => {
         <oe-classification tag="cat">Cat</oe-classification>
 			`);
 
-      await fixture.dismissHelpDialog();
+      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
@@ -1591,7 +1601,7 @@ test.describe("verification grid with custom template", () => {
 test.describe("verification grid interaction with the host application", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.createWithAppChrome();
-    await fixture.dismissHelpDialog();
+    await fixture.dismissBootstrapDialog();
   });
 
   test("should not select all tiles when ctrl + A is pressed inside the input box", async ({ fixture }) => {

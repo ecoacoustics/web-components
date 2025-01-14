@@ -7,7 +7,7 @@
   "main": "./dist/components.js",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "build:components && build:docs",
+    "build": "pnpm build:components && pnpm build:docs",
     "dev:docs": "concurrently \"eleventy --config eleventy.config.js --watch --incremental\" \"pnpm start:docs\"",
     "start:docs": "vite ./dist/docs/ --config ./vite.config.ts",
     "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=eleventy.config.js",

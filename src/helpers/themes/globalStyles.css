@@ -30,6 +30,35 @@ sl-icon {
     font-size: calc(var(--oe-font-size) * 1.5);
     padding: 0;
   }
+
+  &.xl-icon {
+    font-size: calc(var(--oe-font-size) * 2.25);
+    padding: 0;
+  }
+
+  &.inline-icon {
+    display: inline-block;
+  }
+}
+
+/*
+  Swiping actions work on shoelace carousel elements, so the navigation buttons
+  on the side of carousel does not provide little functionality, but they take
+  up a lot of horizontal space (which is prime real-estate on mobile devices).
+  Therefore, I disable the navigation buttons on small width screens such as
+  mobile devices to conserve space, when alternative, more intuitive and compact
+  navigational actions can be used on these smaller devices.
+*/
+sl-carousel {
+  &::part(navigation-button) {
+    color: var(--oe-primary-color);
+  }
+
+  @media (max-width: 600px) {
+    &::part(navigation) {
+      display: none;
+    }
+  }
 }
 
 button:disabled,
@@ -100,14 +129,46 @@ hr {
 
 dialog {
   position: relative;
+
+  height: max-content;
+  width: max-content;
+
+  /*
+    We have a minimum width and height so that all dialogs are clearly not a
+    part of the main content.
+    By setting a minimum width and height of 50%, we ensure that the dialog will
+    always look raised against the main content.
+  */
+  min-width: 80%;
+  min-height: 80%;
+
+  /*
+    Similar to the minimum width and height, we set a maximum width and height
+    to ensure that there is always a clear distinction between the dialog and
+    the main content.
+    It should always be clearly visible that there is interactive content under
+    the dialog, and that you should dismiss the dialog to interact with the
+    main page content.
+
+    Sometimes (on really small screens), percentage of the screen width or
+    height does not leave enough space for the dialog to be clearly raised above
+    the main content.
+  */
+  width: fit-content;
+  height: fit-content;
+
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);
-  min-width: 70%;
-  max-width: 80%;
-  max-height: 100%;
   background-color: var(--oe-background-color);
   border-radius: var(--oe-border-rounding);
-  padding: 2rem;
+  padding: 0;
+
+  /*
+    If outline is not disabled, dialog elements will have an outline around them
+    when they are focused. This is not the behavior that we want, so we disable
+    it here.
+  */
+  outline: none;
 
   animation: fade-in 600ms forwards;
 
@@ -117,8 +178,10 @@ dialog {
 
   /* Styles applied to mobile devices */
   @media (max-width: 600px) {
-    max-width: 100%;
-    padding: 1rem;
+    position: fixed;
+    min-width: 100dvw;
+    min-height: 100dvh;
+    margin: 0;
   }
 }
 

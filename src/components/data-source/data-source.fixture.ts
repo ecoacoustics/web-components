@@ -13,7 +13,7 @@ class DataSourceFixture {
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
   public decisionButtons = () => this.page.locator(".decision-button").all();
   public gridTiles = () => this.page.locator(".tile-container").all();
-  public dismissHelpDialogButton = () => this.page.getByTestId("dismiss-help-dialog-btn").first();
+  public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
   public testJsonInput = "http://localhost:3000/test-items.json";
 
@@ -87,15 +87,15 @@ class DataSourceFixture {
     return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
   }
 
-  public async makeSubSelection(subSelectionIndicies: number[]): Promise<void> {
+  public async makeSubSelection(subSelectionIndices: number[]): Promise<void> {
     const gridTiles = await this.gridTiles();
-    for (const index of subSelectionIndicies) {
+    for (const index of subSelectionIndices) {
       await gridTiles[index].click({ force: true });
     }
   }
 
-  public async dismissHelpDialog(): Promise<void> {
-    await this.dismissHelpDialogButton().click();
+  public async dismissBootstrapDialog(): Promise<void> {
+    await this.dismissBootstrapDialogButton().click();
   }
 
   public async sendDecision(decisionIndex: number): Promise<void> {

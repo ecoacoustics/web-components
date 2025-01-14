@@ -1,0 +1,134 @@
+.decisions-slide {
+  --animation-duration: 8s;
+
+  --depress-top: 0.75px;
+  --depress-left: 0.75px;
+}
+
+/*
+  These keyframes are outside of the .decisions-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+@keyframes decisions-cursor-movement {
+  from {
+    transform: none;
+  }
+
+  /* move and hold on the true decision */
+  5%,
+  35% {
+    transform: translate(-18px, 0);
+  }
+
+  40%,
+  to {
+    transform: none;
+  }
+}
+
+@keyframes decisions-cursor-clicks {
+  from,
+  10% {
+    r: 0px;
+  }
+  15% {
+    r: 6px;
+  }
+  20% {
+    r: 0px;
+  }
+
+  49%,
+  50% {
+    r: 0px;
+  }
+  55% {
+    r: 6px;
+  }
+  60% {
+    r: 0px;
+  }
+}
+
+/*
+  The duration of the decision slides animation is half of the rest of the
+  animations.
+  This allows us to simplify the decision slide animations, as we only need two
+  keyframes.
+*/
+@keyframes decisions-slide-movement {
+  from,
+  25% {
+    transform: none;
+  }
+
+  45%,
+  70% {
+    transform: translate(calc(-100% - var(--oe-spacing)), 0);
+  }
+
+  90%,
+  to {
+    transform: translate(calc(-200% - var(--oe-spacing) * 2), 0);
+  }
+}
+
+@keyframes decisions-current-slide-decisions {
+  from,
+  9% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  10%,
+  40% {
+    --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes decisions-next-slide-decisions {
+  from,
+  49% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  50%,
+  to {
+    --decision-color: var(--negative-color);
+  }
+}
+
+@keyframes decisions-true-click {
+  from,
+  9% {
+    transform: translate(0, 0);
+  }
+
+  10%,
+  20% {
+    transform: translate(var(--depress-left), var(--depress-top));
+  }
+
+  21%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes decisions-false-click {
+  from,
+  49% {
+    transform: translate(0, 0);
+  }
+
+  50%,
+  60% {
+    transform: translate(var(--depress-left), var(--depress-top));
+  }
+
+  61%,
+  to {
+    transform: translate(0, 0);
+  }
+}

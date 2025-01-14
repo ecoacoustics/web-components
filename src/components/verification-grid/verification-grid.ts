@@ -8,7 +8,6 @@ import {
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
-import { VerificationHelpDialogComponent } from "./help-dialog";
 import { callbackConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
@@ -31,6 +30,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser";
+import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -166,8 +166,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
-  @query("oe-verification-help-dialog")
-  private helpDialog!: VerificationHelpDialogComponent;
+  @query("oe-verification-bootstrap")
+  private bootstrapDialog!: VerificationBootstrapComponent;
 
   @query("#grid-container")
   private gridContainer!: HTMLDivElement;
@@ -210,10 +210,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // if we receive a value that is larger than the subjects buffer, we emit
     // a warning so that we can catch it in dev, and use the subject arrays
     // length as a fallback to prevent hard-failing.
-    const avaliableSubjectsCount = this.subjects.length;
-    if (clampedHead > avaliableSubjectsCount) {
+    const availableSubjectsCount = this.subjects.length;
+    if (clampedHead > availableSubjectsCount) {
       console.warn("Attempted to set the viewHead to a value larger than the subjects array");
-      clampedHead = avaliableSubjectsCount;
+      clampedHead = availableSubjectsCount;
     }
 
     this.viewHeadIndex = clampedHead;
@@ -315,8 +315,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public isHelpDialogOpen(): boolean {
-    return this.helpDialog.open;
+  public isBootstrapDialogOpen(): boolean {
+    return this.bootstrapDialog.open;
   }
 
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
@@ -416,23 +416,17 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private handleTileInvalidation(): void {
-    // if the user doesn't explicitly define a "selection-behavior" attribute
-    // then we will infer the selection behavior based on the device type
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
+    const isMobile = this.isMobileDevice();
 
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
-    this.skipButton.selectionMode = selectionBehavior;
+    this.skipButton.isMobile = isMobile;
     for (const element of decisionElements) {
-      element.selectionMode = selectionBehavior;
+      element.isMobile = isMobile;
     }
 
-    this.helpDialog.selectionBehavior = selectionBehavior;
-    this.helpDialog.decisionElements = decisionElements;
+    this.bootstrapDialog.decisionElements = decisionElements;
 
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
@@ -537,6 +531,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   //#endregion
 
   //#region EventHandlers
+
   private handleKeyDown(event: KeyboardEvent): void {
     // most browsers scroll a page width when the user presses the space bar
     // however, since space bar can also be used to play spectrograms, we don't
@@ -602,7 +597,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "?": {
-        this.helpDialog.showModal(false);
+        this.handleHelpRequest();
         break;
       }
     }
@@ -645,12 +640,24 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     this.hideHighlightBox();
   }
 
-  private handleHelpDialogOpen(): void {
+  private handleHelpRequest(): void {
+    // if the user is on a mobile device, there is no use showing the advanced
+    // shortcuts because the user cannot use them
+    // therefore, if the user clicks the help button on a mobile device
+    // we take them directly to the onboarding modal
+    if (this.isMobileDevice()) {
+      this.bootstrapDialog.showTutorialDialog();
+    } else {
+      this.bootstrapDialog.showAdvancedDialog();
+    }
+  }
+
+  private handleBootstrapDialogOpen(): void {
     this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
   }
 
-  private handleHelpDialogClose(): void {
+  private handleBootstrapDialogClose(): void {
     this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
     this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
   }
@@ -802,10 +809,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   }
 
   private canSubSelect(): boolean {
-    // we check that the help dialog is not open so that the user doesn't
+    // we check that the bootstrap dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
     // when they can't actually see the grid items
-    return this.populatedTileCount > 1 && !this.isHelpDialogOpen();
+    return this.populatedTileCount > 1 && !this.isBootstrapDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -1029,8 +1036,8 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   private async handleDecision(event: DecisionEvent) {
     // if the dialog box is open, we don't want to catch events
     // because the user could accidentally create a decision by using the
-    // decision keyboard shortcuts while the help dialog is open
-    if (this.isHelpDialogOpen()) {
+    // decision keyboard shortcuts while the bootstrap dialog is open
+    if (this.isBootstrapDialogOpen()) {
       return;
     }
 
@@ -1342,12 +1349,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     return html`
-      <oe-verification-help-dialog
-        @open="${this.handleHelpDialogOpen}"
-        @close="${this.handleHelpDialogClose}"
-        verificationTasksCount="${this.hasVerificationTask() ? 1 : 0}"
-        classificationTasksCount="${this.requiredClassificationTags.length}"
-      ></oe-verification-help-dialog>
+      <oe-verification-bootstrap
+        @open="${this.handleBootstrapDialogOpen}"
+        @close="${this.handleBootstrapDialogClose}"
+        .hasVerificationTask="${this.hasVerificationTask()}"
+        .hasClassificationTask="${this.hasClassificationTask()}"
+        .isMobile="${this.isMobileDevice()}"
+      ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
@@ -1388,7 +1396,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
             <button
               data-testid="help-dialog-button"
-              @click="${() => this.helpDialog.showModal(false)}"
+              @click="${() => this.handleHelpRequest()}"
               class="oe-btn-info"
               rel="help"
             >

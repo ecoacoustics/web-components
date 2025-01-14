@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Empty Verification Grid</title>
+    <script type="module" src="/src/components/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid></oe-verification-grid>
+
+    <p>
+      This dev page tests a verification grid with no slotted content. This means that there are no decision buttons or
+      tile templates.
+    </p>
+
+    <p>
+      We should see that the verification grid is still functional, and that the skip button is still present, but there
+      should be warning and errors displayed on the page indicating to the user that their verification grid is set up
+      incorrectly.
+    </p>
+  </body>
+</html>

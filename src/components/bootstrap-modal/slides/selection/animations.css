@@ -1,0 +1,328 @@
+.selection-slide {
+  --animation-duration: 8s;
+}
+
+/*
+  These keyframes are outside of the .selection-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+
+  It is fine to use px units in these animations because the svg viewBox is set
+  meaning that the svg will dynamically scale to all screen resolutions.
+*/
+@keyframes selection-cursor-movement {
+  from {
+    transform: translate(-70px, -60px);
+  }
+
+  10%,
+  15% {
+    transform: translate(-40px, -80px);
+  }
+
+  /* Make first negative decision */
+  20%,
+  25% {
+    transform: translate(-20px, 60px);
+  }
+
+  30%,
+  35% {
+    transform: translate(60px, -80px);
+  }
+
+  /* Make second negative decision */
+  40%,
+  45% {
+    transform: translate(-20px, 60px);
+  }
+
+  50%,
+  55% {
+    transform: translate(-30px, -10px);
+  }
+
+  /* Make positive decision */
+  60%,
+  65% {
+    transform: translate(-40px, 60px);
+  }
+
+  70%,
+  75% {
+    transform: translate(-140px, -80px);
+  }
+
+  80%,
+  85% {
+    transform: translate(0px, 0px);
+  }
+
+  /* Make positive decision about highlight selected */
+  90%,
+  95% {
+    transform: translate(-40px, 60px);
+  }
+}
+
+@keyframes selection-cursor-clicks {
+  10% {
+    r: 0px;
+  }
+  12% {
+    r: 6px;
+  }
+  14% {
+    r: 0px;
+  }
+
+  20% {
+    r: 0px;
+  }
+  22% {
+    r: 6px;
+  }
+  24% {
+    r: 0px;
+  }
+
+  30% {
+    r: 0px;
+  }
+  32% {
+    r: 6px;
+  }
+  34% {
+    r: 0px;
+  }
+
+  40% {
+    r: 0px;
+  }
+  42% {
+    r: 6px;
+  }
+  44% {
+    r: 0px;
+  }
+
+  50% {
+    r: 0px;
+  }
+  52% {
+    r: 6px;
+  }
+  54% {
+    r: 0px;
+  }
+
+  60% {
+    r: 0px;
+  }
+  62% {
+    r: 6px;
+  }
+  64% {
+    r: 0px;
+  }
+
+  90% {
+    r: 0px;
+  }
+  92% {
+    r: 6px;
+  }
+  94% {
+    r: 0px;
+  }
+}
+
+@keyframes selection-highlight-box-animation {
+  from,
+  75% {
+    width: 0;
+    height: 0;
+  }
+
+  /*
+    Using px values here is okay because the s election highlight box is inside
+    an svg container, meaning that the svg viewBox will scale the svg to all
+    screen resolutions, including mobile devices.
+  */
+  80% {
+    width: 140px;
+    height: 80px;
+  }
+  80.001% {
+    width: 0;
+    height: 0;
+  }
+}
+
+/*
+    TODO: there might be a better way to do keyframe ranges here
+
+    I have created keyframe ranges using very close percentage values.
+    I don't think this is the best solution and can definately be improved.
+
+    e.g. from, 74% { ... } 75%, to { ... } means that there is no animation
+    between 0% and 74%, and then there is an almost instant animation to go from
+    state 74% to 75%.
+*/
+@keyframes selection-tile-0 {
+  from,
+  74% {
+    fill: var(--oe-panel-color);
+  }
+
+  75%,
+  to {
+    fill: var(--oe-selected-color);
+  }
+}
+
+@keyframes selection-tile-1 {
+  from,
+  9% {
+    fill: var(--oe-panel-color);
+  }
+
+  10%,
+  29% {
+    fill: var(--oe-selected-color);
+  }
+
+  30%,
+  76% {
+    fill: var(--oe-panel-color);
+  }
+  /* end of individual seletion */
+
+  77%,
+  to {
+    fill: var(--oe-selected-color);
+  }
+}
+
+@keyframes selection-tile-2 {
+  from,
+  29% {
+    fill: var(--oe-panel-color);
+  }
+
+  30%,
+  49% {
+    fill: var(--oe-selected-color);
+  }
+
+  50%,
+  to {
+    fill: var(--oe-panel-color);
+  }
+}
+
+@keyframes selection-tile-3 {
+  from,
+  76% {
+    fill: var(--oe-panel-color);
+  }
+
+  77%,
+  to {
+    fill: var(--oe-selected-color);
+  }
+}
+
+@keyframes selection-tile-4 {
+  from,
+  49% {
+    fill: var(--oe-panel-color);
+  }
+
+  50%,
+  74% {
+    fill: var(--oe-selected-color);
+  }
+
+  75%,
+  77% {
+    fill: var(--oe-panel-color);
+  }
+  /* end of individual seletion */
+
+  78%,
+  to {
+    fill: var(--oe-selected-color);
+  }
+}
+
+@keyframes selection-tile-0-decisions {
+  from,
+  89% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes selection-tile-1-decisions {
+  from,
+  19% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  20%,
+  89% {
+    --decision-color: var(--negative-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes selection-tile-2-decisions {
+  from,
+  39% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  40%,
+  to {
+    --decision-color: var(--negative-color);
+  }
+}
+
+@keyframes selection-tile-3-decisions {
+  from,
+  89% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes selection-tile-4-decisions {
+  from,
+  59% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  60%,
+  89% {
+    --decision-color: var(--positive-color);
+  }
+
+  90%,
+  to {
+    --decision-color: var(--positive-color);
+  }
+}

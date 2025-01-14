@@ -1,0 +1,48 @@
+@import url("./animations.css");
+
+.paging-slide {
+  .cursor {
+    animation: paging-cursor-movement var(--animation-duration) infinite;
+  }
+
+  .click-animation {
+    animation: paging-cursor-clicks var(--animation-duration) infinite;
+  }
+
+  .pages {
+    animation: paging-slide-movement var(--animation-duration) infinite;
+
+    .previous-page {
+      /*
+        I have added a decision color to the previous page of results so that the
+        two different pages can clearly be distinguished when pressing the "next"
+        and "previous" buttons.
+      */
+      --decision-color: var(--positive-color);
+
+      animation: paging-slide-decisions-current var(--animation-duration) infinite;
+      transform: translate(-100%, 0);
+    }
+  }
+
+  .progress-bar {
+    /*
+      The animation played on the progress bar demonstrates moving the view
+      head backwards and forwards using the pagination buttons.
+      This means that throughout the duration of the animation, the verification
+      head will not change.
+    */
+    --verification-head: 50%;
+
+    animation: progress-bar-button-depression var(--animation-duration) infinite;
+
+    .view-head-segment {
+      width: var(--verification-head);
+      animation: progress-bar-view-head-movement var(--animation-duration) infinite;
+    }
+
+    .verification-head-segment {
+      width: var(--verification-head);
+    }
+  }
+}

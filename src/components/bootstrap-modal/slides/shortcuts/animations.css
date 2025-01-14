@@ -1,0 +1,209 @@
+/*
+  These keyframes are outside of the .shortcut-slide class because keyframes
+  cannot be lexically scoped to a class.
+  To subvert this limitation, I have prefixed the keyframes with the name of
+  the slide they are intended for.
+*/
+.shortcut-slide {
+  --animation-duration: 8s;
+}
+
+@keyframes shortcut-cursor-clicks {
+  20% {
+    r: 0px;
+  }
+  22% {
+    r: 6px;
+  }
+  24% {
+    r: 0px;
+  }
+
+  50% {
+    r: 0px;
+  }
+  52% {
+    r: 6px;
+  }
+  54% {
+    r: 0px;
+  }
+}
+
+/* selection animations */
+
+@keyframes shortcut-tile-0-selection-animation {
+  from,
+  9% {
+    fill: var(--oe-panel-color);
+  }
+
+  /* ctrl + A selection */
+  10%,
+  39% {
+    fill: var(--oe-selected-color);
+  }
+
+  /* Esc de-selection */
+  40%,
+  to {
+    fill: var(--oe-panel-color);
+  }
+}
+
+@keyframes shortcut-tile-1-selection-animation {
+  from,
+  9% {
+    fill: var(--oe-panel-color);
+  }
+
+  /* ctrl + A selection */
+  10%,
+  19% {
+    fill: var(--oe-selected-color);
+  }
+
+  /* Showing that you can toggle a single tile using ctrl */
+  20%,
+  49% {
+    fill: var(--oe-panel-color);
+  }
+
+  50%,
+  69% {
+    fill: var(--oe-selected-color);
+  }
+
+  70%,
+  to {
+    fill: var(--oe-panel-color);
+  }
+}
+/* decision animations */
+
+@keyframes shortcut-tile-0-decision-animation {
+  from,
+  29% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  30%,
+  to {
+    --decision-color: var(--positive-color);
+  }
+}
+
+@keyframes shortcut-tile-1-decision-animation {
+  from,
+  59% {
+    --decision-color: var(--oe-panel-color);
+  }
+
+  60%,
+  to {
+    --decision-color: var(--negative-color);
+  }
+}
+
+@keyframes select-all-animation {
+  from,
+  9% {
+    transform: translate(0, 0);
+  }
+
+  11%,
+  13% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  14%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes ctrl-click-animation {
+  from,
+  19% {
+    transform: translate(0, 0);
+  }
+
+  20%,
+  24% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  25%,
+  49% {
+    transform: translate(0, 0);
+  }
+  50%,
+  54% {
+    transform: translate(0.13em, 0.13em);
+  }
+  55%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes positive-decision-animation {
+  from,
+  28% {
+    transform: translate(0, 0);
+  }
+
+  29%,
+  31% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  32%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes deselect-all-animation {
+  from,
+  39% {
+    transform: translate(0, 0);
+  }
+
+  40%,
+  42% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  43%,
+  69% {
+    transform: translate(0, 0);
+  }
+
+  70%,
+  72% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  73%,
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes negative-decision-animation {
+  from,
+  58% {
+    transform: translate(0, 0);
+  }
+
+  59%,
+  61% {
+    transform: translate(0.13em, 0.13em);
+  }
+
+  62%,
+  to {
+    transform: translate(0, 0);
+  }
+}

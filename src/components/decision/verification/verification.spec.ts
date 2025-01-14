@@ -1,4 +1,4 @@
-import { expect } from "@sand4rt/experimental-ct-web";
+import { expect } from "../../../tests/assertions";
 import { verificationFixture as test } from "./verification.fixture";
 import { getCssBackgroundColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
@@ -8,19 +8,9 @@ test.describe("Verification Component", () => {
     await fixture.create();
   });
 
-  test("should display a shortcut tooltip on hover", async ({ fixture }) => {
-    const decisionButton = fixture.decisionButton();
-    await decisionButton.hover();
-    const tooltip = await decisionButton.getAttribute("title");
-    expect(tooltip).toBeTruthy();
-  });
-
   test("should display a keyboard shortcut when provided", async ({ fixture }) => {
-    const keyboardShortcut = "a";
-    await fixture.changeShortcut(keyboardShortcut);
-
-    const realizedKeyboardShortcut = await fixture.shortcutText();
-    expect(realizedKeyboardShortcut).toEqual(keyboardShortcut);
+    await fixture.changeShortcut("a");
+    await expect(fixture.shortcutLegend()).toHaveTrimmedText("A");
   });
 
   test("should display both additional tags and a keyboard shortcut when provided", async ({ fixture }) => {
@@ -32,10 +22,9 @@ test.describe("Verification Component", () => {
     await fixture.changeShortcut(keyboardShortcut);
 
     const realizedAdditionalTags = await fixture.additionalTagsText();
-    const realizedKeyboardShortcut = await fixture.shortcutText();
 
     expect(realizedAdditionalTags).toEqual(expectedAdditionalTagsText);
-    expect(realizedKeyboardShortcut).toEqual(keyboardShortcut);
+    await expect(fixture.shortcutLegend()).toHaveTrimmedText("A");
   });
 
   test("should have a spare space for additional tags even if not provided", async ({ fixture }) => {
@@ -44,23 +33,19 @@ test.describe("Verification Component", () => {
   });
 
   test("should have a spare space for a keyboard shortcut if none is provided", async ({ fixture }) => {
-    const realizedKeyboardShortcut = await fixture.shortcutText();
-    expect(realizedKeyboardShortcut).toEqual("");
+    await expect(fixture.shortcutLegend()).toHaveTrimmedText("");
   });
 
   test("should show keyboard shortcuts when in explicit desktop selection mode", async ({ fixture }) => {
-    const testedKeyboardShortcut = "k";
-    await fixture.changeShortcut(testedKeyboardShortcut);
-    await fixture.changeSelectionMode("desktop");
-
-    const realizedKeyboardShortcut = await fixture.shortcutText();
-    expect(realizedKeyboardShortcut).toBe(testedKeyboardShortcut);
+    await fixture.changeShortcut("k");
+    await fixture.changeIsMobile(false);
+    await expect(fixture.shortcutLegend()).toHaveTrimmedText("K");
   });
 
   test("should not show keyboard shortcuts when in tablet selection mode", async ({ fixture }) => {
     const testedKeyboardShortcut = "k";
     await fixture.changeShortcut(testedKeyboardShortcut);
-    await fixture.changeSelectionMode("tablet");
+    await fixture.changeIsMobile(true);
 
     const isShortcutVisible = await fixture.isShortcutLegendVisible();
     expect(isShortcutVisible).toBe(false);

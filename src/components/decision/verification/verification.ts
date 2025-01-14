@@ -1,13 +1,13 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
-import { DecisionComponent } from "../decision";
+import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
 import { html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
-import { KeyboardShortcut } from "verification-grid/help-dialog";
+import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
 
 /**
@@ -38,14 +38,20 @@ export class VerificationComponent extends DecisionComponent {
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
+  public override get decisionModels(): Partial<DecisionModels<Verification>> {
+    return this._decisionModels;
+  }
+
+  private _decisionModels: Partial<DecisionModels<Verification>> = {};
+
   public override shortcutKeys(): KeyboardShortcut[] {
-    let description = `Apply a ${this.verified} verification`;
+    let description = `Decide ${this.verified}`;
     if (this.additionalTags.length) {
       const additionalTagText = this.additionalTags.map((tag) => tag.text).join(", ");
       description += ` and also these tags: ${additionalTagText}`;
     }
 
-    return [{ key: this.shortcut, description }];
+    return [{ keys: [this.shortcut], description }];
   }
 
   protected override handleShortcutKey(event: KeyboardEvent): void {
@@ -90,12 +96,13 @@ export class VerificationComponent extends DecisionComponent {
     const verificationModel: Verification = decisionModels[0];
     const color = this.injector.colorService(verificationModel);
 
+    this._decisionModels[this.verified] = verificationModel;
+
     return html`
       <button
         id="decision-button"
         class="oe-btn-primary decision-button ${buttonClasses}"
         part="decision-button"
-        title="Shortcut: ${this.shortcut}"
         style="--ripple-color: var(${color})"
         aria-disabled="${this.disabled}"
         @click="${() => this.handleDecision()}"
@@ -109,7 +116,9 @@ export class VerificationComponent extends DecisionComponent {
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
         <div>
-          ${this.selectionMode !== "tablet" ? html`<kbd class="shortcut-legend">${this.shortcut}</kbd>` : nothing}
+          ${!this.isMobile
+            ? html`<span class="shortcut-legend">${keyboardShortcutTemplate({ keys: [this.shortcut] })}</span>`
+            : nothing}
         </div>
       </button>
     `;

@@ -70,6 +70,7 @@
       "pageerror",
       "spacebar",
       "appender",
+      "whipbird",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
@@ -109,7 +110,11 @@
       "pushqrdx.inline-html",
       "hediet.vscode-drawio",
       "htmlhint.vscode-htmlhint",
+      "stylelint.vscode-stylelint",
       "firefox-devtools.vscode-firefox-debug",
+
+      // extensions used to create svgs
+      "jock.svg",
 
       // toml is used for netlify configs
       "tamasfe.even-better-toml",

@@ -7,7 +7,6 @@ import {
   waitForContentReady,
 } from "../../../tests/helpers";
 import { VerificationComponent } from "./verification";
-import { SelectionObserverType } from "../../verification-grid/verification-grid";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
 import { test } from "../../../tests/assertions";
@@ -53,10 +52,6 @@ class VerificationComponentFixture {
     return await this.additionalTagsLegend().textContent();
   }
 
-  public async shortcutText(): Promise<string | null> {
-    return await this.shortcutLegend().textContent();
-  }
-
   public async isShortcutLegendVisible(): Promise<boolean> {
     return (await this.shortcutLegend().count()) > 0;
   }
@@ -76,8 +71,8 @@ class VerificationComponentFixture {
     );
   }
 
-  public async changeSelectionMode(tabletSelection: SelectionObserverType) {
-    await setBrowserValue<VerificationComponent>(this.component(), "selectionMode", tabletSelection);
+  public async changeIsMobile(tabletSelection: boolean) {
+    await setBrowserValue<VerificationComponent>(this.component(), "isMobile", tabletSelection);
   }
 
   public async changeVerified(verified: DecisionOptions) {

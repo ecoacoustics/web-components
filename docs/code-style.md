@@ -56,7 +56,7 @@ and [code-workspace](/webcomponents.code-workspace).
       e.g. `@query("#selector") private element!: Readonly<Element>`
 6. Prefer to use internal state
 7. All methods on a web component that returns a HTML, or SVG template must be
-   prepended with "Template"(e.g. `private decisionPromptTemplate(): TemplateResult<1>`)
+   prepended with "Template" (e.g. `private decisionPromptTemplate(): TemplateResult`)
 
 ## CSS Parts
 
@@ -74,6 +74,15 @@ following format:
 
 This ensure that the user can change the default styles of css part targeted
 elements.
+
+## CSS Animations
+
+Because `@keyframe` declarations cannot be lexically scoped in CSS, you should
+**always** prefix keyframe identifiers with their scoping.
+
+Example: For an animation that targets a grid tile element, the scoping prefix
+"`grid-tile`" could be used in a keyframe declaration such as
+`@keyframe grid-tile-selection-animation`.
 
 ## JsDoc
 
