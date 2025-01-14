@@ -100,3 +100,9 @@ test.describe("without annotations", () => {
     expect(spectrogramSize).toEqual(componentSize);
   });
 });
+
+test.describe("overflowing annotations", () => {
+  test.describe("label positioning", () => {});
+
+  test.describe("bounding box positioning", () => {});
+});
