@@ -1,5 +1,10 @@
 import { html } from "lit";
-import { KeyboardShortcut, keyboardShortcutTemplate, shiftSymbol } from "../../../../templates/keyboardShortcut";
+import {
+  KeyboardShortcut,
+  keyboardShortcutTemplate,
+  mouseClick,
+  shiftSymbol,
+} from "../../../../templates/keyboardShortcut";
 import { BootstrapSlide } from "../bootstrapSlide";
 
 export function advancedShortcutsSlide(): BootstrapSlide {
@@ -11,9 +16,9 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["f11"], description: "Fullscreen" },
     { keys: ["Ctrl", "a"], description: "Select all" },
     { keys: ["Esc"], description: "Deselect all" },
-    { keys: ["Ctrl"], description: "Toggle selection", hasMouse: true },
-    { keys: [shiftSymbol], description: "Exclusive range selection", hasMouse: true },
-    { keys: ["Ctrl", shiftSymbol], description: "Additive range selection", hasMouse: true },
+    { keys: ["Ctrl", mouseClick], description: "Toggle selection" },
+    { keys: [shiftSymbol, mouseClick], description: "Exclusive range selection" },
+    { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Additive range selection" },
   ] satisfies KeyboardShortcut[];
 
   const slideTemplate = html`

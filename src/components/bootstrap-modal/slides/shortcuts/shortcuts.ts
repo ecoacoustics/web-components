@@ -3,7 +3,7 @@ import { map } from "lit/directives/map.js";
 import { BootstrapSlide } from "../bootstrapSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
 import { cursorSprite } from "../../sprites/cursor.sprite";
-import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../../templates/keyboardShortcut";
+import { KeyboardShortcut, keyboardShortcutTemplate, mouseClick } from "../../../../templates/keyboardShortcut";
 
 export function shortcutsSlide(
   decisionShortcuts: ReadonlyArray<KeyboardShortcut>,
@@ -47,7 +47,7 @@ function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): Te
   // 7. Deselect all tiles (to reset the animation)
   const displayedShortcuts = [
     { keys: ["Ctrl", "a"], description: "Select all" },
-    { keys: ["Ctrl"], hasMouse: true, description: "Toggle selection" },
+    { keys: ["Ctrl", mouseClick], description: "Toggle selection" },
     positiveShortcut,
     { keys: ["Esc"], description: "Deselect all" },
     negativeShortcut,

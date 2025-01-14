@@ -2,12 +2,11 @@ import { html, HTMLTemplateResult } from "lit";
 import { when } from "lit/directives/when.js";
 import { loop } from "../helpers/directives";
 
-export type KeyboardShortcutKey = string | typeof shiftSymbol;
+export type KeyboardShortcutKey = string | typeof shiftSymbol | typeof mouseClick;
 
 export interface KeyboardShortcut {
   keys: KeyboardShortcutKey[];
   description?: string;
-  hasMouse?: boolean;
 }
 
 export enum ShiftSymbolVariant {
@@ -17,6 +16,7 @@ export enum ShiftSymbolVariant {
 }
 
 export const shiftSymbol = Symbol("shift");
+export const mouseClick = Symbol("mouseClick");
 
 /**
  * @description
@@ -28,38 +28,34 @@ export function keyboardShortcutTemplate(
   shiftSymbolVariant: ShiftSymbolVariant = ShiftSymbolVariant.long,
 ): HTMLTemplateResult {
   const shortShiftCharacter = "⇧";
-  let skipNext = false;
+
+  const normalized = new Array<string | typeof mouseClick>();
+  for (let i = 0; i < shortcut.keys.length; i++) {
+    const key = shortcut.keys[i];
+    if (key === shiftSymbol) {
+      if (shiftSymbolVariant === ShiftSymbolVariant.inline) {
+        const nextKey = i < shortcut.keys.length ? shortcut.keys[i + 1].toString() : "";
+        normalized.push(shortShiftCharacter + nextKey);
+        i++;
+      } else if (shiftSymbolVariant === ShiftSymbolVariant.short) {
+        normalized.push(shortShiftCharacter);
+      } else if (shiftSymbolVariant === ShiftSymbolVariant.long) {
+        normalized.push("Shift");
+      }
+    } else {
+      normalized.push(key);
+    }
+  }
 
   return html`
-    ${loop(shortcut.keys, (key, { last, index }) => {
-      if (skipNext) {
-        return;
-      }
-
-      if (key === shiftSymbol) {
-        switch (shiftSymbolVariant) {
-          case ShiftSymbolVariant.inline: {
-            skipNext = true;
-            if (last) {
-              return html`<kbd>${shortShiftCharacter}</kbd>`;
-            }
-
-            const nextKey = shortcut.keys[index + 1];
-            return html`<kbd>${shortShiftCharacter}${nextKey}</kbd>`;
-          }
-
-          case ShiftSymbolVariant.short: {
-            return html`<kbd>${shortShiftCharacter}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`;
-          }
-
-          case ShiftSymbolVariant.long: {
-            return html`<kbd>Shift</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`;
-          }
-        }
-      }
-
-      return html`<kbd>${key.toLocaleUpperCase()}</kbd> ${when(!last || shortcut.hasMouse, () => "+")}`;
-    })}
-    ${when(shortcut.hasMouse, () => html`<sl-icon name="mouse" class="inline-icon xl-icon"></sl-icon>`)}
+    ${loop(
+      normalized,
+      (key, { last }) => html`
+        ${key === mouseClick
+          ? html`<sl-icon name="mouse" class="inline-icon xl-icon"></sl-icon>`
+          : html`<kbd>${key.toLocaleUpperCase()}</kbd>`}
+        ${when(!last, () => "+")}
+      `,
+    )}
   `;
 }
