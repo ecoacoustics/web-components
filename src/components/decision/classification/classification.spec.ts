@@ -10,53 +10,51 @@ test.describe("Classification Component", () => {
   test("should display the correct shortcuts if both true and false shortcuts are provided", async ({ fixture }) => {
     const trueShortcut = "a";
     const falseShortcut = "b";
-    const testedShortcuts = [trueShortcut, falseShortcut];
 
     await fixture.changeTrueShortcut(trueShortcut);
     await fixture.changeFalseShortcut(falseShortcut);
 
     const realizedShortcuts = await fixture.getShortcutLegends();
-    expect(realizedShortcuts).toEqual(testedShortcuts);
+
+    // we expect that the shortcut keys are displayed in uppercase
+    expect(realizedShortcuts).toEqual(["A", "B"]);
   });
 
   test("should derive a false shortcut if only a true shortcut is provided", async ({ fixture }) => {
     const trueShortcut = "a";
-    const expectedFalseShortcut = `⇧A`;
 
     await fixture.changeTrueShortcut(trueShortcut);
 
     const realizedShortcuts = await fixture.getShortcutLegends();
-    expect(realizedShortcuts).toEqual([trueShortcut, expectedFalseShortcut]);
+    expect(realizedShortcuts).toEqual(["A", "⇧A"]);
   });
 
   test("should derive a true shortcut if only a false shortcut is provided", async ({ fixture }) => {
     const falseShortcut = "J";
-    const expectedTrueShortcut = "j";
+    const expectedDisplayedShortcuts = ["J", "⇧J"];
 
     await fixture.changeFalseShortcut(falseShortcut);
 
     const realizedShortcuts = await fixture.getShortcutLegends();
-    expect(realizedShortcuts).toEqual([expectedTrueShortcut, "⇧J"]);
+    expect(realizedShortcuts).toEqual(expectedDisplayedShortcuts);
   });
 
   test("should use a lowercase letter for false if the true shortcut is uppercase", async ({ fixture }) => {
     const trueShortcut = "A";
-    const expectedFalseShortcut = "a";
 
     await fixture.changeTrueShortcut(trueShortcut);
 
     const realizedShortcuts = await fixture.getShortcutLegends();
-    expect(realizedShortcuts).toEqual(["⇧A", expectedFalseShortcut]);
+    expect(realizedShortcuts).toEqual(["⇧A", "A"]);
   });
 
   test("should use an uppercase letter for true if the false shortcut is lowercase", async ({ fixture }) => {
     const falseShortcut = "j";
-    const expectedTrueShortcut = `⇧J`;
 
     await fixture.changeFalseShortcut(falseShortcut);
 
     const realizedShortcuts = await fixture.getShortcutLegends();
-    expect(realizedShortcuts).toEqual([expectedTrueShortcut, falseShortcut]);
+    expect(realizedShortcuts).toEqual(["⇧J", "J"]);
   });
 
   test("should not have any shortcuts if none are provided", async ({ fixture }) => {

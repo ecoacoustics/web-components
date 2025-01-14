@@ -8,7 +8,7 @@ class ClassificationComponentFixture {
   constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-classification").first();
-  public shortcutLegends = () => this.page.locator(".shortcut-legend").all();
+  public shortcutLegends = () => this.page.locator("kbd").all();
   public decisionOptions = () => this.page.locator(".button-text").all();
   public colorPills = () => this.page.locator(".decision-color-pill").all();
   public decisionTitle = () => this.page.locator(".decision-group-title").first();

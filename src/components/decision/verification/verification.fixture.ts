@@ -52,10 +52,6 @@ class VerificationComponentFixture {
     return await this.additionalTagsLegend().textContent();
   }
 
-  public async shortcutText(): Promise<string | null> {
-    return await this.shortcutLegend().textContent();
-  }
-
   public async isShortcutLegendVisible(): Promise<boolean> {
     return (await this.shortcutLegend().count()) > 0;
   }
