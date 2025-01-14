@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.3.0...web-components-v1.4.0) (2025-01-14)
+
+
+### Features
+
+* Add animations to show verification grid usage ([#265](https://github.com/ecoacoustics/web-components/issues/265)) ([c7ce400](https://github.com/ecoacoustics/web-components/commit/c7ce400e0041094928c0162d4adde870c946e6f5)), closes [#107](https://github.com/ecoacoustics/web-components/issues/107) [#108](https://github.com/ecoacoustics/web-components/issues/108)
+
 ## [1.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.2.6...web-components-v1.3.0) (2024-11-29)
 
 
