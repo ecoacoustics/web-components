@@ -258,7 +258,6 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
   }
 
   public render(): HTMLTemplateResult {
-    console.debug("re-rendering", this.hasVerificationTask, this.hasClassificationTask);
     return html`
       <dialog id="dialog-element" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">

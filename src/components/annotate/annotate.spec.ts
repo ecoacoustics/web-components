@@ -82,6 +82,14 @@ test.describe("with annotations", () => {
         await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
       });
     });
+
+    test.describe("slotted tag content", () => {
+      test("should reflect slotted tag content correctly in hidden style", () => {});
+
+      test("should reflect slotted tag content correctly in edge style", () => {});
+
+      test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
+    });
   });
 });
 
@@ -105,4 +113,10 @@ test.describe("overflowing annotations", () => {
   test.describe("label positioning", () => {});
 
   test.describe("bounding box positioning", () => {});
+});
+
+test.describe("overlapping annotations", () => {
+  test.describe("overlapping labels", () => {});
+
+  test.describe("bounding boxes", () => {});
 });

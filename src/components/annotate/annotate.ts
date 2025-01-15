@@ -6,13 +6,14 @@ import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../.
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { Size } from "../../models/rendering";
-import { AnnotationComponent } from "annotation/annotation";
+import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
 import { Tag } from "../../models/tag";
 import { computed, watch } from "@lit-labs/preact-signals";
 import annotateStyles from "./css/style.css?inline";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -71,9 +72,16 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency) - textHeight);
     const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value - textHeight);
 
+    let headingTemplate = html``;
+    if (model.reference instanceof AnnotationComponent && model.reference.tagComponents) {
+      headingTemplate = html`${map(model.reference.tagComponents, (element) => unsafeHTML(element.innerHTML))}`;
+    } else {
+      headingTemplate = html`${annotationTags.join(", ")}`;
+    }
+
     return html`
       <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">
-        <h2 class="bounding-box-heading">${annotationTags.join(", ")}</h2>
+        <h2 class="bounding-box-heading">${headingTemplate}</h2>
         <div class="bounding-box" style="width: ${watch(width)}px; height: ${watch(height)}px;"></div>
       </aside>
     `;

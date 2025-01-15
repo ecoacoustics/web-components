@@ -32,7 +32,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   public tags: Tag[] = [];
 
   @queryAllDeeplyAssignedElements({ selector: "oe-tag" })
-  private tagComponents?: TagComponent[];
+  public readonly tagComponents?: ReadonlyArray<TagComponent>;
 
   public get tagModels(): Tag[] {
     const attributeTags = this.tags;
