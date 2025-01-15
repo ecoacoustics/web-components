@@ -3,6 +3,10 @@ import { test } from "../../tests/assertions";
 test.describe("model parsing", () => {
   test("should throw an error if no bounding attributes are present", () => {});
 
+  test("should throw an error if an attribute is not a number", () => {});
+
+  test("should issue a warning if all attributes are empty", () => {});
+
   test("should throw an error if only one attribute is missing", () => {});
 
   test("should not throw an error only tags are missing", () => {});

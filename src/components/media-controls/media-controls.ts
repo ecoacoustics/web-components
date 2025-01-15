@@ -13,6 +13,7 @@ import { IRootContext, rootContext } from "../../helpers/constants/contextTokens
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
+ * @description
  * Specifies where you should be able to find a preference setting in the media
  * controls that can change the spectrogram settings.
  *

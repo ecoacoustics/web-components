@@ -56,6 +56,7 @@
     max(calc(var(--oe-theme-lightness) + 43%), 96%)
   );
   --oe-annotation-color: green;
+  --oe-annotation-font-color: white;
 
   --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
   --oe-panel-color-lighter: color-mix(in srgb, var(--oe-panel-color) 1%, var(--oe-background-color));

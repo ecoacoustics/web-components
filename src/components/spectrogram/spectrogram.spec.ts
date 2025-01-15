@@ -1,7 +1,7 @@
 import { invokeBrowserMethod } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
-import { expect, test } from "../../tests/assertions";
-import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
+import { expect } from "../../tests/assertions";
+import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { sleep } from "../../helpers/utilities";
 
 test.describe("unit tests", () => {
@@ -89,12 +89,12 @@ test.describe("unit tests", () => {
   });
 });
 
-fixture.describe("spectrogram", () => {
-  fixture.beforeEach(async ({ fixture }) => {
+test.describe("spectrogram", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  fixture("play and pausing audio with source slot", async ({ fixture }) => {
+  test("play and pausing audio with source slot", async ({ fixture }) => {
     const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
     await fixture.updateSlot(slot);
 
@@ -105,7 +105,7 @@ fixture.describe("spectrogram", () => {
     expect(await fixture.isPlayingAudio()).toBe(false);
   });
 
-  fixture("playing and pausing audio with src attribute", async ({ fixture }) => {
+  test("playing and pausing audio with src attribute", async ({ fixture }) => {
     await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
     expect(await fixture.isPlayingAudio()).toBe(true);
 

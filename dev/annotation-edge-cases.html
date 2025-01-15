@@ -15,6 +15,14 @@
         </oe-spectrogram>
 
         <oe-annotation
+          tags="empty-attributes"
+          start-time=""
+          end-time=""
+          low-frequency=""
+          high-frequency=""
+        ></oe-annotation>
+
+        <oe-annotation
           tags="high-freq-overflow"
           start-time="1"
           end-time="2"
@@ -86,11 +94,19 @@
         ></oe-annotation>
 
         <oe-annotation
-          tags="totally-offscreen"
-          start-time="7"
+          tags="fully-offscreen"
+          start-time="8"
           end-time="9"
           low-frequency="8000"
           high-frequency="9900"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="fully-offscreen-single-axis"
+          start-time="3"
+          end-time="3.4"
+          low-frequency="-4000"
+          high-frequency="-2000"
         ></oe-annotation>
 
         <!--
@@ -103,6 +119,19 @@
           end-time="1.5"
           low-frequency="-100"
           high-frequency="0"
+        ></oe-annotation>
+
+        <!--
+          This edge case is interesting because the label is going off the top
+          of the view box which means that the label heading should probably be
+          attached to the bottom of the bounding box instead.
+         -->
+        <oe-annotation
+          tags="offscreen-label"
+          start-time="2.3"
+          end-time="2.5"
+          low-frequency="10000"
+          high-frequency="11025"
         ></oe-annotation>
 
         <oe-annotation
