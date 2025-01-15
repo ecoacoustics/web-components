@@ -8,102 +8,128 @@
   </head>
 
   <body>
-    <oe-annotate>
-      <oe-spectrogram id="spectrogram" src="/example.flac">
-        <source src="/example.flac" />
-      </oe-spectrogram>
+    <oe-axes>
+      <oe-annotate>
+        <oe-spectrogram id="spectrogram" src="/example.flac">
+          <source src="/example.flac" />
+        </oe-spectrogram>
 
-      <oe-annotation
-        tags="high-freq-overflow"
-        start-time="0.4"
-        end-time="4.99"
-        low-frequency="2500"
-        high-frequency="3500"
-      ></oe-annotation>
+        <oe-annotation
+          tags="high-freq-overflow"
+          start-time="1"
+          end-time="2"
+          low-frequency="21050"
+          high-frequency="23050"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="low-freq-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="low-freq-overflow"
+          start-time="2"
+          end-time="1"
+          low-frequency="-1000"
+          high-frequency="1000"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="start-time-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="start-time-overflow"
+          start-time="-2"
+          end-time="0.5"
+          low-frequency="8000"
+          high-frequency="9900"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="end-time-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="end-time-overflow"
+          start-time="4.5"
+          end-time="7"
+          low-frequency="8000"
+          high-frequency="9900"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="time-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="time-overflow"
+          start-time="-2"
+          end-time="7"
+          low-frequency="2000"
+          high-frequency="4000"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="frequency-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="frequency-overflow"
+          start-time="3.8"
+          end-time="4.2"
+          low-frequency="-1000"
+          high-frequency="23050"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="all-overflow"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="all-overflow"
+          start-time="-2"
+          end-time="7"
+          low-frequency="-1000"
+          high-frequency="23050"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="overlapping-annotation-first"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
-      <oe-annotation
-        tags="overlapping-annotation-second"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="overlapping-annotation-first"
+          start-time="1"
+          end-time="2"
+          low-frequency="8000"
+          high-frequency="9900"
+        ></oe-annotation>
+        <oe-annotation
+          tags="overlapping-annotation-second"
+          start-time="1"
+          end-time="1.5"
+          low-frequency="6000"
+          high-frequency="10050"
+        ></oe-annotation>
 
-      <oe-annotation
-        tags="totally-offscreen"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
+        <oe-annotation
+          tags="totally-offscreen"
+          start-time="7"
+          end-time="9"
+          low-frequency="8000"
+          high-frequency="9900"
+        ></oe-annotation>
 
-      <!--
-        This is an interesting test because we can still render the
-        annotations heading, but the bounding box will be hidden
-      -->
-      <oe-annotation
-        tags="just-offscreen-low-time"
-        start-time="2.93"
-        end-time="3.32"
-        low-frequency="8000"
-        high-frequency="9900"
-      ></oe-annotation>
-    </oe-annotate>
+        <!--
+          This is an interesting test because we can still render the
+          annotations heading, but the bounding box will be hidden
+        -->
+        <oe-annotation
+          tags="just-offscreen-low-frequency"
+          start-time="1"
+          end-time="1.5"
+          low-frequency="-100"
+          high-frequency="0"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="inverse-frequencies"
+          start-time="2.93"
+          end-time="3.32"
+          low-frequency="9900"
+          high-frequency="8000"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="inverse-time"
+          start-time="3.32"
+          end-time="2.93"
+          low-frequency="8000"
+          high-frequency="9900"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="fully-inverse"
+          start-time="3.32"
+          end-time="2.93"
+          low-frequency="9900"
+          high-frequency="8000"
+        ></oe-annotation>
+      </oe-annotate>
+    </oe-axes>
 
     <div>
       <button onclick="zeroWidth()">Change to zero width</button>
