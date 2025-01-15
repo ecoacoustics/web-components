@@ -5,7 +5,6 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import { Pixel, UnitConverter } from "../../models/unitConverters";
-import { Size } from "../../models/rendering";
 import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
@@ -43,19 +42,11 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   private handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
-
-      if (this.unitConverter) {
-        this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
-      }
     }
 
     if (this.annotationElements) {
       this.annotationModels = this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
     }
-  }
-
-  private handleCanvasResize(value: Size): void {
-    console.debug(value, this.annotationModels);
   }
 
   private annotationTemplate(model: Annotation): HTMLTemplateResult {
@@ -72,9 +63,16 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency) - textHeight);
     const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value - textHeight);
 
+    const isTagComponentSource =
+      model.reference instanceof AnnotationComponent &&
+      model.reference.tagComponents &&
+      model.reference.tagComponents.length > 0;
+
     let headingTemplate = html``;
-    if (model.reference instanceof AnnotationComponent && model.reference.tagComponents) {
-      headingTemplate = html`${map(model.reference.tagComponents, (element) => unsafeHTML(element.innerHTML))}`;
+    if (isTagComponentSource) {
+      headingTemplate = html`${map((model.reference as AnnotationComponent).tagComponents, (element) =>
+        unsafeHTML(element.innerHTML),
+      )}`;
     } else {
       headingTemplate = html`${annotationTags.join(", ")}`;
     }
