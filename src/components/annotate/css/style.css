@@ -21,7 +21,7 @@
     margin: 0;
     font-size: var(--oe-font-size);
 
-    color: white;
+    color: var(--oe-annotation-font-color);
     background-color: var(--oe-annotation-color);
   }
 
