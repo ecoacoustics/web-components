@@ -27,4 +27,8 @@ export class Annotation {
   public tags: Tag[];
   public reference: object;
   public verifications: Verification[];
+
+  public valid(): Readonly<boolean> {
+    return this.lowFrequency < this.highFrequency && this.startOffset < this.endOffset;
+  }
 }

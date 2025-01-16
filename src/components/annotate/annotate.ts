@@ -92,17 +92,33 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       // render the annotations.
       // Therefore, we can save some computation time by culling the annotation.
       return true;
+    } else if (!model.valid()) {
+      return true;
     }
 
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
 
+    // TODO: I suspect that we can combine the superset check and this isVisible
+    // math so that we only have to do one calculation
+    //
     // TODO: we might want to make this inclusive e.g. >=
     const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
     const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
     const isVisible = isTimeInView && isFrequencyInView;
+    if (!isVisible) {
+      return true;
+    }
 
-    return !isVisible;
+    // if the annotation is larger than the view box, then we want don't want to
+    // render it
+    const isSupersetOfViewBox =
+      model.startOffset < temporalDomain[0] &&
+      model.endOffset > temporalDomain[1] &&
+      model.lowFrequency < frequencyDomain[0] &&
+      model.highFrequency > frequencyDomain[1];
+
+    return isSupersetOfViewBox;
   }
 
   private annotationTemplate(model: Annotation): HTMLTemplateResult {
@@ -136,8 +152,8 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     // console.debug((model.reference as any).tags.map((x: any) => x.text).join(), model, { left, top, width, height });
 
     return html`
-      <aside class="annotation-container" style="left: ${watch(left)}px; top: ${watch(top)}px;">
-        <h2 class="bounding-box-heading" part="annotation-heading">${headingTemplate}</h2>
+      <h2 class="bounding-box-heading" part="annotation-heading">${headingTemplate}</h2>
+      <aside class="annotation-container" tabindex="0" style="left: ${watch(left)}px; top: ${watch(top)}px;">
         <div
           class="bounding-box"
           part="annotation-bounding-box"

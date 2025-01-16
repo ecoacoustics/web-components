@@ -10,22 +10,44 @@
 
 .annotation-surface {
   position: absolute;
+  width: 100%;
+  height: 100%;
   z-index: 1;
+
+  overflow: hidden;
 }
 
 .annotation-container {
   position: absolute;
+  cursor: pointer;
 
-  & > .bounding-box-heading {
-    width: fit-content;
-    margin: 0;
-    font-size: var(--oe-font-size);
-
-    color: var(--oe-annotation-font-color);
-    background-color: var(--oe-annotation-color);
+  &:focus {
+    --oe-annotation-color: var(--oe-selected-annotation-color);
+    z-index: 1;
   }
+}
 
-  & > .bounding-box {
-    border: 1px solid var(--oe-annotation-color);
-  }
+.bounding-box-heading {
+  position: absolute;
+  width: fit-content;
+  margin: 0;
+  font-size: var(--oe-font-size);
+
+  color: var(--oe-annotation-font-color);
+  background-color: var(--oe-annotation-color);
+
+  position-anchor: --bounding-box-anchor;
+  left: anchor(left);
+  top: anchor(top);
+
+  position-try:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
+}
+
+.bounding-box {
+  border: var(--oe-annotation-size) solid var(--oe-annotation-color);
+
+  anchor-name: --bounding-box-anchor;
 }
