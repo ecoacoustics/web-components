@@ -37,16 +37,10 @@
   background-color: var(--oe-annotation-color);
 
   /* anchor positioning */
-  position-area: top right;
-  /* left: anchor(center);
-  top: anchor(center); */
+  left: anchor(left);
+  bottom: anchor(top);
 
-  /* 
-  position-try:
-    flip-block,
-    flip-inline,
-    flip-block flip-inline reverse; */
-
+  position-try: flip-block, flip-inline;
   position-visibility: no-overflow;
 }
 

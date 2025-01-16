@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -14,6 +14,7 @@ import { computed, watch } from "@lit-labs/preact-signals";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
+import { Size } from "../../models/rendering";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -69,12 +70,17 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   @queryAllDeeplyAssignedElements({ selector: "oe-annotation" })
   private annotationElements?: AnnotationComponent[];
 
+  @query(".annotation-surface")
+  private annotationSurface!: HTMLDivElement;
+
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
 
   private handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
+
+      (this.unitConverter as any).canvasSize.subscribe((value: Size) => this.handleCanvasResize(value));
       this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
     }
 
@@ -85,6 +91,12 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
   private handleSpectrogramUpdate(): void {
     this.requestUpdate();
+  }
+
+  private handleCanvasResize(value: Size): void {
+    const { width, height } = value;
+    this.annotationSurface.style.width = `${width}px`;
+    this.annotationSurface.style.height = `${height}px`;
   }
 
   private cullAnnotation(model: Annotation): boolean {
@@ -99,12 +111,6 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
-
-    console.debug(
-      this.unitConverter.temporalRange.value,
-      this.unitConverter.frequencyRange.value,
-      this.unitConverter.canvasSize.value,
-    );
 
     // TODO: I suspect that we can combine the superset check and this isVisible
     // math so that we only have to do one calculation
