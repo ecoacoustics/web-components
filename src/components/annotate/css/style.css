@@ -28,7 +28,7 @@
 }
 
 .bounding-box-heading {
-  position: absolute;
+  position: fixed;
   width: fit-content;
   margin: 0;
   font-size: var(--oe-font-size);
@@ -36,18 +36,20 @@
   color: var(--oe-annotation-font-color);
   background-color: var(--oe-annotation-color);
 
-  position-anchor: --bounding-box-anchor;
-  left: anchor(left);
-  top: anchor(top);
+  /* anchor positioning */
+  position-area: top right;
+  /* left: anchor(center);
+  top: anchor(center); */
 
+  /* 
   position-try:
     flip-block,
     flip-inline,
-    flip-block flip-inline;
+    flip-block flip-inline reverse; */
+
+  position-visibility: no-overflow;
 }
 
 .bounding-box {
   border: var(--oe-annotation-size) solid var(--oe-annotation-color);
-
-  anchor-name: --bounding-box-anchor;
 }
