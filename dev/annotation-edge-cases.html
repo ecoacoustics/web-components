@@ -181,9 +181,14 @@
       </div>
     </div>
 
+    <div class="long-scroll-container">
+      <h2>Long scroll container</h2>
+      <p>This is useful for testing if the annotations behave correctly when scrolling</p>
+    </div>
+
     <script>
       let spectrogramElement;
-      const windowControlSensitivity = 20;
+      const windowControlSensitivity = 100;
 
       window.addEventListener("load", () => {
         spectrogramElement = document.getElementById("spectrogram");
@@ -280,6 +285,11 @@
     <style>
       oe-spectrogram {
         height: 600px;
+      }
+
+      .long-scroll-container {
+        position: relative;
+        height: 100dvh;
       }
 
       .window-controls {
