@@ -20,3 +20,9 @@ export class TagComponent extends AbstractComponent(LitElement) {
     return html`<slot></slot>`;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-tag": TagComponent;
+  }
+}
