@@ -59,3 +59,9 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
     return html`<slot></slot>`;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-annotation": AnnotationComponent;
+  }
+}

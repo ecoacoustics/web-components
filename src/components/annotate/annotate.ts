@@ -65,13 +65,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram?: SpectrogramComponent;
+  private readonly spectrogram?: SpectrogramComponent;
 
   @queryAllDeeplyAssignedElements({ selector: "oe-annotation" })
-  private annotationElements?: AnnotationComponent[];
+  private readonly annotationElements?: AnnotationComponent[];
 
-  @query(".annotation-surface")
-  private annotationSurface!: HTMLDivElement;
+  @query(".annotation-chrome")
+  private readonly annotationSurface!: HTMLDivElement;
 
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
@@ -186,7 +186,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div id="wrapper-element" class="vertically-fill">
-        <div class="annotation-surface">
+        <div class="annotation-chrome">
           ${map(this.annotationModels, (model: Annotation, i: number) =>
             when(!this.cullAnnotation(model), () => this.annotationTemplate(model, i)),
           )}
@@ -194,5 +194,11 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
         <slot @slotchange="${() => this.handleSlotChange()}"></slot>
       </div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-annotate": AnnotateComponent;
   }
 }
