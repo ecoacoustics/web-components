@@ -2,6 +2,8 @@
   position: relative;
   display: inline-block;
   width: 100%;
+
+  --font-height: 12.8px;
 }
 
 #wrapper-element {
@@ -35,14 +37,18 @@
   background-color: var(--oe-annotation-color);
 
   /* anchor positioning */
-  left: anchor(left);
-  bottom: anchor(top);
+  left: max(anchor(left), 0px);
+  bottom: max(anchor(top), 0px);
 
-  position-try: flip-block, flip-inline;
+  position-try: flip-block, flip-inline, --pt;
   position-visibility: no-overflow;
 }
 
 .bounding-box {
   position: absolute;
   border: var(--oe-annotation-size) solid var(--oe-annotation-color);
+}
+
+@position-try --pt {
+  top: 0px;
 }
