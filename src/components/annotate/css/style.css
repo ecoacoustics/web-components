@@ -6,15 +6,15 @@
 
 #wrapper-element {
   position: relative;
+
+  padding-top: var(--top-padding);
 }
 
 .annotation-chrome {
   position: absolute;
   z-index: 1;
 
-  anchor-name: --annotate-chrome;
-
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .annotation-container {
@@ -50,10 +50,13 @@
   }
 
   &.style-spectrogram-top {
-    anchor-name: --annotate-chrome;
-    bottom: anchor(top);
+    top: -1em;
+    left: max(anchor(left), 0px);
 
-    transform: rotate(-45deg);
+    transform: rotate(-20deg);
+    transform-origin: 0 0;
+
+    overflow: visible;
   }
 
   &.style-hidden {
