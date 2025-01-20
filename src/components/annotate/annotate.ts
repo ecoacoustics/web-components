@@ -180,15 +180,19 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       "style-hidden": this.tagStyle === AnnotationTagStyle.HIDDEN,
     });
 
-    const headingAnchorStyles = styleMap({
-      "position-anchor": this.tagStyle === AnnotationTagStyle.EDGE ? annotationAnchorName : undefined,
+    const boundingBoxClasses = classMap({
+      "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
     });
 
     return html`
-      <h2 class="bounding-box-heading ${headingClasses}" part="annotation-heading" style=${headingAnchorStyles}>
+      <h2
+        class="bounding-box-heading ${headingClasses}"
+        part="annotation-heading"
+        style="position-anchor: ${annotationAnchorName};"
+      >
         ${headingTemplate}
       </h2>
-      <aside class="annotation-container" tabindex="0">
+      <aside class="annotation-container ${boundingBoxClasses}" tabindex="0">
         <div
           class="bounding-box"
           part="annotation-bounding-box"
@@ -205,8 +209,12 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   }
 
   public render() {
+    const wrapperStyles = styleMap({
+      "--top-padding": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP ? "4em" : undefined,
+    });
+
     return html`
-      <div id="wrapper-element" class="vertically-fill">
+      <div id="wrapper-element" class="vertically-fill" style=${wrapperStyles}>
         <div class="annotation-chrome">
           ${map(this.annotationModels, (model: Annotation, i: number) =>
             when(!this.cullAnnotation(model), () => this.annotationTemplate(model, i)),
