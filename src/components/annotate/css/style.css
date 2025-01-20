@@ -2,8 +2,6 @@
   position: relative;
   display: inline-block;
   width: 100%;
-
-  --font-height: 12.8px;
 }
 
 #wrapper-element {

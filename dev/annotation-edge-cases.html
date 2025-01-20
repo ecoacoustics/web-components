@@ -23,22 +23,6 @@
         ></oe-annotation>
 
         <oe-annotation
-          tags="high-freq-overflow"
-          start-time="1"
-          end-time="2"
-          low-frequency="21050"
-          high-frequency="23050"
-        ></oe-annotation>
-
-        <oe-annotation
-          tags="low-freq-overflow"
-          start-time="2"
-          end-time="1"
-          low-frequency="-1000"
-          high-frequency="1000"
-        ></oe-annotation>
-
-        <oe-annotation
           tags="start-time-overflow"
           start-time="-2"
           end-time="0.5"
@@ -52,6 +36,22 @@
           end-time="7"
           low-frequency="5000"
           high-frequency="6900"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="overflow-high-freq"
+          start-time="3"
+          end-time="3.4"
+          low-frequency="9500"
+          high-frequency="13000"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="overflow-low-freq"
+          start-time="3"
+          end-time="3.4"
+          low-frequency="-2000"
+          high-frequency="1000"
         ></oe-annotation>
 
         <oe-annotation
@@ -102,7 +102,15 @@
         ></oe-annotation>
 
         <oe-annotation
-          tags="fully-offscreen-single-axis"
+          tags="fully-offscreen-high-freq"
+          start-time="1"
+          end-time="2"
+          low-frequency="21050"
+          high-frequency="23050"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="fully-offscreen-low-freq"
           start-time="3"
           end-time="3.4"
           low-frequency="-4000"
@@ -110,26 +118,10 @@
         ></oe-annotation>
 
         <oe-annotation
-          tags="overflow-high-freq"
-          start-time="3"
-          end-time="3.4"
-          low-frequency="9500"
-          high-frequency="13000"
-        ></oe-annotation>
-
-        <oe-annotation
-          tags="overflow-low-freq"
-          start-time="3"
-          end-time="3.4"
-          low-frequency="-2000"
-          high-frequency="1000"
-        ></oe-annotation>
-
-        <oe-annotation
           tags="right-bottom-corner"
           start-time="4.9"
           end-time="5.1"
-          low-frequency="-2000"
+          low-frequency="-500"
           high-frequency="500"
         ></oe-annotation>
 
@@ -145,7 +137,7 @@
           tags="left-bottom-corner"
           start-time="-0.1"
           end-time="0.1"
-          low-frequency="-1000"
+          low-frequency="-500"
           high-frequency="500"
         ></oe-annotation>
 
@@ -171,6 +163,14 @@
           end-time="2.601"
           low-frequency="6500"
           high-frequency="6501"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="normal-annotation"
+          start-time="3"
+          end-time="3.5"
+          low-frequency="5000"
+          high-frequency="6500"
         ></oe-annotation>
 
         <!--
@@ -243,6 +243,18 @@
           <button onclick="windowZoomOut()">-</button>
         </div>
       </div>
+    </div>
+
+    <div>
+      <h2>Isolated elements</h2>
+      <oe-tag>You should not see this</oe-tag>
+      <oe-annotation
+        tags="you should not see this"
+        low-frequency="0"
+        high-frequency="1000"
+        start-time="0"
+        end-time="5"
+      ></oe-annotation>
     </div>
 
     <div class="long-scroll-container">

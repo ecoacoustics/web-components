@@ -20,6 +20,7 @@ async function toHaveTrimmedText(received: Locator, expected: string) {
     message: () => `expected '${realizedText}' to be '${expectedText}'`,
   };
 }
+
 export const expect = playwrightExpect.extend({
   toHaveTrimmedText,
 });
