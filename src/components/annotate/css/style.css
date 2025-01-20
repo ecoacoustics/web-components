@@ -25,6 +25,11 @@
     --oe-annotation-color: var(--oe-selected-annotation-color);
     z-index: 1;
   }
+
+  & > .bounding-box {
+    position: absolute;
+    border: var(--oe-annotation-size) solid var(--oe-annotation-color);
+  }
 }
 
 .bounding-box-heading {
@@ -37,26 +42,23 @@
   background-color: var(--oe-annotation-color);
 
   position-visibility: no-overflow;
-}
 
-.style-edge {
-  left: max(anchor(left), 0px);
-  bottom: max(anchor(top), 0px);
-  position-try: flip-block, flip-inline, --pt;
-}
+  &.style-edge {
+    left: max(anchor(left), 0px);
+    bottom: max(anchor(top), 0px);
+    position-try: flip-block, flip-inline, --pt;
+  }
 
-.style-spectrogram-top {
-  anchor-name: --annotate-chrome;
-  position-area: center;
-}
+  &.style-spectrogram-top {
+    anchor-name: --annotate-chrome;
+    bottom: anchor(top);
 
-.style-hidden {
-  display: none;
-}
+    transform: rotate(-45deg);
+  }
 
-.bounding-box {
-  position: absolute;
-  border: var(--oe-annotation-size) solid var(--oe-annotation-color);
+  &.style-hidden {
+    display: none;
+  }
 }
 
 @position-try --pt {
