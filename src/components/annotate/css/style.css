@@ -12,6 +12,8 @@
   position: absolute;
   z-index: 1;
 
+  anchor-name: --annotate-chrome;
+
   overflow: hidden;
 }
 
@@ -44,6 +46,8 @@
 }
 
 .style-spectrogram-top {
+  anchor-name: --annotate-chrome;
+  position-area: center;
 }
 
 .style-hidden {

@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -15,8 +15,8 @@ import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
-import annotateStyles from "./css/style.css?inline";
 import { styleMap } from "lit/directives/style-map.js";
+import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -62,7 +62,11 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   @property({ type: Boolean, converter: booleanConverter, reflect: true })
   public readonly = false;
 
-  @property({ type: String, attribute: "tag-style", converter: enumConverter(AnnotationTagStyle) as any })
+  @property({
+    type: String,
+    attribute: "tag-style",
+    converter: enumConverter(AnnotationTagStyle, AnnotationTagStyle.EDGE as any) as any,
+  })
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
@@ -76,26 +80,6 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
-
-  public willUpdate(change: PropertyValues<this>): void {
-    if (change.has("tagStyle")) {
-      const newTagStyle = change.get("tagStyle") as any;
-      if (!newTagStyle) {
-        return;
-      }
-
-      const possibleTagStyles = [
-        AnnotationTagStyle.EDGE,
-        AnnotationTagStyle.HIDDEN,
-        AnnotationTagStyle.SPECTROGRAM_TOP,
-      ] as const satisfies AnnotationTagStyle[];
-
-      if (!possibleTagStyles.includes(newTagStyle)) {
-        this.tagStyle = AnnotationTagStyle.EDGE;
-        console.error(`Tag style "${newTagStyle}" could not be found. Falling back to "${AnnotationTagStyle.EDGE}"`);
-      }
-    }
-  }
 
   public handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
@@ -197,7 +181,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     });
 
     const headingAnchorStyles = styleMap({
-      "position-anchor": this.tagStyle === AnnotationTagStyle.EDGE ? annotationAnchorName : "--annotate-chrome",
+      "position-anchor": this.tagStyle === AnnotationTagStyle.EDGE ? annotationAnchorName : undefined,
     });
 
     return html`
@@ -221,7 +205,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div id="wrapper-element" class="vertically-fill">
-        <div class="annotation-chrome" style="anchor-name: --annotate-chrome">
+        <div class="annotation-chrome">
           ${map(this.annotationModels, (model: Annotation, i: number) =>
             when(!this.cullAnnotation(model), () => this.annotationTemplate(model, i)),
           )}
