@@ -1,97 +1,314 @@
-import { Size } from "../../models/rendering";
+import { Hertz, Seconds } from "../../models/unitConverters";
 import { expect } from "../../tests/assertions";
-import { getBrowserValue, setBrowserAttribute } from "../../tests/helpers";
-import { AnnotateComponent, AnnotationTagStyle } from "./annotate";
+import { setBrowserValue } from "../../tests/helpers";
+import { TagComponent } from "../tag/tag";
 import { annotateFixture as test } from "./annotate.fixture";
 
-test.describe("with annotations", () => {
-  test("should correctly size all slotted content", async ({ fixture }) => {
-    await fixture.create();
+export interface PartialAnnotation {
+  startTime: Seconds;
+  endTime: Seconds;
+  lowFrequency: Hertz;
+  highFrequency: Hertz;
+}
 
-    const spectrogramSize = await fixture.spectrogram().boundingBox();
-    const componentSize = await fixture.component().boundingBox();
+interface AnnotationBoundingBoxTest {
+  name: string;
+  annotation: PartialAnnotation;
+}
 
-    expect(spectrogramSize).toEqual(componentSize);
-  });
+function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTest>) {
+  for (const spec of testsToRun) {
+    test(spec.name, async ({ fixture }) => {
+      await fixture.createWithAnnotation(spec.annotation);
+      await fixture.onlyShowAnnotationOutline();
+      await expect(fixture.bodyElement()).toHaveScreenshot();
+    });
+  }
+}
 
-  test.describe("bounding boxes", () => {
+test.describe("with annotation", () => {
+  test.describe("in-view headings", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create();
     });
 
-    test("should correctly place the bounding boxes", async ({ fixture }) => {
-      const expectedBoundingBoxes = [] satisfies Size[];
-
-      const boundingBoxes = await fixture.annotationBoundingBoxes();
-      const realizedBoundingBoxes = Promise.all(boundingBoxes.map(async (locator) => await locator.boundingBox()));
-
-      expect(realizedBoundingBoxes).toEqual(expectedBoundingBoxes);
+    test("should have the correct headings", async ({ fixture }) => {
+      const headingTarget = await fixture.annotationHeading(0);
+      await expect(headingTarget).toHaveTrimmedText("bird");
     });
 
-    test("should correctly resize the bounding box if an annotation updates", () => {});
+    test("should correctly render slotted content", async ({ fixture }) => {
+      const headingTarget = await fixture.annotationHeading(2);
+      await expect(headingTarget).toHaveTrimmedText("Bat,Ultrasonic");
+    });
 
-    test("should correctly remove an annotation when removed", () => {});
+    test("should correctly update if the heading changes", async ({ fixture }) => {
+      const tagTarget = await fixture.tagComponent(1);
+      await setBrowserValue<TagComponent>(tagTarget, "textContent", "Subsonic");
+
+      const headingTarget = await fixture.annotationHeading(1);
+      await expect(headingTarget).toHaveTrimmedText("Bat,Subsonic");
+    });
   });
 
-  test.describe("headings", () => {
-    test("should have the correct headings", () => {});
+  test.describe("in-view bounding boxes", () => {
+    const tests = [
+      {
+        name: "should correctly place correct bounding boxes",
+        annotation: { startTime: 3, endTime: 3.5, lowFrequency: 5000, highFrequency: 6500 },
+      },
+    ] satisfies AnnotationBoundingBoxTest[];
 
-    test("should correctly render slotted content", () => {});
-
-    test("should correctly update if the heading changes", () => {});
-
-    test("should correctly update if a heading is removed", () => {});
+    createAnnotationTests(tests);
   });
 
-  test.describe("annotation style tag", () => {
-    test.beforeEach(() => {});
+  test.describe("overflowing annotations", () => {
+    test.describe("fully overflowing", () => {
+      const tests = [
+        {
+          name: "should correctly remove the bounding box if it is a super set of the view window",
+          annotation: {
+            startTime: -2,
+            endTime: 7,
+            lowFrequency: -1000,
+            highFrequency: 23050,
+          },
+        },
+        {
+          name: "should correctly remove the bounding box if it has fully overflowed the negative y-axis",
+          annotation: {
+            startTime: 3,
+            endTime: 3.4,
+            lowFrequency: 24000,
+            highFrequency: 28000,
+          },
+        },
+        {
+          name: "should correctly remove the bounding box if it has fully overflowed the negative x-axis",
+          annotation: {
+            startTime: -2,
+            endTime: -1,
+            lowFrequency: 1000,
+            highFrequency: 3000,
+          },
+        },
+        {
+          name: "should correctly remove the bounding box if it has fully overflowed the positive y-axis",
+          annotation: {
+            startTime: 2,
+            endTime: 4,
+            lowFrequency: -4000,
+            highFrequency: -2000,
+          },
+        },
+        {
+          name: "should correctly remove the bounding box if it has fully overflowed the positive x-axis",
+          annotation: {
+            startTime: 7,
+            endTime: 8,
+            lowFrequency: 1000,
+            highFrequency: 3000,
+          },
+        },
+      ] satisfies AnnotationBoundingBoxTest[];
 
-    test.describe("initial styles", () => {
-      test("should use the correct default tag style", async ({ fixture }) => {
-        await fixture.create();
-
-        const expectedTagStyle = AnnotationTagStyle.EDGE;
-        const realizedTagStyle = await getBrowserValue<AnnotateComponent>(fixture.component(), "tagStyle");
-
-        expect(realizedTagStyle).toBe(expectedTagStyle);
-      });
-
-      test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
-        await fixture.createWithTagStyle(AnnotationTagStyle.HIDDEN);
-      });
-
-      test("should have the correct 'edge' behavior", async ({ fixture }) => {
-        await fixture.createWithTagStyle(AnnotationTagStyle.EDGE);
-      });
-
-      test("should have the correct 'spectrogram-top' behavior", async ({ fixture }) => {
-        await fixture.createWithTagStyle(AnnotationTagStyle.SPECTROGRAM_TOP);
-      });
+      createAnnotationTests(tests);
     });
 
-    test.describe("updating attributes", () => {
-      test("should correctly update if the tag style is updated to 'hidden'", async ({ fixture }) => {
-        await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "hidden");
-      });
+    test.describe("partially overflowed 1 axis", () => {
+      const tests = [
+        {
+          name: "should position correctly if only the start time has overflowed",
+          annotation: {
+            startTime: -2,
+            endTime: 0.5,
+            lowFrequency: -1000,
+            highFrequency: 1000,
+          },
+        },
+        {
+          name: "should position correctly if only the end time has overflowed",
+          annotation: {
+            startTime: 4.5,
+            endTime: 7,
+            lowFrequency: 5000,
+            highFrequency: 6900,
+          },
+        },
+        {
+          name: "should position correctly if only the low frequency has overflowed",
+          annotation: {
+            startTime: 3,
+            endTime: 3.4,
+            lowFrequency: -2000,
+            highFrequency: 1000,
+          },
+        },
+        {
+          name: "should position correctly if only the high frequency has overflowed",
+          annotation: {
+            startTime: 1,
+            endTime: 2,
+            lowFrequency: 21050,
+            highFrequency: 23050,
+          },
+        },
+        {
+          name: "should position correctly if only the high frequency label is overflowing",
+          annotation: {
+            startTime: 3,
+            endTime: 3.4,
+            lowFrequency: 9500,
+            highFrequency: 13000,
+          },
+        },
+      ] satisfies AnnotationBoundingBoxTest[];
 
-      test("should correctly update if the tag style is updated to 'edge'", async ({ fixture }) => {
-        await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "edge");
-      });
-
-      test("should correctly update if the tag style is updated to 'spectrogram-top'", async ({ fixture }) => {
-        await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
-      });
+      createAnnotationTests(tests);
     });
 
-    test.describe("slotted tag content", () => {
-      test("should reflect slotted tag content correctly in hidden style", () => {});
+    test.describe("two axes overflow", () => {
+      const tests = [
+        {
+          name: "should position correctly if both time dimensions have overflowed",
+          annotation: {
+            startTime: -2,
+            endTime: 7,
+            lowFrequency: 2000,
+            highFrequency: 4000,
+          },
+        },
+        {
+          name: "should position correctly if both frequency dimensions have overflowed",
+          annotation: {
+            startTime: 3.8,
+            endTime: 4.2,
+            lowFrequency: -1000,
+            highFrequency: 23050,
+          },
+        },
+      ] satisfies AnnotationBoundingBoxTest[];
 
-      test("should reflect slotted tag content correctly in edge style", () => {});
-
-      test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
+      createAnnotationTests(tests);
     });
+
+    test.describe("corners overflowed", () => {
+      const tests = [
+        {
+          name: "should position correctly in the top left corner",
+          annotation: {
+            startTime: -0.1,
+            endTime: 0.1,
+            lowFrequency: 10500,
+            highFrequency: 11500,
+          },
+        },
+        {
+          name: "should position correctly in the top right corner",
+          annotation: {
+            startTime: 4.9,
+            endTime: 5.1,
+            lowFrequency: 10500,
+            highFrequency: 12000,
+          },
+        },
+        {
+          name: "should position correctly in the bottom right corner",
+          annotation: {
+            startTime: 4.9,
+            endTime: 5.1,
+            lowFrequency: -500,
+            highFrequency: 500,
+          },
+        },
+        {
+          name: "should position correctly in the bottom left corner",
+          annotation: {
+            startTime: -0.1,
+            endTime: 0.1,
+            lowFrequency: -500,
+            highFrequency: 500,
+          },
+        },
+      ] satisfies AnnotationBoundingBoxTest[];
+
+      createAnnotationTests(tests);
+    });
+  });
+
+  test.describe("updating annotations", () => {
+    test("should correctly remove a bounding box if is updated from inside to outside the view window", () => {});
+
+    test("should correctly add a bounding box if it is updated from outside to inside the view window", () => {});
+
+    test("should keep a bounding box hidden if updated from out of view to another out of view position", () => {});
+
+    test("should correctly update an annotation", () => {});
+
+    test("should correctly remove an annotation", () => {});
+  });
+
+  test.describe("selecting annotations", () => {
+    test("should change the annotations color if inside the bounding box is clicked", () => {});
+
+    test("should change the annotations color if the heading is clicked", () => {});
+
+    test("should raise above other annotations when the bounding box is clicked", () => {});
+
+    test("should raise above other annotations when the heading is clicked", () => {});
   });
 });
+
+// TODO: For some reason, importing the AnnotationTagStyle enum from the
+// annotate.ts file causes a bundler error with the very confusing error message
+// "SyntaxError: src/components/annotate/css/style.css: Unexpected token (1:0)playwright"
+//
+// test.describe("annotation style tag", () => {
+//   test.describe("initial styles", () => {
+//     test("should use the correct default tag style", async ({ fixture }) => {
+//       await fixture.create();
+
+//       const expectedTagStyle = AnnotationTagStyle.EDGE;
+//       const realizedTagStyle = await getBrowserValue<AnnotateComponent>(fixture.component(), "tagStyle");
+
+//       expect(realizedTagStyle).toBe(expectedTagStyle);
+//     });
+
+//     test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
+//       await fixture.createWithTagStyle(AnnotationTagStyle.HIDDEN);
+//     });
+
+//     test("should have the correct 'edge' behavior", async ({ fixture }) => {
+//       await fixture.createWithTagStyle(AnnotationTagStyle.EDGE);
+//     });
+
+//     test("should have the correct 'spectrogram-top' behavior", async ({ fixture }) => {
+//       await fixture.createWithTagStyle(AnnotationTagStyle.SPECTROGRAM_TOP);
+//     });
+//   });
+
+//   test.describe("updating attributes", () => {
+//     test("should correctly update if the tag style is updated to 'hidden'", async ({ fixture }) => {
+//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "hidden");
+//     });
+
+//     test("should correctly update if the tag style is updated to 'edge'", async ({ fixture }) => {
+//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "edge");
+//     });
+
+//     test("should correctly update if the tag style is updated to 'spectrogram-top'", async ({ fixture }) => {
+//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
+//     });
+//   });
+
+//   test.describe("slotted tag content", () => {
+//     test("should reflect slotted tag content correctly in hidden style", () => {});
+
+//     test("should reflect slotted tag content correctly in edge style", () => {});
+
+//     test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
+//   });
+// });
 
 test.describe("without annotations", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -107,16 +324,4 @@ test.describe("without annotations", () => {
     const componentSize = await fixture.component().boundingBox();
     expect(spectrogramSize).toEqual(componentSize);
   });
-});
-
-test.describe("overflowing annotations", () => {
-  test.describe("label positioning", () => {});
-
-  test.describe("bounding box positioning", () => {});
-});
-
-test.describe("overlapping annotations", () => {
-  test.describe("overlapping labels", () => {});
-
-  test.describe("bounding boxes", () => {});
 });

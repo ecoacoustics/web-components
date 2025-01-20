@@ -1,4 +1,4 @@
-import { html, LitElement, unsafeCSS } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, required } from "../../helpers/decorators";
@@ -6,12 +6,9 @@ import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
 import { tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "tag/tag";
-import annotationStyles from "./css/style.css?inline";
 
 @customElement("oe-annotation")
 export class AnnotationComponent extends AbstractComponent(LitElement) {
-  public static styles = unsafeCSS(annotationStyles);
-
   @required()
   @property({ attribute: "low-frequency", type: Number })
   public lowFrequency!: number;
@@ -56,7 +53,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   }
 
   public render() {
-    return html`<slot></slot>`;
+    return html`<slot class="hide-slot"></slot>`;
   }
 }
 

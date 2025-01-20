@@ -5,7 +5,7 @@ export interface Size {
   height: number;
 }
 
-// 2D slices are alwyas a subset of an fft spectrogram
+// 2D slices are always a subset of an fft spectrogram
 export class TwoDSlice<XT extends number, YT extends number> {
   public constructor(data: TwoDSlice<any, any>) {
     this.x0 = data.x0;

@@ -357,6 +357,15 @@ button {
   min-height: 0px;
 }
 
+/* Typically used in data components */
+slot.hide-slot {
+  display: none;
+
+  &::slotted(*) {
+    display: none;
+  }
+}
+
 @keyframes fade-in {
   0% {
     opacity: 0;

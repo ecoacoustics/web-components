@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -65,18 +64,18 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private readonly spectrogram?: SpectrogramComponent;
+  private spectrogram?: SpectrogramComponent;
 
   @queryAllDeeplyAssignedElements({ selector: "oe-annotation" })
-  private readonly annotationElements?: AnnotationComponent[];
+  private annotationElements?: AnnotationComponent[];
 
   @query(".annotation-chrome")
-  private readonly annotationSurface!: HTMLDivElement;
+  private annotationSurface!: HTMLDivElement;
 
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
 
-  private handleSlotChange(): void {
+  public handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
 
@@ -141,11 +140,15 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
     const annotationTags = model.tags.map((tag: Tag) => tag.text);
 
-    const left = computed(() => this.unitConverter!.scaleX.value(model.startOffset));
-    const width = computed(() => this.unitConverter!.scaleX.value(model.endOffset) - left.value);
+    const left = computed(() => this.unitConverter && this.unitConverter.scaleX.value(model.startOffset));
+    const width = computed(
+      () => this.unitConverter && this.unitConverter.scaleX.value(model.endOffset) - (left.value ?? 0),
+    );
 
-    const top = computed(() => this.unitConverter!.scaleY.value(model.highFrequency));
-    const height = computed(() => this.unitConverter!.scaleY.value(model.lowFrequency) - top.value);
+    const top = computed(() => this.unitConverter && this.unitConverter.scaleY.value(model.highFrequency));
+    const height = computed(
+      () => this.unitConverter && this.unitConverter.scaleY.value(model.lowFrequency) - (top.value ?? 0),
+    );
 
     const isTagComponentSource =
       model.reference instanceof AnnotationComponent &&

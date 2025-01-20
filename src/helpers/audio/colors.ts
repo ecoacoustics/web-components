@@ -76,7 +76,7 @@ export function getColorScale(name: ColorMapName): ColorScaler {
   let scaler = colorScales[name];
 
   if (scaler === undefined) {
-    console.warn("Could not find color scale", name, ". Defaulting to grayscale");
+    console.warn(`Could not find color scale '${name}'. Defaulting to grayscale`);
     scaler = colorScales.grayscale;
   }
 
