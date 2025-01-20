@@ -9,7 +9,7 @@
 
   <body>
     <oe-axes>
-      <oe-annotate>
+      <oe-annotate id="annotate">
         <oe-spectrogram id="spectrogram" src="/example.flac">
           <source src="/example.flac" />
         </oe-spectrogram>
@@ -228,6 +228,7 @@
       <button onclick="zeroWidth()">Change to zero width</button>
       <button onclick="zeroHeight()">Change to zero height</button>
       <button onclick="changeSpectrogramOffset()">Change spectrogram offset</button>
+      <button onclick="changeTagStyle()">Change tag style</button>
     </div>
 
     <div>
@@ -264,10 +265,12 @@
 
     <script>
       let spectrogramElement;
+      let annotateElement;
       const windowControlSensitivity = 100;
 
       window.addEventListener("load", () => {
         spectrogramElement = document.getElementById("spectrogram");
+        annotateElement = document.getElementById("annotate");
       });
 
       function zeroWidth() {
@@ -280,6 +283,13 @@
 
       function changeSpectrogramOffset() {
         spectrogramElement.setAttribute("offset", "2");
+      }
+
+      let currentTagStyle = 1;
+      function changeTagStyle() {
+        const tagStyles = ["hidden", "edge", "spectrogram-top", "invalid-tag-style"];
+        const newTagStyle = tagStyles[++currentTagStyle % tagStyles.length];
+        annotateElement.setAttribute("tag-style", newTagStyle);
       }
 
       function windowSize() {

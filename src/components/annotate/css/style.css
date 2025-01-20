@@ -34,12 +34,20 @@
   color: var(--oe-annotation-font-color);
   background-color: var(--oe-annotation-color);
 
-  /* anchor positioning */
+  position-visibility: no-overflow;
+}
+
+.style-edge {
   left: max(anchor(left), 0px);
   bottom: max(anchor(top), 0px);
-
   position-try: flip-block, flip-inline, --pt;
-  position-visibility: no-overflow;
+}
+
+.style-spectrogram-top {
+}
+
+.style-hidden {
+  display: none;
 }
 
 .bounding-box {

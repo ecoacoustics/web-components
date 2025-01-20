@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -14,7 +14,9 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
+import { classMap } from "lit/directives/class-map.js";
 import annotateStyles from "./css/style.css?inline";
+import { styleMap } from "lit/directives/style-map.js";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -74,6 +76,26 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
+
+  public willUpdate(change: PropertyValues<this>): void {
+    if (change.has("tagStyle")) {
+      const newTagStyle = change.get("tagStyle") as any;
+      if (!newTagStyle) {
+        return;
+      }
+
+      const possibleTagStyles = [
+        AnnotationTagStyle.EDGE,
+        AnnotationTagStyle.HIDDEN,
+        AnnotationTagStyle.SPECTROGRAM_TOP,
+      ] as const satisfies AnnotationTagStyle[];
+
+      if (!possibleTagStyles.includes(newTagStyle)) {
+        this.tagStyle = AnnotationTagStyle.EDGE;
+        console.error(`Tag style "${newTagStyle}" could not be found. Falling back to "${AnnotationTagStyle.EDGE}"`);
+      }
+    }
+  }
 
   public handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
@@ -155,6 +177,8 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       model.reference.tagComponents &&
       model.reference.tagComponents.length > 0;
 
+    const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
+
     let headingTemplate = html``;
     if (isTagComponentSource) {
       headingTemplate = html`${map((model.reference as AnnotationComponent).tagComponents, (element) =>
@@ -166,10 +190,18 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
     // console.debug((model.reference as any).tags.map((x: any) => x.text).join(), model, { left, top, width, height });
 
-    const anchorName: CssVariable = `--bounding-box-anchor-${index}`;
+    const headingClasses = classMap({
+      "style-edge": this.tagStyle === AnnotationTagStyle.EDGE,
+      "style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
+      "style-hidden": this.tagStyle === AnnotationTagStyle.HIDDEN,
+    });
+
+    const headingAnchorStyles = styleMap({
+      "position-anchor": this.tagStyle === AnnotationTagStyle.EDGE ? annotationAnchorName : "--annotate-chrome",
+    });
 
     return html`
-      <h2 class="bounding-box-heading" part="annotation-heading" style="position-anchor: ${anchorName};">
+      <h2 class="bounding-box-heading ${headingClasses}" part="annotation-heading" style=${headingAnchorStyles}>
         ${headingTemplate}
       </h2>
       <aside class="annotation-container" tabindex="0" style="left: ${watch(left)}px; top: ${watch(top)}px;">
@@ -179,7 +211,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
           style="
             width: ${watch(width)}px;
             height: ${watch(height)}px;
-            anchor-name: ${anchorName};
+            anchor-name: ${annotationAnchorName};
           "
         ></div>
       </aside>
@@ -189,7 +221,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div id="wrapper-element" class="vertically-fill">
-        <div class="annotation-chrome">
+        <div class="annotation-chrome" style="anchor-name: --annotate-chrome">
           ${map(this.annotationModels, (model: Annotation, i: number) =>
             when(!this.cullAnnotation(model), () => this.annotationTemplate(model, i)),
           )}
