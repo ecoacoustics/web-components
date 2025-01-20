@@ -188,11 +188,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       <h2 class="bounding-box-heading ${headingClasses}" part="annotation-heading" style=${headingAnchorStyles}>
         ${headingTemplate}
       </h2>
-      <aside class="annotation-container" tabindex="0" style="left: ${watch(left)}px; top: ${watch(top)}px;">
+      <aside class="annotation-container" tabindex="0">
         <div
           class="bounding-box"
           part="annotation-bounding-box"
           style="
+            left: ${watch(left)}px;
+            top: ${watch(top)}px;
             width: ${watch(width)}px;
             height: ${watch(height)}px;
             anchor-name: ${annotationAnchorName};
