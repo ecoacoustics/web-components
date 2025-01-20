@@ -1,6 +1,8 @@
 import { Tag } from "../models/tag";
 import { Enum } from "./types/advancedTypes";
 
+const converterNoProvidedFallback = Symbol("converter-no-fallback");
+
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 
 export const arrayConverter = <T = unknown>(value: string | null | T[]): T[] => {
@@ -53,7 +55,10 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
   return value;
 };
 
-export const enumConverter = <T extends Enum>(enumValues: T) => {
+export const enumConverter = <T extends Enum>(
+  enumValues: T,
+  fallbackValue: keyof T | typeof converterNoProvidedFallback = converterNoProvidedFallback,
+) => {
   return (value: string): T[keyof T] | undefined => {
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
@@ -62,6 +67,24 @@ export const enumConverter = <T extends Enum>(enumValues: T) => {
 
     if (enumKey) {
       return enumValues[enumKey];
+    }
+
+    // if we get to this point, the user has provided an incorrect value to the
+    // enum attribute, and we should either fall back to the default or
+    // throw an error
+    //
+    // Because noProvidedFallback symbol is not exported from this file, we know
+    // that if the fallback is the noProvidedFallback symbol, the user has not
+    // provided a fallback to this function.
+    // We use a symbol over undefined or any other falsy value because the user
+    // might want to use undefined or a falsy value as the fallback value.
+    if (fallbackValue === converterNoProvidedFallback) {
+      console.error();
+    } else {
+      // this string type casting is okay because we have checked that it is not
+      // a symbol in the if condition above
+      console.warn(`'${value}' is not a valid value. Falling back to '${fallbackValue as string}'.`);
+      return fallbackValue as any;
     }
   };
 };
