@@ -39,6 +39,10 @@ test.describe("with annotation", () => {
 
     test("should correctly render slotted content", async ({ fixture }) => {
       const headingTarget = await fixture.annotationHeading(2);
+
+      // because the second annotation contains two <oe-tag> components
+      // we expect that the annotation heading text will be the concatenation
+      // of the two oe-tag content
       await expect(headingTarget).toHaveTrimmedText("Bat,Ultrasonic");
     });
 

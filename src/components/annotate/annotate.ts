@@ -16,6 +16,7 @@ import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
 import annotateStyles from "./css/style.css?inline";
+import { loop } from "../../helpers/directives";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -139,21 +140,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   }
 
   private spectrogramTopHeadingTemplate(model: Annotation): HTMLTemplateResult {
-    const annotationTags = model.tags.map((tag: Tag) => tag.text);
-
-    const isTagComponentSource =
-      model.reference instanceof AnnotationComponent &&
-      model.reference.tagComponents &&
-      model.reference.tagComponents.length > 0;
-
-    let headingTemplate = html``;
-    if (isTagComponentSource) {
-      headingTemplate = html`${map((model.reference as AnnotationComponent).tagComponents, (element) =>
-        unsafeHTML(element.innerHTML),
-      )}`;
-    } else {
-      headingTemplate = html`${annotationTags.join(", ")}`;
-    }
+    const headingTemplate = this.tagLabelTemplate(model);
 
     const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
 
@@ -168,12 +155,32 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     `;
   }
 
+  private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
+    const isTagComponentSource =
+      model.reference instanceof AnnotationComponent &&
+      model.reference.tagComponents &&
+      model.reference.tagComponents.length > 0;
+
+    const tagSeparator = ", ";
+
+    let headingTemplate = html``;
+    if (isTagComponentSource) {
+      headingTemplate = html`${loop<HTMLElement>(
+        (model.reference as any).tagComponents,
+        (element, { last }) => html`${unsafeHTML(element.innerHTML)} ${last ? "" : tagSeparator}`,
+      )}`;
+    } else {
+      const annotationTags = model.tags.map((tag: Tag) => tag.text);
+      headingTemplate = html`${annotationTags.join(tagSeparator)}`;
+    }
+
+    return headingTemplate;
+  }
+
   private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
     if (!this.unitConverter) {
       return html`An error occurred`;
     }
-
-    const annotationTags = model.tags.map((tag: Tag) => tag.text);
 
     const left = computed(() => this.unitConverter && this.unitConverter.scaleX.value(model.startOffset));
     const width = computed(
@@ -185,21 +192,9 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       () => this.unitConverter && this.unitConverter.scaleY.value(model.lowFrequency) - (top.value ?? 0),
     );
 
-    const isTagComponentSource =
-      model.reference instanceof AnnotationComponent &&
-      model.reference.tagComponents &&
-      model.reference.tagComponents.length > 0;
-
     const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
 
-    let headingTemplate = html``;
-    if (isTagComponentSource) {
-      headingTemplate = html`${map((model.reference as AnnotationComponent).tagComponents, (element) =>
-        unsafeHTML(element.innerHTML),
-      )}`;
-    } else {
-      headingTemplate = html`${annotationTags.join(", ")}`;
-    }
+    const headingTemplate = this.tagLabelTemplate(model);
 
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,

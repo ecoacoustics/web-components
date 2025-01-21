@@ -37,7 +37,7 @@ class TestPage {
   public async create() {
     await this.page.setContent(`
       <oe-annotate>
-        <oe-spectrogram src="/example.flac"></oe-spectrogram>
+        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
 
         <oe-annotation
           data-testid="annotation-attribute-tag"
@@ -100,7 +100,7 @@ class TestPage {
   public async createWithTagStyle(tagStyle: AnnotationTagStyle) {
     await this.page.setContent(`
       <oe-annotate tag-style="${tagStyle}">
-        <oe-spectrogram src="/example.flac"></oe-spectrogram>
+        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
 
         <oe-annotation
           data-testid="annotation-attribute-tag"
@@ -141,7 +141,7 @@ class TestPage {
   public async createWithoutAnnotations() {
     await this.page.setContent(`
       <oe-annotate>
-        <oe-spectrogram src="/example.flac"></oe-spectrogram>
+        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
       </oe-annotate>
     `);
 
