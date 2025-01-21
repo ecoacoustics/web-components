@@ -9,7 +9,7 @@
 
   <body>
     <!-- <oe-annotate id="annotate" tag-style="SPECTROGRAM_TOP"> -->
-    <oe-annotate id="annotate" tag-style="SPECTROGRAM_TOP">
+    <oe-annotate id="annotate" tag-style="EDGE">
       <oe-spectrogram id="spectrogram" src="/example.flac">
         <source src="/example.flac" />
       </oe-spectrogram>
@@ -166,12 +166,15 @@
       ></oe-annotation>
 
       <oe-annotation
-        tags="normal-annotation"
+        tags="normal-annotation,tag-2"
         start-time="3"
         end-time="3.5"
         low-frequency="5000"
         high-frequency="6500"
-      ></oe-annotation>
+      >
+        <oe-tag>Slotted Tag 1</oe-tag>
+        <oe-tag>Slotted Tag 2</oe-tag>
+      </oe-annotation>
 
       <!--
           This is an interesting test because we can still render the
