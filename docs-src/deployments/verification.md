@@ -1,6 +1,6 @@
 ---
 layout: layouts/deployment.11ty.js
-title: Cane Toads Verification
+title: Verification Tool
 ---
 
 <oe-verification-grid id="verification-grid">
