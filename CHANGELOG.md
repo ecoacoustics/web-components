@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.4.0...web-components-v1.4.1) (2025-01-21)
+
+
+### Bug Fixes
+
+* Incorrect file name for local results ([#275](https://github.com/ecoacoustics/web-components/issues/275)) ([dfcb1d8](https://github.com/ecoacoustics/web-components/commit/dfcb1d8a0d25612eb7d6be4df4e350f3f221dc08)), closes [#261](https://github.com/ecoacoustics/web-components/issues/261)
+
 ## [1.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.3.0...web-components-v1.4.0) (2025-01-14)
 
 
