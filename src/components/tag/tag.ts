@@ -17,7 +17,7 @@ export class TagComponent extends AbstractComponent(LitElement) {
   }
 
   public render() {
-    return html`<slot class="hide-slotted-content"></slot>`;
+    return html`<slot class="hide-slot"></slot>`;
   }
 }
 
