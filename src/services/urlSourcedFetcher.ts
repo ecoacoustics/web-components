@@ -37,10 +37,16 @@ export class UrlSourcedFetcher {
     return this.file.type ?? this.fileExtensionMediaType(this.file.name);
   }
 
-  public async updateSrc(src: string): Promise<typeof this> {
-    this._src = src;
+  public async updateSrc(newSource: string | File): Promise<typeof this> {
+    if (newSource instanceof File) {
+      this._src = URL.createObjectURL(newSource);
+      this.file = newSource;
+      return this;
+    }
 
-    const response = await fetch(src);
+    this._src = newSource;
+
+    const response = await fetch(newSource);
     if (!response.ok) {
       throw new Error(`Could not fetch data: ${response.statusText} (${response.status})`);
     }
@@ -76,7 +82,7 @@ export class UrlSourcedFetcher {
       throw UrlSourcedFetcher.unsupportedFormatError;
     }
 
-    // to itterate over the dataset, we require the input file to be an array
+    // to iterate over the dataset, we require the input file to be an array
     // of subjects
     // if we do not receive an array of subjects, the urlSourcedFetcher will
     // fallback to an empty dataset and log an error in the console

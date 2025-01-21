@@ -23,9 +23,13 @@ import dataSourceStyles from "./css/style.css?inline";
 export class DataSourceComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(dataSourceStyles);
 
+  // TODO: The polymorphic typing of src (string | File) is a red hearing that
+  // something is wrong with the design of this component.
+  // I originally added "File" to the typing so that when uploading a local file
+  // the src property would have a file object that had the original file name.
   /** A remote JSON or CSV file to use as the data source */
-  @property({ type: String })
-  public src?: string;
+  @property({ reflect: true })
+  public src?: string | File;
 
   /**
    * A verification grid component that the derived page fetcher callback will
@@ -204,7 +208,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.src = URL.createObjectURL(file);
+    this.src = file;
   }
 
   private async updateVerificationGrid(): Promise<void> {
@@ -257,7 +261,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           class="hidden"
           type="file"
           accept=".csv,.json"
-          @change="${this.handleFileChange}"
+          @change="${(event: Event) => this.handleFileChange(event)}"
         />
       </span>
     `;
