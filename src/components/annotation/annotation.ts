@@ -6,24 +6,31 @@ import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
 import { tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "tag/tag";
+import { Hertz, Seconds } from "../../models/unitConverters";
 
+/**
+ * @description
+ * Builds an annotation model using DOM element attributes
+ *
+ * @slot - A slot for <oe-tag> elements
+ */
 @customElement("oe-annotation")
 export class AnnotationComponent extends AbstractComponent(LitElement) {
   @required()
-  @property({ attribute: "low-frequency", type: Number })
-  public lowFrequency!: number;
+  @property({ attribute: "low-frequency", type: Number, reflect: true })
+  public lowFrequency!: Hertz;
 
   @required()
-  @property({ attribute: "high-frequency", type: Number })
-  public highFrequency!: number;
+  @property({ attribute: "high-frequency", type: Number, reflect: true })
+  public highFrequency!: Hertz;
 
   @required()
-  @property({ attribute: "start-time", type: Number })
-  public startTime!: number;
+  @property({ attribute: "start-time", type: Number, reflect: true })
+  public startTime!: Seconds;
 
   @required()
-  @property({ attribute: "end-time", type: Number })
-  public endTime!: number;
+  @property({ attribute: "end-time", type: Number, reflect: true })
+  public endTime!: Seconds;
 
   @property({ type: Array, converter: tagArrayConverter })
   public tags: Tag[] = [];

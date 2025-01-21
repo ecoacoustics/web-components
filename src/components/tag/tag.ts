@@ -6,6 +6,8 @@ import { Tag } from "../../models/tag";
 /**
  * @description
  * A tag that can be placed inside an oe-annotation component
+ *
+ * @slot - Content that can be displayed to describe the tag
  */
 @customElement("oe-tag")
 export class TagComponent extends AbstractComponent(LitElement) {

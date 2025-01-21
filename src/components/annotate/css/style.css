@@ -1,7 +1,36 @@
+@property --oe-annotation-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: green;
+}
+
+@property --oe-annotation-font-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: white;
+}
+
+@property --oe-annotation-focus-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: lightgreen;
+}
+
+@property --oe-annotation-weight {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2px;
+}
+
 :host {
   position: relative;
   display: inline-block;
   width: 100%;
+
+  --oe-annotation-color: green;
+  --oe-annotation-font-color: white;
+  --oe-annotation-focus-color: lightgreen;
+  --oe-annotation-weight: 2px;
 }
 
 #wrapper-element {
@@ -28,13 +57,13 @@
   cursor: pointer;
 
   &:focus {
-    --oe-annotation-color: var(--oe-selected-annotation-color);
+    --oe-annotation-color: var(--oe-annotation-focus-color);
     z-index: 1;
   }
 
   & > .bounding-box {
     position: absolute;
-    border: var(--oe-annotation-size) solid var(--oe-annotation-color);
+    border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
   }
 }
 
@@ -62,6 +91,20 @@
 
     rotate: -20deg;
     transform-origin: 0 0;
+
+    /*
+      We use a ::before pseudo element to draw a line going from the annotation
+      heading to the annotation bounding box.
+      This makes it easier to see what annotation a heading is associated with.
+    */
+    &::before {
+      position: absolute;
+      height: 100%;
+
+      border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
+
+      content: "";
+    }
   }
 
   &.style-hidden {
