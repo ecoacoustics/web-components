@@ -161,13 +161,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       model.reference.tagComponents &&
       model.reference.tagComponents.length > 0;
 
-    const tagSeparator = ", ";
+    const tagSeparator = ",";
 
     let headingTemplate = html``;
     if (isTagComponentSource) {
       headingTemplate = html`${loop<HTMLElement>(
         (model.reference as any).tagComponents,
-        (element, { last }) => html`${unsafeHTML(element.innerHTML)} ${last ? "" : tagSeparator}`,
+        (element, { last }) => html`${unsafeHTML(element.getHTML().trim())}${last ? "" : tagSeparator}`,
       )}`;
     } else {
       const annotationTags = model.tags.map((tag: Tag) => tag.text);
