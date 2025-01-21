@@ -58,9 +58,10 @@
   }
 
   &.style-spectrogram-top {
-    position: relative;
+    position: absolute;
+    bottom: 0px;
 
-    /* transform: rotate(-20deg); */
+    transform: rotate(-20deg);
     transform-origin: 0 0;
   }
 
