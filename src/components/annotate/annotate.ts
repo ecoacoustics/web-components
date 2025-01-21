@@ -240,11 +240,14 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
     return html`
       <div id="wrapper-element" class="vertically-fill">
-        <div class="headings-chrome">
-          ${when(this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP, () =>
-            map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model)),
-          )}
-        </div>
+        ${when(
+          this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
+          () => html`
+            <div class="headings-chrome">
+              ${map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
+            </div>
+          `,
+        )}
 
         <div class="wrapper-chrome">
           <div class="annotation-chrome">
