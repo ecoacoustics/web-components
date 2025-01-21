@@ -21,7 +21,6 @@
 
 .headings-chrome {
   position: relative;
-  display: flex;
 }
 
 .annotation-container {
@@ -61,7 +60,7 @@
     position: absolute;
     bottom: 0px;
 
-    transform: rotate(-20deg);
+    rotate: -20deg;
     transform-origin: 0 0;
   }
 

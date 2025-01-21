@@ -31,25 +31,25 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
   @queryAllDeeplyAssignedElements({ selector: "oe-tag" })
   public readonly tagComponents?: ReadonlyArray<TagComponent>;
 
-  public get tagModels(): Tag[] {
-    const attributeTags = this.tags;
-    const componentTags = this.tagComponents
-      ? this.tagComponents.flatMap((element: TagComponent) => element.model)
-      : [];
-
-    return [...attributeTags, ...componentTags];
-  }
-
   public get model(): Readonly<Annotation> {
     return new Annotation(
       this.startTime,
       this.endTime,
       this.lowFrequency,
       this.highFrequency,
-      this.tagModels,
+      this.tagModels(),
       this,
       [],
     );
+  }
+
+  public tagModels(): Tag[] {
+    const attributeTags = this.tags;
+    const componentTags = this.tagComponents
+      ? this.tagComponents.flatMap((element: TagComponent) => element.model)
+      : [];
+
+    return [...attributeTags, ...componentTags];
   }
 
   public render() {
