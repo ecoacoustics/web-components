@@ -15,7 +15,6 @@ import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
-import { styleMap } from "lit/directives/style-map.js";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -139,6 +138,32 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     return isSupersetOfViewBox;
   }
 
+  private spectrogramTopHeadingTemplate(model: Annotation): HTMLTemplateResult {
+    const annotationTags = model.tags.map((tag: Tag) => tag.text);
+
+    const isTagComponentSource =
+      model.reference instanceof AnnotationComponent &&
+      model.reference.tagComponents &&
+      model.reference.tagComponents.length > 0;
+
+    let headingTemplate = html``;
+    if (isTagComponentSource) {
+      headingTemplate = html`${map((model.reference as AnnotationComponent).tagComponents, (element) =>
+        unsafeHTML(element.innerHTML),
+      )}`;
+    } else {
+      headingTemplate = html`${annotationTags.join(", ")}`;
+    }
+
+    const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
+
+    return html`
+      <h2 class="bounding-box-heading style-spectrogram-top" part="annotation-heading" style="left: ${watch(left)}px;">
+        ${headingTemplate}
+      </h2>
+    `;
+  }
+
   private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
     if (!this.unitConverter) {
       return html`An error occurred`;
@@ -172,26 +197,24 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       headingTemplate = html`${annotationTags.join(", ")}`;
     }
 
-    // console.debug((model.reference as any).tags.map((x: any) => x.text).join(), model, { left, top, width, height });
-
-    const headingClasses = classMap({
-      "style-edge": this.tagStyle === AnnotationTagStyle.EDGE,
-      "style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
-      "style-hidden": this.tagStyle === AnnotationTagStyle.HIDDEN,
-    });
-
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
     });
 
     return html`
-      <h2
-        class="bounding-box-heading ${headingClasses}"
-        part="annotation-heading"
-        style="position-anchor: ${annotationAnchorName};"
-      >
-        ${headingTemplate}
-      </h2>
+      ${when(
+        this.tagStyle === AnnotationTagStyle.EDGE,
+        () => html`
+          <h2
+            class="bounding-box-heading style-edge"
+            part="annotation-heading"
+            style="position-anchor: ${annotationAnchorName};"
+          >
+            ${headingTemplate}
+          </h2>
+        `,
+      )}
+
       <aside class="annotation-container ${boundingBoxClasses}" tabindex="0">
         <div
           class="bounding-box"
@@ -209,18 +232,23 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   }
 
   public render() {
-    const wrapperStyles = styleMap({
-      "--top-padding": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP ? "4em" : undefined,
-    });
+    const visibleAnnotations = this.annotationModels.filter((model) => !this.cullAnnotation(model));
 
     return html`
-      <div id="wrapper-element" class="vertically-fill" style=${wrapperStyles}>
-        <div class="annotation-chrome">
-          ${map(this.annotationModels, (model: Annotation, i: number) =>
-            when(!this.cullAnnotation(model), () => this.annotationTemplate(model, i)),
+      <div id="wrapper-element" class="vertically-fill">
+        <div class="headings-chrome">
+          ${when(this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP, () =>
+            map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model)),
           )}
         </div>
-        <slot @slotchange="${() => this.handleSlotChange()}"></slot>
+
+        <div class="wrapper-chrome">
+          <div class="annotation-chrome">
+            ${map(visibleAnnotations, (model: Annotation, i: number) => this.annotationTemplate(model, i))}
+          </div>
+
+          <slot @slotchange="${() => this.handleSlotChange()}"></slot>
+        </div>
       </div>
     `;
   }

@@ -6,15 +6,22 @@
 
 #wrapper-element {
   position: relative;
+}
 
-  padding-top: var(--top-padding);
+.wrapper-chrome {
+  position: relative;
 }
 
 .annotation-chrome {
   position: absolute;
   z-index: 1;
 
-  /* overflow: hidden; */
+  overflow: hidden;
+}
+
+.headings-chrome {
+  position: relative;
+  display: flex;
 }
 
 .annotation-container {
@@ -33,7 +40,6 @@
 }
 
 .bounding-box-heading {
-  position: absolute;
   width: fit-content;
   margin: 0;
   font-size: var(--oe-font-size);
@@ -44,19 +50,18 @@
   position-visibility: no-overflow;
 
   &.style-edge {
+    position: absolute;
+
     left: max(anchor(left), 0px);
     bottom: max(anchor(top), 0px);
     position-try: flip-block, flip-inline, --pt;
   }
 
   &.style-spectrogram-top {
-    top: -1em;
-    left: max(anchor(left), 0px);
+    position: relative;
 
-    transform: rotate(-20deg);
+    /* transform: rotate(-20deg); */
     transform-origin: 0 0;
-
-    overflow: visible;
   }
 
   &.style-hidden {
