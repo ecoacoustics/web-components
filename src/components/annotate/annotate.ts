@@ -158,9 +158,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
 
     return html`
-      <h2 class="bounding-box-heading style-spectrogram-top" part="annotation-heading" style="left: ${watch(left)}px;">
+      <label
+        class="bounding-box-heading style-spectrogram-top"
+        part="annotation-heading"
+        style="left: ${watch(left)}px;"
+      >
         ${headingTemplate}
-      </h2>
+      </label>
     `;
   }
 
@@ -205,13 +209,13 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       ${when(
         this.tagStyle === AnnotationTagStyle.EDGE,
         () => html`
-          <h2
+          <label
             class="bounding-box-heading style-edge"
             part="annotation-heading"
             style="position-anchor: ${annotationAnchorName};"
           >
             ${headingTemplate}
-          </h2>
+          </label>
         `,
       )}
 
