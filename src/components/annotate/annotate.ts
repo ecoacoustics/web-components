@@ -15,8 +15,8 @@ import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
-import annotateStyles from "./css/style.css?inline";
 import { loop } from "../../helpers/directives";
+import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -52,6 +52,11 @@ export enum AnnotationTagStyle {
  *
  * @csspart annotation-bounding-box - The square around an annotation
  * @csspart annotation-heading - Selector for the annotation heading/labels
+ *
+ * @cssproperty [--oe-annotation-color]
+ * @cssproperty [--oe-annotation-font-color]
+ * @cssproperty [--oe-annotation-weight]
+ * @cssproperty [--oe-annotation-focus-color]
  *
  * @slot - A spectrogram element to add annotations to
  */
