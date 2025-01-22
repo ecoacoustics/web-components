@@ -1,15 +1,15 @@
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, queryAll } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { UnitConverter } from "../../models/unitConverters";
+import { AngleDegrees, Pixel, UnitConverter } from "../../models/unitConverters";
 import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
 import { Tag } from "../../models/tag";
-import { computed, watch } from "@lit-labs/preact-signals";
+import { computed, signal, watch } from "@lit-labs/preact-signals";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
@@ -80,11 +80,51 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   @queryAllDeeplyAssignedElements({ selector: "oe-annotation" })
   private annotationElements?: AnnotationComponent[];
 
+  @queryAll(".bounding-box-heading")
+  private headingElements!: Readonly<NodeListOf<HTMLLabelElement>>;
+
   @query(".annotation-chrome")
   private annotationSurface!: HTMLDivElement;
 
+  private readonly headingChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
+
+  public updated(): void {
+    // prettier-ignore
+    const boundingBoxes = Array.from(this.headingElements).map(
+      (element) => element.getBoundingClientRect(),
+    );
+
+    let maximumHeight = -Infinity;
+    boundingBoxes.forEach((bounds) => {
+      /*
+                  /
+                 /?
+                / ?
+      hypo     /  ? opposite (unknown; chrome height)
+      (width) /   ?
+             /.   ?
+             ------
+             .deg: 20
+      */
+
+      const angle: AngleDegrees = 20;
+      const hypotenuse = bounds.width;
+
+      const opposite = hypotenuse * Math.sin(angle);
+
+      console.debug(bounds);
+
+      if (opposite > maximumHeight) {
+        maximumHeight = opposite;
+      }
+    });
+
+    this.headingChromeHeight.value = maximumHeight;
+
+    console.debug(maximumHeight);
+  }
 
   public handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
@@ -243,7 +283,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
         ${when(
           this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
           () => html`
-            <div class="headings-chrome">
+            <div class="headings-chrome" style="height: ${watch(this.headingChromeHeight)}px">
               ${map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
             </div>
           `,

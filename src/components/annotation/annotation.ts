@@ -5,7 +5,7 @@ import { queryAllDeeplyAssignedElements, required } from "../../helpers/decorato
 import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
 import { tagArrayConverter } from "../../helpers/attributes";
-import { TagComponent } from "tag/tag";
+import { TagComponent } from "../tag/tag";
 import { Hertz, Seconds } from "../../models/unitConverters";
 
 /**

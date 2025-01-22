@@ -9,6 +9,7 @@ export type MHertz = number;
 export type Sample = number;
 export type Pixel = number;
 export type EmUnit = number;
+export type AngleDegrees = number;
 
 /**
  * A value that is bounded from [0, 1]

@@ -72,13 +72,13 @@
   margin: 0;
   font-size: var(--oe-font-size);
 
-  color: var(--oe-annotation-font-color);
-  background-color: var(--oe-annotation-color);
-
   position-visibility: no-overflow;
 
   &.style-edge {
     position: absolute;
+
+    color: var(--oe-annotation-font-color);
+    background-color: var(--oe-annotation-color);
 
     left: max(anchor(left), 0px);
     bottom: max(anchor(top), 0px);
@@ -97,14 +97,14 @@
       heading to the annotation bounding box.
       This makes it easier to see what annotation a heading is associated with.
     */
-    &::before {
+    /* &::before {
       position: absolute;
       height: 100%;
 
       border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
 
       content: "";
-    }
+    } */
   }
 
   &.style-hidden {
