@@ -8,6 +8,10 @@ import { booleanConverter, tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "../tag/tag";
 import { Hertz, Seconds } from "../../models/unitConverters";
 
+// TODO: we might want to create the concept of a "data component" (mixin)
+// that doesn't have any template content, but can accept attributes/slotted
+// content to build a model
+
 /**
  * @description
  * Builds an annotation model using DOM element attributes
