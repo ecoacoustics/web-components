@@ -59,15 +59,17 @@ export const enumConverter = <T extends Enum>(
   enumValues: T,
   fallbackValue: keyof T | typeof converterNoProvidedFallback = converterNoProvidedFallback,
 ) => {
-  return (value: string): T[keyof T] | undefined => {
+  return (value: string | null): T[keyof T] | undefined => {
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
-    const lowercaseKey = value.toLowerCase();
+    const lowercaseKey = value?.toLowerCase();
     const enumKey = Object.keys(enumValues).find((key) => key.toLowerCase() === lowercaseKey) as keyof T | undefined;
 
     if (enumKey) {
       return enumValues[enumKey];
     }
+
+    const acceptedKeys = Object.keys(enumValues).join(",");
 
     // if we get to this point, the user has provided an incorrect value to the
     // enum attribute, and we should either fall back to the default or
@@ -79,11 +81,18 @@ export const enumConverter = <T extends Enum>(
     // We use a symbol over undefined or any other falsy value because the user
     // might want to use undefined or a falsy value as the fallback value.
     if (fallbackValue === converterNoProvidedFallback) {
-      console.error();
+      console.error(`'${value}' is not a valid value. Accepted values: ${acceptedKeys}`);
+
+      // we return "undefined" here instead of "null" because so that it mimics
+      // the behavior that we'd expect if we indexed into a non-existent key
+      // e.g. enumValues["non-existent"] would return undefined
+      return undefined;
     } else {
       // this string type casting is okay because we have checked that it is not
       // a symbol in the if condition above
-      console.warn(`'${value}' is not a valid value. Falling back to '${fallbackValue as string}'.`);
+      console.warn(
+        `'${value}' is not a valid value. Falling back to '${fallbackValue as string}'. Accepted values: ${acceptedKeys}`,
+      );
       return fallbackValue as any;
     }
   };
