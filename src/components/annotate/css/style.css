@@ -80,9 +80,16 @@
     color: var(--oe-annotation-font-color);
     background-color: var(--oe-annotation-color);
 
-    left: max(anchor(left), 0px);
-    bottom: max(anchor(top), 0px);
-    position-try: flip-block, flip-inline, --pt;
+    /*
+      When the annotation headings are positioned at the top of the spectrogram
+      (tag-style="spectrogram-top"), if the label is too large to fit inside the
+      annotations width, it can cause the heading to overflow and not be visible.
+
+      This is especially predominant when the user slots in their own content.
+    */
+    left: min(max(anchor(left), 0px), calc(100% - 5em));
+    bottom: max(anchor(top), 1em);
+    position-try: flip-block, flip-inline, --position-float-top;
   }
 
   &.style-spectrogram-top {
@@ -112,6 +119,6 @@
   }
 }
 
-@position-try --pt {
+@position-try --position-float-top {
   top: 0px;
 }

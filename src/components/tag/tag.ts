@@ -15,7 +15,10 @@ export class TagComponent extends AbstractComponent(LitElement) {
   public value = "";
 
   public get model(): Readonly<Tag> {
-    return { text: this.value };
+    return {
+      text: this.value,
+      reference: this,
+    };
   }
 
   public render() {
