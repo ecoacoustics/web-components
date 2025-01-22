@@ -93,31 +93,37 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   public updated(): void {
     // prettier-ignore
     const boundingBoxes = Array.from(this.headingElements).map(
-      (element) => element.getBoundingClientRect(),
+      (element) => {
+        const x = element.getBoundingClientRect();
+        console.debug(element, x);
+        return x;
+      }
     );
 
     let maximumHeight = -Infinity;
     boundingBoxes.forEach((bounds) => {
-      /*
-                  /
-                 /?
-                / ?
-      hypo     /  ? opposite (unknown; chrome height)
-      (width) /   ?
-             /.   ?
-             ------
-             .deg: 20
-      */
+      // 1. we first have to calculate how much height the heading has
+      // 2. then we calculate how much height the 20 degree angle creates
+      // 3. we add the two heights together to get the chrome height required
+      // 4. we set the chrome height to the maximum of these values
 
-      const angle: AngleDegrees = 20;
-      const hypotenuse = bounds.width;
+      const headingAngle = 20 satisfies AngleDegrees;
 
-      const opposite = hypotenuse * Math.sin(angle);
+      // 1.
+      const hypotOppositeAngle: AngleDegrees = 90 - headingAngle;
+      const innerAngle: AngleDegrees = 90 - hypotOppositeAngle;
+      const headingHeight: Pixel = Math.cos(innerAngle) * bounds.height;
 
-      console.debug(bounds);
+      // 2.
+      const labelHeight: Pixel = Math.sin(headingAngle) * bounds.width;
 
-      if (opposite > maximumHeight) {
-        maximumHeight = opposite;
+      console.debug(labelHeight);
+
+      // 3.
+      const totalHeight: Pixel = headingHeight + labelHeight;
+
+      if (totalHeight > maximumHeight) {
+        maximumHeight = totalHeight;
       }
     });
 
