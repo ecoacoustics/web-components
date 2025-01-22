@@ -27,7 +27,7 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
 }
 
 test.describe("with annotation", () => {
-  test.describe("in-view headings", () => {
+  test.describe("heading content", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create();
     });

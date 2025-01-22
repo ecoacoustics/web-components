@@ -76,6 +76,9 @@ class TestPage {
   }
 
   public async createWithAnnotation(model: PartialAnnotation) {
+    // I use "kookaburra" here because it is a longer tag name. Therefore, it
+    // pushes the tag to its limit
+    // it also makes it easier to see the annotation heading in the test output
     await this.page.setContent(`
       <oe-annotate>
         <oe-spectrogram
@@ -85,7 +88,7 @@ class TestPage {
 
         <oe-annotation
           data-testid="annotation-attribute-tag"
-          tags="bird"
+          tags="kookaburra"
           start-time="${model.startTime}"
           end-time="${model.endTime}"
           low-frequency="${model.lowFrequency}"
