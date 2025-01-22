@@ -54,7 +54,7 @@
 - `oe-annotation-updated` - Fires when the low-frequency, high-frequency, start-time, end-time, or tag properties are updated
 - `oe-annotation-removed` - Fires when the annotation is deleted
 - `oe-annotation-selected` - Fires when the annotation is selected. Triggered by `focus`, and also emits an `Annotation` model (along with setting a `selected` property)
-- `oe-annotation-deselected` - Fires when the annotation is selected Triggered by `blur`, and also emits an `Annotation` model (along with setting a `selected` property)
+- `oe-annotation-deselected` - Fires when the annotation is de-selected Triggered by `blur`, and also emits an `Annotation` model (along with setting a `selected` property)
 - `oe-annotations-changed` - Something about the `oe-annotate`'s light dom template has changed. E.g. the DOM node has been copied or moved. This is useful for any accessory component that renders part of the list (in another format).
 
 All annotation events are bubbled through the `oe-annotate` component,

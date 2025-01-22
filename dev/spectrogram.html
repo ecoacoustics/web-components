@@ -8,36 +8,38 @@
   </head>
 
   <body>
-    <oe-annotate>
-      <oe-indicator>
-        <oe-spectrogram
-          id="playing-spectrogram"
-          class="large"
-          window-size="1024"
-          color-map="magma"
-          brightness="-0.4"
-          contrast="2"
-          scaling="stretch"
-        >
-          <source src="/example.flac" />
-        </oe-spectrogram>
+    <oe-axes>
+      <oe-annotate>
+        <oe-indicator>
+          <oe-spectrogram
+            id="playing-spectrogram"
+            class="large"
+            window-size="1024"
+            color-map="magma"
+            brightness="-0.4"
+            contrast="2"
+            scaling="stretch"
+          >
+            <source src="/example.flac" />
+          </oe-spectrogram>
 
-        <oe-annotation
-          tags="bird"
-          start-time="0.4"
-          end-time="4.99"
-          low-frequency="2500"
-          high-frequency="3500"
-        ></oe-annotation>
+          <oe-annotation
+            tags="bird"
+            start-time="0.4"
+            end-time="4.99"
+            low-frequency="2500"
+            high-frequency="3500"
+          ></oe-annotation>
 
-        <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
-          <oe-tag value="bat">Bat</oe-tag>
-          <oe-tag value="ultrasonic">
-            <a href="https://en.wikipedia.org/wiki/Ultrasonic_transducer">Ultrasonic</a>
-          </oe-tag>
-        </oe-annotation>
-      </oe-indicator>
-    </oe-annotate>
+          <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
+            <oe-tag value="bat">Bat</oe-tag>
+            <oe-tag value="ultrasonic">
+              <strong>Ultrasonic</strong>
+            </oe-tag>
+          </oe-annotation>
+        </oe-indicator>
+      </oe-annotate>
+    </oe-axes>
 
     <oe-media-controls for="playing-spectrogram">
       <span slot="play-icon">Play</span>

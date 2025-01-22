@@ -1,7 +1,7 @@
 @property --oe-annotation-color {
   syntax: "<color>";
   inherits: false;
-  initial-value: green;
+  initial-value: var(--oe-primary-color);
 }
 
 @property --oe-annotation-font-color {
@@ -13,7 +13,7 @@
 @property --oe-annotation-focus-color {
   syntax: "<color>";
   inherits: false;
-  initial-value: lightgreen;
+  initial-value: var(--oe-selected-color);
 }
 
 @property --oe-annotation-weight {
@@ -27,9 +27,9 @@
   display: inline-block;
   width: 100%;
 
-  --oe-annotation-color: green;
+  --oe-annotation-color: var(--oe-primary-color);
   --oe-annotation-font-color: white;
-  --oe-annotation-focus-color: lightgreen;
+  --oe-annotation-focus-color: var(--oe-selected-color);
   --oe-annotation-weight: 2px;
 }
 
