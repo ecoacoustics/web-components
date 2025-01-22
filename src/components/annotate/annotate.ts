@@ -49,6 +49,13 @@ export enum AnnotationTagStyle {
  *   </oe-annotation>
  * </oe-annotate>
  * ```
+ * @fires oe-annotation-created
+ * @fires oe-annotation-updating (not implemented)
+ * @fires oe-annotation-updated (not implemented)
+ * @fires oe-annotation-removed
+ * @fires oe-annotation-selected
+ * @fires oe-annotation-deselected
+ * @fires oe-annotation-changed
  *
  * @csspart annotation-bounding-box - The square around an annotation
  * @csspart annotation-heading - Selector for the annotation heading/labels
@@ -64,15 +71,22 @@ export enum AnnotationTagStyle {
 export class AnnotateComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(annotateStyles);
 
-  @property({ type: Boolean, converter: booleanConverter, reflect: true })
-  public readonly = false;
-
   @property({
     type: String,
     attribute: "tag-style",
     converter: enumConverter(AnnotationTagStyle, AnnotationTagStyle.EDGE as any) as any,
   })
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
+
+  /**
+   * Makes all annotations readonly, can be overwritten by setting
+   * readonly="false" on the `oe-annotation` component
+   * (not currently implemented; all annotations are readonly)
+   *
+   * @default true
+   */
+  @property({ type: Boolean, converter: booleanConverter, reflect: true })
+  public readonly = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
@@ -251,6 +265,23 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
     });
 
+    const focusCallback = (targetModel: Annotation, selected: boolean) => {
+      console.debug(selected);
+      if (targetModel.reference instanceof AnnotationComponent) {
+        targetModel.reference.selected = selected;
+      } else {
+        const emittedEventName = selected
+          ? AnnotationComponent.selectedEventName
+          : AnnotationComponent.deselectedEventName;
+
+        this.dispatchEvent(
+          new CustomEvent(emittedEventName, {
+            bubbles: true,
+          }),
+        );
+      }
+    };
+
     return html`
       ${when(
         this.tagStyle === AnnotationTagStyle.EDGE,
@@ -265,7 +296,12 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
         `,
       )}
 
-      <aside class="annotation-container ${boundingBoxClasses}" tabindex="0">
+      <aside
+        class="annotation-container ${boundingBoxClasses}"
+        tabindex="0"
+        @focus="${() => focusCallback(model, true)}"
+        @blur="${() => focusCallback(model, false)}"
+      >
         <div
           class="bounding-box"
           part="annotation-bounding-box"

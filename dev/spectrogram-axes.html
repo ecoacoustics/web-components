@@ -9,31 +9,9 @@
 
   <body>
     <oe-axes>
-      <oe-indicator>
-        <oe-spectrogram
-          id="playing-spectrogram"
-          src="/public/example_34s.flac"
-          color-map="magma"
-          window-function="gaussian"
-          window-size="2048"
-          window-overlap="512"
-          paused=""
-          scaling="stretch"
-          offset="0"
-          brightness="-0.35"
-          contrast="2.5"
-          mel-scale
-        ></oe-spectrogram>
-      </oe-indicator>
+      <oe-spectrogram id="playing-spectrogram" src="/example.flac"></oe-spectrogram>
     </oe-axes>
 
     <oe-media-controls for="spectrogram"></oe-media-controls>
-
-    <style>
-      oe-spectrogram {
-        height: 500px;
-        width: 500px;
-      }
-    </style>
   </body>
 </html>
