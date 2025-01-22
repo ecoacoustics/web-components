@@ -98,20 +98,6 @@
 
     rotate: -20deg;
     transform-origin: 0 0;
-
-    /*
-      We use a ::before pseudo element to draw a line going from the annotation
-      heading to the annotation bounding box.
-      This makes it easier to see what annotation a heading is associated with.
-    */
-    /* &::before {
-      position: absolute;
-      height: 100%;
-
-      border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
-
-      content: "";
-    } */
   }
 
   &.style-hidden {
@@ -121,4 +107,5 @@
 
 @position-try --position-float-top {
   top: 0px;
+  bottom: initial;
 }
