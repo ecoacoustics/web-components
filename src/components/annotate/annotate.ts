@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { customElement, property, query, queryAll } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -103,16 +103,47 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   private readonly headingChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
+  private resizeChromeNextUpdate = false;
 
   public updated(): void {
-    // prettier-ignore
-    const boundingBoxes = Array.from(this.headingElements).map(
-      (element) => {
-        const x = element.getBoundingClientRect();
-        console.debug(element, x);
-        return x;
-      }
-    );
+    if (this.resizeChromeNextUpdate) {
+      this.resizeChrome();
+    }
+  }
+
+  public handleSlotChange(): void {
+    if (this.spectrogram && this.spectrogram.unitConverters) {
+      this.unitConverter = this.spectrogram.unitConverters.value;
+
+      (this.unitConverter as any).canvasSize.subscribe((value: Size) => this.handleCanvasResize(value));
+      this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
+    }
+
+    if (this.annotationElements) {
+      this.annotationModels = this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
+    }
+
+    // we resize the chrome regardless of if there are annotation elements
+    // because if all the slotted annotation elements are removed, we want to
+    // remove all the chrome
+    // this.resizeChrome();
+    this.resizeChromeNextUpdate = true;
+  }
+
+  private handleSpectrogramUpdate(): void {
+    this.requestUpdate();
+  }
+
+  private handleCanvasResize(value: Size): void {
+    const { width, height } = value;
+    this.annotationSurface.style.width = `${width}px`;
+    this.annotationSurface.style.height = `${height}px`;
+
+    this.resizeChromeNextUpdate = true;
+  }
+
+  private resizeChrome(): void {
+    const boundingBoxes = Array.from(this.headingElements).map((element) => element.getBoundingClientRect());
 
     let maximumHeight = -Infinity;
     boundingBoxes.forEach((bounds) => {
@@ -141,32 +172,8 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
       }
     });
 
+    // 4.
     this.headingChromeHeight.value = maximumHeight;
-
-    console.debug(maximumHeight);
-  }
-
-  public handleSlotChange(): void {
-    if (this.spectrogram && this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters.value;
-
-      (this.unitConverter as any).canvasSize.subscribe((value: Size) => this.handleCanvasResize(value));
-      this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
-    }
-
-    if (this.annotationElements) {
-      this.annotationModels = this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
-    }
-  }
-
-  private handleSpectrogramUpdate(): void {
-    this.requestUpdate();
-  }
-
-  private handleCanvasResize(value: Size): void {
-    const { width, height } = value;
-    this.annotationSurface.style.width = `${width}px`;
-    this.annotationSurface.style.height = `${height}px`;
   }
 
   private cullAnnotation(model: Annotation): boolean {
