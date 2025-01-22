@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { customElement, property, query, queryAll } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -8,7 +8,6 @@ import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
-import { Tag } from "../../models/tag";
 import { computed, signal, watch } from "@lit-labs/preact-signals";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
@@ -16,6 +15,7 @@ import { CssVariable } from "../../helpers/types/advancedTypes";
 import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
+import { TagComponent } from "../tag/tag";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -107,6 +107,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
   public updated(): void {
     if (this.resizeChromeNextUpdate) {
+      this.resizeChromeNextUpdate = false;
       this.resizeChrome();
     }
   }
@@ -228,25 +229,18 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   }
 
   private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
-    const isTagComponentSource =
-      model.reference instanceof AnnotationComponent &&
-      model.reference.tagComponents &&
-      model.reference.tagComponents.length > 0;
-
     const tagSeparator = ",";
 
-    let headingTemplate = html``;
-    if (isTagComponentSource) {
-      headingTemplate = html`${loop<HTMLElement>(
-        (model.reference as any).tagComponents,
-        (element, { last }) => html`${unsafeHTML(element.getHTML().trim())}${last ? "" : tagSeparator}`,
-      )}`;
-    } else {
-      const annotationTags = model.tags.map((tag: Tag) => tag.text);
-      headingTemplate = html`${annotationTags.join(tagSeparator)}`;
-    }
+    return html`
+      ${loop(model.tags, (tag, { last }) => {
+        if (tag.reference instanceof TagComponent) {
+          const tagElement = tag.reference;
+          return html`${unsafeHTML(tagElement.getHTML().trim())}${last ? "" : tagSeparator}`;
+        }
 
-    return headingTemplate;
+        return html`${tag.text}${last ? "" : tagSeparator}`;
+      })}
+    `;
   }
 
   private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
