@@ -146,6 +146,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   private resizeChrome(): void {
     const boundingBoxes = Array.from(this.headingElements).map((element) => element.getBoundingClientRect());
 
+    // TODO: I might be able to improve some of the math logic
     let maximumHeight = -Infinity;
     boundingBoxes.forEach((bounds) => {
       // 1. we first have to calculate how much height the heading has
@@ -162,8 +163,6 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
 
       // 2.
       const labelHeight: Pixel = Math.sin(headingAngle) * bounds.width;
-
-      console.debug(labelHeight);
 
       // 3.
       const totalHeight: Pixel = headingHeight + labelHeight;
@@ -267,7 +266,6 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     });
 
     const focusCallback = (targetModel: Annotation, selected: boolean) => {
-      console.debug(selected);
       if (targetModel.reference instanceof AnnotationComponent) {
         targetModel.reference.selected = selected;
       } else {
