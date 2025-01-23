@@ -1,26 +1,4 @@
-@property --oe-annotation-color {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: green;
-}
-
-@property --oe-annotation-font-color {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: white;
-}
-
-@property --oe-annotation-focus-color {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: lightgreen;
-}
-
-@property --oe-annotation-weight {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 2px;
-}
+@import url("./variables.css");
 
 :host {
   position: relative;
