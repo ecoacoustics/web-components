@@ -8,7 +8,7 @@ import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
-import { computed, watch } from "@lit-labs/preact-signals";
+import { computed, signal, watch } from "@lit-labs/preact-signals";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
@@ -100,6 +100,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
   @query(".annotation-chrome")
   private annotationSurface!: HTMLDivElement;
 
+  private readonly headingChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
   private resizeChromeNextUpdate = false;
@@ -172,9 +173,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
     });
 
     // 4.
-    if (this.unitConverter) {
-      this.unitConverter.requestChrome({ top: maximumHeight });
-    }
+    this.headingChromeHeight.value = maximumHeight;
   }
 
   private cullAnnotation(model: Annotation): boolean {
@@ -325,7 +324,7 @@ export class AnnotateComponent extends AbstractComponent(LitElement) {
         ${when(
           this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
           () => html`
-            <div class="headings-chrome">
+            <div class="headings-chrome" style="height: ${watch(this.headingChromeHeight)}px">
               ${map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
             </div>
           `,

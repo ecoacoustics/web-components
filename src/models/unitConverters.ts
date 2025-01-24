@@ -28,13 +28,6 @@ export type FrequencyScale = LinearScale<Hertz>;
 export type InvertTemporalScale = InverseLinearScale<Seconds>;
 export type InvertFrequencyScale = InverseLinearScale<Hertz>;
 
-export interface Chrome {
-  top: Pixel;
-  bottom: Pixel;
-  left: Pixel;
-  right: Pixel;
-}
-
 const identityFunction = (value: number) => value;
 
 // TODO: we might want to use batch signals here to increase performance
@@ -58,7 +51,6 @@ export class UnitConverter {
   public audioModel: Signal<AudioModel>;
   public melScale: Signal<boolean>;
   public nyquist = computed(() => this.audioModel.value.sampleRate / 2);
-  public chrome: Chrome = { top: 0, bottom: 0, left: 0, right: 0 };
   private frequencyInterpolator = computed(() => (this.melScale.value ? hertzToMels : (value: Hertz): Hertz => value));
 
   // by using computed signals for the temporalDomain and frequencyDomain
@@ -122,15 +114,6 @@ export class UnitConverter {
   public scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
-
-  public requestChrome(amount: Partial<Chrome>): Chrome {
-    return {
-      top: Math.max(amount.top ?? 0, this.chrome.top),
-      bottom: Math.max(amount.bottom ?? 0, this.chrome.bottom),
-      left: Math.max(amount.left ?? 0, this.chrome.left),
-      right: Math.max(amount.right ?? 0, this.chrome.right),
-    };
-  }
 
   // TODO: I think passing in a scaleConverter here is a hack
   /**

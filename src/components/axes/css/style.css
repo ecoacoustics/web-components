@@ -3,7 +3,18 @@
   display: inline-block;
   width: 100%;
 
-  min-height: 128px !important;
+  /*
+    This is the initial padding applied to both axes
+    It should be overwritten with the actual padding values once we know how
+    much space the axes labels will take up
+
+    We set an initial padding size to a reasonable value so that elements don't
+    change their position too much when the axes labels are added
+  */
+  --x-axis-padding: 2em;
+  --y-axis-padding: 2em;
+
+  min-height: calc(128px + var(--y-axis-padding)) !important;
 
   &::part(grid) {
     color: lightblue;
@@ -19,6 +30,8 @@
 
 #wrapped-element {
   position: relative;
+  padding-bottom: var(--x-axis-padding);
+  padding-left: var(--y-axis-padding);
 }
 
 #axes-svg {
