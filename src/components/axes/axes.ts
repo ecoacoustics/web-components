@@ -2,7 +2,6 @@ import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
-import { AbstractComponent } from "../../mixins/abstractComponent";
 import {
   Hertz,
   TemporalScale,
@@ -17,6 +16,7 @@ import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { hertzToMHertz } from "../../helpers/converters";
+import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't
@@ -56,7 +56,7 @@ import axesStyles from "./css/style.css?inline";
  * @slot - A spectrogram element to add axes to
  */
 @customElement("oe-axes")
-export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) implements WithChromeProvider {
   public static styles = unsafeCSS(axesStyles);
 
   public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
@@ -511,6 +511,14 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     values.push(end);
 
     return values;
+  }
+
+  public chromeLeft(): ChromeTemplate {
+    return html``;
+  }
+
+  public chromeBottom(): ChromeTemplate {
+    return html``;
   }
 
   private axesTemplate() {
