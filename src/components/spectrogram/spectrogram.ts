@@ -5,12 +5,12 @@ import { RenderCanvasSize, RenderWindow, Size, TwoDSlice } from "../../models/re
 import { AudioModel } from "../../models/recordings";
 import { Hertz, Pixel, Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
-import { AbstractComponent } from "../../mixins/abstractComponent";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
+import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -44,7 +44,7 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
-export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
 
   // TODO: we should also have a "pause" event
@@ -578,7 +578,7 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
     return this.domRenderWindow;
   }
 
-  public render() {
+  public surface() {
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>

@@ -1,20 +1,14 @@
-import { CSSResultGroup, LitElement, unsafeCSS } from "lit";
+import { CSSResultGroup, CSSResultOrNative, unsafeCSS } from "lit";
 import { ReactiveController } from "./reactiveController";
+import { Component } from "./mixins";
 import globalStyles from "../helpers/themes/globalStyles.css?inline";
 import defaultTheming from "../helpers/themes/theming.css?inline";
-
-type ImplementsConstructor<T> = new (...args: any[]) => T;
-type Component = ImplementsConstructor<LitElement>;
 
 let themingInserted = false;
 
 export const AbstractComponent = <T extends Component>(superClass: T) => {
   class AbstractComponentClass extends superClass {
-    public constructor(...args: any[]) {
-      super(args);
-    }
-
-    protected static finalizeStyles(styles: CSSResultGroup) {
+    protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
       // we only want to apply the theming styles once to the documents root
       if (!themingInserted) {
         AbstractComponentClass.insertTheming();

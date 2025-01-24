@@ -1,6 +1,5 @@
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { customElement, property, query, queryAll } from "lit/decorators.js";
-import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { AngleDegrees, Pixel, UnitConverter } from "../../models/unitConverters";
@@ -17,6 +16,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
 import { TagComponent } from "../tag/tag";
 import annotateStyles from "./css/style.css?inline";
+import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -68,7 +68,7 @@ export enum AnnotationTagStyle {
  * @slot - A spectrogram element to add annotations to
  */
 @customElement("oe-annotate")
-export class AnnotateComponent extends AbstractComponent(LitElement) {
+export class AnnotateComponent extends ChromeProvider(LitElement) {
   public static styles = unsafeCSS(annotateStyles);
 
   @property({

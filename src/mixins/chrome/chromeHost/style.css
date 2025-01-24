@@ -1,0 +1,40 @@
+#chrome-wrapper {
+  display: grid;
+
+  grid-template-areas:
+    ".    top     ."
+    "left overlay right"
+    ".    bottom  .";
+}
+
+.chrome {
+  &.chrome-top {
+    grid-area: 1 / 2;
+  }
+
+  &.chrome-bottom {
+    grid-area: 3 / 2;
+  }
+
+  &.chrome-left {
+    grid-area: 2 / 1;
+  }
+
+  &.chrome-right {
+    grid-area: 2 / 3;
+  }
+}
+
+.surface {
+  position: relative;
+  grid-area: 2 / 2;
+
+  & > .chrome-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+  }
+}
