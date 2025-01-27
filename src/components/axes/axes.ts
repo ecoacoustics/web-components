@@ -1,4 +1,4 @@
-import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
+import { html, LitElement, nothing, svg, TemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
@@ -120,7 +120,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
-  private unitConverter!: UnitConverter;
+  private unitConverter?: UnitConverter;
 
   // because label padding is a relative fraction, we need to calculate the
   // actual pixel value of the padding
@@ -148,11 +148,12 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     };
   }
 
-  public firstUpdated(): void {
+  public firstUpdated(change: any): void {
+    super.firstUpdated(change);
     this.emUnitFontSize = this.calculateFontSize("M");
   }
 
-  private handleSlotChange(): void {
+  protected handleSlotChange(): void {
     if (this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
 
@@ -190,7 +191,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       // we pull out xPosition to a variable because we use it twice (without modification)
       // for the lines x1 and x2 position
       // by pulling it out to a separate variable, we can avoid recalculating the value twice
-      const xPosition = this.unitConverter.scaleX.value(value);
+      const xPosition = this.unitConverter?.scaleX.value(value);
       return svg`<line
         x1="${xPosition}"
         x2="${xPosition}"
@@ -201,7 +202,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     };
 
     const yGridLineTemplate = (value: Hertz) => {
-      const yPosition = this.unitConverter.scaleY.value(value);
+      const yPosition = this.unitConverter?.scaleY.value(value);
       return svg`<line
         x1="0"
         x2="${canvasSize.width}"
@@ -227,6 +228,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     `;
   }
 
+  private xAxisTemplate!: TemplateResult;
+  private yAxisTemplate!: TemplateResult;
+
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
   private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
@@ -250,7 +254,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     }
 
     const xLabelTemplate = (value: Seconds) => {
-      const xPosition = this.unitConverter.scaleX.value(value);
+      const xPosition = this.unitConverter?.scaleX.value(value);
       const labelYPosition = canvasSize.height + this.tickSize.height;
       const tickYPosition = canvasSize.height;
 
@@ -277,7 +281,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     const yLabelTemplate = (value: Hertz) => {
       const xPosition = -this.tickSize;
-      const yPosition = this.unitConverter.scaleY.value(value);
+      const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
       return svg`<g>
@@ -331,6 +335,20 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     `
       : nothing;
 
+    this.xAxisTemplate = svg`
+      <g part="x-ticks">
+        ${xAxisLabelsTemplate}
+        ${xAxisTitleTemplate}
+      </g>
+    `;
+
+    this.yAxisTemplate = svg`
+      <g part="y-ticks">
+        ${yAxisLabelsTemplate}
+        ${yAxisTitleTemplate}
+      </g>
+    `;
+
     return svg`
       <g part="tick">
         <g part="x-ticks">
@@ -347,6 +365,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   }
 
   private xValues(): Seconds[] {
+    if (!this.unitConverter) {
+      return [];
+    }
+
     const step =
       this.xStepOverride ||
       this.calculateStep(
@@ -365,6 +387,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   }
 
   private yValues(): Hertz[] {
+    if (!this.unitConverter) {
+      return [];
+    }
+
     const step =
       this.yStepOverride ||
       this.calculateStep(
@@ -465,7 +491,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
           domain,
           totalLabelSize,
           scale,
-          sizeKey === "height" ? this.unitConverter.melScale.value : false,
+          sizeKey === "height" && this.unitConverter ? this.unitConverter.melScale.value : false,
         )
       ) {
         return proposedStep;
@@ -513,32 +539,57 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     return values;
   }
 
+  // private axesTemplate() {
+  //   const xValues = this.xValues();
+  //   const yValues = this.yValues();
+  //   const canvasSize = this.unitConverter.canvasSize.value;
+
+  //   const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
+  //   const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
+
+  //   return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
+  // }
+
   public chromeLeft(): ChromeTemplate {
-    return html``;
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
+
+    return html`<svg>${this.xAxisTemplate}</svg>`;
   }
 
   public chromeBottom(): ChromeTemplate {
-    return html``;
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
+
+    return html`<svg>${this.yAxisTemplate}</svg>`;
   }
 
-  private axesTemplate() {
+  public chromeOverlay(): ChromeTemplate {
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
     const xValues = this.xValues();
     const yValues = this.yValues();
     const canvasSize = this.unitConverter.canvasSize.value;
 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
-    const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
-  }
-
-  public render() {
-    return html`
-      <div id="wrapped-element" class="vertically-fill">
-        ${this.unitConverter ? this.axesTemplate() : nothing}
-        <slot @slotchange="${this.handleSlotChange}"></slot>
-      </div>
-    `;
+    return html`<svg>${gridLines}</svg>`;
   }
 }
 

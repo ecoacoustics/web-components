@@ -15,8 +15,8 @@ import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
 import { TagComponent } from "../tag/tag";
-import annotateStyles from "./css/style.css?inline";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",

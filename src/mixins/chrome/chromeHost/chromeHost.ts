@@ -1,29 +1,28 @@
 import { CSSResultGroup, CSSResultOrNative, html, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
 import { Component } from "../../mixins";
 import { ChromeProviderKey, ChromeTemplate, WithChromeProvider } from "../chromeProvider/chromeProvider";
-import { createContext, provide } from "@lit/context";
 import { UnitConverter } from "../../../models/unitConverters";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
+import { state } from "lit/decorators.js";
 import chromeHostStyles from "./style.css?inline";
+import { guard } from "lit/directives/guard.js";
 
 export interface ChromeAdvertisement {
   unitConverter: UnitConverter;
   connect(provider: WithChromeProvider): void;
   disconnect(provider: WithChromeProvider): void;
+  requestUpdate(): void;
 }
 
 export interface ChromeHostSurface {
   surface(): TemplateResult;
 }
 
-export const chromeAdvertisementContext = createContext<ChromeAdvertisement>("chrome-advertisement");
+export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
 export const ChromeHost = <T extends Component>(superClass: T) => {
   class ChromeHostComponentClass extends superClass {
-    @provide({ context: chromeAdvertisementContext })
-    protected chromeAdvertisement!: ChromeAdvertisement;
-
     protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
       const chromeHostCss = unsafeCSS(chromeHostStyles);
       let returnedStyles: CSSResultGroup = [chromeHostCss];
@@ -39,21 +38,36 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       return super.finalizeStyles(returnedStyles);
     }
 
+    @state()
     private providers = new Set<WithChromeProvider>();
+
     private unitConverter!: UnitConverter;
+    private updateSurface = false;
 
     public firstUpdated(change: PropertyValues<this>): void {
+      console.debug("update");
       super.firstUpdated(change);
 
-      this.chromeAdvertisement = {
+      const chromeAdvertisement = {
         unitConverter: this.getUnitConverter(),
-        connect: this.connect,
-        disconnect: this.disconnect,
-      };
+        connect: (provider: WithChromeProvider) => this.connect(provider),
+        disconnect: (provider: WithChromeProvider) => this.disconnect(provider),
+        requestUpdate: () => this.requestUpdate(),
+      } satisfies ChromeAdvertisement;
+
+      setTimeout(() => {
+        this.dispatchEvent(
+          new CustomEvent<ChromeAdvertisement>(chromeAdvertisementEventName, {
+            detail: chromeAdvertisement,
+            bubbles: true,
+          }),
+        );
+      }, 100);
     }
 
     private connect(provider: WithChromeProvider): void {
       this.providers.add(provider);
+      this.requestUpdate();
     }
 
     private disconnect(provider: WithChromeProvider): void {
@@ -67,7 +81,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     private providerTemplate(key: ChromeProviderKey): ChromeTemplate {
       return html`${map(this.providers, (provider) => {
         if (typeof provider[key] === "function") {
-          return provider[key];
+          return provider[key]();
         }
 
         return nothing;
@@ -86,7 +100,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
 
           <div class="surface">
             <div class="chrome chrome-overlay">${this.providerTemplate("chromeOverlay")}</div>
-            ${componentTemplate}
+            ${guard(this.updateSurface, () => componentTemplate)}
           </div>
         </div>
       `;
