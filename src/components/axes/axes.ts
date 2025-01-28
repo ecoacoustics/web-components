@@ -155,6 +155,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
   protected handleSlotChange(): void {
     if (this.spectrogram.unitConverters) {
+      console.debug("slot change");
       this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
 
       // we don't have to use a resize observer to observe when the spectrogram

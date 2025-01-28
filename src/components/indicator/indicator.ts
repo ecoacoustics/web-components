@@ -1,11 +1,11 @@
 import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
 import { html, LitElement, unsafeCSS } from "lit";
 import { customElement, query } from "lit/decorators.js";
-import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
+import { ChromeProvider, ChromeTemplate } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import indicatorStyles from "./css/style.css?inline";
 
 /**
@@ -18,7 +18,7 @@ import indicatorStyles from "./css/style.css?inline";
  * @slot - A spectrogram component to add an indicator to
  */
 @customElement("oe-indicator")
-export class IndicatorComponent extends AbstractComponent(LitElement) {
+export class IndicatorComponent extends ChromeProvider(LitElement) {
   public static styles = unsafeCSS(indicatorStyles);
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
@@ -30,7 +30,7 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
 
-  private handleSlotChange(): void {
+  protected handleSlotChange(): void {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
 
@@ -58,17 +58,14 @@ export class IndicatorComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public render() {
+  public chromeOverlay(): ChromeTemplate {
     return html`
-      <div id="wrapped-element" class="vertically-fill">
-        <svg id="indicator-svg">
-          <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px);">
-            <line id="indicator-line" part="indicator-line" y1="0" y2="100%"></line>
-            <circle id="seek-icon" part="seek-icon" cy="100%" r="5" />
-          </g>
-        </svg>
-        <slot @slotchange="${() => this.handleSlotChange()}"></slot>
-      </div>
+      <svg id="indicator-svg">
+        <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px);">
+          <line id="indicator-line" part="indicator-line" y1="0" y2="100%"></line>
+          <circle id="seek-icon" part="seek-icon" cy="100%" r="5" />
+        </g>
+      </svg>
     `;
   }
 }
