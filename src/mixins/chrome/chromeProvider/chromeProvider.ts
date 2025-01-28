@@ -1,4 +1,4 @@
-import { CSSResultGroup, html, HTMLTemplateResult, nothing, PropertyValues } from "lit";
+import { html, HTMLTemplateResult, nothing, PropertyValues } from "lit";
 import { Component } from "../../mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
@@ -12,7 +12,6 @@ export interface WithChromeProvider {
   chromeLeft?(): ChromeTemplate;
   chromeRight?(): ChromeTemplate;
   chromeOverlay?(): ChromeTemplate;
-  styles?: CSSResultGroup;
 }
 
 export type ChromeProviderKey = keyof WithChromeProvider;

@@ -1,5 +1,5 @@
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
-import { customElement, property, query, queryAll } from "lit/decorators.js";
+import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { customElement, property, queryAll } from "lit/decorators.js";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { AngleDegrees, Pixel, UnitConverter } from "../../models/unitConverters";
@@ -11,11 +11,10 @@ import { computed, signal, watch } from "@lit-labs/preact-signals";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
-import { Size } from "../../models/rendering";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
 import { TagComponent } from "../tag/tag";
-import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -68,7 +67,7 @@ export enum AnnotationTagStyle {
  * @slot - A spectrogram element to add annotations to
  */
 @customElement("oe-annotate")
-export class AnnotateComponent extends ChromeProvider(LitElement) {
+export class AnnotateComponent extends ChromeProvider(LitElement) implements WithChromeProvider {
   public static styles = unsafeCSS(annotateStyles);
 
   @property({
@@ -97,13 +96,14 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @queryAll(".bounding-box-heading")
   private headingElements!: Readonly<NodeListOf<HTMLLabelElement>>;
 
-  @query(".annotation-chrome")
-  private annotationSurface!: HTMLDivElement;
-
   private readonly headingChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
   private resizeChromeNextUpdate = false;
+
+  public get visibleAnnotations(): Annotation[] {
+    return this.annotationModels.filter((model) => !this.cullAnnotation(model));
+  }
 
   public updated(): void {
     if (this.resizeChromeNextUpdate) {
@@ -116,7 +116,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
 
-      (this.unitConverter as any).canvasSize.subscribe((value: Size) => this.handleCanvasResize(value));
+      (this.unitConverter as any).canvasSize.subscribe(() => this.handleCanvasResize());
       this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
     }
 
@@ -135,11 +135,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     this.requestUpdate();
   }
 
-  private handleCanvasResize(value: Size): void {
-    const { width, height } = value;
-    this.annotationSurface.style.width = `${width}px`;
-    this.annotationSurface.style.height = `${height}px`;
-
+  private handleCanvasResize(): void {
     this.resizeChromeNextUpdate = true;
   }
 
@@ -316,27 +312,18 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     `;
   }
 
-  public render() {
-    const visibleAnnotations = this.annotationModels.filter((model) => !this.cullAnnotation(model));
+  public chromeOverlay(): ChromeTemplate {
+    return html`${map(this.visibleAnnotations, (model: Annotation, i: number) => this.annotationTemplate(model, i))}`;
+  }
+
+  public chromeTop(): ChromeTemplate {
+    if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
+      return nothing;
+    }
 
     return html`
-      <div id="wrapper-element" class="vertically-fill">
-        ${when(
-          this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
-          () => html`
-            <div class="headings-chrome" style="height: ${watch(this.headingChromeHeight)}px">
-              ${map(visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
-            </div>
-          `,
-        )}
-
-        <div class="wrapper-chrome">
-          <div class="annotation-chrome">
-            ${map(visibleAnnotations, (model: Annotation, i: number) => this.annotationTemplate(model, i))}
-          </div>
-
-          <slot @slotchange="${() => this.handleSlotChange()}"></slot>
-        </div>
+      <div class="headings-chrome" style="height: ${watch(this.headingChromeHeight)}px">
+        ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
       </div>
     `;
   }
