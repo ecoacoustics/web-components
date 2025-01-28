@@ -5,7 +5,7 @@ import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
-import { ChromeProvider, ChromeTemplate } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import indicatorStyles from "./css/style.css?inline";
 
 /**
@@ -18,7 +18,7 @@ import indicatorStyles from "./css/style.css?inline";
  * @slot - A spectrogram component to add an indicator to
  */
 @customElement("oe-indicator")
-export class IndicatorComponent extends ChromeProvider(LitElement) {
+export class IndicatorComponent extends ChromeProvider(LitElement) implements WithChromeProvider {
   public static styles = unsafeCSS(indicatorStyles);
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
