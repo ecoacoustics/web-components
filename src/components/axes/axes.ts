@@ -244,7 +244,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter?.scaleX.value(value);
-      const labelYPosition = canvasSize.height + this.tickSize.height;
+      const labelYPosition = this.tickSize.height + this.labelPadding.height;
       const tickYPosition = canvasSize.height;
 
       return svg`
@@ -269,7 +269,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     };
 
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = -this.tickSize.width;
+      const xPosition = this.tickSize.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
@@ -300,7 +300,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       <text
         part="title x-title"
         x="${canvasSize.width / 2}"
-        y="${canvasSize.height + xTitleOffset}"
+        y="${xTitleOffset}"
         text-anchor="middle"
         font-family="sans-serif"
       >
