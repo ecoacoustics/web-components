@@ -8,7 +8,7 @@
   --oe-annotation-color: green;
   --oe-annotation-font-color: white;
   --oe-annotation-focus-color: lightgreen;
-  --oe-annotation-weight: 2px;
+  --oe-annotation-weight: 1px;
 }
 
 #wrapper-element {
@@ -31,8 +31,13 @@
 }
 
 .annotation-container {
-  position: relative;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
   cursor: pointer;
+
+  overflow: hidden;
 
   &:focus {
     --oe-annotation-color: var(--oe-annotation-focus-color);
