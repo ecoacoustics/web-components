@@ -245,15 +245,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter?.scaleX.value(value);
       const labelYPosition = this.tickSize.height + this.labelPadding.height;
-      const tickYPosition = canvasSize.height;
 
       return svg`
         <g>
           <line
             part="x-tick"
             x="${xPosition}"
-            y1="${tickYPosition}"
-            y2="${tickYPosition + this.tickSize.height}"
+            y1="0"
+            y2="${this.tickSize.height}"
           ></line>
           <text
             part="x-label"
@@ -284,7 +283,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
           part="y-label"
           text-anchor="end"
           dominant-baseline="middle"
-          x="${xPosition - this.labelPadding.width}"
+          x="${xPosition}"
           y="${yPosition}"
         >
           ${mHertzValue.toFixed(1)}
