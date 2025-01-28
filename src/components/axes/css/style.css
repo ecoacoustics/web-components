@@ -28,7 +28,7 @@
   }
 }
 
-#axes-svg {
+.axes-svg {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -53,4 +53,10 @@
   g {
     stroke: currentColor;
   }
+}
+
+.axes-labels {
+  overflow: visible;
+  height: fit-content;
+  width: fit-content;
 }

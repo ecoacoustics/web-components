@@ -536,7 +536,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg>${this.xAxisTemplate}</svg>`;
+    return html`<svg class="axes-labels">${this.yAxisTemplate}</svg>`;
   }
 
   public chromeBottom(): ChromeTemplate {
@@ -550,7 +550,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg>${this.yAxisTemplate}</svg>`;
+    return html`<svg class="axes-labels">${this.xAxisTemplate}</svg>`;
   }
 
   public chromeOverlay(): ChromeTemplate {
@@ -564,7 +564,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg>${gridLines}</svg>`;
+    return html`<svg class="axes-svg">${gridLines}</svg>`;
   }
 }
 
