@@ -5,8 +5,8 @@ import { UnitConverter } from "../../../models/unitConverters";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
-import chromeHostStyles from "./style.css?inline";
 import { guard } from "lit/directives/guard.js";
+import chromeHostStyles from "./style.css?inline";
 
 export interface ChromeAdvertisement {
   unitConverter: UnitConverter;
@@ -45,7 +45,6 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     private updateSurface = false;
 
     public firstUpdated(change: PropertyValues<this>): void {
-      console.debug("update");
       super.firstUpdated(change);
 
       const chromeAdvertisement = {
@@ -66,6 +65,23 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     private connect(provider: WithChromeProvider): void {
+      const styles = (provider.constructor as any).styles as CSSResultGroup;
+      if (Array.isArray(styles)) {
+        for (const style of styles) {
+          if (style instanceof CSSStyleSheet) {
+            this.shadowRoot?.adoptedStyleSheets.push(style);
+          } else {
+            this.shadowRoot?.adoptedStyleSheets.push((style as any).styleSheet);
+          }
+        }
+      } else {
+        if (styles instanceof CSSStyleSheet) {
+          this.shadowRoot?.adoptedStyleSheets.push(styles);
+        } else {
+          this.shadowRoot?.adoptedStyleSheets.push((styles as any).styleSheet);
+        }
+      }
+
       this.providers.add(provider);
       this.requestUpdate();
     }
