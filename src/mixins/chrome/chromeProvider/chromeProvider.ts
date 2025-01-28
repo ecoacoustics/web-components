@@ -39,7 +39,7 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     }
 
     public render() {
-      this.chromeAdvertisement?.requestUpdate();
+      // this.chromeAdvertisement?.requestUpdate();
       return html`<slot @slotchange="${() => this.handleSlotChange()}"></slot>`;
     }
   }

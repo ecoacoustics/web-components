@@ -27,6 +27,8 @@ export enum AnnotationTagStyle {
  * @description
  * Creates an annotation surface that can render annotations
  *
+ * This component must wrap an element that implements the ChromeHost mixin
+ *
  * @example
  * ```html
  * <oe-annotate>

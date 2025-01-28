@@ -28,12 +28,6 @@
   }
 }
 
-#wrapped-element {
-  position: relative;
-  padding-bottom: var(--x-axis-padding);
-  padding-left: var(--y-axis-padding);
-}
-
 #axes-svg {
   position: absolute;
   width: 100%;

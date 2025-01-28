@@ -266,7 +266,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.renderSpectrogram();
     }
 
-    this.resizeCanvas(this.canvas);
+    // TODO: Find out why this was originally here
+    // this.resizeCanvas(this.canvas);
   }
 
   public renderSpectrogram(): void {
