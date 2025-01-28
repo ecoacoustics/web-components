@@ -1,7 +1,15 @@
-import { CSSResultGroup, CSSResultOrNative, html, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import {
+  CSSResultGroup,
+  CSSResultOrNative,
+  html,
+  LitElement,
+  nothing,
+  PropertyValues,
+  TemplateResult,
+  unsafeCSS,
+} from "lit";
 import { Component } from "../../mixins";
 import { ChromeProviderKey, ChromeTemplate, WithChromeProvider } from "../chromeProvider/chromeProvider";
-import { UnitConverter } from "../../../models/unitConverters";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
@@ -9,7 +17,6 @@ import { guard } from "lit/directives/guard.js";
 import chromeHostStyles from "./style.css?inline";
 
 export interface ChromeAdvertisement {
-  unitConverter: UnitConverter;
   connect(provider: WithChromeProvider): void;
   disconnect(provider: WithChromeProvider): void;
   requestUpdate(): void;
@@ -41,14 +48,12 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     @state()
     private providers = new Set<WithChromeProvider>();
 
-    private unitConverter!: UnitConverter;
     private updateSurface = false;
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
 
       const chromeAdvertisement = {
-        unitConverter: this.getUnitConverter(),
         connect: (provider: WithChromeProvider) => this.connect(provider),
         disconnect: (provider: WithChromeProvider) => this.disconnect(provider),
         requestUpdate: () => this.requestUpdate(),
@@ -65,33 +70,90 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     private connect(provider: WithChromeProvider): void {
-      const styles = (provider.constructor as any).styles as CSSResultGroup;
-      if (Array.isArray(styles)) {
-        for (const style of styles) {
-          if (style instanceof CSSStyleSheet) {
-            this.shadowRoot?.adoptedStyleSheets.push(style);
-          } else {
-            this.shadowRoot?.adoptedStyleSheets.push((style as any).styleSheet);
-          }
-        }
-      } else {
-        if (styles instanceof CSSStyleSheet) {
-          this.shadowRoot?.adoptedStyleSheets.push(styles);
-        } else {
-          this.shadowRoot?.adoptedStyleSheets.push((styles as any).styleSheet);
-        }
-      }
+      // we add the providers style sheets to the host first so that when the
+      // providers template is rendered, the stylesheets are guaranteed to be
+      // present and there won't be a flash of unstyled content or cumulative
+      // shift
+      const styles = this.getProviderStyleSheets(provider);
+      this.addStyleSheets(styles);
 
       this.providers.add(provider);
+
       this.requestUpdate();
     }
 
     private disconnect(provider: WithChromeProvider): void {
-      this.providers.add(provider);
+      const styles = this.getProviderStyleSheets(provider);
+
+      // we remove the providers style sheets last so that there is not a flash
+      // of unstyled content when the provider is removed
+      this.providers.delete(provider);
+      this.removeStyleSheets(styles);
     }
 
-    private getUnitConverter(): UnitConverter {
-      return this.unitConverter;
+    private getProviderStyleSheets(provider: WithChromeProvider): CSSResultGroup {
+      if (!(provider instanceof LitElement)) {
+        console.error("Attempted to attach non-lit element to ChromeHost");
+        return [];
+      }
+
+      const providerClass = provider.constructor as any;
+      return providerClass.styles;
+    }
+
+    private addStyleSheets(styleSheets: CSSResultGroup): void {
+      if (Array.isArray(styleSheets)) {
+        for (const style of styleSheets) {
+          if (Array.isArray(style)) {
+            this.addStyleSheets(style);
+          } else {
+            this.addStyleSheet(style);
+          }
+        }
+
+        return;
+      }
+
+      this.addStyleSheet(styleSheets);
+    }
+
+    private removeStyleSheets(styleSheets: CSSResultGroup): void {
+      if (Array.isArray(styleSheets)) {
+        for (const style of styleSheets) {
+          if (Array.isArray(style)) {
+            this.removeStyleSheets(style);
+          } else {
+            this.removeStyleSheet(style);
+          }
+        }
+      }
+    }
+
+    private addStyleSheet(styleSheet: CSSResultOrNative): void {
+      if (styleSheet instanceof CSSStyleSheet) {
+        this.shadowRoot?.adoptedStyleSheets.push(styleSheet);
+      } else {
+        this.shadowRoot?.adoptedStyleSheets.push((styleSheet as any).styleSheet);
+      }
+    }
+
+    private removeStyleSheet(styleSheet: CSSResultOrNative): void {
+      const currentStyles = this.shadowRoot?.adoptedStyleSheets;
+      if (!currentStyles) {
+        return;
+      }
+
+      const styleSheetObject = styleSheet instanceof CSSStyleSheet ? styleSheet : styleSheet.styleSheet;
+      if (!styleSheetObject) {
+        return;
+      }
+
+      const indexToRemove = currentStyles.indexOf(styleSheetObject);
+      if (indexToRemove < 0) {
+        return;
+      }
+
+      this.shadowRoot.adoptedStyleSheets.splice(indexToRemove, 1);
     }
 
     private providerTemplate(key: ChromeProviderKey): ChromeTemplate {

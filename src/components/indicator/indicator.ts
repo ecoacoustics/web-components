@@ -10,7 +10,9 @@ import indicatorStyles from "./css/style.css?inline";
 
 /**
  * @description
- * A red line that displays the playback position on a spectrogram
+ * A vertical line that displays the playback position on a spectrogram
+ *
+ * This component must wrap an element that implements the ChromeHost mixin
  *
  * @csspart indicator-line - A css target to style the indicator line
  * @csspart seek-icon - A css target to style the seek icon underneath the indicator line
@@ -25,7 +27,7 @@ export class IndicatorComponent extends ChromeProvider(LitElement) implements Wi
   private spectrogram?: SpectrogramComponent;
 
   @query("#indicator-svg")
-  private indicatorSvg!: Readonly<HTMLDivElement>;
+  private indicatorSvg!: Readonly<SVGElement>;
 
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);

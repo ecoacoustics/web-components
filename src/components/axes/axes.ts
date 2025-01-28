@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, svg, TemplateResult, unsafeCSS } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import {
@@ -18,6 +18,7 @@ import { Size } from "../../models/rendering";
 import { hertzToMHertz } from "../../helpers/converters";
 import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import axesStyles from "./css/style.css?inline";
+import { map } from "lit/directives/map.js";
 
 // TODO: this component should have optimized rendering so that it doesn't
 // attempt to re-render an axes that will result in the same template
@@ -29,6 +30,8 @@ import axesStyles from "./css/style.css?inline";
 /**
  * @description
  * X and Y axis grid lines showing duration and frequency of a spectrogram
+ *
+ * This component must wrap an element that implements the ChromeHost mixin
  *
  * @example
  * ```html
@@ -108,10 +111,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   public showYGrid = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram!: SpectrogramComponent;
-
-  @query("#axes-svg")
-  private elementChrome!: Readonly<HTMLDivElement>;
+  private spectrogram!: Readonly<SpectrogramComponent>;
 
   // if we do not know the text that we want to measure, we use one large
   // character as an upperbound estimate of the size of characters
@@ -120,7 +120,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
-  private unitConverter?: UnitConverter;
+  private unitConverter?: Readonly<UnitConverter>;
 
   // because label padding is a relative fraction, we need to calculate the
   // actual pixel value of the padding
@@ -155,21 +155,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
   protected handleSlotChange(): void {
     if (this.spectrogram.unitConverters) {
-      console.debug("slot change");
       this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
-
-      // we don't have to use a resize observer to observe when the spectrogram
-      // or slotted elements resize because we will receive a signal from the
-      // unit converter which will trigger a re-render
-      this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
-    }
-  }
-
-  private handleCanvasResize(canvasSize: Size): void {
-    if (this?.elementChrome) {
-      const { width, height } = canvasSize;
-      this.elementChrome.style.width = `${width}px`;
-      this.elementChrome.style.height = `${height}px`;
     }
   }
 
@@ -187,7 +173,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     return { width, height };
   }
 
-  private createGridLinesTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+  private createGridLinesTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Readonly<Size>) {
     const xGridLineTemplate = (value: Seconds) => {
       // we pull out xPosition to a variable because we use it twice (without modification)
       // for the lines x1 and x2 position
@@ -213,16 +199,18 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       ></line>`;
     };
 
-    const xAxisGridLinesTemplate = svg`${xValues.map(
+    const xAxisGridLinesTemplate = svg`${map(
+      xValues,
       (value, i) => svg`${i > 0 && i < xValues.length - 1 ? xGridLineTemplate(value) : nothing}`,
     )}`;
 
-    const yAxisGridLinesTemplate = svg`${yValues.map(
+    const yAxisGridLinesTemplate = svg`${map(
+      yValues,
       (value, i) => svg`${i > 0 && i < yValues.length - 1 ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`
-      <g part="grid" >
+      <g part="grid">
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
@@ -234,7 +222,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Readonly<Size>) {
     const xTitleFontSize = this.calculateFontSize(this.xTitle);
     const yTitleFontSize = this.calculateFontSize(this.yTitle);
     const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
@@ -247,12 +235,12 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
     const yTitleOffset = yTitleFontSize.height + fontSize.width;
 
-    if (this.elementChrome) {
-      const xAxisPadding = xTitleOffset + xTitleFontSize.height;
-      const yAxisPadding = yTitleOffset;
-      this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
-      this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
-    }
+    // if (this.elementChrome) {
+    //   const xAxisPadding = xTitleOffset + xTitleFontSize.height;
+    //   const yAxisPadding = yTitleOffset;
+    //   this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
+    //   this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
+    // }
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter?.scaleX.value(value);
@@ -281,7 +269,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     };
 
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = -this.tickSize;
+      const xPosition = -this.tickSize.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
@@ -304,8 +292,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       </g>`;
     };
 
-    const xAxisLabelsTemplate = this.showXAxis ? svg`${xValues.map((value) => xLabelTemplate(value))}` : nothing;
-    const yAxisLabelsTemplate = this.showYAxis ? svg`${yValues.map((value) => yLabelTemplate(value))}` : nothing;
+    const xAxisLabelsTemplate = this.showXAxis ? svg`${map(xValues, (value) => xLabelTemplate(value))}` : nothing;
+    const yAxisLabelsTemplate = this.showYAxis ? svg`${map(yValues, (value) => yLabelTemplate(value))}` : nothing;
 
     const xAxisTitleTemplate = this.showXTitle
       ? svg`
@@ -352,15 +340,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     return svg`
       <g part="tick">
-        <g part="x-ticks">
-          ${xAxisLabelsTemplate}
-          ${xAxisTitleTemplate}
-        </g>
-
-        <g part="y-ticks">
-          ${yAxisLabelsTemplate}
-          ${yAxisTitleTemplate}
-        </g>
+        <g part="x-ticks">${this.xAxisTemplate}</g>
+        <g part="y-ticks">${this.yAxisTemplate}</g>
       </g>
     `;
   }
@@ -509,6 +490,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     scale: FrequencyScale | TemporalScale,
     includeEnd = true,
   ): number[] {
+    if (step === 0) {
+      return [];
+    }
+
     const values: number[] = [];
     for (let i = start; i < end; i += step) {
       values.push(i);
@@ -539,17 +524,6 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     return values;
   }
-
-  // private axesTemplate() {
-  //   const xValues = this.xValues();
-  //   const yValues = this.yValues();
-  //   const canvasSize = this.unitConverter.canvasSize.value;
-
-  //   const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
-  //   const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
-
-  //   return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
-  // }
 
   public chromeLeft(): ChromeTemplate {
     if (!this.unitConverter) {

@@ -22,10 +22,6 @@
   }
 }
 
-#wrapped-element {
-  position: relative;
-}
-
 #indicator-svg {
   position: absolute;
   width: 100%;
