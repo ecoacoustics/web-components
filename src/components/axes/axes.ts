@@ -114,7 +114,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   private spectrogram!: Readonly<SpectrogramComponent>;
 
   // if we do not know the text that we want to measure, we use one large
-  // character as an upperbound estimate of the size of characters
+  // character as an upper bound estimate of the size of characters
   // using the default case should only ever be used for estimates and measuring
   // against actual text values is recommended
   // I have this as a private property so that we don't have to re-calculate the
@@ -250,7 +250,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
         <g>
           <line
             part="x-tick"
-            x="${xPosition}"
+            x1="${xPosition}"
+            x2="${xPosition}"
             y1="0"
             y2="${this.tickSize.height}"
           ></line>
@@ -268,16 +269,17 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     };
 
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = this.tickSize.width;
+      const xPosition = this.tickSize.width + this.labelPadding.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
       return svg`<g>
         <line
           part="y-tick"
-          x1="${xPosition}"
-          x2="${xPosition + this.tickSize.width}"
-          y="${yPosition}"
+          x1="${xPosition + this.labelPadding.width}"
+          x2="${xPosition + this.labelPadding.width + this.tickSize.width}"
+          y1="${yPosition}"
+          y2="${yPosition}"
         ></line>
         <text
           part="y-label"
