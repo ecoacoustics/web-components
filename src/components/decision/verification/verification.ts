@@ -24,7 +24,7 @@ import { Tag } from "../../../models/tag";
 @customElement("oe-verification")
 export class VerificationComponent extends DecisionComponent {
   @required()
-  @property({ type: String, converter: enumConverter(DecisionOptions) as any })
+  @property({ type: String, converter: enumConverter(DecisionOptions) })
   public verified: DecisionOptions = DecisionOptions.TRUE;
 
   /** Value that will be added to the oe-additional-tags column */

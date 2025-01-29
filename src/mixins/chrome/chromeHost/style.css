@@ -8,6 +8,8 @@
 }
 
 .chrome {
+  position: relative;
+
   &.chrome-edge {
     position: relative;
     height: fit-content;
@@ -42,5 +44,9 @@
     height: 100%;
 
     z-index: 1;
+  }
+
+  & > .host-template {
+    display: contents;
   }
 }

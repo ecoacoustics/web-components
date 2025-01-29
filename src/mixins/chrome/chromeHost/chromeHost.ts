@@ -1,19 +1,9 @@
-import {
-  CSSResultGroup,
-  CSSResultOrNative,
-  html,
-  LitElement,
-  nothing,
-  PropertyValues,
-  TemplateResult,
-  unsafeCSS,
-} from "lit";
+import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
 import { Component } from "../../mixins";
 import { ChromeProviderKey, ChromeTemplate, WithChromeProvider } from "../chromeProvider/chromeProvider";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
-import { guard } from "lit/directives/guard.js";
 import chromeHostStyles from "./style.css?inline";
 
 export interface ChromeAdvertisement {
@@ -23,13 +13,13 @@ export interface ChromeAdvertisement {
 }
 
 export interface ChromeHostSurface {
-  surface(): TemplateResult;
+  surface(): ChromeTemplate;
 }
 
 export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
 export const ChromeHost = <T extends Component>(superClass: T) => {
-  class ChromeHostComponentClass extends superClass {
+  abstract class ChromeHostComponentClass extends superClass implements ChromeHostSurface {
     protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
       const chromeHostCss = unsafeCSS(chromeHostStyles);
       let returnedStyles: CSSResultGroup = [chromeHostCss];
@@ -48,7 +38,12 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     @state()
     private providers = new Set<WithChromeProvider>();
 
-    private updateSurface = false;
+    /**
+     * A template that will have chrome added to it
+     * You must provide an implementation of the surface() method to use a
+     * ChromeHost mixin
+     */
+    public abstract surface(): ChromeTemplate;
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
@@ -167,7 +162,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     public render() {
-      const componentTemplate = (this as any).surface();
+      const componentTemplate = this.surface();
 
       return html`
         <div id="chrome-wrapper">
@@ -178,7 +173,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
 
           <div class="surface">
             <div class="chrome chrome-overlay">${this.providerTemplate("chromeOverlay")}</div>
-            ${guard(this.updateSurface, () => componentTemplate)}
+            <div class="host-template">${componentTemplate}</div>
           </div>
         </div>
       `;

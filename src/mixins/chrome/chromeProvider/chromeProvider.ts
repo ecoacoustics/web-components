@@ -17,9 +17,15 @@ export interface WithChromeProvider {
 export type ChromeProviderKey = keyof WithChromeProvider;
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
-  abstract class ChromeProviderComponentClass extends superClass {
+  abstract class ChromeProviderComponentClass extends superClass implements WithChromeProvider {
     @state()
     private chromeAdvertisement?: ChromeAdvertisement;
+
+    public abstract chromeTop?(): ChromeTemplate;
+    public abstract chromeBottom?(): ChromeTemplate;
+    public abstract chromeLeft?(): ChromeTemplate;
+    public abstract chromeRight?(): ChromeTemplate;
+    public abstract chromeOverlay?(): ChromeTemplate;
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
