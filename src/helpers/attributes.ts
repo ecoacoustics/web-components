@@ -57,7 +57,7 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
 
 export const enumConverter = <T extends Enum>(
   enumValues: T,
-  fallbackValue: keyof T | typeof converterNoProvidedFallback = converterNoProvidedFallback,
+  fallbackValue: typeof converterNoProvidedFallback | T[keyof T] = converterNoProvidedFallback,
 ) => {
   return (value: string | null): T[keyof T] | undefined => {
     // we compare the requested key, and the enums keys as lowercase so that

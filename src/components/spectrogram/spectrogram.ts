@@ -8,17 +8,21 @@ import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
-import { booleanConverter } from "../../helpers/attributes";
+import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
-import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
+import { ChromeHost, ChromeHostSurface } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
-
-export type SpectrogramCanvasScale = "stretch" | "natural" | "original";
 
 export interface IPlayEvent {
   play: boolean;
   keyboardShortcut: boolean;
+}
+
+export enum SpectrogramCanvasScale {
+  STRETCH = "stretch",
+  NATURAL = "natural",
+  ORIGINAL = "original",
 }
 
 // TODO: remove this default model
@@ -44,7 +48,7 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
-export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) {
+export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) implements ChromeHostSurface {
   public static styles = unsafeCSS(spectrogramStyles);
 
   // TODO: we should also have a "pause" event
@@ -76,8 +80,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
    *
    * @values stretch | natural | original
    */
-  @property({ type: String, reflect: true })
-  public scaling: SpectrogramCanvasScale = "stretch";
+  @property({
+    type: String,
+    reflect: true,
+    converter: enumConverter(SpectrogramCanvasScale, SpectrogramCanvasScale.STRETCH),
+  })
+  public scaling: SpectrogramCanvasScale = SpectrogramCanvasScale.STRETCH;
 
   /** The size of the fft window */
   @property({ type: Number, attribute: "window-size", reflect: true })
@@ -111,8 +119,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @property({ type: Number, reflect: true })
   public contrast = 1;
 
-  @queryAssignedElements()
-  public slotElements!: Array<HTMLElement>;
+  @queryAssignedElements({ selector: "source" })
+  public slottedSourceElements!: ReadonlyArray<HTMLElement>;
 
   @query("#media-element")
   private mediaElement!: HTMLMediaElement;
@@ -173,16 +181,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       return this.src;
     }
 
-    const slotElement = this.slotElements[0];
-    if (slotElement instanceof HTMLSourceElement) {
-      return slotElement.src;
+    // TODO: We should support multiple <source> elements as fallbacks
+    // see: https://github.com/ecoacoustics/web-components/issues/280
+    const targetSourceElement = this.slottedSourceElements[0];
+    if (targetSourceElement instanceof HTMLSourceElement) {
+      return targetSourceElement.src;
     }
 
     return "";
   }
 
   public hasSource(): boolean {
-    return !!this.src || this.slotElements.length > 0;
+    return !!this.src || this.slottedSourceElements.length > 0;
   }
 
   // todo: this should be part of a mixin
@@ -472,7 +482,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
-    const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slotElements"];
+    const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slottedSourceElements"];
     return invalidationKeys.some((key) => change.has(key));
   }
 
@@ -582,13 +592,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public surface() {
+    console.debug(this.renderedSource);
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>
       </div>
       <audio
         id="media-element"
-        src="${this.src}"
+        src="${this.renderedSource}"
         @play="${() => this.play()}"
         @ended="${() => this.stop()}"
         preload="metadata"

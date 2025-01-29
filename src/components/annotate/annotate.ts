@@ -75,7 +75,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
   @property({
     type: String,
     attribute: "tag-style",
-    converter: enumConverter(AnnotationTagStyle, AnnotationTagStyle.EDGE as any) as any,
+    converter: enumConverter(AnnotationTagStyle, AnnotationTagStyle.EDGE),
   })
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
 

@@ -18,7 +18,6 @@
             color-map="magma"
             brightness="-0.4"
             contrast="2"
-            scaling="stretch"
           >
             <source src="/example.flac" />
           </oe-spectrogram>
@@ -65,8 +64,10 @@
         heightInputElem.addEventListener("input", changeHeight);
       };
 
+      const spectrogram = () => document.getElementById("playing-spectrogram");
+
       function changeSource() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.src === "/example.flac") {
           element.setAttribute("src", "/example_34s.flac");
@@ -79,25 +80,25 @@
 
       function changeHeight(event) {
         const newHeight = event.target.value;
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         element.style.height = `${newHeight}px`;
       }
 
       function changeAspectRatio() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         const currentAspectRatio = element.getAttribute("scale");
 
         if (currentAspectRatio === "stretch") {
           element.setAttribute("scale", "natural");
         } else if (currentAspectRatio === "natural") {
           element.setAttribute("scale", "original");
-        } else if (currentAspectRatio === "original") {
+        } else {
           element.setAttribute("scale", "stretch");
         }
       }
 
       function changeOffset() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("offset") === "2") {
           element.setAttribute("offset", "0");
@@ -108,7 +109,7 @@
 
       function changeColorMap() {
         document.getElementById("generation").value = parseInt(document.getElementById("generation").value) + 1;
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("color-map") === "audacity") {
           element.setAttribute("color-map", "raven");
@@ -118,7 +119,7 @@
       }
 
       function changeWindowSize() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("window-size") === "1024") {
           element.setAttribute("window-size", "256");
@@ -128,7 +129,7 @@
       }
 
       function changeSize() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         const currentSize = element.style.width;
 
         if (currentSize === "90vw") {
@@ -144,7 +145,7 @@
       }
 
       function changeScale() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.hasAttribute("mel-scale")) {
           element.removeAttribute("mel-scale");
@@ -185,7 +186,7 @@
       }
 
       .large {
-        height: 800px;
+        height: 600px;
         width: 100%;
       }
     </style>
