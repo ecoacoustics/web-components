@@ -390,9 +390,13 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   private naturalSize(originalSize: Size, target: HTMLElement): Size {
-    // the natural size is where we scale the width and height up
-    // until one of the dimensions overflows the targetEntry.contentRect
-    // while keeping the aspect ratio
+    if (target.clientWidth === 0 || target.clientHeight === 0) {
+      return { width: 0, height: 0 };
+    }
+
+    // the natural size is where we take the "original" spectrogram size and
+    // scale the width and height (while maintaining the aspect ratio) up until
+    // one of the dimensions overflows the targetEntry.contentRect
     const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
 
     return {
@@ -425,11 +429,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   // TODO: refactor this procedure
   private resizeCanvas(targetEntry: HTMLElement): void {
-    let size: Size | undefined;
+    let size: Size;
 
-    if (this.scaling === "original") {
+    if (this.scaling === SpectrogramCanvasScale.ORIGINAL) {
       size = this.originalFftSize();
-    } else if (this.scaling === "natural") {
+    } else if (this.scaling === SpectrogramCanvasScale.NATURAL) {
       const originalSize = this.originalFftSize();
       size = this.naturalSize(originalSize, targetEntry);
     } else {
@@ -445,15 +449,13 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.canvas.height = size.height;
     }
 
-    if (this.scaling === "original") {
+    if (this.scaling === SpectrogramCanvasScale.ORIGINAL) {
       this.style.height = `${size.height}px`;
       this.style.width = `${size.width}px`;
-    }
-
-    if (this.scaling === "stretch") {
-      this.canvas.style.width = "100%";
-    } else {
+    } else if (this.scaling === SpectrogramCanvasScale.NATURAL) {
       this.canvas.style.width = "auto";
+    } else {
+      this.canvas.style.width = "100%";
     }
   }
 
@@ -592,7 +594,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public surface() {
-    console.debug(this.renderedSource);
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>
