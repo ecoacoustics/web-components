@@ -32,6 +32,21 @@
   &.chrome-right {
     grid-area: 2 / 3;
   }
+
+  /*
+    By default, css grid cells will have a fixed size determined by the grid
+    template.
+  */
+  &.chrome-left,
+  &.chrome-right {
+    display: flex;
+  }
+
+  &.chrome-top,
+  &.chrome-bottom {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .surface {

@@ -28,24 +28,24 @@
     z-index to one
   */
   z-index: 1;
-
-  line {
-    shape-rendering: crispEdges;
-  }
-
-  text {
-    fill: var(--oe-font-color);
-    stroke: none;
-    font: 11px sans-serif;
-  }
-
-  g {
-    stroke: currentColor;
-  }
 }
 
 .axes-labels {
   overflow: visible;
   height: 2em;
   width: 1em;
+}
+
+line {
+  shape-rendering: crispEdges;
+}
+
+text {
+  fill: var(--oe-font-color);
+  stroke: none;
+  font: 11px sans-serif;
+}
+
+g {
+  stroke: currentColor;
 }
