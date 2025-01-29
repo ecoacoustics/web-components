@@ -399,6 +399,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // one of the dimensions overflows the targetEntry.contentRect
     const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
 
+    console.debug(originalSize);
+
     return {
       width: originalSize.width * scale,
       height: originalSize.height * scale,
