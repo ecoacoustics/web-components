@@ -17,8 +17,8 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { hertzToMHertz } from "../../helpers/converters";
 import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
-import axesStyles from "./css/style.css?inline";
 import { map } from "lit/directives/map.js";
+import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't
 // attempt to re-render an axes that will result in the same template
