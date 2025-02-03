@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Only Media Controls</title>
+    <script type="module" src="/src/components/index.ts"></script>
+  </head>
+
+  <body>
+    <p>This is a paragraph element</p>
+
+    <oe-media-controls></oe-media-controls>
+
+    <section>
+      <h3>Description</h3>
+      <p>I have previously seen bugs where the media controls would end up wrapping siblings (for some reason).</p>
+      <p>You should check the box model of the media controls on this page.</p>
+    </section>
+
+    <section>
+      <h3>Errors</h3>
+      <p>Additionally, you should check that the correct errors are thrown.</p>
+    </section>
+  </body>
+</html>
