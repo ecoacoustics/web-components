@@ -278,9 +278,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     } else if (this.invalidateSpectrogramSource(change)) {
       this.renderSpectrogram();
     }
-
-    // TODO: Find out why this was originally here
-    // this.resizeCanvas(this.canvas);
   }
 
   public async renderSpectrogram() {
@@ -392,7 +389,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       throw new Error("Attempted to initialize unit converter before creating audio model");
     }
 
-    const unitConverters = new UnitConverter(
+    this.unitConverters.value = new UnitConverter(
       this.renderWindow,
       this.renderCanvasSize,
       // typescript is correctly throwing an error because if the audio model
@@ -402,12 +399,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // happen when this component is working correctly.
       //
       // TODO: as part of a defensive programming practice, we should remove
-      // this "as any" cast and gracefully handle errors where the audio model
+      // the "as any" cast and gracefully handle errors where the audio model
       // suddenly destructs itself
       this.audio as any,
       signal(this.melScale),
     );
-    this.unitConverters.value = unitConverters;
   }
 
   private originalFftSize(): Size {
@@ -499,11 +495,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
 
     if (this.scaling === SpectrogramCanvasScale.ORIGINAL) {
+      this.canvas.style.position = "relative";
       this.canvas.style.height = `${size.height}px`;
       this.canvas.style.width = `${size.width}px`;
     } else if (this.scaling === SpectrogramCanvasScale.NATURAL) {
+      this.canvas.style.position = "relative";
       this.canvas.style.width = "auto";
     } else {
+      /*
+        we want absolute positioning because the relative position point will be
+        the .surface element provided by the ChromeHost mixin
+      */
+      this.canvas.style.position = "absolute";
       this.canvas.style.width = "100%";
     }
   }
