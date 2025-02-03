@@ -52,6 +52,7 @@
 .surface {
   position: relative;
   grid-area: 2 / 2;
+  max-width: 100%;
 
   & > .chrome-overlay {
     position: absolute;
