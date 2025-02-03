@@ -1,4 +1,4 @@
-import { invokeBrowserMethod } from "../../tests/helpers";
+import { invokeBrowserMethod, removeBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect } from "../../tests/assertions";
 import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
@@ -89,27 +89,35 @@ test.describe("unit tests", () => {
   });
 });
 
-test.describe("spectrogram", () => {
+test.describe("playing/pausing", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  test("play and pausing audio with source slot", async ({ fixture }) => {
+  async function assertCanPlayPause(fixture: any) {
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
+    expect(await fixture.isPlayingAudio()).toBe(true);
+
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
+    expect(await fixture.isPlayingAudio()).toBe(false);
+  }
+
+  test("should behave correctly with a src attribute and source slot", async ({ fixture }) => {
+    const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
+    await fixture.updateSlot(slot);
+    await assertCanPlayPause(fixture);
+  });
+
+  test("should behave correctly pausing audio with only source slot", async ({ fixture }) => {
     const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
     await fixture.updateSlot(slot);
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    expect(await fixture.isPlayingAudio()).toBe(true);
+    await removeBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src");
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
-    expect(await fixture.isPlayingAudio()).toBe(false);
+    await assertCanPlayPause(fixture);
   });
 
-  test("playing and pausing audio with src attribute", async ({ fixture }) => {
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    expect(await fixture.isPlayingAudio()).toBe(true);
-
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
-    expect(await fixture.isPlayingAudio()).toBe(false);
+  test("should behave correctly with src attribute", async ({ fixture }) => {
+    await assertCanPlayPause(fixture);
   });
 });
