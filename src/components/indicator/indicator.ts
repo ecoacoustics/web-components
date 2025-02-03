@@ -29,12 +29,23 @@ export class IndicatorComponent extends ChromeProvider(LitElement) implements Wi
   @query("#indicator-svg")
   private indicatorSvg!: Readonly<SVGElement>;
 
+  // TODO: investigate why I am de-referencing the signal here. Wouldn't it be
+  // easier to work with and more performant with a reactive signal
   private unitConverter?: UnitConverter;
   private computedTimePx: ReadonlySignal<number> = computed(() => 0);
 
   protected handleSlotChange(): void {
-    if (this.spectrogram && this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters.value;
+    if (!this.spectrogram) {
+      console.warn("An oe-indicator component was updated without an oe-spectrogram component.");
+      return;
+    }
+
+    this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
+      this.unitConverter = newUnitConverter;
+
+      if (this.unitConverter) {
+        this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
+      }
 
       this.computedTimePx = computed(() => {
         if (!this.spectrogram || !this.unitConverter) {
@@ -45,11 +56,7 @@ export class IndicatorComponent extends ChromeProvider(LitElement) implements Wi
         const scale = this.unitConverter.scaleX.value;
         return scale(time.value);
       });
-
-      if (this.unitConverter) {
-        this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
-      }
-    }
+    });
   }
 
   private handleCanvasResize(canvasSize: Size): void {

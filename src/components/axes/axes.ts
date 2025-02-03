@@ -111,7 +111,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   public showYGrid = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram!: Readonly<SpectrogramComponent>;
+  private spectrogram?: Readonly<SpectrogramComponent>;
 
   // if we do not know the text that we want to measure, we use one large
   // character as an upper bound estimate of the size of characters
@@ -154,9 +154,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   }
 
   protected handleSlotChange(): void {
-    if (this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
+    if (!this.spectrogram) {
+      console.warn("An oe-axes component was updated without an oe-spectrogram component.");
+      return;
     }
+
+    this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
+      this.unitConverter = newUnitConverter;
+    });
   }
 
   // because querying the DOM for the font size will cause a repaint and reflow
