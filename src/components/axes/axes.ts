@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, svg, TemplateResult, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import {
@@ -113,6 +113,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: Readonly<SpectrogramComponent>;
 
+  @state()
+  private unitConverter?: Readonly<UnitConverter>;
+
   // if we do not know the text that we want to measure, we use one large
   // character as an upper bound estimate of the size of characters
   // using the default case should only ever be used for estimates and measuring
@@ -120,7 +123,6 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
-  private unitConverter?: Readonly<UnitConverter>;
 
   // because label padding is a relative fraction, we need to calculate the
   // actual pixel value of the padding

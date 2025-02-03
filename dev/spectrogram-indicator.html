@@ -9,17 +9,18 @@
 
   <body>
     <oe-indicator>
-      <oe-spectrogram id="spectrogram" src="/example.flac" window-size="256" scaling="original"></oe-spectrogram>
+      <oe-spectrogram id="spectrogram" src="/example.flac" window-size="512" scaling="natural"></oe-spectrogram>
     </oe-indicator>
 
     <oe-media-controls for="spectrogram"></oe-media-controls>
 
     <section>
-      <h3>What to look for</h3>
+      <h3>Notes</h3>
       <ul>
         <li>The media controls can sometimes (incorrectly) wrap the indicator component host</li>
-        <li>The indicator overflowing the spectrogram</li>
-        <li>Make sure you can play audio and the indicator moves</li>
+        <li>Ensure the indicator is not overflowing the spectrogram</li>
+        <li>Check you can play audio and the indicator moves</li>
+        <li>Try making the window bigger than smaller. The indicator should be able to shrink</li>
       </ul>
     </section>
   </body>
