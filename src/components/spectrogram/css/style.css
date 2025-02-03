@@ -1,17 +1,6 @@
 :host {
   --min-height: 128px;
 
-  /*
-    TODO: we should remove display: block from the components :host
-    Because :host is user configurable, we should not add style properties
-    that are used to effect the layout of shadow DOM children.
-
-    Using display: block here means that if the user changes the display on
-    the host element, it will break the layout of the spectrogram.
-
-    e.g. <oe-spectrogram style="display: inline-block"></oe-spectrogram>
-    can potentially break the layout spectrogram content.
-  */
   display: block;
   min-height: var(--min-height);
 }

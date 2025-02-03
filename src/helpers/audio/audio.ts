@@ -54,7 +54,7 @@ export class AudioHelper {
     src: string,
     canvas: HTMLCanvasElement,
     options: SpectrogramOptions,
-  ): Promise<IAudioInformation> {
+  ): Promise<Readonly<IAudioInformation>> {
     if (this.offscreenCanvas) {
       throw new Error("Connect can only be called once. Use regenerateSpectrogram to update the spectrogram.");
     }
@@ -71,7 +71,6 @@ export class AudioHelper {
   }
 
   public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
-    console.log("audio: change source");
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
@@ -120,7 +119,6 @@ export class AudioHelper {
 
   private async abort() {
     const abortedGeneration = this.generation;
-    //console.log("audio: abort start", { abortedGeneration });
 
     const metadata = this.generationData.get(abortedGeneration);
 
@@ -145,7 +143,6 @@ export class AudioHelper {
 
     await this.state.waitForWorkerIdle();
 
-    //console.log("audio: abort complete", { abortedGeneration, generation: this.generation });
     return generation;
   }
 
@@ -166,7 +163,6 @@ export class AudioHelper {
     // recreate the processor every time!
     await this.createAudioContext(info, downloadedBuffer, generation);
 
-    //console.log(`audio (${generation}): audio context created, starting spectrogram generation`);
     this.regenerateWorker(options, info, generation);
 
     // returns before the worker finishes painting
@@ -247,7 +243,6 @@ export class AudioHelper {
     // do not refactor into the class - we don't want to mixup state with a
     // object that is recreated many times
     context.addEventListener("complete", () => {
-      //console.log(`audio (${generation}): context complete`);
       this.state.processorComplete(generation);
     });
 
@@ -256,8 +251,6 @@ export class AudioHelper {
 
     if (success) {
       this.generationData.set(generation, source);
-
-      //console.log(`audio (${generation}):context: source start and start rendering`);
 
       source.start();
       context.startRendering();

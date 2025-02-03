@@ -2,8 +2,7 @@
 
 :host {
   position: relative;
-  display: inline-block;
-  width: 100%;
+  display: block;
 
   --oe-annotation-color: green;
   --oe-annotation-font-color: white;

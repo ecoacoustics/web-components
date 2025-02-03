@@ -1,7 +1,6 @@
 :host {
   position: relative;
-  display: inline-block;
-  width: 100%;
+  display: block;
 
   min-height: calc(128px + var(--y-axis-padding)) !important;
 

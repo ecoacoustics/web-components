@@ -1,3 +1,8 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+
 sl-menu-item[checked]::part(base) {
   background-color: var(--oe-selected-color);
   color: var(--oe-font-color);
