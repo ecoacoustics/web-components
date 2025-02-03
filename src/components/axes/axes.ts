@@ -233,14 +233,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
     // label assuming at a fixed amount away from the largest theoretical axis label
     const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
-    const yTitleOffset = yTitleFontSize.height + fontSize.width;
-
-    // if (this.elementChrome) {
-    //   const xAxisPadding = xTitleOffset + xTitleFontSize.height;
-    //   const yAxisPadding = yTitleOffset;
-    //   this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
-    //   this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
-    // }
+    const yTitleOffset = yTitleFontSize.height;
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter?.scaleX.value(value);
@@ -268,8 +261,11 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       `;
     };
 
+    const yTitleX = yTitleOffset;
+    const yTitleY = canvasSize.height / 2;
+
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = this.tickSize.width + this.labelPadding.width;
+      const xPosition = yTitleX + yTitleFontSize.height + this.labelPadding.width + fontSize.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
@@ -314,9 +310,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       ? svg`
       <text
         part="title y-title"
-        x="-${yTitleOffset}"
-        y="${canvasSize.height / 2}"
-        transform="rotate(270, -${yTitleOffset}, ${canvasSize.height / 2})"
+        x="${yTitleX}"
+        y="${yTitleY}"
+        transform="rotate(270, ${yTitleX}, ${yTitleY})"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -537,7 +533,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg class="axes-labels">${this.yAxisTemplate}</svg>`;
+    return html`<svg class="axes-label-chrome y-axis-chrome" height="${canvasSize.height}">${this.yAxisTemplate}</svg>`;
   }
 
   public chromeBottom(): ChromeTemplate {
@@ -551,7 +547,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg class="axes-labels">${this.xAxisTemplate}</svg>`;
+    return html`<svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}">${this.xAxisTemplate}</svg>`;
   }
 
   public chromeOverlay(): ChromeTemplate {

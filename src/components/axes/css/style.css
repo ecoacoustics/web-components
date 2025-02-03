@@ -21,7 +21,6 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  overflow: visible;
 
   /*
     The axes lines will be hidden behind the spectrogram if we do not set
@@ -30,10 +29,17 @@
   z-index: 1;
 }
 
-.axes-labels {
+svg.axes-label-chrome {
+  position: relative;
   overflow: visible;
-  height: 2em;
-  width: 1em;
+
+  &.x-axis-chrome {
+    height: 2em;
+  }
+
+  &.y-axis-chrome {
+    width: 3.4em;
+  }
 }
 
 line {
