@@ -8,6 +8,19 @@
   </head>
 
   <body>
-    <oe-spectrogram id="spectrogram" src="/example.flac"></oe-spectrogram>
+    <section>
+      <h3>Stretch</h3>
+      <oe-spectrogram src="/example.flac" scaling="stretch"></oe-spectrogram>
+    </section>
+
+    <section>
+      <h3>Natural</h3>
+      <oe-spectrogram src="/example.flac" scaling="natural"></oe-spectrogram>
+    </section>
+
+    <section>
+      <h3>Original</h3>
+      <oe-spectrogram src="/example.flac" scaling="original"></oe-spectrogram>
+    </section>
   </body>
 </html>
