@@ -14,10 +14,6 @@
 }
 
 #spectrogram-container > canvas {
-  /*
-    we want absolute positioning because the relative position point will be
-    the .surface element provided by the ChromeHost mixin
-  */
   position: relative;
   display: inherit;
   height: 100%;
