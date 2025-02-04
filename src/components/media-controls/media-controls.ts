@@ -133,8 +133,14 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       // because we want to scope the for attribute to the current shadow root
       // we need to use the getRootNode method to get the shadow root
       const rootNode = this.getRootNode() as HTMLElement;
-      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(`#${this.for}`);
+      const locator = `#${this.for}`;
+      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(locator);
+
       if (!this.spectrogramElement) {
+        console.warn(`Could not locate oe-media-controls target "${locator}"`);
+        return;
+      } else if (!(this.spectrogramElement instanceof SpectrogramComponent)) {
+        console.error("Attempted to attach oe-media-controls to non spectrogram element");
         return;
       }
 
