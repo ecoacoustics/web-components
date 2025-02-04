@@ -92,8 +92,8 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
         return [];
       }
 
-      const providerClass = provider.constructor as any;
-      return providerClass.styles;
+      const providerClass = provider.constructor as typeof LitElement;
+      return providerClass.styles ?? [];
     }
 
     private addStyleSheets(styleSheets: CSSResultGroup): void {
@@ -167,8 +167,8 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       return html`
         <div id="chrome-wrapper">
           <div class="chrome chrome-edge chrome-top">${this.providerTemplate("chromeTop")}</div>
-          <div class="chrome chrome-edge chrome-bottom">${this.providerTemplate("chromeBottom")}</div>
-          <div class="chrome chrome-edge chrome-left">${this.providerTemplate("chromeLeft")}</div>
+          <!-- <div class="chrome chrome-edge chrome-bottom">${this.providerTemplate("chromeBottom")}</div> -->
+          <!-- <div class="chrome chrome-edge chrome-left">${this.providerTemplate("chromeLeft")}</div> -->
           <div class="chrome chrome-edge chrome-right">${this.providerTemplate("chromeRight")}</div>
 
           <div class="surface">
