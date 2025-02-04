@@ -164,7 +164,12 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
     this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
       this.unitConverter = newUnitConverter;
+      this.unitConverter?.canvasSize.subscribe(() => this.handleCanvasResize());
     });
+  }
+
+  private handleCanvasResize(): void {
+    this.requestUpdate();
   }
 
   // because querying the DOM for the font size will cause a repaint and reflow

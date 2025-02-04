@@ -26,6 +26,14 @@
 svg.axes-label-chrome {
   position: relative;
   overflow: visible;
+
+  &.x-axis-chrome {
+    max-width: 100%;
+  }
+
+  &.y-axis-chrome {
+    max-height: 100%;
+  }
 }
 
 line {
