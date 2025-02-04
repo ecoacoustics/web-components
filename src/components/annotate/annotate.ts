@@ -1,8 +1,8 @@
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { customElement, property, queryAll, queryAssignedElements } from "lit/decorators.js";
-import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
+import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { AngleDegrees, Pixel, UnitConverter } from "../../models/unitConverters";
+import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
@@ -112,22 +112,18 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   public handleSlotChange(): void {
     if (!this.spectrogram) {
-      console.warn("An oe-axes component was updated without an oe-spectrogram component.");
+      console.warn("An oe-annotate component was updated without an oe-spectrogram component.");
       return;
     }
 
     this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
       this.unitConverter = newUnitConverter;
+      this.unitConverter?.canvasSize.subscribe(() => this.handleCanvasResize());
     });
 
-    if (this.spectrogram && this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters.value;
+    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
 
-      (this.unitConverter as any).canvasSize.subscribe(() => this.handleCanvasResize());
-      this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
-    }
-
-    if (this.annotationElements) {
+    if (this.annotationElements && this.annotationElements.length > 0) {
       this.annotationModels = this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
     }
 

@@ -1,7 +1,4 @@
 :host {
-  position: relative;
-  display: block;
-
   &::part(indicator-line) {
     stroke: red;
     stroke-width: 2;
