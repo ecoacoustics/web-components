@@ -25,7 +25,7 @@
   overflow: hidden;
 }
 
-.headings-chrome {
+.labels {
   position: relative;
 }
 
@@ -64,8 +64,8 @@
 
     /*
       When the annotation headings are positioned at the top of the spectrogram
-      (tag-style="spectrogram-top"), if the label is too large to fit inside the
-      annotations width, it can cause the heading to overflow and not be visible.
+      if the label is too large to fit inside the annotations width, it can
+      cause the heading to overflow and not be visible.
 
       This is especially predominant when the user slots in their own content.
     */

@@ -104,13 +104,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
   private resizeChromeNextUpdate = false;
 
   public get visibleAnnotations(): Annotation[] {
-    return this.annotationModels.filter((model) => !this.cullAnnotation(model));
+    return this.annotationModels.filter((model) => !this.shouldCullAnnotation(model));
   }
 
   public updated(): void {
     if (this.resizeChromeNextUpdate) {
       this.resizeChromeNextUpdate = false;
-      this.resizeChrome();
+      this.measureLabelHeight();
     }
   }
 
@@ -141,7 +141,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     this.resizeChromeNextUpdate = true;
   }
 
-  private resizeChrome(): void {
+  private measureLabelHeight(): void {
     const boundingBoxes = Array.from(this.headingElements).map((element) => element.getBoundingClientRect());
 
     // TODO: I might be able to improve some of the math logic
@@ -155,8 +155,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
       const headingAngle = 20 satisfies AngleDegrees;
 
       // 1.
-      const hypotOppositeAngle: AngleDegrees = 90 - headingAngle;
-      const innerAngle: AngleDegrees = 90 - hypotOppositeAngle;
+      const hypotenuseOppositeAngle: AngleDegrees = 90 - headingAngle;
+      const innerAngle: AngleDegrees = 90 - hypotenuseOppositeAngle;
       const headingHeight: Pixel = Math.cos(innerAngle) * bounds.height;
 
       // 2.
@@ -174,7 +174,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     this.headingChromeHeight.value = maximumHeight;
   }
 
-  private cullAnnotation(model: Annotation): boolean {
+  private shouldCullAnnotation(model: Annotation): boolean {
     if (!this.unitConverter) {
       // If there is no unit converter initialized, there is no way that we can
       // render the annotations.
@@ -191,8 +191,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     // math so that we only have to do one calculation
     //
     // TODO: we might want to make this inclusive e.g. >=
-    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
-    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
+    const isTimeInView = model.startOffset > temporalDomain[0] && model.endOffset >= temporalDomain[1];
+    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency >= frequencyDomain[0];
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
@@ -202,9 +202,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     // render it
     const isSupersetOfViewBox =
       model.startOffset < temporalDomain[0] &&
-      model.endOffset > temporalDomain[1] &&
+      model.endOffset >= temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
-      model.highFrequency > frequencyDomain[1];
+      model.highFrequency >= frequencyDomain[1];
 
     return isSupersetOfViewBox;
   }
@@ -242,7 +242,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
 
   private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
     if (!this.unitConverter) {
-      return html`An error occurred`;
+      return html`Attempted to render annotation before unit converter initialization`;
     }
 
     const left = computed(() => this.unitConverter && this.unitConverter.scaleX.value(model.startOffset));
@@ -324,7 +324,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     }
 
     return html`
-      <div class="headings-chrome" style="height: ${watch(this.headingChromeHeight)}px">
+      <div class="labels" style="height: ${watch(this.headingChromeHeight)}px">
         ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
       </div>
     `;
