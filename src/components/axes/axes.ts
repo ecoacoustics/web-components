@@ -546,7 +546,6 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
     return this.yAxisTemplate;
-    return html``;
   }
 
   public chromeBottom(): ChromeTemplate {
