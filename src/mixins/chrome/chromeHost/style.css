@@ -5,7 +5,7 @@
     ".    top     ."
     "left overlay right"
     ".    bottom  .";
-  grid-template-columns: min-content;
+  grid-template-columns: min-content auto min-content;
 }
 
 .chrome {
