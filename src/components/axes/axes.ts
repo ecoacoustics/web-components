@@ -1,4 +1,4 @@
-import { html, LitElement, nothing, svg, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, svg, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
@@ -224,8 +224,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     `;
   }
 
-  private xAxisTemplate!: TemplateResult;
-  private yAxisTemplate!: TemplateResult;
+  private xAxisTemplate!: HTMLTemplateResult;
+  private yAxisTemplate!: HTMLTemplateResult;
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
@@ -271,6 +271,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     const yTitleX = yTitleOffset;
     const yTitleY = canvasSize.height / 2;
 
+    const xTitleX = canvasSize.width / 2;
+    const xTitleY = xTitleOffset;
+
     const yLabelTemplate = (value: Hertz) => {
       const xPosition = yTitleX + yTitleFontSize.height + this.labelPadding.width + fontSize.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
@@ -303,8 +306,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
       ? svg`
       <text
         part="title x-title"
-        x="${canvasSize.width / 2}"
-        y="${xTitleOffset}"
+        x="${xTitleX}"
+        y="${xTitleY}"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -328,18 +331,20 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
     `
       : nothing;
 
-    this.xAxisTemplate = svg`
-      <g part="x-ticks">
-        ${xAxisLabelsTemplate}
-        ${xAxisTitleTemplate}
-      </g>
+    const xAxisChromeHeight = xTitleY + xTitleFontSize.height;
+    const yAxisChromeWidth =
+      yTitleX + yTitleFontSize.height + this.labelPadding.width + fontSize.width + this.tickSize.width;
+
+    this.xAxisTemplate = html`
+      <svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}" height="${xAxisChromeHeight}">
+        <g part="x-ticks">${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
+      </svg>
     `;
 
-    this.yAxisTemplate = svg`
-      <g part="y-ticks">
-        ${yAxisLabelsTemplate}
-        ${yAxisTitleTemplate}
-      </g>
+    this.yAxisTemplate = html`
+      <svg class="axes-label-chrome y-axis-chrome" width="${yAxisChromeWidth}" height="${canvasSize.height}">
+        <g part="y-ticks">${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
+      </svg>
     `;
 
     return svg`
@@ -540,7 +545,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg class="axes-label-chrome y-axis-chrome" height="${canvasSize.height}">${this.yAxisTemplate}</svg>`;
+    return this.yAxisTemplate;
+    return html``;
   }
 
   public chromeBottom(): ChromeTemplate {
@@ -554,7 +560,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) imp
 
     this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}">${this.xAxisTemplate}</svg>`;
+    return this.xAxisTemplate;
   }
 
   public chromeOverlay(): ChromeTemplate {
