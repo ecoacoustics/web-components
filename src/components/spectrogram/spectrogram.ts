@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import { computed, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, ReadonlySignal, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
@@ -10,7 +10,7 @@ import { WindowFunctionName } from "fft-windowing-ts";
 import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
-import { ChromeHost, ChromeHostSurface } from "../../mixins/chrome/chromeHost/chromeHost";
+import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -47,7 +47,7 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  * @slot - A `<source>` element to provide the audio source
  */
 @customElement("oe-spectrogram")
-export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) implements ChromeHostSurface {
+export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
 
   // TODO: we should also have a "pause" event
@@ -138,12 +138,16 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   // directly assigning to the "unitConverter" property.
   // The readonly annotation still allows you to modify properties of the signal
   // e.g. the signals "value" property.
-  // We allows the user to update the signals "value" property because it will
-  // have the correct reactive behavior.
-  public readonly unitConverters = signal<UnitConverter | undefined>(undefined);
   private readonly renderWindow = computed<RenderWindow>(() => this.parseRenderWindow());
   private readonly audio = signal<AudioModel | undefined>(undefined);
   private readonly renderCanvasSize = signal<RenderCanvasSize>({ width: 0, height: 0 });
+  private readonly _unitConverters = signal<UnitConverter | undefined>(undefined);
+
+  // we have a getter for the unit converters property so that the internal
+  // typing of the signal can be mutable while the exported signal is readonly
+  public get unitConverters(): ReadonlySignal<UnitConverter | undefined> {
+    return this._unitConverters;
+  }
 
   private readonly audioHelper = new AudioHelper();
   private readonly audioContext = new AudioContext();
@@ -389,7 +393,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       throw new Error("Attempted to initialize unit converter before creating audio model");
     }
 
-    this.unitConverters.value = new UnitConverter(
+    this._unitConverters.value = new UnitConverter(
       this.renderWindow,
       this.renderCanvasSize,
       // typescript is correctly throwing an error because if the audio model
@@ -651,7 +655,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     );
   }
 
-  public surface() {
+  public renderSurface() {
     return html`
       <div id="spectrogram-container">
         <canvas></canvas>

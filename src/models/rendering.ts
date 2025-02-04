@@ -1,8 +1,13 @@
 export type TwoDFft = Float32Array[];
 
-export interface Size {
-  width: number;
-  height: number;
+export interface Size<T extends number = number> {
+  width: T;
+  height: T;
+}
+
+export interface Rect<T extends number = number> extends Size<T> {
+  x: T;
+  y: T;
 }
 
 // 2D slices are always a subset of an fft spectrogram

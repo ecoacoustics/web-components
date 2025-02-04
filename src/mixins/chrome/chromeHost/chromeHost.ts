@@ -1,25 +1,22 @@
-import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
+import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, RootPart, unsafeCSS } from "lit";
 import { Component } from "../../mixins";
-import { ChromeProviderKey, ChromeTemplate, WithChromeProvider } from "../chromeProvider/chromeProvider";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
 import chromeHostStyles from "./style.css?inline";
+import { ChromeTemplate } from "../types";
 
+// TODO: improve typing here
 export interface ChromeAdvertisement {
-  connect(provider: WithChromeProvider): void;
-  disconnect(provider: WithChromeProvider): void;
+  connect(provider: any): void;
+  disconnect(provider: any): void;
   requestUpdate(): void;
-}
-
-export interface ChromeHostSurface {
-  surface(): ChromeTemplate;
 }
 
 export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
 export const ChromeHost = <T extends Component>(superClass: T) => {
-  abstract class ChromeHostComponentClass extends superClass implements ChromeHostSurface {
+  abstract class ChromeHostComponentClass extends superClass {
     protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
       const chromeHostCss = unsafeCSS(chromeHostStyles);
       let returnedStyles: CSSResultGroup = [chromeHostCss];
@@ -36,21 +33,20 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     @state()
-    private providers = new Set<WithChromeProvider>();
+    private providers = new Set<ChromeHostComponentClass>();
 
     /**
-     * A template that will have chrome added to it
-     * You must provide an implementation of the surface() method to use a
-     * ChromeHost mixin
+     * The content to render chrome around.
+     * Replaces render on the ChromeHost.
      */
-    public abstract surface(): ChromeTemplate;
+    public abstract renderSurface(): RootPart;
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
 
       const chromeAdvertisement = {
-        connect: (provider: WithChromeProvider) => this.connect(provider),
-        disconnect: (provider: WithChromeProvider) => this.disconnect(provider),
+        connect: (provider: ChromeHostComponentClass) => this.connect(provider),
+        disconnect: (provider: ChromeHostComponentClass) => this.disconnect(provider),
         requestUpdate: () => this.requestUpdate(),
       } satisfies ChromeAdvertisement;
 
@@ -64,7 +60,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       }, 100);
     }
 
-    private connect(provider: WithChromeProvider): void {
+    private connect(provider: ChromeHostComponentClass): void {
       // we add the providers style sheets to the host first so that when the
       // providers template is rendered, the stylesheets are guaranteed to be
       // present and there won't be a flash of unstyled content or cumulative
@@ -77,7 +73,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       this.requestUpdate();
     }
 
-    private disconnect(provider: WithChromeProvider): void {
+    private disconnect(provider: ChromeHostComponentClass): void {
       const styles = this.getProviderStyleSheets(provider);
 
       // we remove the providers style sheets last so that there is not a flash
@@ -86,7 +82,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       this.removeStyleSheets(styles);
     }
 
-    private getProviderStyleSheets(provider: WithChromeProvider): CSSResultGroup {
+    private getProviderStyleSheets(provider: ChromeHostComponentClass): CSSResultGroup {
       if (!(provider instanceof LitElement)) {
         console.error("Attempted to attach non-lit element to ChromeHost");
         return [];
@@ -151,8 +147,9 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       this.shadowRoot.adoptedStyleSheets.splice(indexToRemove, 1);
     }
 
-    private providerTemplate(key: ChromeProviderKey): ChromeTemplate {
-      return html`${map(this.providers, (provider) => {
+    // TODO: improve typing here
+    private providerTemplate(key: any): ChromeTemplate {
+      return html`${map(this.providers, (provider: any) => {
         if (typeof provider[key] === "function") {
           return provider[key]();
         }
@@ -162,7 +159,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     public render() {
-      const componentTemplate = this.surface();
+      const componentTemplate = this.renderSurface();
 
       return html`
         <div id="chrome-wrapper">
