@@ -47,6 +47,13 @@
   }
 }
 
+.vertically-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  /* min-height: 0px; */
+}
+
 .figure-head {
   display: flex;
   justify-content: space-between;
