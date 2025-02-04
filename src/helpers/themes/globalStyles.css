@@ -350,13 +350,6 @@ button {
   border-radius: var(--oe-border-rounding);
 }
 
-.vertically-fill {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1;
-  min-height: 0px;
-}
-
 /*
   You might want to hide slot content in data components.
   E.g. The <oe-annotation> component does not have any template content, but
