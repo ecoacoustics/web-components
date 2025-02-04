@@ -6,6 +6,9 @@
     "left overlay right"
     ".    bottom  .";
   grid-template-columns: min-content auto min-content;
+  grid-template-rows: min-content auto min-content;
+
+  height: 100%;
 }
 
 .chrome {
