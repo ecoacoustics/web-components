@@ -288,8 +288,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return svg`<g>
         <line
           part="y-tick"
-          x1="${xPosition + this.labelPadding.width}"
-          x2="${xPosition + this.labelPadding.width + this.tickSize.width}"
+          x1="${xPosition}"
+          x2="${xPosition + this.tickSize.width}"
           y1="${yPosition}"
           y2="${yPosition}"
         ></line>
