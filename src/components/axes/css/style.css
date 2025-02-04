@@ -31,14 +31,6 @@
 svg.axes-label-chrome {
   position: relative;
   overflow: visible;
-
-  &.x-axis-chrome {
-    height: 2em;
-  }
-
-  &.y-axis-chrome {
-    width: 3.4em;
-  }
 }
 
 line {
