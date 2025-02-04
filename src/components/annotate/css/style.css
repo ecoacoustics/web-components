@@ -6,7 +6,7 @@
 
   --oe-annotation-color: green;
   --oe-annotation-font-color: white;
-  --oe-annotation-focus-color: lightgreen;
+  --oe-annotation-selected-color: lightgreen;
   --oe-annotation-weight: 1px;
 }
 
@@ -39,7 +39,7 @@
   overflow: hidden;
 
   &:focus {
-    --oe-annotation-color: var(--oe-annotation-focus-color);
+    --oe-annotation-color: var(--oe-annotation-selected-color);
     z-index: 1;
   }
 
@@ -79,7 +79,7 @@
     bottom: 0px;
 
     rotate: -20deg;
-    transform-origin: 0 0;
+    transform-origin: bottom left;
   }
 
   &.style-hidden {

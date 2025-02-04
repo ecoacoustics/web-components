@@ -1,5 +1,5 @@
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
-import { customElement, property, queryAll } from "lit/decorators.js";
+import { customElement, property, queryAll, queryAssignedElements } from "lit/decorators.js";
 import { queryAllDeeplyAssignedElements, queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { AngleDegrees, Pixel, UnitConverter } from "../../models/unitConverters";
@@ -14,7 +14,8 @@ import { CssVariable } from "../../helpers/types/advancedTypes";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
 import { TagComponent } from "../tag/tag";
-import { ChromeProvider, ChromeTemplate, WithChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { ChromeTemplate } from "../../mixins/chrome/types";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -37,7 +38,7 @@ export enum AnnotationTagStyle {
  *   <oe-annotation
  *     tags="laughing-kookaburra"
  *     low-frequency="0"
- *     high-frequency="10_000"
+ *     high-frequency="10000"
  *     start-time="30"
  *     end-time="32"
  *   ></oe-annotation>
@@ -59,17 +60,17 @@ export enum AnnotationTagStyle {
  * @fires oe-annotation-changed
  *
  * @csspart annotation-bounding-box - The square around an annotation
- * @csspart annotation-heading - Selector for the annotation heading/labels
+ * @csspart annotation-label - Selector for the annotation label
  *
  * @cssproperty [--oe-annotation-color]
  * @cssproperty [--oe-annotation-font-color]
  * @cssproperty [--oe-annotation-weight]
- * @cssproperty [--oe-annotation-focus-color]
+ * @cssproperty [--oe-annotation-selected-color]
  *
  * @slot - A spectrogram element to add annotations to
  */
 @customElement("oe-annotate")
-export class AnnotateComponent extends ChromeProvider(LitElement) implements WithChromeProvider {
+export class AnnotateComponent extends ChromeProvider(LitElement) {
   public static styles = unsafeCSS(annotateStyles);
 
   @property({
@@ -80,8 +81,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
   public tagStyle: AnnotationTagStyle = AnnotationTagStyle.EDGE;
 
   /**
-   * Makes all annotations readonly, can be overwritten by setting
-   * readonly="false" on the `oe-annotation` component
+   * Makes all annotations readonly
    * (not currently implemented; all annotations are readonly)
    *
    * @default true
@@ -92,29 +92,34 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
-  @queryAllDeeplyAssignedElements({ selector: "oe-annotation" })
+  @queryAssignedElements({ selector: "oe-annotation" })
   private annotationElements?: AnnotationComponent[];
 
   @queryAll(".bounding-box-heading")
-  private headingElements!: Readonly<NodeListOf<HTMLLabelElement>>;
+  private labelElements!: Readonly<NodeListOf<HTMLLabelElement>>;
 
   private readonly headingChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
-  private resizeChromeNextUpdate = false;
 
   public get visibleAnnotations(): Annotation[] {
     return this.annotationModels.filter((model) => !this.shouldCullAnnotation(model));
   }
 
   public updated(): void {
-    if (this.resizeChromeNextUpdate) {
-      this.resizeChromeNextUpdate = false;
-      this.measureLabelHeight();
-    }
+    this.measureLabelHeight();
   }
 
   public handleSlotChange(): void {
+    if (!this.spectrogram) {
+      console.warn("An oe-axes component was updated without an oe-spectrogram component.");
+      return;
+    }
+
+    this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
+      this.unitConverter = newUnitConverter;
+    });
+
     if (this.spectrogram && this.spectrogram.unitConverters) {
       this.unitConverter = this.spectrogram.unitConverters.value;
 
@@ -130,7 +135,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     // because if all the slotted annotation elements are removed, we want to
     // remove all the chrome
     // this.resizeChrome();
-    this.resizeChromeNextUpdate = true;
   }
 
   private handleSpectrogramUpdate(): void {
@@ -138,40 +142,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
   }
 
   private handleCanvasResize(): void {
-    this.resizeChromeNextUpdate = true;
+    this.requestUpdate();
   }
 
   private measureLabelHeight(): void {
-    const boundingBoxes = Array.from(this.headingElements).map((element) => element.getBoundingClientRect());
-
-    // TODO: I might be able to improve some of the math logic
-    let maximumHeight = -Infinity;
-    boundingBoxes.forEach((bounds) => {
-      // 1. we first have to calculate how much height the heading has
-      // 2. then we calculate how much height the 20 degree angle creates
-      // 3. we add the two heights together to get the chrome height required
-      // 4. we set the chrome height to the maximum of these values
-
-      const headingAngle = 20 satisfies AngleDegrees;
-
-      // 1.
-      const hypotenuseOppositeAngle: AngleDegrees = 90 - headingAngle;
-      const innerAngle: AngleDegrees = 90 - hypotenuseOppositeAngle;
-      const headingHeight: Pixel = Math.cos(innerAngle) * bounds.height;
-
-      // 2.
-      const labelHeight: Pixel = Math.sin(headingAngle) * bounds.width;
-
-      // 3.
-      const totalHeight: Pixel = headingHeight + labelHeight;
-
-      if (totalHeight > maximumHeight) {
-        maximumHeight = totalHeight;
-      }
-    });
-
-    // 4.
-    this.headingChromeHeight.value = maximumHeight;
+    const labelHeights = Array.from(this.labelElements).map((element) => element.getBoundingClientRect().height);
+    this.headingChromeHeight.value = Math.max(...labelHeights);
   }
 
   private shouldCullAnnotation(model: Annotation): boolean {
@@ -215,11 +191,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
     const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
 
     return html`
-      <label
-        class="bounding-box-heading style-spectrogram-top"
-        part="annotation-heading"
-        style="left: ${watch(left)}px;"
-      >
+      <label class="bounding-box-heading style-spectrogram-top" part="annotation-label" style="left: ${watch(left)}px;">
         ${headingTemplate}
       </label>
     `;
@@ -285,7 +257,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) implements Wit
         () => html`
           <label
             class="bounding-box-heading style-edge"
-            part="annotation-heading"
+            part="annotation-label"
             style="position-anchor: ${annotationAnchorName};"
           >
             ${headingTemplate}

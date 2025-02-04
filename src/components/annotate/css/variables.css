@@ -10,7 +10,7 @@
   initial-value: white;
 }
 
-@property --oe-annotation-focus-color {
+@property --oe-annotation-selected-color {
   syntax: "<color>";
   inherits: false;
   initial-value: lightgreen;

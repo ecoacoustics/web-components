@@ -1,4 +1,4 @@
-import { RenderCanvasSize, RenderWindow } from "./rendering";
+import { Rect, RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
 import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
@@ -114,6 +114,15 @@ export class UnitConverter {
   public scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
+
+  public annotationRect(): Rect<Pixel> {
+    return {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    };
+  }
 
   // TODO: I think passing in a scaleConverter here is a hack
   /**

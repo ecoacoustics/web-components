@@ -59,5 +59,5 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
     }
   }
 
-  return AbstractComponentClass as Component;
+  return AbstractComponentClass;
 };

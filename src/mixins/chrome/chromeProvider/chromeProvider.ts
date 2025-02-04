@@ -1,23 +1,12 @@
-import { html, HTMLTemplateResult, nothing, PropertyValues } from "lit";
+import { html, PropertyValues } from "lit";
 import { Component } from "../../mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";
-
-export type ChromeTemplate = HTMLTemplateResult | typeof nothing;
-
-export interface WithChromeProvider {
-  chromeTop?(): ChromeTemplate;
-  chromeBottom?(): ChromeTemplate;
-  chromeLeft?(): ChromeTemplate;
-  chromeRight?(): ChromeTemplate;
-  chromeOverlay?(): ChromeTemplate;
-}
-
-export type ChromeProviderKey = keyof WithChromeProvider;
+import { ChromeTemplate } from "../types";
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
-  abstract class ChromeProviderComponentClass extends superClass implements WithChromeProvider {
+  abstract class ChromeProviderComponentClass extends superClass {
     @state()
     private chromeAdvertisement?: ChromeAdvertisement;
 
@@ -50,5 +39,5 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     }
   }
 
-  return AbstractComponent(ChromeProviderComponentClass as Component);
+  return AbstractComponent(ChromeProviderComponentClass);
 };

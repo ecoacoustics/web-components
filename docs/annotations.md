@@ -24,7 +24,7 @@
 
 ### Annotation Viewer Properties
 
-- `readonly` - Makes all annotations readonly, can be overwritten by setting readonly="false" on the `oe-annotation` component (annotation viewer readonly should always take precedence over the `oe-annotation` readonly state. E.g. If `oe-annotate` is readonly, and an annotation has `readonly="false"`, the annotation should still be readonly because the `oe-annotate`'s readonly property takes precedence.)
+- `readonly` - Makes all annotations readonly.
   - Can edit? Annotation not readonly and annotation viewer is not readonly
 - `tag-style` { hidden | edge | spectrogram-top } - An enum attribute which can be used to stop showing tags
 
@@ -100,30 +100,4 @@ Similar to the axes, and indicator components, you can simply wrap the
     end-time="32"
   ></oe-annotation>
 </oe-annotate>
-```
-
-#### Nested Order of Web Components
-
-Because the annotation viewer component will annotate anything that it wraps,
-the correct ordering of web components for a spectrogram that has an axes,
-indicator, and annotation-viewer component is
-
-1. axes
-2. indicator
-3. annotation-viewer
-
-Ideally the order of the web components would not be important, however, at the
-moment we are limited into specifying an order.
-We hope to remove this in the future.
-
-##### Example
-
-```html
-<oe-axes>
-  <oe-indicator>
-    <oe-annotate>
-      <oe-spectrogram></oe-spectrogram>
-    </oe-annotate>
-  </oe-indicator>
-</oe-axes>
 ```
