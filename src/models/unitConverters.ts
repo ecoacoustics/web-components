@@ -116,13 +116,17 @@ export class UnitConverter {
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 
-  public annotationRect(annotation: Readonly<Annotation>): Rect<Signal<Pixel>> {
-    return {
-      x: computed(() => this.scaleX.value(annotation.startOffset)),
-      y: computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset)),
-      width: computed(() => this.scaleY.value(annotation.highFrequency)),
-      height: computed(() => this.scaleY.value(annotation.highFrequency - annotation.lowFrequency)),
-    };
+  public annotationRect(annotation: Readonly<Annotation>): Readonly<Rect<Signal<Pixel>>> {
+    const x = computed(() => this.scaleX.value(annotation.startOffset));
+    const y = computed(() => this.scaleY.value(annotation.highFrequency));
+    const width = computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset));
+
+    // we have to use the computed y offset for mel scales to work
+    // this is because in a mel scale, a 1 hertz unit is different depending on
+    // its value
+    const height = computed(() => this.scaleY.value(annotation.lowFrequency) - y.value);
+
+    return { x, y, width, height };
   }
 
   // TODO: I think passing in a scaleConverter here is a hack
