@@ -1,8 +1,8 @@
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
-import { customElement, property, queryAll, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { Pixel, ScaleDomain, UnitConverter } from "../../models/unitConverters";
+import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
@@ -16,6 +16,7 @@ import { loop } from "../../helpers/directives";
 import { TagComponent } from "../tag/tag";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
+import { createRef, ref, Ref } from "lit/directives/ref.js";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -95,8 +96,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @queryAssignedElements({ selector: "oe-annotation" })
   private annotationElements?: AnnotationComponent[];
 
-  @queryAll(".bounding-box-label")
-  private labelElements!: Readonly<NodeListOf<HTMLLabelElement>>;
+  private labelRefs: Ref<HTMLLabelElement>[] = [];
 
   private readonly topChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
@@ -140,7 +140,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   private measureLabelHeight(): void {
-    const labelHeights = Array.from(this.labelElements).map((element) => element.getBoundingClientRect().height);
+    const labelHeights = this.labelRefs.map((element) => element.value?.getBoundingClientRect().height ?? 0);
     this.topChromeHeight.value = Math.max(...labelHeights);
   }
 
@@ -191,8 +191,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
 
+    const labelRef = createRef<HTMLLabelElement>();
+    this.labelRefs.push(labelRef);
+
     return html`
-      <label class="bounding-box-label style-spectrogram-top" part="annotation-label" style="left: ${watch(left)}px;">
+      <label
+        class="bounding-box-label style-spectrogram-top"
+        part="annotation-label"
+        style="left: ${watch(left)}px;"
+        ${ref(labelRef)}
+      >
         ${labelTemplate}
       </label>
     `;

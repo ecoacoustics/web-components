@@ -9,7 +9,7 @@
 
   <body>
     <oe-axes>
-      <oe-annotate>
+      <oe-annotate tag-style="spectrogram-top">
         <oe-indicator>
           <oe-spectrogram
             id="playing-spectrogram"
@@ -30,13 +30,13 @@
           low-frequency="2500"
           high-frequency="3500"
         ></oe-annotation>
-        <!-- 
-          <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
-            <oe-tag value="bat">Bat</oe-tag>
-            <oe-tag value="ultrasonic">
-              <strong>Ultrasonic</strong>
-            </oe-tag>
-          </oe-annotation> -->
+
+        <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
+          <oe-tag value="bat">Bat</oe-tag>
+          <oe-tag value="ultrasonic">
+            <strong>Ultrasonic</strong>
+          </oe-tag>
+        </oe-annotation>
       </oe-annotate>
     </oe-axes>
 
@@ -185,7 +185,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .large::part(canvas) {
+      .large {
         height: 600px;
         width: 100%;
       }
