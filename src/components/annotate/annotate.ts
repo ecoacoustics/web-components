@@ -59,7 +59,7 @@ export enum AnnotationTagStyle {
  * @fires oe-annotation-deselected
  * @fires oe-annotation-changed
  *
- * @csspart annotation-bounding-box - The square around an annotation
+ * @csspart annotation-bounding-box - The "box part" of the annotation. The "green" square around the annotated event
  * @csspart annotation-label - Selector for the annotation label
  *
  * @cssproperty [--oe-annotation-color]
@@ -100,10 +100,17 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private readonly topChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
-  private annotationModels: Annotation[] = [];
 
   public get visibleAnnotations(): Annotation[] {
     return this.annotationModels.filter((model) => !this.shouldCullAnnotation(model));
+  }
+
+  private get annotationModels(): Annotation[] {
+    if (!this.annotationElements) {
+      return [];
+    }
+
+    return this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
   }
 
   public updated(): void {
@@ -122,10 +129,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     });
 
     this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
-
-    if (this.annotationElements && this.annotationElements.length > 0) {
-      this.annotationModels = this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
-    }
 
     // we resize the chrome regardless of if there are annotation elements
     // because if all the slotted annotation elements are removed, we want to
