@@ -7,6 +7,12 @@ import { ChromeTemplate } from "../types";
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
   abstract class ChromeProviderComponentClass extends superClass {
+    public constructor(...args: any[]) {
+      super(...args);
+
+      this.attachAdvertisementListeners();
+    }
+
     @state()
     private chromeAdvertisement?: ChromeAdvertisement;
 
@@ -18,7 +24,6 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
-      this.addEventListener(chromeAdvertisementEventName, (event: any) => this.handleChromeAdvertisement(event));
     }
 
     public updated(change: PropertyValues<this>): void {
@@ -27,6 +32,10 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
 
     /** You might want to override this */
     protected handleSlotChange(): void {}
+
+    private attachAdvertisementListeners(): void {
+      this.addEventListener(chromeAdvertisementEventName, (event: any) => this.handleChromeAdvertisement(event));
+    }
 
     private handleChromeAdvertisement(event: CustomEvent<ChromeAdvertisement>): void {
       this.chromeAdvertisement = event.detail;
