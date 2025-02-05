@@ -43,7 +43,7 @@ test.describe("with annotation", () => {
       // because the second annotation contains two <oe-tag> components
       // we expect that the annotation label text will be the concatenation
       // of the two oe-tag content
-      await expect(labelTarget).toHaveTrimmedText("Bat,Ultrasonic");
+      await expect(labelTarget).toHaveTrimmedText("Bat,Ultrasonic Slotted");
     });
 
     // TODO: this test is currently skipped because we do not support this type

@@ -14,11 +14,26 @@ export class TagComponent extends AbstractComponent(LitElement) {
   @property({ type: String })
   public value = "";
 
-  @queryAssignedElements()
-  private innerElements!: NodeListOf<Element>;
+  private get innerElements(): Element[] {
+    // if the slotted content is text without a wrapper element
+    // e.g. <oe-tag>Cow</oe-tag>
+    // it will not be caught by the @queryAssignedElements decorator
+    // to fix this, I get all of the text content of the host element and assign
+    // it to a new "virtual" element that only contains that text
+
+    return Array.from(this.childNodes).map((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textElement = document.createElement("span");
+        textElement.textContent = node.textContent;
+        return textElement;
+      }
+
+      return node as Element;
+    });
+  }
 
   public get model(): Readonly<Tag> {
-    const elementReferences = Array.from(this.innerElements);
+    const elementReferences = this.innerElements;
 
     return {
       text: this.value,

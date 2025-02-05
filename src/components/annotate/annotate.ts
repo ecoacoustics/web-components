@@ -211,9 +211,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     return html`
       ${loop(model.tags, (tag, { last }) => {
-        if (tag.reference instanceof TagComponent) {
-          const tagElement = tag.reference;
-          return html`${unsafeHTML(tagElement.getHTML().trim())}${last ? "" : tagSeparator}`;
+        const elementReferences = tag.elementReferences;
+        if (Array.isArray(elementReferences) && elementReferences.length > 0) {
+          return elementReferences.map(
+            (element: Element) => html`${unsafeHTML(element.outerHTML)}${last ? "" : tagSeparator}`,
+          );
         }
 
         return html`${tag.text}${last ? "" : tagSeparator}`;
