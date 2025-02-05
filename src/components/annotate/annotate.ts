@@ -95,10 +95,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @queryAssignedElements({ selector: "oe-annotation" })
   private annotationElements?: AnnotationComponent[];
 
-  @queryAll(".bounding-box-heading")
+  @queryAll(".bounding-box-label")
   private labelElements!: Readonly<NodeListOf<HTMLLabelElement>>;
 
-  private readonly headingChromeHeight = signal<Pixel>(0);
+  private readonly topChromeHeight = signal<Pixel>(0);
   private unitConverter?: UnitConverter;
   private annotationModels: Annotation[] = [];
 
@@ -143,7 +143,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private measureLabelHeight(): void {
     const labelHeights = Array.from(this.labelElements).map((element) => element.getBoundingClientRect().height);
-    this.headingChromeHeight.value = Math.max(...labelHeights);
+    this.topChromeHeight.value = Math.max(...labelHeights);
   }
 
   private shouldCullAnnotation(model: Annotation): boolean {
@@ -181,14 +181,14 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return isSupersetOfViewBox;
   }
 
-  private spectrogramTopHeadingTemplate(model: Annotation): HTMLTemplateResult {
-    const headingTemplate = this.tagLabelTemplate(model);
+  private spectrogramTopLabelTemplate(model: Annotation): HTMLTemplateResult {
+    const labelTemplate = this.tagLabelTemplate(model);
 
     const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
 
     return html`
-      <label class="bounding-box-heading style-spectrogram-top" part="annotation-label" style="left: ${watch(left)}px;">
-        ${headingTemplate}
+      <label class="bounding-box-label style-spectrogram-top" part="annotation-label" style="left: ${watch(left)}px;">
+        ${labelTemplate}
       </label>
     `;
   }
@@ -225,7 +225,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
 
-    const headingTemplate = this.tagLabelTemplate(model);
+    const labelTemplate = this.tagLabelTemplate(model);
 
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
@@ -252,11 +252,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         this.tagStyle === AnnotationTagStyle.EDGE,
         () => html`
           <label
-            class="bounding-box-heading style-edge"
+            class="bounding-box-label style-edge"
             part="annotation-label"
             style="position-anchor: ${annotationAnchorName};"
           >
-            ${headingTemplate}
+            ${labelTemplate}
           </label>
         `,
       )}
@@ -292,8 +292,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     }
 
     return html`
-      <div class="labels" style="height: ${watch(this.headingChromeHeight)}px">
-        ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopHeadingTemplate(model))}
+      <div class="labels" style="height: ${watch(this.topChromeHeight)}px">
+        ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopLabelTemplate(model))}
       </div>
     `;
   }

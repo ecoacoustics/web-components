@@ -12,7 +12,7 @@ class TestPage {
   public tagComponents = () => this.page.locator("oe-tag").all();
   public annotationContainers = () => this.page.locator(".annotation-container").all();
   public annotationBoundingBoxes = () => this.page.locator(".bounding-box").all();
-  public annotationHeadings = () => this.page.locator(".bounding-box-heading").all();
+  public annotationLabels = () => this.page.locator(".bounding-box-label").all();
   public bodyElement = () => this.page.locator("body").first();
 
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
@@ -24,9 +24,9 @@ class TestPage {
     return annotations[index];
   }
 
-  public async annotationHeading(index: Readonly<number>) {
-    const headings = await this.annotationHeadings();
-    return headings[index];
+  public async annotationLabel(index: Readonly<number>) {
+    const labels = await this.annotationLabels();
+    return labels[index];
   }
 
   public async tagComponent(index: Readonly<number>) {
@@ -78,7 +78,7 @@ class TestPage {
   public async createWithAnnotation(model: PartialAnnotation) {
     // I use "kookaburra" here because it is a longer tag name. Therefore, it
     // pushes the tag to its limit
-    // it also makes it easier to see the annotation heading in the test output
+    // it also makes it easier to see the annotation label in the test output
     await this.page.setContent(`
       <oe-annotate>
         <oe-spectrogram
@@ -171,9 +171,9 @@ class TestPage {
       });
     }
 
-    const targetAnnotationHeadings = await this.annotationHeadings();
-    for (const heading of targetAnnotationHeadings) {
-      heading.evaluate((element: HTMLHeadingElement) => {
+    const targetAnnotationLabels = await this.annotationLabels();
+    for (const label of targetAnnotationLabels) {
+      label.evaluate((element: HTMLHeadingElement) => {
         element.style.border = "green 2px solid";
         element.style.backgroundColor = "green";
         element.style.color = "green";

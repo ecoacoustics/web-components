@@ -27,33 +27,33 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
 }
 
 test.describe("with annotation", () => {
-  test.describe("heading content", () => {
+  test.describe("label content", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create();
     });
 
-    test("should have the correct headings", async ({ fixture }) => {
-      const headingTarget = await fixture.annotationHeading(0);
-      await expect(headingTarget).toHaveTrimmedText("bird");
+    test("should have the correct label", async ({ fixture }) => {
+      const labelTarget = await fixture.annotationLabel(0);
+      await expect(labelTarget).toHaveTrimmedText("bird");
     });
 
     test("should correctly render slotted content", async ({ fixture }) => {
-      const headingTarget = await fixture.annotationHeading(2);
+      const labelTarget = await fixture.annotationLabel(2);
 
       // because the second annotation contains two <oe-tag> components
-      // we expect that the annotation heading text will be the concatenation
+      // we expect that the annotation label text will be the concatenation
       // of the two oe-tag content
-      await expect(headingTarget).toHaveTrimmedText("Bat,Ultrasonic");
+      await expect(labelTarget).toHaveTrimmedText("Bat,Ultrasonic");
     });
 
     // TODO: this test is currently skipped because we do not support this type
     // of update in the current AbstractComponent implementation
-    test.skip("should correctly update if the heading content", async ({ fixture }) => {
+    test.skip("should correctly update if the label content", async ({ fixture }) => {
       const tagTarget = await fixture.tagComponent(1);
       await setBrowserValue<TagComponent>(tagTarget, "textContent", "Subsonic");
 
-      const headingTarget = await fixture.annotationHeading(2);
-      await expect(headingTarget).toHaveTrimmedText("Bat,Subsonic");
+      const labelTarget = await fixture.annotationLabel(2);
+      await expect(labelTarget).toHaveTrimmedText("Bat,Subsonic");
     });
   });
 
@@ -257,11 +257,11 @@ test.describe("with annotation", () => {
   test.describe("selecting annotations", () => {
     test("should change the annotations color if inside the bounding box is clicked", () => {});
 
-    test("should change the annotations color if the heading is clicked", () => {});
+    test("should change the annotations color if the label is clicked", () => {});
 
     test("should raise above other annotations when the bounding box is clicked", () => {});
 
-    test("should raise above other annotations when the heading is clicked", () => {});
+    test("should raise above other annotations when the label is clicked", () => {});
   });
 });
 
