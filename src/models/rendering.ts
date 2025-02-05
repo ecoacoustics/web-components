@@ -1,11 +1,11 @@
 export type TwoDFft = Float32Array[];
 
-export interface Size<T extends number = number> {
+export interface Size<T = number> {
   width: T;
   height: T;
 }
 
-export interface Rect<T extends number = number> extends Size<T> {
+export interface Rect<T = number> extends Size<T> {
   x: T;
   y: T;
 }
