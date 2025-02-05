@@ -89,6 +89,22 @@ test.describe("unit tests", () => {
   });
 });
 
+test.describe("spectrogram sizing", () => {
+  test("should obey minimum height and block rules in unmodified stretch", () => {});
+
+  test("should not be able to define a height less than the minimum height", () => {});
+
+  test("should be able to set a width and height larger than the page", () => {});
+
+  test("should be able to set the canvas size in stretch scaling", () => {});
+
+  test("should scale naturally scale correctly if the canvas height is set", () => {});
+
+  // the box model should still have the correct size, but the canvas and chrome
+  // surface should not go beyond the original scale
+  test("should not be able to override the size if in original scaling", () => {});
+});
+
 test.describe("playing/pausing", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
