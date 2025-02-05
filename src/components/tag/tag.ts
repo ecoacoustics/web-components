@@ -24,7 +24,7 @@ export class TagComponent extends AbstractComponent(LitElement) {
     return Array.from(this.childNodes).map((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const textElement = document.createElement("span");
-        textElement.textContent = node.textContent;
+        textElement.textContent = node.textContent?.trim() || "";
         return textElement;
       }
 

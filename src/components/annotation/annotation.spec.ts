@@ -3,6 +3,18 @@ import { expect } from "../../tests/assertions";
 import { setBrowserValue } from "../../tests/helpers";
 import { annotationFixture as test } from "./annotation.fixture";
 
+// because we don't want to assert the elementReference array, we just assert
+// the tag text and reference properties
+function assertTagModels(expected: ReadonlyArray<Tag>, realized: ReadonlyArray<Tag>) {
+  for (const i in expected) {
+    const expectedTag = expected[i];
+    const realizedTag = realized[i];
+
+    expect(realizedTag.text).toEqual(expectedTag.text);
+    expect(realizedTag.reference).toEqual(expectedTag.reference);
+  }
+}
+
 test.describe("component template", () => {
   test("should not display any content", async ({ fixture }) => {
     // To really push this test to its limit, I have set the display: block and
@@ -133,7 +145,10 @@ test.describe("tag parsing", () => {
     // "should not throw an error only tags are missing"
 
     test("should correctly parse a tag component with an empty value", async ({ fixture }) => {
-      const expectedTag = { text: "" } as const satisfies Tag;
+      const expectedTag = {
+        text: "",
+        reference: null,
+      } as const satisfies Tag;
 
       await fixture.create(`
         <oe-annotation
@@ -147,11 +162,14 @@ test.describe("tag parsing", () => {
       `);
 
       const realizedTags = await fixture.tagModels();
-      expect(realizedTags).toEqual([expectedTag]);
+      assertTagModels([expectedTag], realizedTags);
     });
 
     test("should correctly parse a fully formed tag component", async ({ fixture }) => {
-      const expectedTag = { text: "koala" } as const satisfies Tag;
+      const expectedTag = {
+        text: "koala",
+        reference: null,
+      } as const satisfies Tag;
 
       await fixture.create(`
         <oe-annotation
@@ -167,7 +185,7 @@ test.describe("tag parsing", () => {
       `);
 
       const realizedTags = await fixture.tagModels();
-      expect(realizedTags).toEqual([expectedTag]);
+      assertTagModels([expectedTag], realizedTags);
     });
 
     test("should correctly multiple tag components", async ({ fixture }) => {
@@ -188,17 +206,18 @@ test.describe("tag parsing", () => {
       `);
 
       const realizedTags = await fixture.tagModels();
+      const expectedTags = [
+        { text: "koala", reference: null },
+        { text: "kangaroo", reference: null },
+        { text: "", reference: null },
+        { text: "", reference: null },
+      ] as const satisfies Tag[];
 
       // prettier wants to combine all of these objects into a single line,
       // however, I think that it is more readable to have each object on its
       // own line that keeps under the 80 character limit
       // prettier-ignore
-      expect(realizedTags).toEqual([
-        { text: "koala" },
-        { text: "kangaroo" },
-        { text: "" },
-        { text: "" }
-      ]);
+      assertTagModels(expectedTags, realizedTags);
     });
   });
 
