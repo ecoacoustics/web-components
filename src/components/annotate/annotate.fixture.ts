@@ -66,7 +66,7 @@ class TestPage {
         >
           <oe-tag value="bat">Bat</oe-tag>
           <oe-tag value="ultrasonic">
-            <strong class="slotted-content">Ultrasonic</strong>
+            <strong class="slotted-content">Ultrasonic Slotted</strong>
           </oe-tag>
         </oe-annotation>
       </oe-annotate>
