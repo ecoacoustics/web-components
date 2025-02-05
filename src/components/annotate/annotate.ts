@@ -161,8 +161,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // math so that we only have to do one calculation
     //
     // TODO: we might want to make this inclusive e.g. >=
-    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset >= temporalDomain[0];
-    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency >= frequencyDomain[0];
+    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
+    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
+    // const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
+    // const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
@@ -170,11 +172,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     // if the annotation is larger than the view box, then we want don't want to
     // render it
+    // const isSupersetOfViewBox =
+    //   model.startOffset < temporalDomain[0] &&
+    //   model.endOffset > temporalDomain[1] &&
+    //   model.lowFrequency < frequencyDomain[0] &&
+    //   model.highFrequency > frequencyDomain[1];
     const isSupersetOfViewBox =
       model.startOffset < temporalDomain[0] &&
-      model.endOffset >= temporalDomain[1] &&
+      model.endOffset > temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
-      model.highFrequency >= frequencyDomain[1];
+      model.highFrequency > frequencyDomain[1];
 
     return isSupersetOfViewBox;
   }
@@ -211,7 +218,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return html`Attempted to render annotation before unit converter initialization`;
     }
 
-    const { x: top, y: left, width, height } = this.unitConverter.annotationRect(model);
+    const { x, y, width, height } = this.unitConverter.annotationRect(model);
 
     const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
 
@@ -261,8 +268,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
           class="bounding-box"
           part="annotation-bounding-box"
           style="
-            left: ${watch(left)}px;
-            top: ${watch(top)}px;
+            left: ${watch(x)}px;
+            top: ${watch(y)}px;
             width: ${watch(width)}px;
             height: ${watch(height)}px;
             anchor-name: ${annotationAnchorName};

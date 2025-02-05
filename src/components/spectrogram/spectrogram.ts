@@ -39,6 +39,8 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  * @description
  * A spectrogram component that can be used with the open ecoacoustics components
  *
+ * @csspart canvas - Allows you to size the spectrogram component from the size of the canvas
+ *
  * @fires Loading
  * @fires Finished
  * @fires play
@@ -501,10 +503,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     if (this.scaling === SpectrogramCanvasScale.ORIGINAL) {
       this.canvas.style.position = "relative";
       this.canvas.style.height = `${size.height}px`;
+      this.canvas.style.maxHeight = `${size.height}px`;
+
       this.canvas.style.width = `${size.width}px`;
+      this.canvas.style.maxWidth = `${size.width}px`;
     } else if (this.scaling === SpectrogramCanvasScale.NATURAL) {
       this.canvas.style.position = "relative";
+
       this.canvas.style.width = "auto";
+      this.canvas.style.maxWidth = "auto";
     } else {
       /*
         we want absolute positioning because the relative position point will be
@@ -512,6 +519,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       */
       this.canvas.style.position = "absolute";
       this.canvas.style.width = "100%";
+      this.canvas.style.maxWidth = "100%";
     }
   }
 
@@ -658,7 +666,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public renderSurface() {
     return html`
       <div id="spectrogram-container">
-        <canvas></canvas>
+        <canvas part="canvas"></canvas>
       </div>
       <audio
         id="media-element"

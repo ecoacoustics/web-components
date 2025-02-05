@@ -21,22 +21,22 @@
           >
             <source src="/example.flac" />
           </oe-spectrogram>
+        </oe-indicator>
 
-          <oe-annotation
-            tags="bird"
-            start-time="0.4"
-            end-time="4.99"
-            low-frequency="2500"
-            high-frequency="3500"
-          ></oe-annotation>
-
+        <oe-annotation
+          tags="bird"
+          start-time="0.4"
+          end-time="4.99"
+          low-frequency="2500"
+          high-frequency="3500"
+        ></oe-annotation>
+        <!-- 
           <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
             <oe-tag value="bat">Bat</oe-tag>
             <oe-tag value="ultrasonic">
               <strong>Ultrasonic</strong>
             </oe-tag>
-          </oe-annotation>
-        </oe-indicator>
+          </oe-annotation> -->
       </oe-annotate>
     </oe-axes>
 
@@ -185,7 +185,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .large {
+      .large::part(canvas) {
         height: 600px;
         width: 100%;
       }
