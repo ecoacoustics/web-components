@@ -297,7 +297,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     }
 
     return html`
-      <div class="labels" style="height: ${watch(this.topChromeHeight)}px">
+      <div class="labels-top-chrome" style="height: ${watch(this.topChromeHeight)}px">
         ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopLabelTemplate(model))}
       </div>
     `;
