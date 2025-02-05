@@ -62,6 +62,11 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     private connect(provider: ChromeHostComponentClass): void {
+      if (!(provider instanceof LitElement)) {
+        console.error("Attempted to attach non-lit element to ChromeHost");
+        return;
+      }
+
       // we add the providers style sheets to the host first so that when the
       // providers template is rendered, the stylesheets are guaranteed to be
       // present and there won't be a flash of unstyled content or cumulative
@@ -84,11 +89,6 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     private getProviderStyleSheets(provider: ChromeHostComponentClass): CSSResultGroup {
-      if (!(provider instanceof LitElement)) {
-        console.error("Attempted to attach non-lit element to ChromeHost");
-        return [];
-      }
-
       const providerClass = provider.constructor as typeof LitElement;
       return providerClass.styles ?? [];
     }

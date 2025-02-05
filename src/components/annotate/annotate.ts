@@ -2,7 +2,7 @@ import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { customElement, property, queryAll, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { Pixel, UnitConverter } from "../../models/unitConverters";
+import { Pixel, ScaleDomain, UnitConverter } from "../../models/unitConverters";
 import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
@@ -117,7 +117,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     this.measureLabelHeight();
   }
 
-  public handleSlotChange(): void {
+  protected handleSlotChange(): void {
     if (!this.spectrogram) {
       console.warn("An oe-annotate component was updated without an oe-spectrogram component.");
       return;
@@ -129,11 +129,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     });
 
     this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
-
-    // we resize the chrome regardless of if there are annotation elements
-    // because if all the slotted annotation elements are removed, we want to
-    // remove all the chrome
-    // this.resizeChrome();
   }
 
   private handleSpectrogramUpdate(): void {
@@ -166,7 +161,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // math so that we only have to do one calculation
     //
     // TODO: we might want to make this inclusive e.g. >=
-    const isTimeInView = model.startOffset > temporalDomain[0] && model.endOffset >= temporalDomain[1];
+    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset >= temporalDomain[0];
     const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency >= frequencyDomain[0];
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
@@ -216,15 +211,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return html`Attempted to render annotation before unit converter initialization`;
     }
 
-    const left = computed(() => this.unitConverter && this.unitConverter.scaleX.value(model.startOffset));
-    const width = computed(
-      () => this.unitConverter && this.unitConverter.scaleX.value(model.endOffset) - (left.value ?? 0),
-    );
-
-    const top = computed(() => this.unitConverter && this.unitConverter.scaleY.value(model.highFrequency));
-    const height = computed(
-      () => this.unitConverter && this.unitConverter.scaleY.value(model.lowFrequency) - (top.value ?? 0),
-    );
+    const { x: top, y: left, width, height } = this.unitConverter.annotationRect(model);
 
     const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
 

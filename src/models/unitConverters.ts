@@ -2,6 +2,7 @@ import { Rect, RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
 import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
+import { Annotation } from "./annotation";
 
 export type Seconds = number;
 export type Hertz = number;
@@ -115,12 +116,12 @@ export class UnitConverter {
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 
-  public annotationRect(): Rect<Pixel> {
+  public annotationRect(annotation: Readonly<Annotation>): Rect<Signal<Pixel>> {
     return {
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
+      x: computed(() => this.scaleX.value(annotation.startOffset)),
+      y: computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset)),
+      width: computed(() => this.scaleY.value(annotation.highFrequency)),
+      height: computed(() => this.scaleY.value(annotation.highFrequency - annotation.lowFrequency)),
     };
   }
 

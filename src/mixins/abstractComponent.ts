@@ -17,6 +17,8 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
       const globalCss = unsafeCSS(globalStyles);
       let newStyles: CSSResultGroup = [globalCss];
 
+      // applyStyleSheets(this, newStyles);
+
       // it is important that the theming is the first style
       // this is because all the styles in the styles array get combined into
       // one big computed.ts file, with the items at the start of the array
