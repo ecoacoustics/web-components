@@ -3,8 +3,8 @@ import { Component } from "../../mixins";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
-import chromeHostStyles from "./style.css?inline";
 import { ChromeTemplate } from "../types";
+import chromeHostStyles from "./style.css?inline";
 
 // TODO: improve typing here
 export interface ChromeAdvertisement {
@@ -43,21 +43,22 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
+      this.sendChromeHostAdvertisement();
+    }
 
+    private sendChromeHostAdvertisement(): void {
       const chromeAdvertisement = {
         connect: (provider: ChromeHostComponentClass) => this.connect(provider),
         disconnect: (provider: ChromeHostComponentClass) => this.disconnect(provider),
         requestUpdate: () => this.requestUpdate(),
       } satisfies ChromeAdvertisement;
 
-      setTimeout(() => {
-        this.dispatchEvent(
-          new CustomEvent<ChromeAdvertisement>(chromeAdvertisementEventName, {
-            detail: chromeAdvertisement,
-            bubbles: true,
-          }),
-        );
-      }, 100);
+      this.dispatchEvent(
+        new CustomEvent<ChromeAdvertisement>(chromeAdvertisementEventName, {
+          detail: chromeAdvertisement,
+          bubbles: true,
+        }),
+      );
     }
 
     private connect(provider: ChromeHostComponentClass): void {
