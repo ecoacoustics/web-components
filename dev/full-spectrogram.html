@@ -14,7 +14,7 @@
     </header>
 
     <oe-axes>
-      <oe-annotate tag-style="edge">
+      <oe-annotate tag-style="spectrogram-top">
         <oe-indicator>
           <oe-spectrogram
             id="playing-spectrogram"
@@ -59,11 +59,16 @@
     <button onclick="changeOffset();">Change Offset</button>
     <button onclick="changeScale();">Change Mel-Scale</button>
     <button onclick="changeAspectRatio();">Change Scale</button>
+    <button onclick="changeTagStyle();">Change tag style</button>
     <input type="text" readonly value="0" id="generation" autocomplete="off" />
     <label>
       Change height
       <input id="height-input" type="range" value="800" min="0" max="1000" />
     </label>
+
+    <footer style="padding-bottom: 100dvh">
+      <h2>This is a footer with some long content to test scrolling</h2>
+    </footer>
 
     <script>
       window.onload = () => {
@@ -72,6 +77,7 @@
       };
 
       const spectrogram = () => document.getElementById("playing-spectrogram");
+      const annotate = () => document.querySelector("oe-annotate");
 
       function changeSource() {
         const element = spectrogram();
@@ -82,6 +88,18 @@
           element.setAttribute("src", "/404-file.flac");
         } else {
           element.setAttribute("src", "/example.flac");
+        }
+      }
+
+      function changeTagStyle() {
+        const element = annotate();
+
+        if (element.tagStyle === "edge") {
+          element.tagStyle = "spectrogram-top";
+        } else if (element.tagStyle === "spectrogram-top") {
+          element.tagStyle = "hidden";
+        } else {
+          element.tagStyle = "edge";
         }
       }
 
@@ -192,7 +210,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .large {
+      .large::part(canvas) {
         height: 600px;
         width: 100%;
       }

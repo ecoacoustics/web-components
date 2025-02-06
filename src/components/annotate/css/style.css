@@ -86,6 +86,20 @@
   font-size: var(--oe-font-size);
   z-index: 2;
 
+  /*
+    When rendering the labels on an angle in spectrogram-top, the text can
+    undergo very heavy anti aliasing which can make it difficult to read.
+
+    To fix this, I have applied a bunch of text rendering properties
+    to ask the browser engine to not compromise the quality of content.
+
+    While it is most impactful on the spectrogram-top style, I have applied it
+    to edge styling as well in case the user wants to either:
+    - Slot rotated content into the annotation tag
+    - Rotate the spectrogram itself (for some reason)
+  */
+  text-rendering: optimizeLegibility;
+
   position-visibility: no-overflow;
 
   &.style-edge {

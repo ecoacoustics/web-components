@@ -116,6 +116,15 @@ a {
   text-decoration: underline;
   color: var(--oe-font-color);
 
+  /*
+    There is a bug in Chrome where if a label is rotated, all text inside the
+    parent container (not just the text inside the anchor) will be very blurry.
+
+    To fix this, I set the text-decoration-thickness to 0 so that if text is
+    rotated with an anchor element, it will not be blurry.
+  */
+  text-decoration-thickness: 0;
+
   &:hover {
     text-decoration: none;
   }

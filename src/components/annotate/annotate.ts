@@ -140,6 +140,15 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   private measureLabelHeight(): void {
+    // if there are no labels to measure, we can short circuit and set the top
+    // chrome height to 0.
+    // if we removed this check, the Math.max below would return -Infinity
+    // if there were no labels.
+    if (this.labelRefs.length === 0) {
+      this.topChromeHeight.value = 0;
+      return;
+    }
+
     const labelHeights = this.labelRefs.map((element) => element.value?.getBoundingClientRect().height ?? 0);
     this.topChromeHeight.value = Math.max(...labelHeights);
   }
@@ -298,6 +307,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return nothing;
     }
 
+    console.debug("chrome top", this.topChromeHeight.value);
     return html`
       <div class="labels-top-chrome" style="height: ${watch(this.topChromeHeight)}px">
         ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopLabelTemplate(model))}
