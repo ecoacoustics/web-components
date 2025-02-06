@@ -55,10 +55,10 @@
   position absolute that contains all of the annotations.
 */
 .annotations-surface {
-  position: absolute;
+  position: relative;
 
   & > aside.annotation-container {
-    position: relative;
+    position: absolute;
 
     z-index: 2;
 
