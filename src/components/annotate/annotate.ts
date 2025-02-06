@@ -169,10 +169,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // math so that we only have to do one calculation
     //
     // TODO: we might want to make this inclusive e.g. >=
-    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
-    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
-    // const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset > temporalDomain[0];
-    // const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency > frequencyDomain[0];
+    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset >= temporalDomain[0];
+    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency >= frequencyDomain[0];
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
@@ -187,9 +185,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     //   model.highFrequency > frequencyDomain[1];
     const isSupersetOfViewBox =
       model.startOffset < temporalDomain[0] &&
-      model.endOffset > temporalDomain[1] &&
+      model.endOffset >= temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
-      model.highFrequency > frequencyDomain[1];
+      model.highFrequency >= frequencyDomain[1];
+
+    // const isSupersetOfViewBox = false;
 
     return isSupersetOfViewBox;
   }
