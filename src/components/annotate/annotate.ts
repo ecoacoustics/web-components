@@ -281,14 +281,18 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         tabindex="0"
         @focus="${() => focusCallback(model, true)}"
         @blur="${() => focusCallback(model, false)}"
-        style="
-          left: ${watch(x)}px;
-          top: ${watch(y)}px;
-          width: ${watch(width)}px;
-          height: ${watch(height)}px;
-        "
       >
-        <div class="bounding-box" part="annotation-bounding-box" style="anchor-name: ${annotationAnchorName};"></div>
+        <div
+          class="bounding-box"
+          part="annotation-bounding-box"
+          style="
+            left: ${watch(x)}px;
+            top: ${watch(y)}px;
+            width: ${watch(width)}px;
+            height: ${watch(height)}px;
+            anchor-name: ${annotationAnchorName};
+          "
+        ></div>
       </aside>
     `;
   }
