@@ -13,7 +13,6 @@ import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
-import { TagComponent } from "../tag/tag";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
@@ -113,7 +112,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
   }
 
-  public updated(): void {
+  public chromeRendered(): void {
     this.measureLabelHeight();
   }
 
@@ -303,11 +302,17 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeTop(): ChromeTemplate {
+    // because the labelRefs array is dynamically populated by the
+    // spectrogramTopLabelTemplate function, we have to destroy all labelRefs
+    // when the template is re-rendered.
+    // we also set the labelRefs array to an empty array if the tagStyle is not
+    // spectrogram-top because the references will no longer exist.
+    this.labelRefs = [];
+
     if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
       return nothing;
     }
 
-    console.debug("chrome top", this.topChromeHeight.value);
     return html`
       <div class="labels-top-chrome" style="height: ${watch(this.topChromeHeight)}px">
         ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopLabelTemplate(model))}

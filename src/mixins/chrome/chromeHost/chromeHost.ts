@@ -33,7 +33,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     @state()
-    private providers = new Set<ChromeHostComponentClass>();
+    private providers = new Set<any>();
 
     /**
      * The content to render chrome around.
@@ -44,6 +44,10 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
       this.sendChromeHostAdvertisement();
+    }
+
+    public updated(): void {
+      this.providers.forEach((provider) => provider.chromeRendered?.());
     }
 
     private sendChromeHostAdvertisement(): void {
