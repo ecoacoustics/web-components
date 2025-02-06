@@ -266,6 +266,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public updated(change: PropertyValues<this>) {
+    super.updated(change);
+
     if (this.doneFirstRender) {
       // because regenerating the options is also performed when the source is
       // invalidated, we only use the regenerateSpectrogramOptions method when
@@ -438,8 +440,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // scale the width and height (while maintaining the aspect ratio) up until
     // one of the dimensions overflows the targetEntry.contentRect
     const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
-
-    console.debug(originalSize);
 
     return {
       width: originalSize.width * scale,

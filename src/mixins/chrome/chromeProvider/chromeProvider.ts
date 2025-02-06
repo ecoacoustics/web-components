@@ -21,6 +21,7 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     public abstract chromeLeft?(): ChromeTemplate;
     public abstract chromeRight?(): ChromeTemplate;
     public abstract chromeOverlay?(): ChromeTemplate;
+    public abstract chromeRendered?(): void;
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
