@@ -29,25 +29,54 @@
   position: relative;
 }
 
-.annotation-container {
+/*
+  We have some really weird mix of positioning here because of the way that
+  css position anchors work.
+  We use css position anchors for the "edge" style labels.
+
+  Some basic rules:
+  - Elements positioned with CSS anchor MUST be removed from the normal document
+    flow. Meaning that the labels MUST be position absolute, or fixed.
+  - The element that the anchored element is attached to must be positioned
+    relative if the anchored element is absolute.
+  - If the anchored element is fixed, the label will positioned relative to the
+    anchor host, but its overflow will be relative to the viewport.
+
+  Therefore, our labels are positioned absolute, and the bounding box that the
+  labels are attached to are positioned relative.
+
+  However, because we want to overlay the annotation bounding boxes on top of
+  the spectrogram, we cannot have the annotation bounding boxes in the document
+  flow, or else other chrome surface overlays would be effected by the box
+  size of the annotations.
+
+  So that the annotations are removed from flow and can overlay on top of the
+  spectrogram, we have a surface container that is removed from flow using
+  position absolute that contains all of the annotations.
+*/
+.annotations-surface {
   position: absolute;
-  width: 100%;
-  height: 100%;
 
-  z-index: 2;
+  & > aside.annotation-container {
+    position: relative;
 
-  cursor: pointer;
+    z-index: 2;
 
-  overflow: hidden;
+    cursor: pointer;
 
-  &:focus {
-    --oe-annotation-color: var(--oe-annotation-selected-color);
-    z-index: 1;
-  }
+    overflow: visible;
 
-  & > .bounding-box {
-    position: absolute;
-    border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
+    &:focus {
+      --oe-annotation-color: var(--oe-annotation-selected-color);
+      z-index: 1;
+    }
+
+    & > .bounding-box {
+      position: absolute;
+      border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
@@ -60,13 +89,7 @@
   position-visibility: no-overflow;
 
   &.style-edge {
-    /*
-      TODO: investigate why i have to use position: fixed here
-      anchored elements need to be removed from the normal document flow, but I
-      would have thought that absolute would do this and have better scoping.
-    */
     position: fixed;
-    /* position: absolute; */
 
     color: var(--oe-annotation-font-color);
     background-color: var(--oe-annotation-color);
