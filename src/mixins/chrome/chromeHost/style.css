@@ -18,6 +18,7 @@
     position: relative;
     height: fit-content;
     width: fit-content;
+    overflow: hidden;
   }
 
   &.chrome-top {
