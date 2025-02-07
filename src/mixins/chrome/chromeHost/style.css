@@ -56,7 +56,7 @@
   position: relative;
   grid-area: 2 / 2;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 
   & > .chrome-overlay {
     position: absolute;
