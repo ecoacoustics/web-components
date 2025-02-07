@@ -1,5 +1,5 @@
 import { html, LitElement } from "lit";
-import { customElement, property, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Tag } from "../../models/tag";
 

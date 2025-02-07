@@ -270,9 +270,18 @@ test.describe("tag parsing", () => {
         { text: "attribute-koala" },
         { text: "" },
         { text: "attribute-fish" },
-        { text: "slotted-kangaroo" },
-        { text: "" },
-      ];
+        {
+          text: "slotted-kangaroo",
+          elementReferences: [],
+          reference: null,
+        },
+        {
+          text: "",
+          elementReferences: [],
+          reference: null,
+        },
+      ] satisfies Tag[];
+
       const realizedTags = await fixture.tagModels();
 
       expect(realizedTags).toEqual(expectedTags);
