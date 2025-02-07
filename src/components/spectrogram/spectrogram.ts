@@ -129,6 +129,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @query("canvas")
   private canvas!: HTMLCanvasElement;
 
+  @query("#spectrogram-container")
+  private spectrogramContainer!: Readonly<HTMLDivElement>;
+
   public readonly currentTime: Signal<Seconds> = signal(this.offset);
 
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
@@ -219,7 +222,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // the canvas will not be initialized, and the canvas can be undefined
     // this can sometimes occur during tests if the test runner doesn't
     // correctly wait for the component to be fully initialized
-    OeResizeObserver.instance.unobserve(this.canvas);
+    OeResizeObserver.instance.unobserve(this.spectrogramContainer);
 
     // because the resize observer is disconnected when the spectrogram is
     // removed from the DOM, the unit converter value will still have the old
@@ -237,7 +240,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public async firstUpdated(change: any) {
     super.firstUpdated(change);
 
-    OeResizeObserver.observe(this.canvas, (e) => this.handleResize(e));
+    OeResizeObserver.observe(this.spectrogramContainer, (e) => this.handleResize(e));
 
     // because audio context's automatically start in an active state, and start
     // processing audio even if there is no <audio> element input, we immediately
@@ -665,8 +668,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   public renderSurface() {
     return html`
-      <div id="spectrogram-container">
-        <canvas part="canvas"></canvas>
+      <div id="spectrogram-container" part="canvas">
+        <canvas></canvas>
       </div>
       <audio
         id="media-element"
