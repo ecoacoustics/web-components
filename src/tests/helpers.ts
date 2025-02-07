@@ -28,11 +28,23 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
 export async function changeToMobile(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.mobile);
   await viewportMock(page);
+
+  Object.defineProperty(navigator as any, "userAgentData", {
+    get: () => ({
+      mobile: true,
+    }),
+  });
 }
 
 export async function changeToDesktop(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.desktop);
   await viewportMock(page);
+
+  Object.defineProperty(navigator as any, "userAgentData", {
+    get: () => ({
+      mobile: false,
+    }),
+  });
 }
 
 export function mockDeviceSize(size: Size): DeviceMock {

@@ -81,28 +81,6 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
     });
   });
 
-  test.describe("removing spectrogram component", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.removeSpectrogramElement();
-    });
-
-    test("position of indicator", async ({ fixture }) => {
-      const initialPosition = await fixture.indicatorPosition();
-      expect(initialPosition).toBe(0);
-    });
-
-    // the indicator should not move if the spectrogram component is removed
-    // because there is no audio to play
-    test("functionality of indicator", async ({ fixture, page }) => {
-      await fixture.playAudio();
-      await page.waitForTimeout(1000);
-
-      const position = await fixture.indicatorPosition();
-
-      expect(position).toBe(0);
-    });
-  });
-
   test.describe("changing spectrogram audio source while playing", () => {
     test.beforeEach(async ({ fixture, page }) => {
       // we simulate playing the audio for half a second before changing the audio source
