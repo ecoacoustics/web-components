@@ -153,19 +153,23 @@ test.describe("with annotation", () => {
         {
           name: "should position correctly if only the high frequency has overflowed",
           annotation: {
-            startTime: 1,
-            endTime: 2,
-            lowFrequency: 21050,
-            highFrequency: 23050,
+            startTime: 2,
+            endTime: 2.5,
+            lowFrequency: 10000,
+            highFrequency: 13050,
           },
         },
         {
+          // In this test, the annotation is not overflowing, but if the label
+          // was rendered in the top left position, it would overflow the
+          // high frequency axis
+          // therefore, we expect that the label will be rendered on the bottom
           name: "should position correctly if only the high frequency label is overflowing",
           annotation: {
             startTime: 3,
             endTime: 3.4,
             lowFrequency: 9500,
-            highFrequency: 13000,
+            highFrequency: 10900,
           },
         },
       ] satisfies AnnotationBoundingBoxTest[];

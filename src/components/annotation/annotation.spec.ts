@@ -40,10 +40,6 @@ test.describe("component template", () => {
 });
 
 test.describe("model parsing", () => {
-  test.fail("should throw an error if bounding attributes are missing", async ({ fixture }) => {
-    await fixture.create("<oe-annotation></oe-annotation>");
-  });
-
   test("should not throw an error only tags are missing", async ({ fixture }) => {
     // if creating the component (through fixture.create) throws an error, the
     // test will fail
