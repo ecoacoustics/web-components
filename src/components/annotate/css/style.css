@@ -10,25 +10,6 @@
   --oe-annotation-weight: 1px;
 }
 
-#wrapper-element {
-  position: relative;
-}
-
-.wrapper-chrome {
-  position: relative;
-}
-
-.annotation-chrome {
-  position: absolute;
-  z-index: 1;
-
-  overflow: hidden;
-}
-
-.labels-top-chrome {
-  position: relative;
-}
-
 /*
   We have some really weird mix of positioning here because of the way that
   css position anchors work.
@@ -55,6 +36,12 @@
   position absolute that contains all of the annotations.
 */
 .annotations-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
   & > aside.annotation-container {
     position: relative;
 
@@ -72,6 +59,10 @@
       border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
     }
   }
+}
+
+.labels-top-chrome {
+  position: relative;
 }
 
 .bounding-box-label {
