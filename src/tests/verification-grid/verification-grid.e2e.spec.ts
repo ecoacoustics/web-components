@@ -25,6 +25,7 @@ import { AudioCachedState, SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
+import { EnumValue } from "../../helpers/types/advancedTypes";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -113,21 +114,6 @@ test.describe("single verification grid", () => {
     const advancedShortcutSlideTitle = "Keyboard shortcuts";
 
     test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture, page }) => {
-      await changeToMobile(page);
-      await fixture.openBootstrapDialog();
-
-      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
-      expect(isBootstrapDialogOpen).toBe(true);
-
-      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
-      expect(realizedSlideTitle).not.toBe(advancedShortcutSlideTitle);
-    });
-
-    // If the user is on a mobile device, there is no purpose in opening the
-    // advanced shortcuts bootstrap dialog because they cannot use the keyboard
-    // therefore, if the user clicks on the help button while on a mobile, we
-    // expect that the user is taken straight to the tutorial modal
-    test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture, page }) => {
       await changeToDesktop(page);
       await fixture.openBootstrapDialog();
 
@@ -136,6 +122,21 @@ test.describe("single verification grid", () => {
 
       const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
       expect(realizedSlideTitle).toBe(advancedShortcutSlideTitle);
+    });
+
+    // If the user is on a mobile device, there is no purpose in opening the
+    // advanced shortcuts bootstrap dialog because they cannot use the keyboard
+    // therefore, if the user clicks on the help button while on a mobile, we
+    // expect that the user is taken straight to the tutorial modal
+    test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture, page }) => {
+      await changeToMobile(page);
+      await fixture.openBootstrapDialog();
+
+      const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
+      expect(isBootstrapDialogOpen).toBe(true);
+
+      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
+      expect(realizedSlideTitle).not.toBe(advancedShortcutSlideTitle);
     });
   });
 
@@ -1016,8 +1017,14 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("spectrogram scaling attributes", () => {
-    const testedScales: SpectrogramCanvasScale[] = ["stretch", "natural", "original"];
-    testedScales.forEach((scale: SpectrogramCanvasScale) => {
+    // For some reason, we cannot use the SpectrogramCanvasScale enum here
+    // because it causes a bundling error
+    // However, I was able to get type checking for our tested scales using
+    // our EnumValue helper type
+    // TODO: figure out why we can't import the SpectrogramCanvasScale enum here
+    const testedScales = ["stretch", "natural", "original"] as const satisfies EnumValue<SpectrogramCanvasScale>;
+
+    testedScales.forEach((scale: EnumValue<SpectrogramCanvasScale>) => {
       test.describe(`${scale} scaling`, () => {
         test.beforeEach(async ({ fixture }) => {
           await fixture.changeSpectrogramScaling(scale);

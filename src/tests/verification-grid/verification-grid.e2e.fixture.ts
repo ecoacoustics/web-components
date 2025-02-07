@@ -35,7 +35,7 @@ import { Decision } from "../../models/decisions/decision";
 import { expect, test } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
-import { CssVariable } from "../../helpers/types/advancedTypes";
+import { CssVariable, EnumValue } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 import { SPACE_KEY } from "../../helpers/keyboard";
 
@@ -330,7 +330,12 @@ class TestPage {
   }
 
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
-    const subjectClassifications = Array.from(subject.classifications.values());
+    // although the SubjectWrapper's classification property is a map, it gets
+    // converted into a regular object when it is serialized from the browser
+    // to the playwright test environment
+    // therefore, to get the values of the classification property, we use
+    // the Object.values method
+    const subjectClassifications = Array.from(Object.values(subject.classifications));
 
     // prettier wants to inline all of these into one line, but I think that
     // separating verifications and classifications into separate lines makes
@@ -655,7 +660,7 @@ class TestPage {
     await strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
   }
 
-  public async changeSpectrogramScaling(scale: SpectrogramCanvasScale) {
+  public async changeSpectrogramScaling(scale: EnumValue<SpectrogramCanvasScale>) {
     console.log(scale);
   }
 
