@@ -1,10 +1,9 @@
-import { CSSResultGroup, CSSResultOrNative, html, PropertyValues, unsafeCSS } from "lit";
+import { html, PropertyValues } from "lit";
 import { Component } from "../../mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";
 import { ChromeTemplate } from "../types";
-import chromeProviderStyles from "./style.css?inline";
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
   abstract class ChromeProviderComponentClass extends superClass {
@@ -12,21 +11,6 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
       super(...args);
 
       this.attachAdvertisementListeners();
-    }
-
-    protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
-      const chromeHostCss = unsafeCSS(chromeProviderStyles);
-      let returnedStyles: CSSResultGroup = [chromeHostCss];
-
-      if (Array.isArray(styles)) {
-        returnedStyles = [chromeHostCss, ...styles];
-      } else if (styles !== undefined) {
-        returnedStyles = [chromeHostCss, styles];
-      }
-
-      // eslint-disable-next-line
-      // @ts-ignore
-      return super.finalizeStyles(returnedStyles);
     }
 
     @state()
@@ -61,17 +45,7 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
 
     public render() {
       this.chromeAdvertisement?.requestUpdate();
-      return html`
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 0;
-          "
-        >
-          <slot @slotchange="${() => this.handleSlotChange()}"></slot>
-        </div>
-      `;
+      return html`<slot @slotchange="${() => this.handleSlotChange()}"></slot>`;
     }
   }
 

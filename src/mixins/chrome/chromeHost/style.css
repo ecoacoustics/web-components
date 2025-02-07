@@ -1,9 +1,3 @@
-:host {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0;
-}
-
 #chrome-wrapper {
   display: grid;
 
@@ -15,10 +9,6 @@
   grid-template-rows: min-content auto min-content;
 
   height: 100%;
-}
-
-.host-container {
-  flex: 1 1 0;
 }
 
 .chrome {
