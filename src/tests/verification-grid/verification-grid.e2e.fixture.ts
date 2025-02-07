@@ -107,7 +107,7 @@ class TestPage {
     <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
 
-  public async create(customTemplate = this.defaultTemplate) {
+  public async create(customTemplate = this.defaultTemplate, requiredSelectors: string[] = []) {
     await this.page.setContent(`
       <oe-verification-grid id="verification-grid">
         ${customTemplate}
@@ -120,22 +120,24 @@ class TestPage {
       </oe-verification-grid>
     `);
 
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", ...requiredSelectors]);
   }
 
   public async createWithClassificationTask() {
+    // prettier-ignore
     await this.create(`
       <oe-classification tag="car" true-shortcut="h"></oe-classification>
       <oe-classification tag="koala" true-shortcut="j"></oe-classification>
       <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-    `);
+    `, ["oe-classification"]);
   }
 
   public async createWithVerificationTask() {
+    // prettier-ignore
     await this.create(`
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
-    `);
+    `, ["oe-verification"]);
   }
 
   public async createWithAppChrome() {
