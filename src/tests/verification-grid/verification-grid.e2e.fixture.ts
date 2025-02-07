@@ -555,6 +555,11 @@ class TestPage {
   }
 
   public async dismissBootstrapDialog() {
+    const isInitialBootstrapDialogOpen = await this.isBootstrapDialogOpen();
+    if (!isInitialBootstrapDialogOpen) {
+      return;
+    }
+
     await this.dismissBootstrapDialogButton().click();
   }
 
