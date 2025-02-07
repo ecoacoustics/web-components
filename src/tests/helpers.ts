@@ -279,3 +279,10 @@ export async function waitForContentReady(page: Page, selectors: string[] = []):
   // wait until all network requests have completed
   await page.waitForLoadState("networkidle");
 }
+
+export async function setElementSize(target: Locator, shape: Size<Pixel>) {
+  await target.evaluate((element: HTMLElement, shape: Size<Pixel>) => {
+    element.style.width = `${shape.width}px`;
+    element.style.height = `${shape.height}px`;
+  }, shape);
+}

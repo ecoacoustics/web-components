@@ -23,15 +23,28 @@ test.describe("component template", () => {
 });
 
 test.describe("tag models", () => {
+  // because the tag models created by the oe-tag component have an array of
+  // element references, we can't assert directly on the model because our
+  // element references will never match.
+  function assertTagModel(realized: Readonly<Tag>, expected: Readonly<Tag>): void {
+    const { elementReferences, ...partialRealized } = realized;
+
+    expect(partialRealized).toEqual(expected);
+    expect(elementReferences).toBeDefined();
+  }
+
   test("should create the correct model if it contains a value", async ({ fixture }) => {
     const testedTag = "Koala";
 
     await fixture.create(`<oe-tag value="${testedTag}">${testedTag}</oe-tag>`);
 
-    const expectedTagModel = { text: testedTag } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model");
+    const expectedTagModel = {
+      text: testedTag,
+      reference: null,
+    } satisfies Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
 
-    expect(realizedTagModel).toEqual(expectedTagModel);
+    assertTagModel(realizedTagModel, expectedTagModel);
   });
 
   test("should create the correct model if it does not have a value", async ({ fixture }) => {
@@ -40,10 +53,13 @@ test.describe("tag models", () => {
     // with an empty string.
     await fixture.create("<oe-tag>Koala</oe-tag>");
 
-    const expectedTagModel = { text: "" } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model");
+    const expectedTagModel = {
+      text: "",
+      reference: null,
+    } satisfies Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
 
-    expect(realizedTagModel).toEqual(expectedTagModel);
+    assertTagModel(realizedTagModel, expectedTagModel);
   });
 
   test("should update the model if the value changes", async ({ fixture }) => {
@@ -53,9 +69,12 @@ test.describe("tag models", () => {
     await fixture.create(`<oe-tag value="${testedTag}">${testedTag}</oe-tag>`);
     await setBrowserValue<TagComponent>(fixture.component(), "value", updatedTag);
 
-    const expectedTagModel = { text: updatedTag } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model");
+    const expectedTagModel = {
+      text: updatedTag,
+      reference: null,
+    } satisfies Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
 
-    expect(realizedTagModel).toEqual(expectedTagModel);
+    assertTagModel(realizedTagModel, expectedTagModel);
   });
 });
