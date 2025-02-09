@@ -5,6 +5,7 @@ import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
 import { ChromeTemplate } from "../types";
 import chromeHostStyles from "./style.css?inline";
+import { mergeStyles } from "../../../helpers/styles";
 
 // TODO: improve typing here
 export interface ChromeAdvertisement {
@@ -17,19 +18,12 @@ export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
 export const ChromeHost = <T extends Component>(superClass: T) => {
   abstract class ChromeHostComponentClass extends superClass {
-    protected static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
-      const chromeHostCss = unsafeCSS(chromeHostStyles);
-      let returnedStyles: CSSResultGroup = [chromeHostCss];
-
-      if (Array.isArray(styles)) {
-        returnedStyles = [chromeHostCss, ...styles];
-      } else if (styles !== undefined) {
-        returnedStyles = [chromeHostCss, styles];
-      }
+    public static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
+      const newStyles: CSSResultGroup = mergeStyles([chromeHostStyles], styles);
 
       // eslint-disable-next-line
       // @ts-ignore
-      return super.finalizeStyles(returnedStyles);
+      return super.finalizeStyles(newStyles);
     }
 
     @state()
