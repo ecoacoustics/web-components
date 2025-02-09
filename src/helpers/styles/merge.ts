@@ -1,19 +1,5 @@
 import { CSSResultGroup, unsafeCSS } from "lit";
 
-// /**
-//  * @description
-//  * Injects one or multiple style sheets into a LitElement component.
-//  * This can be useful when creating component mixins or abstract components that
-//  * extend the LitElement class.
-//  */
-// export const applyStyleSheets = (
-//   classConstructor: Component,
-//   styleSheets: string[],
-//   currentStyles: CSSResultGroup,
-// ): void => {
-//   const styles = mergeStyles(styleSheets, currentStyles);
-// };
-
 /**
  * @description
  * Merges multiple style sheets into one CSSResultGroup.
