@@ -1,11 +1,13 @@
-import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, RootPart, unsafeCSS } from "lit";
+import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, RootPart } from "lit";
 import { Component } from "../../mixins";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
 import { ChromeTemplate } from "../types";
+import { mergeStyles } from "../../../helpers/styles/merge";
+import { addStyleSheets } from "../../../helpers/styles/add";
+import { removeStyleSheets } from "../../../helpers/styles/remove";
 import chromeHostStyles from "./style.css?inline";
-import { mergeStyles } from "../../../helpers/styles";
 
 // TODO: improve typing here
 export interface ChromeAdvertisement {
@@ -70,7 +72,8 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       // present and there won't be a flash of unstyled content or cumulative
       // shift
       const styles = this.getProviderStyleSheets(provider);
-      this.addStyleSheets(styles);
+      addStyleSheets(this, styles);
+      // this.addStyleSheets(styles);
 
       this.providers.add(provider);
 
@@ -83,67 +86,12 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       // we remove the providers style sheets last so that there is not a flash
       // of unstyled content when the provider is removed
       this.providers.delete(provider);
-      this.removeStyleSheets(styles);
+      removeStyleSheets(this, styles);
     }
 
     private getProviderStyleSheets(provider: ChromeHostComponentClass): CSSResultGroup {
       const providerClass = provider.constructor as typeof LitElement;
       return providerClass.styles ?? [];
-    }
-
-    private addStyleSheets(styleSheets: CSSResultGroup): void {
-      if (Array.isArray(styleSheets)) {
-        for (const style of styleSheets) {
-          if (Array.isArray(style)) {
-            this.addStyleSheets(style);
-          } else {
-            this.addStyleSheet(style);
-          }
-        }
-
-        return;
-      }
-
-      this.addStyleSheet(styleSheets);
-    }
-
-    private removeStyleSheets(styleSheets: CSSResultGroup): void {
-      if (Array.isArray(styleSheets)) {
-        for (const style of styleSheets) {
-          if (Array.isArray(style)) {
-            this.removeStyleSheets(style);
-          } else {
-            this.removeStyleSheet(style);
-          }
-        }
-      }
-    }
-
-    private addStyleSheet(styleSheet: CSSResultOrNative): void {
-      if (styleSheet instanceof CSSStyleSheet) {
-        this.shadowRoot?.adoptedStyleSheets.push(styleSheet);
-      } else {
-        this.shadowRoot?.adoptedStyleSheets.push((styleSheet as any).styleSheet);
-      }
-    }
-
-    private removeStyleSheet(styleSheet: CSSResultOrNative): void {
-      const currentStyles = this.shadowRoot?.adoptedStyleSheets;
-      if (!currentStyles) {
-        return;
-      }
-
-      const styleSheetObject = styleSheet instanceof CSSStyleSheet ? styleSheet : styleSheet.styleSheet;
-      if (!styleSheetObject) {
-        return;
-      }
-
-      const indexToRemove = currentStyles.indexOf(styleSheetObject);
-      if (indexToRemove < 0) {
-        return;
-      }
-
-      this.shadowRoot.adoptedStyleSheets.splice(indexToRemove, 1);
     }
 
     // TODO: improve typing here

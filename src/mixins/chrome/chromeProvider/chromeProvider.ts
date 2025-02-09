@@ -4,7 +4,7 @@ import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";
 import { ChromeTemplate } from "../types";
-import { mergeStyles } from "../../../helpers/styles";
+import { mergeStyles } from "../../../helpers/styles/merge";
 import providerStyles from "./style.css?inline";
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
