@@ -26,7 +26,7 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
   }
 }
 
-test.describe("with annotation", () => {
+test.describe("annotation", () => {
   test.describe("label content", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create();
@@ -72,7 +72,7 @@ test.describe("with annotation", () => {
     test.describe("fully overflowing", () => {
       const tests = [
         {
-          name: "should correctly remove the bounding box if it is a super set of the view window",
+          name: "super set",
           annotation: {
             startTime: -2,
             endTime: 7,
@@ -81,7 +81,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should correctly remove the bounding box if it has fully overflowed the negative y-axis",
+          name: "negative y-axis",
           annotation: {
             startTime: 3,
             endTime: 3.4,
@@ -90,7 +90,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should correctly remove the bounding box if it has fully overflowed the negative x-axis",
+          name: "negative x-axis",
           annotation: {
             startTime: -2,
             endTime: -1,
@@ -99,7 +99,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should correctly remove the bounding box if it has fully overflowed the positive y-axis",
+          name: "positive y-axis",
           annotation: {
             startTime: 2,
             endTime: 4,
@@ -108,7 +108,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should correctly remove the bounding box if it has fully overflowed the positive x-axis",
+          name: "positive x-axis",
           annotation: {
             startTime: 7,
             endTime: 8,
@@ -124,7 +124,7 @@ test.describe("with annotation", () => {
     test.describe("partially overflowed 1 axis", () => {
       const tests = [
         {
-          name: "should position correctly if only the start time has overflowed",
+          name: "start time has overflowed",
           annotation: {
             startTime: -2,
             endTime: 0.5,
@@ -133,7 +133,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly if only the end time has overflowed",
+          name: "end time has overflowed",
           annotation: {
             startTime: 4.5,
             endTime: 7,
@@ -142,7 +142,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly if only the low frequency has overflowed",
+          name: "low frequency has overflowed",
           annotation: {
             startTime: 3,
             endTime: 3.4,
@@ -151,7 +151,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly if only the high frequency has overflowed",
+          name: "high frequency has overflowed",
           annotation: {
             startTime: 2,
             endTime: 2.5,
@@ -164,7 +164,7 @@ test.describe("with annotation", () => {
           // was rendered in the top left position, it would overflow the
           // high frequency axis
           // therefore, we expect that the label will be rendered on the bottom
-          name: "should position correctly if only the high frequency label is overflowing",
+          name: "high frequency label is overflowing",
           annotation: {
             startTime: 3,
             endTime: 3.4,
@@ -180,7 +180,7 @@ test.describe("with annotation", () => {
     test.describe("two axes overflow", () => {
       const tests = [
         {
-          name: "should position correctly if both time dimensions have overflowed",
+          name: "time dimensions overflow",
           annotation: {
             startTime: -2,
             endTime: 7,
@@ -189,7 +189,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly if both frequency dimensions have overflowed",
+          name: "frequency dimensions have overflow",
           annotation: {
             startTime: 3.8,
             endTime: 4.2,
@@ -205,7 +205,7 @@ test.describe("with annotation", () => {
     test.describe("corners overflowed", () => {
       const tests = [
         {
-          name: "should position correctly in the top left corner",
+          name: "top left",
           annotation: {
             startTime: -0.1,
             endTime: 0.1,
@@ -214,7 +214,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly in the top right corner",
+          name: "top right",
           annotation: {
             startTime: 4.9,
             endTime: 5.1,
@@ -223,7 +223,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly in the bottom right corner",
+          name: "bottom right",
           annotation: {
             startTime: 4.9,
             endTime: 5.1,
@@ -232,7 +232,7 @@ test.describe("with annotation", () => {
           },
         },
         {
-          name: "should position correctly in the bottom left corner",
+          name: "bottom left",
           annotation: {
             startTime: -0.1,
             endTime: 0.1,
