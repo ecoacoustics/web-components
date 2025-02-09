@@ -1,12 +1,22 @@
-import { html, PropertyValues } from "lit";
+import { CSSResultGroup, CSSResultOrNative, html, PropertyValues } from "lit";
 import { Component } from "../../mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";
 import { ChromeTemplate } from "../types";
+import { mergeStyles } from "../../../helpers/styles";
+import providerStyles from "./style.css?inline";
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
   abstract class ChromeProviderComponentClass extends superClass {
+    public static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
+      const newStyles: CSSResultGroup = mergeStyles([providerStyles], styles);
+
+      // eslint-disable-next-line
+      // @ts-ignore
+      return super.finalizeStyles(newStyles);
+    }
+
     public constructor(...args: any[]) {
       super(...args);
 
