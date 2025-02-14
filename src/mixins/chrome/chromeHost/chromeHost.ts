@@ -18,9 +18,9 @@ export interface ChromeAdvertisement {
 
 export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
-export const ChromeHost = <T extends Component>(superClass: T) => {
+export const ChromeHost = <T extends Component>(superClass: T): Component => {
   abstract class ChromeHostComponentClass extends superClass {
-    public static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
+    public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       const newStyles: CSSResultGroup = mergeStyles([chromeHostStyles], styles);
 
       // eslint-disable-next-line

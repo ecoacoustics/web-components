@@ -7,9 +7,9 @@ import { ChromeTemplate } from "../types";
 import { mergeStyles } from "../../../helpers/styles/merge";
 import providerStyles from "./style.css?inline";
 
-export const ChromeProvider = <T extends Component>(superClass: T) => {
+export const ChromeProvider = <T extends Component>(superClass: T): Component => {
   abstract class ChromeProviderComponentClass extends superClass {
-    public static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
+    public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       const newStyles: CSSResultGroup = mergeStyles([providerStyles], styles);
 
       // eslint-disable-next-line

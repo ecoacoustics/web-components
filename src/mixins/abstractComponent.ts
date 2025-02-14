@@ -1,4 +1,4 @@
-import { CSSResultGroup, CSSResultOrNative, unsafeCSS } from "lit";
+import { CSSResultGroup, CSSResultOrNative } from "lit";
 import { ReactiveController } from "./reactiveController";
 import { Component } from "./mixins";
 import { mergeStyles } from "../helpers/styles/merge";
@@ -7,9 +7,9 @@ import defaultTheming from "../helpers/themes/theming.css?inline";
 
 let themingInserted = false;
 
-export const AbstractComponent = <T extends Component>(superClass: T) => {
+export const AbstractComponent = <T extends Component>(superClass: T): Component => {
   class AbstractComponentClass extends superClass {
-    public static finalizeStyles(styles?: CSSResultGroup): Array<CSSResultOrNative> {
+    public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       // we only want to apply the theming styles once to the documents root
       if (!themingInserted) {
         AbstractComponentClass.insertTheming();
@@ -32,7 +32,8 @@ export const AbstractComponent = <T extends Component>(superClass: T) => {
 
     private reactiveController = new ReactiveController(this);
 
-    // TODO: find out if we have to explicitly call hostConnected and hostDisconnected
+    // TODO: find out if we have to explicitly call hostConnected and
+    // hostDisconnected
     public connectedCallback(): void {
       super.connectedCallback();
       this.reactiveController.hostConnected();
