@@ -3,26 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Components - Spectrogram + Axes + Indicator</title>
+    <title>Web Components - Spectrogram + Axes + Indicator + Annotation</title>
     <script type="module" src="/src/components/index.ts"></script>
   </head>
 
   <body>
+    <header>
+      <h2>Header content</h2>
+      <p>This is some header content to ensure we're not aligning to 0,0 of the page</p>
+    </header>
+
     <oe-axes>
-      <oe-indicator>
-        <oe-spectrogram
-          id="playing-spectrogram"
-          class="large"
-          window-size="1024"
-          color-map="magma"
-          brightness="-0.5"
-          contrast="2"
-          scaling="stretch"
-        >
-          <source src="/example2.flac" />
-        </oe-spectrogram>
-      </oe-indicator>
+      <oe-annotate tag-style="edge">
+        <oe-indicator>
+          <oe-spectrogram
+            id="playing-spectrogram"
+            class="large"
+            window-size="1024"
+            color-map="magma"
+            brightness="-0.4"
+            contrast="2"
+          >
+            <source src="/example.flac" />
+          </oe-spectrogram>
+        </oe-indicator>
+
+        <oe-annotation
+          tags="bird"
+          start-time="0.4"
+          end-time="4.99"
+          low-frequency="2500"
+          high-frequency="3500"
+        ></oe-annotation>
+
+        <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900" tags="1,2">
+          <oe-tag value="bat"></oe-tag>
+          <oe-tag value="ultrasonic">
+            tag:
+            <strong>Ultrasonic Slotted</strong>
+            <a href="#wiki">learn more</a>
+          </oe-tag>
+        </oe-annotation>
+      </oe-annotate>
     </oe-axes>
+
     <oe-media-controls for="playing-spectrogram">
       <span slot="play-icon">Play</span>
       <span slot="pause-icon">Pause</span>
@@ -35,11 +59,16 @@
     <button onclick="changeOffset();">Change Offset</button>
     <button onclick="changeScale();">Change Mel-Scale</button>
     <button onclick="changeAspectRatio();">Change Scale</button>
+    <button onclick="changeTagStyle();">Change tag style</button>
     <input type="text" readonly value="0" id="generation" autocomplete="off" />
     <label>
       Change height
       <input id="height-input" type="range" value="800" min="0" max="1000" />
     </label>
+
+    <footer style="padding-bottom: 100dvh">
+      <h2>This is a footer with some long content to test scrolling</h2>
+    </footer>
 
     <script>
       window.onload = () => {
@@ -47,8 +76,11 @@
         heightInputElem.addEventListener("input", changeHeight);
       };
 
+      const spectrogram = () => document.getElementById("playing-spectrogram");
+      const annotate = () => document.querySelector("oe-annotate");
+
       function changeSource() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.src === "/example.flac") {
           element.setAttribute("src", "/example_34s.flac");
@@ -59,27 +91,39 @@
         }
       }
 
+      function changeTagStyle() {
+        const element = annotate();
+
+        if (element.tagStyle === "edge") {
+          element.tagStyle = "spectrogram-top";
+        } else if (element.tagStyle === "spectrogram-top") {
+          element.tagStyle = "hidden";
+        } else {
+          element.tagStyle = "edge";
+        }
+      }
+
       function changeHeight(event) {
         const newHeight = event.target.value;
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         element.style.height = `${newHeight}px`;
       }
 
       function changeAspectRatio() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         const currentAspectRatio = element.getAttribute("scale");
 
         if (currentAspectRatio === "stretch") {
           element.setAttribute("scale", "natural");
         } else if (currentAspectRatio === "natural") {
           element.setAttribute("scale", "original");
-        } else if (currentAspectRatio === "original") {
+        } else {
           element.setAttribute("scale", "stretch");
         }
       }
 
       function changeOffset() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("offset") === "2") {
           element.setAttribute("offset", "0");
@@ -90,7 +134,7 @@
 
       function changeColorMap() {
         document.getElementById("generation").value = parseInt(document.getElementById("generation").value) + 1;
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("color-map") === "audacity") {
           element.setAttribute("color-map", "raven");
@@ -100,7 +144,7 @@
       }
 
       function changeWindowSize() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.getAttribute("window-size") === "1024") {
           element.setAttribute("window-size", "256");
@@ -110,7 +154,7 @@
       }
 
       function changeSize() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
         const currentSize = element.style.width;
 
         if (currentSize === "90vw") {
@@ -126,7 +170,7 @@
       }
 
       function changeScale() {
-        const element = document.getElementById("playing-spectrogram");
+        const element = spectrogram();
 
         if (element.hasAttribute("mel-scale")) {
           element.removeAttribute("mel-scale");
@@ -166,10 +210,11 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .large {
-        height: 800px;
+      /* 
+      .large::part(canvas) {
+        height: 600px;
         width: 100%;
-      }
+      } */
     </style>
   </body>
 </html>

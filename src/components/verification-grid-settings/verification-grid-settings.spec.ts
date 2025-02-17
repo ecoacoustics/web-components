@@ -1,4 +1,4 @@
-import { expect } from "@sand4rt/experimental-ct-web";
+import { expect } from "../../tests/assertions";
 import { settingsFixture as test } from "./verification-grid-settings.fixture";
 
 test.describe("Verification Grid Settings Component", () => {

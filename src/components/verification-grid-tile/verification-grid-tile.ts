@@ -31,6 +31,7 @@ interface OverflowEventDetail {
   isOverlapping: boolean;
 }
 
+// cspell:disable-next-line
 const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
 const shortcutTranslation: Record<string, string> = {
   1: "!",

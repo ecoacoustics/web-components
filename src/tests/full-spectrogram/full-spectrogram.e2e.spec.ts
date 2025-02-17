@@ -1,5 +1,7 @@
+import { Size } from "../../models/rendering";
+import { Pixel } from "../../models/unitConverters";
 import { expect } from "../assertions";
-import { catchLocatorEvent } from "../helpers";
+import { catchLocatorEvent, setElementSize } from "../helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
 
 test.describe("interactions between all components", () => {
@@ -114,5 +116,39 @@ test.describe("interactions between all components", () => {
 
     const currentTime = await fixture.audioPlaybackTime();
     expect(currentTime).toBe(0);
+  });
+});
+
+test.describe("sizing", () => {
+  test("should include chrome height in spectrogram host sizing", async ({ fixture }) => {
+    const testedSize = { width: 300, height: 300 } satisfies Size<Pixel>;
+    await setElementSize(fixture.spectrogramComponent(), testedSize);
+
+    const realizedSize = await fixture.getSpectrogramHostSize();
+    expect(realizedSize).toEqual(testedSize);
+
+    const chromeSize = await fixture.getChromeSize();
+    const canvasSize = await fixture.getCanvasSize();
+
+    expect(realizedSize).toEqual({
+      width: canvasSize.width + chromeSize.width,
+      height: canvasSize.height + chromeSize.height,
+    });
+  });
+
+  test("should not include chrome height in spectrogram canvas sizing", async ({ fixture }) => {
+    const testedSize = { width: 300, height: 300 } satisfies Size<Pixel>;
+    await setElementSize(fixture.canvasElement(), testedSize);
+
+    const canvasSize = await fixture.getCanvasSize();
+    expect(canvasSize).toEqual(testedSize);
+
+    const spectrogramSize = await fixture.getSpectrogramHostSize();
+    const chromeSize = await fixture.getChromeSize();
+
+    expect(spectrogramSize).toEqual({
+      width: canvasSize.width + chromeSize.width,
+      height: canvasSize.height + chromeSize.height,
+    });
   });
 });

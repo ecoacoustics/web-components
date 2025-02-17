@@ -1,0 +1,76 @@
+#chrome-wrapper {
+  display: grid;
+
+  grid-template-areas:
+    ".    top     ."
+    "left overlay right"
+    ".    bottom  .";
+  grid-template-columns: min-content auto min-content;
+  grid-template-rows: min-content fit-content min-content;
+
+  height: 100%;
+}
+
+.chrome {
+  position: relative;
+
+  &.chrome-edge {
+    position: relative;
+    height: fit-content;
+    width: fit-content;
+    overflow: hidden;
+  }
+
+  &.chrome-top {
+    grid-area: 1 / 2;
+  }
+
+  &.chrome-bottom {
+    grid-area: 3 / 2;
+  }
+
+  &.chrome-left {
+    grid-area: 2 / 1;
+  }
+
+  &.chrome-right {
+    grid-area: 2 / 3;
+  }
+
+  /*
+    By default, css grid cells will have a fixed size determined by the grid
+    template.
+  */
+  &.chrome-left,
+  &.chrome-right {
+    display: flex;
+  }
+
+  &.chrome-top,
+  &.chrome-bottom {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.surface {
+  display: flex;
+
+  position: relative;
+  grid-area: 2 / 2;
+  max-width: 100%;
+  overflow: visible;
+
+  & > .chrome-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+  }
+
+  & > .host-template {
+    display: contents;
+  }
+}

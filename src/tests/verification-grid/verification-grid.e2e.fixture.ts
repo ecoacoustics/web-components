@@ -35,7 +35,7 @@ import { Decision } from "../../models/decisions/decision";
 import { expect, test } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
-import { CssVariable } from "../../helpers/types/advancedTypes";
+import { CssVariable, EnumValue } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 
 class TestPage {
@@ -105,7 +105,7 @@ class TestPage {
     <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
 
-  public async create(customTemplate = this.defaultTemplate) {
+  public async create(customTemplate = this.defaultTemplate, requiredSelectors: string[] = []) {
     await this.page.setContent(`
       <oe-verification-grid id="verification-grid">
         ${customTemplate}
@@ -118,22 +118,24 @@ class TestPage {
       </oe-verification-grid>
     `);
 
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", ...requiredSelectors]);
   }
 
   public async createWithClassificationTask() {
+    // prettier-ignore
     await this.create(`
       <oe-classification tag="car" true-shortcut="h"></oe-classification>
       <oe-classification tag="koala" true-shortcut="j"></oe-classification>
       <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-    `);
+    `, ["oe-classification"]);
   }
 
   public async createWithVerificationTask() {
+    // prettier-ignore
     await this.create(`
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
-    `);
+    `, ["oe-verification"]);
   }
 
   public async createWithAppChrome() {
@@ -321,7 +323,12 @@ class TestPage {
   }
 
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
-    const subjectClassifications = Array.from(subject.classifications.values());
+    // although the SubjectWrapper's classification property is a map, it gets
+    // converted into a regular object when it is serialized from the browser
+    // to the playwright test environment
+    // therefore, to get the values of the classification property, we use
+    // the Object.values method
+    const subjectClassifications = Array.from(Object.values(subject.classifications));
 
     // prettier wants to inline all of these into one line, but I think that
     // separating verifications and classifications into separate lines makes
@@ -527,6 +534,11 @@ class TestPage {
   }
 
   public async dismissBootstrapDialog() {
+    const isInitialBootstrapDialogOpen = await this.isBootstrapDialogOpen();
+    if (!isInitialBootstrapDialogOpen) {
+      return;
+    }
+
     await this.dismissBootstrapDialogButton().click();
   }
 
@@ -632,7 +644,7 @@ class TestPage {
     await strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
   }
 
-  public async changeSpectrogramScaling(scale: SpectrogramCanvasScale) {
+  public async changeSpectrogramScaling(scale: EnumValue<SpectrogramCanvasScale>) {
     console.log(scale);
   }
 

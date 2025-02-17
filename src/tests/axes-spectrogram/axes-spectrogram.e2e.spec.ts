@@ -46,13 +46,13 @@ test.describe("interactions between axes and spectrogram", () => {
         expectedXTickCount: 11,
         expectedYTickCount: 56,
       },
+      // when testing a height of 100px, the height should be clipped to 128px
+      // because the spectrogram components canvas has a minimum height of 128px
       {
         spectrogramSize: { width: 100, height: 100 },
-        expectedXStep: 2,
+        expectedXStep: 5,
         expectedYStep: 2,
-        // we expect four here because it should include the last value
-        // even though it is not a part of the "nice interval"
-        expectedXTickCount: 4,
+        expectedXTickCount: 2,
         expectedYTickCount: 6,
       },
     ];

@@ -13,6 +13,7 @@ import { IRootContext, rootContext } from "../../helpers/constants/contextTokens
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
+ * @description
  * Specifies where you should be able to find a preference setting in the media
  * controls that can change the spectrogram settings.
  *
@@ -127,8 +128,14 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       // because we want to scope the for attribute to the current shadow root
       // we need to use the getRootNode method to get the shadow root
       const rootNode = this.getRootNode() as HTMLElement;
-      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(`#${this.for}`);
+      const locator = `#${this.for}`;
+      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(locator);
+
       if (!this.spectrogramElement) {
+        console.warn(`Could not locate oe-media-controls target "${locator}"`);
+        return;
+      } else if (!(this.spectrogramElement instanceof SpectrogramComponent)) {
+        console.error("Attempted to attach oe-media-controls to non spectrogram element");
         return;
       }
 

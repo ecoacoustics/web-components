@@ -28,11 +28,23 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
 export async function changeToMobile(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.mobile);
   await viewportMock(page);
+
+  Object.defineProperty(navigator as any, "userAgentData", {
+    get: () => ({
+      mobile: true,
+    }),
+  });
 }
 
 export async function changeToDesktop(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.desktop);
   await viewportMock(page);
+
+  Object.defineProperty(navigator as any, "userAgentData", {
+    get: () => ({
+      mobile: false,
+    }),
+  });
 }
 
 export function mockDeviceSize(size: Size): DeviceMock {
@@ -278,4 +290,11 @@ export async function waitForContentReady(page: Page, selectors: string[] = []):
 
   // wait until all network requests have completed
   await page.waitForLoadState("networkidle");
+}
+
+export async function setElementSize(target: Locator, shape: Size<Pixel>) {
+  await target.evaluate((element: HTMLElement, shape: Size<Pixel>) => {
+    element.style.width = `${shape.width}px`;
+    element.style.height = `${shape.height}px`;
+  }, shape);
 }

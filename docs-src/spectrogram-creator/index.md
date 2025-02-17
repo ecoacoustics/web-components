@@ -4,7 +4,7 @@ title: Open Ecoacoustics Web Components | Spectrogram Creator
 ---
 
 <script src="/deps/prism-core.min.js"></script>
-<script src="/deps/prism-markup.min.js"></script>
+<script src="/deps/prism-css.min.js"></script>
 <script src="/deps/prism-autoloader.min.js"></script>
 
 ## Spectrogram Creator

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Only Spectrogram</title>
+    <script type="module" src="/src/components/index.ts"></script>
+  </head>
+
+  <body>
+    <section>
+      <h3>Stretch</h3>
+      <oe-spectrogram src="/example.flac"></oe-spectrogram>
+    </section>
+
+    <section>
+      <h3>Natural</h3>
+      <oe-spectrogram src="/example.flac" scaling="natural"></oe-spectrogram>
+    </section>
+
+    <section>
+      <h3>Original</h3>
+      <oe-spectrogram src="/example.flac" scaling="original"></oe-spectrogram>
+    </section>
+
+    <section>
+      <h3>Notes</h3>
+      <ul>
+        <li>Stretch scaling should always be the width of the screen because it is a display: block</li>
+        <li>Natural scaling should maintain its aspect ratio and have a height of 128 px</li>
+        <li>
+          Original scaling should always maintain its original size. It should push all other content out of the way
+        </li>
+      </ul>
+    </section>
+  </body>
+</html>

@@ -1,7 +1,7 @@
-import { invokeBrowserMethod } from "../../tests/helpers";
+import { invokeBrowserMethod, removeBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
-import { expect, test } from "../../tests/assertions";
-import { singleSpectrogramFixture as fixture } from "./single-spectrogram.fixture";
+import { expect } from "../../tests/assertions";
+import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { sleep } from "../../helpers/utilities";
 
 test.describe("unit tests", () => {
@@ -89,27 +89,51 @@ test.describe("unit tests", () => {
   });
 });
 
-fixture.describe("spectrogram", () => {
-  fixture.beforeEach(async ({ fixture }) => {
+test.describe("spectrogram sizing", () => {
+  test("should obey minimum height and block rules in unmodified stretch", () => {});
+
+  test("should not be able to define a height less than the minimum height", () => {});
+
+  test("should be able to set a width and height larger than the page", () => {});
+
+  test("should be able to set the canvas size in stretch scaling", () => {});
+
+  test("should scale naturally scale correctly if the canvas height is set", () => {});
+
+  // the box model should still have the correct size, but the canvas and chrome
+  // surface should not go beyond the original scale
+  test("should not be able to override the size if in original scaling", () => {});
+});
+
+test.describe("playing/pausing", () => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });
 
-  fixture("play and pausing audio with source slot", async ({ fixture }) => {
+  async function assertCanPlayPause(fixture: any) {
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
+    expect(await fixture.isPlayingAudio()).toBe(true);
+
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
+    expect(await fixture.isPlayingAudio()).toBe(false);
+  }
+
+  test("should behave correctly with a src attribute and source slot", async ({ fixture }) => {
+    const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
+    await fixture.updateSlot(slot);
+    await assertCanPlayPause(fixture);
+  });
+
+  test("should behave correctly pausing audio with only source slot", async ({ fixture }) => {
     const slot = `<source src="${fixture.audioSource}" type="audio/flac" />`;
     await fixture.updateSlot(slot);
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    expect(await fixture.isPlayingAudio()).toBe(true);
+    await removeBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src");
 
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
-    expect(await fixture.isPlayingAudio()).toBe(false);
+    await assertCanPlayPause(fixture);
   });
 
-  fixture("playing and pausing audio with src attribute", async ({ fixture }) => {
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    expect(await fixture.isPlayingAudio()).toBe(true);
-
-    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "pause");
-    expect(await fixture.isPlayingAudio()).toBe(false);
+  test("should behave correctly with src attribute", async ({ fixture }) => {
+    await assertCanPlayPause(fixture);
   });
 });

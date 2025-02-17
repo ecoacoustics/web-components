@@ -1,11 +1,16 @@
 export type TwoDFft = Float32Array[];
 
-export interface Size {
-  width: number;
-  height: number;
+export interface Size<T = number> {
+  width: T;
+  height: T;
 }
 
-// 2D slices are alwyas a subset of an fft spectrogram
+export interface Rect<T = number> extends Size<T> {
+  x: T;
+  y: T;
+}
+
+// 2D slices are always a subset of an fft spectrogram
 export class TwoDSlice<XT extends number, YT extends number> {
   public constructor(data: TwoDSlice<any, any>) {
     this.x0 = data.x0;
