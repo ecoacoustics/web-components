@@ -20,7 +20,36 @@ export default class Docs {
     );
 
     return `
+      <script src="/deps/prism-core.min.js"></script>
+      <script src="/deps/prism-markup.min.js"></script>
+      <script src="/deps/prism-autoloader.min.js"></script>
+
        <h1>API</h1>
+
+       <section class="alert alert-warning">
+        <h2>Note about CSS parts</h2>
+        <p>
+          When targeting an annotate, indicator, or axes components css parts,
+          you must target the component that is being wrapped.
+        </p>
+
+        <p>
+          For example, if you want to change the colour of the axes components
+          grid lines (<code>::part(grid-lines)</code>), you must use the
+          following format:
+        </p>
+
+<pre>
+${
+  /* prettier-ignore */
+  Prism.highlight(`oe-axes *::part(grid-lines),
+oe-axes::part(grid-lines) {
+  color: red;
+}`, Prism.languages.css)
+}
+</pre>
+
+       </section>
        ${elements
          .map(
            (element) => `

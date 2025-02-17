@@ -15,6 +15,7 @@ export default function (config) {
   config.addPassthroughCopy({ "node_modules/prismjs/themes/prism-okaidia.min.css": "deps/prism-okaidia.min.css" });
   config.addPassthroughCopy({ "node_modules/prismjs/components/prism-core.min.js": "deps/prism-core.min.js" });
   config.addPassthroughCopy({ "node_modules/prismjs/components/prism-markup.min.js": "deps/prism-markup.min.js" });
+  config.addPassthroughCopy({ "node_modules/prismjs/components/prism-css.min.js": "deps/prism-css.min.js" });
   config.addPassthroughCopy({
     "node_modules/prismjs/plugins/autoloader/prism-autoloader.min.js": "deps/prism-autoloader.min.js",
   });
