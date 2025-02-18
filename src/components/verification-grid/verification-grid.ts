@@ -32,6 +32,7 @@ import { injectionContext, verificationGridContext } from "../../helpers/constan
 import { UrlTransformer } from "../../services/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import verificationGridStyles from "./css/style.css?inline";
+import { IPlayEvent } from "spectrogram/spectrogram";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -624,6 +625,27 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // if (this.showingSelectionShortcuts && !event.altKey) {
     if (this.showingSelectionShortcuts) {
       this.hideSelectionShortcuts();
+    }
+  }
+
+  /**
+   * Catches a verification grid tiles play event, and conditionally cancels it
+   * based on the current selection state.
+   */
+  private handleTilePlay(event: CustomEvent<IPlayEvent>): void {
+    // If there are no tiles selected, we never want to cancel the play event
+    // this condition is why we cancel play events inside the verification grid
+    // component.
+    // Because if we conditionally cancel the play event inside the grid tile
+    // (upstream), we will never reach this condition to play all tiles if
+    // there is no sub-selection.
+    if (this.currentSubSelection.length === 0) {
+      return;
+    }
+
+    const tile = event.target as VerificationGridTileComponent;
+    if (!tile.selected && event.detail.keyboardShortcut) {
+      event.preventDefault();
     }
   }
 
@@ -1378,6 +1400,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
+                    @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
                     .model="${subject}"
                     .index="${i}"

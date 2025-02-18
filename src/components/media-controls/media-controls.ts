@@ -76,11 +76,14 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
 
   public disconnectedCallback(): void {
-    this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
-    this.spectrogramElement?.removeEventListener(
-      SpectrogramComponent.optionsChangeEventName,
-      this.optionsChangeHandler,
-    );
+    if (this.spectrogramElement) {
+      this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
+      this.spectrogramElement?.removeEventListener(
+        SpectrogramComponent.optionsChangeEventName,
+        this.optionsChangeHandler,
+      );
+    }
+
     document.removeEventListener("keydown", this.keyDownHandler);
 
     super.disconnectedCallback();
@@ -109,7 +112,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
-      // unbind the previous spectrogram element from the playing
+      // unbind the previous spectrogram element from the "play" event listener
       this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
       this.spectrogramElement?.removeEventListener(
         SpectrogramComponent.optionsChangeEventName,

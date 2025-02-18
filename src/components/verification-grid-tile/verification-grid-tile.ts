@@ -1,7 +1,7 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
-import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
+import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
@@ -31,19 +31,20 @@ interface OverflowEventDetail {
   isOverlapping: boolean;
 }
 
-const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm" as const;
-const shortcutTranslation: Record<string, string> = {
-  1: "!",
-  2: "@",
-  3: "#",
-  4: "$",
-  5: "%",
-  6: "^",
-  7: "&",
-  8: "*",
-  9: "(",
-  0: ")",
-} as const;
+// cspell:disable-next-line
+const shortcutOrder = "1234567890qwertyuiopasdfghjklzxcvbnm";
+const shortcutTranslation = {
+  "1": "!",
+  "2": "@",
+  "3": "#",
+  "4": "$",
+  "5": "%",
+  "6": "^",
+  "7": "&",
+  "8": "*",
+  "9": "(",
+  "0": ")",
+} as const satisfies Record<string, string>;
 
 /**
  * @description
@@ -65,7 +66,7 @@ const shortcutTranslation: Record<string, string> = {
 export class VerificationGridTileComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
-  public static readonly selectedEventName = "selected" as const;
+  public static readonly selectedEventName = "selected";
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })
@@ -120,7 +121,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
   private keyDownHandler = this.handleKeyDown.bind(this);
   private loadingHandler = this.handleLoading.bind(this);
   private loadedHandler = this.handleLoaded.bind(this);
-  private playHandler = this.handlePlay.bind(this);
 
   public loaded = false;
   private shortcuts: string[] = [];
@@ -139,16 +139,12 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       this.spectrogram.removeEventListener("loaded", this.loadedHandler);
     }
 
-    this.contentsWrapper.removeEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
-
     this.intersectionObserver.disconnect();
 
     super.disconnectedCallback();
   }
 
   public firstUpdated(): void {
-    this.contentsWrapper.addEventListener<any>(SpectrogramComponent.playEventName, this.playHandler);
-
     if (!this.spectrogram) {
       throw new Error("Could not find spectrogram component");
     }
@@ -180,8 +176,20 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       this.spectrogram.src = this.model.url;
     }
 
+    if (this.index > shortcutOrder.length) {
+      this.shortcuts = [];
+    }
+
     const shortcutKey = shortcutOrder[this.index];
-    this.shortcuts = [shortcutKey, shortcutTranslation[shortcutKey] ?? ""];
+
+    // we use a type guard here because TypeScript inlining the type check of
+    // the shortcutTranslation object does not narrow the type of the
+    // shortcutKey variable
+    if (this.hasAlternativeShortcut(shortcutKey)) {
+      this.shortcuts = [shortcutKey, shortcutTranslation[shortcutKey]];
+    } else {
+      this.shortcuts = [shortcutKey];
+    }
   }
 
   public resetSettings(): void {
@@ -206,6 +214,10 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
     this.requestUpdate();
   }
 
+  private hasAlternativeShortcut(shortcut: string): shortcut is keyof typeof shortcutTranslation {
+    return shortcut in shortcutTranslation;
+  }
+
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     const hasOverlapContent = entries.some((entry) => entry.intersectionRatio < 1);
 
@@ -218,12 +230,6 @@ export class VerificationGridTileComponent extends SignalWatcher(AbstractCompone
       bubbles: true,
     });
     this.dispatchEvent(overlapEvent);
-  }
-
-  private handlePlay(event: CustomEvent<IPlayEvent>): void {
-    if (!this.selected && event.detail.keyboardShortcut) {
-      event.preventDefault();
-    }
   }
 
   // this method is called when the spectrogram starts rendering
