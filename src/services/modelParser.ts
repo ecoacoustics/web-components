@@ -1,4 +1,5 @@
 import { camelCase, dotCase, pascalCase, snakeCase, kebabCase, sentenceCase, noCase } from "change-case";
+import { identityCase, uppercaseDotCase } from "./caseConverters";
 
 export type CandidateKey = string;
 export type Transformer = Record<string, CandidateKey[]>;
@@ -34,13 +35,12 @@ export abstract class ModelParser<T> {
   }
 
   private static getKeyPermutations(key: string): string[] {
-    const identityCase = (value: any) => value;
-
     const supportedCasings = [
       identityCase,
       camelCase,
       snakeCase,
       dotCase,
+      uppercaseDotCase,
       pascalCase,
       kebabCase,
       noCase,
