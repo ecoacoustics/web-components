@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.4.1...web-components-v1.5.0) (2025-02-19)
+
+
+### Features
+
+* Add support for Uppercase.Dot.Casing ([#290](https://github.com/ecoacoustics/web-components/issues/290)) ([da0ba09](https://github.com/ecoacoustics/web-components/commit/da0ba095a786cce036187686e2e1c7ba2b97a48d)), closes [#242](https://github.com/ecoacoustics/web-components/issues/242)
+
+
+### Bug Fixes
+
+* Space to play with no grid selection should play all ([#287](https://github.com/ecoacoustics/web-components/issues/287)) ([ae65ccc](https://github.com/ecoacoustics/web-components/commit/ae65cccdad5e8101f8c088db16674b89ded788ce)), closes [#128](https://github.com/ecoacoustics/web-components/issues/128) [#258](https://github.com/ecoacoustics/web-components/issues/258)
+
 ## [1.4.1](https://github.com/ecoacoustics/web-components/compare/web-components-v1.4.0...web-components-v1.4.1) (2025-01-21)
 
 
