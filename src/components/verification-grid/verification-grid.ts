@@ -32,6 +32,7 @@ import { injectionContext, verificationGridContext } from "../../helpers/constan
 import { UrlTransformer } from "../../services/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import verificationGridStyles from "./css/style.css?inline";
+import { IPlayEvent } from "spectrogram/spectrogram";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -624,6 +625,36 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // if (this.showingSelectionShortcuts && !event.altKey) {
     if (this.showingSelectionShortcuts) {
       this.hideSelectionShortcuts();
+    }
+  }
+
+  /**
+   * Catches a verification grid tiles play event, and conditionally cancels it
+   * based on the current selection state.
+   *
+   * Reminder: The play shortcut is listened for by each media-controls, so this
+   * handler runs grid size times when the play shortcut is pressed.
+   */
+  private handleTilePlay(event: CustomEvent<IPlayEvent>): void {
+    // If there are no tiles selected, then we want to play everything
+    // so don't cancel any of the play events.
+    // This is handled here and not in the tiles, because the tile's don't know the total
+    // selected count.
+    if (this.currentSubSelection.length === 0) {
+      return;
+    }
+
+    const eventTarget = event.target;
+    if (!(eventTarget instanceof VerificationGridTileComponent)) {
+      console.warn("Received play event request from non-tile element");
+      return;
+    }
+
+    // but if some are selected, then cancel the play event for only those that
+    // aren't selected
+    if (!eventTarget.selected && event.detail.keyboardShortcut) {
+      console.log("Cancelling play event for unselected tile", eventTarget.selected);
+      event.preventDefault();
     }
   }
 
@@ -1378,6 +1409,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @loaded="${this.handleSpectrogramLoaded}"
+                    @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
                     .model="${subject}"
                     .index="${i}"

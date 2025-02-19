@@ -47,10 +47,11 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
 export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
 
-  public static readonly playEventName = "play" as const;
-  public static readonly loadingEventName = "loading" as const;
-  public static readonly loadedEventName = "loaded" as const;
-  public static readonly optionsChangeEventName = "options-change" as const;
+  // TODO: we should also have a "pause" event
+  public static readonly playEventName = "play";
+  public static readonly loadingEventName = "loading";
+  public static readonly loadedEventName = "loaded";
+  public static readonly optionsChangeEventName = "options-change";
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -525,7 +526,16 @@ export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitEle
 
     // if this event is canceled, the spectrogram will not play
     const eventSuccess = this.dispatchEvent(
-      new CustomEvent<IPlayEvent>(SpectrogramComponent.playEventName, { detail, cancelable: true, bubbles: true }),
+      new CustomEvent<IPlayEvent>(SpectrogramComponent.playEventName, {
+        detail,
+        cancelable: true,
+        bubbles: true,
+
+        // We set composed: true so that the event can bubble through shadow
+        // and light DOM boundaries.
+        // Such as when the spectrogram is templated inside a grid tile
+        composed: true,
+      }),
     );
 
     // if the event is canceled (through event.preventDefault), it means that

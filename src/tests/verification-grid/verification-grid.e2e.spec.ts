@@ -600,6 +600,57 @@ test.describe("single verification grid", () => {
     // test.describe("auto paging", () => {});
   });
 
+  test.describe("playing and pausing tiles", () => {
+    test.describe("no sub-selection", () => {
+      test("should play all tiles when the play shortcut is pressed", async ({ fixture }) => {
+        const expectedPlayingCount = await fixture.getPopulatedGridSize();
+
+        await fixture.shortcutGridPlay();
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+
+        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
+      });
+
+      test("should play a single tile in a 1x1 grid with keyboard shortcuts", async ({ fixture }) => {
+        const expectedPlayingCount = 1;
+        await fixture.changeGridSize(1);
+
+        await fixture.shortcutGridPlay();
+
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
+      });
+
+      test("should pause all tiles when the pause shortcut is pressed", () => {});
+    });
+
+    test.describe("with sub-selection", () => {
+      const testedSubSelection = [0, 1];
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.createSubSelection(testedSubSelection, ["ControlOrMeta"]);
+      });
+
+      test("should only play selected tiles when the play shortcut is pressed", async ({ fixture }) => {
+        await fixture.shortcutGridPlay();
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+        expect(realizedPlayingStates).toHaveLength(testedSubSelection.length);
+      });
+
+      // in this test, we assert that if two tiles are playing and the user
+      // de-selects one of the tiles, only the selected tile should stop
+      // when the user presses the pause shortcut
+      test("should only pause selected tiles when the pause shortcut is pressed", async ({ fixture }) => {
+        await fixture.shortcutGridPlay();
+
+        await fixture.createSubSelection([1]);
+        await fixture.shortcutGridPause();
+
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+        expect(realizedPlayingStates).toHaveLength(1);
+      });
+    });
+  });
+
   test.describe("sub-selection", () => {
     const commonSelectionTests = () => {
       test("should select a tile when clicked", async ({ fixture }) => {

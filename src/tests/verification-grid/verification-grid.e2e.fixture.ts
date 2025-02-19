@@ -37,6 +37,7 @@ import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
+import { SPACE_KEY } from "../../helpers/keyboard";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -82,6 +83,7 @@ class TestPage {
   public gridProgressCompletedSegment = () => this.gridProgressBar().locator(".completed-segment").first();
   public gridProgressHeadSegment = () => this.gridProgressBar().locator(".head-segment").first();
 
+  public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
   public spectrogramComponent = async (index = 0) =>
     (await this.gridTileComponents())[index].locator("oe-spectrogram").first();
   public gridTileComponent = async (index = 0) => (await this.gridTileComponents())[index].first();
@@ -320,6 +322,13 @@ class TestPage {
     return highlightedTiles.map((_, i) => i);
   }
 
+  public async playingSpectrograms(): Promise<Locator[]> {
+    return this.asyncFilter(await this.spectrogramComponents(), async (spectrogram) => {
+      const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
+      return !value;
+    });
+  }
+
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
     const subjectClassifications = Array.from(subject.classifications.values());
 
@@ -483,6 +492,20 @@ class TestPage {
   // actions
   public async nextPage() {
     await this.nextPageButton().click();
+  }
+
+  /** Plays selected grid tiles using the play/pause keyboard shortcut */
+  public async shortcutGridPlay() {
+    // TODO: for some reason, importing static properties into our fixtures
+    // breaks the test bundling.
+    // We should figure out why this happens and fix it.
+    // await this.page.keyboard.press(MediaControlsComponent.playShortcut);
+
+    await this.page.keyboard.press(SPACE_KEY);
+  }
+
+  public async shortcutGridPause() {
+    await this.shortcutGridPlay();
   }
 
   public async playSpectrogram(index: number) {
@@ -689,6 +712,15 @@ class TestPage {
       },
       { key, value },
     );
+  }
+
+  // A VERY hacky function to filter an array using an async predicate
+  // I have purposely not added this to a helper file to try and discourage its
+  // use and limit its scope
+  // TODO: remove this method
+  private async asyncFilter<T>(items: T[], predicate: (item: T, i: number) => Promise<boolean>): Promise<T[]> {
+    const results = await Promise.all(items.map(predicate));
+    return items.filter((_v, index) => results[index]);
   }
 }
 

@@ -9,6 +9,7 @@ import {
 } from "../helpers";
 import { AudioModel } from "../../models/recordings";
 import { test } from "../assertions";
+import { MediaControlsComponent } from "../../components";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
@@ -45,9 +46,9 @@ class TestPage {
     await element.evaluate((element) => element.remove());
   }
 
-  public async pressSpaceBar() {
+  public async shortcutPlaySpectrogram() {
     const target = this.spectrogramComponent();
-    await target.press(" ");
+    await target.press(MediaControlsComponent.playShortcut);
   }
 
   public async playAudio() {

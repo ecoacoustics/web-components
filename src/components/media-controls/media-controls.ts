@@ -45,6 +45,8 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
 export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(mediaControlsStyles);
 
+  public static readonly playShortcut = SPACE_KEY;
+
   private static recursiveAxesSearch = (element: HTMLElement): AxesComponent | null => {
     if (element instanceof AxesComponent) {
       return element;
@@ -76,11 +78,14 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   private optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
 
   public disconnectedCallback(): void {
-    this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
-    this.spectrogramElement?.removeEventListener(
-      SpectrogramComponent.optionsChangeEventName,
-      this.optionsChangeHandler,
-    );
+    if (this.spectrogramElement) {
+      this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
+      this.spectrogramElement?.removeEventListener(
+        SpectrogramComponent.optionsChangeEventName,
+        this.optionsChangeHandler,
+      );
+    }
+
     document.removeEventListener("keydown", this.keyDownHandler);
 
     super.disconnectedCallback();
@@ -109,7 +114,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("for")) {
-      // unbind the previous spectrogram element from the playing
+      // unbind the previous spectrogram element from the "play" event listener
       this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
       this.spectrogramElement?.removeEventListener(
         SpectrogramComponent.optionsChangeEventName,
@@ -176,7 +181,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    if (event.key === SPACE_KEY) {
+    if (event.key === MediaControlsComponent.playShortcut) {
       this.toggleAudio(true);
     }
   }
@@ -216,7 +221,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
             (value) =>
               html`<sl-menu-item
                 type="${value == currentValue ? "checkbox" : "normal"}"
-                value="${value}"
+                value="${value.toString()}"
                 ?checked=${value == currentValue}
               >
                 ${value}
