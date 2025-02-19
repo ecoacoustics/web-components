@@ -36,14 +36,6 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
         "scientificName",
         "commonName",
 
-        // for some reason, upper cased dot-case (e.g. Common.Name) isn't in our
-        // change-case library. To quick-fix this for a deployment, I have manually
-        // added a transformer for "Common.Name" to "commonName"
-        // This is a temporary fix and should be replaced with a proper
-        // implementation in the future.
-        // TODO: replace this with a proper implementation
-        "Common.Name",
-
         // Ecosounds annotation download formats
         "commonNameTags",
         "speciesNameTags",
