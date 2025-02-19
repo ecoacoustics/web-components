@@ -1,5 +1,5 @@
-export const SPACE_KEY = " " as const;
-export const ENTER_KEY = "Enter" as const;
-export const ESCAPE_KEY = "Escape" as const;
-export const LEFT_ARROW_KEY = "ArrowLeft" as const;
-export const RIGHT_ARROW_KEY = "ArrowRight" as const;
+export const SPACE_KEY = " ";
+export const ENTER_KEY = "Enter";
+export const ESCAPE_KEY = "Escape";
+export const LEFT_ARROW_KEY = "ArrowLeft";
+export const RIGHT_ARROW_KEY = "ArrowRight";

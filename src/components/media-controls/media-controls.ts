@@ -45,6 +45,8 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
 export class MediaControlsComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(mediaControlsStyles);
 
+  public static readonly playShortcut = SPACE_KEY;
+
   private static recursiveAxesSearch = (element: HTMLElement): AxesComponent | null => {
     if (element instanceof AxesComponent) {
       return element;
@@ -179,7 +181,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    if (event.key === SPACE_KEY) {
+    if (event.key === MediaControlsComponent.playShortcut) {
       this.toggleAudio(true);
     }
   }
@@ -219,7 +221,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
             (value) =>
               html`<sl-menu-item
                 type="${value == currentValue ? "checkbox" : "normal"}"
-                value="${value}"
+                value="${value.toString()}"
                 ?checked=${value == currentValue}
               >
                 ${value}

@@ -1,3 +1,4 @@
+import { SpectrogramComponent } from "../../components";
 import { expect } from "../assertions";
 import { catchLocatorEvent } from "../helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
@@ -85,8 +86,8 @@ test.describe("interactions between all components", () => {
     expect(realizedMediaControlsIconAfterPlay).toBe("pause");
   });
 
-  test.skip("playing audio with the space bar", async ({ fixture }) => {
-    await fixture.pressSpaceBar();
+  test("playing audio with the space bar", async ({ fixture }) => {
+    await fixture.shortcutPlaySpectrogram();
 
     const expectedPlayingState = true;
     const realizedPlayingState = await fixture.isAudioPlaying();
@@ -96,6 +97,26 @@ test.describe("interactions between all components", () => {
 
     expect(realizedPlayingState).toEqual(expectedPlayingState);
     expect(realizedMediaControlsIcon).toEqual(expectedMediaControlsIcon);
+  });
+
+  test("should not play if the 'play' event is canceled", async ({ fixture }) => {
+    const playEvent = catchLocatorEvent(fixture.spectrogramComponent(), "play");
+
+    // I cannot cancel the event in the playwright NodeJS context because
+    // the event prototype is not exposed in the NodeJS context.
+    // Therefore, I cancel the play event in the browser context and cancel
+    await fixture.spectrogramComponent().evaluate((element: SpectrogramComponent) => {
+      element.addEventListener("play", (event) => event.preventDefault());
+    });
+
+    await fixture.playAudio();
+    await playEvent;
+
+    const isPlayingState = await fixture.isAudioPlaying();
+    const mediaControlsIcon = await fixture.mediaControlsPlayIcon();
+
+    expect(isPlayingState).toBe(false);
+    expect(mediaControlsIcon).toBe("play");
   });
 
   test("should pause and reset the playback time to 0 when the spectrograms source changes", async ({ fixture }) => {

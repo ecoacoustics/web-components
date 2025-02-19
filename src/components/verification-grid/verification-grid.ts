@@ -631,20 +631,29 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   /**
    * Catches a verification grid tiles play event, and conditionally cancels it
    * based on the current selection state.
+   *
+   * Reminder: The play shortcut is listened for by each media-controls, so this
+   * handler runs grid size times when the play shortcut is pressed.
    */
   private handleTilePlay(event: CustomEvent<IPlayEvent>): void {
-    // If there are no tiles selected, we never want to cancel the play event
-    // this condition is why we cancel play events inside the verification grid
-    // component.
-    // Because if we conditionally cancel the play event inside the grid tile
-    // (upstream), we will never reach this condition to play all tiles if
-    // there is no sub-selection.
+    // If there are no tiles selected, then we want to play everything
+    // so don't cancel any of the play events.
+    // This is handled here and not in the tiles, because the tile's don't know the total
+    // selected count.
     if (this.currentSubSelection.length === 0) {
       return;
     }
 
-    const tile = event.target as VerificationGridTileComponent;
-    if (!tile.selected && event.detail.keyboardShortcut) {
+    const eventTarget = event.target;
+    if (!(eventTarget instanceof VerificationGridTileComponent)) {
+      console.warn("Received play event request from non-tile element");
+      return;
+    }
+
+    // but if some are selected, then cancel the play event for only those that
+    // aren't selected
+    if (!eventTarget.selected && event.detail.keyboardShortcut) {
+      console.log("Cancelling play event for unselected tile", eventTarget.selected);
       event.preventDefault();
     }
   }

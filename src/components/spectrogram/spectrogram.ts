@@ -47,6 +47,7 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
 export class SpectrogramComponent extends SignalWatcher(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
 
+  // TODO: we should also have a "pause" event
   public static readonly playEventName = "play";
   public static readonly loadingEventName = "loading";
   public static readonly loadedEventName = "loaded";
