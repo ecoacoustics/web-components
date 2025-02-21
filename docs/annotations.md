@@ -9,24 +9,30 @@
   <oe-annotation
     tags="laughing-kookaburra"
     low-frequency="0"
-    high-frequency="10_000"
+    high-frequency="10000"
     start-time="30"
     end-time="32"
   ></oe-annotation>
   <oe-annotation low-frequency="100" high-frequency="600" start-time="28.11" end-time="29.2" readonly>
     <oe-tag value="koala">Koala</oe-tag>
     <oe-tag value="kookaburra">
-      <img src="kookaburra.png" alt="A picture of a kookaburra" />
+      <!-- you can change how the tag will be shown using slotted content -->
+      <a href="https://en.wikipedia.org/wiki/Kookaburra">
+        <img src="kookaburra.png" alt="A picture of a kookaburra" />
+      </a>
     </oe-tag>
   </oe-annotation>
 </oe-annotate>
 ```
 
-### Annotation Viewer Properties
+### Annotation Viewer Attributes
 
 - `readonly` - Makes all annotations readonly.
   - Can edit? Annotation not readonly and annotation viewer is not readonly
-- `tag-style` { hidden | edge | spectrogram-top } - An enum attribute which can be used to stop showing tags
+- `tag-style` { hidden | edge | spectrogram-top } - An enum attribute which changes how to tags will be shown
+  - `hidden` - All tag content/labels will be hidden. Annotation bounding boxes will still be shown.
+  - `edge` - The tag content/labels will be shown on the edge of the associated bounding box
+  - `spectrogram-top` - The tag content/labels will be shown above the spectrogram.
 
 ## Annotation Component (`oe-annotation`)
 

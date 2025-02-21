@@ -1,8 +1,8 @@
 import { Size } from "../../models/rendering";
 import { IAudioInformation, SpectrogramOptions } from "./models";
 
-export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor" as const;
-export const HIGH_ACCURACY_TIME_PROCESSOR_NAME = "high-accuracy-time-processor" as const;
+export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor";
+export const HIGH_ACCURACY_TIME_PROCESSOR_NAME = "high-accuracy-time-processor";
 
 export type NamedMessageData<TMessage, TData> = [name: TMessage, data: TData];
 export type Generation = { generation: number };

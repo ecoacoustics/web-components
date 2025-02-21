@@ -63,7 +63,7 @@ export const enumConverter = <T extends Enum>(
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
     const lowercaseKey = value?.toLowerCase();
-    const enumValue = Object.values(enumValues).find((key) => key === lowercaseKey) as keyof T | undefined;
+    const enumValue = Object.values(enumValues).find((key) => key === lowercaseKey);
 
     if (enumValue) {
       return enumValue as any;
@@ -71,9 +71,9 @@ export const enumConverter = <T extends Enum>(
 
     const acceptedKeys = Object.keys(enumValues).join(",");
 
-    // if we get to this point, the user has provided an incorrect value to the
+    // If we get to this point, the user has provided an incorrect value to the
     // enum attribute, and we should either fall back to the default or
-    // throw an error
+    // throw an error.
     //
     // Because noProvidedFallback symbol is not exported from this file, we know
     // that if the fallback is the noProvidedFallback symbol, the user has not
@@ -91,9 +91,9 @@ export const enumConverter = <T extends Enum>(
       // this string type casting is okay because we have checked that it is not
       // a symbol in the if condition above
       console.warn(
-        `'${value}' is not a valid value. Falling back to '${fallbackValue as string}'. Accepted values: ${acceptedKeys}`,
+        `'${value}' is not a valid value. Falling back to '${fallbackValue}'. Accepted values: ${acceptedKeys}`,
       );
-      return fallbackValue as any;
+      return fallbackValue;
     }
   };
 };

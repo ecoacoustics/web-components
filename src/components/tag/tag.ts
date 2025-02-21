@@ -21,14 +21,19 @@ export class TagComponent extends AbstractComponent(LitElement) {
     // to fix this, I get all of the text content of the host element and assign
     // it to a new "virtual" element that only contains that text
 
-    return Array.from(this.childNodes).map((node) => {
+    const childNodes = Array.from(this.childNodes);
+    return childNodes.map((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const textElement = document.createElement("span");
         textElement.textContent = node.textContent?.trim() || "";
         return textElement;
       }
 
-      return node as Element;
+      if (!(node instanceof Element)) {
+        throw new Error("Unexpected element node type");
+      }
+
+      return node;
     });
   }
 

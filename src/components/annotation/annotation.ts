@@ -47,11 +47,13 @@ import { Hertz, Seconds } from "../../models/unitConverters";
 @customElement("oe-annotation")
 export class AnnotationComponent extends AbstractComponent(LitElement) {
   public static readonly createdEventName = "oe-annotation-created";
-  public static readonly updatingEventName = "oe-annotation-updating";
   public static readonly updatedEventName = "oe-annotation-updated";
   public static readonly removedEventName = "oe-annotation-removed";
   public static readonly selectedEventName = "oe-annotation-selected";
   public static readonly deselectedEventName = "oe-annotation-deselected";
+
+  // TODO: these events are not implemented
+  public static readonly updatingEventName = "oe-annotation-updating";
   public static readonly annotationChangedEventName = "oe-annotation-changed";
 
   @required()
@@ -126,6 +128,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
     this.dispatchEvent(
       new CustomEvent(AnnotationComponent.removedEventName, {
         bubbles: true,
+        composed: true,
       }),
     );
   }
@@ -140,6 +143,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
     this.dispatchEvent(
       new CustomEvent(AnnotationComponent.createdEventName, {
         bubbles: true,
+        composed: true,
       }),
     );
   }
@@ -161,6 +165,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
       this.dispatchEvent(
         new CustomEvent(AnnotationComponent.updatedEventName, {
           bubbles: true,
+          composed: true,
         }),
       );
     }

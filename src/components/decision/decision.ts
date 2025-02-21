@@ -39,7 +39,7 @@ export type DecisionComponentUnion = DecisionComponent | VerificationComponent |
 @customElement("oe-decision")
 export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public static styles = [unsafeCSS(decisionStyles), decisionColors];
-  public static readonly decisionEventName = "decision" as const;
+  public static readonly decisionEventName = "decision";
 
   protected abstract handleShortcutKey(event: KeyboardEvent): void;
   protected abstract isShortcutKey(event: KeyboardEvent): Readonly<boolean>;
