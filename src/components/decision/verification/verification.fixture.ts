@@ -87,7 +87,7 @@ class VerificationComponentFixture {
   }
 
   public async changeDecisionDisabled(disabled: boolean) {
-    const disabledAttributeName = "disabled" as const;
+    const disabledAttributeName = "disabled";
 
     if (!disabled) {
       await removeBrowserAttribute<VerificationComponent>(this.component(), disabledAttributeName);

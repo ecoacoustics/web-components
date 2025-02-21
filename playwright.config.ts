@@ -5,7 +5,7 @@ export default defineConfig({
   // we should aim to support fully parallel tests
   // however, it is possible that this breaks some tests down the line
   // (if we do not code good, isolated and independent tests)
-  fullyParallel: false,
+  fullyParallel: true,
   // by enabling retries, playwright will automatically detect flaky tests
   retries: 3,
   // we start the vite server so that we can access the public/ directory

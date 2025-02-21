@@ -52,10 +52,10 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
 export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) {
   public static styles = unsafeCSS(spectrogramStyles);
 
-  public static readonly playEventName = "play" as const;
-  public static readonly loadingEventName = "loading" as const;
-  public static readonly loadedEventName = "loaded" as const;
-  public static readonly optionsChangeEventName = "options-change" as const;
+  public static readonly playEventName = "play";
+  public static readonly loadingEventName = "loading";
+  public static readonly loadedEventName = "loaded";
+  public static readonly optionsChangeEventName = "options-change";
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })

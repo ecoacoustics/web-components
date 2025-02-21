@@ -13,7 +13,7 @@ function userAgentPolyfill(): NavigatorUAData {
   } as any;
 }
 
-const userAgentDataKey = "userAgentData" as const;
+const userAgentDataKey = "userAgentData";
 
 // if multiple components are imported from multiple entry point, we only want
 // to apply the polyfill once

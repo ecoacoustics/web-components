@@ -52,12 +52,13 @@ export enum AnnotationTagStyle {
  * </oe-annotate>
  * ```
  * @fires oe-annotation-created
- * @fires oe-annotation-updating (not implemented)
- * @fires oe-annotation-updated (not implemented)
  * @fires oe-annotation-removed
  * @fires oe-annotation-selected
  * @fires oe-annotation-deselected
  * @fires oe-annotation-changed
+ *
+ * @fires oe-annotation-updating (not implemented)
+ * @fires oe-annotation-updated (not implemented)
  *
  * @csspart annotation-bounding-box - The "box part" of the annotation. The "green" square around the annotated event
  * @csspart annotation-label - Selector for the annotation label
@@ -221,9 +222,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       ${loop(model.tags, (tag, { last }) => {
         const elementReferences = tag.elementReferences;
         if (Array.isArray(elementReferences) && elementReferences.length > 0) {
-          return elementReferences.map(
-            (element: Element) => html`${unsafeHTML(element.outerHTML)}${last ? "" : tagSeparator}`,
-          );
+          return elementReferences.map((element) => html`${unsafeHTML(element.outerHTML)}${last ? "" : tagSeparator}`);
         }
 
         return html`${tag.text}${last ? "" : tagSeparator}`;
@@ -257,6 +256,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         this.dispatchEvent(
           new CustomEvent(emittedEventName, {
             bubbles: true,
+            composed: true,
           }),
         );
       }

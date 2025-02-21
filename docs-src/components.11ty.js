@@ -1,5 +1,14 @@
 import fs from "fs";
 
+// I use trim to remove the leading and trailing whitespace from the string.
+// This makes the code block easier to read because indentation is consistent.
+const cssPartsExample = `
+oe-axes *::part(grid-lines)
+oe-axes::part(grid-lines) {
+  color: red;
+}
+`.trim();
+
 /**
  * This page generates its content from the custom-element.json file as read by
  * the _data/api.11tydata.js script.
@@ -26,8 +35,8 @@ export default class Docs {
 
        <h1>API</h1>
 
-       <section class="alert alert-warning">
-        <h2>Note about CSS parts</h2>
+       <section class="alert alert-warning mt-2">
+        <h2 class="mt-0">Note about CSS parts</h2>
         <p>
           When targeting an annotate, indicator, or axes components css parts,
           you must target the component that is being wrapped.
@@ -39,14 +48,8 @@ export default class Docs {
           following format:
         </p>
 
-<pre>
-${
-  /* prettier-ignore */
-  Prism.highlight(`oe-axes *::part(grid-lines),
-oe-axes::part(grid-lines) {
-  color: red;
-}`, Prism.languages.css)
-}
+<pre class="language-css">
+${Prism.highlight(cssPartsExample, Prism.languages.css)}
 </pre>
 
        </section>

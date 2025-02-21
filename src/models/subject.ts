@@ -14,14 +14,14 @@ export enum AudioCachedState {
 /** Original unprocessed data from the data source */
 export type Subject = Record<PropertyKey, unknown>;
 
-const columnNamespace = "oe_" as const;
+const columnNamespace = "oe_";
 
 // since we do not know the input format of the provided csv or json files
 // it is possible for users to input a csv file that already has a column name
 // to prevent column name collision, we prepend all the fields that we add
 // to the original data input with "oe"
-const tagColumnName = `${columnNamespace}tag` as const;
-const confirmedColumnName = `${columnNamespace}confirmed` as const;
+const tagColumnName = `${columnNamespace}tag`;
+const confirmedColumnName = `${columnNamespace}confirmed`;
 type ClassificationColumn = `${typeof columnNamespace}${string}`;
 
 export interface DownloadableResult extends Subject {

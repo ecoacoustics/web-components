@@ -106,8 +106,8 @@ interface CurrentPage {
 export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(verificationGridStyles);
 
-  public static readonly decisionMadeEventName = "decision-made" as const;
-  private static readonly loadedEventName = "loaded" as const;
+  public static readonly decisionMadeEventName = "decision-made";
+  private static readonly loadedEventName = "loaded";
 
   @provide({ context: verificationGridContext })
   @state()
