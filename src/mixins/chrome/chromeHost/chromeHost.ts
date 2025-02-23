@@ -18,7 +18,7 @@ export interface ChromeAdvertisement {
 
 export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
-export const ChromeHost = <T extends Component>(superClass: T): Component => {
+export const ChromeHost = <T extends Component>(superClass: T) => {
   abstract class ChromeHostComponentClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       const newStyles: CSSResultGroup = mergeStyles([chromeHostStyles], styles);
@@ -124,5 +124,5 @@ export const ChromeHost = <T extends Component>(superClass: T): Component => {
     }
   }
 
-  return AbstractComponent(ChromeHostComponentClass as Component);
+  return AbstractComponent(ChromeHostComponentClass);
 };

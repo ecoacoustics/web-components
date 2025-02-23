@@ -7,7 +7,7 @@ import { ChromeTemplate } from "../types";
 import { mergeStyles } from "../../../helpers/styles/merge";
 import providerStyles from "./style.css?inline";
 
-export const ChromeProvider = <T extends Component>(superClass: T): Component => {
+export const ChromeProvider = <T extends Component>(superClass: T) => {
   abstract class ChromeProviderComponentClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       const newStyles: CSSResultGroup = mergeStyles([providerStyles], styles);
