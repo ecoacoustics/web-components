@@ -63,13 +63,12 @@ export const enumConverter = <T extends Enum>(
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
     const lowercaseKey = value?.toLowerCase();
-    const enumValue = Object.values(enumValues).find((key) => key === lowercaseKey);
+    const acceptedKeys = Object.values(enumValues);
+    const enumValue = acceptedKeys.find((key) => key === lowercaseKey);
 
     if (enumValue) {
       return enumValue as any;
     }
-
-    const acceptedKeys = Object.keys(enumValues).join(",");
 
     // If we get to this point, the user has provided an incorrect value to the
     // enum attribute, and we should either fall back to the default or

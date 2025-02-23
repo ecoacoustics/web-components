@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Components - Spectrogram + Axes + Indicator + Annotation</title>
-    <script type="module" src="/src/components/index.ts"></script>
+    <script type="module" src="/src/index.ts"></script>
   </head>
 
   <body>
@@ -14,7 +14,8 @@
     </header>
 
     <oe-axes>
-      <oe-annotate tag-style="edge">
+      <!-- <oe-annotate tag-style="edge"> -->
+      <oe-annotate tag-style>
         <oe-indicator>
           <oe-spectrogram
             id="playing-spectrogram"

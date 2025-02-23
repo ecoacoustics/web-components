@@ -74,6 +74,13 @@ export enum AnnotationTagStyle {
 export class AnnotateComponent extends ChromeProvider(LitElement) {
   public static styles = unsafeCSS(annotateStyles);
 
+  /**
+   * Changes how to labels are displayed on annotations.
+   *
+   * `hidden` - All tag content/labels will be hidden. Annotation bounding boxes will still be shown.
+   * `edge` - The tag content/labels will be shown on the edge of the associated bounding box
+   * `spectrogram-top` - The tag content/labels will be shown above the spectrogram.
+   */
   @property({
     type: String,
     attribute: "tag-style",
@@ -87,21 +94,26 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
    *
    * @default true
    */
-  @property({ type: Boolean, converter: booleanConverter, reflect: true })
+  @property({ type: Boolean, converter: booleanConverter })
   public readonly = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
   @queryAssignedElements({ selector: "oe-annotation" })
-  private annotationElements?: AnnotationComponent[];
-
-  private labelRefs: Ref<HTMLLabelElement>[] = [];
+  private annotationElements?: ReadonlyArray<AnnotationComponent>;
 
   private readonly topChromeHeight = signal<Pixel>(0);
-  private unitConverter?: UnitConverter;
+  private labelRefs: Ref<Readonly<HTMLLabelElement>>[] = [];
+  private unitConverter?: Readonly<UnitConverter>;
 
-  public get visibleAnnotations(): Annotation[] {
+  private get instantiatedLabelRefs() {
+    return this.labelRefs.filter(
+      (ref): ref is Ref<Readonly<HTMLLabelElement>> & { readonly value: HTMLElement } => ref.value !== undefined,
+    );
+  }
+
+  private get visibleAnnotations(): Annotation[] {
     return this.annotationModels.filter((model) => !this.shouldCullAnnotation(model));
   }
 
@@ -149,7 +161,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return;
     }
 
-    const labelHeights = this.labelRefs.map((element) => element.value?.getBoundingClientRect().height ?? 0);
+    const labelHeights = this.instantiatedLabelRefs.map((ref) => ref.value.getBoundingClientRect().height);
     this.topChromeHeight.value = Math.max(...labelHeights);
   }
 
@@ -179,26 +191,22 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     // if the annotation is larger than the view box, then we want don't want to
     // render it
-    // const isSupersetOfViewBox =
-    //   model.startOffset < temporalDomain[0] &&
-    //   model.endOffset > temporalDomain[1] &&
-    //   model.lowFrequency < frequencyDomain[0] &&
-    //   model.highFrequency > frequencyDomain[1];
     const isSupersetOfViewBox =
       model.startOffset < temporalDomain[0] &&
       model.endOffset >= temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
       model.highFrequency >= frequencyDomain[1];
 
-    // const isSupersetOfViewBox = false;
-
     return isSupersetOfViewBox;
   }
 
-  private spectrogramTopLabelTemplate(model: Annotation): HTMLTemplateResult {
+  private spectrogramTopLabelTemplate(model: Readonly<Annotation>): HTMLTemplateResult {
     const labelTemplate = this.tagLabelTemplate(model);
 
-    const left = computed(() => this.unitConverter && Math.max(this.unitConverter.scaleX.value(model.startOffset), 0));
+    // we know that the unitConverter is defined because the annotation will be
+    // culled if the unitConverter is not defined.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const left = computed(() => Math.max(this.unitConverter!.scaleX.value(model.startOffset), 0));
 
     const labelRef = createRef<HTMLLabelElement>();
     this.labelRefs.push(labelRef);
@@ -221,25 +229,24 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return html`
       ${loop(model.tags, (tag, { last }) => {
         const elementReferences = tag.elementReferences;
+        const tagSuffix = last ? "" : tagSeparator;
+
         if (Array.isArray(elementReferences) && elementReferences.length > 0) {
-          return elementReferences.map((element) => html`${unsafeHTML(element.outerHTML)}${last ? "" : tagSeparator}`);
+          return elementReferences.map((element) => html`${unsafeHTML(element.outerHTML)}${tagSuffix}`);
         }
 
-        return html`${tag.text}${last ? "" : tagSeparator}`;
+        return html`${tag.text}${tagSuffix}`;
       })}
     `;
   }
 
   private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
-    if (!this.unitConverter) {
-      return html`Attempted to render annotation before unit converter initialization`;
-    }
-
-    const { x, y, width, height } = this.unitConverter.annotationRect(model);
-
+    // we know that the unit converter will be defined when the annotation is
+    // rendered because the annotation will be culled if the unit converter is
+    // not defined.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { x, y, width, height } = this.unitConverter!.annotationRect(model);
     const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
-
-    const labelTemplate = this.tagLabelTemplate(model);
 
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
@@ -256,7 +263,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         this.dispatchEvent(
           new CustomEvent(emittedEventName, {
             bubbles: true,
-            composed: true,
           }),
         );
       }
@@ -271,7 +277,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
             part="annotation-label"
             style="position-anchor: ${annotationAnchorName};"
           >
-            ${labelTemplate}
+            ${this.tagLabelTemplate(model)}
           </label>
         `,
       )}

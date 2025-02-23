@@ -1,13 +1,8 @@
-@import url("./variables.css");
+@import url("variables.css");
 
 :host {
   position: relative;
   display: block;
-
-  --oe-annotation-color: green;
-  --oe-annotation-font-color: white;
-  --oe-annotation-selected-color: lightgreen;
-  --oe-annotation-weight: 1px;
 }
 
 /*
