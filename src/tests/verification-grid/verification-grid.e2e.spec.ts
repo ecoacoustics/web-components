@@ -14,18 +14,15 @@ import {
 } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
-import {
-  MousePosition,
-  ProgressBar,
-  SpectrogramCanvasScale,
-  VerificationGridComponent,
-  VerificationGridTileComponent,
-} from "../../components";
 import { AudioCachedState, SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { EnumValue } from "../../helpers/types/advancedTypes";
+import { ProgressBar } from "../../components/progress-bar/progress-bar";
+import { MousePosition, VerificationGridComponent } from "../../components/verification-grid/verification-grid";
+import { SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
+import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {

@@ -1,14 +1,17 @@
 import { CSSResultGroup, CSSResultOrNative, LitElement } from "lit";
 
+/**
+ * @description
+ * Removes a CSSStyleSheet from the shadowRoot of a LitElement
+ */
 export function removeStyleSheets(component: LitElement, styleSheets: CSSResultGroup): void {
-  if (Array.isArray(styleSheets)) {
-    for (const style of styleSheets) {
-      if (Array.isArray(style)) {
-        removeStyleSheets(component, style);
-      } else {
-        removeStyleSheet(component, style);
-      }
-    }
+  if (!Array.isArray(styleSheets)) {
+    removeStyleSheet(component, styleSheets);
+    return;
+  }
+
+  for (const style of styleSheets) {
+    removeStyleSheets(component, style);
   }
 }
 

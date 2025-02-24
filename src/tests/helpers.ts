@@ -1,10 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
 import { Size } from "../models/rendering";
-import { MousePosition } from "../components";
 import { KeyboardModifiers } from "../helpers/types/playwright";
 import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
+import { MousePosition } from "../components/verification-grid/verification-grid";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -233,7 +233,10 @@ export async function getBrowserSignalValue<T extends HTMLElement, SignalType = 
 
 // TODO: We can smartly work out if it is a method or a property, and invoke it or read it
 // we can also work out if it is a primitive or not. If it is not, we should serialize it
-export async function getBrowserValue<T extends HTMLElement>(component: any, key: keyof T): Promise<T[keyof T]> {
+export async function getBrowserValue<T extends HTMLElement, U extends T[keyof T] = T[keyof T]>(
+  component: any,
+  key: keyof T,
+): Promise<U> {
   return await component.evaluate((element: T, { key }: { key: keyof T }) => element[key], { key });
 }
 
@@ -271,11 +274,11 @@ export async function hasBrowserAttribute<T extends HTMLElement>(component: any,
   });
 }
 
-export async function invokeBrowserMethod<T extends HTMLElement>(
+export async function invokeBrowserMethod<T extends HTMLElement, ReturnType extends T[keyof T] = T[keyof T]>(
   component: any,
   key: keyof T,
   ...args: any[]
-): Promise<unknown> {
+): Promise<ReturnType> {
   return await component.evaluate(
     (element: T, key: keyof T, args: any[] = []) => (element[key] as (...args: any) => any)(...args),
     key,

@@ -1,9 +1,9 @@
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
-import progressBarStyles from "./css/style.css?inline";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
+import progressBarStyles from "./css/style.css?inline";
 
 /**
  * @description

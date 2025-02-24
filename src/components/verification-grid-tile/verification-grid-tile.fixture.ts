@@ -22,8 +22,7 @@ class VerificationGridTileFixture {
   }
 
   public async isSelected(): Promise<boolean> {
-    const value = await getBrowserValue<VerificationGridTileComponent>(this.component(), "selected");
-    return value as boolean;
+    return await getBrowserValue<VerificationGridTileComponent, boolean>(this.component(), "selected");
   }
 
   // TODO: Fix this

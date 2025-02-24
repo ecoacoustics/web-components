@@ -22,10 +22,7 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       await fixture.pauseAudio();
 
       // check that the audio element is playing
-      const mediaElementTime = (await getBrowserValue<HTMLAudioElement>(
-        fixture.audioElement(),
-        "currentTime",
-      )) as number;
+      const mediaElementTime = await getBrowserValue<HTMLAudioElement, number>(fixture.audioElement(), "currentTime");
       expect(mediaElementTime).toBeGreaterThan(0);
 
       // check that the spectrogram component is playing

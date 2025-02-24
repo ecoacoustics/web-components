@@ -20,16 +20,6 @@ import {
 } from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
-import {
-  AxesComponent,
-  DataSourceComponent,
-  MediaControlsComponent,
-  ProgressBar,
-  SpectrogramCanvasScale,
-  SpectrogramComponent,
-  VerificationBootstrapComponent,
-  VerificationGridTileComponent,
-} from "../../components";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
 import { expect, test } from "../assertions";
@@ -38,6 +28,13 @@ import { decisionColor } from "../../services/colors";
 import { CssVariable, EnumValue } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 import { SPACE_KEY } from "../../helpers/keyboard";
+import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
+import { SpectrogramCanvasScale, SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { ProgressBar } from "../../components/progress-bar/progress-bar";
+import { MediaControlsComponent } from "../../components/media-controls/media-controls";
+import { AxesComponent } from "../../components/axes/axes";
+import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
+import { DataSourceComponent } from "../../components/data-source/data-source";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -361,8 +358,7 @@ class TestPage {
 
   public async areMediaControlsPlaying(index: number): Promise<boolean> {
     const mediaControls: Locator = (await this.mediaControlsComponent())[index];
-    const value = await invokeBrowserMethod<MediaControlsComponent>(mediaControls, "isSpectrogramPlaying");
-    return value as boolean;
+    return await invokeBrowserMethod<MediaControlsComponent, boolean>(mediaControls, "isSpectrogramPlaying");
   }
 
   public async isAudioPlaying(index: number): Promise<boolean> {
@@ -416,8 +412,7 @@ class TestPage {
   }
 
   public async isViewingHistory(): Promise<boolean> {
-    const value = await invokeBrowserMethod<VerificationGridComponent>(this.gridComponent(), "isViewingHistory");
-    return value as boolean;
+    return await invokeBrowserMethod<VerificationGridComponent, boolean>(this.gridComponent(), "isViewingHistory");
   }
 
   public async downloadResults(): Promise<string> {

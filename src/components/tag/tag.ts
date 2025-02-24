@@ -18,9 +18,9 @@ export class TagComponent extends AbstractComponent(LitElement) implements DataC
   private get innerElements(): Element[] {
     // if the slotted content is text without a wrapper element
     // e.g. <oe-tag>Cow</oe-tag>
-    // it will not be caught by the @queryAssignedElements decorator
+    // it will not be caught by a @queryAssignedElements decorator
     // to fix this, I get all of the text content of the host element and assign
-    // it to a new "virtual" element that only contains that text
+    // it to a new element that only contains that text
 
     const childNodes = Array.from(this.childNodes);
     return childNodes.map((node) => {
@@ -49,7 +49,7 @@ export class TagComponent extends AbstractComponent(LitElement) implements DataC
   }
 
   public render() {
-    return html`<slot class="hide-slot"></slot>`;
+    return html`<slot class="hide-slot-content"></slot>`;
   }
 }
 

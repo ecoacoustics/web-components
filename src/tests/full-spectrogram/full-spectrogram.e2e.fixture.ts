@@ -72,8 +72,8 @@ class TestPage {
   }
 
   public async isAudioPlaying(): Promise<boolean> {
-    const value = await getBrowserValue<SpectrogramComponent>(this.spectrogramComponent(), "paused");
-    return !value as boolean;
+    const value = await getBrowserValue<SpectrogramComponent, boolean>(this.spectrogramComponent(), "paused");
+    return !value;
   }
 
   public async audioPlaybackTime(): Promise<number> {

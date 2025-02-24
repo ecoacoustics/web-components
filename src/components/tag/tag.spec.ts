@@ -33,7 +33,7 @@ test.describe("tag models", () => {
     expect(elementReferences).toBeDefined();
   }
 
-  test("should create the correct model if it contains a value", async ({ fixture }) => {
+  test("should create the correct model if it contains an attribute value", async ({ fixture }) => {
     const testedTag = "Koala";
 
     await fixture.create(`<oe-tag value="${testedTag}">${testedTag}</oe-tag>`);
@@ -42,7 +42,7 @@ test.describe("tag models", () => {
       text: testedTag,
       reference: null,
     } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent, Tag>(fixture.component(), "model");
 
     assertTagModel(realizedTagModel, expectedTagModel);
   });
@@ -57,7 +57,7 @@ test.describe("tag models", () => {
       text: "",
       reference: null,
     } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent, Tag>(fixture.component(), "model");
 
     assertTagModel(realizedTagModel, expectedTagModel);
   });
@@ -73,7 +73,7 @@ test.describe("tag models", () => {
       text: updatedTag,
       reference: null,
     } satisfies Tag;
-    const realizedTagModel = await getBrowserValue<TagComponent>(fixture.component(), "model") as Tag;
+    const realizedTagModel = await getBrowserValue<TagComponent, Tag>(fixture.component(), "model");
 
     assertTagModel(realizedTagModel, expectedTagModel);
   });
