@@ -363,14 +363,8 @@ button {
   You might want to hide slot content in data components.
   E.g. The <oe-annotation> component does not have any template content, but
        still requires a slot so that it can accept <oe-tag> data components.
-
-  TODO: we might be able to remove this helper class if we create a dedicated
-  "data component" mixin that would build a model using a components attributes
-  and slotted content.
-  This class would no longer be needed because we could scope this slot hiding
-  to this proposed "data component".
 */
-slot.hide-slot {
+slot.hide-slot-content {
   display: none;
 
   &::slotted(*) {

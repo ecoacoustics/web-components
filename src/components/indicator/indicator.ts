@@ -13,7 +13,7 @@ import indicatorStyles from "./css/style.css?inline";
  * @description
  * A vertical line that displays the playback position on a spectrogram
  *
- * This component must wrap an element that implements the ChromeHost mixin
+ * This component must wrap a spectrogram component.
  *
  * @csspart indicator-line - A css target to style the indicator line
  * @csspart seek-icon - A css target to style the seek icon underneath the indicator line

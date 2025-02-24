@@ -1,5 +1,5 @@
 import { Tag } from "../models/tag";
-import { Enum } from "./types/advancedTypes";
+import { Enum, EnumValue } from "./types/advancedTypes";
 
 const converterNoProvidedFallback = Symbol("converter-no-fallback");
 
@@ -57,9 +57,9 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
 
 export const enumConverter = <T extends Enum>(
   enumValues: T,
-  fallbackValue: typeof converterNoProvidedFallback | T[keyof T] = converterNoProvidedFallback,
+  fallbackValue: typeof converterNoProvidedFallback | EnumValue<T> = converterNoProvidedFallback,
 ) => {
-  return (value: string | null): T[keyof T] | undefined => {
+  return (value: string | null): EnumValue<T> | undefined => {
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
     const lowercaseKey = value?.toLowerCase();

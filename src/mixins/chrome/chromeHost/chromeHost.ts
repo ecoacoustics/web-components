@@ -7,12 +7,13 @@ import { ChromeTemplate } from "../types";
 import { mergeStyles } from "../../../helpers/styles/merge";
 import { addStyleSheets } from "../../../helpers/styles/add";
 import { removeStyleSheets } from "../../../helpers/styles/remove";
+import { IChromeProvider } from "../chromeProvider/chromeProvider";
 import chromeHostStyles from "./style.css?inline";
 
 // TODO: improve typing here
 export interface ChromeAdvertisement {
-  connect(provider: any): void;
-  disconnect(provider: any): void;
+  connect(provider: IChromeProvider): void;
+  disconnect(provider: IChromeProvider): void;
   requestUpdate(): void;
 }
 
@@ -29,7 +30,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     @state()
-    private providers = new Set<any>();
+    private providers = new Set<IChromeProvider>();
 
     /**
      * The content to render chrome around.
@@ -48,8 +49,8 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
 
     private sendChromeHostAdvertisement(): void {
       const chromeAdvertisement = {
-        connect: (provider: ChromeHostComponentClass) => this.connect(provider),
-        disconnect: (provider: ChromeHostComponentClass) => this.disconnect(provider),
+        connect: (provider: IChromeProvider) => this.connect(provider),
+        disconnect: (provider: IChromeProvider) => this.disconnect(provider),
         requestUpdate: () => this.requestUpdate(),
       } satisfies ChromeAdvertisement;
 
@@ -61,7 +62,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       );
     }
 
-    private connect(provider: ChromeHostComponentClass): void {
+    private connect(provider: IChromeProvider): void {
       if (!(provider instanceof LitElement)) {
         console.error("Attempted to attach non-lit element to ChromeHost");
         return;
@@ -80,7 +81,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       this.requestUpdate();
     }
 
-    private disconnect(provider: ChromeHostComponentClass): void {
+    private disconnect(provider: IChromeProvider): void {
       const styles = this.getProviderStyleSheets(provider);
 
       // we remove the providers style sheets last so that there is not a flash
@@ -89,14 +90,13 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       removeStyleSheets(this, styles);
     }
 
-    private getProviderStyleSheets(provider: ChromeHostComponentClass): CSSResultGroup {
+    private getProviderStyleSheets(provider: IChromeProvider): CSSResultGroup {
       const providerClass = provider.constructor as typeof LitElement;
       return providerClass.styles ?? [];
     }
 
-    // TODO: improve typing here
-    private providerTemplate(key: any): ChromeTemplate {
-      return html`${map(this.providers, (provider: any) => {
+    private providerTemplate(key: keyof IChromeProvider): ChromeTemplate {
+      return html`${map(this.providers, (provider) => {
         if (typeof provider[key] === "function") {
           return provider[key]();
         }

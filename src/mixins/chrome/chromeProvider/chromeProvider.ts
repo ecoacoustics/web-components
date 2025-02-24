@@ -7,8 +7,24 @@ import { ChromeTemplate } from "../types";
 import { mergeStyles } from "../../../helpers/styles/merge";
 import providerStyles from "./style.css?inline";
 
+// We export an interface for the ChromeProvider because the ChromeProvider
+// class is dynamically created by the ChromeProvider mixin, meaning that
+// TypeScript cannot pull out the ChromeProvider class from the mixin
+// and use it as a type.
+//
+// To get around this, we export a polymorphic interface that narrows the
+// typing of the ChromeProvider to methods that are exposed to the ChromeHost.
+export interface IChromeProvider {
+  chromeTop?(): ChromeTemplate;
+  chromeBottom?(): ChromeTemplate;
+  chromeLeft?(): ChromeTemplate;
+  chromeRight?(): ChromeTemplate;
+  chromeOverlay?(): ChromeTemplate;
+  chromeRendered?(): void;
+}
+
 export const ChromeProvider = <T extends Component>(superClass: T) => {
-  abstract class ChromeProviderComponentClass extends superClass {
+  abstract class ChromeProviderComponentClass extends superClass implements IChromeProvider {
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       const newStyles: CSSResultGroup = mergeStyles([providerStyles], styles);
 
@@ -45,12 +61,15 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     protected handleSlotChange(): void {}
 
     private attachAdvertisementListeners(): void {
-      this.addEventListener(chromeAdvertisementEventName, (event: any) => this.handleChromeAdvertisement(event));
+      this.addEventListener(chromeAdvertisementEventName, (event: Event) =>
+        // TODO: remove this type cast. We might need a type guard
+        this.handleChromeAdvertisement(event as CustomEvent<ChromeAdvertisement>),
+      );
     }
 
     private handleChromeAdvertisement(event: CustomEvent<ChromeAdvertisement>): void {
       this.chromeAdvertisement = event.detail;
-      this.chromeAdvertisement?.connect(this as any);
+      this.chromeAdvertisement.connect(this);
     }
 
     public render() {

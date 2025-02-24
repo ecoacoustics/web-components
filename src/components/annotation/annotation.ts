@@ -179,7 +179,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) implement
   }
 
   public render() {
-    return html`<slot class="hide-slot"></slot>`;
+    return html`<slot class="hide-slot-content"></slot>`;
   }
 }
 

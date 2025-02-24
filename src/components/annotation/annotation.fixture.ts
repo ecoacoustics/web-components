@@ -16,11 +16,11 @@ class TestPage {
   }
 
   public async tagModels(): Promise<ReadonlyArray<Tag>> {
-    return (await invokeBrowserMethod<AnnotationComponent>(this.component(), "tagModels" as any)) as Tag[];
+    return await invokeBrowserMethod<AnnotationComponent, Tag[]>(this.component(), "tagModels" as any);
   }
 
   public async annotationModel(): Promise<Readonly<Annotation>> {
-    return (await getBrowserValue<AnnotationComponent>(this.component(), "model")) as Annotation;
+    return await getBrowserValue<AnnotationComponent, Annotation>(this.component(), "model");
   }
 
   public async assertAnnotationModel(expected: any) {

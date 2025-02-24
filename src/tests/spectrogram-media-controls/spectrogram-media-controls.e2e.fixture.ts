@@ -51,7 +51,7 @@ class MultipleSpectrogramFixture {
   public async isPlayingAudio(component: Locator): Promise<boolean> {
     const mediaElement = component.locator("audio").first();
     const hasDocumentAttribute = !(await hasBrowserAttribute<SpectrogramComponent>(component, "paused"));
-    const hasObjectProperty = !(await getBrowserValue<HTMLAudioElement>(mediaElement, "paused"));
+    const hasObjectProperty = !(await getBrowserValue<HTMLAudioElement, boolean>(mediaElement, "paused"));
 
     return hasDocumentAttribute && hasObjectProperty;
   }
