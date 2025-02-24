@@ -1,6 +1,6 @@
 import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
-import { getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import { getBrowserStyles, getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
 import { TagComponent } from "../tag/tag";
 import { AnnotateComponent } from "./annotate";
 import { annotateFixture as test } from "./annotate.fixture";
@@ -63,7 +63,7 @@ test.describe("annotation", () => {
         name: "should correctly place correct bounding boxes",
         annotation: { startOffset: 3, endOffset: 3.5, lowFrequency: 5000, highFrequency: 6500 },
       },
-    ] satisfies AnnotationBoundingBoxTest[];
+    ] as const satisfies AnnotationBoundingBoxTest[];
 
     createAnnotationTests(tests);
   });
@@ -116,7 +116,7 @@ test.describe("annotation", () => {
             highFrequency: 3000,
           },
         },
-      ] satisfies AnnotationBoundingBoxTest[];
+      ] as const satisfies AnnotationBoundingBoxTest[];
 
       createAnnotationTests(tests);
     });
@@ -172,7 +172,7 @@ test.describe("annotation", () => {
             highFrequency: 10900,
           },
         },
-      ] satisfies AnnotationBoundingBoxTest[];
+      ] as const satisfies AnnotationBoundingBoxTest[];
 
       createAnnotationTests(tests);
     });
@@ -197,7 +197,7 @@ test.describe("annotation", () => {
             highFrequency: 23050,
           },
         },
-      ] satisfies AnnotationBoundingBoxTest[];
+      ] as const satisfies AnnotationBoundingBoxTest[];
 
       createAnnotationTests(tests);
     });
@@ -240,7 +240,7 @@ test.describe("annotation", () => {
             highFrequency: 500,
           },
         },
-      ] satisfies AnnotationBoundingBoxTest[];
+      ] as const satisfies AnnotationBoundingBoxTest[];
 
       createAnnotationTests(tests);
     });
@@ -334,13 +334,28 @@ test.describe("annotation", () => {
   });
 
   test.describe("selecting annotations", () => {
-    test("should change the annotations color if inside the bounding box is clicked", () => {});
+    test("should change the annotations color if inside the bounding box is clicked", async ({ fixture }) => {
+      const target = (await fixture.annotationBoundingBoxes())[0];
+      await target.click();
+    });
 
-    test("should change the annotations color if the label is clicked", () => {});
+    test("should change the annotations color if the label is clicked", async ({ fixture }) => {
+      const target = (await fixture.annotationLabels())[0];
 
-    test("should raise above other annotations when the bounding box is clicked", () => {});
+      const initialAnnotationColor = getBrowserStyles(target)[0].color;
 
-    test("should raise above other annotations when the label is clicked", () => {});
+      await target.click();
+    });
+
+    test("should raise above other annotations when the bounding box is clicked", async ({ fixture }) => {
+      const target = (await fixture.annotationBoundingBoxes())[0];
+      await target.click();
+    });
+
+    test("should raise above other annotations when the label is clicked", async ({ fixture }) => {
+      const target = (await fixture.annotationLabels())[0];
+      await target.click();
+    });
   });
 });
 
