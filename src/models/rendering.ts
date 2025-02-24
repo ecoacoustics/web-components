@@ -1,3 +1,5 @@
+import { Hertz, Seconds } from "./unitConverters";
+
 export type TwoDFft = Float32Array[];
 
 export interface Size<T = number> {
@@ -26,28 +28,28 @@ export class TwoDSlice<XT extends number, YT extends number> {
 }
 
 export class SpectrogramModel {
-  public constructor(startOffset: number, endOffset: number) {
+  public constructor(startOffset: Seconds, endOffset: Seconds) {
     this.startOffset = startOffset;
     this.endOffset = endOffset;
   }
 
-  public startOffset: number;
-  public endOffset: number;
+  public startOffset: Seconds;
+  public endOffset: Seconds;
 }
 
 // also consider: SpectrogramRenderSlice
 export class RenderWindow {
-  public constructor(startOffset: number, endOffset: number, lowFrequency: number, highFrequency: number) {
+  public constructor(startOffset: Seconds, endOffset: Seconds, lowFrequency: Hertz, highFrequency: Hertz) {
     this.startOffset = startOffset;
     this.endOffset = endOffset;
     this.lowFrequency = lowFrequency;
     this.highFrequency = highFrequency;
   }
 
-  public startOffset: number;
-  public endOffset: number;
-  public lowFrequency: number;
-  public highFrequency: number;
+  public startOffset: Seconds;
+  public endOffset: Seconds;
+  public lowFrequency: Hertz;
+  public highFrequency: Hertz;
 
   // changes the render window to a DOM representation that can be used in the
   // window="" attribute of the oe-spectrogram component

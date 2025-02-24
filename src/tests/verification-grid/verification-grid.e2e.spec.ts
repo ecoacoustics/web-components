@@ -18,10 +18,8 @@ import { AudioCachedState, SubjectWrapper } from "../../models/subject";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
-import { EnumValue } from "../../helpers/types/advancedTypes";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
 import { MousePosition, VerificationGridComponent } from "../../components/verification-grid/verification-grid";
-import { SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 
 test.describe("while the initial bootstrap dialog is open", () => {
@@ -1010,23 +1008,6 @@ test.describe("single verification grid", () => {
 
       const realizedNumberOfSelected = await fixture.selectedTileIndexes();
       expect(realizedNumberOfSelected).toHaveLength(0);
-    });
-  });
-
-  test.describe("spectrogram scaling attributes", () => {
-    // For some reason, we cannot use the SpectrogramCanvasScale enum here
-    // because it causes a bundling error
-    // However, I was able to get type checking for our tested scales using
-    // our EnumValue helper type
-    // TODO: figure out why we can't import the SpectrogramCanvasScale enum here
-    const testedScales = ["stretch", "natural", "original"] as const satisfies EnumValue<SpectrogramCanvasScale>;
-
-    testedScales.forEach((scale: EnumValue<SpectrogramCanvasScale>) => {
-      test.describe(`${scale} scaling`, () => {
-        test.beforeEach(async ({ fixture }) => {
-          await fixture.changeSpectrogramScaling(scale);
-        });
-      });
     });
   });
 

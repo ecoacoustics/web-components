@@ -25,11 +25,11 @@ import { Decision } from "../../models/decisions/decision";
 import { expect, test } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
-import { CssVariable, EnumValue } from "../../helpers/types/advancedTypes";
+import { CssVariable } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
-import { SpectrogramCanvasScale, SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
 import { MediaControlsComponent } from "../../components/media-controls/media-controls";
 import { AxesComponent } from "../../components/axes/axes";
@@ -190,13 +190,11 @@ class TestPage {
   }
 
   public async getViewHead(): Promise<number> {
-    const pagedItems = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "viewHead");
-    return pagedItems as number;
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHead");
   }
 
   public async getVerificationHead(): Promise<number> {
-    const pagedItems = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "decisionHead");
-    return pagedItems as number;
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHead");
   }
 
   public async tileSizes(): Promise<Size[]> {
@@ -220,9 +218,9 @@ class TestPage {
     const indexes: number[] = [];
 
     for (const tile of tiles) {
-      const isSelected = (await getBrowserValue<VerificationGridTileComponent>(tile, "selected")) as boolean;
+      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
       if (isSelected) {
-        const tileIndex = (await getBrowserValue<VerificationGridTileComponent>(tile, "index")) as number;
+        const tileIndex = await getBrowserValue<VerificationGridTileComponent, number>(tile, "index");
         indexes.push(tileIndex);
       }
     }
@@ -235,7 +233,7 @@ class TestPage {
     const selectedTiles: Locator[] = [];
 
     for (const tile of tiles) {
-      const isSelected = (await getBrowserValue<VerificationGridTileComponent>(tile, "selected")) as boolean;
+      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
       if (isSelected) {
         selectedTiles.push(tile);
       }
@@ -282,7 +280,7 @@ class TestPage {
     const tileModels = await this.gridTileComponents();
     const tileTarget = tileModels[index];
 
-    const tileModel = (await getBrowserValue<VerificationGridTileComponent>(tileTarget, "model")) as SubjectWrapper;
+    const tileModel = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tileTarget, "model");
     return this.subjectDecisions(tileModel);
   }
 
@@ -291,7 +289,7 @@ class TestPage {
     const tiles = await this.gridTileComponents();
 
     for (const tile of tiles) {
-      const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+      const model = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
       const modelDecisions = this.subjectDecisions(model);
 
       if (modelDecisions.length > 0) {
@@ -309,7 +307,7 @@ class TestPage {
     const highlightedTiles: Locator[] = [];
 
     for (const tile of gridTiles) {
-      const model = (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+      const model = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
       const modelDecisions = this.subjectDecisions(model);
 
       const isHighlighted = modelDecisions.length > 0;
@@ -350,7 +348,7 @@ class TestPage {
     const gridTiles = await this.gridTileComponents();
 
     const gridTileModels = gridTiles.map(async (tile) => {
-      return (await getBrowserValue<VerificationGridTileComponent>(tile, "model")) as SubjectWrapper;
+      return await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
     });
 
     return await Promise.all(gridTileModels);
@@ -395,7 +393,7 @@ class TestPage {
   public async progressBarValueToPercentage(value: number): Promise<string> {
     const progressBar = this.gridProgressBar();
 
-    const maxValue = (await getBrowserValue<ProgressBar>(progressBar, "total")) as number;
+    const maxValue = await getBrowserValue<ProgressBar, number>(progressBar, "total");
     const percentage = 100 * (value / maxValue);
 
     return `${percentage}%`;
@@ -621,8 +619,8 @@ class TestPage {
 
   public async getGridShape(): Promise<GridShape> {
     const targetGrid = this.gridComponent();
-    const columns = (await getBrowserValue<VerificationGridComponent>(targetGrid, "columns")) as number;
-    const rows = (await getBrowserValue<VerificationGridComponent>(targetGrid, "rows")) as number;
+    const columns = await getBrowserValue<VerificationGridComponent, number>(targetGrid, "columns");
+    const rows = await getBrowserValue<VerificationGridComponent, number>(targetGrid, "rows");
     return { columns, rows };
   }
 
@@ -660,10 +658,6 @@ class TestPage {
     const targetedBrowserAttribute = "local";
     const strategy = local ? setBrowserAttribute : removeBrowserAttribute;
     await strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
-  }
-
-  public async changeSpectrogramScaling(scale: EnumValue<SpectrogramCanvasScale>) {
-    console.log(scale);
   }
 
   public async showMediaControls(visible: boolean) {
