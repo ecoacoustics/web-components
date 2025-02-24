@@ -57,7 +57,14 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
       super.updated(change);
     }
 
-    /** You might want to override this */
+    /**
+     * A lifecycle method that is run when new elements are slotted in to the
+     * providers default slot.
+     *
+     * This can be useful for attaching subscribers to nested components.
+     * e.g. Subscribing to the spectrogram components unitConverter property
+     * when the spectrogram is slotted into the provider.
+     */
     protected handleSlotChange(): void {}
 
     private attachAdvertisementListeners(): void {
