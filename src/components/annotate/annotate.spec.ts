@@ -272,7 +272,7 @@ test.describe("annotation", () => {
 // TODO: For some reason, importing the AnnotationTagStyle enum from the
 // annotate.ts file causes a bundler error with the very confusing error message
 // "SyntaxError: src/components/annotate/css/style.css: Unexpected token (1:0)playwright"
-//
+
 // test.describe("annotation style tag", () => {
 //   test.describe("initial styles", () => {
 //     test("should use the correct default tag style", async ({ fixture }) => {

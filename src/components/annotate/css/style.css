@@ -3,6 +3,15 @@
 :host {
   position: relative;
   display: block;
+
+  /*
+    TODO: the browser should be able to initialize these variables through the
+    variables.css file.
+  */
+  --oe-annotation-color: green;
+  --oe-annotation-font-color: white;
+  --oe-annotation-selected-color: lightgreen;
+  --oe-annotation-weight: 1px;
 }
 
 /*

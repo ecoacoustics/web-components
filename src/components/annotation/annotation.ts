@@ -7,10 +7,7 @@ import { Tag } from "../../models/tag";
 import { booleanConverter, tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "../tag/tag";
 import { Hertz, Seconds } from "../../models/unitConverters";
-
-// TODO: we might want to create the concept of a "data component" (mixin)
-// that doesn't have any template content, but can accept attributes/slotted
-// content to build a model
+import { DataComponent } from "../../helpers/dataComponent";
 
 /**
  * @description
@@ -45,7 +42,7 @@ import { Hertz, Seconds } from "../../models/unitConverters";
  * @slot - A slot for <oe-tag> elements
  */
 @customElement("oe-annotation")
-export class AnnotationComponent extends AbstractComponent(LitElement) {
+export class AnnotationComponent extends AbstractComponent(LitElement) implements DataComponent<Annotation> {
   public static readonly createdEventName = "oe-annotation-created";
   public static readonly updatedEventName = "oe-annotation-updated";
   public static readonly removedEventName = "oe-annotation-removed";
@@ -98,7 +95,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
       this.lowFrequency,
       this.highFrequency,
       this.tagModels(),
-      this,
+      {},
       [],
     );
   }
@@ -117,6 +114,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
     this.dispatchEvent(
       new CustomEvent(emittedEventName, {
         bubbles: true,
+        composed: true,
       }),
     );
   }
@@ -158,7 +156,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) {
       "startTime",
       "endTime",
       "tags",
-    ] satisfies (keyof this)[];
+    ] as const satisfies (keyof this)[];
 
     const hasAnnotationUpdate = updatedAnnotationProperties.some((key) => key in change);
     if (hasAnnotationUpdate) {

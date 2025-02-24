@@ -116,7 +116,7 @@ export class VerificationComponent extends DecisionComponent {
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
         <div>
-          ${!this.isMobile
+          ${!this.isMobile && this.shortcut
             ? html`<span class="shortcut-legend">${keyboardShortcutTemplate({ keys: [this.shortcut] })}</span>`
             : nothing}
         </div>

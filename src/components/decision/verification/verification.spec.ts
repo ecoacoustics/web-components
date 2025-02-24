@@ -13,6 +13,10 @@ test.describe("Verification Component", () => {
     await expect(fixture.shortcutLegend()).toHaveTrimmedText("A");
   });
 
+  test("should not display a keyboard shortcut if none is provided", async ({ fixture }) => {
+    await expect(fixture.shortcutLegend()).not.toBeAttached();
+  });
+
   test("should display both additional tags and a keyboard shortcut when provided", async ({ fixture }) => {
     const additionalTags = "tag1, tag2";
     const keyboardShortcut = "a";

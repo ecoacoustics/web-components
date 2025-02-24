@@ -120,7 +120,7 @@ test.describe("tag parsing", () => {
     // additionally, testing a single tag attribute was already tested in
     // "should return the correct model if all attributes are present"
 
-    test("should correctly parse a multiple tag", async ({ fixture }) => {
+    test("should correctly parse multiple tag attributes", async ({ fixture }) => {
       await fixture.create(`
         <oe-annotation
           tags="koala,kangaroo"
@@ -276,7 +276,7 @@ test.describe("tag parsing", () => {
           elementReferences: [],
           reference: null,
         },
-      ] satisfies Tag[];
+      ] as const satisfies Tag[];
 
       const realizedTags = await fixture.tagModels();
 

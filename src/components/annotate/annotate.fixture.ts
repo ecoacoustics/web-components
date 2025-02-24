@@ -8,12 +8,14 @@ import { SpectrogramComponent } from "../spectrogram/spectrogram";
 class TestPage {
   public constructor(public readonly page: Page) {}
 
+  // I use the body element for snapshot (screenshot) assertions
+  public bodyElement = () => this.page.locator("body").first();
+
   public component = () => this.page.locator("oe-annotate").first();
   public tagComponents = () => this.page.locator("oe-tag").all();
   public annotationContainers = () => this.page.locator(".annotation-container").all();
   public annotationBoundingBoxes = () => this.page.locator(".bounding-box").all();
   public annotationLabels = () => this.page.locator(".bounding-box-label").all();
-  public bodyElement = () => this.page.locator("body").first();
 
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
   public spectrogramContainer = () => this.spectrogram().locator("#spectrogram-container").first();
