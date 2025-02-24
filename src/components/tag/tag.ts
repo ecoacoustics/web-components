@@ -2,6 +2,7 @@ import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Tag } from "../../models/tag";
+import { DataComponent } from "../../helpers/dataComponent";
 
 /**
  * @description
@@ -10,7 +11,7 @@ import { Tag } from "../../models/tag";
  * @slot - Content that can be displayed to describe the tag
  */
 @customElement("oe-tag")
-export class TagComponent extends AbstractComponent(LitElement) {
+export class TagComponent extends AbstractComponent(LitElement) implements DataComponent<Tag> {
   @property({ type: String })
   public value = "";
 

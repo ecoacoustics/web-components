@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, nothing, svg, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, svg, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
@@ -151,7 +151,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     };
   }
 
-  public firstUpdated(change: any): void {
+  public firstUpdated(change: PropertyValues<this>): void {
     super.firstUpdated(change);
     this.emUnitFontSize = this.calculateFontSize("M");
   }
@@ -186,7 +186,11 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     return { width, height };
   }
 
-  private createGridLinesTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Readonly<Size>) {
+  private createGridLinesTemplate(
+    xValues: ReadonlyArray<Seconds>,
+    yValues: ReadonlyArray<Hertz>,
+    canvasSize: Readonly<Size>,
+  ) {
     const xGridLineTemplate = (value: Seconds) => {
       // we pull out xPosition to a variable because we use it twice (without modification)
       // for the lines x1 and x2 position
@@ -235,18 +239,18 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Readonly<Size>) {
+  private createAxisLabelsTemplate(
+    xValues: ReadonlyArray<Seconds>,
+    yValues: ReadonlyArray<Hertz>,
+    canvasSize: Readonly<Size>,
+  ) {
     const xTitleFontSize = this.calculateFontSize(this.xTitle);
     const yTitleFontSize = this.calculateFontSize(this.yTitle);
     const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
-    // Because the y-axis labels can be a variable length, we can't just offset the y-axis title by a fixed amount
-    // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
-    // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
-    // label assuming at a fixed amount away from the largest theoretical axis label
-    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
-    const yTitleOffset = yTitleFontSize.height;
+    const xTitleOffsetTop = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
+    const yTitleOffsetLeft = yTitleFontSize.height;
 
     const xLabelTemplate = (value: Seconds) => {
       const xPosition = this.unitConverter?.scaleX.value(value);
@@ -274,14 +278,11 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       `;
     };
 
-    const yTitleX = yTitleOffset;
     const yTitleY = canvasSize.height / 2;
-
     const xTitleX = canvasSize.width / 2;
-    const xTitleY = xTitleOffset;
 
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = yTitleX + yTitleFontSize.height + this.labelPadding.width + fontSize.width;
+      const xPosition = yTitleOffsetLeft + yTitleFontSize.height + this.labelPadding.width + fontSize.width;
       const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
@@ -313,7 +314,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       <text
         part="title x-title"
         x="${xTitleX}"
-        y="${xTitleY}"
+        y="${xTitleOffsetTop}"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -326,9 +327,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       ? svg`
       <text
         part="title y-title"
-        x="${yTitleX}"
+        x="${yTitleOffsetLeft}"
         y="${yTitleY}"
-        transform="rotate(270, ${yTitleX}, ${yTitleY})"
+        transform="rotate(270, ${yTitleOffsetLeft}, ${yTitleY})"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -337,9 +338,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     `
       : nothing;
 
-    const xAxisChromeHeight = xTitleY + xTitleFontSize.height;
+    const xAxisChromeHeight = xTitleOffsetTop + xTitleFontSize.height;
     const yAxisChromeWidth =
-      yTitleX + yTitleFontSize.height + this.labelPadding.width + fontSize.width + this.tickSize.width;
+      yTitleOffsetLeft + yTitleFontSize.height + this.labelPadding.width + fontSize.width + this.tickSize.width;
 
     this.xAxisTemplate = html`
       <svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}" height="${xAxisChromeHeight}">
@@ -367,7 +368,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     }
 
     const step =
-      this.xStepOverride ||
+      this.xStepOverride ??
       this.calculateStep(
         this.unitConverter.temporalDomain.value,
         this.unitConverter.temporalRange.value,
@@ -389,7 +390,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     }
 
     const step =
-      this.yStepOverride ||
+      this.yStepOverride ??
       this.calculateStep(
         this.unitConverter.frequencyDomain.value,
         this.unitConverter.frequencyRange.value,
@@ -457,7 +458,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     scale: FrequencyScale | TemporalScale,
     sizeKey: keyof Size,
   ): number {
-    const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02];
+    const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02] as const;
     const fontSize = this.calculateFontSize("0.0");
     const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
 
@@ -579,7 +580,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg class="axes-svg">${gridLines}</svg>`;
+    return html`<svg class="axes-overlay-svg">${gridLines}</svg>`;
   }
 }
 

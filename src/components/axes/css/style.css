@@ -11,7 +11,14 @@
   }
 }
 
-.axes-svg {
+/*
+  Because the axes component is a ChromeProvider, all of the axes elements
+  will be rendered in the ChromeHost's shadow root.
+
+  Using the .axes-svg as the top-level selector, allows us to scope the styling
+   to the axes component.
+*/
+.axes-overlay-svg {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -23,7 +30,7 @@
   z-index: 1;
 }
 
-svg.axes-label-chrome {
+.axes-label-chrome {
   position: relative;
   overflow: visible;
 
@@ -36,16 +43,19 @@ svg.axes-label-chrome {
   }
 }
 
-line {
-  shape-rendering: crispEdges;
-}
+.axes-overlay-svg,
+.axes-label-chrome {
+  text {
+    fill: var(--oe-font-color);
+    stroke: none;
+    font: 11px sans-serif;
+  }
 
-text {
-  fill: var(--oe-font-color);
-  stroke: none;
-  font: 11px sans-serif;
-}
+  g {
+    stroke: currentColor;
+  }
 
-g {
-  stroke: currentColor;
+  line {
+    shape-rendering: crispEdges;
+  }
 }
