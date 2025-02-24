@@ -33,5 +33,35 @@
         </li>
       </ul>
     </section>
+
+    <button onclick="changeSource();">Change source</button>
+
+    <script>
+      let currentSourceIndex = 0;
+      const sources = [
+        "/example.flac",
+        "/example2.flac",
+        "/example_34s.flac",
+        "/example_1s.wav",
+        "/120hz.wav",
+        "/diagnostic.wav",
+        "/merged_diagnostic.wav",
+        "/404-error.flac",
+      ];
+
+      const spectrograms = () => document.querySelectorAll("oe-spectrogram");
+
+      function changeSource() {
+        currentSourceIndex += 1;
+        const newSource = sources[currentSourceIndex % sources.length];
+
+        console.debug("changing to source", newSource);
+
+        const elements = spectrograms();
+        for (const element of elements) {
+          element.src = newSource;
+        }
+      }
+    </script>
   </body>
 </html>
