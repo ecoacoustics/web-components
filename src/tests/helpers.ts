@@ -233,11 +233,11 @@ export async function getBrowserSignalValue<T extends HTMLElement, SignalType = 
 
 // TODO: We can smartly work out if it is a method or a property, and invoke it or read it
 // we can also work out if it is a primitive or not. If it is not, we should serialize it
-export async function getBrowserValue<T extends HTMLElement, U extends T[keyof T] = T[keyof T]>(
-  component: any,
-  key: keyof T,
-): Promise<U> {
-  return await component.evaluate((element: T, { key }: { key: keyof T }) => element[key], { key });
+export async function getBrowserValue<
+  Target extends HTMLElement,
+  ReturnValue extends Target[keyof Target] = Target[keyof Target],
+>(component: any, key: keyof Target): Promise<ReturnValue> {
+  return await component.evaluate((element: Target, { key }: { key: keyof Target }) => element[key], { key });
 }
 
 export async function setBrowserValue<T>(component: any, key: keyof T, value: T[keyof T]) {
