@@ -1,15 +1,15 @@
-import { Hertz, Seconds } from "../../models/unitConverters";
+import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
-import { setBrowserValue } from "../../tests/helpers";
+import { getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
 import { TagComponent } from "../tag/tag";
+import { AnnotateComponent } from "./annotate";
 import { annotateFixture as test } from "./annotate.fixture";
 
-export interface PartialAnnotation {
-  startTime: Seconds;
-  endTime: Seconds;
-  lowFrequency: Hertz;
-  highFrequency: Hertz;
-}
+/**
+ * A subset of an annotation should only be used to initialize annotations in
+ * testing.
+ */
+export type PartialAnnotation = Pick<Annotation, "startOffset" | "endOffset" | "lowFrequency" | "highFrequency">;
 
 interface AnnotationBoundingBoxTest {
   name: string;
@@ -61,7 +61,7 @@ test.describe("annotation", () => {
     const tests = [
       {
         name: "should correctly place correct bounding boxes",
-        annotation: { startTime: 3, endTime: 3.5, lowFrequency: 5000, highFrequency: 6500 },
+        annotation: { startOffset: 3, endOffset: 3.5, lowFrequency: 5000, highFrequency: 6500 },
       },
     ] satisfies AnnotationBoundingBoxTest[];
 
@@ -74,8 +74,8 @@ test.describe("annotation", () => {
         {
           name: "super set",
           annotation: {
-            startTime: -2,
-            endTime: 7,
+            startOffset: -2,
+            endOffset: 7,
             lowFrequency: -1000,
             highFrequency: 23050,
           },
@@ -83,8 +83,8 @@ test.describe("annotation", () => {
         {
           name: "negative y-axis",
           annotation: {
-            startTime: 3,
-            endTime: 3.4,
+            startOffset: 3,
+            endOffset: 3.4,
             lowFrequency: 24000,
             highFrequency: 28000,
           },
@@ -92,8 +92,8 @@ test.describe("annotation", () => {
         {
           name: "negative x-axis",
           annotation: {
-            startTime: -2,
-            endTime: -1,
+            startOffset: -2,
+            endOffset: -1,
             lowFrequency: 1000,
             highFrequency: 3000,
           },
@@ -101,8 +101,8 @@ test.describe("annotation", () => {
         {
           name: "positive y-axis",
           annotation: {
-            startTime: 2,
-            endTime: 4,
+            startOffset: 2,
+            endOffset: 4,
             lowFrequency: -4000,
             highFrequency: -2000,
           },
@@ -110,8 +110,8 @@ test.describe("annotation", () => {
         {
           name: "positive x-axis",
           annotation: {
-            startTime: 7,
-            endTime: 8,
+            startOffset: 7,
+            endOffset: 8,
             lowFrequency: 1000,
             highFrequency: 3000,
           },
@@ -126,8 +126,8 @@ test.describe("annotation", () => {
         {
           name: "start time has overflowed",
           annotation: {
-            startTime: -2,
-            endTime: 0.5,
+            startOffset: -2,
+            endOffset: 0.5,
             lowFrequency: -1000,
             highFrequency: 1000,
           },
@@ -135,8 +135,8 @@ test.describe("annotation", () => {
         {
           name: "end time has overflowed",
           annotation: {
-            startTime: 4.5,
-            endTime: 7,
+            startOffset: 4.5,
+            endOffset: 7,
             lowFrequency: 5000,
             highFrequency: 6900,
           },
@@ -144,8 +144,8 @@ test.describe("annotation", () => {
         {
           name: "low frequency has overflowed",
           annotation: {
-            startTime: 3,
-            endTime: 3.4,
+            startOffset: 3,
+            endOffset: 3.4,
             lowFrequency: -2000,
             highFrequency: 1000,
           },
@@ -153,8 +153,8 @@ test.describe("annotation", () => {
         {
           name: "high frequency has overflowed",
           annotation: {
-            startTime: 2,
-            endTime: 2.5,
+            startOffset: 2,
+            endOffset: 2.5,
             lowFrequency: 10000,
             highFrequency: 13050,
           },
@@ -166,8 +166,8 @@ test.describe("annotation", () => {
           // therefore, we expect that the label will be rendered on the bottom
           name: "high frequency label is overflowing",
           annotation: {
-            startTime: 3,
-            endTime: 3.4,
+            startOffset: 3,
+            endOffset: 3.4,
             lowFrequency: 9500,
             highFrequency: 10900,
           },
@@ -182,8 +182,8 @@ test.describe("annotation", () => {
         {
           name: "time dimensions overflow",
           annotation: {
-            startTime: -2,
-            endTime: 7,
+            startOffset: -2,
+            endOffset: 7,
             lowFrequency: 2000,
             highFrequency: 4000,
           },
@@ -191,8 +191,8 @@ test.describe("annotation", () => {
         {
           name: "frequency dimensions have overflow",
           annotation: {
-            startTime: 3.8,
-            endTime: 4.2,
+            startOffset: 3.8,
+            endOffset: 4.2,
             lowFrequency: -1000,
             highFrequency: 23050,
           },
@@ -207,8 +207,8 @@ test.describe("annotation", () => {
         {
           name: "top left",
           annotation: {
-            startTime: -0.1,
-            endTime: 0.1,
+            startOffset: -0.1,
+            endOffset: 0.1,
             lowFrequency: 10500,
             highFrequency: 11500,
           },
@@ -216,8 +216,8 @@ test.describe("annotation", () => {
         {
           name: "top right",
           annotation: {
-            startTime: 4.9,
-            endTime: 5.1,
+            startOffset: 4.9,
+            endOffset: 5.1,
             lowFrequency: 10500,
             highFrequency: 12000,
           },
@@ -225,8 +225,8 @@ test.describe("annotation", () => {
         {
           name: "bottom right",
           annotation: {
-            startTime: 4.9,
-            endTime: 5.1,
+            startOffset: 4.9,
+            endOffset: 5.1,
             lowFrequency: -500,
             highFrequency: 500,
           },
@@ -234,8 +234,8 @@ test.describe("annotation", () => {
         {
           name: "bottom left",
           annotation: {
-            startTime: -0.1,
-            endTime: 0.1,
+            startOffset: -0.1,
+            endOffset: 0.1,
             lowFrequency: -500,
             highFrequency: 500,
           },
@@ -247,15 +247,90 @@ test.describe("annotation", () => {
   });
 
   test.describe("updating annotations", () => {
-    test("should correctly remove a bounding box if is updated from inside to outside the view window", () => {});
+    const inViewTemplate = `
+      <oe-annotation
+        start-time="0.2"
+        end-time="1"
+        low-frequency="1000"
+        high-frequency="2000"
+      ></oe-annotation>
+    `;
 
-    test("should correctly add a bounding box if it is updated from outside to inside the view window", () => {});
+    const outOfViewTemplate = `
+      <oe-annotation
+        start-time="-2"
+        end-time="-1"
+        low-frequency="1000"
+        high-frequency="2000"
+      ></oe-annotation>
+    `;
 
-    test("should keep a bounding box hidden if updated from out of view to another out of view position", () => {});
+    test("should remove a bounding box if is updated from inside to outside the view window", async ({ fixture }) => {
+      await fixture.createWithTemplate(inViewTemplate);
 
-    test("should correctly update an annotation", () => {});
+      const initialAnnotationCount = await fixture.annotationCount();
+      expect(initialAnnotationCount).toBeGreaterThan(0);
 
-    test("should correctly remove an annotation", () => {});
+      const expectedAnnotationCount = initialAnnotationCount - 1;
+
+      await fixture.moveAnnotationOutsideView(0);
+
+      const realizedAnnotationCount = await fixture.annotationCount();
+      expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
+    });
+
+    test("should add a bounding box if it is updated from outside to inside the view window", async ({ fixture }) => {
+      await fixture.createWithTemplate(outOfViewTemplate);
+
+      const initialAnnotationCount = await fixture.annotationCount();
+      expect(initialAnnotationCount).toBe(0);
+
+      const expectedAnnotationCount = initialAnnotationCount + 1;
+
+      await fixture.moveAnnotationInsideView(0);
+
+      const realizedAnnotationCount = await fixture.annotationCount();
+      expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
+    });
+
+    test("should correctly update an annotation from inside to inside the view window", async ({ fixture }) => {
+      await fixture.createWithTemplate(inViewTemplate);
+
+      const initialAnnotationCount = await fixture.annotationCount();
+      expect(initialAnnotationCount).toBeGreaterThan(0);
+
+      await fixture.moveAnnotationInsideView(0);
+
+      const realizedAnnotationCount = await fixture.annotationCount();
+      expect(realizedAnnotationCount).toBe(initialAnnotationCount);
+    });
+
+    test("should keep hidden if updated from out of view to another out of view position", async ({ fixture }) => {
+      await fixture.createWithTemplate(outOfViewTemplate);
+
+      const initialAnnotationCount = await fixture.annotationCount();
+      expect(initialAnnotationCount).toBe(0);
+
+      await fixture.moveAnnotationOutsideView(0);
+
+      const finalAnnotationCount = await fixture.annotationCount();
+      expect(finalAnnotationCount).toBe(0);
+    });
+
+    test("should correctly remove an annotation", async ({ fixture }) => {
+      await fixture.createWithTemplate(inViewTemplate);
+
+      const initialAnnotationCount = await fixture.annotationCount();
+      expect(initialAnnotationCount).toBeGreaterThan(0);
+
+      const expectedAnnotationCount = initialAnnotationCount - 1;
+
+      await fixture.removeAnnotation(0);
+
+      const realizedAnnotationCount = await fixture.annotationCount();
+
+      expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
+    });
   });
 
   test.describe("selecting annotations", () => {
@@ -269,56 +344,57 @@ test.describe("annotation", () => {
   });
 });
 
-// TODO: For some reason, importing the AnnotationTagStyle enum from the
-// annotate.ts file causes a bundler error with the very confusing error message
+// TODO: importing the AnnotationTagStyle enum from the annotate.ts file causes
+// a bundler error with the very confusing error message
 // "SyntaxError: src/components/annotate/css/style.css: Unexpected token (1:0)playwright"
+// see: https://github.com/ecoacoustics/web-components/issues/289
+test.describe("annotation style tag", () => {
+  test.describe("initial styles", () => {
+    test("should use the correct default tag style", async ({ fixture }) => {
+      await fixture.create();
 
-// test.describe("annotation style tag", () => {
-//   test.describe("initial styles", () => {
-//     test("should use the correct default tag style", async ({ fixture }) => {
-//       await fixture.create();
+      const realizedTagStyle = await getBrowserValue<AnnotateComponent>(fixture.component(), "tagStyle");
 
-//       const expectedTagStyle = AnnotationTagStyle.EDGE;
-//       const realizedTagStyle = await getBrowserValue<AnnotateComponent>(fixture.component(), "tagStyle");
+      // I would like to use the TagStyle enum here, but it causes a bundler
+      // error, so I'm using an untyped string value instead
+      expect(realizedTagStyle).toBe("edge");
+    });
 
-//       expect(realizedTagStyle).toBe(expectedTagStyle);
-//     });
+    test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
+      await fixture.createWithTagStyle("hidden");
+    });
 
-//     test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
-//       await fixture.createWithTagStyle(AnnotationTagStyle.HIDDEN);
-//     });
+    test("should have the correct 'edge' behavior", async ({ fixture }) => {
+      await fixture.createWithTagStyle("edge");
+    });
 
-//     test("should have the correct 'edge' behavior", async ({ fixture }) => {
-//       await fixture.createWithTagStyle(AnnotationTagStyle.EDGE);
-//     });
+    test("should have the correct 'spectrogram-top' behavior", async ({ fixture }) => {
+      await fixture.createWithTagStyle("spectrogram-top");
+    });
+  });
 
-//     test("should have the correct 'spectrogram-top' behavior", async ({ fixture }) => {
-//       await fixture.createWithTagStyle(AnnotationTagStyle.SPECTROGRAM_TOP);
-//     });
-//   });
+  test.describe("updating attributes", () => {
+    test("should correctly update if the tag style is updated to 'hidden'", async ({ fixture }) => {
+      await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "hidden");
+    });
 
-//   test.describe("updating attributes", () => {
-//     test("should correctly update if the tag style is updated to 'hidden'", async ({ fixture }) => {
-//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "hidden");
-//     });
+    test("should correctly update if the tag style is updated to 'edge'", async ({ fixture }) => {
+      await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "edge");
+    });
 
-//     test("should correctly update if the tag style is updated to 'edge'", async ({ fixture }) => {
-//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "edge");
-//     });
+    test("should correctly update if the tag style is updated to 'spectrogram-top'", async ({ fixture }) => {
+      await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
+    });
+  });
 
-//     test("should correctly update if the tag style is updated to 'spectrogram-top'", async ({ fixture }) => {
-//       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
-//     });
-//   });
+  test.describe("slotted tag content", () => {
+    test("should reflect slotted tag content correctly in hidden style", () => {});
 
-//   test.describe("slotted tag content", () => {
-//     test("should reflect slotted tag content correctly in hidden style", () => {});
+    test("should reflect slotted tag content correctly in edge style", () => {});
 
-//     test("should reflect slotted tag content correctly in edge style", () => {});
-
-//     test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
-//   });
-// });
+    test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
+  });
+});
 
 test.describe("without annotations", () => {
   test.beforeEach(async ({ fixture }) => {

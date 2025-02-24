@@ -1,9 +1,10 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 import { waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
+import { EnumValue } from "../../helpers/types/advancedTypes";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -13,6 +14,8 @@ class TestPage {
 
   public component = () => this.page.locator("oe-annotate").first();
   public tagComponents = () => this.page.locator("oe-tag").all();
+
+  public annotations = () => this.page.locator("oe-annotation").all();
   public annotationContainers = () => this.page.locator(".annotation-container").all();
   public annotationBoundingBoxes = () => this.page.locator(".bounding-box").all();
   public annotationLabels = () => this.page.locator(".bounding-box-label").all();
@@ -91,8 +94,8 @@ class TestPage {
         <oe-annotation
           data-testid="annotation-attribute-tag"
           tags="kookaburra"
-          start-time="${model.startTime}"
-          end-time="${model.endTime}"
+          start-time="${model.startOffset}"
+          end-time="${model.endOffset}"
           low-frequency="${model.lowFrequency}"
           high-frequency="${model.highFrequency}"
         ></oe-annotation>
@@ -102,7 +105,7 @@ class TestPage {
     await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
   }
 
-  public async createWithTagStyle(tagStyle: AnnotationTagStyle) {
+  public async createWithTagStyle(tagStyle: EnumValue<AnnotationTagStyle>) {
     await this.page.setContent(`
       <oe-annotate tag-style="${tagStyle}">
         <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
@@ -137,6 +140,17 @@ class TestPage {
             <strong class="slotted-content">Ultrasonic</strong>
           </oe-tag>
         </oe-annotation>
+      </oe-annotate>
+    `);
+
+    await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
+  }
+
+  public async createWithTemplate(template: string) {
+    await this.page.setContent(`
+      <oe-annotate>
+        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
+        ${template}
       </oe-annotate>
     `);
 
@@ -181,6 +195,56 @@ class TestPage {
         element.style.color = "green";
       });
     }
+  }
+
+  // the move into view and move outside view functions
+  public async moveAnnotationOutsideView(index: number) {
+    await this.updateAnnotation(index, {
+      startOffset: -2,
+      endOffset: -1,
+      lowFrequency: 1000,
+      highFrequency: 2000,
+    });
+  }
+
+  public async moveAnnotationInsideView(index: number) {
+    await this.updateAnnotation(index, {
+      startOffset: 0.5,
+      endOffset: 1.5,
+      lowFrequency: 1500,
+      highFrequency: 2500,
+    });
+  }
+
+  public async removeAnnotation(index: number) {
+    const targetAnnotation = (await this.annotations())[index];
+    await targetAnnotation.evaluate((element: HTMLElement) => {
+      element.remove();
+    });
+  }
+
+  /** Returns the count of visible annotations */
+  public async annotationCount() {
+    const annotationBoundingBoxes = await this.annotationBoundingBoxes();
+    const annotationLabels = await this.annotationLabels();
+
+    // assert that we have the same number of bounding boxes and labels
+    // if these are not equal, then we want to fail the test because there is a
+    // major issue with the component
+    expect(annotationLabels.length === annotationBoundingBoxes.length).toBe(true);
+
+    return annotationLabels.length;
+  }
+
+  private async updateAnnotation(index: number, newModel: PartialAnnotation) {
+    const targetAnnotation = (await this.annotations())[index];
+
+    await targetAnnotation.evaluate((element: HTMLElement, model: PartialAnnotation) => {
+      element.setAttribute("start-time", model.startOffset.toString());
+      element.setAttribute("end-time", model.endOffset.toString());
+      element.setAttribute("low-frequency", model.lowFrequency.toString());
+      element.setAttribute("high-frequency", model.highFrequency.toString());
+    }, newModel);
   }
 }
 
