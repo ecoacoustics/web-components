@@ -1,9 +1,6 @@
 @import url("variables.css");
 
 :host {
-  position: relative;
-  display: block;
-
   /*
     TODO: the browser should be able to initialize these variables through the
     variables.css file.

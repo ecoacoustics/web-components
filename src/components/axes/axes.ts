@@ -415,6 +415,11 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     scale: FrequencyScale | TemporalScale,
     melScale: boolean,
   ): boolean {
+    if (!this.unitConverter) {
+      console.error("Cannot calculate step without unit converter");
+      return false;
+    }
+
     const textLabelPadding = fontSize * AxesComponent.labelPadding;
 
     // if we are rendering in a linear scale, we can easily virtually measure
@@ -439,7 +444,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     // of the last two labels and check if they overlap
     // this is because the last two labels will be the closest together and the
     // most likely to be overlapping
-    const proposedValues = this.generateAxisValues(domain[0], domain[1], proposedStep, scale, false);
+    const proposedValues = this.generateAxisValues(
+      this.unitConverter.renderWindow.value.lowFrequency,
+      this.unitConverter.renderWindow.value.highFrequency,
+      proposedStep,
+      scale,
+      false,
+    );
+
     const lastTwoValues = proposedValues.slice(-2);
     const lastTwoPositions = lastTwoValues.map((value) => scale(value));
     const positionDelta = Math.abs(lastTwoPositions[0] - lastTwoPositions[1]);
@@ -458,6 +470,11 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     scale: FrequencyScale | TemporalScale,
     sizeKey: keyof Size,
   ): number {
+    if (!this.unitConverter) {
+      console.error("Cannot calculate step without unit converter");
+      return 0;
+    }
+
     const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02] as const;
     const fontSize = this.calculateFontSize("0.0");
     const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
@@ -489,7 +506,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
           domain,
           totalLabelSize,
           scale,
-          sizeKey === "height" && this.unitConverter ? this.unitConverter.melScale.value : false,
+          sizeKey === "height" && this.unitConverter.melScale.value,
         )
       ) {
         return proposedStep;

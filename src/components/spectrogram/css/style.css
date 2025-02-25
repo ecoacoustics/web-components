@@ -1,7 +1,5 @@
 :host {
   --min-height: 128px;
-
-  display: block;
   min-height: var(--min-height);
 }
 
