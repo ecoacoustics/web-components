@@ -22,7 +22,6 @@
     position: relative;
     height: fit-content;
     width: fit-content;
-    overflow: hidden;
   }
 
   &.chrome-top {
@@ -48,12 +47,32 @@
   &.chrome-left,
   &.chrome-right {
     display: flex;
+
+    /*
+      I typically try to avoid overflow rendering. However, I use overflow
+      rendering here because we want the chrome to be in flow and contribute its
+      width to the chrome left and right cells.
+
+      However, we do not want the chrome to contribute to the height. This is
+      because we do not want the chrome to stop the spectrogram shrinking in
+      height.
+      An example can be seen in the axes component where if the y-axis
+      contributed height to the chrome host, the spectrogram would not be able
+      to shrink in height.
+    */
+    height: 0;
   }
 
   &.chrome-top,
   &.chrome-bottom {
     display: flex;
     flex-direction: column;
+
+    /*
+      Inversely to the left and right chrome, we want the top and bottom chrome
+      to contribute to the height of the grid cell, but not the width.
+    */
+    width: 0;
   }
 }
 
