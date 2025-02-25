@@ -69,38 +69,46 @@
     <input type="text" readonly value="0" id="generation" autocomplete="off" />
 
     <div>
-      <label class="height-modifier">
-        <input id="spectrogram-height-input" type="range" value="800" min="0" max="1000" />
-        Change Spectrogram Height
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeSpectrogramHeight(event)" />
+        Spectrogram Height
       </label>
 
-      <label class="height-modifier">
-        <input id="canvas-height-input" type="range" value="800" min="0" max="1000" />
-        Change Canvas Height
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeCanvasHeight(event)" />
+        Canvas Height
       </label>
 
-      <label class="height-modifier">
-        <input id="annotate-height-input" type="range" value="800" min="0" max="1000" />
-        Change Annotate Height
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeAnnotateHeight(event)" />
+        Annotate Height
       </label>
-
-      <footer style="padding-bottom: 100dvh">
-        <h2>This is a footer with some long content to test scrolling</h2>
-      </footer>
     </div>
 
+    <hr />
+
+    <div>
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeSpectrogramWidth(event)" />
+        Spectrogram Width
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeCanvasWidth(event)" />
+        Canvas Width
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeAnnotateWidth(event)" />
+        Annotate Width
+      </label>
+    </div>
+
+    <footer style="padding-bottom: 100dvh">
+      <h2>This is a footer with some long content to test scrolling</h2>
+    </footer>
+
     <script>
-      window.onload = () => {
-        const heightInputElement = document.getElementById("spectrogram-height-input");
-        heightInputElement.addEventListener("input", changeSpectrogramHeight);
-
-        const canvasHeightInputElement = document.getElementById("canvas-height-input");
-        canvasHeightInputElement.addEventListener("input", changeCanvasHeight);
-
-        const annotateHeightInputElement = document.getElementById("annotate-height-input");
-        annotateHeightInputElement.addEventListener("input", changeAnnotateHeight);
-      };
-
       const spectrogram = () => document.getElementById("playing-spectrogram");
       const annotate = () => document.querySelector("oe-annotate");
       const canvas = () => spectrogram().shadowRoot.querySelector("canvas");
@@ -142,6 +150,21 @@
       function changeAnnotateHeight(event) {
         const newHeight = event.target.value;
         annotate().style.height = `${newHeight}px`;
+      }
+
+      function changeSpectrogramWidth(event) {
+        const newHeight = event.target.value;
+        spectrogram().style.width = `${newHeight}px`;
+      }
+
+      function changeCanvasWidth(event) {
+        const newHeight = event.target.value;
+        canvas().style.width = `${newHeight}px`;
+      }
+
+      function changeAnnotateWidth(event) {
+        const newHeight = event.target.value;
+        annotate().style.width = `${newHeight}px`;
       }
 
       function changeAspectRatio() {
@@ -245,7 +268,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .height-modifier {
+      .size-modifier {
         display: flex;
         align-items: center;
       }
