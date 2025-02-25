@@ -20,6 +20,12 @@ function addStyleSheet(component: LitElement, styles: CSSResultOrNative): void {
   if (styles instanceof CSSStyleSheet) {
     component.shadowRoot?.adoptedStyleSheets.push(styles);
   } else {
-    component.shadowRoot?.adoptedStyleSheets.push((styles as any).styleSheet);
+    const resultStyleSheet = styles.styleSheet;
+    if (!resultStyleSheet) {
+      console.warn("No styleSheet found in CSSResult", styles);
+      return;
+    }
+
+    component.shadowRoot?.adoptedStyleSheets.push(styles.styleSheet);
   }
 }
