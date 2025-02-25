@@ -59,8 +59,18 @@
       An example can be seen in the axes component where if the y-axis
       contributed height to the chrome host, the spectrogram would not be able
       to shrink in height.
+
+      Ideally this would be 0px, but Chrome has an "optimization" where it will
+      not render 0px elements, even if overflow is set to visible.
+      Therefore, we set the height to 1px. So that the chrome will render the
+      child elements, but have very little impact on the height of the surface
+      height.
+      Using fractional pixel units (e.g. 0.1px) works, but introduces a
+      maintainable burden if Chrome changes how it rounds fractional pixels.
+      E.g. at the time of writing, Chrome rounds 0.1px to 0px, but this could
+      change in the future.
     */
-    height: 0;
+    height: 1px;
   }
 
   &.chrome-top,
@@ -72,7 +82,7 @@
       Inversely to the left and right chrome, we want the top and bottom chrome
       to contribute to the height of the grid cell, but not the width.
     */
-    width: 0;
+    width: 1px;
   }
 }
 
