@@ -256,6 +256,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
     const tagSeparator = ",";
+    this.templateTagElements = [];
 
     return html`
       ${loop(model.tags, (tag, { last }) => {
