@@ -124,6 +124,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
+  private xAxisTemplate!: HTMLTemplateResult;
+  private yAxisTemplate!: HTMLTemplateResult;
 
   // because label padding is a relative fraction, we need to calculate the
   // actual pixel value of the padding
@@ -234,9 +236,6 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       </g>
     `;
   }
-
-  private xAxisTemplate!: HTMLTemplateResult;
-  private yAxisTemplate!: HTMLTemplateResult;
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
