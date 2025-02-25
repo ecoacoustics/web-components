@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
 import { customElement, property, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -8,7 +8,6 @@ import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
 import { computed, signal, watch } from "@lit-labs/preact-signals";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { classMap } from "lit/directives/class-map.js";
@@ -22,6 +21,11 @@ export enum AnnotationTagStyle {
   HIDDEN = "hidden",
   EDGE = "edge",
   SPECTROGRAM_TOP = "spectrogram-top",
+}
+
+interface TemplateTagElements {
+  litTemplateRef: Ref<HTMLSpanElement>;
+  elementReferences: ReadonlyArray<Element>;
 }
 
 /**
@@ -60,7 +64,7 @@ export enum AnnotationTagStyle {
  * @fires oe-annotation-updating (not implemented)
  * @fires oe-annotation-updated (not implemented)
  *
- * @csspart annotation-bounding-box - The "box part" of the annotation. The "green" square around the annotated event
+ * @csspart annotation-bounding-box - The "box part" of the annotation. E.g. The "green" square around the event.
  * @csspart annotation-label - Selector for the annotation label
  *
  * @cssproperty [--oe-annotation-color]
@@ -105,6 +109,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private readonly topChromeHeight = signal<Pixel>(0);
   private labelRefs: Ref<Readonly<HTMLLabelElement>>[] = [];
+  private templateTagElements: TemplateTagElements[] = [];
   private unitConverter?: Readonly<UnitConverter>;
 
   private get instantiatedLabelRefs() {
@@ -113,16 +118,26 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     );
   }
 
-  private get visibleAnnotations(): Annotation[] {
-    return this.annotationModels.filter((model) => !this.shouldCullAnnotation(model));
-  }
-
   private get annotationModels(): Annotation[] {
     if (!this.annotationElements) {
       return [];
     }
 
     return this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
+  }
+
+  public updated(changes: PropertyValues<this>): void {
+    super.updated(changes);
+
+    for (const tagElement of this.templateTagElements) {
+      const litTemplateElement = tagElement.litTemplateRef.value;
+      if (!litTemplateElement) {
+        console.warn("A tag element was not found in the template.");
+        continue;
+      }
+
+      litTemplateElement.append(...tagElement.elementReferences);
+    }
   }
 
   public chromeRendered(): void {
@@ -178,12 +193,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
 
-    // TODO: I suspect that we can combine the superset check and this isVisible
-    // math so that we only have to do one calculation
-    //
-    // TODO: we might want to make this inclusive e.g. >=
-    const isTimeInView = model.startOffset < temporalDomain[1] && model.endOffset >= temporalDomain[0];
-    const isFrequencyInView = model.lowFrequency < frequencyDomain[1] && model.highFrequency >= frequencyDomain[0];
+    const isTimeInView = this.unitConverter.isWithinTemporalDomain([model.startOffset, model.endOffset]);
+    const isFrequencyInView = this.unitConverter.isWithinFrequencyDomain([model.lowFrequency, model.highFrequency]);
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
@@ -232,7 +243,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         const tagSuffix = last ? "" : tagSeparator;
 
         if (Array.isArray(elementReferences) && elementReferences.length > 0) {
-          return elementReferences.map((element) => html`${unsafeHTML(element.outerHTML)}${tagSuffix}`);
+          const tagTemplateRef = createRef<HTMLSpanElement>();
+          this.templateTagElements.push({
+            litTemplateRef: tagTemplateRef,
+            elementReferences,
+          });
+
+          return html`<span ${ref(tagTemplateRef)}></span>`;
         }
 
         return html`${tag.text}${tagSuffix}`;
@@ -306,7 +323,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   public chromeOverlay(): ChromeTemplate {
     return html`
       <div class="annotations-surface">
-        ${map(this.visibleAnnotations, (model: Annotation, i: number) => this.annotationTemplate(model, i))}
+        ${map(this.annotationModels, (model: Annotation, i: number) =>
+          this.shouldCullAnnotation(model) ? nothing : this.annotationTemplate(model, i),
+        )}
       </div>
     `;
   }
@@ -318,6 +337,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // we also set the labelRefs array to an empty array if the tagStyle is not
     // spectrogram-top because the references will no longer exist.
     this.labelRefs = [];
+    this.templateTagElements = [];
 
     if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
       return nothing;
@@ -325,7 +345,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     return html`
       <div class="labels-top-chrome" style="height: ${watch(this.topChromeHeight)}px">
-        ${map(this.visibleAnnotations, (model: Annotation) => this.spectrogramTopLabelTemplate(model))}
+        ${map(this.annotationModels, (model: Annotation) =>
+          this.shouldCullAnnotation(model) ? nothing : this.spectrogramTopLabelTemplate(model),
+        )}
       </div>
     `;
   }

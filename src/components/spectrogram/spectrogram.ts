@@ -240,7 +240,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public async firstUpdated(change: any) {
     super.firstUpdated(change);
 
-    OeResizeObserver.observe(this.spectrogramContainer, (e) => this.handleResize(e));
+    OeResizeObserver.observe(this.spectrogramContainer, (event) => this.handleResize(event));
 
     // because audio context's automatically start in an active state, and start
     // processing audio even if there is no <audio> element input, we immediately

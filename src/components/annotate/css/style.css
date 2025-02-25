@@ -16,7 +16,7 @@
   css position anchors work.
   We use css position anchors for the "edge" style labels.
 
-  Some basic rules:
+  Some basic background on anchor positioning:
   - Elements positioned with CSS anchor MUST be removed from the normal document
     flow. Meaning that the labels MUST be position absolute, or fixed.
   - The element that the anchored element is attached to must be positioned
@@ -24,8 +24,8 @@
   - If the anchored element is fixed, the label will positioned relative to the
     anchor host, but its overflow will be relative to the viewport.
 
-  Therefore, our labels are positioned absolute, and the bounding box that the
-  labels are attached to are positioned relative.
+  Therefore, our labels are positioned absolute, and the bounding box containers
+  that the labels are attached to are positioned relative.
 
   However, because we want to overlay the annotation bounding boxes on top of
   the spectrogram, we cannot have the annotation bounding boxes in the document
@@ -33,8 +33,8 @@
   size of the annotations.
 
   So that the annotations are removed from flow and can overlay on top of the
-  spectrogram, we have a surface container that is removed from flow using
-  position absolute that contains all of the annotations.
+  spectrogram, we have an annotations-surface container that is removed from
+  flow using position absolute that contains all of the annotations.
 */
 .annotations-surface {
   position: absolute;
@@ -43,7 +43,7 @@
   height: 100%;
   overflow: hidden;
 
-  & > aside.annotation-container {
+  & > .annotation-container {
     position: relative;
 
     z-index: 2;
@@ -62,6 +62,12 @@
   }
 }
 
+/*
+  This is the top-level chrome element that will be used when the tag-style is
+  set to "top".
+  I set the position to relative so that if we add additional chrome elements,
+  they will be pushed down by the height of the labels.
+*/
 .labels-top-chrome {
   position: relative;
 }
@@ -70,6 +76,13 @@
   width: fit-content;
   margin: 0;
   font-size: var(--oe-font-size);
+
+  /*
+    I use z-index 4 so that the label appears above
+      - grid lines (z-index 1)
+      - bounding boxes (z-index 2)
+      - indicator (z-index 3)
+  */
   z-index: 4;
 
   /*

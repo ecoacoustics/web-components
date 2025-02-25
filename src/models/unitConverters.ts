@@ -129,6 +129,28 @@ export class UnitConverter {
     return { x, y, width, height };
   }
 
+  /**
+   * @returns
+   * A boolean indicating if any part of the value is within the temporal
+   * domain
+   */
+  public isWithinTemporalDomain(value: ScaleDomain<Seconds>): boolean {
+    const [domainStart, domainEnd] = this.temporalDomain.value;
+    const [valueStart, valueEnd] = value;
+    return valueStart < domainEnd && valueEnd >= domainStart;
+  }
+
+  /**
+   * @returns
+   * A boolean indicating if any part of the value is within the frequency
+   * domain.
+   */
+  public isWithinFrequencyDomain(value: ScaleDomain<Hertz>): boolean {
+    const [domainLowFrequency, domainHighFrequency] = this.frequencyDomain.value;
+    const [valueStart, valueEnd] = value;
+    return valueStart < domainHighFrequency && valueEnd >= domainLowFrequency;
+  }
+
   // TODO: I think passing in a scaleConverter here is a hack
   /**
    * @returns a function that converts a value to a pixel value
