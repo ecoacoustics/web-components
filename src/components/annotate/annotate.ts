@@ -161,6 +161,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   protected handleSlotChange(): void {
     if (!this.spectrogram) {
       console.warn("An oe-annotate component was updated without an oe-spectrogram component.");
+
+      // we explicitly set the unit converter back to undefined so that if the
+      // spectrogram component is removed (or moved/reassigned) after
+      // initialization, this component won't have an outdated unit converter
+      // from a moved or removed spectrogram component
+      this.unitConverter = undefined;
       return;
     }
 
