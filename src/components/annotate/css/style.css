@@ -70,7 +70,7 @@
   width: fit-content;
   margin: 0;
   font-size: var(--oe-font-size);
-  z-index: 2;
+  z-index: 4;
 
   /*
     When rendering the labels on an angle in spectrogram-top, the text can
