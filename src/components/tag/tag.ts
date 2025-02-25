@@ -15,7 +15,7 @@ export class TagComponent extends AbstractComponent(LitElement) implements DataC
   @property({ type: String })
   public value = "";
 
-  private get innerElements(): Element[] {
+  private get innerElements(): Node[] {
     // if the slotted content is text without a wrapper element
     // e.g. <oe-tag>Cow</oe-tag>
     // it will not be caught by a @queryAssignedElements decorator
@@ -34,7 +34,10 @@ export class TagComponent extends AbstractComponent(LitElement) implements DataC
         throw new Error("Unexpected element node type");
       }
 
-      return node;
+      // we clone the node so that if the original node is removed from the DOM
+      // e.g. Lit re-renders a template where the node was assigned, the node
+      // will still be available in the tag model and can be re-assigned
+      return node.cloneNode(true);
     });
   }
 

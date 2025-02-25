@@ -25,7 +25,7 @@ export enum AnnotationTagStyle {
 
 interface TemplateTagElements {
   litTemplateRef: Ref<HTMLSpanElement>;
-  elementReferences: ReadonlyArray<Element>;
+  elementReferences: ReadonlyArray<Node>;
 }
 
 /**
@@ -129,6 +129,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   public updated(changes: PropertyValues<this>): void {
     super.updated(changes);
 
+    // Because the <oe-tag> component supports slotted elements, we want to
+    // append the slotted oe-tag elements in the associate annotations label.
+    // However, Lit doesn't support rendering HTML element reference in their
+    // html templates, and using unsafeHTML and copying the innerHTML of the
+    // slotted element does not preserve event listeners.
+    //
+    // So that event listeners and element references are preserved, we append
+    // the elements after the Lit HTML templates have been rendered to the DOM.
+    // At which point, we will have a reference to the Lit template element and
+    // can assign each of the slotted elements to the template element.
     for (const tagElement of this.templateTagElements) {
       const litTemplateElement = tagElement.litTemplateRef.value;
       if (!litTemplateElement) {
@@ -141,7 +151,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeRendered(): void {
-    this.measureLabelHeight();
+    if (this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP) {
+      this.measureLabelHeight();
+    } else {
+      this.topChromeHeight.value = 0;
+    }
   }
 
   protected handleSlotChange(): void {
