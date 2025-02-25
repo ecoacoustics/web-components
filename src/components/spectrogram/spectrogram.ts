@@ -237,7 +237,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     super.disconnectedCallback();
   }
 
-  public async firstUpdated(change: any) {
+  public async firstUpdated(change: PropertyValues<this>) {
     super.firstUpdated(change);
 
     OeResizeObserver.observe(this.spectrogramContainer, (event) => this.handleResize(event));

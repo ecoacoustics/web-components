@@ -1,6 +1,6 @@
 import { CSSResultGroup, CSSResultOrNative } from "lit";
 import { ReactiveController } from "./reactiveController";
-import { Component } from "./mixins";
+import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 import globalStyles from "../helpers/themes/globalStyles.css?inline";
 import defaultTheming from "../helpers/themes/theming.css?inline";

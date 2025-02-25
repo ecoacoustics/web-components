@@ -1,5 +1,5 @@
 import { CSSResultGroup, CSSResultOrNative, html, PropertyValues } from "lit";
-import { Component } from "../../mixins";
+import { Component } from "../../../helpers/types/mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";

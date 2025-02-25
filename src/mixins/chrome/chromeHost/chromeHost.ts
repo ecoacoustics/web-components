@@ -1,5 +1,5 @@
 import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, RootPart } from "lit";
-import { Component } from "../../mixins";
+import { Component } from "../../../helpers/types/mixins";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
