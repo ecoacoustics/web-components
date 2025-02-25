@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 #chrome-wrapper {
   display: grid;
 

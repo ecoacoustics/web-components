@@ -10,6 +10,7 @@ import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { IRootContext, rootContext } from "../../helpers/constants/contextTokens";
+import { when } from "lit/directives/when.js";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -266,6 +267,75 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
     `;
   }
 
+  private axesSettingsTemplate() {
+    const axesChangeHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
+      if (!this.axesElement) {
+        throw new Error("No axes element found");
+      }
+
+      const menuItem = event.detail.item;
+      const checkboxElement = menuItem.querySelector<HTMLInputElement>("input[type=checkbox]");
+
+      if (!checkboxElement) {
+        throw new Error("No checkbox element found");
+      }
+
+      const key = checkboxElement.name as keyof AxesComponent;
+      const value = checkboxElement.checked;
+
+      (this.axesElement as any)[key] = value;
+    };
+
+    return html`
+      <sl-menu-item>
+        Axes
+        <sl-menu @sl-select="${axesChangeHandler}" slot="submenu">
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showXTitle" ?checked=${this.axesElement?.showXTitle} />
+              X-Axis Title
+            </label>
+          </sl-menu-item>
+
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showYTitle" ?checked=${this.axesElement?.showYTitle} />
+              Y-Axis Title
+            </label>
+          </sl-menu-item>
+
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showXAxis" ?checked=${this.axesElement?.showXAxis} />
+              X-Axis Labels
+            </label>
+          </sl-menu-item>
+
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showYAxis" ?checked=${this.axesElement?.showYAxis} />
+              Y-Axis Labels
+            </label>
+          </sl-menu-item>
+
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showXGrid" ?checked=${this.axesElement?.showXGrid} />
+              X-Axis Grid Lines
+            </label>
+          </sl-menu-item>
+
+          <sl-menu-item>
+            <label>
+              <input type="checkbox" name="showYGrid" ?checked=${this.axesElement?.showYGrid} />
+              Y-Axis Grid Lines
+            </label>
+          </sl-menu-item>
+        </sl-menu>
+      </sl-menu-item>
+    `;
+  }
+
   private settingsTemplate() {
     if (!this.spectrogramElement) {
       return nothing;
@@ -322,24 +392,6 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
       };
     };
 
-    const axesChangeHandler = (event: CustomEvent<{ item: SlMenuItem }>) => {
-      if (!this.axesElement) {
-        throw new Error("No axes element found");
-      }
-
-      const menuItem = event.detail.item;
-      const checkboxElement = menuItem.querySelector<HTMLInputElement>("input[type=checkbox]");
-
-      if (!checkboxElement) {
-        throw new Error("No checkbox element found");
-      }
-
-      const key = checkboxElement.name as keyof AxesComponent;
-      const value = checkboxElement.checked;
-
-      (this.axesElement as any)[key] = value;
-    };
-
     return html`
       <sl-dropdown hoist>
         <a class="settings-menu-item" slot="trigger">
@@ -386,52 +438,7 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
             currentOptions.melScale ? "mel" : "linear",
             discreteDropdownHandler("melScale"),
           )}
-          <sl-menu-item>
-            Axes
-            <sl-menu @sl-select="${axesChangeHandler}" slot="submenu">
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXTitle" ?checked=${this.axesElement?.showXTitle} />
-                  X-Axis Title
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYTitle" ?checked=${this.axesElement?.showYTitle} />
-                  Y-Axis Title
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXAxis" ?checked=${this.axesElement?.showXAxis} />
-                  X-Axis Labels
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYAxis" ?checked=${this.axesElement?.showYAxis} />
-                  Y-Axis Labels
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showXGrid" ?checked=${this.axesElement?.showXGrid} />
-                  X-Axis Grid Lines
-                </label>
-              </sl-menu-item>
-
-              <sl-menu-item>
-                <label>
-                  <input type="checkbox" name="showYGrid" ?checked=${this.axesElement?.showYGrid} />
-                  Y-Axis Grid Lines
-                </label>
-              </sl-menu-item>
-            </sl-menu>
-          </sl-menu-item>
+          ${when(this.axesElement, () => this.axesSettingsTemplate())}
         </sl-menu>
       </sl-dropdown>
     `;
