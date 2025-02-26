@@ -16,7 +16,6 @@ import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../he
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
-import { Decision } from "../../models/decisions/decision";
 import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
@@ -31,8 +30,9 @@ import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import verificationGridStyles from "./css/style.css?inline";
 import { IPlayEvent } from "spectrogram/spectrogram";
+import { Seconds } from "../../models/unitConverters";
+import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -100,7 +100,7 @@ interface CurrentPage {
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
  *
- * @fires decision - Emits information about the decision that was made
+ * @fires decision-made - Emits information about the decision that was made
  * @fires loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
@@ -109,6 +109,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   public static readonly decisionMadeEventName = "decision-made" as const;
   private static readonly loadedEventName = "loaded" as const;
+  private static readonly autoPageTimeout = 0.3 satisfies Seconds;
 
   @provide({ context: verificationGridContext })
   @state()
@@ -323,7 +324,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
   //#region Updates
 
-  // because subjects are appended into the "subjects" array asyncronously by
+  // because subjects are appended into the "subjects" array asynchronously by
   // the gridPageFetcher, it is possible for the verification grid to be ahead
   // of where the async page fetcher has populated the subjects up to.
   // therefore, we use a callback to append to the "subjects" array so that we
@@ -1079,14 +1080,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     const hasSubSelection = subSelection.length > 0;
     const trueSubSelection = hasSubSelection ? subSelection : gridTiles;
 
-    const selectedTiles = trueSubSelection.filter((tile) => !tile.hidden);
+    const emittedSubjects: SubjectWrapper[] = [];
+    for (const tile of trueSubSelection) {
+      if (tile.hidden) {
+        continue;
+      }
 
-    const tileDecisions: [VerificationGridTileComponent, Decision[]][] = selectedTiles.map(
-      (tile: VerificationGridTileComponent) => [tile, userDecisions],
-    );
-
-    for (const [tile, decisions] of tileDecisions) {
-      for (const decision of decisions) {
+      for (const decision of userDecisions) {
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
@@ -1094,16 +1094,20 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
           tile.removeDecision(decision);
         } else {
           tile.addDecision(decision);
+          emittedSubjects.push(tile.model);
         }
       }
     }
 
-    this.dispatchEvent(new CustomEvent(VerificationGridComponent.decisionMadeEventName, { detail: tileDecisions }));
+    this.dispatchEvent(
+      new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
+    );
+
     if (this.shouldAutoPage()) {
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
-      await sleep(0.3);
+      await sleep(VerificationGridComponent.autoPageTimeout);
       await this.nextPage();
     }
   }

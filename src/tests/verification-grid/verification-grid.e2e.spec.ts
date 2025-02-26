@@ -1365,6 +1365,24 @@ test.describe("decisions", () => {
       },
     ]);
   });
+
+  test("should emit the correct event", async ({ fixture }) => {
+    const targetTile = 0;
+
+    const decisionEvent = catchLocatorEvent<CustomEvent<SubjectWrapper[]>>(fixture.gridComponent(), "decision-made");
+    await fixture.createSubSelection([0]);
+    await fixture.makeDecision(targetTile);
+
+    const gridTiles = await fixture.gridTileComponents();
+    const targetGridTile = gridTiles[targetTile];
+    const expectedSubjectWrapper = (await getBrowserValue<VerificationGridTileComponent>(
+      targetGridTile,
+      "model",
+    )) as SubjectWrapper;
+
+    const realizedEvent = await decisionEvent;
+    expect(realizedEvent).toEqual([expectedSubjectWrapper]);
+  });
 });
 
 test.describe("decision meter", () => {

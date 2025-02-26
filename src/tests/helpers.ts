@@ -192,7 +192,7 @@ export async function catchEvent<T extends Event>(locator: Page, name: string) {
 export async function catchLocatorEvent<T extends Event>(locator: Locator, name: string): Promise<T> {
   return locator.evaluate((element: HTMLElement, name: string) => {
     return new Promise((resolve) => {
-      element.addEventListener(name, (data) => resolve(data));
+      element.addEventListener(name, (data) => resolve(data.detail));
     });
   }, name);
 }

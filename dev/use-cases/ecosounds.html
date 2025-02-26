@@ -83,6 +83,12 @@
         const verificationGrid = document.querySelector("oe-verification-grid");
         verificationGrid.urlTransformer = createUrlTransformer();
         verificationGrid.getPage = gridPaginator;
+
+        // this is some debug info so that I can see the decision model that is
+        // produced by the verification grid
+        verificationGrid.addEventListener("decision-made", (event) => {
+          console.log("new decision", event);
+        });
       }
 
       window.addEventListener("load", () => setup());
