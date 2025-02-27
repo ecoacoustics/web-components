@@ -27,7 +27,7 @@ import classificationStyles from "./css/style.css?inline";
  * @csspart true-decision-button - Styling selector to target the true decision button
  * @csspart false-decision-button - Styling selector to target the false decision button
  *
- * @fires decision
+ * @event decision
  */
 @customElement("oe-classification")
 export class ClassificationComponent extends DecisionComponent {

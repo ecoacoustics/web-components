@@ -34,7 +34,7 @@ export type DecisionComponentUnion = DecisionComponent | VerificationComponent |
  * types of decisions.
  * e.g. a verification decision or a classification decision
  *
- * @fires decision
+ * @event decision
  */
 @customElement("oe-decision")
 export abstract class DecisionComponent extends AbstractComponent(LitElement) {
