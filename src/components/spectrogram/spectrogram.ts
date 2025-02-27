@@ -38,8 +38,8 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  * @description
  * A spectrogram component that can be used with the open ecoacoustics components
  *
- * @fires Loading
- * @fires Finished
+ * @event Loading
+ * @event Finished
  *
  * @slot - A `<source>` element to provide the audio source
  */

@@ -19,7 +19,7 @@ import { Tag } from "../../../models/tag";
  *
  * @csspart decision-button - The button that triggers the decision
  *
- * @fires decision
+ * @event decision
  */
 @customElement("oe-verification")
 export class VerificationComponent extends DecisionComponent {

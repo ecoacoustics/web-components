@@ -44,7 +44,11 @@ export default class Docs {
                parameters: renderTable("", ["name", "description", "type.text"], m.parameters),
              })),
          )}
-         ${renderTable("Events", ["name", "description"], element.events)}
+         ${renderTable(
+           "Events",
+           ["name", "description", "type.text"],
+           element.events?.filter((e) => e.name !== undefined),
+         )}
          ${renderTable("Slots", [["name", "(default)"], "description"], element.slots)}
          ${renderTable("CSS Shadow Parts", ["name", "description"], element.cssParts)}
          ${renderTable("CSS Custom Properties", ["name", "description"], element.cssProperties)}

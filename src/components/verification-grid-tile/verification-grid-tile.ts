@@ -60,7 +60,7 @@ const shortcutTranslation = {
  * @cssproperty [--selected-border-size] - The size of the border when a
  * decision is being shown
  *
- * @fires Loaded
+ * @event Loaded
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTileComponent extends SignalWatcher(AbstractComponent(LitElement)) {
