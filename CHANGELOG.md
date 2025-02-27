@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.5.0...web-components-v2.0.0) (2025-02-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* Emit SubjectWrapper grid decision-made event
+
+### Features
+
+* Emit SubjectWrapper grid decision-made event ([3bf4d1d](https://github.com/ecoacoustics/web-components/commit/3bf4d1d42ac5b7065202e7cc3126fa7666ca0127)), closes [#294](https://github.com/ecoacoustics/web-components/issues/294)
+
 ## [1.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.4.1...web-components-v1.5.0) (2025-02-19)
 
 
