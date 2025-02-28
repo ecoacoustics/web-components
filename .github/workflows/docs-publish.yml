@@ -29,7 +29,7 @@ jobs:
           version: 8
           run_install: |
             - recursive: true
-            args: [--frozen-lockfile, --strict-peer-dependencies]
+            - args: [--frozen-lockfile]
 
       # TODO: We are building the components twice (once for publishing to CDN)
       # and once for publishing to docs. We might want to combine the workflows
