@@ -82,7 +82,7 @@ export function getColorScale(name: ColorMapName): ColorScaler {
 
   // if scaler is a string, it's a chroma scale
   if (typeof scaler === "string") {
-    return makeScaler(chroma.scale(scaler));
+    return makeScaler(chroma.scale(scaler as any));
   }
 
   return scaler;

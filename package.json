@@ -17,8 +17,8 @@
     "test:unit": "playwright test src/components/ src/services/",
     "test:e2e": "playwright test src/tests/",
     "test:report": "playwright show-report test-results",
-    "lint": "eslint .",
-    "format": "prettier . --write"
+    "lint": "eslint ./src/",
+    "format": "prettier ./src/ --write"
   },
   "files": [
     "./dist",
