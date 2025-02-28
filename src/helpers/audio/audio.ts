@@ -1,5 +1,5 @@
 import { State } from "./state";
-import { IAudioMetadata, parseBlob } from "music-metadata-browser";
+import { IAudioMetadata, parseBlob } from "music-metadata";
 // import bufferBuilderProcessorConstructor from "./buffer-builder-processor.ts?worker&inline";
 import BufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
 // import workerPath from "./worker.ts?worker&url";
@@ -202,6 +202,7 @@ export class AudioHelper {
 
     const cachedResponse = response.clone();
     const responseBuffer = await response.arrayBuffer();
+    console.debug(responseBuffer);
     const cachedMetadata = await parseBlob(new Blob([responseBuffer]));
     const audioInformation = this.createAudioInformation(cachedMetadata);
 
