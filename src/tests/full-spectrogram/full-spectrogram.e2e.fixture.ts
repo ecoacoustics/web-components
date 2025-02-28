@@ -9,7 +9,6 @@ import {
 } from "../helpers";
 import { AudioModel } from "../../models/recordings";
 import { test } from "../assertions";
-import { MediaControlsComponent } from "../../components";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
@@ -48,7 +47,11 @@ class TestPage {
 
   public async shortcutPlaySpectrogram() {
     const target = this.spectrogramComponent();
-    await target.press(MediaControlsComponent.playShortcut);
+    // Using the static property on the MediaControls component results in a
+    // bundling error TypeError: Unknown file extension ".svg"
+    // This error will only surface when using "pnpm test" and will not occur
+    // when using "pnpm run test --ui"
+    await target.press(" ");
   }
 
   public async playAudio() {
