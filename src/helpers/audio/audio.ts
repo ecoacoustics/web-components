@@ -202,7 +202,6 @@ export class AudioHelper {
 
     const cachedResponse = response.clone();
     const responseBuffer = await response.arrayBuffer();
-    console.debug(responseBuffer);
     const cachedMetadata = await parseBlob(new Blob([responseBuffer]));
     const audioInformation = this.createAudioInformation(cachedMetadata);
 

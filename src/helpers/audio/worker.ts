@@ -116,7 +116,9 @@ function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
   // commit doesn't exist on chrome
-  (destinationSurface as any).commit && (destinationSurface as any).commit();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  destinationSurface.commit && destinationSurface.commit();
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
