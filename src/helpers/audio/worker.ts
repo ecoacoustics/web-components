@@ -115,8 +115,8 @@ function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   // }
   destinationSurface.drawImage(spectrogramCanvas, 0, 0, destinationCanvas.width, destinationCanvas.height);
 
-  // @ts-expect-error commit doesn't exist on chrome
-  destinationSurface.commit && destinationSurface.commit();
+  // commit doesn't exist on chrome
+  (destinationSurface as any).commit && (destinationSurface as any).commit();
 }
 
 function setup(data: SharedBuffersWithCanvas): void {
