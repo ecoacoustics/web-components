@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v2.0.0...web-components-v2.0.1) (2025-02-28)
+
+
+### Bug Fixes
+
+* Hard lock dependency versions ([#298](https://github.com/ecoacoustics/web-components/issues/298)) ([8a886b4](https://github.com/ecoacoustics/web-components/commit/8a886b464af95f39c0e5ac64fe21dcbb8c940564)), closes [#297](https://github.com/ecoacoustics/web-components/issues/297)
+
 ## [2.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v1.5.0...web-components-v2.0.0) (2025-02-27)
 
 
