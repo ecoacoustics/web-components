@@ -106,7 +106,7 @@ export function queryAllDeeplyAssignedElements<T extends Element = Element>(
  * If no element is found, null will be returned.
  */
 export function queryParentElement(options: QueryParentElementsOptions) {
-  const recursiveParentElementSearch = (element: HTMLElement) => {
+  const recursiveParentElementSearch = (element: HTMLElement): any => {
     if (element.matches(options.selector)) {
       return element;
     } else if (element.parentElement) {
