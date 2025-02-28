@@ -50,7 +50,7 @@ const jetScale = makeScaler(
   chroma.scale(jetColorScheme.map((a) => chroma.rgb(a[0] * 255, a[1] * 255, a[2] * 255))).mode("lrgb"),
 );
 
-export const colorScales: Record<Color, string | ColorScaler> = {
+export const colorScales: Record<Color, chroma.BrewerPaletteName | ColorScaler> = {
   grayscale: "Greys",
   blue: "Blues",
   green: "Greens",

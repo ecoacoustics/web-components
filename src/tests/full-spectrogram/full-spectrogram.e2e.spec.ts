@@ -1,4 +1,4 @@
-import { SpectrogramComponent } from "../../components";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 import { catchLocatorEvent } from "../helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
