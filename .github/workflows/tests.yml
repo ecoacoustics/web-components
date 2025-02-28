@@ -30,6 +30,7 @@ jobs:
           version: 8
           run_install: |
             - recursive: true
+            args: [--frozen-lockfile, --strict-peer-dependencies]
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
