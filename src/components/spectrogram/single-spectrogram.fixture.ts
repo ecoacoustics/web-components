@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "./spectrogram";
-import { hasBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { test } from "../../tests/assertions";
 
 class SingleSpectrogramFixture {
@@ -42,6 +42,19 @@ class SingleSpectrogramFixture {
       const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
       spectrogram.style.height = `${height}px`;
     }, height);
+  }
+
+  public async changeSpectrogramWidth(width = 512) {
+    await this.page.evaluate((width) => {
+      const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
+      spectrogram.style.width = `${width}px`;
+    }, width);
+  }
+
+  // we cannot use the SpectrogramCanvasScaling enum here because playwright
+  // will throw an error during bundling and not run these tests
+  public async changeSpectrogramSizing(sizing: string) {
+    setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
   }
 }
 

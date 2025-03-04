@@ -1,8 +1,19 @@
-import { invokeBrowserMethod, removeBrowserAttribute } from "../../tests/helpers";
+import { getElementSize, invokeBrowserMethod, removeBrowserAttribute } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect } from "../../tests/assertions";
-import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { sleep } from "../../helpers/utilities";
+import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
+import { Pixel } from "../../models/unitConverters";
+
+interface SpectrogramSizingTest {
+  name: string;
+  scaling: string;
+  width?: Pixel;
+  height?: Pixel;
+
+  expectedWidth?: Pixel;
+  expectedHeight?: Pixel;
+}
 
 test.describe("unit tests", () => {
   test("play/pause events", async ({ mount, page }) => {
@@ -92,19 +103,151 @@ test.describe("unit tests", () => {
 });
 
 test.describe("spectrogram sizing", () => {
-  test("should obey minimum height and block rules in unmodified stretch", () => {});
+  const minimumSpectrogramHeight = 128 satisfies Pixel;
 
-  test("should not be able to define a height less than the minimum height", () => {});
+  const originalSpectrogramHeight = 256 satisfies Pixel;
+  const originalSpectrogramWidth = 256 satisfies Pixel;
 
-  test("should be able to set a width and height larger than the page", () => {});
+  const viewportWidth = 1920 satisfies Pixel;
+  const viewportHeight = 1080 satisfies Pixel;
 
-  test("should be able to set the canvas size in stretch scaling", () => {});
+  const sizingTests: SpectrogramSizingTest[] = [
+    // default sizing
+    {
+      name: "should have the correct default sizing for stretch",
+      scaling: "stretch",
+      expectedHeight: minimumSpectrogramHeight,
+    },
+    {
+      name: "should have the correct default sizing for natural",
+      scaling: "natural",
+      expectedHeight: Math.min(minimumSpectrogramHeight, viewportHeight),
+    },
+    {
+      name: "should have the correct default sizing for original",
+      scaling: "original",
+      expectedHeight: originalSpectrogramHeight,
+    },
 
-  test("should scale naturally scale correctly if the canvas height is set", () => {});
+    // original scaling
+    {
+      name: "should not be able to resize original spectrogram",
+      scaling: "original",
+      width: 128,
+      height: 512,
+      expectedHeight: originalSpectrogramHeight,
+      expectedWidth: originalSpectrogramHeight,
+    },
 
-  // the box model should still have the correct size, but the canvas and chrome
-  // surface should not go beyond the original scale
-  test("should not be able to override the size if in original scaling", () => {});
+    // this test exists to ensure that we are not culling spectrogram elements
+    // if their width or height is explicitly set to 0
+    {
+      name: "should not cull an original spectrogram with 0 size",
+      scaling: "original",
+      width: 0,
+      height: 0,
+      expectedWidth: originalSpectrogramWidth,
+      expectedHeight: originalSpectrogramHeight,
+    },
+
+    // stretch scaling
+    {
+      name: "should be able to change the width of a stretch spectrogram",
+      scaling: "stretch",
+      width: 887,
+      expectedWidth: 887,
+      expectedHeight: minimumSpectrogramHeight,
+    },
+    {
+      name: "should be able to change the height of a stretch spectrogram",
+      scaling: "stretch",
+      height: 887,
+      // we make assertions
+      expectedWidth: viewportWidth,
+      expectedHeight: 887,
+    },
+    {
+      name: "should be able to change the width and height of a stretch spectrogram",
+      scaling: "stretch",
+      width: 887,
+      height: 887,
+      expectedWidth: 887,
+      expectedHeight: 887,
+    },
+    {
+      name: "should be able to make a stretch spectrogram larger than the viewport container",
+      scaling: "stretch",
+      width: viewportWidth * 2,
+      height: viewportHeight * 2,
+      expectedWidth: viewportWidth * 2,
+      expectedHeight: viewportHeight * 2,
+    },
+
+    // natural scaling
+    {
+      name: "should constrain to width correctly",
+      scaling: "natural",
+      width: 887,
+      expectedWidth: 887,
+      expectedHeight: 887,
+    },
+    {
+      name: "should constrain to height correctly",
+      scaling: "natural",
+      height: 887,
+      expectedWidth: 887,
+      expectedHeight: 887,
+    },
+    {
+      name: "should constrain to the minimum width",
+      scaling: "natural",
+      width: 100,
+      height: 200,
+      expectedWidth: 100,
+      expectedHeight: 100,
+    },
+    {
+      name: "should constrain to the minimum height",
+      scaling: "natural",
+      width: 200,
+      height: 100,
+      expectedWidth: 100,
+      expectedHeight: 100,
+    },
+  ];
+
+  for (const testCase of sizingTests) {
+    test(testCase.name, async ({ fixture }) => {
+      if (testCase.width) {
+        await fixture.changeSpectrogramWidth(testCase.width);
+      }
+
+      if (testCase.height) {
+        await fixture.changeSpectrogramHeight(testCase.height);
+      }
+
+      await fixture.changeSpectrogramSizing(testCase.scaling as any);
+
+      const realizedSize = await getElementSize(fixture.spectrogram());
+      if (testCase.expectedHeight) {
+        expect(realizedSize.height).toBe(testCase.expectedHeight);
+      }
+
+      if (testCase.expectedWidth) {
+        expect(realizedSize.width).toBe(testCase.expectedWidth);
+      }
+    });
+  }
+
+  test.describe("dynamic sizing", () => {
+    test("should correctly resize a STRETCH spectrogram if the window is resized", async () => {});
+
+    test("should correctly resize a NATURAL spectrogram if the window is resized", async () => {});
+
+    test("should correctly resize NATURAL spectrogram if smaller than original spectrogram size", () => {});
+
+    test("should not resize an ORIGINAL spectrogram if the window is resized", async () => {});
+  });
 });
 
 test.describe("playing/pausing", () => {
