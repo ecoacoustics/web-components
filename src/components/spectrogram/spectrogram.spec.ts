@@ -72,12 +72,14 @@ test.describe("unit tests", () => {
     ];
 
     for (const source of testedSources) {
-      test(`renders ${source} correctly`, async ({ mount }) => {
+      test(`renders ${source} correctly`, async ({ mount, fixture }) => {
         const component = await mount(SpectrogramComponent, {
           props: {
             src: `http://localhost:3000/${source}`,
           },
         });
+
+        await fixture.changeSpectrogramHeight();
 
         // sleep for 3 seconds to allow the spectrogram to render
         // TODO: there should probably be a better way to do this

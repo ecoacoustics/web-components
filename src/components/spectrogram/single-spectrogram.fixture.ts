@@ -13,9 +13,15 @@ class SingleSpectrogramFixture {
   public audioSource = "http://localhost:3000/example.flac";
 
   public async create() {
+    // we se the spectrogram height to 632px so that the spectrogram is a nice
+    // square shape in the snapshot tests
     await this.page.setContent(`
-        <oe-spectrogram id="spectrogram" src="${this.audioSource}"></oe-spectrogram>
-        <oe-media-controls for="spectrogram"></oe-media-controls>
+      <oe-spectrogram
+        id="spectrogram"
+        src="${this.audioSource}"
+        style="position: relative; height: 632px;"
+      ></oe-spectrogram>
+      <oe-media-controls for="spectrogram"></oe-media-controls>
     `);
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
@@ -29,6 +35,13 @@ class SingleSpectrogramFixture {
 
   public async isPlayingAudio(): Promise<boolean> {
     return !(await hasBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "paused"));
+  }
+
+  public async changeSpectrogramHeight(height = 632) {
+    await this.page.evaluate((height) => {
+      const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
+      spectrogram.style.height = `${height}px`;
+    }, height);
   }
 }
 
