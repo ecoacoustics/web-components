@@ -134,7 +134,7 @@ export class UnitConverter {
    * A boolean indicating if any part of the value is within the temporal
    * domain
    */
-  public isWithinTemporalDomain(value: ScaleDomain<Seconds>): boolean {
+  public overlapsTemporalDomain(value: ScaleDomain<Seconds>): boolean {
     const [domainStart, domainEnd] = this.temporalDomain.value;
     const [valueStart, valueEnd] = value;
     return valueStart < domainEnd && valueEnd >= domainStart;
@@ -145,7 +145,7 @@ export class UnitConverter {
    * A boolean indicating if any part of the value is within the frequency
    * domain.
    */
-  public isWithinFrequencyDomain(value: ScaleDomain<Hertz>): boolean {
+  public overlapsFrequencyDomain(value: ScaleDomain<Hertz>): boolean {
     const [domainLowFrequency, domainHighFrequency] = this.frequencyDomain.value;
     const [valueStart, valueEnd] = value;
     return valueStart < domainHighFrequency && valueEnd >= domainLowFrequency;

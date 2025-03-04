@@ -37,7 +37,7 @@ class SingleSpectrogramFixture {
     return !(await hasBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "paused"));
   }
 
-  public async changeSpectrogramHeight(height = 632) {
+  public async changeSpectrogramHeight(height = 512) {
     await this.page.evaluate((height) => {
       const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
       spectrogram.style.height = `${height}px`;

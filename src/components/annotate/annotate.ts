@@ -213,8 +213,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
 
-    const isTimeInView = this.unitConverter.isWithinTemporalDomain([model.startOffset, model.endOffset]);
-    const isFrequencyInView = this.unitConverter.isWithinFrequencyDomain([model.lowFrequency, model.highFrequency]);
+    const isTimeInView = this.unitConverter.overlapsTemporalDomain([model.startOffset, model.endOffset]);
+    const isFrequencyInView = this.unitConverter.overlapsFrequencyDomain([model.lowFrequency, model.highFrequency]);
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
