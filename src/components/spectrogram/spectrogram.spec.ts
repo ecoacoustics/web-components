@@ -11,7 +11,7 @@ import { expect } from "../../tests/assertions";
 import { sleep } from "../../helpers/utilities";
 import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { Pixel } from "../../models/unitConverters";
-import { generateChromeProvider } from "../../tests/fakes/chromeProvider";
+import { generateChromeProvider } from "../../tests/fakes/fakeChromeProvider";
 import { html } from "lit";
 import { Size } from "../../models/rendering";
 

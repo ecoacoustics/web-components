@@ -10,7 +10,6 @@ import { removeStyleSheets } from "../../../helpers/styles/remove";
 import { IChromeProvider } from "../chromeProvider/chromeProvider";
 import chromeHostStyles from "./style.css?inline";
 
-// TODO: improve typing here
 export interface ChromeAdvertisement {
   connect(provider: IChromeProvider): void;
   disconnect(provider: IChromeProvider): void;
