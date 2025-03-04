@@ -26,6 +26,17 @@ class SingleSpectrogramFixture {
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
+  public async createWithViewportSize() {
+    await this.page.setContent(`
+      <oe-spectrogram
+        id="spectrogram"
+        src="${this.audioSource}"
+        style="position: relative; width: 100%; height: 100%;"
+      ></oe-spectrogram>
+      <oe-media-controls for="spectrogram"></oe-media-controls>
+    `);
+  }
+
   public async updateSlot(content: string) {
     const componentElement = this.spectrogram();
     await componentElement.evaluate((element: HTMLElement, content: string) => {
