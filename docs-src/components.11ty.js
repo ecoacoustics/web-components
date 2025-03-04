@@ -3,7 +3,7 @@ import fs from "fs";
 // I use trim to remove the leading and trailing whitespace from the string.
 // This makes the code block easier to read because indentation is consistent.
 const cssPartsExample = `
-oe-axes *::part(grid-lines)
+oe-axes *::part(grid-lines),
 oe-axes::part(grid-lines) {
   color: red;
 }

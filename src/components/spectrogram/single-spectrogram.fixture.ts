@@ -2,12 +2,18 @@ import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "./spectrogram";
 import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { test } from "../../tests/assertions";
+import { Size } from "../../models/rendering";
+import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 
 class SingleSpectrogramFixture {
   public constructor(public readonly page: Page) {}
 
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
+  public spectrogramCanvas = () => this.page.locator("oe-spectrogram canvas").first();
   public spectrogramAudioElement = () => this.page.locator("oe-spectrogram #media-element").first();
+  public chromeContainer = (selector: `chrome-${"top" | "bottom" | "left" | "right"}`) =>
+    this.spectrogram().locator(selector).first();
+
   public mediaControls = () => this.page.locator("oe-media-controls").first();
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
   public audioSource = "http://localhost:3000/example.flac";
@@ -48,25 +54,53 @@ class SingleSpectrogramFixture {
     return !(await hasBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "paused"));
   }
 
-  public async changeSpectrogramHeight(height = 512) {
-    await this.page.evaluate((height) => {
-      const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
-      spectrogram.style.height = `${height}px`;
-    }, height);
-  }
-
-  public async changeSpectrogramWidth(width = 512) {
-    await this.page.evaluate((width) => {
-      const spectrogram = document.querySelector("oe-spectrogram") as HTMLElement;
-      spectrogram.style.width = `${width}px`;
-    }, width);
-  }
-
   // we cannot use the SpectrogramCanvasScaling enum here because playwright
   // will throw an error during bundling and not run these tests
   public async changeSpectrogramSizing(sizing: string) {
     setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
   }
+
+  public async changeSpectrogramHeight(height = 512) {
+    await this.spectrogram().evaluate((element: SpectrogramComponent, height) => {
+      element.style.height = `${height}px`;
+    }, height);
+  }
+
+  public async changeSpectrogramWidth(width = 512) {
+    await this.spectrogram().evaluate((element: SpectrogramComponent, width) => {
+      element.style.width = `${width}px`;
+    }, width);
+  }
+
+  /**
+   * Changes the spectrogram's canvas size (through css parts) without changing
+   * the spectrogram host size.
+   */
+  public async changeCanvasSize(size: Size) {
+    await this.spectrogram().evaluate((element: SpectrogramComponent) => {
+      const styles = new CSSStyleSheet();
+      styles.replaceSync(`
+        :host *::part(canvas),
+        :host::part(canvas) {
+          width: ${size.width}px;
+          height: ${size.height}px;
+        }
+      `);
+
+      element.shadowRoot?.adoptedStyleSheets.push(styles);
+    });
+  }
+
+  public async addChromeProvider(provider: IChromeProvider) {
+    await this.spectrogram().evaluate((element: SpectrogramComponent, provider: IChromeProvider) => {
+      // I use "as any" here because the chromeHost "connect" method is private
+      // TODO: I should technically listen for the host chrome advertisement
+      // event, but this works for now
+      (element as any).connect(provider);
+    }, provider);
+  }
+
+  public async chromeElement() {}
 }
 
 export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({

@@ -11,6 +11,9 @@ import { expect } from "../../tests/assertions";
 import { sleep } from "../../helpers/utilities";
 import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { Pixel } from "../../models/unitConverters";
+import { generateChromeProvider } from "../../tests/fakes/chromeProvider";
+import { html } from "lit";
+import { Size } from "../../models/rendering";
 
 interface SpectrogramSizingTest {
   name: string;
@@ -302,6 +305,57 @@ test.describe("spectrogram sizing", () => {
       expect(realizedSize.height).toEqual(initialShape.height);
     });
   });
+
+  // We add a bit of chrome to the spectrogram component in these tests so that
+  // we can assert that the size targeting the spectrogram canvas will cause the
+  // chrome to be added to the canvas size.
+  // We expect that the spectrogram host will be slightly larger than the canvas
+  // size because of the chrome.
+  test.describe("canvas part styling", () => {
+    const mockChromeHeight = 20 satisfies Pixel;
+
+    test.beforeEach(async ({ fixture }) => {
+      const mockProvider = generateChromeProvider({
+        chromeTop: () => html`<div style="${mockChromeHeight}px">testing123</div>`,
+      });
+
+      fixture.addChromeProvider(mockProvider);
+    });
+
+    test("should size spectrogram host correctly", async ({ fixture }) => {
+      const testedCanvasSize = { width: 512, height: 512 } as const satisfies Size;
+      const expectedCanvasSize = {
+        width: testedCanvasSize.width,
+        height: testedCanvasSize.height + mockChromeHeight,
+      };
+
+      await fixture.changeCanvasSize(testedCanvasSize);
+
+      const realizedHostSize = await getElementSize(fixture.spectrogram());
+      expect(realizedHostSize).toEqual(expectedCanvasSize);
+    });
+
+    test("should size spectrogram canvas to part size", async ({ fixture }) => {
+      const testedCanvasSize = { width: 512, height: 512 } as const satisfies Size;
+
+      await fixture.changeCanvasSize(testedCanvasSize);
+
+      const realizedCanvasSize = await getElementSize(fixture.spectrogramCanvas());
+      expect(realizedCanvasSize).toEqual(testedCanvasSize);
+    });
+
+    // It is possible to create conflicting sizing rules for the spectrogram
+    // component by targeting the canvas part and explicitly sizing the
+    // spectrogram host.
+    // e.g.
+    // oe-spectrogram { height: 100px; }
+    // oe-spectrogram::part(canvas) { height: 200px; }
+    //
+    // This would result in the canvas being 200px tall, but the host being
+    // 100px tall.
+    // We have decided that this is not a valid use case that we want to
+    // support and therefore we will not be testing it.
+  });
 });
 
 test.describe("playing/pausing", () => {
@@ -335,4 +389,33 @@ test.describe("playing/pausing", () => {
   test("should behave correctly with src attribute", async ({ fixture }) => {
     await assertCanPlayPause(fixture);
   });
+});
+
+test.describe("chrome", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
+  test("should not have any chrome if not specified", async ({ fixture }) => {
+    await expect(fixture.chromeContainer("chrome-top")).toBeEmpty();
+    await expect(fixture.chromeContainer("chrome-bottom")).toBeEmpty();
+    await expect(fixture.chromeContainer("chrome-left")).toBeEmpty();
+    await expect(fixture.chromeContainer("chrome-right")).toBeEmpty();
+  });
+
+  const testedChromePositions = ["top", "bottom", "left", "right"] as const;
+  for (const chromePosition of testedChromePositions) {
+    test(`should correctly append to the chrome ${chromePosition}`, async ({ fixture }) => {
+      const testedChromeText = "testing123";
+
+      const mockProvider = generateChromeProvider({
+        [`chrome${chromePosition}`]: () => html`<div>${testedChromeText}</div>`,
+      });
+      fixture.addChromeProvider(mockProvider);
+
+      const chromeTarget = fixture.chromeContainer(`chrome-${chromePosition}`);
+      await expect(chromeTarget).not.toBeEmpty();
+      await expect(chromeTarget).toHaveTrimmedText(testedChromeText);
+    });
+  }
 });
