@@ -11,7 +11,6 @@ import { expect } from "../../tests/assertions";
 import { sleep } from "../../helpers/utilities";
 import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { Pixel } from "../../models/unitConverters";
-import { generateChromeProvider } from "../../tests/fakes/fakeChromeProvider";
 import { html } from "lit";
 import { Size } from "../../models/rendering";
 
@@ -315,9 +314,9 @@ test.describe("spectrogram sizing", () => {
     const mockChromeHeight = 20 satisfies Pixel;
 
     test.beforeEach(async ({ fixture }) => {
-      const mockProvider = generateChromeProvider({
+      const mockProvider = {
         chromeTop: () => html`<div style="${mockChromeHeight}px">testing123</div>`,
-      });
+      };
 
       fixture.addChromeProvider(mockProvider);
     });
@@ -408,9 +407,9 @@ test.describe("chrome", () => {
     test(`should correctly append to the chrome ${chromePosition}`, async ({ fixture }) => {
       const testedChromeText = "testing123";
 
-      const mockProvider = generateChromeProvider({
+      const mockProvider = {
         [`chrome${chromePosition}`]: () => html`<div>${testedChromeText}</div>`,
-      });
+      };
       fixture.addChromeProvider(mockProvider);
 
       const chromeTarget = fixture.chromeContainer(`chrome-${chromePosition}`);

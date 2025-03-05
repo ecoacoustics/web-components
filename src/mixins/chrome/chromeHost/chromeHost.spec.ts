@@ -1,16 +1,15 @@
 import { expect } from "../../../tests/assertions";
-import { chromeAdvertisementEventName } from "./chromeHost";
 import { chromeHostFixture as test } from "./chromeHost.fixture";
 import { catchEvent } from "../../../tests/helpers";
 
 test("should create", async ({ fixture }) => {
-  const component = await fixture.create();
-  expect(component).toBeDefined();
+  await fixture.create();
+  expect(fixture.hostComponent()).toBeDefined();
 });
 
 test.describe("connecting providers", () => {
   test("should dispatch chrome advertisement event on first update", async ({ fixture }) => {
-    const advertisementEvent = catchEvent(fixture.page, chromeAdvertisementEventName);
+    const advertisementEvent = catchEvent(fixture.page, "oe-chrome-advertisement");
 
     await fixture.create();
 

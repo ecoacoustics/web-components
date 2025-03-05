@@ -99,8 +99,6 @@ class SingleSpectrogramFixture {
       (element as any).connect(provider);
     }, provider);
   }
-
-  public async chromeElement() {}
 }
 
 export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({
