@@ -7,19 +7,19 @@ test.beforeEach(async ({ fixture }) => {
 });
 
 test("should correctly add a single stylesheet", async ({ fixture }) => {
-  const testedStyleSheet = css`
+  const testedStyles = css`
     :host {
       color: red;
     }
   `;
 
-  const initialStyleSheets = (await fixture.getComponentStyleSheets()) ?? [];
+  const initialStyles = (await fixture.getComponentStyleSheets()) ?? [];
 
-  await fixture.addStyleSheets([testedStyleSheet]);
-  const finalStyleSheets = await fixture.getComponentStyleSheets();
+  await fixture.addStyleSheets([testedStyles]);
+  const finalStyles = await fixture.getComponentStyleSheets();
 
-  expect(finalStyleSheets).toContain(testedStyleSheet.styleSheet);
-  expect(finalStyleSheets).toHaveLength(initialStyleSheets.length + 1);
+  expect(finalStyles).toContain(testedStyles.styleSheet);
+  expect(finalStyles).toHaveLength(initialStyles.length + 1);
 });
 
 // In this test I test passing in an array of stylesheets that has a nested
@@ -30,7 +30,7 @@ test("should correctly add an array of stylesheets", async ({ fixture }) => {
   // this is much more readable than the prettier formatting where each style
   // sheet is five lines long
   // prettier-ignore
-  const testedStyleSheet = [
+  const testedStyles = [
     css`:host { color: red; }`,
     [
       css`:host { background-color: blue; }`,
@@ -41,19 +41,19 @@ test("should correctly add an array of stylesheets", async ({ fixture }) => {
     ],
   ];
 
-  const initialStyleSheets = (await fixture.getComponentStyleSheets()) ?? [];
+  const initialStyles = (await fixture.getComponentStyleSheets()) ?? [];
 
-  await fixture.addStyleSheets(testedStyleSheet);
-  const finalStyleSheets = await fixture.getComponentStyleSheets();
+  await fixture.addStyleSheets(testedStyles);
+  const finalStyles = await fixture.getComponentStyleSheets();
 
-  expect(finalStyleSheets).toHaveLength(initialStyleSheets.length + 4);
+  expect(finalStyles).toHaveLength(initialStyles.length + 4);
 });
 
 test("should have no operation if an empty array is passed", async ({ fixture }) => {
-  const initialStyleSheets = await fixture.getComponentStyleSheets();
+  const initialStyles = await fixture.getComponentStyleSheets();
 
   await fixture.addStyleSheets([]);
-  const finalStyleSheets = await fixture.getComponentStyleSheets();
+  const finalStyles = await fixture.getComponentStyleSheets();
 
-  expect(finalStyleSheets).toEqual(initialStyleSheets);
+  expect(finalStyles).toEqual(initialStyles);
 });
