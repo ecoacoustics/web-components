@@ -345,6 +345,10 @@ test.describe("annotation", () => {
       const initialAnnotationColor = getBrowserStyles(target)[0].color;
 
       await target.click();
+
+      const realizedAnnotationColor = getBrowserStyles(target)[0].color;
+
+      expect(realizedAnnotationColor).not.toBe(initialAnnotationColor);
     });
 
     test("should raise above other annotations when the bounding box is clicked", async ({ fixture }) => {
