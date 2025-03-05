@@ -1,6 +1,8 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
 import { CSSResultGroup } from "lit";
+import { addStyleSheets } from "./add";
+import { removeStyleSheets } from "./remove";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -17,9 +19,15 @@ class TestPage {
     });
   }
 
-  public async removeStyleSheets(styles: CSSResultGroup) {}
+  public async removeStyleSheets(styles: CSSResultGroup) {
+    const nativeElement = await this.component().elementHandle();
+    removeStyleSheets(nativeElement as any, styles);
+  }
 
-  public async addStyleSheets(styles: CSSResultGroup) {}
+  public async addStyleSheets(styles: CSSResultGroup) {
+    const nativeElement = await this.component().elementHandle();
+    addStyleSheets(nativeElement as any, styles);
+  }
 }
 
 export const stylesFixture = test.extend<{ fixture: TestPage }>({

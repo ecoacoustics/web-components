@@ -1,4 +1,4 @@
-import { test } from "../../tests/assertions";
+import { stylesFixture as test } from "./styles.fixture";
 
 test("should not have any operation if an empty array is passed", () => {});
 
