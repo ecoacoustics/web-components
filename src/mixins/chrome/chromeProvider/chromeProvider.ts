@@ -1,10 +1,9 @@
-import { CSSResultGroup, CSSResultOrNative, html, PropertyValues } from "lit";
+import { adoptStyles, html, PropertyValues, unsafeCSS } from "lit";
 import { Component } from "../../../helpers/types/mixins";
 import { ChromeAdvertisement, chromeAdvertisementEventName } from "../chromeHost/chromeHost";
 import { state } from "lit/decorators.js";
 import { AbstractComponent } from "../../abstractComponent";
 import { ChromeTemplate } from "../types";
-import { mergeStyles } from "../../../helpers/styles/merge";
 import providerStyles from "./style.css?inline";
 
 // We export an interface for the ChromeProvider because the ChromeProvider
@@ -25,14 +24,6 @@ export interface IChromeProvider {
 
 export const ChromeProvider = <T extends Component>(superClass: T) => {
   abstract class ChromeProviderComponentClass extends superClass implements IChromeProvider {
-    public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
-      const newStyles: CSSResultGroup = mergeStyles([providerStyles], styles);
-
-      // eslint-disable-next-line
-      // @ts-ignore
-      return super.finalizeStyles(newStyles);
-    }
-
     public constructor(...args: any[]) {
       super(...args);
 
@@ -48,6 +39,14 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     public abstract chromeRight?(): ChromeTemplate;
     public abstract chromeOverlay?(): ChromeTemplate;
     public abstract chromeRendered?(): void;
+
+    public connectedCallback(): void {
+      super.connectedCallback();
+      adoptStyles(this.shadowRoot as ShadowRoot, [
+        unsafeCSS(providerStyles),
+        ...(this.shadowRoot?.adoptedStyleSheets ?? []),
+      ]);
+    }
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);

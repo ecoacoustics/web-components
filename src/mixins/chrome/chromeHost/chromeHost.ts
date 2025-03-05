@@ -28,12 +28,16 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
      */
     public abstract renderSurface(): RootPart;
 
+    public connectedCallback(): void {
+      super.connectedCallback();
+      adoptStyles(this.shadowRoot as ShadowRoot, [
+        unsafeCSS(chromeHostStyles),
+        ...(this.shadowRoot?.adoptedStyleSheets ?? []),
+      ]);
+    }
+
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
-      adoptStyles(this.shadowRoot as any, [
-        ...(this.shadowRoot?.adoptedStyleSheets ?? []),
-        unsafeCSS(chromeHostStyles),
-      ]);
       this.sendChromeHostAdvertisement();
     }
 
@@ -68,7 +72,6 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
       // shift
       const styles = this.getProviderStyleSheets(provider);
       addStyleSheets(this, styles);
-      // this.addStyleSheets(styles);
 
       this.providers.add(provider);
 
