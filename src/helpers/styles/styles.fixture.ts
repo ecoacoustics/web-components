@@ -5,8 +5,14 @@ import { css, LitElement } from "lit";
 class TestPage {
   public constructor(public readonly page: Page) {}
 
+  public component = () => this.page.locator("oe-spectrogram").first();
+
   public async create() {
     await this.page.setContent("<oe-spectrogram></oe-spectrogram>");
+  }
+
+  public getComponentStyleSheets() {
+    return this.component().evaluate((el) => el.shadowRoot?.adoptedStyleSheets);
   }
 
   // TODO: we should test on a real component, but I can't seem to figure out
