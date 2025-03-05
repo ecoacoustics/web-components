@@ -1,4 +1,4 @@
-import { CSSResultGroup, CSSResultOrNative, LitElement } from "lit";
+import { CSSResult, CSSResultGroup, CSSResultOrNative, LitElement } from "lit";
 
 export function addStyleSheets(component: LitElement, styles: CSSResultGroup): void {
   if (Array.isArray(styles)) {
@@ -17,9 +17,7 @@ export function addStyleSheets(component: LitElement, styles: CSSResultGroup): v
 }
 
 function addStyleSheet(component: LitElement, styles: CSSResultOrNative): void {
-  if (styles instanceof CSSStyleSheet) {
-    component.shadowRoot?.adoptedStyleSheets.push(styles);
-  } else {
+  if (styles instanceof CSSResult) {
     const resultStyleSheet = styles.styleSheet;
     if (!resultStyleSheet) {
       console.warn("No styleSheet found in CSSResult", styles);
@@ -27,5 +25,7 @@ function addStyleSheet(component: LitElement, styles: CSSResultOrNative): void {
     }
 
     component.shadowRoot?.adoptedStyleSheets.push(styles.styleSheet);
+  } else {
+    component.shadowRoot?.adoptedStyleSheets.push(styles);
   }
 }

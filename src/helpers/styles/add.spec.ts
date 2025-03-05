@@ -2,6 +2,10 @@ import { css } from "lit";
 import { stylesFixture as test } from "./styles.fixture";
 import { expect } from "../../tests/assertions";
 
+test.beforeEach(async ({ fixture }) => {
+  await fixture.create();
+});
+
 test("should correctly add a single stylesheet", async ({ fixture }) => {
   const testedStyleSheet = css`
     :host {

@@ -15,6 +15,8 @@ test("should correctly remove a nested tree of stylesheets", () => {});
 test("should only remove stylesheets that are present in a stylesheet array", () => {});
 
 test("should have no operation if no stylesheets are present", async ({ fixture }) => {
+  const initialStyles = await fixture.getComponentStyleSheets();
+
   await fixture.removeStyleSheets([
     css`
       h1 {
@@ -33,7 +35,7 @@ test("should have no operation if no stylesheets are present", async ({ fixture 
   ]);
 
   const styles = await fixture.getComponentStyleSheets();
-  expect(styles).toBeUndefined();
+  expect(styles).toEqual(initialStyles);
 });
 
 test("should have no operation if an empty array is passed", () => {});
