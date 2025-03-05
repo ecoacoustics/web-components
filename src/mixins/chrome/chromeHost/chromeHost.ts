@@ -1,10 +1,9 @@
-import { CSSResultGroup, CSSResultOrNative, html, LitElement, nothing, PropertyValues, RootPart } from "lit";
+import { adoptStyles, CSSResultGroup, html, LitElement, nothing, PropertyValues, RootPart, unsafeCSS } from "lit";
 import { Component } from "../../../helpers/types/mixins";
 import { AbstractComponent } from "../../abstractComponent";
 import { map } from "lit/directives/map.js";
 import { state } from "lit/decorators.js";
 import { ChromeTemplate } from "../types";
-import { mergeStyles } from "../../../helpers/styles/merge";
 import { addStyleSheets } from "../../../helpers/styles/add";
 import { removeStyleSheets } from "../../../helpers/styles/remove";
 import { IChromeProvider } from "../chromeProvider/chromeProvider";
@@ -20,14 +19,6 @@ export const chromeAdvertisementEventName = "oe-chrome-advertisement";
 
 export const ChromeHost = <T extends Component>(superClass: T) => {
   abstract class ChromeHostComponentClass extends superClass {
-    public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
-      const newStyles: CSSResultGroup = mergeStyles([chromeHostStyles], styles);
-
-      // eslint-disable-next-line
-      // @ts-ignore
-      return super.finalizeStyles(newStyles);
-    }
-
     @state()
     private providers = new Set<IChromeProvider>();
 
@@ -39,6 +30,10 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
 
     public firstUpdated(change: PropertyValues<this>): void {
       super.firstUpdated(change);
+      adoptStyles(this.shadowRoot as any, [
+        ...(this.shadowRoot?.adoptedStyleSheets ?? []),
+        unsafeCSS(chromeHostStyles),
+      ]);
       this.sendChromeHostAdvertisement();
     }
 
