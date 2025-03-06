@@ -95,7 +95,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     private providerTemplate(key: keyof IChromeProvider): ChromeTemplate {
       return html`${map(this.providers, (provider) => {
         if (typeof provider[key] === "function") {
-          return provider[key]();
+          return (provider[key] as any)();
         }
 
         return nothing;

@@ -31,7 +31,7 @@ export const ChromeProvider = <T extends Component>(superClass: T) => {
     }
 
     @state()
-    private chromeAdvertisement?: ChromeAdvertisement;
+    protected chromeAdvertisement?: ChromeAdvertisement;
 
     public abstract chromeTop?(): ChromeTemplate;
     public abstract chromeBottom?(): ChromeTemplate;

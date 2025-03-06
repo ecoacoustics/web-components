@@ -146,8 +146,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         continue;
       }
 
+      litTemplateElement.innerHTML = "";
       litTemplateElement.append(...tagElement.elementReferences);
     }
+
+    this.templateTagElements = [];
   }
 
   public chromeRendered(): void {
@@ -172,17 +175,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
       this.unitConverter = newUnitConverter;
-      this.unitConverter?.canvasSize.subscribe(() => this.handleCanvasResize());
     });
 
     this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
   }
 
   private handleSpectrogramUpdate(): void {
-    this.requestUpdate();
-  }
-
-  private handleCanvasResize(): void {
     this.requestUpdate();
   }
 
@@ -256,7 +254,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
     const tagSeparator = ",";
-    this.templateTagElements = [];
 
     return html`
       ${loop(model.tags, (tag, { last }) => {
@@ -284,7 +281,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // not defined.
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { x, y, width, height } = this.unitConverter!.annotationRect(model);
-    const annotationAnchorName: CssVariable = `--bounding-box-anchor-${index}`;
+    const annotationAnchorName = `--bounding-box-anchor-${index}` satisfies CssVariable;
 
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,

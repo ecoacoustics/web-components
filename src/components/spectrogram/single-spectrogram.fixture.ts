@@ -12,7 +12,7 @@ class SingleSpectrogramFixture {
   public spectrogramCanvas = () => this.page.locator("oe-spectrogram canvas").first();
   public spectrogramAudioElement = () => this.page.locator("oe-spectrogram #media-element").first();
   public chromeContainer = (selector: `chrome-${"top" | "bottom" | "left" | "right"}`) =>
-    this.spectrogram().locator(selector).first();
+    this.spectrogram().locator(`.${selector}`).first();
 
   public mediaControls = () => this.page.locator("oe-media-controls").first();
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
@@ -41,6 +41,17 @@ class SingleSpectrogramFixture {
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `);
+    await waitForContentReady(this.page, ["oe-spectrogram"]);
+  }
+
+  public async createWithDefaultSize() {
+    await this.page.setContent(`
+      <oe-spectrogram
+        id="spectrogram"
+        src="${this.audioSource}"
+      ></oe-spectrogram>
+    `);
+    await waitForContentReady(this.page, ["oe-spectrogram"]);
   }
 
   public async updateSlot(content: string) {

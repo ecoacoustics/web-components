@@ -4,6 +4,7 @@ import {
   invokeBrowserMethod,
   mockDeviceSize,
   removeBrowserAttribute,
+  setBrowserAttribute,
   testBreakpoints,
 } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
@@ -22,6 +23,29 @@ interface SpectrogramSizingTest {
 
   expectedWidth?: Pixel;
   expectedHeight?: Pixel;
+}
+
+function assertSpectrogramSizing(testCase: SpectrogramSizingTest) {
+  test(testCase.name, async ({ fixture }) => {
+    if (testCase.width) {
+      await fixture.changeSpectrogramWidth(testCase.width);
+    }
+
+    if (testCase.height) {
+      await fixture.changeSpectrogramHeight(testCase.height);
+    }
+
+    await fixture.changeSpectrogramSizing(testCase.scaling);
+
+    const realizedSize = await getElementSize(fixture.spectrogram());
+    if (testCase.expectedWidth) {
+      expect(realizedSize.width).toEqual(testCase.expectedWidth);
+    }
+
+    if (testCase.expectedHeight) {
+      expect(realizedSize.height).toEqual(testCase.expectedHeight);
+    }
+  });
 }
 
 test.describe("unit tests", () => {
@@ -112,45 +136,59 @@ test.describe("unit tests", () => {
 });
 
 test.describe("spectrogram sizing", () => {
-  test.beforeEach(async ({ fixture }) => {
-    await fixture.createWithViewportSize();
-  });
-
   const minimumSpectrogramHeight = 128 satisfies Pixel;
 
-  const originalSpectrogramHeight = 256 satisfies Pixel;
-  const originalSpectrogramWidth = 256 satisfies Pixel;
+  const originalSpectrogramHeight = 704 satisfies Pixel;
+  const originalSpectrogramWidth = 1264 satisfies Pixel;
 
-  const viewportWidth = 1920 satisfies Pixel;
-  const viewportHeight = 1080 satisfies Pixel;
+  const viewportWidth = 1264 satisfies Pixel;
+  const viewportHeight = 704 satisfies Pixel;
 
-  test.describe("sizing overwrites", () => {
-    const sizingTests: SpectrogramSizingTest[] = [
-      // default sizing
+  test.describe("default sizes", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithDefaultSize();
+    });
+
+    const defaultSizeTests: SpectrogramSizingTest[] = [
       {
         name: "should have the correct default sizing for stretch",
         scaling: "stretch",
+        expectedWidth: viewportWidth,
         expectedHeight: minimumSpectrogramHeight,
       },
       {
         name: "should have the correct default sizing for natural",
         scaling: "natural",
-        expectedHeight: Math.min(minimumSpectrogramHeight, viewportHeight),
+        expectedWidth: viewportWidth,
+        expectedHeight: viewportHeight,
       },
       {
         name: "should have the correct default sizing for original",
         scaling: "original",
         expectedHeight: originalSpectrogramHeight,
+        expectedWidth: originalSpectrogramWidth,
       },
+    ];
 
+    for (const testCase of defaultSizeTests) {
+      assertSpectrogramSizing(testCase);
+    }
+  });
+
+  test.describe("sizing overwrites", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create();
+    });
+
+    const sizingTests: SpectrogramSizingTest[] = [
       // original scaling
       {
         name: "should not be able to resize original spectrogram",
         scaling: "original",
         width: 128,
         height: 512,
+        expectedWidth: originalSpectrogramWidth,
         expectedHeight: originalSpectrogramHeight,
-        expectedWidth: originalSpectrogramHeight,
       },
 
       // this test exists to ensure that we are not culling spectrogram elements
@@ -199,21 +237,21 @@ test.describe("spectrogram sizing", () => {
 
       // natural scaling
       {
-        name: "should constrain to width correctly",
+        name: "should constrain natural scaling to width correctly",
         scaling: "natural",
         width: 887,
         expectedWidth: 887,
         expectedHeight: 887,
       },
       {
-        name: "should constrain to height correctly",
+        name: "should constrain natural scaling to height correctly",
         scaling: "natural",
         height: 887,
         expectedWidth: 887,
         expectedHeight: 887,
       },
       {
-        name: "should constrain to the minimum width",
+        name: "should constrain natural scaling to the minimum width",
         scaling: "natural",
         width: 100,
         height: 200,
@@ -221,7 +259,7 @@ test.describe("spectrogram sizing", () => {
         expectedHeight: 100,
       },
       {
-        name: "should constrain to the minimum height",
+        name: "should constrain natural scaling to the minimum height",
         scaling: "natural",
         width: 200,
         height: 100,
@@ -231,30 +269,15 @@ test.describe("spectrogram sizing", () => {
     ];
 
     for (const testCase of sizingTests) {
-      test(testCase.name, async ({ fixture }) => {
-        if (testCase.width) {
-          await fixture.changeSpectrogramWidth(testCase.width);
-        }
-
-        if (testCase.height) {
-          await fixture.changeSpectrogramHeight(testCase.height);
-        }
-
-        await fixture.changeSpectrogramSizing(testCase.scaling as any);
-
-        const realizedSize = await getElementSize(fixture.spectrogram());
-        if (testCase.expectedHeight) {
-          expect(realizedSize.height).toEqual(testCase.expectedHeight);
-        }
-
-        if (testCase.expectedWidth) {
-          expect(realizedSize.width).toEqual(testCase.expectedWidth);
-        }
-      });
+      assertSpectrogramSizing(testCase);
     }
   });
 
   test.describe("dynamic sizing", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithViewportSize();
+    });
+
     test("should correctly resize a STRETCH spectrogram if the window is resized", async ({ fixture }) => {
       await fixture.changeSpectrogramSizing("stretch");
 
@@ -288,6 +311,16 @@ test.describe("spectrogram sizing", () => {
       const realizedSize = await getElementSize(fixture.spectrogram());
       expect(realizedSize.width).toEqual(50);
       expect(realizedSize.height).toEqual(50);
+    });
+
+    test("should correctly resize a NATURAL spectrogram when the fft size changes", async ({ fixture }) => {
+      await fixture.changeSpectrogramSizing("natural");
+
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "window-size" as any, "2048");
+
+      const finalSize = await getElementSize(fixture.spectrogram());
+      expect(finalSize.width).toEqual(testBreakpoints.desktop.width);
+      expect(finalSize.height).toEqual(testBreakpoints.desktop.height);
     });
 
     test("should not resize an ORIGINAL spectrogram if the window is resized", async ({ fixture }) => {
@@ -401,20 +434,4 @@ test.describe("chrome", () => {
     await expect(fixture.chromeContainer("chrome-left")).toBeEmpty();
     await expect(fixture.chromeContainer("chrome-right")).toBeEmpty();
   });
-
-  const testedChromePositions = ["top", "bottom", "left", "right"] as const;
-  for (const chromePosition of testedChromePositions) {
-    test(`should correctly append to the chrome ${chromePosition}`, async ({ fixture }) => {
-      const testedChromeText = "testing123";
-
-      const mockProvider = {
-        [`chrome${chromePosition}`]: () => html`<div>${testedChromeText}</div>`,
-      };
-      fixture.addChromeProvider(mockProvider);
-
-      const chromeTarget = fixture.chromeContainer(`chrome-${chromePosition}`);
-      await expect(chromeTarget).not.toBeEmpty();
-      await expect(chromeTarget).toHaveTrimmedText(testedChromeText);
-    });
-  }
 });

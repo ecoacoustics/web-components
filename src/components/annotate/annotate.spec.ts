@@ -1,6 +1,12 @@
 import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
-import { getBrowserStyles, getBrowserValue, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import {
+  getBrowserStyles,
+  getBrowserValue,
+  removeBrowserAttribute,
+  setBrowserAttribute,
+  setBrowserValue,
+} from "../../tests/helpers";
 import { TagComponent } from "../tag/tag";
 import { AnnotateComponent } from "./annotate";
 import { annotateFixture as test } from "./annotate.fixture";
@@ -247,26 +253,22 @@ test.describe("annotation", () => {
   });
 
   test.describe("updating annotations", () => {
-    const inViewTemplate = `
-      <oe-annotation
-        start-time="0.2"
-        end-time="1"
-        low-frequency="1000"
-        high-frequency="2000"
-      ></oe-annotation>
-    `;
+    const inViewAnnotation = {
+      startOffset: 0.2,
+      endOffset: 1,
+      lowFrequency: 1000,
+      highFrequency: 2000,
+    } as const satisfies PartialAnnotation;
 
-    const outOfViewTemplate = `
-      <oe-annotation
-        start-time="-2"
-        end-time="-1"
-        low-frequency="1000"
-        high-frequency="2000"
-      ></oe-annotation>
-    `;
+    const outOfViewAnnotation = {
+      startOffset: -2,
+      endOffset: -1,
+      lowFrequency: 1000,
+      highFrequency: 2000,
+    } as const satisfies PartialAnnotation;
 
     test("should remove a bounding box if is updated from inside to outside the view window", async ({ fixture }) => {
-      await fixture.createWithTemplate(inViewTemplate);
+      await fixture.createWithAnnotation(inViewAnnotation);
 
       const initialAnnotationCount = await fixture.annotationCount();
       expect(initialAnnotationCount).toBeGreaterThan(0);
@@ -280,7 +282,7 @@ test.describe("annotation", () => {
     });
 
     test("should add a bounding box if it is updated from outside to inside the view window", async ({ fixture }) => {
-      await fixture.createWithTemplate(outOfViewTemplate);
+      await fixture.createWithAnnotation(outOfViewAnnotation);
 
       const initialAnnotationCount = await fixture.annotationCount();
       expect(initialAnnotationCount).toBe(0);
@@ -294,7 +296,7 @@ test.describe("annotation", () => {
     });
 
     test("should correctly update an annotation from inside to inside the view window", async ({ fixture }) => {
-      await fixture.createWithTemplate(inViewTemplate);
+      await fixture.createWithAnnotation(inViewAnnotation);
 
       const initialAnnotationCount = await fixture.annotationCount();
       expect(initialAnnotationCount).toBeGreaterThan(0);
@@ -306,7 +308,7 @@ test.describe("annotation", () => {
     });
 
     test("should keep hidden if updated from out of view to another out of view position", async ({ fixture }) => {
-      await fixture.createWithTemplate(outOfViewTemplate);
+      await fixture.createWithAnnotation(outOfViewAnnotation);
 
       const initialAnnotationCount = await fixture.annotationCount();
       expect(initialAnnotationCount).toBe(0);
@@ -318,7 +320,7 @@ test.describe("annotation", () => {
     });
 
     test("should correctly remove an annotation", async ({ fixture }) => {
-      await fixture.createWithTemplate(inViewTemplate);
+      await fixture.createWithAnnotation(inViewAnnotation);
 
       const initialAnnotationCount = await fixture.annotationCount();
       expect(initialAnnotationCount).toBeGreaterThan(0);
@@ -376,42 +378,90 @@ test.describe("annotation style tag", () => {
 
       // I would like to use the TagStyle enum here, but it causes a bundler
       // error, so I'm using an untyped string value instead
-      expect(realizedTagStyle).toBe("edge");
-    });
-
-    test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
-      await fixture.createWithTagStyle("hidden");
+      expect(realizedTagStyle).toEqual("edge");
     });
 
     test("should have the correct 'edge' behavior", async ({ fixture }) => {
-      await fixture.createWithTagStyle("edge");
+      await fixture.create("edge");
+
+      const allLabels = await fixture.annotationLabels();
+      const edgeLabels = await fixture.annotationEdgeLabels();
+      const chromeTopLabels = await fixture.annotationTopLabels();
+
+      expect(allLabels).toHaveLength(4);
+      expect(edgeLabels).toHaveLength(allLabels.length);
+      expect(chromeTopLabels).toHaveLength(0);
     });
 
     test("should have the correct 'spectrogram-top' behavior", async ({ fixture }) => {
-      await fixture.createWithTagStyle("spectrogram-top");
+      await fixture.create("spectrogram-top");
+
+      const allLabels = await fixture.annotationLabels();
+      const chromeTopLabels = await fixture.annotationTopLabels();
+      const edgeLabels = await fixture.annotationEdgeLabels();
+
+      expect(allLabels).toHaveLength(4);
+      expect(chromeTopLabels).toHaveLength(allLabels.length);
+      expect(edgeLabels).toHaveLength(0);
+    });
+
+    test("should have the correct 'hidden' attribute behavior", async ({ fixture }) => {
+      await fixture.create("hidden");
+      const tagLabels = await fixture.annotationLabels();
+      expect(tagLabels).toHaveLength(0);
     });
   });
 
   test.describe("updating attributes", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create();
+    });
+
     test("should correctly update if the tag style is updated to 'hidden'", async ({ fixture }) => {
+      // we expect that the annotation labels are visible, and then when we set
+      // the tag style to 'hidden', the labels will be hidden
+      const initialLabels = await fixture.annotationLabels();
+      expect(initialLabels).toHaveLength(4);
+
       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "hidden");
+
+      const annotationLabels = await fixture.annotationLabels();
+      expect(annotationLabels).toHaveLength(0);
+
+      // we should see that the annotation containers are still present
+      // although the labels are not
+      const annotationContainers = await fixture.annotationContainers();
+      expect(annotationContainers).toHaveLength(4);
     });
 
     test("should correctly update if the tag style is updated to 'edge'", async ({ fixture }) => {
       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "edge");
+
+      const annotationLabels = await fixture.annotationLabels();
+      expect(annotationLabels).toHaveLength(4);
     });
 
     test("should correctly update if the tag style is updated to 'spectrogram-top'", async ({ fixture }) => {
       await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
+
+      const annotationLabels = await fixture.annotationLabels();
+      expect(annotationLabels).toHaveLength(4);
     });
-  });
 
-  test.describe("slotted tag content", () => {
-    test("should reflect slotted tag content correctly in hidden style", () => {});
+    test("should remove chrome-top when changing from spectrogram-top to default", async ({ fixture }) => {
+      await setBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any, "spectrogram-top");
 
-    test("should reflect slotted tag content correctly in edge style", () => {});
+      const chromeShape = await fixture.chromeTop().boundingBox();
+      expect(chromeShape?.height).toBeGreaterThan(0);
 
-    test("should reflect slotted tag content correctly in 'spectrogram-top' style", () => {});
+      // I purposely remove the tag-style attribute here instead of setting it
+      // to another value because I think removing an attribute is more likely
+      // to break
+      await removeBrowserAttribute<AnnotateComponent>(fixture.component(), "tag-style" as any);
+
+      const chromeShapeAfter = await fixture.chromeTop().boundingBox();
+      expect(chromeShapeAfter?.height).toEqual(0);
+    });
   });
 });
 

@@ -20,9 +20,15 @@ class TestPage {
   public annotationBoundingBoxes = () => this.page.locator(".bounding-box").all();
   public annotationLabels = () => this.page.locator(".bounding-box-label").all();
 
+  public annotationTopLabels = () => this.page.locator(".bounding-box-label.style-spectrogram-top").all();
+  public annotationEdgeLabels = () => this.page.locator(".bounding-box-label.style-edge").all();
+
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
   public spectrogramContainer = () => this.spectrogram().locator("#spectrogram-container").first();
   public spectrogramCanvas = () => this.spectrogram().locator("canvas").first();
+
+  public chromeTop = () => this.spectrogram().locator(".chrome-top").first();
+  public chromeOverlay = () => this.spectrogram().locator(".chrome-overlay").first();
 
   public async annotationBox(index: Readonly<number>) {
     const annotations = await this.annotationBoundingBoxes();
@@ -39,9 +45,9 @@ class TestPage {
     return tags[index];
   }
 
-  public async create() {
+  public async create(tagStyle?: EnumValue<AnnotationTagStyle>) {
     await this.page.setContent(`
-      <oe-annotate>
+      ${tagStyle ? `<oe-annotate tag-style="${tagStyle}">` : "<oe-annotate>"}
         <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
 
         <oe-annotation
@@ -49,8 +55,8 @@ class TestPage {
           tags="bird"
           start-time="0.4"
           end-time="4.99"
-          low-frequency="2500"
-          high-frequency="3500"
+          low-frequency="6500"
+          high-frequency="8500"
         ></oe-annotation>
 
         <oe-annotation
@@ -70,6 +76,19 @@ class TestPage {
           high-frequency="9900"
         >
           <oe-tag value="bat">Bat</oe-tag>
+          <oe-tag value="ultrasonic">
+            <strong class="slotted-content">Ultrasonic Slotted</strong>
+          </oe-tag>
+        </oe-annotation>
+
+        <oe-annotation
+          data-testid="annotation-mixed-tags"
+          tags="bat"
+          start-time="1.93"
+          end-time="2.32"
+          low-frequency="1000"
+          high-frequency="4900"
+        >
           <oe-tag value="ultrasonic">
             <strong class="slotted-content">Ultrasonic Slotted</strong>
           </oe-tag>
@@ -99,58 +118,6 @@ class TestPage {
           low-frequency="${model.lowFrequency}"
           high-frequency="${model.highFrequency}"
         ></oe-annotation>
-      </oe-annotate>
-    `);
-
-    await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
-  }
-
-  public async createWithTagStyle(tagStyle: EnumValue<AnnotationTagStyle>) {
-    await this.page.setContent(`
-      <oe-annotate tag-style="${tagStyle}">
-        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
-
-        <oe-annotation
-          data-testid="annotation-attribute-tag"
-          tags="caterpillar"
-          start-time="0.4"
-          end-time="4.99"
-          low-frequency="2500"
-          high-frequency="3500"
-        ></oe-annotation>
-
-        <oe-annotation
-          data-testid="annotation-attribute-tags-multiple"
-          tags="cow,male"
-          start-time="0.4"
-          end-time="4.99"
-          low-frequency="2500"
-          high-frequency="3500"
-        ></oe-annotation>
-
-        <oe-annotation
-          data-testid="annotation-component-tag"
-          start-time="2.93"
-          end-time="3.32"
-          low-frequency="8000"
-          high-frequency="9900"
-        >
-          <oe-tag value="bat">Bat</oe-tag>
-          <oe-tag value="ultrasonic">
-            <strong class="slotted-content">Ultrasonic</strong>
-          </oe-tag>
-        </oe-annotation>
-      </oe-annotate>
-    `);
-
-    await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
-  }
-
-  public async createWithTemplate(template: string) {
-    await this.page.setContent(`
-      <oe-annotate>
-        <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
-        ${template}
       </oe-annotate>
     `);
 
@@ -239,6 +206,7 @@ class TestPage {
   public async getAnnotationColor(index: number) {
     const target = (await this.annotationBoundingBoxes())[index];
     const styles = await getBrowserStyles(target);
+    return styles.borderColor;
   }
 
   public annotationSelectedColor() {}
