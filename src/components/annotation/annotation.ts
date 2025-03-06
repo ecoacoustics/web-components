@@ -158,7 +158,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) implement
       "tags",
     ] as const satisfies (keyof this)[];
 
-    const hasAnnotationUpdate = updatedAnnotationProperties.some((key) => key in change);
+    const hasAnnotationUpdate = updatedAnnotationProperties.some((key) => change.has(key));
     if (hasAnnotationUpdate) {
       this.dispatchEvent(
         new CustomEvent(AnnotationComponent.updatedEventName, {
