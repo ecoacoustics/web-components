@@ -126,39 +126,14 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
   }
 
-  public updated(changes: PropertyValues<this>): void {
-    super.updated(changes);
-
-    // Because the <oe-tag> component supports slotted elements, we want to
-    // append the slotted oe-tag elements in the associate annotations label.
-    // However, Lit doesn't support rendering HTML element reference in their
-    // html templates, and using unsafeHTML and copying the innerHTML of the
-    // slotted element does not preserve event listeners.
-    //
-    // So that event listeners and element references are preserved, we append
-    // the elements after the Lit HTML templates have been rendered to the DOM.
-    // At which point, we will have a reference to the Lit template element and
-    // can assign each of the slotted elements to the template element.
-    for (const tagElement of this.templateTagElements) {
-      const litTemplateElement = tagElement.litTemplateRef.value;
-      if (!litTemplateElement) {
-        console.warn("A tag element was not found in the template.");
-        continue;
-      }
-
-      litTemplateElement.innerHTML = "";
-      litTemplateElement.append(...tagElement.elementReferences);
-    }
-
-    this.templateTagElements = [];
-  }
-
   public chromeRendered(): void {
     if (this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP) {
       this.measureLabelHeight();
     } else {
       this.topChromeHeight.value = 0;
     }
+
+    this.appendTagLabelRefs();
   }
 
   protected handleSlotChange(): void {
@@ -182,6 +157,31 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private handleSpectrogramUpdate(): void {
     this.requestUpdate();
+  }
+
+  private appendTagLabelRefs(): void {
+    // Because the <oe-tag> component supports slotted elements, we want to
+    // append the slotted oe-tag elements in the associate annotations label.
+    // However, Lit doesn't support rendering HTML element reference in their
+    // html templates, and using unsafeHTML and copying the innerHTML of the
+    // slotted element does not preserve event listeners.
+    //
+    // So that event listeners and element references are preserved, we append
+    // the elements after the Lit HTML templates have been rendered to the DOM.
+    // At which point, we will have a reference to the Lit template element and
+    // can assign each of the slotted elements to the template element.
+    for (const tagElement of this.templateTagElements) {
+      const litTemplateElement = tagElement.litTemplateRef.value;
+      if (!litTemplateElement) {
+        console.warn("A tag element was not found in the template.");
+        continue;
+      }
+
+      litTemplateElement.innerHTML = "";
+      litTemplateElement.append(...tagElement.elementReferences);
+    }
+
+    this.templateTagElements = [];
   }
 
   private measureLabelHeight(): void {
@@ -267,7 +267,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
             elementReferences,
           });
 
-          return html`<span ${ref(tagTemplateRef)}></span>`;
+          return html`<span ${ref(tagTemplateRef)}></span>${tagSuffix}`;
         }
 
         return html`${tag.text}${tagSuffix}`;

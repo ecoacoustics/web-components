@@ -69,13 +69,13 @@ class TestPage {
         ></oe-annotation>
 
         <oe-annotation
-          data-testid="annotation-component-tag"
+          data-testid="annotation-slotted-tag"
           start-time="2.93"
           end-time="3.32"
           low-frequency="8000"
           high-frequency="9900"
         >
-          <oe-tag value="bat">Bat</oe-tag>
+          <oe-tag value="bat-slotted">Bat Slotted</oe-tag>
           <oe-tag value="ultrasonic">
             <strong class="slotted-content">Ultrasonic Slotted</strong>
           </oe-tag>
@@ -83,7 +83,7 @@ class TestPage {
 
         <oe-annotation
           data-testid="annotation-mixed-tags"
-          tags="bat"
+          tags="bat-attribute"
           start-time="1.93"
           end-time="2.32"
           low-frequency="1000"

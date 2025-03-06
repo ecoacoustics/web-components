@@ -38,28 +38,24 @@ test.describe("annotation", () => {
       await fixture.create();
     });
 
-    test("should have the correct label", async ({ fixture }) => {
+    test("should have the correct attribute tag label", async ({ fixture }) => {
       const labelTarget = await fixture.annotationLabel(0);
       await expect(labelTarget).toHaveTrimmedText("bird");
     });
 
-    test("should correctly render slotted content", async ({ fixture }) => {
-      const labelTarget = await fixture.annotationLabel(2);
-
-      // because the second annotation contains two <oe-tag> components
-      // we expect that the annotation label text will be the concatenation
-      // of the two oe-tag content
-      await expect(labelTarget).toHaveTrimmedText("Bat,Ultrasonic Slotted");
+    test("should have the correct", async ({ fixture }) => {
+      const labelTarget = await fixture.annotationLabel(1);
+      await expect(labelTarget).toHaveTrimmedText("cow,male");
     });
 
-    // TODO: this test is currently skipped because we do not support this type
-    // of update in the current AbstractComponent implementation
-    test.skip("should correctly update if the label content", async ({ fixture }) => {
-      const tagTarget = await fixture.tagComponent(1);
-      await setBrowserValue<TagComponent>(tagTarget, "textContent", "Subsonic");
-
+    test("should correctly render slotted content", async ({ fixture }) => {
       const labelTarget = await fixture.annotationLabel(2);
-      await expect(labelTarget).toHaveTrimmedText("Bat,Subsonic");
+      await expect(labelTarget).toHaveTrimmedText("Bat Slotted,Ultrasonic Slotted");
+    });
+
+    test("should correctly render mixed attribute and slotted content", async ({ fixture }) => {
+      const labelTarget = await fixture.annotationLabel(3);
+      await expect(labelTarget).toHaveTrimmedText("bat-attribute,Ultrasonic Slotted");
     });
   });
 
