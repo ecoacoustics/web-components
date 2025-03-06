@@ -6,9 +6,7 @@ import {
   getBrowserValue,
   removeBrowserAttribute,
   setBrowserAttribute,
-  setBrowserValue,
 } from "../../tests/helpers";
-import { TagComponent } from "../tag/tag";
 import { AnnotateComponent } from "./annotate";
 import { annotateFixture as test } from "./annotate.fixture";
 
@@ -277,7 +275,7 @@ test.describe("annotation", () => {
       const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
       await fixture.moveAnnotationOutsideView();
-      await expect(updatedEvent).resolves.toBeTruthy();
+      await expect(updatedEvent).resolves.toBeDefined();
 
       const realizedAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
@@ -295,7 +293,7 @@ test.describe("annotation", () => {
       const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
       await fixture.moveAnnotationInsideView();
-      await expect(updatedEvent).resolves.toBeTruthy();
+      await expect(updatedEvent).resolves.toBeDefined();
 
       const finalAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(finalAnnotationCount).toBe(expectedAnnotationCount);
@@ -311,7 +309,7 @@ test.describe("annotation", () => {
       const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
       await fixture.moveAnnotationInsideView();
-      await expect(updatedEvent).resolves.toBeTruthy();
+      await expect(updatedEvent).resolves.toBeDefined();
 
       const realizedAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(realizedAnnotationCount).toBe(initialAnnotationCount);
@@ -346,6 +344,10 @@ test.describe("annotation", () => {
   });
 
   test.describe("selecting annotations", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create();
+    });
+
     test("should change the annotations color if inside the bounding box is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationBoundingBoxes())[0];
       await target.click();
