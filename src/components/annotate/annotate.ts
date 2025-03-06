@@ -1,4 +1,4 @@
-import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { customElement, property, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -112,6 +112,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   private templateTagElements: TemplateTagElements[] = [];
   private unitConverter?: Readonly<UnitConverter>;
 
+  private annotationUpdateEventHandler = this.handleAnnotationUpdate.bind(this);
+
   private get instantiatedLabelRefs() {
     return this.labelRefs.filter(
       (ref): ref is Ref<Readonly<HTMLLabelElement>> & { readonly value: HTMLElement } => ref.value !== undefined,
@@ -124,6 +126,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     }
 
     return this.annotationElements.flatMap((element: AnnotationComponent) => element.model);
+  }
+
+  public connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener(AnnotationComponent.updatedEventName, this.annotationUpdateEventHandler);
+  }
+
+  public disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener(AnnotationComponent.updatedEventName, this.annotationUpdateEventHandler);
   }
 
   public chromeRendered(): void {
@@ -153,6 +165,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     });
 
     this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
+  }
+
+  private handleAnnotationUpdate(): void {
+    this.requestUpdate();
   }
 
   private handleSpectrogramUpdate(): void {
