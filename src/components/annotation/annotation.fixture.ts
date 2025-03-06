@@ -10,7 +10,17 @@ class TestPage {
 
   public component = () => this.page.locator("oe-annotation").first();
 
-  public async create(content: string) {
+  public defaultContent = `
+    <oe-annotation
+      tags="dog,cat"
+      low-frequency="0"
+      high-frequency="1000"
+      start-time="0"
+      end-time="5"
+    ></oe-annotation>
+  `;
+
+  public async create(content = this.defaultContent) {
     await this.page.setContent(content);
     await waitForContentReady(this.page);
   }

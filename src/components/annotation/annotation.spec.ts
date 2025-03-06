@@ -1,6 +1,7 @@
 import { Tag } from "../../models/tag";
 import { expect } from "../../tests/assertions";
-import { setBrowserValue } from "../../tests/helpers";
+import { catchLocatorEvent, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import { AnnotationComponent } from "./annotation";
 import { annotationFixture as test } from "./annotation.fixture";
 
 // because we don't want to assert the elementReference array, we just assert
@@ -14,6 +15,72 @@ function assertTagModels(expected: ReadonlyArray<Tag>, realized: ReadonlyArray<T
     expect(realizedTag.reference).toEqual(expectedTag.reference);
   }
 }
+
+// TODO: I would like to use the components static properties where the event
+// names are defined. However, it currently causes a bundling error
+// see: https://github.com/ecoacoustics/web-components/issues/289
+test.describe("events", () => {
+  test("should emit a created event", async ({ fixture }) => {
+    const wrapperTestId = "annotation-wrapper";
+    await fixture.create(`<div data-testid='${wrapperTestId}'></div>`);
+
+    const annotationWrapper = fixture.page.getByTestId(wrapperTestId).first();
+
+    const createdEvent = catchLocatorEvent(annotationWrapper, "oe-annotation-created");
+
+    await annotationWrapper.evaluate((element: HTMLDivElement) => {
+      element.innerHTML = `
+        <oe-annotation
+          start-time="1"
+          end-time="3"
+          low-frequency="1000"
+          high-frequency="3000"
+        ></oe-annotation>
+      `;
+    });
+
+    await expect(createdEvent).resolves.toBeDefined();
+  });
+
+  test("should emit an updated event", async ({ fixture }) => {
+    await fixture.create();
+    const updatedEvent = catchLocatorEvent(fixture.component(), "oe-annotation-updated");
+
+    await setBrowserAttribute<any>(fixture.component(), "start-time", "2");
+
+    await expect(updatedEvent).resolves.toBeDefined();
+  });
+
+  test("should emit a selected event", async ({ fixture }) => {
+    await fixture.create();
+    const selectedEvent = catchLocatorEvent(fixture.component(), "oe-annotation-selected");
+    await setBrowserValue<AnnotationComponent>(fixture.component(), "selected", true);
+    await expect(selectedEvent).resolves.toBeDefined();
+  });
+
+  test("should emit a deselected event", async ({ fixture }) => {
+    await fixture.create();
+    await setBrowserValue<AnnotationComponent>(fixture.component(), "selected", true);
+
+    const deselectedEvent = catchLocatorEvent(fixture.component(), "oe-annotation-deselected");
+    await setBrowserValue<AnnotationComponent>(fixture.component(), "selected", false);
+    await expect(deselectedEvent).resolves.toBeDefined();
+  });
+
+  test("should emit a removed event", async ({ fixture }) => {
+    await fixture.create();
+
+    const removedEvent = catchLocatorEvent(fixture.component(), "oe-annotation-removed");
+
+    await fixture.component().evaluate((element: AnnotationComponent) => {
+      element.remove();
+    });
+
+    await expect(removedEvent).resolves.toBeDefined();
+  });
+
+  // TODO: Add tests for updating and changed events
+});
 
 test.describe("component template", () => {
   test("should not display any content", async ({ fixture }) => {
@@ -109,6 +176,10 @@ test.describe("model parsing", () => {
     `);
 
     await fixture.assertAnnotationModel(expectedAnnotation);
+  });
+
+  test.fail("should throw an error if required attributes are missing", async ({ fixture }) => {
+    await fixture.create("<oe-annotation></oe-annotation>");
   });
 });
 

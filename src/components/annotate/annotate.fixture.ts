@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { expect, test } from "../../tests/assertions";
+import { test } from "../../tests/assertions";
 import { getBrowserStyles, waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
@@ -165,7 +165,7 @@ class TestPage {
   }
 
   // the move into view and move outside view functions
-  public async moveAnnotationOutsideView(index: number) {
+  public async moveAnnotationOutsideView(index = 0) {
     await this.updateAnnotation(index, {
       startOffset: -2,
       endOffset: -1,
@@ -174,7 +174,7 @@ class TestPage {
     });
   }
 
-  public async moveAnnotationInsideView(index: number) {
+  public async moveAnnotationInsideView(index = 0) {
     await this.updateAnnotation(index, {
       startOffset: 0.5,
       endOffset: 1.5,
@@ -183,24 +183,11 @@ class TestPage {
     });
   }
 
-  public async removeAnnotation(index: number) {
+  public async removeAnnotation(index = 0) {
     const targetAnnotation = (await this.annotations())[index];
     await targetAnnotation.evaluate((element: HTMLElement) => {
       element.remove();
     });
-  }
-
-  /** Returns the count of visible annotations */
-  public async annotationCount() {
-    const annotationBoundingBoxes = await this.annotationBoundingBoxes();
-    const annotationLabels = await this.annotationLabels();
-
-    // assert that we have the same number of bounding boxes and labels
-    // if these are not equal, then we want to fail the test because there is a
-    // major issue with the component
-    expect(annotationLabels.length === annotationBoundingBoxes.length).toBe(true);
-
-    return annotationLabels.length;
   }
 
   public async getAnnotationColor(index: number) {

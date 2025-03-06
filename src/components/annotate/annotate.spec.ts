@@ -1,6 +1,7 @@
 import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
 import {
+    catchLocatorEvent,
   getBrowserStyles,
   getBrowserValue,
   removeBrowserAttribute,
@@ -266,66 +267,79 @@ test.describe("annotation", () => {
     test("should remove a bounding box if is updated from inside to outside the view window", async ({ fixture }) => {
       await fixture.createWithAnnotation(inViewAnnotation);
 
-      const initialAnnotationCount = await fixture.annotationCount();
+      const annotationBoxes = await fixture.annotationBoundingBoxes();
+      const initialAnnotationCount = annotationBoxes.length;
       expect(initialAnnotationCount).toBeGreaterThan(0);
 
       const expectedAnnotationCount = initialAnnotationCount - 1;
 
-      await fixture.moveAnnotationOutsideView(0);
+      const targetAnnotation = (await fixture.annotations())[0];
+      const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
-      const realizedAnnotationCount = await fixture.annotationCount();
+      await fixture.moveAnnotationOutsideView();
+      await expect(updatedEvent).resolves.toBeTruthy();
+
+      const realizedAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
     });
 
     test("should add a bounding box if it is updated from outside to inside the view window", async ({ fixture }) => {
       await fixture.createWithAnnotation(outOfViewAnnotation);
 
-      const initialAnnotationCount = await fixture.annotationCount();
+      const initialAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(initialAnnotationCount).toBe(0);
 
       const expectedAnnotationCount = initialAnnotationCount + 1;
 
-      await fixture.moveAnnotationInsideView(0);
+      const targetAnnotation = (await fixture.annotations())[0];
+      const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
-      const realizedAnnotationCount = await fixture.annotationCount();
-      expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
+      await fixture.moveAnnotationInsideView();
+      await expect(updatedEvent).resolves.toBeTruthy();
+
+      const finalAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
+      expect(finalAnnotationCount).toBe(expectedAnnotationCount);
     });
 
     test("should correctly update an annotation from inside to inside the view window", async ({ fixture }) => {
       await fixture.createWithAnnotation(inViewAnnotation);
 
-      const initialAnnotationCount = await fixture.annotationCount();
+      const initialAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(initialAnnotationCount).toBeGreaterThan(0);
 
-      await fixture.moveAnnotationInsideView(0);
+      const targetAnnotation = (await fixture.annotations())[0];
+      const updatedEvent = catchLocatorEvent(targetAnnotation, "oe-annotation-updated");
 
-      const realizedAnnotationCount = await fixture.annotationCount();
+      await fixture.moveAnnotationInsideView();
+      await expect(updatedEvent).resolves.toBeTruthy();
+
+      const realizedAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(realizedAnnotationCount).toBe(initialAnnotationCount);
     });
 
     test("should keep hidden if updated from out of view to another out of view position", async ({ fixture }) => {
       await fixture.createWithAnnotation(outOfViewAnnotation);
 
-      const initialAnnotationCount = await fixture.annotationCount();
+      const initialAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(initialAnnotationCount).toBe(0);
 
-      await fixture.moveAnnotationOutsideView(0);
+      await fixture.moveAnnotationOutsideView();
 
-      const finalAnnotationCount = await fixture.annotationCount();
+      const finalAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(finalAnnotationCount).toBe(0);
     });
 
     test("should correctly remove an annotation", async ({ fixture }) => {
       await fixture.createWithAnnotation(inViewAnnotation);
 
-      const initialAnnotationCount = await fixture.annotationCount();
+      const initialAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
       expect(initialAnnotationCount).toBeGreaterThan(0);
 
       const expectedAnnotationCount = initialAnnotationCount - 1;
 
-      await fixture.removeAnnotation(0);
+      await fixture.removeAnnotation();
 
-      const realizedAnnotationCount = await fixture.annotationCount();
+      const realizedAnnotationCount = (await fixture.annotationBoundingBoxes()).length;
 
       expect(realizedAnnotationCount).toBe(expectedAnnotationCount);
     });
