@@ -45,12 +45,7 @@ class SingleSpectrogramFixture {
   }
 
   public async createWithDefaultSize() {
-    await this.page.setContent(`
-      <oe-spectrogram
-        id="spectrogram"
-        src="${this.audioSource}"
-      ></oe-spectrogram>
-    `);
+    await this.page.setContent(`<oe-spectrogram src="${this.audioSource}"></oe-spectrogram>`);
     await waitForContentReady(this.page, ["oe-spectrogram"]);
   }
 

@@ -7,15 +7,15 @@ import { AnnotationComponent } from "../annotation/annotation";
 import { Annotation } from "../../models/annotation";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
-import { computed, signal, watch } from "@lit-labs/preact-signals";
+import { computed, Signal, signal, watch } from "@lit-labs/preact-signals";
 import { when } from "lit/directives/when.js";
-import { CssVariable } from "../../helpers/types/advancedTypes";
 import { classMap } from "lit/directives/class-map.js";
 import { loop } from "../../helpers/directives";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
 import annotateStyles from "./css/style.css?inline";
+import { Rect } from "../../models/rendering";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -55,6 +55,7 @@ interface TemplateTagElements {
  *   </oe-annotation>
  * </oe-annotate>
  * ```
+ *
  * @fires oe-annotation-created
  * @fires oe-annotation-removed
  * @fires oe-annotation-selected
@@ -291,13 +292,33 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     `;
   }
 
-  private annotationTemplate(model: Annotation, index: number): HTMLTemplateResult {
+  private edgeLabelTemplate(model: Readonly<Annotation>, annotationRect: Readonly<Rect<Signal<Pixel>>>) {
+    const { x, y } = annotationRect;
+
+    const finalX = computed(() => Math.max(x.value, 0));
+    const finalY = computed(() => Math.max(y.value, 0));
+
+    return html`
+      <label
+        class="bounding-box-label style-edge"
+        part="annotation-label"
+        style="
+          left: ${watch(finalX)}px;
+          top: ${watch(finalY)}px;
+        "
+      >
+        ${this.tagLabelTemplate(model)}
+      </label>
+    `;
+  }
+
+  private annotationTemplate(model: Annotation): HTMLTemplateResult {
     // we know that the unit converter will be defined when the annotation is
     // rendered because the annotation will be culled if the unit converter is
     // not defined.
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const { x, y, width, height } = this.unitConverter!.annotationRect(model);
-    const annotationAnchorName = `--bounding-box-anchor-${index}` satisfies CssVariable;
+    const annotationRect = this.unitConverter!.annotationRect(model);
+    const { x, y, width, height } = annotationRect;
 
     const boundingBoxClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
@@ -322,15 +343,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return html`
       ${when(
         this.tagStyle === AnnotationTagStyle.EDGE,
-        () => html`
-          <label
-            class="bounding-box-label style-edge"
-            part="annotation-label"
-            style="position-anchor: ${annotationAnchorName};"
-          >
-            ${this.tagLabelTemplate(model)}
-          </label>
-        `,
+        () => this.edgeLabelTemplate(model, annotationRect),
       )}
 
       <aside
@@ -347,7 +360,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
             top: ${watch(y)}px;
             width: ${watch(width)}px;
             height: ${watch(height)}px;
-            anchor-name: ${annotationAnchorName};
           "
         ></div>
       </aside>
@@ -357,8 +369,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   public chromeOverlay(): ChromeTemplate {
     return html`
       <div class="annotations-surface">
-        ${map(this.annotationModels, (model: Annotation, i: number) =>
-          this.shouldCullAnnotation(model) ? nothing : this.annotationTemplate(model, i),
+        ${map(this.annotationModels, (model: Annotation) =>
+          this.shouldCullAnnotation(model) ? nothing : this.annotationTemplate(model),
         )}
       </div>
     `;
