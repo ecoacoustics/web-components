@@ -106,17 +106,6 @@
 
     color: var(--oe-annotation-font-color);
     background-color: var(--oe-annotation-color);
-
-    /*
-      When the annotation labels are positioned at the top of the spectrogram
-      if the label is too large to fit inside the annotations width, it can
-      cause the label to overflow and not be visible.
-
-      This is especially predominant when the user slots in their own content.
-    */
-    left: min(max(anchor(left), 0px), calc(100% - 5em));
-    bottom: max(anchor(top), 1em);
-    position-try: flip-block, flip-inline, --position-float-top;
   }
 
   &.style-spectrogram-top {
@@ -130,9 +119,4 @@
   &.style-hidden {
     display: none;
   }
-}
-
-@position-try --position-float-top {
-  top: 0px;
-  bottom: initial;
 }

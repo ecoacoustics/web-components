@@ -14,8 +14,9 @@ import { loop } from "../../helpers/directives";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
+import { Rect, Size } from "../../models/rendering";
+import { styleMap } from "lit/directives/style-map.js";
 import annotateStyles from "./css/style.css?inline";
-import { Rect } from "../../models/rendering";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -295,17 +296,23 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   private edgeLabelTemplate(model: Readonly<Annotation>, annotationRect: Readonly<Rect<Signal<Pixel>>>) {
     const { x, y } = annotationRect;
 
+    const fontSize = { width: 12, height: 12 } as const satisfies Size<Pixel>;
+
     const finalX = computed(() => Math.max(x.value, 0));
-    const finalY = computed(() => Math.max(y.value, 0));
+    const finalY = computed(() => Math.max(y.value - fontSize.height, 0));
+
+    const yPosAxis = finalY.value > 12 ? "top" : "bottom";
+
+    const styles = styleMap({
+      left: `${watch(finalX)}px`,
+      top: `${watch(finalY)}px`
+    });
 
     return html`
       <label
         class="bounding-box-label style-edge"
         part="annotation-label"
-        style="
-          left: ${watch(finalX)}px;
-          top: ${watch(finalY)}px;
-        "
+        style=${styles}
       >
         ${this.tagLabelTemplate(model)}
       </label>
