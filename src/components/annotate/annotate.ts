@@ -348,27 +348,24 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     };
 
     return html`
-      ${when(
-        this.tagStyle === AnnotationTagStyle.EDGE,
-        () => this.edgeLabelTemplate(model, annotationRect),
-      )}
-
       <aside
         class="annotation-container ${boundingBoxClasses}"
         tabindex="0"
         @focus="${() => focusCallback(model, true)}"
         @blur="${() => focusCallback(model, false)}"
+        style="
+          left: ${watch(x)}px;
+          top: ${watch(y)}px;
+          width: ${watch(width)}px;
+          height: ${watch(height)}px;
+        "
       >
-        <div
-          class="bounding-box"
-          part="annotation-bounding-box"
-          style="
-            left: ${watch(x)}px;
-            top: ${watch(y)}px;
-            width: ${watch(width)}px;
-            height: ${watch(height)}px;
-          "
-        ></div>
+        <div class="bounding-box" part="annotation-bounding-box">
+          ${when(
+            this.tagStyle === AnnotationTagStyle.EDGE,
+            () => this.edgeLabelTemplate(model, annotationRect),
+          )}
+        </div>
       </aside>
     `;
   }
