@@ -14,7 +14,7 @@ import { loop } from "../../helpers/directives";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
-import { Rect, Size } from "../../models/rendering";
+import { Rect, RenderCanvasSize, Size } from "../../models/rendering";
 import { styleMap } from "lit/directives/style-map.js";
 import annotateStyles from "./css/style.css?inline";
 
@@ -293,20 +293,98 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     `;
   }
 
-  private edgeLabelTemplate(model: Readonly<Annotation>, annotationRect: Readonly<Rect<Signal<Pixel>>>) {
-    const { x, y } = annotationRect;
+  // I have extracted the edge label styles into a separate function so that
+  // we can short circuit the first time that we find a style that fits.
+  private edgeLabelStyles(
+    model: Readonly<Annotation>,
+    annotationRect: Readonly<Rect<Signal<Pixel>>>,
+    canvasSize: Readonly<Signal<RenderCanvasSize>>,
+  ): Parameters<typeof styleMap>[0] {
+    const fontSize = {
+      width: 12,
+      height: 16,
+    } as const satisfies Size<Pixel>;
 
-    const fontSize = { width: 12, height: 12 } as const satisfies Size<Pixel>;
+    // we used to position edge labels using CSS anchor positioning
+    // however, Firefox and Safari did not support anchor positioning
+    // so we transitioned to a JavaScript implementation.
+    //
+    // However, the old method was tried and tested, so therefore, I want to
+    // replicate the following position-try values;
+    // position-try: flip-block, flip-inline, --position-float-top;
+    //
+    // where --position-float-top is
+    // @position-try --position-float-top {
+    //   top: 0px;
+    //   bottom: initial;
+    // }
 
-    const finalX = computed(() => Math.max(x.value, 0));
-    const finalY = computed(() => Math.max(y.value - fontSize.height, 0));
+    // check to see if the label will fit in the top left hand position
+    // (above the annotation)
+    const fitsTopLeft = annotationRect.y.value > fontSize.height;
+    if (fitsTopLeft) {
+      return {
+        top: "0px",
+        transform: "translateY(-100%)",
+        left: annotationRect.x.value > 0 ? "0px" : `${Math.abs(annotationRect.x.value)}px`,
+      };
+    }
 
-    const yPosAxis = finalY.value > 12 ? "top" : "bottom";
+    // flip-block
+    // Flipping the block alignment means moving the label from the top of the
+    // annotation to the bottom.
+    // If it is still inside the container, then we can accept the position
+    // fallback.
+    // This is the most common positioning fallback.
+    const fitsBottomLeft =
+      annotationRect.y.value + annotationRect.height.value + fontSize.height < canvasSize.value.height;
+    if (fitsBottomLeft) {
+      return {
+        bottom: "0px",
+        transform: "translateY(100%)",
+        left: annotationRect.x.value > 0 ? "0px" : `${Math.abs(annotationRect.x.value)}px`,
+      };
+    }
 
-    const styles = styleMap({
-      left: `${watch(finalX)}px`,
-      top: `${watch(finalY)}px`
-    });
+    // flip-inline
+    // Flipping inline alignment means moving the label from the left of the
+    // annotation to the right of the annoation
+    //
+    // HN: I originally had this condition in the css anchor positioning
+    // however, when migrating to JavaScript positioning, I could not think of
+    // a condition where we would want to trigger an inline flip
+
+    // --position-float-top
+    // The last positioning that we try is a custom positioning method where
+    // the label is positioned at the top of the anntoation surface.
+    // If the edge label does not fit after flip-block, flip-inline or float
+    // top, we know that the label will not fit on the annotation surface.
+    // Because the surface is too small.
+    return {
+      top: annotationRect.y.value > 0 ? "0px" : `${Math.abs(annotationRect.y.value)}px`,
+      transform: annotationRect.y.value > 0 ? "translateY(100%)" : "initial",
+      left: "0px",
+    };
+  }
+
+  private edgeLabelTemplate(
+    model: Readonly<Annotation>,
+    annotationRect: Readonly<Rect<Signal<Pixel>>>,
+    canvasSize: Readonly<Signal<RenderCanvasSize>>,
+  ) {
+    //  const labelXPosition = computed(() => annotationRect.x.value > 0 ? "left" : "right");
+    //  const labelYPosition = computed(() => annotationRect.y.value > 0 ? "top" : "bottom");
+    //  const labelXOffset = computed(() => labelXPosition.value === "left" ? "0px" : "0px");
+    //  const labelYOffset = computed(() => labelYPosition.value === "top" ? "-1rem" : "-1rem");
+
+    //  const styles = styleMap({
+    //    [labelXPosition.value]: labelXOffset.value,
+    //    [labelYPosition.value]: labelYOffset.value,
+    //  });
+
+    const styles = styleMap(
+      this.edgeLabelStyles(model, annotationRect, canvasSize),
+    );
 
     return html`
       <label
@@ -323,8 +401,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // we know that the unit converter will be defined when the annotation is
     // rendered because the annotation will be culled if the unit converter is
     // not defined.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const annotationRect = this.unitConverter!.annotationRect(model);
+    if (!this.unitConverter) {
+      console.error("The unit converter is not defined. Cannot render annotations.");
+      return html``;
+    }
+
+    const canvasSize = this.unitConverter.canvasSize;
+    const annotationRect = this.unitConverter.annotationRect(model);
     const { x, y, width, height } = annotationRect;
 
     const boundingBoxClasses = classMap({
@@ -363,7 +446,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         <div class="bounding-box" part="annotation-bounding-box">
           ${when(
             this.tagStyle === AnnotationTagStyle.EDGE,
-            () => this.edgeLabelTemplate(model, annotationRect),
+            () => this.edgeLabelTemplate(model, annotationRect, canvasSize),
           )}
         </div>
       </aside>
