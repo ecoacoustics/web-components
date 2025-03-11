@@ -1,7 +1,7 @@
 import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
 import {
-    catchLocatorEvent,
+  catchLocatorEvent,
   getBrowserStyles,
   getBrowserValue,
   removeBrowserAttribute,

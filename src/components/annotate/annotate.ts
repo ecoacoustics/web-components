@@ -296,7 +296,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   // I have extracted the edge label styles into a separate function so that
   // we can short circuit the first time that we find a style that fits.
   private edgeLabelStyles(
-    model: Readonly<Annotation>,
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
   ): Parameters<typeof styleMap>[0] {
@@ -382,16 +381,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     //    [labelYPosition.value]: labelYOffset.value,
     //  });
 
-    const styles = styleMap(
-      this.edgeLabelStyles(model, annotationRect, canvasSize),
-    );
+    const styles = styleMap(this.edgeLabelStyles(annotationRect, canvasSize));
 
     return html`
-      <label
-        class="bounding-box-label style-edge"
-        part="annotation-label"
-        style=${styles}
-      >
+      <label class="bounding-box-label style-edge" part="annotation-label" style=${styles}>
         ${this.tagLabelTemplate(model)}
       </label>
     `;
@@ -444,9 +437,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         "
       >
         <div class="bounding-box" part="annotation-bounding-box">
-          ${when(
-            this.tagStyle === AnnotationTagStyle.EDGE,
-            () => this.edgeLabelTemplate(model, annotationRect, canvasSize),
+          ${when(this.tagStyle === AnnotationTagStyle.EDGE, () =>
+            this.edgeLabelTemplate(model, annotationRect, canvasSize),
           )}
         </div>
       </aside>
