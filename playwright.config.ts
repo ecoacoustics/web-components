@@ -37,7 +37,9 @@ export default defineConfig({
     // this can be useful for seeing why a test has failed in CI
     process.env.CI ? ["github"] : ["list"],
   ],
-  snapshotPathTemplate: "./src/tests/__snapshots__/{testName}/{arg}{ext}",
+  // be careful when updating this path template. Long path names can cause
+  // Git on Windows to fail checkout
+  snapshotPathTemplate: "./src/tests/__snapshots__/{arg}{ext}",
   testMatch: "**/*.spec.ts",
   projects: [{ name: "chromium" }, { name: "firefox" }, { name: "webkit" }],
 });
