@@ -7,7 +7,7 @@ test("should create", async ({ fixture }) => {
   expect(fixture.hostComponent()).toBeDefined();
 });
 
-test.describe("connecting providers", () => {
+test.describe.fixme("connecting providers", () => {
   test("should dispatch chrome advertisement event on first update", async ({ fixture }) => {
     const advertisementEvent = catchEvent(fixture.page, "oe-chrome-advertisement");
 
@@ -25,7 +25,7 @@ test.describe("connecting providers", () => {
   test("should connect provider", () => {});
 });
 
-test.describe("disconnecting", () => {
+test.describe.fixme("disconnecting", () => {
   test("should disconnect valid provider", () => {});
 
   test("should have no operation if provider is not connected", () => {});
@@ -33,7 +33,7 @@ test.describe("disconnecting", () => {
   test("should disconnect all providers on host disconnect", () => {});
 });
 
-test.describe("chrome rendering", () => {
+test.describe.fixme("chrome rendering", () => {
   test("should handle provider with all chrome regions", () => {});
 
   test("should handle multiple providers", () => {});

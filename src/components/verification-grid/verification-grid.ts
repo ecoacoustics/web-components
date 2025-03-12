@@ -1415,7 +1415,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                     @loaded="${this.handleSpectrogramLoaded}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
-                    .model="${subject}"
+                    .model="${subject as any}"
                     .index="${i}"
                   >
                     ${unsafeHTML(customTemplate.innerHTML)}

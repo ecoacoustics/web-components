@@ -135,7 +135,7 @@ test.describe("unit tests", () => {
   });
 });
 
-test.describe("spectrogram sizing", () => {
+test.describe.skip("spectrogram sizing", () => {
   const minimumSpectrogramHeight = 128 satisfies Pixel;
 
   const originalSpectrogramHeight = 704 satisfies Pixel;

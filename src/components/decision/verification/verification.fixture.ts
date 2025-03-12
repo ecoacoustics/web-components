@@ -52,10 +52,6 @@ class VerificationComponentFixture {
     return await this.additionalTagsLegend().textContent();
   }
 
-  public async isShortcutLegendVisible(): Promise<boolean> {
-    return (await this.shortcutLegend().count()) > 0;
-  }
-
   // change attributes
   public async changeShortcut(key: string) {
     await setBrowserAttribute<VerificationComponent>(this.component(), "shortcut", key);

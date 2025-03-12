@@ -159,60 +159,60 @@ test.describe("interactions between axes and spectrogram", () => {
   });
 
   // TODO: finish these tests
-  // test.describe("with render window", () => {
-  //   const renderWindowXLow = "1";
-  //   const renderWindowXHigh = "3";
-  //   const renderWindowYLow = "100";
-  //   const renderWindowYHigh = "9000";
-  //   const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
+  test.describe.skip("with render window", () => {
+    const renderWindowXLow = "1";
+    const renderWindowXHigh = "3";
+    const renderWindowYLow = "100";
+    const renderWindowYHigh = "9000";
+    const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
 
-  //   test.beforeEach(async ({ fixture }) => {
-  //     await fixture.create(undefined, testRenderWindow);
-  //   });
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(undefined, testRenderWindow);
+    });
 
-  //   test("should have the correct axes values", async ({ fixture }) => {
-  //     await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
-  //   });
+    test("should have the correct axes values", async ({ fixture }) => {
+      await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
+    });
 
-  //   test("changing the render window after creation", async ({ fixture }) => {
-  //     const newXLow = "1";
-  //     const newXHigh = "3";
-  //     const newYLow = "100";
-  //     const newYHigh = "9000";
-  //     const newRenderWindow = `${newXLow}, ${newYLow}, ${newXHigh}, ${newYHigh}`;
+    test("changing the render window after creation", async ({ fixture }) => {
+      const newXLow = "1";
+      const newXHigh = "3";
+      const newYLow = "100";
+      const newYHigh = "9000";
+      const newRenderWindow = `${newXLow}, ${newYLow}, ${newXHigh}, ${newYHigh}`;
 
-  //     await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "window" as any, newRenderWindow);
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "window" as any, newRenderWindow);
 
-  //     await fixture.assertAxisRange(newXLow, newXHigh, newYLow, newYHigh);
-  //   });
+      await fixture.assertAxisRange(newXLow, newXHigh, newYLow, newYHigh);
+    });
 
-  //   // TODO: this test is currently failing because the unitConverters in the
-  //   // spectrogram component are not updating when lit attributes change
-  //   // meaning that the axes component doesn't re-render
-  //   test.skip("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
-  //     const expectedFirstTickValue = "2.0";
-  //     const expectedLastTickValue = "7.0";
-  //     await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");
+    // TODO: this test is currently failing because the unitConverters in the
+    // spectrogram component are not updating when lit attributes change
+    // meaning that the axes component doesn't re-render
+    test.skip("changing the offset after creation should change the x-axis correctly", async ({ fixture }) => {
+      const expectedFirstTickValue = "2.0";
+      const expectedLastTickValue = "7.0";
+      await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");
 
-  //     await fixture.assertAxisRange(expectedFirstTickValue, expectedLastTickValue, renderWindowYLow, renderWindowYHigh);
-  //   });
-  // });
+      await fixture.assertAxisRange(expectedFirstTickValue, expectedLastTickValue, renderWindowYLow, renderWindowYHigh);
+    });
+  });
 
-  // test.describe("with render window and offset", () => {
-  //   const testOffset = 2;
+  test.describe("with render window and offset", () => {
+    const testOffset = 2;
 
-  //   const renderWindowXLow = "1";
-  //   const renderWindowXHigh = "3";
-  //   const renderWindowYLow = "100";
-  //   const renderWindowYHigh = "9000";
-  //   const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
+    const renderWindowXLow = "1";
+    const renderWindowXHigh = "3";
+    const renderWindowYLow = "100";
+    const renderWindowYHigh = "9000";
+    const testRenderWindow = `${renderWindowXLow}, ${renderWindowYLow}, ${renderWindowXHigh}, ${renderWindowYHigh}`;
 
-  //   test.beforeEach(async ({ fixture }) => {
-  //     await fixture.create(testOffset, testRenderWindow);
-  //   });
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(testOffset, testRenderWindow);
+    });
 
-  //   test("should have the correct axes values", async ({ fixture }) => {
-  //     await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
-  //   });
-  // });
+    test("should have the correct axes values", async ({ fixture }) => {
+      await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
+    });
+  });
 });

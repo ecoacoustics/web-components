@@ -103,6 +103,11 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
     }
 
     public render() {
+      if (!this.renderSurface) {
+        console.error("ChromeHost must implement renderSurface");
+        return nothing;
+      }
+
       const componentTemplate = this.renderSurface();
 
       return html`

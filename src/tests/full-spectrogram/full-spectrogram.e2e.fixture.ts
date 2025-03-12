@@ -25,10 +25,10 @@ class TestPage {
   public actionButtonIcon = () => this.actionButton().locator("sl-icon").first();
   private audioSource = "http://localhost:3000/example.flac";
 
-  public chromeTopContainer = () => this.page.locator("chrome-top").first();
-  public chromeBottomContainer = () => this.page.locator("chrome-bottom").first();
-  public chromeLeftContainer = () => this.page.locator("chrome-left").first();
-  public chromeRightContainer = () => this.page.locator("chrome-right").first();
+  public chromeTopContainer = () => this.page.locator(".chrome-top").first();
+  public chromeBottomContainer = () => this.page.locator(".chrome-bottom").first();
+  public chromeLeftContainer = () => this.page.locator(".chrome-left").first();
+  public chromeRightContainer = () => this.page.locator(".chrome-right").first();
 
   public async create() {
     await this.page.setContent(`
