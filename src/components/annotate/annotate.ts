@@ -304,6 +304,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       height: 16,
     } as const satisfies Size<Pixel>;
 
+    // TODO: this should get getBoundingClientRect() so that we support slotted
+    // elements
+    const labelRect = {
+      width: 400,
+      height: 20,
+    } as const satisfies Size<Pixel>;
+
     // we used to position edge labels using CSS anchor positioning
     // however, Firefox and Safari did not support anchor positioning
     // so we transitioned to a JavaScript implementation.
@@ -325,7 +332,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     // check to see if the label will fit in the top left hand position
     // (above the annotation)
-    const fitsTopLeft = annotationRect.y.value > fontSize.height;
+    const fitsTopLeft =
+      annotationRect.y.value > fontSize.height && annotationRect.x.value + labelRect.width < canvasSize.value.width;
     if (fitsTopLeft) {
       return {
         top: "0px",
@@ -344,7 +352,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // fallback.
     // This is the most common positioning fallback.
     const fitsBottomLeft =
-      annotationRect.y.value + annotationRect.height.value + fontSize.height < canvasSize.value.height;
+      annotationRect.y.value + annotationRect.height.value + fontSize.height < canvasSize.value.height &&
+      annotationRect.x.value + labelRect.width < canvasSize.value.width;
     if (fitsBottomLeft) {
       return {
         bottom: "0px",
@@ -357,19 +366,41 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     }
 
     // flip-inline
+    const fitsTopRight =
+      annotationRect.y.value > fontSize.height &&
+      annotationRect.x.value + annotationRect.width.value > canvasSize.value.width;
+    if (fitsTopRight) {
+      return {
+        top: "0px",
+        transform: "translateY(-100%)",
+        right:
+          annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+            ? `${Math.abs(annotationRect.x.value + annotationRect.width.value - canvasSize.value.width)}px`
+            : "0px",
+      };
+    }
+
+    // flip-inline flip-block
     // Flipping inline alignment means moving the label from the left of the
     // annotation to the right of the annotation.
-    //
-    // HN: I originally had this condition in the css anchor positioning
-    // however, when migrating to JavaScript positioning, I could not think of
-    // a condition where we would want to trigger an inline flip
+    const fitsBottomRight =
+      annotationRect.y.value + annotationRect.height.value + labelRect.height < canvasSize.value.height;
+    if (fitsBottomRight) {
+      return {
+        bottom: "0px",
+        transform: "translateY(100%)",
+        right:
+          annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+            ? `${Math.abs(annotationRect.x.value + annotationRect.width.value - canvasSize.value.width)}px`
+            : "0px",
+      };
+    }
 
     // --position-float-top
     // The last positioning that we try is a custom positioning method where
     // the label is positioned at the top of the annotation surface.
-    // If the edge label does not fit after flip-block, flip-inline or float
-    // top, we know that the label will not fit on the annotation surface.
-    // Because the surface is too small.
+    // This is the last common positioning fallback because the label ends up
+    // covering some of the annotation.
     return {
       top:
         annotationRect.y.value > 0
