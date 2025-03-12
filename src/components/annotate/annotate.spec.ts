@@ -4,6 +4,7 @@ import {
   catchLocatorEvent,
   getBrowserStyles,
   getBrowserValue,
+  getCssBackgroundColorVariable,
   removeBrowserAttribute,
   setBrowserAttribute,
 } from "../../tests/helpers";
@@ -350,29 +351,42 @@ test.describe("annotation", () => {
 
     test("should change the annotations color if inside the bounding box is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationBoundingBoxes())[0];
+
+      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
+      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
+        target,
+        "--oe-annotation-selected-color",
+      );
+
+      const initialAnnotationColor = (await getBrowserStyles(target)).borderColor;
+      expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
+
       await target.click();
+
+      const finalAnnotationColor = (await getBrowserStyles(target)).borderColor;
+      expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
+
+      expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
     });
 
     test("should change the annotations color if the label is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationLabels())[0];
 
-      const initialAnnotationColor = getBrowserStyles(target)[0].color;
+      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
+      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
+        target,
+        "--oe-annotation-selected-color",
+      );
+
+      const initialAnnotationColor = (await getBrowserStyles(target)).backgroundColor;
+      expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
 
       await target.click();
 
-      const realizedAnnotationColor = getBrowserStyles(target)[0].color;
+      const finalAnnotationColor = (await getBrowserStyles(target)).backgroundColor;
+      expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
 
-      expect(realizedAnnotationColor).not.toBe(initialAnnotationColor);
-    });
-
-    test("should raise above other annotations when the bounding box is clicked", async ({ fixture }) => {
-      const target = (await fixture.annotationBoundingBoxes())[0];
-      await target.click();
-    });
-
-    test("should raise above other annotations when the label is clicked", async ({ fixture }) => {
-      const target = (await fixture.annotationLabels())[0];
-      await target.click();
+      expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
     });
   });
 });

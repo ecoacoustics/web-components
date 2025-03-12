@@ -68,7 +68,7 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   }, name);
 }
 
-// for some reason new versions of chrome return the background color as  rgba,
+// for some reason new versions of chrome return the background color as rgba,
 // but the foreground color as standard rgb.
 // this can break tests if you are comparing background colors to foreground
 // colors.
