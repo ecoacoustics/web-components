@@ -59,7 +59,7 @@ test.describe("annotation", () => {
     });
   });
 
-  test.describe("in-view bounding boxes", () => {
+  test.describe("in-view annotations", () => {
     const tests = [
       {
         name: "should correctly place correct bounding boxes",
@@ -70,7 +70,7 @@ test.describe("annotation", () => {
     createAnnotationTests(tests);
   });
 
-  test.describe("overflowing annotations", () => {
+  test.describe("annotation overflow", () => {
     test.describe("fully overflowing", () => {
       const tests = [
         {
@@ -123,7 +123,7 @@ test.describe("annotation", () => {
       createAnnotationTests(tests);
     });
 
-    test.describe("partially overflowed 1 axis", () => {
+    test.describe("partial axis overflow", () => {
       const tests = [
         {
           name: "start time has overflowed",
@@ -153,7 +153,7 @@ test.describe("annotation", () => {
           },
         },
         {
-          name: "high frequency has overflowed",
+          name: "high frequency overflow",
           annotation: {
             startOffset: 2,
             endOffset: 2.5,
@@ -166,7 +166,7 @@ test.describe("annotation", () => {
           // was rendered in the top left position, it would overflow the
           // high frequency axis
           // therefore, we expect that the label will be rendered on the bottom
-          name: "high frequency label is overflowing",
+          name: "frequency label overflow",
           annotation: {
             startOffset: 3,
             endOffset: 3.4,
@@ -204,7 +204,7 @@ test.describe("annotation", () => {
       createAnnotationTests(tests);
     });
 
-    test.describe("corners overflowed", () => {
+    test.describe("corner overflow", () => {
       const tests = [
         {
           name: "top left",
