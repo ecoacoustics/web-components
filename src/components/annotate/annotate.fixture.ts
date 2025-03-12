@@ -147,19 +147,13 @@ class TestPage {
       element.style.backgroundColor = "black";
     });
 
-    const targetBoundingBoxes = await this.annotationBoundingBoxes();
-    for (const box of targetBoundingBoxes) {
-      box.evaluate((element: HTMLDivElement) => {
-        element.style.border = `green 2px solid`;
-      });
-    }
-
     const targetAnnotationLabels = await this.annotationLabels();
     for (const label of targetAnnotationLabels) {
       label.evaluate((element: HTMLHeadingElement) => {
-        element.style.border = "green 2px solid";
-        element.style.backgroundColor = "green";
-        element.style.color = "green";
+        // we make the annotation font color the same as the annotation color
+        // so that the text is not visible and we are only asserting over the
+        // bounding box and label positioning
+        element.style.setProperty("--oe-annotation-font-color", "var(--oe-annotation-color)");
       });
     }
   }

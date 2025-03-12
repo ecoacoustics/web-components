@@ -294,7 +294,7 @@
 
       let currentTagStyle = 1;
       function changeTagStyle() {
-        const tagStyles = ["HIDDEN", "EDGE", "SPECTROGRAM_TOP", "invalid-tag-style"];
+        const tagStyles = ["hidden", "edge", "spectrogram-top", "invalid-tag-style"];
         const newTagStyle = tagStyles[++currentTagStyle % tagStyles.length];
         annotateElement.setAttribute("tag-style", newTagStyle);
       }
