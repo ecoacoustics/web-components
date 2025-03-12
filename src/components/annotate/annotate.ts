@@ -318,6 +318,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     //   bottom: initial;
     // }
 
+    // I subtract the annotation weight from some of these positions because
+    // the annotations border is not included in the box models content box.
+    // Meaning that if we do left: 0px, the label will not be positioned flush
+    // with the annotations border edge.
+
     // check to see if the label will fit in the top left hand position
     // (above the annotation)
     const fitsTopLeft = annotationRect.y.value > fontSize.height;
@@ -325,7 +330,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return {
         top: "0px",
         transform: "translateY(-100%)",
-        left: annotationRect.x.value > 0 ? "0px" : `${Math.abs(annotationRect.x.value)}px`,
+        left:
+          annotationRect.x.value > 0
+            ? "calc(var(--oe-annotation-weight) * -1)"
+            : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
       };
     }
 
@@ -341,13 +349,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return {
         bottom: "0px",
         transform: "translateY(100%)",
-        left: annotationRect.x.value > 0 ? "0px" : `${Math.abs(annotationRect.x.value)}px`,
+        left:
+          annotationRect.x.value > 0
+            ? "calc(var(--oe-annotation-weight) * -1)"
+            : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
       };
     }
 
     // flip-inline
     // Flipping inline alignment means moving the label from the left of the
-    // annotation to the right of the annoation
+    // annotation to the right of the annotation.
     //
     // HN: I originally had this condition in the css anchor positioning
     // however, when migrating to JavaScript positioning, I could not think of
@@ -355,12 +366,15 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     // --position-float-top
     // The last positioning that we try is a custom positioning method where
-    // the label is positioned at the top of the anntoation surface.
+    // the label is positioned at the top of the annotation surface.
     // If the edge label does not fit after flip-block, flip-inline or float
     // top, we know that the label will not fit on the annotation surface.
     // Because the surface is too small.
     return {
-      top: annotationRect.y.value > 0 ? "0px" : `${Math.abs(annotationRect.y.value)}px`,
+      top:
+        annotationRect.y.value > 0
+          ? "calc(var(--oe-annotation-weight) * -1)"
+          : `calc(${Math.abs(annotationRect.y.value)}px - var(--oe-annotation-weight))`,
       transform: annotationRect.y.value > 0 ? "translateY(100%)" : "initial",
       left: "0px",
     };
