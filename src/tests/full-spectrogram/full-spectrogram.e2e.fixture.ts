@@ -37,8 +37,6 @@ class TestPage {
           <oe-spectrogram
             id="spectrogram"
             src="${this.audioSource}"
-            offset="2"
-            style="width: 200px; height: 200px;"
           ></oe-spectrogram>
         </oe-indicator>
       </oe-axes>

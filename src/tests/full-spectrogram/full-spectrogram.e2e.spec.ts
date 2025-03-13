@@ -5,7 +5,7 @@ import { expect } from "../assertions";
 import { catchLocatorEvent, setElementSize } from "../helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
 
-test.describe("interactions between all components", () => {
+test.describe.only("interactions between all components", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });

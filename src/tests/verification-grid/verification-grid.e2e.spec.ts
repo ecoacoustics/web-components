@@ -1624,9 +1624,9 @@ test.describe("verification grid with custom template", () => {
       await fixture.makeDecision(0);
 
       // because it can take a while for the next page to load, and the info
-      // cards to update, we have to wait until we receive the "loaded" event
-      // from the grid component that signals that the next page has been loaded
-      await catchLocatorEvent(fixture.gridComponent(), "loaded");
+      // cards to update, we have to wait until we receive the "grid-loaded"
+      // event that signals that the next page has been loaded
+      await catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
 
       const expectedInfoCard = [
         { key: "Title 1", value: "Description 1" },

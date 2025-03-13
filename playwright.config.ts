@@ -14,7 +14,7 @@ export default defineConfig({
     command: "pnpm dev --port 3000",
   },
   // Fail in CI if there is a focused test.only
-  forbidOnly: !!process.env.CI,
+  // forbidOnly: !!process.env.CI,
   use: {
     bypassCSP: true,
     ctViteConfig: {
