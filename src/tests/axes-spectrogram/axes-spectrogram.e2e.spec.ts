@@ -4,10 +4,6 @@ import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 
 test.describe("interactions between axes and spectrogram", () => {
-  test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
-  });
-
   test.describe("axis step for different size spectrograms", () => {
     interface SpectrogramSizeTest {
       spectrogramSize: { width: number; height: number };
@@ -46,9 +42,6 @@ test.describe("interactions between axes and spectrogram", () => {
         expectedXTickCount: 11,
         expectedYTickCount: 56,
       },
-      //TODO: setting the height to 100px is not working because the
-      // Resize observer the throws page error
-      // "ResizeObserver loop completed with undelivered notifications."
       // when testing a height of 100px, the height should be clipped to 128px
       // because the spectrogram components canvas has a minimum height of 128px
       {
@@ -65,7 +58,7 @@ test.describe("interactions between axes and spectrogram", () => {
       const humanizedSize = `${testCase.spectrogramSize.width} x ${testCase.spectrogramSize.height}`;
 
       test(`x-axis step for size ${humanizedSize}`, async ({ fixture }) => {
-        await fixture.changeSize(testCase.spectrogramSize);
+        await fixture.createWithSize(testCase.spectrogramSize);
 
         const expectedXStep = testCase.expectedXStep;
         const realizedXStep = await fixture.xAxisStep();
@@ -76,7 +69,7 @@ test.describe("interactions between axes and spectrogram", () => {
       });
 
       test(`y-axis step for size ${humanizedSize}`, async ({ fixture }) => {
-        await fixture.changeSize(testCase.spectrogramSize);
+        await fixture.createWithSize(testCase.spectrogramSize);
 
         const expectedYStep = testCase.expectedYStep;
         const realizedYStep = await fixture.yAxisStep();
@@ -84,7 +77,7 @@ test.describe("interactions between axes and spectrogram", () => {
       });
 
       test(`x-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
-        await fixture.changeSize(testCase.spectrogramSize);
+        await fixture.createWithSize(testCase.spectrogramSize);
 
         const expectedXTickCount = testCase.expectedXTickCount;
         const xAxisTicks = await fixture.xAxisTicks();
@@ -93,7 +86,7 @@ test.describe("interactions between axes and spectrogram", () => {
       });
 
       test(`y-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
-        await fixture.changeSize(testCase.spectrogramSize);
+        await fixture.createWithSize(testCase.spectrogramSize);
 
         const expectedYTickCount = testCase.expectedYTickCount;
         const yAxisTicks = await fixture.yAxisTicks();
@@ -106,6 +99,7 @@ test.describe("interactions between axes and spectrogram", () => {
   test.skip("different spectrogram stretching attributes", () => {
     test.describe("changing the spectrogram src", () => {
       test.beforeEach(async ({ fixture }) => {
+        await fixture.create();
         await fixture.changeSpectrogramSrc("/example_34s.flac");
       });
 
