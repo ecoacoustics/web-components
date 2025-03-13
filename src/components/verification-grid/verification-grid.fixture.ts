@@ -17,7 +17,7 @@ class VerificationGridFixture {
         </template>
 
         <oe-data-source
-          src="http://localhost:3000/grid-items.json"
+          src="http://localhost:3000/test-items.json"
           for="verification-grid"
         ></oe-data-source>
       </oe-verification-grid>
@@ -36,7 +36,7 @@ class VerificationGridFixture {
         <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
 
         <oe-data-source
-          src="http://localhost:3000/grid-items.json"
+          src="http://localhost:3000/test-items.json"
           for="verification-grid"
         ></oe-data-source>
       </oe-verification-grid>

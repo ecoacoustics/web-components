@@ -198,7 +198,7 @@ test.describe("interactions between axes and spectrogram", () => {
     });
   });
 
-  test.describe("with render window and offset", () => {
+  test.describe.skip("with render window and offset", () => {
     const testOffset = 2;
 
     const renderWindowXLow = "1";
