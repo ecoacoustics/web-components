@@ -37,9 +37,6 @@ class TestPage {
       element.style.width = `${size.width}px`;
       element.style.height = `${size.height}px`;
     }, size);
-
-    // TODO: remove this
-    await this.page.waitForTimeout(100);
   }
 
   public async spectrogramSize(): Promise<Size> {

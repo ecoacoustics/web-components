@@ -313,7 +313,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
     this.initializeUnitConverter();
-    this.resizeCanvas(this.canvas);
+    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
@@ -339,7 +339,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     const originalRecording = { duration: info.duration, startOffset: this.offset };
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
-    this.resizeCanvas(this.canvas);
+    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
@@ -364,7 +364,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     await this.audioHelper.regenerateSpectrogram(this.spectrogramOptions);
 
-    this.resizeCanvas(this.canvas);
+    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
@@ -434,15 +434,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return { width, height };
   }
 
-  private naturalSize(originalSize: Size, target: HTMLElement): Size {
-    if (target.clientWidth === 0 || target.clientHeight === 0) {
+  private naturalSize(originalSize: Size, entry: DOMRectReadOnly): Size {
+    if (entry.width === 0 || entry.height === 0) {
       return { width: 0, height: 0 };
     }
 
     // the natural size is where we take the "original" spectrogram size and
     // scale the width and height (while maintaining the aspect ratio) up until
     // one of the dimensions overflows the targetEntry.contentRect
-    const scale = Math.min(target.clientWidth / originalSize.width, target.clientHeight / originalSize.height);
+    const scale = Math.min(entry.width / originalSize.width, entry.height / originalSize.height);
 
     return {
       width: originalSize.width * scale,
@@ -450,14 +450,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     };
   }
 
-  private stretchSize(entry: HTMLElement): Size {
-    const elementToScaleTo = entry;
-
+  private stretchSize(entry: DOMRectReadOnly): Size {
     // in any correctly structured HTML document, a parent element should always
     // exist (at the very minimum a html tag should be present) however, we
     // cannot enforce this, so we have to check that a parent element exists
-    if (elementToScaleTo) {
-      return { width: elementToScaleTo.clientWidth, height: elementToScaleTo.clientHeight };
+    if (entry) {
+      return { width: entry.width, height: entry.height };
     }
 
     throw new Error("Spectrogram element does not have a parent to scale to");
@@ -475,14 +473,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       return;
     }
 
-    const targetEntry = entries[0].target;
-    if (targetEntry instanceof HTMLElement) {
-      this.resizeCanvas(targetEntry);
-    }
+    const targetEntry = entries[0];
+    this.resizeCanvas(targetEntry.contentRect);
   }
 
   // TODO: refactor this procedure
-  private resizeCanvas(targetEntry: HTMLElement): void {
+  private resizeCanvas(targetEntry: DOMRectReadOnly): void {
     let size: Size;
 
     if (this.scaling === SpectrogramCanvasScale.ORIGINAL) {

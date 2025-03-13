@@ -17,7 +17,7 @@ test.describe("interactions between axes and spectrogram", () => {
       expectedYTickCount: number;
     }
 
-    const testCases: SpectrogramSizeTest[] = [
+    const testCases = [
       {
         spectrogramSize: { width: 1000, height: 1000 },
         expectedXStep: 0.2,
@@ -51,14 +51,14 @@ test.describe("interactions between axes and spectrogram", () => {
       // "ResizeObserver loop completed with undelivered notifications."
       // when testing a height of 100px, the height should be clipped to 128px
       // because the spectrogram components canvas has a minimum height of 128px
-      // {
-      //   spectrogramSize: { width: 100, height: 100 },
-      //   expectedXStep: 5,
-      //   expectedYStep: 2,
-      //   expectedXTickCount: 2,
-      //   expectedYTickCount: 6,
-      // },
-    ];
+      {
+        spectrogramSize: { width: 100, height: 100 },
+        expectedXStep: 5,
+        expectedYStep: 2,
+        expectedXTickCount: 2,
+        expectedYTickCount: 6,
+      },
+    ] as const satisfies SpectrogramSizeTest[];
 
     // TODO: add examples for offsets
     testCases.forEach((testCase: SpectrogramSizeTest) => {

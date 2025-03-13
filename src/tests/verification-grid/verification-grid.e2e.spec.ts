@@ -544,7 +544,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should hide the 'Continue Verifying' button when not viewing history", async ({ fixture }) => {
-      expect(fixture.continueVerifyingButton()).not.toBeVisible();
+      await expect(fixture.continueVerifyingButton()).not.toBeVisible();
     });
 
     test("should show the 'Continue Verifying' button when viewing history", async ({ fixture }) => {
