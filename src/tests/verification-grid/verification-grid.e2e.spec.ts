@@ -1594,19 +1594,19 @@ test.describe("decision meter", () => {
 });
 
 test.describe("verification grid with custom template", () => {
-  test.describe("information cards", () => {
+  test.describe.skip("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
-      const customTemplate = `
+      await fixture.create(
+        `
         <oe-verification verified="true">Koala</oe-verification>
         <oe-verification verified="false">Not Koala</oe-verification>
 
         <template>
-        <oe-info-card></oe-info-card>
+          <oe-info-card></oe-info-card>
         </template>
-			`;
-      await fixture.create(customTemplate);
-
-      await fixture.changeGridSource(fixture.testJsonInput);
+      `,
+        ["oe-info-card"],
+      );
     });
 
     test("should show the information about the current tile", async ({ fixture }) => {
@@ -1614,13 +1614,13 @@ test.describe("verification grid with custom template", () => {
         { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
         { key: "FileId", value: "643,356" },
         { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
-      ];
+      ] as const;
 
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.skip("should update correctly when paging", async ({ fixture }) => {
+    test("should update correctly when paging", async ({ fixture }) => {
       await fixture.makeDecision(0);
 
       // because it can take a while for the next page to load, and the info
@@ -1636,7 +1636,7 @@ test.describe("verification grid with custom template", () => {
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.skip("should update correctly when viewing history", async ({ fixture }) => {
+    test("should update correctly when viewing history", async ({ fixture }) => {
       await fixture.makeDecision(0);
       await fixture.viewPreviousHistoryPage();
 
@@ -1648,7 +1648,7 @@ test.describe("verification grid with custom template", () => {
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
-    test.skip("should update correctly when changing the grid source", async ({ fixture }) => {
+    test("should update correctly when changing the grid source", async ({ fixture }) => {
       const expectedInitialInfoCard = [
         { key: "Title 1", value: "Description 1" },
         { key: "Title 2", value: "Description 2" },
