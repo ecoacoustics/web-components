@@ -1,5 +1,5 @@
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
-import { customElement, property, queryAssignedElements } from "lit/decorators.js";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
+import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { Pixel, UnitConverter } from "../../models/unitConverters";
@@ -14,9 +14,10 @@ import { loop } from "../../helpers/directives";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
-import { Rect, RenderCanvasSize, Size } from "../../models/rendering";
+import { Rect, RenderCanvasSize } from "../../models/rendering";
 import { styleMap } from "lit/directives/style-map.js";
 import annotateStyles from "./css/style.css?inline";
+import { Styles } from "../../helpers/types/lit";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -24,9 +25,27 @@ export enum AnnotationTagStyle {
   SPECTROGRAM_TOP = "spectrogram-top",
 }
 
-interface TemplateTagElements {
+/**
+ * @description
+ * Label positioning for annotation labels.
+ * The numbers associated with each label position is the priority of the
+ * label position.
+ * The lower the number, the more we prefer that label position.
+ */
+enum EdgeLabelPosition {
+  TOP_LEFT = 0,
+  BOTTOM_RIGHT = 1,
+  INLINE_TOP = 2,
+}
+
+enum SpectrogramTopLabelPosition {
+  DEFAULT,
+}
+
+interface TemplateTagElement {
   litTemplateRef: Ref<HTMLSpanElement>;
-  elementReferences: ReadonlyArray<Node>;
+  elementReferences: ReadonlyArray<Node> | undefined;
+  position: EdgeLabelPosition | SpectrogramTopLabelPosition;
 }
 
 /**
@@ -103,6 +122,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @property({ type: Boolean, converter: booleanConverter })
   public readonly = true;
 
+  @query("#annotations-surface")
+  private annotationsSurface!: HTMLDivElement;
+
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
@@ -111,8 +133,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   private readonly topChromeHeight = signal<Pixel>(0);
   private labelRefs: Ref<Readonly<HTMLLabelElement>>[] = [];
-  private templateTagElements: TemplateTagElements[] = [];
+  private templateTagElements: TemplateTagElement[] = [];
   private unitConverter?: Readonly<UnitConverter>;
+  private tagOverflowObserver?: IntersectionObserver;
 
   private annotationUpdateEventHandler = this.handleAnnotationUpdate.bind(this);
 
@@ -138,6 +161,25 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   public disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener(AnnotationComponent.updatedEventName, this.annotationUpdateEventHandler);
+    this.tagOverflowObserver?.disconnect();
+  }
+
+  public firstUpdated(change: PropertyValues<this>): void {
+    super.firstUpdated(change);
+
+    this.tagOverflowObserver = new IntersectionObserver(
+      (entries: IntersectionObserverEntry[]) => {
+        for (const entry of entries) {
+          if (entry.intersectionRatio < 1) {
+            this.handleLabelIntersection(entry);
+          }
+        }
+      },
+      {
+        root: this.annotationsSurface,
+        threshold: 0,
+      },
+    );
   }
 
   public chromeRendered(): void {
@@ -195,8 +237,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         continue;
       }
 
-      litTemplateElement.innerHTML = "";
-      litTemplateElement.append(...tagElement.elementReferences);
+      this.tagOverflowObserver?.observe(litTemplateElement);
+
+      if (tagElement?.elementReferences !== undefined) {
+        litTemplateElement.innerHTML = "";
+        litTemplateElement.append(...tagElement.elementReferences);
+      }
     }
 
     this.templateTagElements = [];
@@ -248,7 +294,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   private spectrogramTopLabelTemplate(model: Readonly<Annotation>): HTMLTemplateResult {
-    const labelTemplate = this.tagLabelTemplate(model);
+    const labelTemplate = this.tagLabelTemplate(model, SpectrogramTopLabelPosition.DEFAULT);
 
     // we know that the unitConverter is defined because the annotation will be
     // culled if the unitConverter is not defined.
@@ -270,7 +316,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     `;
   }
 
-  private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
+  private tagLabelTemplate(model: Annotation, position: TemplateTagElement["position"]): HTMLTemplateResult {
     const tagSeparator = ",";
 
     return html`
@@ -278,17 +324,14 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         const elementReferences = tag.elementReferences;
         const tagSuffix = last ? "" : tagSeparator;
 
-        if (Array.isArray(elementReferences) && elementReferences.length > 0) {
-          const tagTemplateRef = createRef<HTMLSpanElement>();
-          this.templateTagElements.push({
-            litTemplateRef: tagTemplateRef,
-            elementReferences,
-          });
+        const tagTemplateRef = createRef<HTMLSpanElement>();
+        this.templateTagElements.push({
+          litTemplateRef: tagTemplateRef,
+          elementReferences,
+          position,
+        });
 
-          return html`<span ${ref(tagTemplateRef)}></span>${tagSuffix}`;
-        }
-
-        return html`${tag.text}${tagSuffix}`;
+        return html`<span ${ref(tagTemplateRef)}> ${tag.text} </span>${tagSuffix}`;
       })}
     `;
   }
@@ -296,21 +339,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   // I have extracted the edge label styles into a separate function so that
   // we can short circuit the first time that we find a style that fits.
   private edgeLabelStyles(
+    position: EdgeLabelPosition,
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
-  ): Parameters<typeof styleMap>[0] {
-    const fontSize = {
-      width: 12,
-      height: 16,
-    } as const satisfies Size<Pixel>;
-
-    // TODO: this should get getBoundingClientRect() so that we support slotted
-    // elements
-    const labelRect = {
-      width: 400,
-      height: 20,
-    } as const satisfies Size<Pixel>;
-
+  ): Styles {
     // we used to position edge labels using CSS anchor positioning
     // however, Firefox and Safari did not support anchor positioning
     // so we transitioned to a JavaScript implementation.
@@ -329,78 +361,70 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // the annotations border is not included in the box models content box.
     // Meaning that if we do left: 0px, the label will not be positioned flush
     // with the annotations border edge.
+    switch (position) {
+      case EdgeLabelPosition.TOP_LEFT: {
+        return this.topLeftLabelStyles(annotationRect, canvasSize);
+      }
 
-    // check to see if the label will fit in the top left hand position
-    // (above the annotation)
-    const fitsTopLeft =
-      annotationRect.y.value > fontSize.height && annotationRect.x.value + labelRect.width < canvasSize.value.width;
-    if (fitsTopLeft) {
-      return {
-        top: "0px",
-        transform: "translateY(-100%)",
-        left:
-          annotationRect.x.value > 0
-            ? "calc(var(--oe-annotation-weight) * -1)"
-            : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
-      };
+      case EdgeLabelPosition.BOTTOM_RIGHT: {
+        return this.bottomRightLabelStyles(annotationRect, canvasSize);
+      }
+
+      case EdgeLabelPosition.INLINE_TOP: {
+        return this.inlineLabelStyles(annotationRect);
+      }
+
+      default: {
+        throw new Error("Invalid label position");
+      }
     }
+  }
 
-    // flip-block
-    // Flipping the block alignment means moving the label from the top of the
-    // annotation to the bottom.
-    // If it is still inside the container, then we can accept the position
-    // fallback.
-    // This is the most common positioning fallback.
-    const fitsBottomLeft =
-      annotationRect.y.value + annotationRect.height.value + fontSize.height < canvasSize.value.height &&
-      annotationRect.x.value + labelRect.width < canvasSize.value.width;
-    if (fitsBottomLeft) {
-      return {
-        bottom: "0px",
-        transform: "translateY(100%)",
-        left:
-          annotationRect.x.value > 0
-            ? "calc(var(--oe-annotation-weight) * -1)"
-            : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
-      };
-    }
+  private topLeftLabelStyles(
+    annotationRect: Readonly<Rect<Signal<Pixel>>>,
+    canvasSize: Readonly<Signal<RenderCanvasSize>>,
+  ): Styles {
+    return {
+      top: "0px",
+      // transform: "translateY(-100%)",
+      // left:
+      //   annotationRect.x.value > 0
+      //     ? "calc(var(--oe-annotation-weight) * -1)"
+      //     : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
 
-    // flip-inline
-    const fitsTopRight =
-      annotationRect.y.value > fontSize.height &&
-      annotationRect.x.value + annotationRect.width.value > canvasSize.value.width;
-    if (fitsTopRight) {
-      return {
-        top: "0px",
-        transform: "translateY(-100%)",
-        right:
-          annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-            ? `${Math.abs(annotationRect.x.value + annotationRect.width.value - canvasSize.value.width)}px`
-            : "0px",
-      };
-    }
+      transform:
+        annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+          ? "translateY(-100%) translateX(-100%)"
+          : "translateY(-100%)",
+      left:
+        annotationRect.x.value > 0
+          ? annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+            ? `calc(${canvasSize.value.width - annotationRect.x.value}px - (var(--oe-annotation-weight) * -1))`
+            : "calc(var(--oe-annotation-weight) * -1)"
+          : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
+    };
+  }
 
-    // flip-inline flip-block
-    // Flipping inline alignment means moving the label from the left of the
-    // annotation to the right of the annotation.
-    const fitsBottomRight =
-      annotationRect.y.value + annotationRect.height.value + labelRect.height < canvasSize.value.height;
-    if (fitsBottomRight) {
-      return {
-        bottom: "0px",
-        transform: "translateY(100%)",
-        right:
-          annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-            ? `${Math.abs(annotationRect.x.value + annotationRect.width.value - canvasSize.value.width)}px`
-            : "0px",
-      };
-    }
+  private bottomRightLabelStyles(
+    annotationRect: Readonly<Rect<Signal<Pixel>>>,
+    canvasSize: Readonly<Signal<RenderCanvasSize>>,
+  ): Styles {
+    return {
+      bottom: "0px",
+      transform:
+        annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+          ? "translateY(100%) translateX(-100%)"
+          : "translateY(100%)",
+      left:
+        annotationRect.x.value > 0
+          ? annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
+            ? `calc(${canvasSize.value.width - annotationRect.x.value}px - (var(--oe-annotation-weight) * -1))`
+            : "calc(var(--oe-annotation-weight) * -1)"
+          : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
+    };
+  }
 
-    // --position-float-top
-    // The last positioning that we try is a custom positioning method where
-    // the label is positioned at the top of the annotation surface.
-    // This is the last common positioning fallback because the label ends up
-    // covering some of the annotation.
+  private inlineLabelStyles(annotationRect: Readonly<Rect<Signal<Pixel>>>): Styles {
     return {
       top:
         annotationRect.y.value > 0
@@ -411,26 +435,49 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     };
   }
 
+  private labelPosition(
+    annotationRect: Readonly<Rect<Signal<Pixel>>>,
+    canvasSize: Readonly<Signal<RenderCanvasSize>>,
+  ): EdgeLabelPosition {
+    const fitsTopLeft = annotationRect.y.value > 0;
+    if (fitsTopLeft) {
+      return EdgeLabelPosition.TOP_LEFT;
+    }
+
+    // flip-block
+    // Flipping the block alignment means moving the label from the top of the
+    // annotation to the bottom.
+    // If it is still inside the container, then we can accept the position
+    // fallback.
+    // This is the most common positioning fallback.
+    const fitsBottomRight = annotationRect.y.value + annotationRect.height.value < canvasSize.value.height;
+    if (fitsBottomRight) {
+      return EdgeLabelPosition.BOTTOM_RIGHT;
+    }
+
+    // --position-float-top
+    // The last positioning that we try is a custom positioning method where
+    // the label is positioned at the top of the annotation surface.
+    // This is the last common positioning fallback because the label ends up
+    // covering some of the annotation.
+    return EdgeLabelPosition.INLINE_TOP;
+  }
+
+  private handleLabelIntersection(label: IntersectionObserverEntry): void {
+    console.debug("label has overflowed", label);
+  }
+
   private edgeLabelTemplate(
     model: Readonly<Annotation>,
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
   ) {
-    //  const labelXPosition = computed(() => annotationRect.x.value > 0 ? "left" : "right");
-    //  const labelYPosition = computed(() => annotationRect.y.value > 0 ? "top" : "bottom");
-    //  const labelXOffset = computed(() => labelXPosition.value === "left" ? "0px" : "0px");
-    //  const labelYOffset = computed(() => labelYPosition.value === "top" ? "-1rem" : "-1rem");
-
-    //  const styles = styleMap({
-    //    [labelXPosition.value]: labelXOffset.value,
-    //    [labelYPosition.value]: labelYOffset.value,
-    //  });
-
-    const styles = styleMap(this.edgeLabelStyles(annotationRect, canvasSize));
+    const position = this.labelPosition(annotationRect, canvasSize);
+    const styles = styleMap(this.edgeLabelStyles(position, annotationRect, canvasSize));
 
     return html`
       <label class="bounding-box-label style-edge" part="annotation-label" style=${styles}>
-        ${this.tagLabelTemplate(model)}
+        ${this.tagLabelTemplate(model, position)}
       </label>
     `;
   }
@@ -492,7 +539,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
   public chromeOverlay(): ChromeTemplate {
     return html`
-      <div class="annotations-surface">
+      <div id="annotations-surface">
         ${map(this.annotationModels, (model: Annotation) =>
           this.shouldCullAnnotation(model) ? nothing : this.annotationTemplate(model),
         )}

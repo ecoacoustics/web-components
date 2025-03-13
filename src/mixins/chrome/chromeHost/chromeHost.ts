@@ -50,7 +50,7 @@ export const ChromeHost = <T extends Component>(superClass: T) => {
         connect: (provider: IChromeProvider) => this.connect(provider),
         disconnect: (provider: IChromeProvider) => this.disconnect(provider),
         requestUpdate: () => this.requestUpdate(),
-      } satisfies ChromeAdvertisement;
+      } as const satisfies ChromeAdvertisement;
 
       this.dispatchEvent(
         new CustomEvent<ChromeAdvertisement>(chromeAdvertisementEventName, {

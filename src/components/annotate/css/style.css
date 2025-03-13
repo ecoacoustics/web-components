@@ -11,7 +11,7 @@
   --oe-annotation-weight: 1px;
 }
 
-.annotations-surface {
+#annotations-surface {
   position: absolute;
   inset: 0;
   width: 100%;
