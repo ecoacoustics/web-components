@@ -8,7 +8,7 @@
   --oe-annotation-color: green;
   --oe-annotation-font-color: white;
   --oe-annotation-selected-color: lightgreen;
-  --oe-annotation-weight: 2px;
+  --oe-annotation-weight: 1px;
 }
 
 #annotations-surface {

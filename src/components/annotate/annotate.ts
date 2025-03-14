@@ -252,7 +252,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       }
 
       if (tagElement?.elementReferences !== undefined) {
-        // litTemplateElement.innerHTML = "";
+        litTemplateElement.innerHTML = "";
         litTemplateElement.append(...tagElement.elementReferences);
       }
     }
@@ -348,13 +348,17 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         const elementReferences = tag.elementReferences;
         const tagSuffix = last ? "" : tagSeparator;
 
-        const tagTemplateRef = createRef<HTMLSpanElement>();
-        this.templateTagElements.push({
-          litTemplateRef: tagTemplateRef,
-          elementReferences,
-        });
+        if (Array.isArray(elementReferences) && elementReferences.length > 0) {
+          const tagTemplateRef = createRef<HTMLSpanElement>();
+          this.templateTagElements.push({
+            litTemplateRef: tagTemplateRef,
+            elementReferences,
+          });
 
-        return html`<span ${ref(tagTemplateRef)}>${tag.text}</span>${tagSuffix}`;
+          return html`<span ${ref(tagTemplateRef)}></span>${tagSuffix}`;
+        }
+
+        return html`${tag.text}${tagSuffix}`;
       })}
     `;
   }
@@ -386,7 +390,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // with the annotations border edge.
     switch (position) {
       case EdgeLabelPosition.TOP_LEFT: {
-        return this.topLeftLabelStyles(annotationRect, canvasSize);
+        return this.topLeftLabelStyles(annotationRect);
       }
 
       case EdgeLabelPosition.BOTTOM_RIGHT: {
@@ -403,28 +407,19 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     }
   }
 
-  private topLeftLabelStyles(
-    annotationRect: Readonly<Rect<Signal<Pixel>>>,
-    canvasSize: Readonly<Signal<RenderCanvasSize>>,
-  ): Styles {
+  private topLeftLabelStyles(annotationRect: Readonly<Rect<Signal<Pixel>>>): Styles {
+    if (annotationRect.x.value < 0) {
+      return {
+        top: "0px",
+        transform: "translateY(-100%)",
+        left: `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
+      };
+    }
+
     return {
       top: "0px",
-      // transform: "translateY(-100%)",
-      // left:
-      //   annotationRect.x.value > 0
-      //     ? "calc(var(--oe-annotation-weight) * -1)"
-      //     : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
-
-      transform:
-        annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-          ? "translateY(-100%) translateX(-100%)"
-          : "translateY(-100%)",
-      left:
-        annotationRect.x.value > 0
-          ? annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-            ? `calc(${canvasSize.value.width - annotationRect.x.value}px - (var(--oe-annotation-weight) * -1))`
-            : "calc(var(--oe-annotation-weight) * -1)"
-          : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
+      transform: "translateY(-100%)",
+      left: "calc(var(--oe-annotation-weight) * -1)"
     };
   }
 
@@ -432,17 +427,28 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
   ): Styles {
+    if (annotationRect.x.value + annotationRect.width.value > canvasSize.value.width) {
+      if (annotationRect.x.value < 0) {
+        return {
+          bottom: "0px",
+          transform: "translateY(100%) translateX(-100%)",
+          left: `calc(${Math.abs(annotationRect.x.value) + canvasSize.value.width}px - var(--oe-annotation-weight))`,
+        };
+      }
+
+      return {
+        bottom: "0px",
+        transform: "translateY(100%) translateX(-100%)",
+        left: `calc(${Math.abs(canvasSize.value.width - (annotationRect.x.value + annotationRect.width.value))}px - var(--oe-annotation-weight))`,
+      };
+    }
+
     return {
       bottom: "0px",
-      transform:
-        annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-          ? "translateY(100%) translateX(-100%)"
-          : "translateY(100%)",
+      transform: "translateY(100%)",
       left:
         annotationRect.x.value > 0
-          ? annotationRect.x.value + annotationRect.width.value > canvasSize.value.width
-            ? `calc(${canvasSize.value.width - annotationRect.x.value}px - (var(--oe-annotation-weight) * -1))`
-            : "calc(var(--oe-annotation-weight) * -1)"
+          ? "calc(var(--oe-annotation-weight) * -1)"
           : `calc(${Math.abs(annotationRect.x.value)}px - var(--oe-annotation-weight))`,
     };
   }
@@ -509,6 +515,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     const nextLabelPosition = currentPosition + 1;
 
+    console.debug(labelElement.litTemplateRef.value);
     if (nextLabelPosition > EdgeLabelPosition.INLINE_TOP) {
       console.warn("Could not find a suitable label position for the annotation.");
       return;
@@ -526,10 +533,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const styles = computed(() => styleMap(this.edgeLabelStyles(initialPosition.value, annotationRect, canvasSize)));
 
     const labelRef = createRef<HTMLLabelElement>();
-    this.labelElements.push({
+    const labelElement = {
       litTemplateRef: labelRef,
       position: initialPosition,
-    });
+    } as const satisfies LabelElement;
+
+    this.labelElements.push(labelElement);
 
     // we use the "watch" directive here so that only the styles are updated
     // when the is position changed, meaning that lit doesn't have to re-render
