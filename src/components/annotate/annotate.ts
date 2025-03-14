@@ -16,8 +16,8 @@ import { ChromeTemplate } from "../../mixins/chrome/types";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { Rect, RenderCanvasSize } from "../../models/rendering";
 import { styleMap } from "lit/directives/style-map.js";
-import annotateStyles from "./css/style.css?inline";
 import { Styles } from "../../helpers/types/lit";
+import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
   HIDDEN = "hidden",
@@ -39,13 +39,23 @@ enum EdgeLabelPosition {
 }
 
 enum SpectrogramTopLabelPosition {
-  DEFAULT,
+  DEFAULT = 100,
 }
 
 interface TemplateTagElement {
-  litTemplateRef: Ref<HTMLSpanElement>;
-  elementReferences: ReadonlyArray<Node> | undefined;
-  position: EdgeLabelPosition | SpectrogramTopLabelPosition;
+  readonly litTemplateRef: Ref<HTMLSpanElement>;
+  readonly elementReferences: ReadonlyArray<Node> | undefined;
+}
+
+interface LabelElement {
+  readonly litTemplateRef: Ref<HTMLLabelElement>;
+
+  /**
+   * A signal that can be used to update the labels position.
+   * This is a targeted operation and should not cause the entire component to
+   * re-render.
+   */
+  readonly position: Signal<EdgeLabelPosition | SpectrogramTopLabelPosition>;
 }
 
 /**
@@ -132,12 +142,16 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   private annotationElements?: ReadonlyArray<AnnotationComponent>;
 
   private readonly topChromeHeight = signal<Pixel>(0);
-  private labelRefs: Ref<Readonly<HTMLLabelElement>>[] = [];
+  private labelElements: LabelElement[] = [];
   private templateTagElements: TemplateTagElement[] = [];
   private unitConverter?: Readonly<UnitConverter>;
   private tagOverflowObserver?: IntersectionObserver;
 
   private annotationUpdateEventHandler = this.handleAnnotationUpdate.bind(this);
+
+  private get labelRefs(): Ref<HTMLLabelElement>[] {
+    return this.labelElements.map((element) => element.litTemplateRef);
+  }
 
   private get instantiatedLabelRefs() {
     return this.labelRefs.filter(
@@ -237,15 +251,22 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         continue;
       }
 
-      this.tagOverflowObserver?.observe(litTemplateElement);
-
       if (tagElement?.elementReferences !== undefined) {
-        litTemplateElement.innerHTML = "";
+        // litTemplateElement.innerHTML = "";
         litTemplateElement.append(...tagElement.elementReferences);
       }
     }
 
     this.templateTagElements = [];
+
+    for (const labelElement of this.labelElements) {
+      const nativeElement = labelElement.litTemplateRef.value;
+      if (!nativeElement) {
+        continue;
+      }
+
+      this.tagOverflowObserver?.observe(nativeElement);
+    }
   }
 
   private measureLabelHeight(): void {
@@ -294,7 +315,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   private spectrogramTopLabelTemplate(model: Readonly<Annotation>): HTMLTemplateResult {
-    const labelTemplate = this.tagLabelTemplate(model, SpectrogramTopLabelPosition.DEFAULT);
+    const labelTemplate = this.tagLabelTemplate(model);
 
     // we know that the unitConverter is defined because the annotation will be
     // culled if the unitConverter is not defined.
@@ -302,7 +323,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const left = computed(() => Math.max(this.unitConverter!.scaleX.value(model.startOffset), 0));
 
     const labelRef = createRef<HTMLLabelElement>();
-    this.labelRefs.push(labelRef);
+    this.labelElements.push({
+      litTemplateRef: labelRef,
+      position: signal(SpectrogramTopLabelPosition.DEFAULT),
+    });
 
     return html`
       <label
@@ -316,8 +340,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     `;
   }
 
-  private tagLabelTemplate(model: Annotation, position: TemplateTagElement["position"]): HTMLTemplateResult {
-    const tagSeparator = ",";
+  private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
+    const tagSeparator = ", ";
 
     return html`
       ${loop(model.tags, (tag, { last }) => {
@@ -328,10 +352,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         this.templateTagElements.push({
           litTemplateRef: tagTemplateRef,
           elementReferences,
-          position,
         });
 
-        return html`<span ${ref(tagTemplateRef)}> ${tag.text} </span>${tagSuffix}`;
+        return html`<span ${ref(tagTemplateRef)}>${tag.text}</span>${tagSuffix}`;
       })}
     `;
   }
@@ -435,13 +458,18 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     };
   }
 
-  private labelPosition(
+  /**
+   * Uses some basic heuristics to determine what label positions are likely
+   * not to fit this is useful for reducing the number of label re-positions
+   * during renders
+   */
+  private approximateLabelPosition(
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
-  ): EdgeLabelPosition {
+  ): Signal<EdgeLabelPosition> {
     const fitsTopLeft = annotationRect.y.value > 0;
     if (fitsTopLeft) {
-      return EdgeLabelPosition.TOP_LEFT;
+      return signal(EdgeLabelPosition.TOP_LEFT);
     }
 
     // flip-block
@@ -452,7 +480,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // This is the most common positioning fallback.
     const fitsBottomRight = annotationRect.y.value + annotationRect.height.value < canvasSize.value.height;
     if (fitsBottomRight) {
-      return EdgeLabelPosition.BOTTOM_RIGHT;
+      return signal(EdgeLabelPosition.BOTTOM_RIGHT);
     }
 
     // --position-float-top
@@ -460,11 +488,33 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // the label is positioned at the top of the annotation surface.
     // This is the last common positioning fallback because the label ends up
     // covering some of the annotation.
-    return EdgeLabelPosition.INLINE_TOP;
+    return signal(EdgeLabelPosition.INLINE_TOP);
   }
 
   private handleLabelIntersection(label: IntersectionObserverEntry): void {
-    console.debug("label has overflowed", label);
+    const labelElement = this.labelElements.find((element) => element.litTemplateRef.value === label.target);
+    if (!labelElement) {
+      console.warn("could not find overflowing label element");
+      return;
+    }
+
+    this.tryNextLabelPosition(labelElement);
+  }
+
+  private tryNextLabelPosition(labelElement: LabelElement): void {
+    const currentPosition = labelElement.position.value;
+    if (currentPosition === SpectrogramTopLabelPosition.DEFAULT) {
+      return;
+    }
+
+    const nextLabelPosition = currentPosition + 1;
+
+    if (nextLabelPosition > EdgeLabelPosition.INLINE_TOP) {
+      console.warn("Could not find a suitable label position for the annotation.");
+      return;
+    }
+
+    labelElement.position.value = nextLabelPosition;
   }
 
   private edgeLabelTemplate(
@@ -472,12 +522,26 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     annotationRect: Readonly<Rect<Signal<Pixel>>>,
     canvasSize: Readonly<Signal<RenderCanvasSize>>,
   ) {
-    const position = this.labelPosition(annotationRect, canvasSize);
-    const styles = styleMap(this.edgeLabelStyles(position, annotationRect, canvasSize));
+    const initialPosition = this.approximateLabelPosition(annotationRect, canvasSize);
+    const styles = computed(() => styleMap(this.edgeLabelStyles(initialPosition.value, annotationRect, canvasSize)));
 
+    const labelRef = createRef<HTMLLabelElement>();
+    this.labelElements.push({
+      litTemplateRef: labelRef,
+      position: initialPosition,
+    });
+
+    // we use the "watch" directive here so that only the styles are updated
+    // when the is position changed, meaning that lit doesn't have to re-render
+    // the entire component or annotation.
     return html`
-      <label class="bounding-box-label style-edge" part="annotation-label" style=${styles}>
-        ${this.tagLabelTemplate(model, position)}
+      <label
+        class="bounding-box-label style-edge"
+        part="annotation-label"
+        style=${watch(styles)}
+        ${ref(labelRef)}
+      >
+        ${this.tagLabelTemplate(model)}
       </label>
     `;
   }
@@ -538,6 +602,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeOverlay(): ChromeTemplate {
+    this.labelElements = [];
+
     return html`
       <div id="annotations-surface">
         ${map(this.annotationModels, (model: Annotation) =>
@@ -553,7 +619,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // when the template is re-rendered.
     // we also set the labelRefs array to an empty array if the tagStyle is not
     // spectrogram-top because the references will no longer exist.
-    this.labelRefs = [];
+    this.labelElements = [];
     this.templateTagElements = [];
 
     if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
