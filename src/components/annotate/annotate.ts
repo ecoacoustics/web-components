@@ -36,6 +36,12 @@ enum EdgeLabelPosition {
   TOP_LEFT = 0,
   BOTTOM_RIGHT = 1,
   INLINE_TOP = 2,
+
+  // Using left-edge is very rare. The only time I have ever seen left-edge
+  // used is when an annotation fully overflows all axes except for the start
+  // time, and the width of the annotation (to the edge of the canvas) is
+  // very small (e.g. 1px).
+  LEFT_EDGE = 3,
 }
 
 enum SpectrogramTopLabelPosition {
@@ -401,6 +407,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         return this.inlineLabelStyles(annotationRect);
       }
 
+      case EdgeLabelPosition.LEFT_EDGE: {
+        return this.leftEdgeLabelStyles(annotationRect, canvasSize);
+      }
+
       default: {
         throw new Error("Invalid label position");
       }
@@ -419,7 +429,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     return {
       top: "0px",
       transform: "translateY(-100%)",
-      left: "calc(var(--oe-annotation-weight) * -1)"
+      left: "calc(var(--oe-annotation-weight) * -1)",
     };
   }
 
@@ -461,6 +471,17 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
           : `calc(${Math.abs(annotationRect.y.value)}px - var(--oe-annotation-weight))`,
       transform: annotationRect.y.value > 0 ? "translateY(100%)" : "initial",
       left: "0px",
+    };
+  }
+
+  private leftEdgeLabelStyles(annotationRect: Readonly<Rect<Signal<Pixel>>>): Styles {
+    return {
+      top:
+        annotationRect.y.value > 0
+          ? "calc(var(--oe-annotation-weight) * -1)"
+          : `calc(${Math.abs(annotationRect.y.value)}px - var(--oe-annotation-weight))`,
+      left: "calc(var(--oe-annotation-weight) * -1)",
+      transform: "translateX(-100%)",
     };
   }
 
@@ -515,8 +536,8 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     const nextLabelPosition = currentPosition + 1;
 
-    console.debug(labelElement.litTemplateRef.value);
-    if (nextLabelPosition > EdgeLabelPosition.INLINE_TOP) {
+    // TODO: programmatically determine the last label position
+    if (nextLabelPosition > EdgeLabelPosition.LEFT_EDGE) {
       console.warn("Could not find a suitable label position for the annotation.");
       return;
     }
@@ -544,12 +565,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // when the is position changed, meaning that lit doesn't have to re-render
     // the entire component or annotation.
     return html`
-      <label
-        class="bounding-box-label style-edge"
-        part="annotation-label"
-        style=${watch(styles)}
-        ${ref(labelRef)}
-      >
+      <label class="bounding-box-label style-edge" part="annotation-label" style=${watch(styles)} ${ref(labelRef)}>
         ${this.tagLabelTemplate(model)}
       </label>
     `;
