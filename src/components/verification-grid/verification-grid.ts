@@ -101,14 +101,14 @@ interface CurrentPage {
  * @slot data-source - An `oe-data-source` element that provides the data
  *
  * @event { SubjectModel[] } decision-made - Emits information about the decision that was made
- * @event loaded - Emits when all the spectrograms have been loaded
+ * @event grid-loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
 export class VerificationGridComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(verificationGridStyles);
 
-  public static readonly decisionMadeEventName = "decision-made" as const;
-  private static readonly loadedEventName = "loaded" as const;
+  public static readonly decisionMadeEventName = "decision-made";
+  private static readonly loadedEventName = "grid-loaded";
   private static readonly autoPageTimeout = 0.3 satisfies Seconds;
 
   @provide({ context: verificationGridContext })
@@ -1415,7 +1415,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
                     @loaded="${this.handleSpectrogramLoaded}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
-                    .model="${subject}"
+                    .model="${subject as any}"
                     .index="${i}"
                   >
                     ${unsafeHTML(customTemplate.innerHTML)}

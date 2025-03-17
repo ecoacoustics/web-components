@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Spectrogram + Axes + Indicator + Annotation</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <header>
+      <h2>Header content</h2>
+      <p>This is some header content to ensure we're not aligning to 0,0 of the page</p>
+    </header>
+
+    <oe-axes>
+      <!-- <oe-annotate> -->
+      <!-- <oe-annotate tag-style> -->
+      <!-- <oe-annotate tag-style="hidden"> -->
+      <!-- <oe-annotate tag-style="spectrogram-top"> -->
+      <oe-annotate tag-style="edge">
+        <oe-indicator>
+          <oe-spectrogram
+            id="playing-spectrogram"
+            class="large"
+            window-size="1024"
+            color-map="magma"
+            brightness="-0.4"
+            contrast="2"
+          >
+            <source src="/example.flac" />
+          </oe-spectrogram>
+        </oe-indicator>
+
+        <oe-annotation
+          tags="bird"
+          start-time="0.4"
+          end-time="4.99"
+          low-frequency="2500"
+          high-frequency="3500"
+        ></oe-annotation>
+
+        <oe-annotation
+          tags="unit test annotation"
+          start-time="3"
+          end-time="3.5"
+          low-frequency="5000"
+          high-frequency="6500"
+        ></oe-annotation>
+
+        <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900" tags="1,2">
+          <oe-tag value="bat"></oe-tag>
+          <oe-tag value="ultrasonic">
+            tag:
+            <strong>Ultrasonic Slotted</strong>
+            <a href="#wiki">learn more</a>
+          </oe-tag>
+        </oe-annotation>
+
+        <oe-annotation start-time="3.32" end-time="3.71" low-frequency="4000" high-frequency="6900">
+          <span>I am not an oe-tag element</span>
+          hanging text
+        </oe-annotation>
+      </oe-annotate>
+    </oe-axes>
+
+    <oe-media-controls for="playing-spectrogram">
+      <span slot="play-icon">Play</span>
+      <span slot="pause-icon">Pause</span>
+    </oe-media-controls>
+
+    <button onclick="changeSource();">Change source</button>
+    <button onclick="changeColorMap();">Change colour map</button>
+    <button onclick="changeSize();">Change Size</button>
+    <button onclick="changeWindowSize();">Change Window Size</button>
+    <button onclick="changeOffset();">Change Offset</button>
+    <button onclick="changeScale();">Change Mel-Scale</button>
+    <button onclick="changeAspectRatio();">Change Scale</button>
+    <button onclick="changeTagStyle();">Change tag style</button>
+    <input type="text" readonly value="0" id="generation" autocomplete="off" />
+
+    <div>
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeSpectrogramHeight(event)" />
+        Spectrogram Height
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeCanvasHeight(event)" />
+        Canvas Height
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="1000" oninput="changeAnnotateHeight(event)" />
+        Annotate Height
+      </label>
+    </div>
+
+    <hr />
+
+    <div>
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeSpectrogramWidth(event)" />
+        Spectrogram Width
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeCanvasWidth(event)" />
+        Canvas Width
+      </label>
+
+      <label class="size-modifier">
+        <input type="range" value="800" min="0" max="2000" oninput="changeAnnotateWidth(event)" />
+        Annotate Width
+      </label>
+    </div>
+
+    <footer style="padding-bottom: 100dvh">
+      <h2>This is a footer with some long content to test scrolling</h2>
+    </footer>
+
+    <script>
+      const spectrogram = () => document.getElementById("playing-spectrogram");
+      const annotate = () => document.querySelector("oe-annotate");
+      const canvas = () => spectrogram().shadowRoot.querySelector("canvas");
+
+      function changeSource() {
+        const element = spectrogram();
+
+        if (element.src === "/example.flac") {
+          element.setAttribute("src", "/example_34s.flac");
+        } else if (element.src === "/example_34s.flac") {
+          element.setAttribute("src", "/404-file.flac");
+        } else {
+          element.setAttribute("src", "/example.flac");
+        }
+      }
+
+      function changeTagStyle() {
+        const element = annotate();
+
+        if (element.tagStyle === "edge") {
+          element.tagStyle = "spectrogram-top";
+        } else if (element.tagStyle === "spectrogram-top") {
+          element.tagStyle = "hidden";
+        } else {
+          element.tagStyle = "edge";
+        }
+      }
+
+      function changeSpectrogramHeight(event) {
+        const newHeight = event.target.value;
+        spectrogram().style.height = `${newHeight}px`;
+      }
+
+      function changeCanvasHeight(event) {
+        const newHeight = event.target.value;
+        canvas().style.height = `${newHeight}px`;
+      }
+
+      function changeAnnotateHeight(event) {
+        const newHeight = event.target.value;
+        annotate().style.height = `${newHeight}px`;
+      }
+
+      function changeSpectrogramWidth(event) {
+        const newHeight = event.target.value;
+        spectrogram().style.width = `${newHeight}px`;
+      }
+
+      function changeCanvasWidth(event) {
+        const newHeight = event.target.value;
+        canvas().style.width = `${newHeight}px`;
+      }
+
+      function changeAnnotateWidth(event) {
+        const newHeight = event.target.value;
+        annotate().style.width = `${newHeight}px`;
+      }
+
+      function changeAspectRatio() {
+        const element = spectrogram();
+        const currentAspectRatio = element.getAttribute("scale");
+
+        if (currentAspectRatio === "stretch") {
+          element.setAttribute("scale", "natural");
+        } else if (currentAspectRatio === "natural") {
+          element.setAttribute("scale", "original");
+        } else {
+          element.setAttribute("scale", "stretch");
+        }
+      }
+
+      function changeOffset() {
+        const element = spectrogram();
+
+        if (element.getAttribute("offset") === "2") {
+          element.setAttribute("offset", "0");
+        } else {
+          element.setAttribute("offset", "2");
+        }
+      }
+
+      function changeColorMap() {
+        document.getElementById("generation").value = parseInt(document.getElementById("generation").value) + 1;
+        const element = spectrogram();
+
+        if (element.getAttribute("color-map") === "audacity") {
+          element.setAttribute("color-map", "raven");
+        } else {
+          element.setAttribute("color-map", "audacity");
+        }
+      }
+
+      function changeWindowSize() {
+        const element = spectrogram();
+
+        if (element.getAttribute("window-size") === "1024") {
+          element.setAttribute("window-size", "256");
+        } else {
+          element.setAttribute("window-size", "1024");
+        }
+      }
+
+      function changeSize() {
+        const element = spectrogram();
+        const currentSize = element.style.width;
+
+        if (currentSize === "90vw") {
+          element.style.width = "1200px";
+          element.style.height = "200px";
+        } else if (currentSize === "1200px") {
+          element.style.width = "600px";
+          element.style.height = "600px";
+        } else {
+          element.style.width = "90vw";
+          element.style.height = "90vh";
+        }
+      }
+
+      function changeScale() {
+        const element = spectrogram();
+
+        if (element.hasAttribute("mel-scale")) {
+          element.removeAttribute("mel-scale");
+        } else {
+          element.setAttribute("mel-scale", "");
+        }
+      }
+    </script>
+
+    <style>
+      oe-axes {
+        color: blue;
+
+        &::part(tick) {
+          color: lime;
+        }
+
+        &::part(x-tick) {
+          color: red;
+        }
+
+        &::part(y-tick) {
+          color: green;
+        }
+
+        &::part(y-grid) {
+          color: purple;
+        }
+
+        &::part(x-grid) {
+          color: orange;
+        }
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .size-modifier {
+        display: flex;
+        align-items: center;
+      }
+    </style>
+  </body>
+</html>

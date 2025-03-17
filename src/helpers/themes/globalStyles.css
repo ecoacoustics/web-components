@@ -116,6 +116,15 @@ a {
   text-decoration: underline;
   color: var(--oe-font-color);
 
+  /*
+    There is a bug in Chrome where if a label is rotated, all text inside the
+    parent container (not just the text inside the anchor) will be very blurry.
+
+    To fix this, I set the text-decoration-thickness to 0 so that if text is
+    rotated with an anchor element, it will not be blurry.
+  */
+  text-decoration-thickness: 0;
+
   &:hover {
     text-decoration: none;
   }
@@ -350,11 +359,17 @@ button {
   border-radius: var(--oe-border-rounding);
 }
 
-.vertically-fill {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1;
-  min-height: 0px;
+/*
+  You might want to hide slot content in data components.
+  E.g. The <oe-annotation> component does not have any template content, but
+       still requires a slot so that it can accept <oe-tag> data components.
+*/
+slot.hide-slot-content {
+  display: none;
+
+  &::slotted(*) {
+    display: none;
+  }
 }
 
 @keyframes fade-in {

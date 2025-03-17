@@ -1,8 +1,7 @@
-import { html, LitElement, nothing, svg, unsafeCSS } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, svg, unsafeCSS } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
-import { AbstractComponent } from "../../mixins/abstractComponent";
 import {
   Hertz,
   TemporalScale,
@@ -17,6 +16,9 @@ import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { hertzToMHertz } from "../../helpers/converters";
+import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { map } from "lit/directives/map.js";
+import { ChromeTemplate } from "../../mixins/chrome/types";
 import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't
@@ -29,6 +31,8 @@ import axesStyles from "./css/style.css?inline";
 /**
  * @description
  * X and Y axis grid lines showing duration and frequency of a spectrogram
+ *
+ * This component must wrap an element that implements the ChromeHost mixin
  *
  * @example
  * ```html
@@ -56,7 +60,7 @@ import axesStyles from "./css/style.css?inline";
  * @slot - A spectrogram element to add axes to
  */
 @customElement("oe-axes")
-export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   public static styles = unsafeCSS(axesStyles);
 
   public static fontCanvas: HTMLCanvasElement = document.createElement("canvas");
@@ -108,19 +112,20 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   public showYGrid = true;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
-  private spectrogram!: SpectrogramComponent;
+  private spectrogram?: Readonly<SpectrogramComponent>;
 
-  @query("#axes-svg")
-  private elementChrome!: Readonly<HTMLDivElement>;
+  @state()
+  private unitConverter?: Readonly<UnitConverter>;
 
   // if we do not know the text that we want to measure, we use one large
-  // character as an upperbound estimate of the size of characters
+  // character as an upper bound estimate of the size of characters
   // using the default case should only ever be used for estimates and measuring
   // against actual text values is recommended
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
-  private unitConverter!: UnitConverter;
+  private xAxisTemplate!: HTMLTemplateResult;
+  private yAxisTemplate!: HTMLTemplateResult;
 
   // because label padding is a relative fraction, we need to calculate the
   // actual pixel value of the padding
@@ -148,27 +153,26 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     };
   }
 
-  public firstUpdated(): void {
+  public firstUpdated(change: PropertyValues<this>): void {
+    super.firstUpdated(change);
     this.emUnitFontSize = this.calculateFontSize("M");
   }
 
-  private handleSlotChange(): void {
-    if (this.spectrogram.unitConverters) {
-      this.unitConverter = this.spectrogram.unitConverters.value as UnitConverter;
+  protected handleSlotChange(): void {
+    if (!this.spectrogram) {
+      console.warn("An oe-axes component was updated without an oe-spectrogram component.");
 
-      // we don't have to use a resize observer to observe when the spectrogram
-      // or slotted elements resize because we will receive a signal from the
-      // unit converter which will trigger a re-render
-      this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
+      // we explicitly set the unit converter back to undefined so that if the
+      // spectrogram component is removed (or moved/reassigned) after
+      // initialization, this component won't have an outdated unit converter
+      // from a moved or removed spectrogram component
+      this.unitConverter = undefined;
+      return;
     }
-  }
 
-  private handleCanvasResize(canvasSize: Size): void {
-    if (this?.elementChrome) {
-      const { width, height } = canvasSize;
-      this.elementChrome.style.width = `${width}px`;
-      this.elementChrome.style.height = `${height}px`;
-    }
+    this.spectrogram.unitConverters.subscribe((newUnitConverter?: UnitConverter) => {
+      this.unitConverter = newUnitConverter;
+    });
   }
 
   // because querying the DOM for the font size will cause a repaint and reflow
@@ -185,12 +189,16 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     return { width, height };
   }
 
-  private createGridLinesTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+  private createGridLinesTemplate(
+    xValues: ReadonlyArray<Seconds>,
+    yValues: ReadonlyArray<Hertz>,
+    canvasSize: Readonly<Size>,
+  ) {
     const xGridLineTemplate = (value: Seconds) => {
       // we pull out xPosition to a variable because we use it twice (without modification)
       // for the lines x1 and x2 position
       // by pulling it out to a separate variable, we can avoid recalculating the value twice
-      const xPosition = this.unitConverter.scaleX.value(value);
+      const xPosition = this.unitConverter?.scaleX.value(value);
       return svg`<line
         x1="${xPosition}"
         x2="${xPosition}"
@@ -201,7 +209,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     };
 
     const yGridLineTemplate = (value: Hertz) => {
-      const yPosition = this.unitConverter.scaleY.value(value);
+      const yPosition = this.unitConverter?.scaleY.value(value);
       return svg`<line
         x1="0"
         x2="${canvasSize.width}"
@@ -211,16 +219,18 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       ></line>`;
     };
 
-    const xAxisGridLinesTemplate = svg`${xValues.map(
+    const xAxisGridLinesTemplate = svg`${map(
+      xValues,
       (value, i) => svg`${i > 0 && i < xValues.length - 1 ? xGridLineTemplate(value) : nothing}`,
     )}`;
 
-    const yAxisGridLinesTemplate = svg`${yValues.map(
+    const yAxisGridLinesTemplate = svg`${map(
+      yValues,
       (value, i) => svg`${i > 0 && i < yValues.length - 1 ? yGridLineTemplate(value) : nothing}`,
     )}`;
 
     return svg`
-      <g part="grid" >
+      <g part="grid">
         ${this.showXGrid ? svg`<g part="x-grid">${xAxisGridLinesTemplate}</g>` : nothing}
         ${this.showYGrid ? svg`<g part="y-grid">${yAxisGridLinesTemplate}</g>` : nothing}
       </g>
@@ -229,38 +239,31 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
 
   // TODO: We should probably refactor this so that we only calculate the font size
   // once per each unique length of strings
-  private createAxisLabelsTemplate(xValues: Seconds[], yValues: Hertz[], canvasSize: Size) {
+  private createAxisLabelsTemplate(
+    xValues: ReadonlyArray<Seconds>,
+    yValues: ReadonlyArray<Hertz>,
+    canvasSize: Readonly<Size>,
+  ) {
     const xTitleFontSize = this.calculateFontSize(this.xTitle);
     const yTitleFontSize = this.calculateFontSize(this.yTitle);
     const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
-    // Because the y-axis labels can be a variable length, we can't just offset the y-axis title by a fixed amount
-    // This is unlike the x-axis where the font will always have the same height, regardless of how many digits
-    // Therefore, we have to get the number of digits in the largest number in the y-axis, then position the y-axis
-    // label assuming at a fixed amount away from the largest theoretical axis label
-    const xTitleOffset = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
-    const yTitleOffset = yTitleFontSize.height + fontSize.width;
-
-    if (this.elementChrome) {
-      const xAxisPadding = xTitleOffset + xTitleFontSize.height;
-      const yAxisPadding = yTitleOffset;
-      this.elementChrome.style.setProperty("--x-axis-padding", `${xAxisPadding}px`);
-      this.elementChrome.style.setProperty("--y-axis-padding", `${yAxisPadding}px`);
-    }
+    const xTitleOffsetTop = xTitleFontSize.height + fontSize.height + this.tickSize.height + this.titleOffset.height;
+    const yTitleOffsetLeft = yTitleFontSize.height;
 
     const xLabelTemplate = (value: Seconds) => {
-      const xPosition = this.unitConverter.scaleX.value(value);
-      const labelYPosition = canvasSize.height + this.tickSize.height;
-      const tickYPosition = canvasSize.height;
+      const xPosition = this.unitConverter?.scaleX.value(value);
+      const labelYPosition = this.tickSize.height + this.labelPadding.height;
 
       return svg`
         <g>
           <line
             part="x-tick"
-            x="${xPosition}"
-            y1="${tickYPosition}"
-            y2="${tickYPosition + this.tickSize.height}"
+            x1="${xPosition}"
+            x2="${xPosition}"
+            y1="0"
+            y2="${this.tickSize.height}"
           ></line>
           <text
             part="x-label"
@@ -275,9 +278,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       `;
     };
 
+    const yTitleY = canvasSize.height / 2;
+    const xTitleX = canvasSize.width / 2;
+
     const yLabelTemplate = (value: Hertz) => {
-      const xPosition = -this.tickSize;
-      const yPosition = this.unitConverter.scaleY.value(value);
+      const xPosition = yTitleOffsetLeft + yTitleFontSize.height + this.labelPadding.width + fontSize.width;
+      const yPosition = this.unitConverter?.scaleY.value(value);
       const mHertzValue = hertzToMHertz(value);
 
       return svg`<g>
@@ -285,13 +291,14 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
           part="y-tick"
           x1="${xPosition}"
           x2="${xPosition + this.tickSize.width}"
-          y="${yPosition}"
+          y1="${yPosition}"
+          y2="${yPosition}"
         ></line>
         <text
           part="y-label"
           text-anchor="end"
           dominant-baseline="middle"
-          x="${xPosition - this.labelPadding.width}"
+          x="${xPosition}"
           y="${yPosition}"
         >
           ${mHertzValue.toFixed(1)}
@@ -299,15 +306,15 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       </g>`;
     };
 
-    const xAxisLabelsTemplate = this.showXAxis ? svg`${xValues.map((value) => xLabelTemplate(value))}` : nothing;
-    const yAxisLabelsTemplate = this.showYAxis ? svg`${yValues.map((value) => yLabelTemplate(value))}` : nothing;
+    const xAxisLabelsTemplate = this.showXAxis ? svg`${map(xValues, (value) => xLabelTemplate(value))}` : nothing;
+    const yAxisLabelsTemplate = this.showYAxis ? svg`${map(yValues, (value) => yLabelTemplate(value))}` : nothing;
 
     const xAxisTitleTemplate = this.showXTitle
       ? svg`
       <text
         part="title x-title"
-        x="${canvasSize.width / 2}"
-        y="${canvasSize.height + xTitleOffset}"
+        x="${xTitleX}"
+        y="${xTitleOffsetTop}"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -320,9 +327,9 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
       ? svg`
       <text
         part="title y-title"
-        x="-${yTitleOffset}"
-        y="${canvasSize.height / 2}"
-        transform="rotate(270, -${yTitleOffset}, ${canvasSize.height / 2})"
+        x="${yTitleOffsetLeft}"
+        y="${yTitleY}"
+        transform="rotate(270, ${yTitleOffsetLeft}, ${yTitleY})"
         text-anchor="middle"
         font-family="sans-serif"
       >
@@ -331,24 +338,37 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     `
       : nothing;
 
+    const xAxisChromeHeight = xTitleOffsetTop + xTitleFontSize.height;
+    const yAxisChromeWidth =
+      yTitleOffsetLeft + yTitleFontSize.height + this.labelPadding.width + fontSize.width + this.tickSize.width;
+
+    this.xAxisTemplate = html`
+      <svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}" height="${xAxisChromeHeight}">
+        <g part="x-ticks">${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
+      </svg>
+    `;
+
+    this.yAxisTemplate = html`
+      <svg class="axes-label-chrome y-axis-chrome" width="${yAxisChromeWidth}" height="${canvasSize.height}">
+        <g part="y-ticks">${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
+      </svg>
+    `;
+
     return svg`
       <g part="tick">
-        <g part="x-ticks">
-          ${xAxisLabelsTemplate}
-          ${xAxisTitleTemplate}
-        </g>
-
-        <g part="y-ticks">
-          ${yAxisLabelsTemplate}
-          ${yAxisTitleTemplate}
-        </g>
+        <g part="x-ticks">${this.xAxisTemplate}</g>
+        <g part="y-ticks">${this.yAxisTemplate}</g>
       </g>
     `;
   }
 
   private xValues(): Seconds[] {
+    if (!this.unitConverter) {
+      return [];
+    }
+
     const step =
-      this.xStepOverride ||
+      this.xStepOverride ??
       this.calculateStep(
         this.unitConverter.temporalDomain.value,
         this.unitConverter.temporalRange.value,
@@ -365,8 +385,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
   }
 
   private yValues(): Hertz[] {
+    if (!this.unitConverter) {
+      return [];
+    }
+
     const step =
-      this.yStepOverride ||
+      this.yStepOverride ??
       this.calculateStep(
         this.unitConverter.frequencyDomain.value,
         this.unitConverter.frequencyRange.value,
@@ -391,6 +415,11 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     scale: FrequencyScale | TemporalScale,
     melScale: boolean,
   ): boolean {
+    if (!this.unitConverter) {
+      console.error("Cannot calculate step without unit converter");
+      return false;
+    }
+
     const textLabelPadding = fontSize * AxesComponent.labelPadding;
 
     // if we are rendering in a linear scale, we can easily virtually measure
@@ -415,7 +444,14 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     // of the last two labels and check if they overlap
     // this is because the last two labels will be the closest together and the
     // most likely to be overlapping
-    const proposedValues = this.generateAxisValues(domain[0], domain[1], proposedStep, scale, false);
+    const proposedValues = this.generateAxisValues(
+      this.unitConverter.renderWindow.value.lowFrequency,
+      this.unitConverter.renderWindow.value.highFrequency,
+      proposedStep,
+      scale,
+      false,
+    );
+
     const lastTwoValues = proposedValues.slice(-2);
     const lastTwoPositions = lastTwoValues.map((value) => scale(value));
     const positionDelta = Math.abs(lastTwoPositions[0] - lastTwoPositions[1]);
@@ -434,7 +470,12 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     scale: FrequencyScale | TemporalScale,
     sizeKey: keyof Size,
   ): number {
-    const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02];
+    if (!this.unitConverter) {
+      console.error("Cannot calculate step without unit converter");
+      return 0;
+    }
+
+    const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02] as const;
     const fontSize = this.calculateFontSize("0.0");
     const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
 
@@ -465,7 +506,7 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
           domain,
           totalLabelSize,
           scale,
-          sizeKey === "height" ? this.unitConverter.melScale.value : false,
+          sizeKey === "height" && this.unitConverter.melScale.value,
         )
       ) {
         return proposedStep;
@@ -482,6 +523,10 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     scale: FrequencyScale | TemporalScale,
     includeEnd = true,
   ): number[] {
+    if (step === 0) {
+      return [];
+    }
+
     const values: number[] = [];
     for (let i = start; i < end; i += step) {
       values.push(i);
@@ -513,24 +558,46 @@ export class AxesComponent extends SignalWatcher(AbstractComponent(LitElement)) 
     return values;
   }
 
-  private axesTemplate() {
+  public chromeLeft(): ChromeTemplate {
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
+
+    return this.yAxisTemplate;
+  }
+
+  public chromeBottom(): ChromeTemplate {
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
+    const xValues = this.xValues();
+    const yValues = this.yValues();
+    const canvasSize = this.unitConverter.canvasSize.value;
+
+    this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
+
+    return this.xAxisTemplate;
+  }
+
+  public chromeOverlay(): ChromeTemplate {
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
     const xValues = this.xValues();
     const yValues = this.yValues();
     const canvasSize = this.unitConverter.canvasSize.value;
 
     const gridLines = this.createGridLinesTemplate(xValues, yValues, canvasSize);
-    const labels = this.createAxisLabelsTemplate(xValues, yValues, canvasSize);
 
-    return html`<svg id="axes-svg">${gridLines} ${labels}</svg>`;
-  }
-
-  public render() {
-    return html`
-      <div id="wrapped-element" class="vertically-fill">
-        ${this.unitConverter ? this.axesTemplate() : nothing}
-        <slot @slotchange="${this.handleSlotChange}"></slot>
-      </div>
-    `;
+    return html`<svg class="axes-overlay-svg">${gridLines}</svg>`;
   }
 }
 

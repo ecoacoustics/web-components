@@ -1,10 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
 import { Size } from "../models/rendering";
-import { MousePosition } from "../components";
 import { KeyboardModifiers } from "../helpers/types/playwright";
 import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
+import { MousePosition } from "../components/verification-grid/verification-grid";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -28,11 +28,27 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
 export async function changeToMobile(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.mobile);
   await viewportMock(page);
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "userAgentData", {
+      get: () => ({
+        mobile: true,
+      }),
+    });
+  });
 }
 
 export async function changeToDesktop(page: Page) {
   const viewportMock = mockDeviceSize(testBreakpoints.desktop);
   await viewportMock(page);
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "userAgentData", {
+      get: () => ({
+        mobile: false,
+      }),
+    });
+  });
 }
 
 export function mockDeviceSize(size: Size): DeviceMock {
@@ -56,7 +72,7 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   }, name);
 }
 
-// for some reason new versions of chrome return the background color as  rgba,
+// for some reason new versions of chrome return the background color as rgba,
 // but the foreground color as standard rgb.
 // this can break tests if you are comparing background colors to foreground
 // colors.
@@ -221,8 +237,11 @@ export async function getBrowserSignalValue<T extends HTMLElement, SignalType = 
 
 // TODO: We can smartly work out if it is a method or a property, and invoke it or read it
 // we can also work out if it is a primitive or not. If it is not, we should serialize it
-export async function getBrowserValue<T extends HTMLElement>(component: any, key: keyof T): Promise<T[keyof T]> {
-  return await component.evaluate((element: T, { key }: { key: keyof T }) => element[key], { key });
+export async function getBrowserValue<
+  Target extends HTMLElement,
+  ReturnValue extends Target[keyof Target] = Target[keyof Target],
+>(component: any, key: keyof Target): Promise<ReturnValue> {
+  return await component.evaluate((element: Target, { key }: { key: keyof Target }) => element[key], { key });
 }
 
 export async function setBrowserValue<T>(component: any, key: keyof T, value: T[keyof T]) {
@@ -259,11 +278,11 @@ export async function hasBrowserAttribute<T extends HTMLElement>(component: any,
   });
 }
 
-export async function invokeBrowserMethod<T extends HTMLElement>(
+export async function invokeBrowserMethod<T extends HTMLElement, ReturnType extends T[keyof T] = T[keyof T]>(
   component: any,
   key: keyof T,
   ...args: any[]
-): Promise<unknown> {
+): Promise<ReturnType> {
   return await component.evaluate(
     (element: T, key: keyof T, args: any[] = []) => (element[key] as (...args: any) => any)(...args),
     key,
@@ -278,4 +297,11 @@ export async function waitForContentReady(page: Page, selectors: string[] = []):
 
   // wait until all network requests have completed
   await page.waitForLoadState("networkidle");
+}
+
+export async function setElementSize(target: Locator, shape: Size<Pixel>) {
+  await target.evaluate((element: HTMLElement, shape: Size<Pixel>) => {
+    element.style.width = `${shape.width}px`;
+    element.style.height = `${shape.height}px`;
+  }, shape);
 }

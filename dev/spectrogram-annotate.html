@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Spectrogram + Axes</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-annotate>
+      <oe-spectrogram id="spectrogram" src="/example.flac"></oe-spectrogram>
+
+      <oe-annotation tags="bird" start-time="0.4" end-time="4.99" low-frequency="2500" high-frequency="3500">
+        <oe-tag value="bird">Bird</oe-tag>
+      </oe-annotation>
+
+      <oe-annotation start-time="2.93" end-time="3.32" low-frequency="8000" high-frequency="9900">
+        <oe-tag value="bat">Bat</oe-tag>
+        <oe-tag value="ultrasonic">Ultrasonic</oe-tag>
+      </oe-annotation>
+    </oe-annotate>
+
+    <oe-media-controls for="spectrogram"></oe-media-controls>
+  </body>
+</html>

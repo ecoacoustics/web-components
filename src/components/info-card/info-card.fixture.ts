@@ -27,7 +27,7 @@ class TestPage {
   }
 
   public async subjectUrl(): Promise<string> {
-    const model = (await getBrowserValue<InfoCardComponent>(this.component(), "model")) as SubjectWrapper;
+    const model = await getBrowserValue<InfoCardComponent, SubjectWrapper>(this.component(), "model");
     return model.url;
   }
 
@@ -45,8 +45,7 @@ class TestPage {
   }
 
   public async audioDownloadLocation(): Promise<string> {
-    const value = await getBrowserValue<HTMLAnchorElement>(this.downloadRecordingButton(), "href");
-    return value as string;
+    return await getBrowserValue<HTMLAnchorElement, string>(this.downloadRecordingButton(), "href");
   }
 }
 

@@ -60,7 +60,7 @@ export default defineConfig({
       entry: {
         // the components.js entry imports all components, helpers, and services
         // in a single barrel file. This is typically the entrypoint for CDN's
-        components: "./src/components/index.ts",
+        components: "./src/index.ts",
 
         // each entry point represents a component, helper, or service that can
         // be imported individually without importing all components
@@ -79,6 +79,9 @@ export default defineConfig({
         "components/verification": "./src/components/decision/verification/verification.ts",
         "components/verification-grid-settings": "./src/components/verification-grid-settings/verification-grid-settings.ts",
         "components/progress-bar": "./src/components/progress-bar/progress-bar.ts",
+        "components/annotate": "./src/components/annotate/annotate.ts",
+        "components/annotation": "./src/components/annotation/annotation.ts",
+        "components/tag": "./src/components/tag/tag.ts",
 
         "components/helpers/constants/contextTokens": "./src/helpers/constants/contextTokens.ts",
       },

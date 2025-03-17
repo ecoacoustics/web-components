@@ -9,6 +9,7 @@ import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
 import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
+import { when } from "lit/directives/when.js";
 
 /**
  * @description
@@ -24,7 +25,7 @@ import { Tag } from "../../../models/tag";
 @customElement("oe-verification")
 export class VerificationComponent extends DecisionComponent {
   @required()
-  @property({ type: String, converter: enumConverter(DecisionOptions) as any })
+  @property({ type: String, converter: enumConverter(DecisionOptions) })
   public verified: DecisionOptions = DecisionOptions.TRUE;
 
   /** Value that will be added to the oe-additional-tags column */
@@ -116,9 +117,13 @@ export class VerificationComponent extends DecisionComponent {
         <div class="additional-tags">${this.additionalTagsTemplate()}</div>
 
         <div>
-          ${!this.isMobile
-            ? html`<span class="shortcut-legend">${keyboardShortcutTemplate({ keys: [this.shortcut] })}</span>`
-            : nothing}
+          <!--
+            even if there is no shortcut, we reserve a space for the shortcut
+            key so that all buttons are the same height.
+           -->
+          <span class="shortcut-legend">
+            ${when(!this.isMobile && this.shortcut, () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`)}
+          </span>
         </div>
       </button>
     `;

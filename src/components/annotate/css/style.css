@@ -1,0 +1,100 @@
+@import url("variables.css");
+
+:host {
+  /*
+    TODO: the browser should be able to initialize these variables through the
+    variables.css file.
+  */
+  --oe-annotation-color: green;
+  --oe-annotation-font-color: white;
+  --oe-annotation-selected-color: lightgreen;
+  --oe-annotation-weight: 1px;
+}
+
+#annotations-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  & > .annotation-container {
+    position: absolute;
+
+    z-index: 2;
+
+    cursor: pointer;
+
+    &:focus {
+      --oe-annotation-color: var(--oe-annotation-selected-color);
+      z-index: 1;
+    }
+
+    & > .bounding-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+
+      border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
+    }
+  }
+}
+
+/*
+  This is the top-level chrome element that will be used when the tag-style is
+  set to "top".
+  I set the position to relative so that if we add additional chrome elements,
+  they will be pushed down by the height of the labels.
+*/
+.labels-top-chrome {
+  position: relative;
+}
+
+.bounding-box-label {
+  width: fit-content;
+  margin: 0;
+  font-size: var(--oe-font-size);
+
+  /*
+    I use z-index 4 so that the label appears above
+      - grid lines (z-index 1)
+      - bounding boxes (z-index 2)
+      - indicator (z-index 3)
+  */
+  z-index: 4;
+
+  /*
+    When rendering the labels on an angle in spectrogram-top, the text can
+    undergo very heavy anti aliasing which can make it difficult to read.
+
+    To fix this, I have applied a bunch of text rendering properties
+    to ask the browser engine to not compromise the quality of content.
+
+    While it is most impactful on the spectrogram-top style, I have applied it
+    to edge styling as well in case the user wants to either:
+    - Slot rotated content into the annotation tag
+    - Rotate the spectrogram itself (for some reason)
+  */
+  text-rendering: optimizeLegibility;
+
+  position-visibility: no-overflow;
+
+  &.style-edge {
+    position: absolute;
+
+    color: var(--oe-annotation-font-color);
+    background-color: var(--oe-annotation-color);
+  }
+
+  &.style-spectrogram-top {
+    position: absolute;
+    bottom: 0px;
+
+    rotate: -20deg;
+    transform-origin: bottom left;
+  }
+
+  &.style-hidden {
+    display: none;
+  }
+}

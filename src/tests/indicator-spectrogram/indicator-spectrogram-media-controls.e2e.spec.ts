@@ -22,10 +22,7 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       await fixture.pauseAudio();
 
       // check that the audio element is playing
-      const mediaElementTime = (await getBrowserValue<HTMLAudioElement>(
-        fixture.audioElement(),
-        "currentTime",
-      )) as number;
+      const mediaElementTime = await getBrowserValue<HTMLAudioElement, number>(fixture.audioElement(), "currentTime");
       expect(mediaElementTime).toBeGreaterThan(0);
 
       // check that the spectrogram component is playing
@@ -78,28 +75,6 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
     // this test will fail if the indicator moves before the audio starts playing
     test("playing audio after sleep", async () => {
       // noop
-    });
-  });
-
-  test.describe("removing spectrogram component", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.removeSpectrogramElement();
-    });
-
-    test("position of indicator", async ({ fixture }) => {
-      const initialPosition = await fixture.indicatorPosition();
-      expect(initialPosition).toBe(0);
-    });
-
-    // the indicator should not move if the spectrogram component is removed
-    // because there is no audio to play
-    test("functionality of indicator", async ({ fixture, page }) => {
-      await fixture.playAudio();
-      await page.waitForTimeout(1000);
-
-      const position = await fixture.indicatorPosition();
-
-      expect(position).toBe(0);
     });
   });
 

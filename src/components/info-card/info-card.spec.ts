@@ -7,7 +7,7 @@ test.describe("Info Card", () => {
     await fixture.create();
   });
 
-  test("Download link should be the same as the audio source", async ({ fixture }) => {
+  test("should have the same download link should be the same as the audio source", async ({ fixture }) => {
     const subjectModel: Subject = {
       name: "John Doe",
       age: 52,

@@ -52,10 +52,6 @@ class VerificationComponentFixture {
     return await this.additionalTagsLegend().textContent();
   }
 
-  public async isShortcutLegendVisible(): Promise<boolean> {
-    return (await this.shortcutLegend().count()) > 0;
-  }
-
   // change attributes
   public async changeShortcut(key: string) {
     await setBrowserAttribute<VerificationComponent>(this.component(), "shortcut", key);
@@ -87,7 +83,7 @@ class VerificationComponentFixture {
   }
 
   public async changeDecisionDisabled(disabled: boolean) {
-    const disabledAttributeName = "disabled" as const;
+    const disabledAttributeName = "disabled";
 
     if (!disabled) {
       await removeBrowserAttribute<VerificationComponent>(this.component(), disabledAttributeName);

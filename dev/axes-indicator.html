@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Spectrogram + Axes + Indicator</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-indicator>
+      <oe-axes>
+        <oe-spectrogram id="spectrogram" src="/example.flac"></oe-spectrogram>
+      </oe-axes>
+    </oe-indicator>
+
+    <oe-media-controls for="spectrogram"></oe-media-controls>
+
+    <div>
+      <button value="host-size-styling" class="disabled" onclick="toggleClass(this)">Size host component</button>
+      <button value="part-styling" class="disabled" onclick="toggleClass(this)">Size canvas</button>
+    </div>
+
+    <script>
+      function spectrogram() {
+        return document.getElementById("spectrogram");
+      }
+
+      function toggleClass(event) {
+        const targetClass = event.value;
+
+        const target = spectrogram();
+        const isActive = target.classList.contains(targetClass);
+        if (isActive) {
+          target.classList.remove(targetClass);
+          event.classList.remove("active");
+          event.classList.add("disabled");
+        } else {
+          target.classList.add(targetClass);
+          event.classList.add("active");
+          event.classList.remove("disabled");
+        }
+      }
+    </script>
+
+    <style>
+      .host-size-style {
+        position: relative;
+        height: 500px;
+        width: 500px;
+      }
+
+      .part-styling {
+        &::part(canvas) {
+          position: relative;
+          height: 300px;
+          width: 500px;
+        }
+      }
+
+      .active {
+        border: 2px solid lime;
+      }
+
+      .disabled {
+        border: 2px solid red;
+      }
+    </style>
+  </body>
+</html>

@@ -1,7 +1,8 @@
-import { RenderCanvasSize, RenderWindow } from "./rendering";
+import { Rect, RenderCanvasSize, RenderWindow } from "./rendering";
 import { AudioModel } from "./recordings";
 import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
+import { Annotation } from "./annotation";
 
 export type Seconds = number;
 export type Hertz = number;
@@ -9,6 +10,7 @@ export type MHertz = number;
 export type Sample = number;
 export type Pixel = number;
 export type EmUnit = number;
+export type AngleDegrees = number;
 
 /**
  * A value that is bounded from [0, 1]
@@ -113,6 +115,41 @@ export class UnitConverter {
   public scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
+
+  public annotationRect(annotation: Readonly<Annotation>): Readonly<Rect<Signal<Pixel>>> {
+    const x = computed(() => this.scaleX.value(annotation.startOffset));
+    const y = computed(() => this.scaleY.value(annotation.highFrequency));
+    const width = computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset));
+
+    // we have to use the computed y offset for mel scales to work
+    // this is because in a mel scale, a 1 hertz unit is different depending on
+    // its value
+    const height = computed(() => this.scaleY.value(annotation.lowFrequency) - y.value);
+
+    return { x, y, width, height };
+  }
+
+  /**
+   * @returns
+   * A boolean indicating if any part of the value is within the temporal
+   * domain
+   */
+  public overlapsTemporalDomain(value: ScaleDomain<Seconds>): boolean {
+    const [domainStart, domainEnd] = this.temporalDomain.value;
+    const [valueStart, valueEnd] = value;
+    return valueStart < domainEnd && valueEnd >= domainStart;
+  }
+
+  /**
+   * @returns
+   * A boolean indicating if any part of the value is within the frequency
+   * domain.
+   */
+  public overlapsFrequencyDomain(value: ScaleDomain<Hertz>): boolean {
+    const [domainLowFrequency, domainHighFrequency] = this.frequencyDomain.value;
+    const [valueStart, valueEnd] = value;
+    return valueStart < domainHighFrequency && valueEnd >= domainLowFrequency;
+  }
 
   // TODO: I think passing in a scaleConverter here is a hack
   /**

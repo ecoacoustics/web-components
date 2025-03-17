@@ -5,7 +5,7 @@ export default defineConfig({
   // we should aim to support fully parallel tests
   // however, it is possible that this breaks some tests down the line
   // (if we do not code good, isolated and independent tests)
-  fullyParallel: true,
+  fullyParallel: false,
   // by enabling retries, playwright will automatically detect flaky tests
   retries: 3,
   // we start the vite server so that we can access the public/ directory
@@ -15,6 +15,7 @@ export default defineConfig({
   },
   // Fail in CI if there is a focused test.only
   forbidOnly: !!process.env.CI,
+  tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,
     ctViteConfig: {
@@ -37,7 +38,9 @@ export default defineConfig({
     // this can be useful for seeing why a test has failed in CI
     process.env.CI ? ["github"] : ["list"],
   ],
-  snapshotPathTemplate: "./src/tests/__snapshots__/{testName}/{arg}{ext}",
+  // be careful when updating this path template. Long path names can cause
+  // Git on Windows to fail checkout
+  snapshotPathTemplate: "./src/tests/__snapshots__/{arg}{ext}",
   testMatch: "**/*.spec.ts",
   projects: [{ name: "chromium" }, { name: "firefox" }, { name: "webkit" }],
 });

@@ -95,17 +95,17 @@ test.describe("data source", () => {
   test("should handle having no source correctly with local files", async ({ fixture }) => {
     const expectedLocalFileInputText = "Browse files";
     await fixture.setLocalAttribute(true);
-    expect(fixture.filePicker()).toHaveText(expectedLocalFileInputText);
+    await expect(fixture.localFileInputButton()).toHaveText(expectedLocalFileInputText);
   });
 
   test("should handle having no source correctly with remote files", async ({ fixture }) => {
     await fixture.setLocalAttribute(false);
-    expect(fixture.filePicker()).not.toBeAttached();
+    await expect(fixture.localFileInputButton()).not.toBeAttached();
   });
 
   test("should use a custom button for local file inputs", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
-    expect(fixture.browserFileInput()).not.toBeVisible();
+    await expect(fixture.browserFileInput()).not.toBeVisible();
   });
 
   // TODO: fix in https://github.com/ecoacoustics/web-components/issues/86
@@ -115,7 +115,7 @@ test.describe("data source", () => {
     await fixture.localFileInputButton().click();
 
     // TODO: Check if we are really expecting a promise rejection here
-    expect(fileInputEvent).rejects.toBeTruthy();
+    await expect(fileInputEvent).rejects.toBeTruthy();
   });
 
   // TODO: this functionality is a stretch goal
@@ -123,35 +123,35 @@ test.describe("data source", () => {
 
   test.skip("should not allow dragging and dropping a file onto local file inputs", () => {});
 
-  test.fixme("should handle changing from local to remote files", async ({ fixture }) => {
+  test("should handle changing from local to remote files", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
-    expect(fixture.filePicker()).toBeAttached();
+    await expect(fixture.localFileInputButton()).toBeAttached();
 
     await fixture.setLocalAttribute(false);
-    expect(fixture.filePicker()).not.toBeAttached();
+    await expect(fixture.localFileInputButton()).not.toBeAttached();
   });
 
   test("should handle changing from remote to local files", async ({ fixture }) => {
     await fixture.setLocalAttribute(false);
-    expect(fixture.filePicker()).not.toBeAttached();
+    await expect(fixture.localFileInputButton()).not.toBeAttached();
 
     await fixture.setLocalAttribute(true);
-    expect(fixture.filePicker()).toBeAttached();
+    await expect(fixture.localFileInputButton()).toBeAttached();
   });
 
   test.skip("should invalidate local file source when switching to a remote file", async ({ fixture }) => {
     await fixture.setLocalAttribute(false);
-    expect(await fixture.getFileName()).toBe("example.flac");
+    expect(await fixture.getFileName()).toEqual("example.flac");
 
     await fixture.setLocalAttribute(true);
-    expect(await fixture.getFileName()).toBe("");
+    expect(await fixture.getFileName()).toEqual("");
   });
 
   test.skip("should invalidate remote source when switching to a local file", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
-    expect(await fixture.getFileName()).toBe("");
+    expect(await fixture.getFileName()).toEqual("");
 
     await fixture.setLocalAttribute(false);
-    expect(await fixture.getFileName()).toBe("example.flac");
+    expect(await fixture.getFileName()).toEqual("example.flac");
   });
 });

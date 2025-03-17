@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Components - Spectrogram + Axes</title>
-    <script type="module" src="/src/components/index.ts"></script>
+    <script type="module" src="/src/index.ts"></script>
   </head>
 
   <body>
@@ -13,5 +13,13 @@
     </oe-axes>
 
     <oe-media-controls for="spectrogram"></oe-media-controls>
+
+    <section>
+      <h3>Notes</h3>
+      <ul>
+        <li>Ensure that the axes labels, ticks, and titles arn't fully overflowing their svg containers</li>
+        <li>Try making the window bigger than smaller. The axes should be able to shrink</li>
+      </ul>
+    </section>
   </body>
 </html>

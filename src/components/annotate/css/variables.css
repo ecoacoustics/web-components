@@ -1,0 +1,23 @@
+@property --oe-annotation-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: green;
+}
+
+@property --oe-annotation-font-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: white;
+}
+
+@property --oe-annotation-selected-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: lightgreen;
+}
+
+@property --oe-annotation-weight {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}

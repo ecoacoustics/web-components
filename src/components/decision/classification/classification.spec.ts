@@ -132,7 +132,7 @@ test.describe("Classification Component", () => {
       fixture,
       page,
     }) => {
-      const loggedEventName = "decision" as const;
+      const loggedEventName = "decision";
       await logEvent(page, loggedEventName);
       await fixture.changeDecisionDisabled(true);
       await fixture.changeDecisionDisabled(false);

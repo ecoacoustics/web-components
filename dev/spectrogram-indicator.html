@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Components - Spectrogram + Indicator</title>
-    <script type="module" src="/src/components/index.ts"></script>
+    <script type="module" src="/src/index.ts"></script>
   </head>
 
   <body>
@@ -13,5 +13,15 @@
     </oe-indicator>
 
     <oe-media-controls for="spectrogram"></oe-media-controls>
+
+    <section>
+      <h3>Notes</h3>
+      <ul>
+        <li>The media controls can sometimes (incorrectly) wrap the indicator component host</li>
+        <li>Ensure the indicator is not overflowing the spectrogram</li>
+        <li>Check you can play audio and the indicator moves</li>
+        <li>Try making the window bigger, then smaller. The indicator should be able to shrink</li>
+      </ul>
+    </section>
   </body>
 </html>

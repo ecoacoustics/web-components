@@ -1,5 +1,7 @@
 import { Tag } from "../models/tag";
-import { Enum } from "./types/advancedTypes";
+import { Enum, EnumValue } from "./types/advancedTypes";
+
+const converterNoProvidedFallback = Symbol("converter-no-fallback");
 
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
 
@@ -53,15 +55,44 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
   return value;
 };
 
-export const enumConverter = <T extends Enum>(enumValues: T) => {
-  return (value: string): T[keyof T] | undefined => {
+export const enumConverter = <T extends Enum>(
+  enumValues: T,
+  fallbackValue: typeof converterNoProvidedFallback | EnumValue<T> = converterNoProvidedFallback,
+) => {
+  return (value: string | null): EnumValue<T> | undefined => {
     // we compare the requested key, and the enums keys as lowercase so that
     // the attribute that is exposed to the user is case insensitive
-    const lowercaseKey = value.toLowerCase();
-    const enumKey = Object.keys(enumValues).find((key) => key.toLowerCase() === lowercaseKey) as keyof T | undefined;
+    const lowercaseKey = value?.toLowerCase();
+    const acceptedKeys = Object.values(enumValues);
+    const enumValue = acceptedKeys.find((key) => key === lowercaseKey);
 
-    if (enumKey) {
-      return enumValues[enumKey];
+    if (enumValue) {
+      return enumValue as any;
+    }
+
+    // If we get to this point, the user has provided an incorrect value to the
+    // enum attribute, and we should either fall back to the default or
+    // throw an error.
+    //
+    // Because noProvidedFallback symbol is not exported from this file, we know
+    // that if the fallback is the noProvidedFallback symbol, the user has not
+    // provided a fallback to this function.
+    // We use a symbol over undefined or any other falsy value because the user
+    // might want to use undefined or a falsy value as the fallback value.
+    if (fallbackValue === converterNoProvidedFallback) {
+      console.error(`'${value}' is not a valid value. Accepted values: ${acceptedKeys}`);
+
+      // we return "undefined" here instead of "null" because so that it mimics
+      // the behavior that we'd expect if we indexed into a non-existent key
+      // e.g. enumValues["non-existent"] would return undefined
+      return undefined;
+    } else {
+      // this string type casting is okay because we have checked that it is not
+      // a symbol in the if condition above
+      console.warn(
+        `'${value}' is not a valid value. Falling back to '${fallbackValue}'. Accepted values: ${acceptedKeys}`,
+      );
+      return fallbackValue;
     }
   };
 };

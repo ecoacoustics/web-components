@@ -84,7 +84,7 @@ class ClassificationComponentFixture {
   }
 
   public async changeDecisionDisabled(disabled: boolean) {
-    const disabledAttributeName = "disabled" as const;
+    const disabledAttributeName = "disabled";
 
     if (!disabled) {
       await removeBrowserAttribute<ClassificationComponent>(this.component(), disabledAttributeName);

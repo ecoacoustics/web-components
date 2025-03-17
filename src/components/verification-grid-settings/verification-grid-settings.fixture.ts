@@ -82,13 +82,13 @@ class TestPage {
 
   /** Returns the value of the verification grids `grid-size` attribute */
   public async verificationGridSize(): Promise<number> {
-    return (await getBrowserValue<VerificationGridComponent>(this.verificationGrid(), "targetGridSize")) as number;
+    return await getBrowserValue<VerificationGridComponent, number>(this.verificationGrid(), "targetGridSize");
   }
 
   /** Returns the grid size shown by the grid size settings input */
   public async gridSizeInputValue(): Promise<string> {
     await this.gridSizeTriggerButton().click();
-    return (await getBrowserValue<HTMLInputElement>(this.gridSizeInput(), "value")) as string;
+    return await getBrowserValue<HTMLInputElement, string>(this.gridSizeInput(), "value");
   }
 }
 

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Annotation Edge Cases</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-indicator>
+      <oe-axes>
+        <oe-annotate id="annotate" tag-style="edge">
+          <oe-spectrogram id="spectrogram" src="/example.flac">
+            <source src="/example.flac" />
+          </oe-spectrogram>
+
+          <oe-annotation
+            tags="empty-attributes"
+            start-time=""
+            end-time=""
+            low-frequency=""
+            high-frequency=""
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="start-time-overflow"
+            start-time="-2"
+            end-time="0.5"
+            low-frequency="6000"
+            high-frequency="7900"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="end-time-overflow"
+            start-time="4.5"
+            end-time="7"
+            low-frequency="5000"
+            high-frequency="6900"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="overflow-high-freq"
+            start-time="3"
+            end-time="3.4"
+            low-frequency="9500"
+            high-frequency="13000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="overflow-low-freq"
+            start-time="3"
+            end-time="3.4"
+            low-frequency="-400"
+            high-frequency="400"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="time-overflow"
+            start-time="-2"
+            end-time="7"
+            low-frequency="2000"
+            high-frequency="4000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="frequency-overflow"
+            start-time="3.8"
+            end-time="4.2"
+            low-frequency="-1000"
+            high-frequency="23050"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="all-overflow"
+            start-time="-2"
+            end-time="7"
+            low-frequency="-1000"
+            high-frequency="23050"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="overlapping-annotation-first"
+            start-time="1"
+            end-time="2"
+            low-frequency="8000"
+            high-frequency="9900"
+          ></oe-annotation>
+          <oe-annotation
+            tags="overlapping-annotation-second"
+            start-time="1"
+            end-time="1.5"
+            low-frequency="6000"
+            high-frequency="10050"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="fully-offscreen"
+            start-time="8"
+            end-time="9"
+            low-frequency="8000"
+            high-frequency="9900"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="fully-offscreen-high-freq"
+            start-time="1"
+            end-time="2"
+            low-frequency="21050"
+            high-frequency="23050"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="fully-offscreen-low-freq"
+            start-time="3"
+            end-time="3.4"
+            low-frequency="-4000"
+            high-frequency="-2000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="right-bottom-corner"
+            start-time="4.9"
+            end-time="5.1"
+            low-frequency="-500"
+            high-frequency="500"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="right-top-corner"
+            start-time="4.9"
+            end-time="5.1"
+            low-frequency="10500"
+            high-frequency="12000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="left-bottom-corner"
+            start-time="-0.1"
+            end-time="0.1"
+            low-frequency="-500"
+            high-frequency="500"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="left-top-corner"
+            start-time="-0.1"
+            end-time="0.1"
+            low-frequency="10500"
+            high-frequency="11500"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="top-temporal-overflow"
+            start-time="-1"
+            end-time="6"
+            low-frequency="9000"
+            high-frequency="12000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="bottom-temporal-overflow"
+            start-time="-1"
+            end-time="6"
+            low-frequency="-1000"
+            high-frequency="1000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="right-frequency-overflow"
+            start-time="4.4"
+            end-time="5.2"
+            low-frequency="-1000"
+            high-frequency="12000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="small-right-frequency-overflow"
+            start-time="4.99"
+            end-time="5.01"
+            low-frequency="-1000"
+            high-frequency="12000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="left-frequency-overflow"
+            start-time="-1"
+            end-time="0.3"
+            low-frequency="-1000"
+            high-frequency="12000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="small-annotation"
+            start-time="2.4"
+            end-time="2.41"
+            low-frequency="4500"
+            high-frequency="5000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="dot-annotation"
+            start-time="2.6"
+            end-time="2.601"
+            low-frequency="6500"
+            high-frequency="6501"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="normal-annotation,tag-2"
+            start-time="3"
+            end-time="3.5"
+            low-frequency="5000"
+            high-frequency="6500"
+          >
+            <oe-tag value="slotted-tag-1-value">Slotted Tag 1</oe-tag>
+            <oe-tag value="slotted-tag-2-value">Slotted Tag 2</oe-tag>
+          </oe-annotation>
+
+          <!--
+            This is an interesting test because we can still render the
+            annotations label, but the bounding box will be hidden
+          -->
+          <oe-annotation
+            tags="just-offscreen-low-frequency"
+            start-time="1"
+            end-time="1.5"
+            low-frequency="-100"
+            high-frequency="0"
+          ></oe-annotation>
+
+          <!--
+            This edge case is interesting because the label is going off the top
+            of the view box which means that the label label should probably be
+            attached to the bottom of the bounding box instead.
+          -->
+          <oe-annotation
+            tags="offscreen-label"
+            start-time="2.3"
+            end-time="2.5"
+            low-frequency="10000"
+            high-frequency="11025"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="inverse-frequencies"
+            start-time="2.93"
+            end-time="3.32"
+            low-frequency="9900"
+            high-frequency="8000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="inverse-time"
+            start-time="3.32"
+            end-time="2.93"
+            low-frequency="8000"
+            high-frequency="9900"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="fully-inverse"
+            start-time="3.32"
+            end-time="2.93"
+            low-frequency="9900"
+            high-frequency="8000"
+          ></oe-annotation>
+        </oe-annotate>
+      </oe-axes>
+    </oe-indicator>
+
+    <oe-media-controls for="spectrogram"></oe-media-controls>
+
+    <div>
+      <button onclick="zeroWidth()">Change to zero width</button>
+      <button onclick="zeroHeight()">Change to zero height</button>
+      <button onclick="changeSpectrogramOffset()">Change spectrogram offset</button>
+      <button onclick="changeTagStyle()">Change tag style</button>
+    </div>
+
+    <div>
+      <h2>Window Controls</h2>
+      <div class="window-controls">
+        <div class="up-button"><button onclick="windowUp()">^</button></div>
+        <button onclick="windowLeft()">&lt;</button>
+        <button onclick="windowDown()">v</button>
+        <button onclick="windowRight()">&gt;</button>
+
+        <div class="zoom-controls">
+          <button onclick="windowZoomIn()">+</button>
+          <button onclick="windowZoomOut()">-</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2>Isolated elements</h2>
+      <oe-tag>You should not see this</oe-tag>
+      <oe-annotation
+        tags="you should not see this"
+        low-frequency="0"
+        high-frequency="1000"
+        start-time="0"
+        end-time="5"
+      ></oe-annotation>
+    </div>
+
+    <div class="long-scroll-container">
+      <h2>Long scroll container</h2>
+      <p>This is useful for testing if the annotations behave correctly when scrolling</p>
+    </div>
+
+    <script>
+      let spectrogramElement;
+      let annotateElement;
+      const windowControlSensitivity = 100;
+
+      window.addEventListener("load", () => {
+        spectrogramElement = document.getElementById("spectrogram");
+        annotateElement = document.getElementById("annotate");
+      });
+
+      function zeroWidth() {
+        spectrogramElement.style.width = "0px";
+      }
+
+      function zeroHeight() {
+        spectrogramElement.style.height = "0px";
+      }
+
+      function changeSpectrogramOffset() {
+        spectrogramElement.setAttribute("offset", "2");
+      }
+
+      let currentTagStyle = 1;
+      function changeTagStyle() {
+        const tagStyles = ["hidden", "edge", "spectrogram-top", "invalid-tag-style"];
+        const newTagStyle = tagStyles[++currentTagStyle % tagStyles.length];
+        annotateElement.setAttribute("tag-style", newTagStyle);
+      }
+
+      function windowSize() {
+        const windowAttribute = spectrogramElement.getAttribute("window");
+        if (!windowAttribute) {
+          return addWindowViewBox();
+        }
+
+        const [startOffset, lowFrequency, endOffset, highFrequency] = windowAttribute
+          .split(",")
+          .map((value) => parseFloat(value));
+
+        return { startOffset, endOffset, lowFrequency, highFrequency };
+      }
+
+      // because we want to test the spectrogram element without a window view
+      // box, we only add the window view box once we need it
+      function addWindowViewBox() {
+        const initialValue = {
+          startOffset: 0,
+          endOffset: 5,
+          lowFrequency: 0,
+          highFrequency: 22050,
+        };
+
+        setWindowViewBox(initialValue);
+
+        return initialValue;
+      }
+
+      function setWindowViewBox(value) {
+        const attributeValue = `${value.startOffset},${value.endOffset},${value.lowFrequency},${value.highFrequency}`;
+        spectrogramElement.setAttribute("window", attributeValue);
+      }
+
+      // window modifiers
+      function windowUp() {
+        const windowValue = windowSize();
+        windowValue.highFrequency += windowControlSensitivity;
+        windowValue.lowFrequency += windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+
+      function windowLeft() {
+        const windowValue = windowSize();
+        windowValue.startOffset -= windowControlSensitivity;
+        windowValue.endOffset -= windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+
+      function windowDown() {
+        const windowValue = windowSize();
+        windowValue.highFrequency -= windowControlSensitivity;
+        windowValue.lowFrequency -= windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+
+      function windowRight() {
+        const windowValue = windowSize();
+        windowValue.startOffset += windowControlSensitivity;
+        windowValue.endOffset += windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+
+      function windowZoomIn() {
+        const windowValue = windowSize();
+        windowValue.startOffset -= windowControlSensitivity;
+        windowValue.endOffset -= windowControlSensitivity;
+        windowValue.highFrequency -= windowControlSensitivity;
+        windowValue.lowFrequency -= windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+
+      function windowZoomOut() {
+        const windowValue = windowSize();
+        windowValue.startOffset += windowControlSensitivity;
+        windowValue.endOffset += windowControlSensitivity;
+        windowValue.highFrequency += windowControlSensitivity;
+        windowValue.lowFrequency += windowControlSensitivity;
+        setWindowViewBox(windowValue);
+      }
+    </script>
+
+    <style>
+      oe-spectrogram::part(canvas) {
+        height: 600px;
+      }
+
+      .long-scroll-container {
+        position: relative;
+        height: 100dvh;
+      }
+
+      .window-controls {
+        display: inline-block;
+        width: fit-content;
+
+        & > * {
+          margin: 0.1rem;
+        }
+
+        button {
+          padding: 0.5rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+
+        .up-button {
+          display: flex;
+          justify-content: center;
+        }
+
+        .zoom-controls {
+          margin-top: 0.5rem;
+        }
+      }
+    </style>
+  </body>
+</html>

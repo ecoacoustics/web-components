@@ -3,6 +3,7 @@ import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/s
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
 import { expect, test } from "../assertions";
+import { Pixel } from "../../models/unitConverters";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -32,14 +33,26 @@ class TestPage {
     await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
-  public async changeSize(size: Size) {
-    await this.spectrogramComponent().evaluate((element, size) => {
-      element.style.width = `${size.width}px`;
-      element.style.height = `${size.height}px`;
-    }, size);
-
-    // TODO: remove this
-    await this.page.waitForTimeout(100);
+  // This create method is a hack to get around the fact that the ResizeObserver
+  // callback runs asynchronously.
+  // We need to wait unit the resize is complete before we can assert
+  // the axes or size of the spectrogram. However, this is difficult to wait
+  // during testing, so I use this hack to create a spectrogram with an initial
+  // size instead of testing the resize.
+  //
+  // TODO: There should be a similar method that tests resizing the spectrogram
+  // after initialization
+  public async createWithSize(size: Readonly<Size<Pixel>>) {
+    await this.page.setContent(`
+      <oe-axes>
+        <oe-spectrogram
+          id="spectrogram"
+          src="${this.audioSource}"
+          style="width: ${size.width}px; height: ${size.height}px;"
+        ></oe-spectrogram>
+      </oe-axes>
+    `);
+    await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
   public async spectrogramSize(): Promise<Size> {

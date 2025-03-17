@@ -1,16 +1,4 @@
 :host {
-  position: relative;
-  display: inline-block;
-
-  /*
-    By setting the width to 100%, the indicator component will take up the full
-    width of the parent container.
-    However, this causes problems when the parent container changes size
-    e.g. when expanding the information card in the spectrogram grid
-    TODO: fix this bug
-  */
-  width: 100%;
-
   &::part(indicator-line) {
     stroke: red;
     stroke-width: 2;
@@ -22,15 +10,11 @@
   }
 }
 
-#wrapped-element {
-  position: relative;
-}
-
 #indicator-svg {
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 3;
   overflow: visible;
 }
 

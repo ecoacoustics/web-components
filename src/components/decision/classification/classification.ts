@@ -212,7 +212,7 @@ export class ClassificationComponent extends DecisionComponent {
   }
 
   public override render() {
-    const buttonOptions = [DecisionOptions.TRUE, DecisionOptions.FALSE] satisfies DecisionOptions[];
+    const buttonOptions = [DecisionOptions.TRUE, DecisionOptions.FALSE] as const satisfies DecisionOptions[];
 
     // prettier-ignore
     return html`

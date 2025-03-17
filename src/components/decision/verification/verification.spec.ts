@@ -47,8 +47,7 @@ test.describe("Verification Component", () => {
     await fixture.changeShortcut(testedKeyboardShortcut);
     await fixture.changeIsMobile(true);
 
-    const isShortcutVisible = await fixture.isShortcutLegendVisible();
-    expect(isShortcutVisible).toBe(false);
+    await expect(fixture.shortcutLegend()).toHaveTrimmedText("");
   });
 
   test("should have the correct color for a true decision", async ({ fixture }) => {

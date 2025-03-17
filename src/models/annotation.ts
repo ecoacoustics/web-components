@@ -1,12 +1,13 @@
 import { Verification } from "./decisions/verification";
 import { Tag } from "./tag";
+import { Hertz, Seconds } from "./unitConverters";
 
 export class Annotation {
   public constructor(
-    startOffset: number,
-    endOffset: number,
-    lowFrequency: number,
-    highFrequency: number,
+    startOffset: Seconds,
+    endOffset: Seconds,
+    lowFrequency: Hertz,
+    highFrequency: Hertz,
     tags: Tag[],
     reference: object,
     verifications: Verification[],
@@ -20,11 +21,15 @@ export class Annotation {
     this.verifications = verifications;
   }
 
-  public startOffset: number;
-  public endOffset: number;
-  public lowFrequency: number;
-  public highFrequency: number;
+  public startOffset: Seconds;
+  public endOffset: Seconds;
+  public lowFrequency: Hertz;
+  public highFrequency: Hertz;
   public tags: Tag[];
-  public reference: object;
+  public readonly reference: Readonly<object>;
   public verifications: Verification[];
+
+  public valid(): Readonly<boolean> {
+    return this.lowFrequency < this.highFrequency && this.startOffset < this.endOffset;
+  }
 }
