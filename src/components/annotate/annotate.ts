@@ -408,7 +408,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       }
 
       case EdgeLabelPosition.LEFT_EDGE: {
-        return this.leftEdgeLabelStyles(annotationRect, canvasSize);
+        return this.leftEdgeLabelStyles(annotationRect);
       }
 
       default: {
@@ -469,8 +469,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         annotationRect.y.value > 0
           ? "calc(var(--oe-annotation-weight) * -1)"
           : `calc(${Math.abs(annotationRect.y.value)}px - var(--oe-annotation-weight))`,
+      left:
+        annotationRect.x.value > 0
+          ? "var(--oe-annotation-weight)"
+          : `calc(${Math.abs(annotationRect.x.value)}px + var(--oe-annotation-weight))`,
       transform: annotationRect.y.value > 0 ? "translateY(100%)" : "initial",
-      left: "0px",
     };
   }
 
