@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v2.0.1...web-components-v2.1.0) (2025-03-17)
+
+
+### Features
+
+* Annotation viewer components ([#278](https://github.com/ecoacoustics/web-components/issues/278)) ([e7b635d](https://github.com/ecoacoustics/web-components/commit/e7b635dc86fb9586afbd155e4ebe790428a859ee)), closes [#5](https://github.com/ecoacoustics/web-components/issues/5) [#279](https://github.com/ecoacoustics/web-components/issues/279)
+
 ## [2.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v2.0.0...web-components-v2.0.1) (2025-02-28)
 
 
