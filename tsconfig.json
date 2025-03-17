@@ -25,6 +25,7 @@
     "declarationDir": "@types",
     "declaration": true,
     "emitDeclarationOnly": true,
+    "erasableSyntaxOnly": false,
 
     "baseUrl": "src/components",
     "paths": {

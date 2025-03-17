@@ -280,12 +280,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // chrome height to 0.
     // if we removed this check, the Math.max below would return -Infinity
     // if there were no labels.
-    if (this.labelRefs.length === 0) {
+    const targetLabels = this.instantiatedLabelRefs;
+    if (targetLabels.length === 0) {
       this.topChromeHeight.value = 0;
       return;
     }
 
-    const labelHeights = this.instantiatedLabelRefs.map((ref) => ref.value.getBoundingClientRect().height);
+    const labelHeights = targetLabels.map((ref) => ref.value.getBoundingClientRect().height);
     this.topChromeHeight.value = Math.max(...labelHeights);
   }
 
@@ -347,7 +348,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   private tagLabelTemplate(model: Annotation): HTMLTemplateResult {
-    const tagSeparator = ", ";
+    const tagSeparator = ",";
 
     return html`
       ${loop(model.tags, (tag, { last }) => {
@@ -630,7 +631,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeOverlay(): ChromeTemplate {
-    this.labelElements = [];
+    if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
+      this.labelElements = [];
+    }
 
     return html`
       <div id="annotations-surface">
@@ -642,6 +645,10 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeTop(): ChromeTemplate {
+    if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
+      return nothing;
+    }
+
     // because the labelRefs array is dynamically populated by the
     // spectrogramTopLabelTemplate function, we have to destroy all labelRefs
     // when the template is re-rendered.
@@ -649,10 +656,6 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // spectrogram-top because the references will no longer exist.
     this.labelElements = [];
     this.templateTagElements = [];
-
-    if (this.tagStyle !== AnnotationTagStyle.SPECTROGRAM_TOP) {
-      return nothing;
-    }
 
     return html`
       <div class="labels-top-chrome" style="height: ${watch(this.topChromeHeight)}px">

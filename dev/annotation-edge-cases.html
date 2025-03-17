@@ -14,7 +14,7 @@
           <oe-spectrogram id="spectrogram" src="/example.flac">
             <source src="/example.flac" />
           </oe-spectrogram>
-          <!-- 
+
           <oe-annotation
             tags="empty-attributes"
             start-time=""
@@ -149,7 +149,7 @@
             low-frequency="10500"
             high-frequency="11500"
           ></oe-annotation>
- -->
+
           <oe-annotation
             tags="top-temporal-overflow"
             start-time="-1"
@@ -189,7 +189,7 @@
             low-frequency="-1000"
             high-frequency="12000"
           ></oe-annotation>
-          <!-- 
+
           <oe-annotation
             tags="small-annotation"
             start-time="2.4"
@@ -216,31 +216,31 @@
             <oe-tag value="slotted-tag-1-value">Slotted Tag 1</oe-tag>
             <oe-tag value="slotted-tag-2-value">Slotted Tag 2</oe-tag>
           </oe-annotation>
- -->
+
           <!--
             This is an interesting test because we can still render the
             annotations label, but the bounding box will be hidden
           -->
-          <!-- <oe-annotation
+          <oe-annotation
             tags="just-offscreen-low-frequency"
             start-time="1"
             end-time="1.5"
             low-frequency="-100"
             high-frequency="0"
-          ></oe-annotation> -->
+          ></oe-annotation>
 
           <!--
             This edge case is interesting because the label is going off the top
             of the view box which means that the label label should probably be
             attached to the bottom of the bounding box instead.
           -->
-          <!-- <oe-annotation
+          <oe-annotation
             tags="offscreen-label"
             start-time="2.3"
             end-time="2.5"
             low-frequency="10000"
             high-frequency="11025"
-          ></oe-annotation> -->
+          ></oe-annotation>
 
           <oe-annotation
             tags="inverse-frequencies"

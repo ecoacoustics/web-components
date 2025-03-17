@@ -15,6 +15,7 @@ export default defineConfig({
   },
   // Fail in CI if there is a focused test.only
   forbidOnly: !!process.env.CI,
+  tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,
     ctViteConfig: {

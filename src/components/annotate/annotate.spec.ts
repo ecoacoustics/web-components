@@ -43,7 +43,7 @@ test.describe("annotation", () => {
       await expect(labelTarget).toHaveTrimmedText("bird");
     });
 
-    test("should have the correct", async ({ fixture }) => {
+    test("should have the correct text for multiple tag labels", async ({ fixture }) => {
       const labelTarget = await fixture.annotationLabel(1);
       await expect(labelTarget).toHaveTrimmedText("cow,male");
     });
@@ -116,6 +116,44 @@ test.describe("annotation", () => {
             endOffset: 8,
             lowFrequency: 1000,
             highFrequency: 3000,
+          },
+        },
+
+        // only one axes is visible
+        {
+          name: "only low frequency",
+          annotation: {
+            startOffset: -1,
+            endOffset: 6,
+            lowFrequency: -1000,
+            highFrequency: 1000,
+          },
+        },
+        {
+          name: "only high frequency",
+          annotation: {
+            startOffset: -1,
+            endOffset: 6,
+            lowFrequency: 9000,
+            highFrequency: 12000,
+          },
+        },
+        {
+          name: "only start time",
+          annotation: {
+            startOffset: -1,
+            endOffset: 0.3,
+            lowFrequency: -1000,
+            highFrequency: 12000,
+          },
+        },
+        {
+          name: "only end time",
+          annotation: {
+            startOffset: 4.4,
+            endOffset: 5.2,
+            lowFrequency: -1000,
+            highFrequency: 12000,
           },
         },
       ] as const satisfies AnnotationBoundingBoxTest[];
