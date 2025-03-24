@@ -4,11 +4,11 @@ title: Verification Tool
 ---
 
 <oe-verification-grid id="verification-grid" grid-size="1">
-      <oe-classification tag="Birds" true-shortcut="1"></oe-classification>
-      <oe-classification tag="Insects" true-shortcut="2"></oe-classification>
-      <oe-classification tag="Rain" true-shortcut="3"></oe-classification>
-      <oe-classification tag="Wind" true-shortcut="4"></oe-classification>
-      <oe-classification tag="Silence" true-shortcut="5"></oe-classification>
+      <oe-classification tag="Birds" true-shortcut="q"></oe-classification>
+      <oe-classification tag="Insects" true-shortcut="w"></oe-classification>
+      <oe-classification tag="Rain" true-shortcut="e"></oe-classification>
+      <oe-classification tag="Wind" true-shortcut="r"></oe-classification>
+      <oe-classification tag="Silence" true-shortcut="t"></oe-classification>
     <oe-data-source id="data-source" slot="data-source" for="verification-grid" local></oe-data-source>
 </oe-verification-grid>
 
