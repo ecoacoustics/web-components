@@ -23,8 +23,8 @@ Along with additional information on how to customize it to your needs.
 
   <body>
     <oe-verification-grid id="verification-grid" grid-size="3" selection-behavior="desktop">
-      <oe-verification verified="true" shortcut="Y">Grey-headed flying fox</oe-verification>
-      <oe-verification verified="false" shortcut="N">Grey-headed flying fox</oe-verification>
+      <oe-verification verified="true" shortcut="y">Grey-headed flying fox</oe-verification>
+      <oe-verification verified="false" shortcut="n">Grey-headed flying fox</oe-verification>
     </oe-verification-grid>
 
     <oe-data-source for="verification-grid" local></oe-data-source>

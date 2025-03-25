@@ -16,7 +16,7 @@ You can import all the web components through the CDN
 Script tag snippet:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/components.js"></script>
+<script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
 ```
 
 Full page example:
@@ -28,7 +28,7 @@ Full page example:
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Component CDN Example</title>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/components.js"></script>
+    <script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
   </head>
 
   <body>

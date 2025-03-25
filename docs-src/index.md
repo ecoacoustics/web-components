@@ -18,7 +18,7 @@ To use the CDN, simply add the following code into the `<head>` tag of your webs
 ### Install via NPM
 
 ```sh
-$ npm i @ecoacoustics/webcomponents-workspace
+$ npm i @ecoacoustics/web-components
 >
 ```
 
