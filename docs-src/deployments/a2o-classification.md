@@ -6,9 +6,11 @@ title: Verification Tool
 <oe-verification-grid id="verification-grid" grid-size="1">
     <oe-classification tag="Birds" true-shortcut="q"></oe-classification>
     <oe-classification tag="Insects" true-shortcut="w"></oe-classification>
-    <oe-classification tag="Rain" true-shortcut="e"></oe-classification>
-    <oe-classification tag="Wind" true-shortcut="r"></oe-classification>
-    <oe-classification tag="Silence" true-shortcut="t"></oe-classification>
+    <oe-classification tag="Frogs" true-shortcut="e"></oe-classification>
+    <oe-classification tag="Rain" true-shortcut="r"></oe-classification>
+    <oe-classification tag="Wind" true-shortcut="t"></oe-classification>
+    <oe-classification tag="Human" true-shortcut="y"></oe-classification>
+    <oe-classification tag="Silence" true-shortcut="u"></oe-classification>
     <oe-data-source id="data-source" slot="data-source" for="verification-grid" local></oe-data-source>
 </oe-verification-grid>
 
