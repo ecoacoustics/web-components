@@ -10,18 +10,6 @@ A short description of the pull request
 - Example feature
 - Example feature
 
-### Bug Fixes
-
-- Example Bug Fix
-- Example Bug Fix
-- Example Bug Fix
-
-### Code Quality
-
-- Example Code Quality Change
-- Example Code Quality Change
-- Example Code Quality Change
-
 ### Remaining Bugs / Unresolved Problems
 
 ## Visual Changes
@@ -38,8 +26,6 @@ A short description of the pull request
 ## Related Issues
 
 Fixes: #xyz
-
-## Additional Notes
 
 ## Final Checklist
 
