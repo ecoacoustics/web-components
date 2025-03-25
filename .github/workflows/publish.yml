@@ -47,7 +47,7 @@ jobs:
         run: |
           set -e
           mkdir -p ./dist
-          zip -r ./dist/components.zip ./assets/ ./@types/ ./components.js -x "**/node_modules/*"
+          zip -r ./dist/components.zip ./assets/ ./@types/ ./dist/ ./dist/components.js -x "**/node_modules/*"
           gh release upload ${{ inputs.tag_name }} ./dist/components.zip
 
   Publish-Documentation:

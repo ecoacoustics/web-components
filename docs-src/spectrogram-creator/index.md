@@ -280,12 +280,11 @@ function updateAttribute(attribute, value) {
 
 function booleanAttribute(attribute, show) {
   const shouldShow = show === "true";
-  const spectrogram = spectrogram();
 
   if (shouldShow) {
-    spectrogram.setAttribute(attribute, "");
+    spectrogram().setAttribute(attribute, "");
   } else {
-    spectrogram.removeAttribute(attribute);
+    spectrogram().removeAttribute(attribute);
   }
 }
 
