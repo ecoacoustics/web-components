@@ -18,7 +18,7 @@ Along with additional information on how to customize it to your needs.
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OE Bat Verification Grid</title>
-    <script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/dist/components.js"></script>
   </head>
 
   <body>
