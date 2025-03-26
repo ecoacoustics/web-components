@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.0...web-components-v2.1.1) (2025-03-26)
+
+
+### Bug Fixes
+
+* **docs:** Outdated and inconsistent examples ([#312](https://github.com/ecoacoustics/web-components/issues/312)) ([d55eaab](https://github.com/ecoacoustics/web-components/commit/d55eaab1ce7bf591e6ac90bc209c3faf67db0f30)), closes [#310](https://github.com/ecoacoustics/web-components/issues/310)
+
 ## [2.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v2.0.1...web-components-v2.1.0) (2025-03-17)
 
 
