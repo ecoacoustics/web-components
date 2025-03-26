@@ -621,6 +621,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       if (desync > desyncLimit) {
         console.log("Media element exceeded desync threshold (this might cause rubber banding)");
 
+        startTime -= desync;
+
         this._currentTime.value = mediaElementTime;
         this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
 
