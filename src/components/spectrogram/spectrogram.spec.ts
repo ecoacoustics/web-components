@@ -1,5 +1,6 @@
 import {
   changeToMobile,
+  getBrowserSignalValue,
   getElementSize,
   invokeBrowserMethod,
   mockDeviceSize,
@@ -113,7 +114,7 @@ test.describe("unit tests", () => {
       "example2.flac",
       "example_34s.flac",
       "merged_diagnostic.wav",
-    ];
+    ] as const satisfies string[];
 
     for (const source of testedSources) {
       test(`renders ${source} correctly`, async ({ mount, fixture }) => {
@@ -149,7 +150,7 @@ test.describe.skip("spectrogram sizing", () => {
       await fixture.createWithDefaultSize();
     });
 
-    const defaultSizeTests: SpectrogramSizingTest[] = [
+    const defaultSizeTests = [
       {
         name: "should have the correct default sizing for stretch",
         scaling: "stretch",
@@ -168,7 +169,7 @@ test.describe.skip("spectrogram sizing", () => {
         expectedHeight: originalSpectrogramHeight,
         expectedWidth: originalSpectrogramWidth,
       },
-    ];
+    ] as const satisfies SpectrogramSizingTest[];
 
     for (const testCase of defaultSizeTests) {
       assertSpectrogramSizing(testCase);
@@ -180,7 +181,7 @@ test.describe.skip("spectrogram sizing", () => {
       await fixture.create();
     });
 
-    const sizingTests: SpectrogramSizingTest[] = [
+    const sizingTests = [
       // original scaling
       {
         name: "should not be able to resize original spectrogram",
@@ -266,7 +267,7 @@ test.describe.skip("spectrogram sizing", () => {
         expectedWidth: 100,
         expectedHeight: 100,
       },
-    ];
+    ] as const satisfies SpectrogramSizingTest[];
 
     for (const testCase of sizingTests) {
       assertSpectrogramSizing(testCase);
@@ -420,6 +421,119 @@ test.describe("playing/pausing", () => {
 
   test("should behave correctly with src attribute", async ({ fixture }) => {
     await assertCanPlayPause(fixture);
+  });
+
+  test("should reset the currentTime if the spectrogram src is changed", async ({ fixture }) => {
+    // the spectrogram element starts with a src attribute, therefore we can
+    // start playing the original source without needing to change it at the
+    // beginning of the tests
+
+    // we wait some time after the audio starts to play so that the currentTime
+    // will be a lot greater than 0
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
+    await fixture.page.waitForTimeout(1_000);
+
+    // after changing the source, we wait for a bit so that if the currentTime
+    // is still being updated, it will be a lot greater than 0
+    await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src", fixture.secondaryAudioSource);
+    await fixture.page.waitForTimeout(1_000);
+
+    const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(currentTime).toEqual(0);
+    expect(await fixture.isPlayingAudio()).toEqual(false);
+  });
+
+  test("should reset the currentTime if the spectrograms source changes from src to slotted", async ({ fixture }) => {
+    // because the spectrogram element starts with a src attribute, so we can
+    // start playing the spectrograms src attribute immediately
+
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
+    await fixture.page.waitForTimeout(1_000);
+
+    // after changing the source, we wait for a bit so that if the currentTime
+    // is still being updated, it will be a lot greater than 0
+    await fixture.updateSlot(`<source src="${fixture.secondaryAudioSource}" type="audio/flac" />`);
+    await fixture.page.waitForTimeout(1_000);
+
+    const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(currentTime).toEqual(0);
+    expect(await fixture.isPlayingAudio()).toEqual(false);
+
+  });
+
+  test("should reset the currentTime if the spectrograms slotted source changes", async ({ fixture }) => {
+    await removeBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src");
+    await fixture.updateSlot(`<source src="${fixture.audioSource}" type="audio/flac" />`);
+
+    await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
+    await fixture.page.waitForTimeout(1_000);
+
+    // after changing the source, we wait for a bit so that if the currentTime
+    // is still being updated, it will be a lot greater than 0
+    await fixture.updateSlot(`<source src="${fixture.secondaryAudioSource}" type="audio/flac" />`);
+    await fixture.page.waitForTimeout(1_000);
+
+    const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(currentTime).toEqual(0);
+    expect(await fixture.isPlayingAudio()).toEqual(false);
+  });
+
+  // This test asserts that the high accuracy time processor only starts
+  // interpolating time once audio playback has started.
+  test("should only start playing once the audio starts playing", async ({ fixture }) => {
+    // we dispatch a "play" event from the audio element so that if the high
+    // accuracy time processor starts interpolating time before the audio starts
+    // playing, we will be able to detect it.
+    await fixture.spectrogramAudioElement().dispatchEvent("play");
+
+    await fixture.page.waitForTimeout(1_000);
+
+    // although the audio element has been dispatched a "play" event, playback
+    // has not started yet, so the currentTime should still be 0
+    const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(currentTime).toEqual(0);
+
+    // we manually start playing the audio element so that playback begins
+    // without dispatching another "play" event which might cause this test to
+    // pass when it should not have
+    await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "play");
+
+    await fixture.page.waitForTimeout(1_000);
+
+    const updatedCurrentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(updatedCurrentTime).toBeGreaterThan(0);
+  });
+
+  // In the case of slow internet connections, or if the user loses connection
+  // during playback, the audio playback might start/ and stop half way through
+  // playback.
+  // If the high accuracy time processor doesn't correctly identify that
+  // playback has stopped, it will continue to update the currentTime of the
+  // spectrogram.
+  // This test ensures that playback interpolation can correctly rubber band
+  // back to the correct playback time if audio playback becomes de-synced from
+  // the spectrogram.
+  test("should keep the currentTime in sync if the audio elements playback starts and stops", async ({ fixture }) => {
+    await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
+    await fixture.page.waitForTimeout(1_000);
+
+    // We pause the audio element directly so that the high frequency time
+    // processor thinks that the audio is still playing, but the audio element
+    // is actually paused.
+    await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
+    await fixture.page.waitForTimeout(1_000);
+
+    const initialTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    expect(initialTime).toBeGreaterThan(0);
+
+    // we simulate enough passage of time so that time interpolation will
+    // rubber band back to the correct paused time
+    await fixture.page.waitForTimeout(2_000);
+
+    const finalTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+    const expectedTime = await getBrowserSignalValue<HTMLAudioElement>(fixture.spectrogramAudioElement(), "currentTime");
+
+    expect(finalTime).toEqual(expectedTime);
   });
 });
 

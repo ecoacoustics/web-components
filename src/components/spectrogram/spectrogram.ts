@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import { computed, ReadonlySignal, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
@@ -132,7 +132,17 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @query("#spectrogram-container")
   private spectrogramContainer!: Readonly<HTMLDivElement>;
 
-  public readonly currentTime: Signal<Seconds> = signal(this.offset);
+  // we use a getter for the currentTime signal so that other components and
+  // host applications cannot modify the currentTime signal value
+  //
+  // TODO: we might want to make this signal writable when we add support for
+  // indicator handle seeking
+  // see: https://github.com/ecoacoustics/web-components/issues/259
+  public currentTime(): ReadonlySignal<Seconds> {
+    return this._currentTime;
+  }
+
+  private readonly _currentTime = signal<Seconds>(this.offset);
 
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
   // you should use the signals exported by the unitConverter
@@ -253,8 +263,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     source.connect(this.audioContext.destination);
 
     // because FireFox reduces the accuracy of the audio element's currentTime
-    // we use an AudioWorkletNode to calculate a more accurate time by calculating
-    // the currentTime based on the number of samples processed
+    // we use an AudioWorkletNode to calculate a more accurate time by
+    // calculating the currentTime based on the number of samples processed
     const workletUrl = new URL(HighAccuracyTimeProcessor, import.meta.url);
     await this.audioContext.audioWorklet.addModule(workletUrl);
     const highAccuracyTimeWorklet = new AudioWorkletNode(this.audioContext, HIGH_ACCURACY_TIME_PROCESSOR_NAME);
@@ -391,7 +401,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public stop(): void {
-    this.currentTime.value = 0;
+    this._currentTime.value = 0;
     this.pause();
   }
 
@@ -571,7 +581,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         this.nextRequestId = null;
       }
 
-      const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
+      const initialTime = this.highAccuracyElapsedTime() - this._currentTime.peek();
       this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
       return;
     }
@@ -579,7 +589,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // even though the audio elements currentTime is not accurate to perform
     // animations, we can use the currentTime to if we only want to update the
     // audio once without polling updates
-    this.currentTime.value = this.mediaElement.currentTime;
+    this._currentTime.value = this.mediaElement.currentTime;
   }
 
   // TODO: move somewhere else
@@ -590,7 +600,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       const bufferTime = this.highAccuracyElapsedTime();
       const timeElapsed = bufferTime - startTime;
 
-      this.currentTime.value = timeElapsed;
+      this._currentTime.value = timeElapsed;
 
       this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
     }
