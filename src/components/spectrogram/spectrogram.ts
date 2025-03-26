@@ -170,6 +170,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private readonly highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
 
+  // TODO: move somewhere else
+  private timeInterpolateFrameId: number | null = null;
+
   // TODO: remove this
   private doneFirstRender = false;
 
@@ -393,6 +396,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public play(keyboardShortcut = false): void {
+    // There is a bug in Firefox (not present in Chrome) where if you repeatedly
+    // play and pause an audio element (e.g. by holding down space bar), the
+    // audio element will not reset the currentTime to 0 once the audio has
+    // finished playing.
+    // To get around this, if we play audio that is already at the end, we reset
+    // the currentTime to 0.
+    const audioValue = this.audio.value;
+    if (!audioValue || this._currentTime.value >= audioValue.duration) {
+      this.mediaElement.currentTime = 0;
+      this._currentTime.value = 0;
+    }
+
     this.setPaused(false, keyboardShortcut);
   }
 
@@ -576,15 +591,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // if the user starts playing the audio, stops playing it, then starts playing it again within the same frame
       // we would have two animation requests, and both would continue polling the time
       // in all subsequent frames, we would have two time updates per frame
-      if (this.nextRequestId !== null) {
-        window.cancelAnimationFrame(this.nextRequestId);
-        this.nextRequestId = null;
+      if (this.timeInterpolateFrameId !== null) {
+        window.cancelAnimationFrame(this.timeInterpolateFrameId);
+        this.timeInterpolateFrameId = null;
       }
 
       // we use peek() here because we do not want to create a subscription
       // to the currentTime signal
       const initialTime = this.highAccuracyElapsedTime() - this._currentTime.peek();
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
+      this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
 
       return;
     }
@@ -595,9 +610,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this._currentTime.value = this.mediaElement.currentTime;
   }
 
-  // TODO: move somewhere else
-  private nextRequestId: number | null = null;
-
   private pollUpdateHighAccuracyTime(startTime: number): void {
     if (!this.paused) {
       const bufferTime = this.highAccuracyElapsedTime();
@@ -606,7 +618,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       if (mediaElementTime === 0) {
         // if the media element has not started playing yet (e.g. due to lag)
         // there is no need to update the time.
-        this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
+        this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
         return;
       }
 
@@ -624,14 +636,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         startTime -= desync;
 
         this._currentTime.value = mediaElementTime;
-        this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+        this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
 
         return;
       }
 
       this._currentTime.value = timeElapsed;
 
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+      this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
     }
   }
 
@@ -663,9 +675,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     if (paused) {
       // TODO: find out if we actually need this
-      if (this.nextRequestId) {
-        window.cancelAnimationFrame(this.nextRequestId);
-        this.nextRequestId = null;
+      if (this.timeInterpolateFrameId !== null) {
+        window.cancelAnimationFrame(this.timeInterpolateFrameId);
+        this.timeInterpolateFrameId = null;
       }
 
       this.mediaElement.pause();
