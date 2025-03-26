@@ -12,7 +12,7 @@ All JavaScript files are automatically deployed [jsdelivr](https://www.jsdelivr.
 To use the CDN, simply add the following code into the `<head>` tag of your website
 
 ```html
-<script type="module" src="https://esm.run/@ecoacoustics/web-components"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@ecoacoustics/web-components/dist/components.js"></script>
 ```
 
 ### Install via NPM
