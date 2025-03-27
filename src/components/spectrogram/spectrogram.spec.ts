@@ -1,6 +1,7 @@
 import {
   changeToMobile,
   getBrowserSignalValue,
+  getBrowserValue,
   getElementSize,
   invokeBrowserMethod,
   mockDeviceSize,
@@ -430,17 +431,25 @@ test.describe("playing/pausing", () => {
     // accuracy time processor starts interpolating time before the audio starts
     // playing, we will be able to detect it.
     await fixture.spectrogramAudioElement().dispatchEvent("play");
-
     await fixture.page.waitForTimeout(1_000);
+
+    // I assert that the play event didn't start the audio element playing to
+    // make this test more robust.
+    // E.g. we do not want the test to fail because the audio element really
+    // has started to play.
+    await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
 
     // although the audio element has been dispatched a "play" event, playback
     // has not started yet, so the currentTime should still be 0
     const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(currentTime).toEqual(0);
 
-    // we manually start playing the audio element so that playback begins
+    // We manually start playing the audio element so that playback begins
     // without dispatching another "play" event which might cause this test to
     // pass when it should not have
+    //
+    // We expect that the currentTime will start to update because the audio
+    // element has started playback.
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "play");
 
     await fixture.page.waitForTimeout(1_000);
@@ -462,11 +471,15 @@ test.describe("playing/pausing", () => {
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
     await fixture.page.waitForTimeout(1_000);
 
+    await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", false);
+
     // We pause the audio element directly so that the high frequency time
     // processor thinks that the audio is still playing, but the audio element
     // is actually paused.
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
     await fixture.page.waitForTimeout(1_000);
+
+    await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
 
     const initialTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(initialTime).toBeGreaterThan(0);
@@ -476,10 +489,7 @@ test.describe("playing/pausing", () => {
     await fixture.page.waitForTimeout(2_000);
 
     const finalTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
-    const expectedTime = await getBrowserSignalValue<HTMLAudioElement>(
-      fixture.spectrogramAudioElement(),
-      "currentTime",
-    );
+    const expectedTime = await getBrowserValue<HTMLAudioElement>(fixture.spectrogramAudioElement(), "currentTime");
 
     expect(finalTime).toEqual(expectedTime);
   });
