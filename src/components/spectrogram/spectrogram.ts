@@ -553,7 +553,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
    */
   private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
-    const invalidationKeys: (keyof SpectrogramComponent)[] = [
+    const invalidationKeys = [
       "domRenderWindow",
       "brightness",
       "contrast",
@@ -563,7 +563,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       "melScale",
       "colorMap",
       "offset",
-    ];
+    ] as const satisfies (keyof SpectrogramComponent)[];
 
     return invalidationKeys.some((key) => change.has(key));
   }
@@ -572,7 +572,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
-    const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slottedSourceElements"];
+    const invalidationKeys = ["src", "slottedSourceElements"] as const satisfies (keyof SpectrogramComponent)[];
     return invalidationKeys.some((key) => change.has(key));
   }
 
