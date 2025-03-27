@@ -71,6 +71,7 @@
       "spacebar",
       "appender",
       "whipbird",
+      "desync",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

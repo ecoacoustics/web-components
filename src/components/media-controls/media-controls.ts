@@ -1,6 +1,5 @@
 import { LitElement, PropertyValues, TemplateResult, html, nothing, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { provide } from "@lit/context";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
@@ -9,7 +8,6 @@ import { AxesComponent } from "../axes/axes";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
-import { IRootContext, rootContext } from "../../helpers/constants/contextTokens";
 import { when } from "lit/directives/when.js";
 import mediaControlsStyles from "./css/style.css?inline";
 
@@ -65,11 +63,6 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
 
   @property({ type: String })
   public playIconPosition: PreferenceLocation = "default";
-
-  @provide({ context: rootContext })
-  private logger: IRootContext = {
-    log: console.log,
-  };
 
   // the media controls component has access to the axes element because it is
   // possible to enable/disable certain axes features from within the media controls
@@ -195,7 +188,6 @@ export class MediaControlsComponent extends AbstractComponent(LitElement) {
   }
 
   private handleUpdatePlaying(): void {
-    this.logger.log(`Audio ${this.isSpectrogramPlaying() ? "playing" : "paused"} `);
     this.requestUpdate();
   }
 

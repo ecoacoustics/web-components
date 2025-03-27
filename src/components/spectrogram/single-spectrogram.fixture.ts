@@ -8,15 +8,16 @@ import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvid
 class SingleSpectrogramFixture {
   public constructor(public readonly page: Page) {}
 
-  public spectrogram = () => this.page.locator("oe-spectrogram").first();
-  public spectrogramCanvas = () => this.page.locator("oe-spectrogram canvas").first();
-  public spectrogramAudioElement = () => this.page.locator("oe-spectrogram #media-element").first();
-  public chromeContainer = (selector: `chrome-${"top" | "bottom" | "left" | "right"}`) =>
+  public readonly spectrogram = () => this.page.locator("oe-spectrogram").first();
+  public readonly spectrogramCanvas = () => this.page.locator("oe-spectrogram canvas").first();
+  public readonly spectrogramAudioElement = () => this.page.locator("oe-spectrogram #media-element").first();
+  public readonly chromeContainer = (selector: `chrome-${"top" | "bottom" | "left" | "right"}`) =>
     this.spectrogram().locator(`.${selector}`).first();
 
-  public mediaControls = () => this.page.locator("oe-media-controls").first();
-  public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
-  public audioSource = "http://localhost:3000/example.flac";
+  public readonly mediaControls = () => this.page.locator("oe-media-controls").first();
+  public readonly mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
+  public readonly audioSource = "http://localhost:3000/example.flac";
+  public readonly secondaryAudioSource = "http://localhost:3000/example2.flac";
 
   public async create() {
     // we se the spectrogram height to 632px so that the spectrogram is a nice
