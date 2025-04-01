@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.0...web-components-v2.1.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* De-sync of audio and spectrogram currentTime ([#317](https://github.com/ecoacoustics/web-components/issues/317)) ([ef5411c](https://github.com/ecoacoustics/web-components/commit/ef5411c270f1992f7531addaca9a58cca7ad2f40)), closes [#229](https://github.com/ecoacoustics/web-components/issues/229)
+* **docs:** Outdated and inconsistent examples ([#312](https://github.com/ecoacoustics/web-components/issues/312)) ([d55eaab](https://github.com/ecoacoustics/web-components/commit/d55eaab1ce7bf591e6ac90bc209c3faf67db0f30)), closes [#310](https://github.com/ecoacoustics/web-components/issues/310)
+
 ## [2.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v2.0.1...web-components-v2.1.0) (2025-03-17)
 
 
