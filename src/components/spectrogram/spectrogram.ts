@@ -180,7 +180,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
 
   // TODO: move somewhere else
-  private timeInterpolateFrameId: number | null = null;
+  private interpolationCancelReference: number | null = null;
 
   // TODO: remove this
   private doneFirstRender = false;
@@ -600,15 +600,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // if the user starts playing the audio, stops playing it, then starts playing it again within the same frame
       // we would have two animation requests, and both would continue polling the time
       // in all subsequent frames, we would have two time updates per frame
-      if (this.timeInterpolateFrameId !== null) {
-        window.cancelAnimationFrame(this.timeInterpolateFrameId);
-        this.timeInterpolateFrameId = null;
+      if (this.interpolationCancelReference !== null) {
+        window.cancelAnimationFrame(this.interpolationCancelReference);
+        this.interpolationCancelReference = null;
       }
 
       // we use peek() here because we do not want to create a subscription
       // to the currentTime signal
       const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
-      this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
+      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
 
       return;
     }
@@ -627,7 +627,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       if (mediaElementTime === 0) {
         // if the media element has not started playing yet (e.g. due to lag)
         // there is no need to update the time.
-        this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
+        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
         return;
       }
 
@@ -643,14 +643,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         startTime -= desync;
 
         this.currentTime = mediaElementTime;
-        this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
 
         return;
       }
 
       this.currentTime = timeElapsed;
 
-      this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
     } else {
       this.currentTime = this.mediaElement.currentTime;
     }
@@ -684,9 +684,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     if (paused) {
       // TODO: find out if we actually need this
-      if (this.timeInterpolateFrameId !== null) {
-        window.cancelAnimationFrame(this.timeInterpolateFrameId);
-        this.timeInterpolateFrameId = null;
+      if (this.interpolationCancelReference !== null) {
+        window.cancelAnimationFrame(this.interpolationCancelReference);
+        this.interpolationCancelReference = null;
       }
 
       this.mediaElement.pause();
