@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import { computed, ReadonlySignal, signal, Signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
@@ -132,7 +132,26 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @query("#spectrogram-container")
   private spectrogramContainer!: Readonly<HTMLDivElement>;
 
-  public readonly currentTime: Signal<Seconds> = signal(this.offset);
+  // TODO: we might want to make this signal writable when we add support for
+  // indicator handle seeking
+  // see: https://github.com/ecoacoustics/web-components/issues/259
+  public get currentTime(): ReadonlySignal<Seconds> {
+    return this._currentTime;
+  }
+
+  private set currentTime(value: Seconds) {
+    if (!this.audio.value) {
+      console.error("Attempted to set current time before audio model initialization");
+      return;
+    } else if (value > this.audio.value.duration || value < 0) {
+      console.error("Attempted to set current time outside of the audio duration");
+      return;
+    }
+
+    this._currentTime.value = value;
+  }
+
+  private readonly _currentTime = signal<Seconds>(this.offset);
 
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
   // you should use the signals exported by the unitConverter
@@ -159,6 +178,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   private readonly highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
+
+  // TODO: move somewhere else
+  private interpolationCancelReference: number | null = null;
 
   // TODO: remove this
   private doneFirstRender = false;
@@ -253,8 +275,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     source.connect(this.audioContext.destination);
 
     // because FireFox reduces the accuracy of the audio element's currentTime
-    // we use an AudioWorkletNode to calculate a more accurate time by calculating
-    // the currentTime based on the number of samples processed
+    // we use an AudioWorkletNode to calculate a more accurate time by
+    // calculating the currentTime based on the number of samples processed
     const workletUrl = new URL(HighAccuracyTimeProcessor, import.meta.url);
     await this.audioContext.audioWorklet.addModule(workletUrl);
     const highAccuracyTimeWorklet = new AudioWorkletNode(this.audioContext, HIGH_ACCURACY_TIME_PROCESSOR_NAME);
@@ -383,6 +405,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public play(keyboardShortcut = false): void {
+    // There is a bug in Firefox (not present in Chrome) where if you repeatedly
+    // play and pause an audio element (e.g. by holding down space bar), the
+    // audio element will not reset the currentTime to 0 once the audio has
+    // finished playing.
+    // To get around this, if we play audio that is already at the end, we reset
+    // the currentTime to 0.
+    const audioValue = this.audio.value;
+    if (!audioValue || this.currentTime.value >= audioValue.duration) {
+      this.mediaElement.currentTime = 0;
+      this.currentTime = 0;
+    }
+
     this.setPaused(false, keyboardShortcut);
   }
 
@@ -391,7 +425,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public stop(): void {
-    this.currentTime.value = 0;
+    this.currentTime = 0;
     this.pause();
   }
 
@@ -528,7 +562,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
    */
   private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
-    const invalidationKeys: (keyof SpectrogramComponent)[] = [
+    const invalidationKeys = [
       "domRenderWindow",
       "brightness",
       "contrast",
@@ -538,7 +572,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       "melScale",
       "colorMap",
       "offset",
-    ];
+    ] as const satisfies (keyof SpectrogramComponent)[];
 
     return invalidationKeys.some((key) => change.has(key));
   }
@@ -547,7 +581,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
-    const invalidationKeys: (keyof SpectrogramComponent)[] = ["src", "slottedSourceElements"];
+    const invalidationKeys = ["src", "slottedSourceElements"] as const satisfies (keyof SpectrogramComponent)[];
     return invalidationKeys.some((key) => change.has(key));
   }
 
@@ -566,33 +600,59 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // if the user starts playing the audio, stops playing it, then starts playing it again within the same frame
       // we would have two animation requests, and both would continue polling the time
       // in all subsequent frames, we would have two time updates per frame
-      if (this.nextRequestId) {
-        window.cancelAnimationFrame(this.nextRequestId);
-        this.nextRequestId = null;
+      if (this.interpolationCancelReference !== null) {
+        window.cancelAnimationFrame(this.interpolationCancelReference);
+        this.interpolationCancelReference = null;
       }
 
+      // we use peek() here because we do not want to create a subscription
+      // to the currentTime signal
       const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
+      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
+
       return;
     }
 
     // even though the audio elements currentTime is not accurate to perform
     // animations, we can use the currentTime to if we only want to update the
     // audio once without polling updates
-    this.currentTime.value = this.mediaElement.currentTime;
+    this.currentTime = this.mediaElement.currentTime;
   }
-
-  // TODO: move somewhere else
-  private nextRequestId: number | null = null;
 
   private pollUpdateHighAccuracyTime(startTime: number): void {
     if (!this.paused) {
       const bufferTime = this.highAccuracyElapsedTime();
+      const mediaElementTime = this.mediaElement.currentTime;
+
+      if (mediaElementTime === 0) {
+        // if the media element has not started playing yet (e.g. due to lag)
+        // there is no need to update the time.
+        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
+        return;
+      }
+
+      // we only compute the time elapsed once the media element has started
+      // playing because we do not need to calculate the time elapsed to short
+      // circuit the time update if the audio element is not playing
       const timeElapsed = bufferTime - startTime;
 
-      this.currentTime.value = timeElapsed;
+      const desyncLimit = 0.1 satisfies Seconds;
+      const desync = Math.abs(mediaElementTime - timeElapsed);
 
-      this.nextRequestId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+      if (desync > desyncLimit) {
+        startTime -= desync;
+
+        this.currentTime = mediaElementTime;
+        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+
+        return;
+      }
+
+      this.currentTime = timeElapsed;
+
+      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+    } else {
+      this.currentTime = this.mediaElement.currentTime;
     }
   }
 
@@ -624,9 +684,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     if (paused) {
       // TODO: find out if we actually need this
-      if (this.nextRequestId) {
-        window.cancelAnimationFrame(this.nextRequestId);
-        this.nextRequestId = null;
+      if (this.interpolationCancelReference !== null) {
+        window.cancelAnimationFrame(this.interpolationCancelReference);
+        this.interpolationCancelReference = null;
       }
 
       this.mediaElement.pause();
@@ -637,7 +697,13 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.updateCurrentTime(true);
     }
 
-    this.paused = paused;
+    // If the audio fails to fetch or play, the media elements paused property
+    // will remain true.
+    // Because we want the spectrograms paused attribute to reflect the media
+    // elements behavior, we set the paused attribute to the media elements
+    // paused property so that all edge cases are handled correctly without
+    // having to keep this component updated with the W3C spec
+    this.paused = this.mediaElement.paused;
   }
 
   // creates a render window from an audio segment if no explicit render window
