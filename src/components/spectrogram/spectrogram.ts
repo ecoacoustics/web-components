@@ -132,14 +132,23 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @query("#spectrogram-container")
   private spectrogramContainer!: Readonly<HTMLDivElement>;
 
-  // we use a getter for the currentTime signal so that other components and
-  // host applications cannot modify the currentTime signal value
-  //
   // TODO: we might want to make this signal writable when we add support for
   // indicator handle seeking
   // see: https://github.com/ecoacoustics/web-components/issues/259
   public get currentTime(): ReadonlySignal<Seconds> {
     return this._currentTime;
+  }
+
+  private set currentTime(value: Seconds) {
+    if (!this.audio.value) {
+      console.error("Attempted to set current time before audio model initialization");
+      return;
+    } else if (value > this.audio.value.duration || value < 0) {
+      console.error("Attempted to set current time outside of the audio duration");
+      return;
+    }
+
+    this._currentTime.value = value;
   }
 
   private readonly _currentTime = signal<Seconds>(this.offset);
@@ -403,9 +412,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // To get around this, if we play audio that is already at the end, we reset
     // the currentTime to 0.
     const audioValue = this.audio.value;
-    if (!audioValue || this._currentTime.value >= audioValue.duration) {
+    if (!audioValue || this.currentTime.value >= audioValue.duration) {
       this.mediaElement.currentTime = 0;
-      this._currentTime.value = 0;
+      this.currentTime = 0;
     }
 
     this.setPaused(false, keyboardShortcut);
@@ -416,7 +425,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public stop(): void {
-    this._currentTime.value = 0;
+    this.currentTime = 0;
     this.pause();
   }
 
@@ -598,7 +607,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
       // we use peek() here because we do not want to create a subscription
       // to the currentTime signal
-      const initialTime = this.highAccuracyElapsedTime() - this._currentTime.peek();
+      const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
       this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
 
       return;
@@ -607,7 +616,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // even though the audio elements currentTime is not accurate to perform
     // animations, we can use the currentTime to if we only want to update the
     // audio once without polling updates
-    this._currentTime.value = this.mediaElement.currentTime;
+    this.currentTime = this.mediaElement.currentTime;
   }
 
   private pollUpdateHighAccuracyTime(startTime: number): void {
@@ -631,19 +640,19 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       const desync = Math.abs(mediaElementTime - timeElapsed);
 
       if (desync > desyncLimit) {
-        console.log("Media element exceeded desync threshold (this might cause rubber banding)");
-
         startTime -= desync;
 
-        this._currentTime.value = mediaElementTime;
+        this.currentTime = mediaElementTime;
         this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
 
         return;
       }
 
-      this._currentTime.value = timeElapsed;
+      this.currentTime = timeElapsed;
 
       this.timeInterpolateFrameId = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+    } else {
+      this.currentTime = this.mediaElement.currentTime;
     }
   }
 
