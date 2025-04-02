@@ -6,8 +6,8 @@ title: Frog Verification
 <oe-verification-grid id="verification-grid" grid-size="1">
     <oe-verification verified="true" shortcut="Q"></oe-verification>
     <oe-verification verified="false" shortcut="W"></oe-verification>
-    <oe-verification verified="true-multiple" shortcut="E"></oe-verification>
-    <oe-verification verified="false-multiple" shortcut="R"></oe-verification>
+    <oe-verification verified="true" additional-tags="multiple" shortcut="E"></oe-verification>
+    <oe-verification verified="false" additional-tags="multiple" shortcut="R"></oe-verification>
     <oe-verification verified="unsure" shortcut="T"></oe-verification>
     <oe-data-source id="data-source" slot="data-source" for="verification-grid" local></oe-data-source>
 </oe-verification-grid>
