@@ -47,7 +47,7 @@
     "@11ty/eleventy": "3.0.0",
     "@11ty/eleventy-plugin-syntaxhighlight": "5.0.0",
     "@custom-elements-manifest/analyzer": "0.10.4",
-    "@playwright/test": "1.50.1",
+    "@playwright/test": "1.51.1",
     "@sand4rt/experimental-ct-web": "1.50.1",
     "@types/audioworklet": "0.0.71",
     "@types/chroma-js": "3.1.1",
