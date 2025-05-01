@@ -76,6 +76,14 @@ export class UrlSourcedFetcher {
       models = JSON.parse(content);
     } else if (this.mediaType.startsWith("text/csv")) {
       models = await csv({ flatKeys: true }).fromString(content);
+    } else if (this.mediaType.startsWith("application/vnd.ms-excel") && this.file.name.endsWith(".csv")) {
+      // Windows can sometimes report the file type of a csv as an
+      // application/vnd.ms-excel file type.
+      // Therefore, if the file type is reported as "excel" and the file
+      // extension is .csv, it is safe to assume that Windows is incorrectly
+      // reporting the csv file as an excel file and we can really parse it with
+      // our csv parser.
+      models = await csv({ flatKeys: true }).fromString(content);
     } else if (this.mediaType.startsWith("text/tab-separated-values")) {
       models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
     } else {
