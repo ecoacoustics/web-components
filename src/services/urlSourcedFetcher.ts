@@ -76,6 +76,19 @@ export class UrlSourcedFetcher {
       models = JSON.parse(content);
     } else if (this.mediaType.startsWith("text/csv")) {
       models = await csv({ flatKeys: true }).fromString(content);
+    } else if (this.mediaType.startsWith("application/vnd.ms-excel") && this.file.name.endsWith(".csv")) {
+      // On Windows, Firefox uses the MIME Database to determine the media type
+      // of a file.
+      // However, when Excel is installed, it can overwrite the datatype for
+      // csv files to application/vnd.ms-excel.
+      //
+      // Therefore, if the file type is reported as "excel" and the file
+      // extension is .csv, it is safe to assume that the file type was
+      // overwritten by an excel install and we can parse the file as a csv.
+      //
+      // see: https://support.mozilla.org/en-US/questions/1401889
+      // see: https://bugzilla.mozilla.org/show_bug.cgi?id=1934918
+      models = await csv({ flatKeys: true }).fromString(content);
     } else if (this.mediaType.startsWith("text/tab-separated-values")) {
       models = await csv({ flatKeys: true, delimiter: "\t" }).fromString(content);
     } else {
