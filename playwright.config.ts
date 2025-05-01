@@ -1,4 +1,4 @@
-import { defineConfig } from "@sand4rt/experimental-ct-web";
+import { defineConfig, devices } from "@sand4rt/experimental-ct-web";
 
 export default defineConfig({
   testDir: "src",
@@ -42,5 +42,18 @@ export default defineConfig({
   // Git on Windows to fail checkout
   snapshotPathTemplate: "./src/tests/__snapshots__/{arg}{ext}",
   testMatch: "**/*.spec.ts",
-  projects: [{ name: "chromium" }, { name: "firefox" }, { name: "webkit" }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+  ],
 });
