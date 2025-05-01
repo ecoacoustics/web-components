@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.1...web-components-v2.1.2) (2025-05-01)
+
+
+### Bug Fixes
+
+* Local .csv data sources not being recognised ([#341](https://github.com/ecoacoustics/web-components/issues/341)) ([d3aa7c3](https://github.com/ecoacoustics/web-components/commit/d3aa7c3a567a45e4f39608e4b7ffc8063395a550)), closes [#243](https://github.com/ecoacoustics/web-components/issues/243)
+
 ## [2.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.0...web-components-v2.1.1) (2025-04-01)
 
 
