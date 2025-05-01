@@ -30,11 +30,14 @@ export async function changeToMobile(page: Page) {
   await viewportMock(page);
 
   await page.evaluate(() => {
-    Object.defineProperty(navigator, "userAgentData", {
-      get: () => ({
-        mobile: true,
-      }),
-    });
+    navigator = {
+      ...navigator,
+      userAgentData: {
+        get: () => ({
+          mobile: true,
+        }),
+      },
+    } as Navigator;
   });
 }
 
@@ -43,11 +46,14 @@ export async function changeToDesktop(page: Page) {
   await viewportMock(page);
 
   await page.evaluate(() => {
-    Object.defineProperty(navigator, "userAgentData", {
-      get: () => ({
-        mobile: false,
-      }),
-    });
+    navigator = {
+      ...navigator,
+      userAgentData: {
+        get: () => ({
+          mobile: false,
+        }),
+      },
+    } as Navigator;
   });
 }
 

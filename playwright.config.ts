@@ -51,9 +51,21 @@ export default defineConfig({
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
     },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
+    // WebKit on Windows does not have AudioContext enabled.
+    // see: https://github.com/microsoft/playwright/issues/14105
+    // see: https://github.com/WebKit/webkit/blob/main/Source/cmake/OptionsWin.cmake#L100
+    //
+    // However, no one uses WebKit on Windows, so I'm not going to support it.
+    // Both MacOS and Linux platforms do have webkit-based browsers
+    // (Safari and Gnome Web) that are used often enough for me to justify
+    // support.
+    ...(process.platform !== "win32"
+      ? [
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+          },
+        ]
+      : []),
   ],
 });
