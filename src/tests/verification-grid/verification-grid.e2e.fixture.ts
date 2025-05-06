@@ -586,8 +586,14 @@ class TestPage {
   }
 
   public async makeDecision(decision: number) {
+    // the decision-made event is only emitted from the verification grid
+    // component once the decision has been fully processed.
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+
     const decisionComponents = await this.decisionButtons();
     await decisionComponents[decision].click();
+
+    await decisionEvent;
   }
 
   public async makeSkipDecision() {
@@ -653,7 +659,9 @@ class TestPage {
   }
 
   public async changeGridSource(value: string) {
+    const loadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
     await setBrowserAttribute<DataSourceComponent>(this.dataSourceComponent(), "src", value);
+    await loadedEvent;
   }
 
   public async changeSourceLocal(local: boolean) {
@@ -696,8 +704,8 @@ class TestPage {
   }
 
   public async highlightSelectAllTiles() {
-    const verificationGrid = this.gridComponent();
-    const bounding = await verificationGrid.boundingBox();
+    const gridContainer = this.gridContainer();
+    const bounding = await gridContainer.boundingBox();
     if (!bounding) {
       throw new Error("Could not get the bounding box of the verification grid");
     }

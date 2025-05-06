@@ -1,4 +1,5 @@
 import {
+  catchLocatorEvent,
   getBrowserSignalValue,
   getBrowserValue,
   getElementSize,
@@ -426,7 +427,7 @@ test.describe("playing/pausing", () => {
 
   // This test asserts that the high accuracy time processor only starts
   // interpolating time once audio playback has started.
-  test("should only start playing once the audio starts playing", async ({ fixture }) => {
+  test.only("should only start playing once the audio starts playing", async ({ fixture }) => {
     // we dispatch a "play" event from the audio element so that if the high
     // accuracy time processor starts interpolating time before the audio starts
     // playing, we will be able to detect it.
@@ -496,6 +497,10 @@ test.describe("playing/pausing", () => {
 });
 
 test.describe("changing source", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should reset the currentTime if the spectrograms src attribute is changed", async ({ fixture }) => {
     // the spectrogram element starts with a src attribute, therefore we can
     // start playing the original source without needing to change it at the
@@ -508,7 +513,12 @@ test.describe("changing source", () => {
 
     // after changing the source, we wait for a bit so that if the currentTime
     // is still being updated, it will be a lot greater than 0
+    const loadedEvent = catchLocatorEvent(fixture.spectrogram(), "loaded");
     await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src", fixture.secondaryAudioSource);
+    await loadedEvent;
+
+    // I wait 1 second after the spectrogram has loaded to assert that the
+    // spectrograms currentTime doesn't keep increasing after the src changes
     await sleep(1);
 
     const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");

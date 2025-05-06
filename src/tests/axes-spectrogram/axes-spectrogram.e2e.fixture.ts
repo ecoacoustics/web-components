@@ -1,4 +1,4 @@
-import { setBrowserAttribute, waitForContentReady } from "../helpers";
+import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
@@ -63,7 +63,11 @@ class TestPage {
   }
 
   public async changeSpectrogramSrc(src: string) {
+    const targetSpectrogram = this.spectrogramComponent();
+
+    const loadedEvent = catchLocatorEvent(targetSpectrogram, "loaded");
     await setBrowserAttribute<SpectrogramComponent>(this.spectrogramComponent(), "src", src);
+    await loadedEvent;
   }
 
   public async changeSpectrogramScaling(value: SpectrogramCanvasScale) {

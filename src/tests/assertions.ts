@@ -36,6 +36,11 @@ export const test = base.extend({
   },
 });
 
+// We manually destroy/close the page fixture after each test to make some
+// Firefox tests less flaky.
+// I suspect that this is not the correct fix and that there are underlying
+// issues within our tests.
+// see: https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
 test.afterEach(async ({ page }) => {
   await page.close();
 });

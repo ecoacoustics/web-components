@@ -1,5 +1,10 @@
 import { Page } from "@playwright/test";
-import { removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import {
+  catchLocatorEvent,
+  removeBrowserAttribute,
+  setBrowserAttribute,
+  waitForContentReady,
+} from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
 import { test } from "../../tests/assertions";
@@ -11,6 +16,8 @@ class DataSourceFixture {
   public localFileInputButton = () => this.page.locator(".file-input").first();
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
   public decisionButtons = () => this.page.locator(".decision-button").all();
+
+  public verificationGrid = () => this.page.locator("oe-verification-grid").first();
   public gridTiles = () => this.page.locator(".tile-container").all();
   public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
@@ -40,7 +47,12 @@ class DataSourceFixture {
       </oe-verification-grid>
     `);
 
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-data-source",
+      "oe-verification",
+      "oe-verification-grid-tile",
+    ]);
   }
 
   public async setLocalAttribute(value: boolean) {
@@ -57,7 +69,9 @@ class DataSourceFixture {
   public async removeLocalFile() {}
 
   public async setRemoteFile(value: string) {
+    const loadedEvent = catchLocatorEvent(this.verificationGrid(), "grid-loaded");
     await setBrowserAttribute<DataSourceComponent>(this.component(), "src", value);
+    await loadedEvent;
   }
 
   public async removeRemoteFile() {
@@ -86,20 +100,29 @@ class DataSourceFixture {
     return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
   }
 
-  public async makeSubSelection(subSelectionIndices: number[]): Promise<void> {
+  public async makeSubSelection(subSelectionIndices: number[]) {
     const gridTiles = await this.gridTiles();
     for (const index of subSelectionIndices) {
       await gridTiles[index].click({ force: true });
     }
   }
 
-  public async dismissBootstrapDialog(): Promise<void> {
+  public async dismissBootstrapDialog() {
     await this.dismissBootstrapDialogButton().click();
   }
 
-  public async sendDecision(decisionIndex: number): Promise<void> {
+  public async sendDecision(decisionIndex: number) {
+    // Because decisions are handled by the verification grid after a click
+    // event, awaiting the button click does not ensure that all event listeners
+    // have completed.
+    // Therefore, we have to wait for the "decisionMade" event to ensure that
+    // the click event was handled by the verification grid component.
+    const decisionEvent = catchLocatorEvent(this.verificationGrid(), "decision-made");
+
     const decisionButtons = await this.decisionButtons();
     await decisionButtons[decisionIndex].click();
+
+    await decisionEvent;
   }
 }
 

@@ -1099,6 +1099,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
     }
 
+    // We only dispatch the "decisionMade" event after the decision has been
+    // applied to the dataset.
+    // This is important for third party event listeners who may want to see the
+    // entire decision set after a decision is made.
     this.dispatchEvent(
       new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
     );

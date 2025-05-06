@@ -42,7 +42,7 @@ class SingleSpectrogramFixture {
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `);
-    await waitForContentReady(this.page, ["oe-spectrogram"]);
+    await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithDefaultSize() {

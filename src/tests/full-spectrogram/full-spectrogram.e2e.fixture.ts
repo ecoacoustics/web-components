@@ -1,6 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import {
+  catchLocatorEvent,
   getBrowserAttribute,
   getBrowserSignalValue,
   getBrowserValue,
@@ -91,7 +92,11 @@ class TestPage {
   }
 
   public async changeSpectrogramSource(src: string) {
-    await setBrowserAttribute<SpectrogramComponent>(this.spectrogramComponent(), "src", src);
+    const targetSpectrogram = this.spectrogramComponent();
+
+    const loadedEvent = catchLocatorEvent(targetSpectrogram, "loaded");
+    await setBrowserAttribute<SpectrogramComponent>(targetSpectrogram, "src", src);
+    await loadedEvent;
   }
 
   public async getSpectrogramHostSize(): Promise<Readonly<Size>> {
