@@ -35,3 +35,7 @@ export const test = base.extend({
     await use(page);
   },
 });
+
+test.afterEach(async ({ page }) => {
+  await page.close();
+});

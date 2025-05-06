@@ -8,8 +8,10 @@ import {
   getBrowserValue,
   getCssBackgroundColorVariable,
   invokeBrowserMethod,
+  mockDeviceSize,
   removeBrowserAttribute,
   setBrowserAttribute,
+  testBreakpoints,
   waitForContentReady,
 } from "../helpers";
 import {
@@ -704,6 +706,26 @@ class TestPage {
     const end = { x: bounding.x + bounding.width, y: bounding.y + bounding.height };
 
     await this.createSelectionBox(start, end);
+  }
+
+  public async changeToMobile() {
+    const target = this.gridComponent();
+    await target.evaluate((element: VerificationGridComponent) => {
+      element["isMobileDevice"] = () => true;
+    });
+
+    const viewportMock = mockDeviceSize(testBreakpoints.mobile);
+    await viewportMock(this.page);
+  }
+
+  public async changeToDesktop() {
+    const target = this.gridComponent();
+    await target.evaluate((element: VerificationGridComponent) => {
+      element["isMobileDevice"] = () => false;
+    });
+
+    const viewportMock = mockDeviceSize(testBreakpoints.desktop);
+    await viewportMock(this.page);
   }
 
   private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {

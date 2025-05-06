@@ -1,5 +1,4 @@
 import {
-  changeToMobile,
   getBrowserSignalValue,
   getBrowserValue,
   getElementSize,
@@ -51,7 +50,7 @@ function assertSpectrogramSizing(testCase: SpectrogramSizingTest) {
 }
 
 test.describe("unit tests", () => {
-  test("play/pause events", async ({ mount, page }) => {
+  test("play/pause events", async ({ mount }) => {
     let outside: CustomEvent<boolean> | undefined;
     const component = await mount(SpectrogramComponent, {
       props: {
@@ -71,13 +70,13 @@ test.describe("unit tests", () => {
     // without this, the test would sometimes fail because the play event
     // does not fire before the pause event
     // TODO: we should correctly await here until the play event is fired
-    await page.waitForTimeout(1000);
+    await sleep(1);
 
     await invokeBrowserMethod<SpectrogramComponent>(component, "pause");
     expect(outside).toEqual({ keyboardShortcut: false, play: false });
   });
 
-  test("loading events", async ({ mount, page }) => {
+  test("loading events", async ({ mount }) => {
     let loadingEvent: CustomEvent | undefined;
     let loadedEvent: CustomEvent | undefined;
 
@@ -96,7 +95,7 @@ test.describe("unit tests", () => {
     });
 
     // TODO: this is a hacky way to wait for the loading event to fire, there should be a better way
-    await page.waitForTimeout(1000);
+    await sleep(1);
 
     expect(loadingEvent).toBeDefined();
     expect(loadedEvent).toBeDefined();
@@ -332,7 +331,8 @@ test.describe.skip("spectrogram sizing", () => {
       expect(initialShape.width).toEqual(testBreakpoints.desktop.width);
       expect(initialShape.height).toEqual(testBreakpoints.desktop.height);
 
-      changeToMobile(fixture.page);
+      const viewportMock = mockDeviceSize(testBreakpoints.mobile);
+      await viewportMock(fixture.page);
 
       const realizedSize = await getElementSize(fixture.spectrogram());
       expect(realizedSize.width).toEqual(initialShape.width);
@@ -431,7 +431,7 @@ test.describe("playing/pausing", () => {
     // accuracy time processor starts interpolating time before the audio starts
     // playing, we will be able to detect it.
     await fixture.spectrogramAudioElement().dispatchEvent("play");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     // I assert that the play event didn't start the audio element playing to
     // make this test more robust.
@@ -452,7 +452,7 @@ test.describe("playing/pausing", () => {
     // element has started playback.
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "play");
 
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     const updatedCurrentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(updatedCurrentTime).toBeGreaterThan(0);
@@ -469,7 +469,7 @@ test.describe("playing/pausing", () => {
   // the spectrogram.
   test("should keep the currentTime in sync if the audio elements playback starts and stops", async ({ fixture }) => {
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", false);
 
@@ -477,7 +477,7 @@ test.describe("playing/pausing", () => {
     // processor thinks that the audio is still playing, but the audio element
     // is actually paused.
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
 
@@ -486,7 +486,7 @@ test.describe("playing/pausing", () => {
 
     // we simulate enough passage of time so that time interpolation will
     // rubber band back to the correct paused time
-    await fixture.page.waitForTimeout(2_000);
+    await sleep(2);
 
     const finalTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     const expectedTime = await getBrowserValue<HTMLAudioElement>(fixture.spectrogramAudioElement(), "currentTime");
@@ -504,12 +504,12 @@ test.describe("changing source", () => {
     // we wait some time after the audio starts to play so that the currentTime
     // will be a lot greater than 0
     await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     // after changing the source, we wait for a bit so that if the currentTime
     // is still being updated, it will be a lot greater than 0
     await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogram(), "src", fixture.secondaryAudioSource);
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(currentTime).toEqual(0);
@@ -524,12 +524,12 @@ test.describe("changing source", () => {
     // start playing the spectrograms src attribute immediately
 
     await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     // after changing the source, we wait for a bit so that if the currentTime
     // is still being updated, it will be a lot greater than 0
     await fixture.updateSlot(`<source src="${fixture.secondaryAudioSource}" type="audio/flac" />`);
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(currentTime).toEqual(0);
@@ -541,12 +541,12 @@ test.describe("changing source", () => {
     await fixture.updateSlot(`<source src="${fixture.audioSource}" type="audio/flac" />`);
 
     await invokeBrowserMethod<SpectrogramComponent>(fixture.spectrogram(), "play");
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     // after changing the source, we wait for a bit so that if the currentTime
     // is still being updated, it will be a lot greater than 0
     await fixture.updateSlot(`<source src="${fixture.secondaryAudioSource}" type="audio/flac" />`);
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     const currentTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
     expect(currentTime).toEqual(0);

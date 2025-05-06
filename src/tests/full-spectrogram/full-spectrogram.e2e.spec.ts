@@ -1,4 +1,5 @@
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { sleep } from "../../helpers/utilities";
 import { Size } from "../../models/rendering";
 import { Pixel } from "../../models/unitConverters";
 import { expect } from "../assertions";
@@ -18,9 +19,9 @@ test.describe("interactions between all components", () => {
     expect(realizedPlayingState).toEqual(expectedPlayingState);
   });
 
-  test("pausing audio", async ({ fixture, page }) => {
+  test("pausing audio", async ({ fixture }) => {
     await fixture.playAudio();
-    await page.waitForTimeout(500);
+    await sleep(0.5);
     await fixture.pauseAudio();
 
     const expectedPlayingState = false;
@@ -28,11 +29,11 @@ test.describe("interactions between all components", () => {
     expect(realizedPlayingState).toEqual(expectedPlayingState);
   });
 
-  test("restarting audio", async ({ fixture, page }) => {
+  test("restarting audio", async ({ fixture }) => {
     await fixture.playAudio();
-    await page.waitForTimeout(500);
+    await sleep(0.5);
     await fixture.pauseAudio();
-    await page.waitForTimeout(500);
+    await sleep(0.5);
     await fixture.playAudio();
 
     const expectedPlayingState = true;

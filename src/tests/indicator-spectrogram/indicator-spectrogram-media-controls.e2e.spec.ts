@@ -1,4 +1,5 @@
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { sleep } from "../../helpers/utilities";
 import { expect } from "../assertions";
 import { getBrowserValue } from "../helpers";
 import { indicatorSpectrogramMediaControlsFixture as test } from "./indicator-spectrogram-media-controls.e2e.fixture";
@@ -14,11 +15,11 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       expect(initialPosition).toBe(0);
     });
 
-    test("playing audio should cause the indicator to move the correct amount", async ({ fixture, page }) => {
+    test("playing audio should cause the indicator to move the correct amount", async ({ fixture }) => {
       const initialPosition = await fixture.indicatorPosition();
 
       await fixture.playAudio();
-      await page.waitForTimeout(1000);
+      await sleep(1);
       await fixture.pauseAudio();
 
       // check that the audio element is playing
@@ -36,26 +37,26 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       expect(finalPosition).toBeGreaterThan(initialPosition);
     });
 
-    test("playing and pausing audio", async ({ fixture, page }) => {
+    test("playing and pausing audio", async ({ fixture }) => {
       await fixture.playAudio();
-      await page.waitForTimeout(1000);
+      await sleep(1);
       await fixture.pauseAudio();
 
       const initialPosition = await fixture.indicatorPosition();
-      await page.waitForTimeout(1000);
+      await sleep(1);
       const finalPosition = await fixture.indicatorPosition();
 
       expect(finalPosition).toEqual(initialPosition);
     });
 
-    test("playing to the end of a recording", async ({ fixture, page }) => {
+    test("playing to the end of a recording", async ({ fixture }) => {
       await fixture.playAudio();
       // go to the end of the recording
-      await page.waitForTimeout(await fixture.audioDuration());
+      await sleep(await fixture.audioDuration());
 
       // when at the end of the recording, wait for an additional second
       const initialPosition = await fixture.indicatorPosition();
-      await page.waitForTimeout(1000);
+      await sleep(1);
       const finalPosition = await fixture.indicatorPosition();
 
       // make sure that after waiting a second at the end of the recording
@@ -79,12 +80,12 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
   });
 
   test.describe("changing spectrogram audio source while playing", () => {
-    test.beforeEach(async ({ fixture, page }) => {
+    test.beforeEach(async ({ fixture }) => {
       // we simulate playing the audio for half a second before changing the audio source
       // so that the indicator has a non-zero position
       // we should see it reset, and be functional with the new audio source
       await fixture.playAudio();
-      await page.waitForTimeout(500);
+      await sleep(0.5);
       await fixture.pauseAudio();
 
       await fixture.changeSpectrogramAudioSource("http://localhost:3000/example2.flac");
@@ -95,11 +96,11 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       expect(indicatorPosition).toBe(0);
     });
 
-    test("functionality of indicator after changing spectrogram audio source", async ({ fixture, page }) => {
+    test("functionality of indicator after changing spectrogram audio source", async ({ fixture }) => {
       const initialPosition = await fixture.indicatorPosition();
 
       await fixture.playAudio();
-      await page.waitForTimeout(1000);
+      await sleep(1);
       await fixture.pauseAudio();
 
       const finalPosition = await fixture.indicatorPosition();

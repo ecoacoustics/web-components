@@ -22,41 +22,6 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
   return { width, height };
 }
 
-// because mobile devices emit different user agent hints, we have a
-// special function to mock a mobile device in test that is more
-// complex than just changing the screen size
-export async function changeToMobile(page: Page) {
-  const viewportMock = mockDeviceSize(testBreakpoints.mobile);
-  await viewportMock(page);
-
-  await page.evaluate(() => {
-    navigator = {
-      ...navigator,
-      userAgentData: {
-        get: () => ({
-          mobile: true,
-        }),
-      },
-    } as Navigator;
-  });
-}
-
-export async function changeToDesktop(page: Page) {
-  const viewportMock = mockDeviceSize(testBreakpoints.desktop);
-  await viewportMock(page);
-
-  await page.evaluate(() => {
-    navigator = {
-      ...navigator,
-      userAgentData: {
-        get: () => ({
-          mobile: false,
-        }),
-      },
-    } as Navigator;
-  });
-}
-
 export function mockDeviceSize(size: Size): DeviceMock {
   return (page: Page) => page.setViewportSize(size);
 }

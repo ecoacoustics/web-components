@@ -67,7 +67,7 @@ class SingleSpectrogramFixture {
     setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
   }
 
-  public async changeSpectrogramHeight(height = 512) {
+  public async changeSpectrogramHeight(height = 704) {
     await this.spectrogram().evaluate((element: SpectrogramComponent, height) => {
       element.style.height = `${height}px`;
     }, height);
@@ -111,7 +111,6 @@ class SingleSpectrogramFixture {
 export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({
   fixture: async ({ page }, run) => {
     const fixture = new SingleSpectrogramFixture(page);
-    await fixture.create();
     await run(fixture);
   },
 });

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@sand4rt/experimental-ct-web";
 
+const isCi = !!process.env.CI;
+
 export default defineConfig({
   testDir: "src",
   // we should aim to support fully parallel tests
@@ -7,14 +9,16 @@ export default defineConfig({
   // (if we do not code good, isolated and independent tests)
   fullyParallel: false,
   // by enabling retries, playwright will automatically detect flaky tests
-  retries: 3,
+  // if we are running the tests locally, I want to disable retries so that
+  // flakey tests are considered failures
+  retries: isCi ? 3 : 0,
   // we start the vite server so that we can access the public/ directory
   // that contains audio files used in testing
   webServer: {
     command: "pnpm dev --port 3000",
   },
   // Fail in CI if there is a focused test.only
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCi,
   tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,
@@ -36,7 +40,7 @@ export default defineConfig({
     ],
     // print the test results out to the console.
     // this can be useful for seeing why a test has failed in CI
-    process.env.CI ? ["github"] : ["list"],
+    isCi ? ["github"] : ["list"],
   ],
   // be careful when updating this path template. Long path names can cause
   // Git on Windows to fail checkout

@@ -1,3 +1,4 @@
+import { sleep } from "../../../helpers/utilities";
 import { expect } from "../../../tests/assertions";
 import { getEventLogs, logEvent } from "../../../tests/helpers";
 import { classificationFixture as test } from "./classification.fixture";
@@ -97,7 +98,7 @@ test.describe("Classification Component", () => {
       await page.keyboard.press("Escape");
       await fixture.decisionTrueButton().dispatchEvent("pointerup");
 
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
@@ -122,7 +123,7 @@ test.describe("Classification Component", () => {
       // we use force = true to say "I know screen readers can't use this button
       // but test that the event is not emitted when clicked anyway"
       await fixture.decisionTrueButton().click({ force: true });
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
@@ -138,7 +139,7 @@ test.describe("Classification Component", () => {
       await fixture.changeDecisionDisabled(false);
 
       await fixture.decisionTrueButton().click();
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, loggedEventName);
       expect(events).toHaveLength(1);

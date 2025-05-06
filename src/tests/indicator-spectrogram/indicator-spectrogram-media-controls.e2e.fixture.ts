@@ -2,6 +2,7 @@ import { Page } from "@playwright/test";
 import { setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { test } from "../assertions";
+import { Seconds } from "../../models/unitConverters";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -58,8 +59,8 @@ class TestPage {
     await this.toggleAudio();
   }
 
-  public async audioDuration(): Promise<number> {
-    return 6_000;
+  public async audioDuration(): Promise<Seconds> {
+    return 6;
   }
 
   private async toggleAudio() {
