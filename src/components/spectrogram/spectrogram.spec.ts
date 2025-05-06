@@ -427,7 +427,7 @@ test.describe("playing/pausing", () => {
 
   // This test asserts that the high accuracy time processor only starts
   // interpolating time once audio playback has started.
-  test.only("should only start playing once the audio starts playing", async ({ fixture }) => {
+  test("should only start playing once the audio starts playing", async ({ fixture }) => {
     // we dispatch a "play" event from the audio element so that if the high
     // accuracy time processor starts interpolating time before the audio starts
     // playing, we will be able to detect it.
