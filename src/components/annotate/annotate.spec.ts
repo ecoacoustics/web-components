@@ -382,7 +382,7 @@ test.describe("annotation", () => {
     });
   });
 
-  test.describe.only("selecting annotations", () => {
+  test.describe("selecting annotations", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create();
     });

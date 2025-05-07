@@ -86,10 +86,10 @@ test.describe("unit tests", () => {
         src: "http://localhost:3000/example.flac",
       },
       on: {
-        loading: (event) => {
+        loading: (event: CustomEvent) => {
           loadingEvent = event;
         },
-        loaded: (event) => {
+        loaded: (event: CustomEvent) => {
           loadedEvent = event;
         },
       },
@@ -119,17 +119,25 @@ test.describe("unit tests", () => {
 
     for (const source of testedSources) {
       test(`renders ${source} correctly`, async ({ mount, fixture }) => {
+        let loadedEvent: CustomEvent | undefined;
+
         const component = await mount(SpectrogramComponent, {
           props: {
             src: `http://localhost:3000/${source}`,
           },
+          on: {
+            loaded: (event: CustomEvent) => {
+              loadedEvent = event;
+            },
+          },
         });
 
         await fixture.changeSpectrogramHeight();
+        await sleep(1);
 
-        // sleep for 3 seconds to allow the spectrogram to render
-        // TODO: there should probably be a better way to do this
-        await sleep(3);
+        // by making an assertion over "loadedEvent" to be defined, Playwright
+        // will automatically wait here until the loaded event has been fired
+        expect(loadedEvent).toBeDefined();
 
         await expect(component).toHaveScreenshot();
       });

@@ -1,12 +1,3 @@
-@import url("@shoelace-style/shoelace/dist/themes/light.css");
-
-/*
-  Because different operating systems ship with different fonts, there might be
-  slightly inconsistencies across operating systems.
-  To fix this, we download the Roboto font so that we know it exists.
-*/
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
-
 /*
   Because some of our web component support going into fullscreen mode, we
   theme the backdrop color of the fullscreen mode to our custom background color
@@ -21,6 +12,10 @@
 * {
   font-family: var(--oe-font-family);
   font-weight: var(--oe-font-weight);
+
+  &:not(svg *) {
+    color: var(--oe-font-color);
+  }
 }
 
 sl-icon {
@@ -295,11 +290,18 @@ button {
   margin: 0.1rem;
   font-size: var(--oe-font-size-large);
   padding: var(--oe-spacing) var(--oe-spacing-large);
+  color: var(--oe-font-color);
   background-color: var(--background-color);
   transition:
     background var(--oe-animation-time),
     border var(--oe-animation-time);
   cursor: pointer;
+
+  /*
+    By setting the touch-action to "manipulation" mobile browsers will not zoom
+    in if the user double taps the button
+  */
+  touch-action: manipulation;
 
   &:hover:not(:disabled, .disabled) {
     background: var(--background-color) radial-gradient(circle, transparent 1%, var(--background-color) 1%)
