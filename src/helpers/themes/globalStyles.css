@@ -1,4 +1,10 @@
 @import url("@shoelace-style/shoelace/dist/themes/light.css");
+
+/*
+  Because different operating systems ship with different fonts, there might be
+  slightly inconsistencies across operating systems.
+  To fix this, we download the Roboto font so that we know it exists.
+*/
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 
 /*
@@ -14,9 +20,7 @@
 
 * {
   font-family: var(--oe-font-family);
-
-  /* CSS Resets */
-  font-weight: normal;
+  font-weight: var(--oe-font-weight);
 }
 
 sl-icon {
@@ -75,7 +79,7 @@ kbd {
   font-family: "Courier New", Courier, monospace;
   text-align: center;
   align-items: center;
-  font-weight: bold;
+  font-weight: var(--oe-font-weight-bold);
   padding: 0.2rem;
   padding-left: 0.5em;
   padding-right: 0.5em;
@@ -271,7 +275,7 @@ input[type="file"] {
     border: none;
     border-radius: var(--oe-border-rounding);
     color: var(--oe-font-color);
-    font-weight: bold;
+    font-weight: var(--oe-font-weight-bold);
     background-color: var(--oe-panel-color);
     padding: 0.5rem;
   }
@@ -289,7 +293,7 @@ button {
   border: var(--border);
   border-radius: var(--oe-border-rounding);
   margin: 0.1rem;
-  font-size: 1em;
+  font-size: var(--oe-font-size-large);
   padding: var(--oe-spacing) var(--oe-spacing-large);
   background-color: var(--background-color);
   transition:
@@ -340,7 +344,7 @@ button {
   border: none;
   background: none;
   box-shadow: none;
-  font-weight: bold;
+  font-weight: var(--oe-font-weight-bold);
   color: var(--oe-primary-color);
 }
 

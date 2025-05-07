@@ -31,8 +31,12 @@
   --oe-border-width: 1px;
 
   --oe-backdrop-shadow: 3px 3px 4px;
+
   --oe-font-family: "Roboto", sans-serif;
   --oe-font-size: 11px;
+  --oe-font-size-large: calc(var(--oe-font-size) + 5px);
+  --oe-font-weight: 400;
+  --oe-font-weight-bold: 800;
 
   --oe-animation-time: 0.3s;
   --oe-spacing-small: 0.3em;

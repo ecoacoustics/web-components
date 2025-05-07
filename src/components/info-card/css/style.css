@@ -25,7 +25,7 @@
   gap: 0.5rem;
 
   .subject-key {
-    font-weight: bold;
+    font-weight: var(--oe-font-weight-bold);
   }
 
   .subject-key,
