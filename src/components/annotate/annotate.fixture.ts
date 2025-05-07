@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
-import { getBrowserStyles, waitForContentReady } from "../../tests/helpers";
+import { waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -182,12 +182,6 @@ class TestPage {
     await targetAnnotation.evaluate((element: HTMLElement) => {
       element.remove();
     });
-  }
-
-  public async getAnnotationColor(index: number) {
-    const target = (await this.annotationBoundingBoxes())[index];
-    const styles = await getBrowserStyles(target);
-    return styles.borderColor;
   }
 
   public annotationSelectedColor() {}

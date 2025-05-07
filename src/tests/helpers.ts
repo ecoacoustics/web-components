@@ -31,15 +31,17 @@ export async function insertHtml(page: Page, html: string) {
   await page.waitForLoadState("networkidle");
 }
 
-export async function getBrowserStyles<T extends HTMLElement>(component: Locator): Promise<CSSStyleDeclaration> {
-  return await component.evaluate((element: T) => {
-    return window.getComputedStyle(element);
-  });
+export async function getBrowserStyle<T extends HTMLElement>(component: Locator, property: string) {
+  return await component.evaluate((element: T, propertyName) => {
+    const styles = window.getComputedStyle(element);
+    return styles.getPropertyValue(propertyName);
+  }, property);
 }
 
 export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
-    return window.getComputedStyle(element).getPropertyValue(variable);
+    const styles = window.getComputedStyle(element);
+    return styles.getPropertyValue(variable);
   }, name);
 }
 
