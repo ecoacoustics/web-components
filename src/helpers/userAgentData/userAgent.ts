@@ -1,21 +1,6 @@
 // on Mac navigator.platform returns "MacIntel"
 export function isMacOs(): boolean {
-  // Some versions of Chromium on MacOS (e.g. the version used by GitHub CI
-  // runners) incorrectly report userAgentData.platform as "Windows". Because
-  // shortcuts behave slightly different on MacOS (e.g. switching ctrl and cmd),
-  // this would cause shortcuts to break on some platform. To fix this, we always
-  // monkey patch navigator.platform's that report as "MacIntel".
-  //
-  // Note: navigator.platform is deprecated, however this mis-reporting of MacOS
-  // was fixed in newer versions of Chromium that do implement navigator.platform
-  // so it'd actually be beneficial to us if Chromium removed support for
-  // navigator.platform because then this monkey patch would only be applied to
-  // old versions of Chromium. If support is removed, navigator.platform will
-  // just return "undefined" and cause any errors.
-  const forceMacOS = navigator.platform === "MacIntel";
-  if (forceMacOS) {
-    return true;
-  }
+  console.log("platform", navigator.userAgentData?.platform);
 
   // TypeScript thinks that userAgentData can be undefined because it is not
   // yet implemented on Firefox
