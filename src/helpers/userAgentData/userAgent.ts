@@ -1,4 +1,7 @@
+// on Mac navigator.platform returns "MacIntel"
 export function isMacOs(): boolean {
+  console.log("platform", navigator.userAgentData?.platform);
+
   // TypeScript thinks that userAgentData can be undefined because it is not
   // yet implemented on Firefox
   // however, we have polyfilled the userAgentData object so we can be sure
