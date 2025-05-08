@@ -1,7 +1,7 @@
 import { expect } from "../../tests/assertions";
 import { userAgentDataFixture as test } from "./userAgent.fixture";
 
-test.describe("isMacOs", () => {
+test.describe.only("isMacOs", () => {
   test("should return the correct value", async ({ page, fixture }) => {
     const expectedResult = fixture.isNodeMac();
     const realizedResult = await page.evaluate(async () => {

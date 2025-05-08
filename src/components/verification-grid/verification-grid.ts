@@ -754,7 +754,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private handleSelection(selectionEvent: SelectionEvent): void {
     if (!this.canSubSelect()) {
-      console.log("opting out of sub-selection");
       return;
     }
 
