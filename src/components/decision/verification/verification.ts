@@ -62,7 +62,7 @@ export class VerificationComponent extends DecisionComponent {
     }
   }
 
-  protected override isShortcutKey(event: KeyboardEvent): Readonly<boolean> {
+  protected override isShortcutKey(event: KeyboardEvent): boolean {
     return event.key.toLowerCase() === this.shortcut.toLowerCase();
   }
 

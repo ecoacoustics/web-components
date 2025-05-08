@@ -362,7 +362,7 @@ test.describe.skip("spectrogram sizing", () => {
         chromeTop: () => html`<div style="${mockChromeHeight}px">testing123</div>`,
       };
 
-      fixture.addChromeProvider(mockProvider);
+      await fixture.addChromeProvider(mockProvider);
     });
 
     test("should size spectrogram host correctly", async ({ fixture }) => {

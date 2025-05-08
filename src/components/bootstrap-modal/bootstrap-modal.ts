@@ -88,7 +88,7 @@ export class VerificationBootstrapComponent extends AbstractComponent(LitElement
 
   private isAdvancedDialog = false;
 
-  public get open(): Readonly<boolean> {
+  public get open(): boolean {
     return this.dialogElement.open;
   }
 

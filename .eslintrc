@@ -18,6 +18,15 @@
       "settings": {
         "polyfills": ["navigator.userAgentData"]
       }
+    },
+    {
+      "files": ["*.spec.ts", "*.fixture.ts"],
+      "parserOptions": {
+        "project": "./tsconfig.spec.json"
+      },
+      "rules": {
+        "@typescript-eslint/no-floating-promises":"error"
+      }
     }
   ]
 }

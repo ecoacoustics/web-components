@@ -64,7 +64,7 @@ class SingleSpectrogramFixture {
   // we cannot use the SpectrogramCanvasScaling enum here because playwright
   // will throw an error during bundling and not run these tests
   public async changeSpectrogramSizing(sizing: string) {
-    setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
+    await setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
   }
 
   public async changeSpectrogramHeight(height = 704) {

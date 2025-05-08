@@ -100,7 +100,7 @@ export class AnnotationComponent extends AbstractComponent(LitElement) implement
     );
   }
 
-  public get selected(): Readonly<boolean> {
+  public get selected(): boolean {
     return this._selected;
   }
 

@@ -1,6 +1,8 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
 import { css, LitElement } from "lit";
+import { removeStyleSheets } from "./remove";
+import { addStyleSheets } from "./add";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -9,6 +11,14 @@ class TestPage {
 
   public async create() {
     await this.page.setContent("<oe-spectrogram></oe-spectrogram>");
+
+    await this.page.addScriptTag({
+      content: removeStyleSheets.toString(),
+    });
+
+    await this.page.addScriptTag({
+      content: addStyleSheets.toString(),
+    });
   }
 
   public getComponentStyleSheets() {

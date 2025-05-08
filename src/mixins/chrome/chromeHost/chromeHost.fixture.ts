@@ -10,7 +10,7 @@ class ChromeHostFixture {
   public providerComponent = () => this.page.locator("oe-tests-chrome-provider").first();
 
   public async create() {
-    this.providerComponent().evaluate((element: any) => {
+    await this.providerComponent().evaluate((element: any) => {
       element.chromeTop = () => html`<div id="test-chrome-top">Top Chrome</div>`;
       element.chromeBottom = () => html`<div id="test-chrome-bottom">Bottom Chrome</div>`;
       element.chromeLeft = () => html`<div id="test-chrome-left">Left Chrome</div>`;

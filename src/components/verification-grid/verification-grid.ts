@@ -23,7 +23,7 @@ import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { repeat } from "lit/directives/repeat.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
-import { hasCtrlLikeModifier } from "../../helpers/userAgent";
+import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";

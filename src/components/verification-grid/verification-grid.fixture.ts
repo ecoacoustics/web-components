@@ -22,7 +22,7 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source"]);
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
   }
 
   public async createWithDecisionElements() {
@@ -41,7 +41,12 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      "oe-verification",
+    ]);
   }
 
   public async setGridSize(value: number) {

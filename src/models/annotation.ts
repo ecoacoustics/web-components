@@ -29,7 +29,7 @@ export class Annotation {
   public readonly reference: Readonly<object>;
   public verifications: Verification[];
 
-  public valid(): Readonly<boolean> {
+  public valid(): boolean {
     return this.lowFrequency < this.highFrequency && this.startOffset < this.endOffset;
   }
 }

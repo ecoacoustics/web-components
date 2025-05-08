@@ -14,6 +14,11 @@ export function isMacOs(): boolean {
  *
  * This is useful because MacOS uses the command key instead of the ctrl key for
  * keyboard shortcuts e.g. Cmd + A instead of Ctrl + A
+ *
+ * @returns
+ * Windows & Linux > Returns true if the user was holding ctrl during the event
+ *
+ * MacOS > Returns true if the user was holding meta during the event
  */
 export function hasCtrlLikeModifier(event: PointerEvent | KeyboardEvent): boolean {
   // The command key is defined as the "meta" key in the KeyboardEvent and

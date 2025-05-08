@@ -172,7 +172,7 @@ export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, 
 export async function catchEvent<T extends Event>(locator: Page, name: string) {
   return locator.evaluate((name: string) => {
     return new Promise<T>((resolve) => {
-      document.addEventListener(name, (data) => resolve(data));
+      document.addEventListener(name, (data: any) => resolve(data));
     });
   }, name);
 }
@@ -181,7 +181,7 @@ export async function catchEvent<T extends Event>(locator: Page, name: string) {
 export async function catchLocatorEvent<T extends Event>(locator: Locator, name: string): Promise<T> {
   return locator.evaluate((element: HTMLElement, name: string) => {
     return new Promise((resolve) => {
-      element.addEventListener(name, (data) => resolve(data.detail));
+      element.addEventListener(name, (data: any) => resolve(data.detail));
     });
   }, name);
 }
@@ -190,7 +190,7 @@ export async function logEvent(page: Page, name: string) {
   await page.evaluate((name) => {
     const eventStoreKey = `oe-${name}-events`;
     window[eventStoreKey] = [];
-    document.addEventListener(name, (data) => window[eventStoreKey].push(data));
+    document.addEventListener(name, (data: any) => window[eventStoreKey].push(data));
   }, name);
 }
 
@@ -263,7 +263,7 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
   );
 }
 
-export async function waitForContentReady(page: Page, selectors: string[] = []): Promise<void> {
+export async function waitForContentReady(page: Page, selectors: string[] = []) {
   // wait for the page to emit the "load"
   await page.waitForLoadState();
   await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));

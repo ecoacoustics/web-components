@@ -42,7 +42,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public static readonly decisionEventName = "decision";
 
   protected abstract handleShortcutKey(event: KeyboardEvent): void;
-  protected abstract isShortcutKey(event: KeyboardEvent): Readonly<boolean>;
+  protected abstract isShortcutKey(event: KeyboardEvent): boolean;
 
   @consume({ context: injectionContext, subscribe: true })
   @state()

@@ -30,17 +30,17 @@ class TestPage {
   public chromeTop = () => this.spectrogram().locator(".chrome-top").first();
   public chromeOverlay = () => this.spectrogram().locator(".chrome-overlay").first();
 
-  public async annotationBox(index: Readonly<number>) {
+  public async annotationBox(index: number) {
     const annotations = await this.annotationBoundingBoxes();
     return annotations[index];
   }
 
-  public async annotationLabel(index: Readonly<number>) {
+  public async annotationLabel(index: number) {
     const labels = await this.annotationLabels();
     return labels[index];
   }
 
-  public async tagComponent(index: Readonly<number>) {
+  public async tagComponent(index: number) {
     const tags = await this.tagComponents();
     return tags[index];
   }
@@ -149,7 +149,7 @@ class TestPage {
 
     const targetAnnotationLabels = await this.annotationLabels();
     for (const label of targetAnnotationLabels) {
-      label.evaluate((element: HTMLHeadingElement) => {
+      await label.evaluate((element: HTMLHeadingElement) => {
         // we make the annotation font color the same as the annotation color
         // so that the text is not visible and we are only asserting over the
         // bounding box and label positioning

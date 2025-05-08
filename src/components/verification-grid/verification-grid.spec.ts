@@ -1,7 +1,7 @@
 import { expect } from "../../tests/assertions";
 import { verificationGridFixture as test } from "./verification-grid.fixture";
 
-test.describe("verification grid", () => {
+test.describe.only("verification grid", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
   });

@@ -12,10 +12,6 @@
 * {
   font-family: var(--oe-font-family);
   font-weight: var(--oe-font-weight);
-
-  &:not(svg *) {
-    color: var(--oe-font-color);
-  }
 }
 
 sl-icon {

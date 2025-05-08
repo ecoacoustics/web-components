@@ -1,7 +1,7 @@
-import { Locator } from "@playwright/test";
+import { Locator, MatcherReturnType } from "@playwright/test";
 import { expect as playwrightExpect, test as base } from "@sand4rt/experimental-ct-web";
 
-async function toHaveTrimmedText(received: Locator, expected: string) {
+async function toHaveTrimmedText(received: Locator, expected: string): Promise<MatcherReturnType> {
   const elementText = await received.textContent();
 
   if (elementText === null) {

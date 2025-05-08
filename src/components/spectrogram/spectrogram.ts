@@ -337,6 +337,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.initializeUnitConverter();
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    console.debug("LOADED");
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
@@ -363,6 +364,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    console.debug("LOADED");
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
@@ -388,6 +390,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    console.debug("LOADED");
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
