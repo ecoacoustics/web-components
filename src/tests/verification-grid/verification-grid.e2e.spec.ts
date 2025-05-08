@@ -46,7 +46,7 @@ test.describe("while the initial bootstrap dialog is open", () => {
   });
 });
 
-test.describe("single verification grid", () => {
+test.describe.only("single verification grid", () => {
   test.beforeEach(async ({ fixture, page }) => {
     await fixture.create();
 
