@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute, waitForContentReady } from "../helpers";
+import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { test } from "../assertions";
 import { Seconds } from "../../models/unitConverters";
@@ -64,11 +64,13 @@ class TestPage {
   }
 
   private async toggleAudio() {
+    const playEvent = catchLocatorEvent(this.audioElement(), "play");
     await this.mediaControlsActionButton().click();
+
     // clicking the play button might result in the audio file being downloaded
     // from the testing server. We wait for the network to be idle to ensure
     // that the audio file has been downloaded before we make any assertions
-    await this.page.waitForLoadState("networkidle");
+    await playEvent;
   }
 }
 

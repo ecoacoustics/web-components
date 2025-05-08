@@ -155,7 +155,6 @@ export async function dragSlider(page: Page, locator: Locator, value: number) {
   const start = { x: absoluteCurrentTrackLocation, y: yPosition };
   const end = { x: absoluteTargetTrackLocation, y: yPosition };
 
-  await locator.hover();
   await dragSelection(page, start, end);
 
   // assert that the sliders value was updated correctly
@@ -266,6 +265,12 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
 export async function waitForContentReady(page: Page, selectors: string[] = []) {
   // wait for the page to emit the "load"
   await page.waitForLoadState();
+
+  // we use page.locator(selector).waitFor() instead of page.waitForSelector
+  // because it is discouraged by the Playwright team because it can lead to
+  // flaky test.
+  // see: https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-selector
+  // await Promise.all(selectors.map((selector) => page.locator(selector).waitFor()));
   await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
 
   // wait until all network requests have completed

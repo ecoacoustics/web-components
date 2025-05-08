@@ -105,7 +105,7 @@ test.describe("data source", () => {
 
   test("should use a custom button for local file inputs", async ({ fixture }) => {
     await fixture.setLocalAttribute(true);
-    await expect(fixture.browserFileInput()).not.toBeVisible();
+    await expect(fixture.browserFileInput()).toBeHidden();
   });
 
   // TODO: fix in https://github.com/ecoacoustics/web-components/issues/86

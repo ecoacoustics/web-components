@@ -251,6 +251,10 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     return this.populatedTileCount - this.hiddenTiles;
   }
 
+  public get loaded() {
+    return this._loaded;
+  }
+
   private get currentPageIndices(): CurrentPage {
     const start = this.viewHead;
 
@@ -268,6 +272,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   public subjects: SubjectWrapper[] = [];
 
+  private _loaded = false;
   private decisionHeadIndex = 0;
   private viewHeadIndex = 0;
 
@@ -560,7 +565,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // therefore, we conditionally check if the meta key is pressed instead of
     // the ctrl key if the user is on a Mac
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/metaKey
-    const hasToggleModifier = hasCtrlLikeModifier(event);
+    const isHoldingCtrl = hasCtrlLikeModifier(event);
 
     switch (event.key) {
       case LEFT_ARROW_KEY: {
@@ -578,7 +583,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       // if the user is holding down both ctrl and D, we should remove the
       // current selection (this is a common behavior in other applications)
       case "d": {
-        if (hasToggleModifier) {
+        if (isHoldingCtrl) {
           // in Chrome and FireFox, Ctrl + D is a browser shortcut to bookmark
           // the current page. We prevent default so that the user can use
           // ctrl + D to remove the current selection
@@ -589,7 +594,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
       }
 
       case "a": {
-        if (hasToggleModifier) {
+        if (isHoldingCtrl) {
           // we prevent default on the ctrl + A event so that chrome doesn't
           // select all the text on the page
           event.preventDefault();
@@ -654,7 +659,6 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     // but if some are selected, then cancel the play event for only those that
     // aren't selected
     if (!eventTarget.selected && event.detail.keyboardShortcut) {
-      console.log("Cancelling play event for unselected tile", eventTarget.selected);
       event.preventDefault();
     }
   }
@@ -750,6 +754,7 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
 
   private handleSelection(selectionEvent: SelectionEvent): void {
     if (!this.canSubSelect()) {
+      console.log("opting out of sub-selection");
       return;
     }
 
@@ -1267,6 +1272,13 @@ export class VerificationGridComponent extends AbstractComponent(LitElement) {
     }
 
     if (!loading) {
+      // We set the "loaded" property before dispatching the loaded event to
+      // minimize the risk of a race condition.
+      // E.g. if someone created an event listener for the "grid-loaded" event
+      // that then checked the "loaded" property, we want the loaded property
+      // to return "true", reflecting the updated value change emitted by the
+      // event.
+      this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
     }
   }

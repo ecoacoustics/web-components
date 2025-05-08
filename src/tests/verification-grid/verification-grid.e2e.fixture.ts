@@ -119,7 +119,14 @@ class TestPage {
       </oe-verification-grid>
     `);
 
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", ...requiredSelectors]);
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      ...requiredSelectors,
+    ]);
+
+    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
   }
 
   public async createWithClassificationTask() {
@@ -171,6 +178,10 @@ class TestPage {
         <input data-testid="host-app-input" type="text" />
       </div>
     `);
+
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+
+    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
   }
 
   // getters
@@ -498,9 +509,8 @@ class TestPage {
 
   /** Plays selected grid tiles using the play/pause keyboard shortcut */
   public async shortcutGridPlay() {
-    // TODO: for some reason, importing static properties into our fixtures
-    // breaks the test bundling.
-    // We should figure out why this happens and fix it.
+    // TODO: We should use the playShortcut definition here
+    // see: https://github.com/ecoacoustics/web-components/issues/289
     // await this.page.keyboard.press(MediaControlsComponent.playShortcut);
 
     await this.page.keyboard.press(SPACE_KEY);
@@ -548,7 +558,7 @@ class TestPage {
   }
 
   public async openBootstrapDialog() {
-    await this.bootstrapDialogButton().click({ force: true });
+    await this.bootstrapDialogButton().click();
   }
 
   public async dismissBootstrapDialog() {

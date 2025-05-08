@@ -122,6 +122,8 @@ test.describe("Classification Component", () => {
       // however, we still want to test the event is not emitted, therefore
       // we use force = true to say "I know screen readers can't use this button
       // but test that the event is not emitted when clicked anyway"
+      //
+      // eslint-disable-next-line playwright/no-force-option
       await fixture.decisionTrueButton().click({ force: true });
       await sleep(1);
 

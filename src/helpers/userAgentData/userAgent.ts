@@ -1,4 +1,6 @@
 export function isMacOs(): boolean {
+  console.log("userAgentData", navigator.userAgentData);
+  console.log("userAgentPlatform", navigator.userAgentData?.platform);
   // TypeScript thinks that userAgentData can be undefined because it is not
   // yet implemented on Firefox
   // however, we have polyfilled the userAgentData object so we can be sure
@@ -21,6 +23,7 @@ export function isMacOs(): boolean {
  * MacOS > Returns true if the user was holding meta during the event
  */
 export function hasCtrlLikeModifier(event: PointerEvent | KeyboardEvent): boolean {
+  console.log("meta:", event.metaKey, "ctrl:", event.ctrlKey);
   // The command key is defined as the "meta" key in the KeyboardEvent and
   // PointerEvent objects therefore, we conditionally check if the meta key is
   // pressed instead of the ctrl key if the user is on a Mac

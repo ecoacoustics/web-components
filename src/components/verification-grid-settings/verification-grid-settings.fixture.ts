@@ -9,7 +9,7 @@ import {
 } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -33,6 +33,8 @@ class TestPage {
       ></oe-verification-grid>
     `);
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
+
+    await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
 
     // because the bootstrap dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component

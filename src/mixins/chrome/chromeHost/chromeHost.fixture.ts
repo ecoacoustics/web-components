@@ -2,6 +2,7 @@ import { Page } from "@playwright/test";
 import { test } from "../../../tests/assertions";
 import { waitForContentReady } from "../../../tests/helpers";
 import { html } from "lit";
+import { IChromeProvider } from "../chromeProvider/chromeProvider";
 
 class ChromeHostFixture {
   public constructor(public readonly page: Page) {}
@@ -10,19 +11,20 @@ class ChromeHostFixture {
   public providerComponent = () => this.page.locator("oe-tests-chrome-provider").first();
 
   public async create() {
-    await this.providerComponent().evaluate((element: any) => {
+    await this.page.setContent(`
+      <oe-tests-chrome-provider>
+        <oe-tests-chrome-host></oe-tests-chrome-host>
+      </oe-tests-chrome-provider>
+    `);
+
+    await this.providerComponent().evaluate((element: HTMLElement & IChromeProvider) => {
       element.chromeTop = () => html`<div id="test-chrome-top">Top Chrome</div>`;
       element.chromeBottom = () => html`<div id="test-chrome-bottom">Bottom Chrome</div>`;
       element.chromeLeft = () => html`<div id="test-chrome-left">Left Chrome</div>`;
       element.chromeRight = () => html`<div id="test-chrome-right">Right Chrome</div>`;
     });
 
-    await this.page.setContent(`
-      <oe-tests-chrome-provider>
-        <oe-tests-chrome-host></oe-tests-chrome-host>
-      </oe-tests-chrome-provider>
-    `);
-    await waitForContentReady(this.page);
+    await waitForContentReady(this.page, ["oe-tests-chrome-provider", "oe-tests-chrome-host"]);
   }
 }
 

@@ -52,8 +52,6 @@ export class ProgressBar extends AbstractComponent(LitElement) {
     const viewHeadPercentageDelta = completedPercentage - viewHeadPercentage;
     const isViewingHistory = this.historyHead < this.completed;
 
-    console.log("completed", completedPercentage);
-
     const completedTooltip = `${this.completed} / ${this.total} (${completedPercentage.toFixed(2)}%) audio segments completed${isViewingHistory ? " (viewing history)" : ""}`;
     const viewHeadHistoryTooltip = `Viewing history from segment ${this.historyHead} / ${this.total} (${viewHeadPercentage.toFixed(2)}%)`;
 

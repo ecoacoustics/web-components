@@ -1,11 +1,12 @@
 import { expect } from "../../tests/assertions";
-import { hasCtrlLikeModifier, isMacOs } from "./userAgent";
 import { userAgentDataFixture as test } from "./userAgent.fixture";
 
 test.describe("isMacOs", () => {
   test("should return the correct value", async ({ page, fixture }) => {
     const expectedResult = fixture.isNodeMac();
     const realizedResult = await page.evaluate(async () => {
+      // @ts-expect-error Because we are inside an evaluate function, we are
+      // running inside the browser and therefore have access to isMacOs
       return isMacOs();
     });
 
@@ -20,6 +21,7 @@ test.describe("hasCtrlLikeModifier", () => {
     const realizedResult = testTarget.evaluate(async (element) => {
       return new Promise((resolve) => {
         element.addEventListener("pointerdown", (caughtEvent: any) => {
+          // @ts-expect-error This function does exist in the browser
           const result = hasCtrlLikeModifier(caughtEvent);
           resolve(result);
         });
@@ -40,6 +42,7 @@ test.describe("hasCtrlLikeModifier", () => {
     const realizedResult = testTarget.evaluate(async (element) => {
       return new Promise((resolve) => {
         element.addEventListener("pointerdown", (caughtEvent: any) => {
+          // @ts-expect-error This function does exist in the browser
           const result = hasCtrlLikeModifier(caughtEvent);
           resolve(result);
         });

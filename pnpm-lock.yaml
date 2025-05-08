@@ -87,6 +87,9 @@ importers:
       eslint-plugin-lit:
         specifier: 1.13.0
         version: 1.13.0(eslint@8.57.0)
+      eslint-plugin-playwright:
+        specifier: ^2.2.0
+        version: 2.2.0(eslint@8.57.0)
       postcss-nested:
         specifier: 7.0.2
         version: 7.0.2(postcss@8.5.3)
@@ -1526,6 +1529,12 @@ packages:
     engines: {node: '>= 12'}
     peerDependencies:
       eslint: '>= 5'
+
+  eslint-plugin-playwright@2.2.0:
+    resolution: {integrity: sha512-qSQpAw7RcSzE3zPp8FMGkthaCWovHZ/BsXtpmnGax9vQLIovlh1bsZHEa2+j2lv9DWhnyeLM/qZmp7ffQZfQvg==}
+    engines: {node: '>=16.6.0'}
+    peerDependencies:
+      eslint: '>=8.40.0'
 
   eslint-scope@7.2.2:
     resolution: {integrity: sha512-dOt21O7lTMhDM+X9mB4GX+DZrZtCUJPL/wlcTqxyrx5IvO0IYtILdtrQGQp+8n5S0gwSVmOf9NQrjMOgfQZlIg==}
@@ -4443,6 +4452,11 @@ snapshots:
       parse5: 6.0.1
       parse5-htmlparser2-tree-adapter: 6.0.1
       requireindex: 1.2.0
+
+  eslint-plugin-playwright@2.2.0(eslint@8.57.0):
+    dependencies:
+      eslint: 8.57.0
+      globals: 13.24.0
 
   eslint-scope@7.2.2:
     dependencies:

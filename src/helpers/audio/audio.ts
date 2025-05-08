@@ -66,7 +66,7 @@ export class AudioHelper {
 
     const info = await this.render(options, this.generation, src);
 
-    console.log("audio: connect complete", performance.now() - now);
+    console.debug("audio: connect complete", performance.now() - now);
     return info;
   }
 
@@ -105,7 +105,7 @@ export class AudioHelper {
 
     await this.render(options, newGeneration);
 
-    console.log("audio: regenerate complete", performance.now() - now);
+    console.debug("audio: regenerate complete", performance.now() - now);
   }
 
   public resizeCanvas(size: Size) {

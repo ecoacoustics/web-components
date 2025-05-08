@@ -7,7 +7,7 @@ import {
 } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 
 class DataSourceFixture {
   public constructor(public readonly page: Page) {}
@@ -53,6 +53,11 @@ class DataSourceFixture {
       "oe-verification",
       "oe-verification-grid-tile",
     ]);
+
+    // By having an except statement here, playwright will continue running this
+    // assertion until it passes or the test times out (30 seconds).
+    // We do this so that we know the entire grid has loaded.
+    await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
   }
 
   public async setLocalAttribute(value: boolean) {
@@ -103,7 +108,7 @@ class DataSourceFixture {
   public async makeSubSelection(subSelectionIndices: number[]) {
     const gridTiles = await this.gridTiles();
     for (const index of subSelectionIndices) {
-      await gridTiles[index].click({ force: true });
+      await gridTiles[index].click();
     }
   }
 

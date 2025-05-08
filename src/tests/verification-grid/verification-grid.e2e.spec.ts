@@ -354,7 +354,7 @@ test.describe("single verification grid", () => {
       await fixture.changeGridSize(3);
     });
 
-    test("should not show the completed segment if a partial page of decisions is made ", async ({ fixture }) => {
+    test("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
       await fixture.createSubSelection([0]);
@@ -543,7 +543,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should hide the 'Continue Verifying' button when not viewing history", async ({ fixture }) => {
-      await expect(fixture.continueVerifyingButton()).not.toBeVisible();
+      await expect(fixture.continueVerifyingButton()).toBeHidden();
     });
 
     test("should show the 'Continue Verifying' button when viewing history", async ({ fixture }) => {
@@ -951,7 +951,7 @@ test.describe("single verification grid", () => {
         await fixture.createSubSelection([0]);
 
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
-        await expect(realizedSelectedTiles).toHaveLength(0);
+        expect(realizedSelectedTiles).toHaveLength(0);
       });
 
       test("should not de-select other tiles when a tile is selected", async ({ fixture }) => {

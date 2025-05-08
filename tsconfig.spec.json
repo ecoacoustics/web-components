@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts"],
+  "include": ["**/*.spec.ts", "**/*.fixture.ts", "src/tests/"],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ES2021",
