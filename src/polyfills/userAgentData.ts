@@ -15,7 +15,7 @@ function userAgentPolyfill(): NavigatorUAData {
 
 const userAgentDataKey = "userAgentData";
 
-console.log("applying polyfill", navigator.platform);
+console.log("platform", navigator.platform);
 
 // if multiple components are imported from multiple entry point, we only want
 // to apply the polyfill once
