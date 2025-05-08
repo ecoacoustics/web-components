@@ -6,7 +6,6 @@ function userAgentPolyfill(): NavigatorUAData {
   const platform = navigator.platform;
   const mac = hasTouch ? "iOS" : "macOS";
   const platforms = { MacIntel: mac, Win32: "Windows", iPhone: "iOS", iPad: "iOS" };
-  console.log("platform", platform);
   return {
     brands: [{ brand: brandEntry?.[0] ?? "", version: brandEntry?.[1] ?? "" }],
     mobile: hasTouch || /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent),
@@ -16,7 +15,7 @@ function userAgentPolyfill(): NavigatorUAData {
 
 const userAgentDataKey = "userAgentData";
 
-console.log("applying polyfill");
+console.log("applying polyfill", navigator.platform);
 
 // if multiple components are imported from multiple entry point, we only want
 // to apply the polyfill once
