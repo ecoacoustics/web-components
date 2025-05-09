@@ -87,5 +87,5 @@ Download the `component.js` file to use all web components or import a subset of
 |         | Chrome | Firefox | Safari |
 | ------- | ------ | ------- | ------ |
 | Windows | ✅     | ✅      | ❌     |
-| MacOS   | ❌     | ❌      | ❌     |
-| Linux   | ❌     | ❌      | ❌     |
+| MacOS   | ✅     | ✅      | ❌     |
+| Linux   | ✅     | ✅      | ❌     |
