@@ -27,7 +27,7 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
     test(spec.name, async ({ fixture }) => {
       await fixture.createWithAnnotation(spec.annotation);
       await fixture.onlyShowAnnotationOutline();
-      await expect(fixture.bodyElement()).toHaveScreenshot();
+      await expect(fixture.bodyElement()).toHaveLayoutScreenshot();
     });
   }
 }

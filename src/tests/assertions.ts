@@ -1,4 +1,4 @@
-import { Locator, MatcherReturnType } from "@playwright/test";
+import { Locator, MatcherReturnType, Page } from "@playwright/test";
 import { expect as playwrightExpect, test as base } from "@sand4rt/experimental-ct-web";
 
 async function toHaveTrimmedText(received: Locator, expected: string): Promise<MatcherReturnType> {
@@ -21,8 +21,46 @@ async function toHaveTrimmedText(received: Locator, expected: string): Promise<M
   };
 }
 
+/**
+ * A snapshot test that has a higher tolerance for browser rendering
+ * discrepancies.
+ * This is typically used to test the layout of a page/component and should be
+ * used for svg or canvas rendering assertions.
+ */
+async function toHaveLayoutScreenshot(
+  locator: Locator,
+  options: Record<string, unknown> = {},
+): Promise<MatcherReturnType> {
+  // because we want to test layout, we want to allow 0.5 pixels of difference
+  // on each size of the element.
+  // This allows for operating systems to handle sub-pixel rendering differently
+  // without the test failing.
+  // Because playwright takes in the number of pixels that are allowed to be
+  // different, we use the size of the elements layout container to determine
+  // the allowed difference.
+  const locatorSize = await locator.boundingBox();
+  const xAllowance = locatorSize?.width ?? 0 / 2;
+  const yAllowance = locatorSize?.height ?? 0 / 2;
+
+  const maxDiffPixels = xAllowance + yAllowance;
+
+  const mergedOptions = Object.assign(options, {
+    maxDiffPixels,
+  });
+
+  await expect(locator).toHaveScreenshot(mergedOptions);
+
+  // because we have a screenshot assertion above, this assertion will throw an
+  // error before we get to return a value, causing the assertion to fail.
+  return {
+    pass: true,
+    message: () => "",
+  };
+}
+
 export const expect = playwrightExpect.extend({
   toHaveTrimmedText,
+  toHaveLayoutScreenshot,
 });
 
 export const test = base.extend({
