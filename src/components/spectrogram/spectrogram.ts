@@ -324,12 +324,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }),
     );
 
-    const info: IAudioInformation = await this.audioHelper.connect(
-      this.renderedSource,
-      this.canvas,
-      this.spectrogramOptions,
-    );
-
+    const info = await this.audioHelper.connect(this.renderedSource, this.canvas, this.spectrogramOptions);
     const originalRecording = { duration: info.duration, startOffset: this.offset };
 
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
@@ -728,6 +723,39 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     );
   }
 
+  /**
+   * Downloads an audio file without using 206 Partial Content (HTTP Range)
+   * requests. This adds a fallback option for browsers that don't support
+   * range requests or range requests that unexpectedly fail.
+   *
+   * Warning: This should only be used as a fallback if a range request fails
+   * because it significantly hurts performance, especially on large audio
+   * files.
+   *
+   * @param failureEvent - An event describing why we are forcing audio download
+   * without partial content. This function takes an event to prove that partial
+   * content has been attempted, and so that slight optimizations can be made
+   * depending on the error message.
+   */
+  private forceAudioDownload(failureEvent: Event): void {
+    const targetElement = failureEvent.target;
+    if (!(targetElement instanceof HTMLAudioElement)) {
+      console.error("Audio download overrides can only be applied to HTMLAudioElement's");
+      return;
+    } else if (targetElement.src.startsWith("blob:")) {
+      return;
+    }
+
+    console.warn("Forcing full audio download without range request. This may hurt performance.");
+
+    fetch(targetElement.src)
+      .then((response) => response.blob())
+      .then((audioBlob) => {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        targetElement.src = audioUrl;
+      });
+  }
+
   public renderSurface() {
     return html`
       <div id="spectrogram-container" part="canvas">
@@ -738,6 +766,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         src="${this.renderedSource}"
         @play="${() => this.play()}"
         @ended="${() => this.stop()}"
+        @error="${(event: Event) => this.forceAudioDownload(event)}"
         preload="metadata"
         crossorigin="anonymous"
       >

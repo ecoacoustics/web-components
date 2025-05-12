@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Audio Sources</title>
+  </head>
+
+  <body>
+    <audio id="longFlac" src="/example_34s.flac"></audio>
+    <button onclick="longFlac.play()">example_34s.flac</button>
+
+    <audio id="flac" src="/example.flac"></audio>
+    <button onclick="flac.play()">example.flac</button>
+
+    <audio id="flacShort" src="/example_1s.wav"></audio>
+    <button onclick="flacShort.play()">example_1s.wav</button>
+
+    <audio id="wav" src="/example.wav"></audio>
+    <button onclick="wav.play()">example.wav</button>
+
+    <p>On this page, try playing each audio source and check that there are no errors in the console.</p>
+
+    <p>
+      Note that most of the audio files will be downloaded in their entirety except for the 34s.flac file that will be
+      download through range (partial) requests. You should check that the browser supports range requests, and if it
+      does not, then it correctly downloads the entire file.
+    </p>
+
+    <style>
+      button {
+        display: block;
+        margin-top: 0.5rem;
+      }
+    </style>
+  </body>
+</html>

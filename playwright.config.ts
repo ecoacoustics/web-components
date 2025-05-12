@@ -64,7 +64,7 @@ export default defineConfig({
     // Both MacOS and Linux platforms do have webkit-based browsers
     // (Safari and Gnome Web) that are used often enough for me to justify
     // support.
-    ...(process.platform !== "win32" && process.platform !== "linux"
+    ...(process.platform !== "win32"
       ? [
           {
             name: "webkit",

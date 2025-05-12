@@ -26,7 +26,7 @@ export class AudioHelper {
   // This data changes every time we render.
   // Keeping them as single instance variables resulted in race conditions
   // We keep references here to disconnect the audio graph on disposal.
-  private generationData: Map<number, AudioBufferSourceNode> = new Map();
+  private generationData = new Map<number, AudioBufferSourceNode>();
 
   private segmentSize = 44100 as const;
   private generation = 0;

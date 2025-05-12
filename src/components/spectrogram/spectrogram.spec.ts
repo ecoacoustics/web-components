@@ -114,6 +114,7 @@ test.describe("unit tests", () => {
       "example.wav",
       "example2.flac",
       "example_34s.flac",
+      "example_34s.wav",
       "merged_diagnostic.wav",
     ] as const satisfies string[];
 
