@@ -27,7 +27,16 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
     test(spec.name, async ({ fixture }) => {
       await fixture.createWithAnnotation(spec.annotation);
       await fixture.onlyShowAnnotationOutline();
-      await expect(fixture.bodyElement()).toHaveLayoutScreenshot();
+
+      // Because the spectrogram component is a ChromeHost, the annotation
+      // bounding boxes and the annotation labels are rendered by the
+      // spectrogram component.
+      // Therefore, we assert that the annotations render correctly by asserting
+      // that the spectrogram component looks correct.
+      // Note: It is not possible to assert the oe-annotate component directly
+      // because it has display: content; which means that it does not
+      // have a bounding box.
+      await expect(fixture.spectrogram()).toHaveLayoutScreenshot();
     });
   }
 }

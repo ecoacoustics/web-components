@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
-import { waitForContentReady } from "../../tests/helpers";
+import { mockDeviceSize, testBreakpoints, waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -8,9 +8,6 @@ import { EnumValue } from "../../helpers/types/advancedTypes";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
-
-  // I use the body element for snapshot (screenshot) assertions
-  public bodyElement = () => this.page.locator("body").first();
 
   public component = () => this.page.locator("oe-annotate").first();
   public tagComponents = () => this.page.locator("oe-tag").all();
@@ -107,7 +104,6 @@ class TestPage {
       <oe-annotate>
         <oe-spectrogram
           src="http://localhost:3000/example.flac"
-          src="/example.flac"
         ></oe-spectrogram>
 
         <oe-annotation
@@ -135,8 +131,16 @@ class TestPage {
   }
 
   public async onlyShowAnnotationOutline() {
+    const viewportMock = mockDeviceSize(testBreakpoints.desktop);
+    await viewportMock(this.page);
+
     await this.page.addStyleTag({
-      content: "body { margin: 0; height: max-content; }",
+      content: `
+        oe-spectrogram {
+          width: 1280px;
+          height: 720px;
+        }
+      `,
     });
 
     await this.spectrogramCanvas().evaluate((element: SpectrogramComponent) => {
