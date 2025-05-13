@@ -491,6 +491,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   // TODO: parents should not contribute to the size of the canvas
+  private bufferedFrameRef: number | null = null;
   private handleResize(entries: ResizeObserverEntry[]): void {
     // if the spectrogram canvas has not been rendered yet, we can safely skip
     // resizing the canvas because:
@@ -502,8 +503,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       return;
     }
 
+    // We do not use a truthy assertion here because if the bufferedFrameRef
+    // value is zero, we still want to cancel the animation frame.
+    if (this.bufferedFrameRef !== null) {
+      window.cancelAnimationFrame(this.bufferedFrameRef);
+    }
+
     const targetEntry = entries[0];
-    this.resizeCanvas(targetEntry.contentRect);
+    this.bufferedFrameRef = requestAnimationFrame(() => this.resizeCanvas(targetEntry.contentRect));
   }
 
   // TODO: refactor this procedure

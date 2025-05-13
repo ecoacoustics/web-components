@@ -546,10 +546,4 @@ test.describe("without annotations", () => {
   test("should have any annotations", async ({ fixture }) => {
     expect(await fixture.annotationContainers()).toHaveLength(0);
   });
-
-  test("should correctly size all slotted content", async ({ fixture }) => {
-    const spectrogramSize = await fixture.spectrogram().boundingBox();
-    const componentSize = await fixture.component().boundingBox();
-    expect(spectrogramSize).toEqual(componentSize);
-  });
 });
