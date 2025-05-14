@@ -13,6 +13,7 @@ import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages"
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
+import { runOnceOnNextAnimationFrame } from "../../helpers/frames";
 
 export interface IPlayEvent {
   play: boolean;
@@ -181,7 +182,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   // TODO: move somewhere else
   private interpolationCancelReference: number | null = null;
-  private bufferedFrameRef: number | null = null;
 
   // TODO: remove this
   private doneFirstRender = false;
@@ -524,12 +524,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     //
     // We do not use a truthy assertion here because if the bufferedFrameRef
     // value is zero, we still want to cancel the animation frame.
-    if (this.bufferedFrameRef !== null) {
-      window.cancelAnimationFrame(this.bufferedFrameRef);
-    }
-
     const targetEntry = entries[0];
-    this.bufferedFrameRef = requestAnimationFrame(() => this.resizeCanvas(targetEntry.contentRect));
+    runOnceOnNextAnimationFrame(this.resizeCanvas, () => this.resizeCanvas(targetEntry.contentRect));
   }
 
   // TODO: refactor this procedure
