@@ -84,8 +84,8 @@ Download the `component.js` file to use all web components or import a subset of
 
 ## Supported Browsers
 
-|         | Chrome | Firefox | Safari / WebKit |
-| ------- | ------ | ------- | --------------- |
-| Windows | ✅     | ✅      | ❌              |
-| MacOS   | ✅     | ✅      | ✅              |
-| Linux   | ✅     | ✅      | ✅              |
+|         | Chrome | Firefox | Safari |
+| ------- | ------ | ------- | ------ |
+| Windows | ✅     | ✅      | ❌     |
+| MacOS   | ✅     | ✅      | ✅     |
+| Linux   | ✅     | ✅      | ❌     |
