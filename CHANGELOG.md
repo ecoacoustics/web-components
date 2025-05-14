@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.2...web-components-v3.0.0) (2025-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Add official support for MacOS, Firefox & Safari ([#344](https://github.com/ecoacoustics/web-components/issues/344))
+
+### Features
+
+* Add official support for MacOS, Firefox & Safari ([#344](https://github.com/ecoacoustics/web-components/issues/344)) ([faa3826](https://github.com/ecoacoustics/web-components/commit/faa3826c40f7120c20fe674835dced2353d457c1)), closes [#271](https://github.com/ecoacoustics/web-components/issues/271)
+
 ## [2.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.1...web-components-v2.1.2) (2025-05-01)
 
 
