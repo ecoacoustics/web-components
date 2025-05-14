@@ -153,8 +153,8 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "pnpm dlx playwright install",
-        "command": "pnpm dlx playwright install",
+        "label": "pnpm exec playwright install",
+        "command": "pnpm exec playwright install",
         "type": "shell",
       },
     ],

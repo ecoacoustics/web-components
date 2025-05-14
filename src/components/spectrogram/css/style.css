@@ -1,7 +1,6 @@
 :host {
   --min-height: 128px;
   min-height: var(--min-height);
-  /* height: fit-content; */
 }
 
 #spectrogram-container {

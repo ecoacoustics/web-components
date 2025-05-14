@@ -181,6 +181,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   // TODO: move somewhere else
   private interpolationCancelReference: number | null = null;
+  private bufferedFrameRef: number | null = null;
 
   // TODO: remove this
   private doneFirstRender = false;
@@ -491,7 +492,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   // TODO: parents should not contribute to the size of the canvas
-  private bufferedFrameRef: number | null = null;
   private handleResize(entries: ResizeObserverEntry[]): void {
     // if the spectrogram canvas has not been rendered yet, we can safely skip
     // resizing the canvas because:
@@ -647,6 +647,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         this.currentTime = mediaElementTime;
         this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
 
+        // console.log("Desync detected, resyncing time");
+
         return;
       }
 
@@ -685,10 +687,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
 
     if (paused) {
+      console.log("Pausing audio");
       // TODO: find out if we actually need this
       if (this.interpolationCancelReference !== null) {
         window.cancelAnimationFrame(this.interpolationCancelReference);
         this.interpolationCancelReference = null;
+        console.log("Cancelling interpolation");
       }
 
       this.mediaElement.pause();
