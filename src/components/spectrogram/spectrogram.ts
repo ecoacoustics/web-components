@@ -59,6 +59,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
 
+  public constructor() {
+    super();
+    this.canvasResizeCallback = Symbol("canvas-resize-callback");
+  }
+
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
   public domRenderWindow?: RenderWindow;
@@ -179,6 +184,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   private readonly highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
+
+  private readonly canvasResizeCallback: symbol;
 
   // TODO: move somewhere else
   private interpolationCancelReference: number | null = null;
@@ -525,7 +532,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // We do not use a truthy assertion here because if the bufferedFrameRef
     // value is zero, we still want to cancel the animation frame.
     const targetEntry = entries[0];
-    runOnceOnNextAnimationFrame(this.resizeCanvas, () => this.resizeCanvas(targetEntry.contentRect));
+    runOnceOnNextAnimationFrame(this.canvasResizeCallback, () => this.resizeCanvas(targetEntry.contentRect));
   }
 
   // TODO: refactor this procedure
