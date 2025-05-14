@@ -477,9 +477,7 @@ test.describe("playing/pausing", () => {
   // This test ensures that playback interpolation can correctly rubber band
   // back to the correct playback time if audio playback becomes de-synced from
   // the spectrogram.
-  test.only("should keep the currentTime in sync if the audio elements playback starts and stops", async ({
-    fixture,
-  }) => {
+  test("should keep the currentTime in sync if the audio elements playback starts and stops", async ({ fixture }) => {
     const playEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "play");
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
     await playEvent;
@@ -492,7 +490,7 @@ test.describe("playing/pausing", () => {
     // resistance polling time for major browsers. If this is less than the
     // fingerprinting resistance polling time, the currentTime greaterThan 0
     // assertion below will sporadically fail.
-    await sleep(0.5);
+    await sleep(1);
 
     await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", false);
 
@@ -502,6 +500,8 @@ test.describe("playing/pausing", () => {
     const pauseEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "pause");
     await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
     await pauseEvent;
+
+    await sleep(1);
 
     await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
 

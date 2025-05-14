@@ -18,8 +18,7 @@ export default defineConfig({
     command: "pnpm dev --port 3000",
   },
   // Fail in CI if there is a focused test.only
-  // forbidOnly: isCi,
-  forbidOnly: false,
+  forbidOnly: isCi,
   tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,

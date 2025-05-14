@@ -687,12 +687,10 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
 
     if (paused) {
-      console.log("Pausing audio");
       // TODO: find out if we actually need this
       if (this.interpolationCancelReference !== null) {
         window.cancelAnimationFrame(this.interpolationCancelReference);
         this.interpolationCancelReference = null;
-        console.log("Cancelling interpolation");
       }
 
       this.mediaElement.pause();
