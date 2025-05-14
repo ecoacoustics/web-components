@@ -22,35 +22,6 @@ export async function getElementSize<T extends HTMLElement>(element: T | Locator
   return { width, height };
 }
 
-// because mobile devices emit different user agent hints, we have a
-// special function to mock a mobile device in test that is more
-// complex than just changing the screen size
-export async function changeToMobile(page: Page) {
-  const viewportMock = mockDeviceSize(testBreakpoints.mobile);
-  await viewportMock(page);
-
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, "userAgentData", {
-      get: () => ({
-        mobile: true,
-      }),
-    });
-  });
-}
-
-export async function changeToDesktop(page: Page) {
-  const viewportMock = mockDeviceSize(testBreakpoints.desktop);
-  await viewportMock(page);
-
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, "userAgentData", {
-      get: () => ({
-        mobile: false,
-      }),
-    });
-  });
-}
-
 export function mockDeviceSize(size: Size): DeviceMock {
   return (page: Page) => page.setViewportSize(size);
 }
@@ -60,15 +31,17 @@ export async function insertHtml(page: Page, html: string) {
   await page.waitForLoadState("networkidle");
 }
 
-export async function getBrowserStyles<T extends HTMLElement>(component: Locator): Promise<CSSStyleDeclaration> {
-  return await component.evaluate((element: T) => {
-    return window.getComputedStyle(element);
-  });
+export async function getBrowserStyle<T extends HTMLElement>(component: Locator, property: string) {
+  return await component.evaluate((element: T, propertyName) => {
+    const styles = window.getComputedStyle(element);
+    return styles.getPropertyValue(propertyName);
+  }, property);
 }
 
 export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
-    return window.getComputedStyle(element).getPropertyValue(variable);
+    const styles = window.getComputedStyle(element);
+    return styles.getPropertyValue(variable);
   }, name);
 }
 
@@ -182,7 +155,6 @@ export async function dragSlider(page: Page, locator: Locator, value: number) {
   const start = { x: absoluteCurrentTrackLocation, y: yPosition };
   const end = { x: absoluteTargetTrackLocation, y: yPosition };
 
-  await locator.hover();
   await dragSelection(page, start, end);
 
   // assert that the sliders value was updated correctly
@@ -199,7 +171,7 @@ export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, 
 export async function catchEvent<T extends Event>(locator: Page, name: string) {
   return locator.evaluate((name: string) => {
     return new Promise<T>((resolve) => {
-      document.addEventListener(name, (data) => resolve(data));
+      document.addEventListener(name, (data: any) => resolve(data));
     });
   }, name);
 }
@@ -208,7 +180,7 @@ export async function catchEvent<T extends Event>(locator: Page, name: string) {
 export async function catchLocatorEvent<T extends Event>(locator: Locator, name: string): Promise<T> {
   return locator.evaluate((element: HTMLElement, name: string) => {
     return new Promise((resolve) => {
-      element.addEventListener(name, (data) => resolve(data.detail));
+      element.addEventListener(name, (data: any) => resolve(data.detail));
     });
   }, name);
 }
@@ -217,7 +189,7 @@ export async function logEvent(page: Page, name: string) {
   await page.evaluate((name) => {
     const eventStoreKey = `oe-${name}-events`;
     window[eventStoreKey] = [];
-    document.addEventListener(name, (data) => window[eventStoreKey].push(data));
+    document.addEventListener(name, (data: any) => window[eventStoreKey].push(data));
   }, name);
 }
 
@@ -290,9 +262,12 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
   );
 }
 
-export async function waitForContentReady(page: Page, selectors: string[] = []): Promise<void> {
+export async function waitForContentReady(page: Page, selectors: string[] = []) {
   // wait for the page to emit the "load"
   await page.waitForLoadState();
+
+  // TODO: we should replcae this with a visibility locator
+  // see: https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-selector
   await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
 
   // wait until all network requests have completed

@@ -15,9 +15,23 @@ function userAgentPolyfill(): NavigatorUAData {
 
 const userAgentDataKey = "userAgentData";
 
+// Some versions of Chromium on MacOS (e.g. the version used by GitHub CI
+// runners) incorrectly report userAgentData.platform as "Windows". Because
+// shortcuts behave slightly different on MacOS (e.g. switching ctrl and cmd),
+// this would cause shortcuts to break on some platform. To fix this, we always
+// monkey patch navigator.platform's that report as "MacIntel".
+//
+// Note: navigator.platform is deprecated, however this mis-reporting of MacOS
+// was fixed in newer versions of Chromium that do implement navigator.platform
+// so it'd actually be beneficial to us if Chromium removed support for
+// navigator.platform because then this monkey patch would only be applied to
+// old versions of Chromium. If support is removed, navigator.platform will
+// just return "undefined" and cause any errors.
+const forceMonkeyPatch = navigator.platform === "MacIntel";
+
 // if multiple components are imported from multiple entry point, we only want
 // to apply the polyfill once
-if (!(userAgentDataKey in navigator)) {
+if (!(userAgentDataKey in navigator) || forceMonkeyPatch) {
   // if we don't use defineProperty, on Chrome we get the error
   // Cannot set property userAgentData of #<Navigator> which has only a getter
   const polyfill = userAgentPolyfill();

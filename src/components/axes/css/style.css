@@ -48,7 +48,7 @@
   text {
     fill: var(--oe-font-color);
     stroke: none;
-    font: 11px sans-serif;
+    font-size: var(--oe-font-size);
   }
 
   g {

@@ -9,7 +9,7 @@ import {
 } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -25,14 +25,24 @@ class TestPage {
   public templateTriggerButton = () => this.page.locator("#settings-template-trigger").first();
   public templateCheckboxes = () => this.page.locator(".template-change-input").all();
 
+  public testJsonInput = "http://localhost:3000/test-items.json";
+
   public async create() {
     await this.page.setContent(`
       <oe-verification-grid
         id="verification-grid"
         grid-size="0"
       ></oe-verification-grid>
+
+      <oe-data-source
+        slot="data-source"
+        for="verification-grid"
+        src="${this.testJsonInput}"
+      ></oe-data-source>
     `);
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
+
+    await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
 
     // because the bootstrap dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component

@@ -92,10 +92,8 @@
 
 .verification-controls-title {
   text-align: center;
-  font-family: sans-serif;
-  font-weight: normal;
-  font-size: 1rem;
-  letter-spacing: 0em;
+  font-size: var(--oe-font-size-large);
+  letter-spacing: 0;
   color: var(--oe-font-color);
   margin: var(--oe-spacing-large);
 }
@@ -130,7 +128,7 @@
 
 .no-decisions-warning {
   color: var(--oe-danger-color);
-  font-weight: bold;
+  font-weight: var(--oe-font-weight-bold);
 }
 
 /*

@@ -95,8 +95,6 @@
       "pkief.material-icon-theme",
       "aaron-bond.better-comments",
       "github.vscode-github-actions",
-      "github.copilot",
-      "github.copilot-chat",
       "github.vscode-pull-request-github",
       "eamodio.gitlens",
       "zignd.html-css-class-completion",
@@ -155,8 +153,8 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "pnpm dlx playwright install",
-        "command": "pnpm dlx playwright install",
+        "label": "pnpm exec playwright install",
+        "command": "pnpm exec playwright install",
         "type": "shell",
       },
     ],

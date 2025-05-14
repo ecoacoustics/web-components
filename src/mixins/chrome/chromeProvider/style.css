@@ -1,5 +1,10 @@
 :host {
-  position: relative;
-  display: block;
-  width: auto;
+  /*
+    By setting the ChromeProvider's display to contents, the ChromeProvider
+    will not create a new layout box, meaning that its side will be limited by
+    the layout box of its largest child (which will be the ChromeHost).
+    This is important because the ChromeProvider should not ever become
+    mis-aligned with the ChromeHost.
+  */
+  display: contents;
 }

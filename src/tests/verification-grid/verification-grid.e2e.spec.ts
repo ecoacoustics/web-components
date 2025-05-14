@@ -2,8 +2,6 @@ import { Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import {
   catchLocatorEvent,
-  changeToDesktop,
-  changeToMobile,
   DeviceMock,
   getBrowserValue,
   getEventLogs,
@@ -21,6 +19,7 @@ import { DecisionOptions } from "../../models/decisions/decision";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
 import { MousePosition, VerificationGridComponent } from "../../components/verification-grid/verification-grid";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
+import { sleep } from "../../helpers/utilities";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -108,8 +107,8 @@ test.describe("single verification grid", () => {
   test.describe("bootstrap dialog", () => {
     const advancedShortcutSlideTitle = "Keyboard shortcuts";
 
-    test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture, page }) => {
-      await changeToDesktop(page);
+    test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture }) => {
+      await fixture.changeToDesktop();
       await fixture.openBootstrapDialog();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
@@ -123,8 +122,8 @@ test.describe("single verification grid", () => {
     // advanced shortcuts bootstrap dialog because they cannot use the keyboard
     // therefore, if the user clicks on the help button while on a mobile, we
     // expect that the user is taken straight to the tutorial modal
-    test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture, page }) => {
-      await changeToMobile(page);
+    test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture }) => {
+      await fixture.changeToMobile();
       await fixture.openBootstrapDialog();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
@@ -200,11 +199,11 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test.skip("should not use a grid size that is larger than the screen size", async ({ fixture, page }) => {
+      test.skip("should not use a grid size that is larger than the screen size", async ({ fixture }) => {
         const requestedGridSize = 100;
         const expectedGridSize = 8;
 
-        await changeToDesktop(page);
+        await fixture.changeToDesktop();
         await fixture.changeGridSize(requestedGridSize);
 
         const gridSize = await fixture.getGridSize();
@@ -229,8 +228,8 @@ test.describe("single verification grid", () => {
 
       test.skip("should decrease the number of grid tiles if the grid size doesn't fit on the screen", () => {});
 
-      test.skip("Should have a 1x1 grid size for mobile devices", async ({ fixture, page }) => {
-        await changeToMobile(page);
+      test.skip("Should have a 1x1 grid size for mobile devices", async ({ fixture }) => {
+        await fixture.changeToMobile();
         const expectedGridSize = 1;
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toEqual(expectedGridSize);
@@ -307,7 +306,7 @@ test.describe("single verification grid", () => {
     //     // web-ctx-playwright gets upgraded to version 1.45.0
     //     // https://playwright.dev/docs/api/class-clock
     //     await fixture.playSpectrogram(targetedTile);
-    //     await page.waitForTimeout(1000);
+    //     await sleep(1);
     //     const indicatorPosition = await fixture.indicatorPosition(targetedTile);
     //     expect(indicatorPosition).toBeGreaterThan(0);
 
@@ -355,7 +354,7 @@ test.describe("single verification grid", () => {
       await fixture.changeGridSize(3);
     });
 
-    test("should not show the completed segment if a partial page of decisions is made ", async ({ fixture }) => {
+    test("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
       await fixture.createSubSelection([0]);
@@ -385,7 +384,7 @@ test.describe("single verification grid", () => {
 
     test("should show the correct tooltips if a full page of decisions is made", async ({ fixture }) => {
       await fixture.makeDecision(0);
-      await fixture.page.waitForTimeout(1000);
+      await sleep(1);
 
       const expectedTooltip = "3 / 30 (10.00%) audio segments completed";
       const completedTooltips = await fixture.gridProgressBarCompletedTooltip().count();
@@ -544,7 +543,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should hide the 'Continue Verifying' button when not viewing history", async ({ fixture }) => {
-      await expect(fixture.continueVerifyingButton()).not.toBeVisible();
+      await expect(fixture.continueVerifyingButton()).toBeHidden();
     });
 
     test("should show the 'Continue Verifying' button when viewing history", async ({ fixture }) => {
@@ -584,7 +583,7 @@ test.describe("single verification grid", () => {
       // time before we can assert the state of the audio
       // the short delay is an intentional feature that allows the user to see
       // that the decision has been applied to the grid before the grid auto pages
-      await fixture.page.waitForTimeout(1000);
+      await sleep(1);
       const postPagedPlayingState = await fixture.isAudioPlaying(0);
       const playbackTime = await fixture.audioPlaybackTime(0);
 
@@ -952,7 +951,7 @@ test.describe("single verification grid", () => {
         await fixture.createSubSelection([0]);
 
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
-        await expect(realizedSelectedTiles).toHaveLength(0);
+        expect(realizedSelectedTiles).toHaveLength(0);
       });
 
       test("should not de-select other tiles when a tile is selected", async ({ fixture }) => {
@@ -1212,7 +1211,7 @@ test.describe("single verification grid", () => {
       },
       {
         deviceName: "mobile",
-        device: changeToMobile,
+        device: mockDeviceSize(testBreakpoints.mobile),
         withoutSlotShape: { columns: 1, rows: 1 },
         withSlotShape: { columns: 1, rows: 1 },
       },
@@ -1689,7 +1688,7 @@ test.describe("verification grid interaction with the host application", () => {
     await fixture.hostAppInput().press("Y");
     await fixture.hostAppInput().press("y");
 
-    await fixture.page.waitForTimeout(1_000);
+    await sleep(1);
 
     const events: unknown[] = await getEventLogs(fixture.page, "decision");
     expect(events).toHaveLength(0);

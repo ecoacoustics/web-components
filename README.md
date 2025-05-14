@@ -81,3 +81,11 @@ Then you can run the following commands:
 You can manually import the example components in this repository using the [GitHub releases page](https://github.com/ecoacoustics/web-components/releases)
 
 Download the `component.js` file to use all web components or import a subset of components through the `components.zip` zip archive.
+
+## Supported Browsers
+
+|         | Chrome | Firefox | Safari |
+| ------- | ------ | ------- | ------ |
+| Windows | ✅     | ✅      | ❌     |
+| MacOS   | ✅     | ✅      | ✅     |
+| Linux   | ✅     | ✅      | ❌     |

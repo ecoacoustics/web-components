@@ -24,7 +24,7 @@ function addStyleSheet(component: LitElement, styles: CSSResultOrNative): void {
       return;
     }
 
-    component.shadowRoot?.adoptedStyleSheets.push(styles.styleSheet);
+    component.shadowRoot?.adoptedStyleSheets.push(resultStyleSheet);
   } else {
     component.shadowRoot?.adoptedStyleSheets.push(styles);
   }

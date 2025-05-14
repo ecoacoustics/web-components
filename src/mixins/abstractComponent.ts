@@ -25,9 +25,12 @@ export const AbstractComponent = <T extends Component>(superClass: T): Component
     private static insertTheming(): void {
       themingInserted = true;
 
-      const style = document.createElement("style");
-      style.innerHTML = defaultTheming;
-      document.head.appendChild(style);
+      // By using "replace", the default theming will be injected in async
+      // this means that applying the default stylesheet is a fire and forget
+      // async operation.
+      const themingStyles = new CSSStyleSheet();
+      themingStyles.replace(defaultTheming);
+      document.adoptedStyleSheets.push(themingStyles);
     }
 
     private reactiveController = new ReactiveController(this);

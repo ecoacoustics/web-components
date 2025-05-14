@@ -38,6 +38,14 @@
   min-width: 300px;
   min-height: 300px;
 
+  /*
+    If the user double taps a grid tile on a mobile browser, we don't want the
+    browser to zoom in.
+    A value of "manipulation" still allows pinch zooming on mobile devices so
+    that users can zoom into a spectrogram.
+  */
+  touch-action: manipulation;
+
   transition:
     border-color var(--oe-animation-time) ease-out,
     border-size var(--oe-animation-time) ease-out;
@@ -58,6 +66,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--oe-spacing);
+
+  & > .tag-label {
+    color: var(--oe-font-color);
+  }
 }
 
 /* TODO: maybe add a border here */

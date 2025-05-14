@@ -18,7 +18,7 @@ test.describe("component template", () => {
       </oe-tag>
     `);
 
-    await expect(fixture.component()).not.toBeVisible();
+    await expect(fixture.component()).toBeHidden();
   });
 });
 

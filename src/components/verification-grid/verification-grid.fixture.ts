@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { VerificationGridComponent } from "./verification-grid";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 
 class VerificationGridFixture {
   public constructor(public readonly page: Page) {}
@@ -22,7 +22,13 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source"]);
+
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+
+    // By having an except statement here, playwright will continue running this
+    // assertion until it passes or the test times out (30 seconds).
+    // We do this so that we know the entire grid has loaded.
+    await expect(this.component()).toHaveJSProperty("loaded", true);
   }
 
   public async createWithDecisionElements() {
@@ -41,7 +47,15 @@ class VerificationGridFixture {
         ></oe-data-source>
       </oe-verification-grid>
     `);
-    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source", "oe-verification"]);
+
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      "oe-verification",
+    ]);
+
+    await expect(this.component()).toHaveJSProperty("loaded", true);
   }
 
   public async setGridSize(value: number) {

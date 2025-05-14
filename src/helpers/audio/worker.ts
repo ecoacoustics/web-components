@@ -43,7 +43,8 @@ function paintBuffer(generation: number): void {
   state.bufferProcessed(sampleBuffer, consumed);
 }
 
-/** main loop, only called once after we have received the shared buffers
+/**
+ * main loop, only called once after we have received the shared buffers
  * @param generation - the render generation
  */
 function work(generation: number): void {

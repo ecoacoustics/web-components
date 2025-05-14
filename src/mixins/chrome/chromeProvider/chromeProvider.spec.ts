@@ -8,7 +8,7 @@ test.beforeEach(async ({ fixture }) => {
 });
 
 test("should create", async ({ fixture }) => {
-  expect(fixture.component()).toBeDefined();
+  expect(fixture.component()).toBeTruthy();
 });
 
 test("should render slotted elements without modification", async ({ fixture }) => {

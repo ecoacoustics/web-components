@@ -116,7 +116,7 @@ export class ClassificationComponent extends DecisionComponent {
     }
   }
 
-  protected override isShortcutKey(event: KeyboardEvent): Readonly<boolean> {
+  protected override isShortcutKey(event: KeyboardEvent): boolean {
     return this.isTrueShortcutKey(event) || this.isFalseShortcutKey(event);
   }
 

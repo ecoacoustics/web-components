@@ -13,7 +13,7 @@ import { SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { repeat } from "lit/directives/repeat.js";
-import { hasCtrlLikeModifier } from "../../helpers/userAgent";
+import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";

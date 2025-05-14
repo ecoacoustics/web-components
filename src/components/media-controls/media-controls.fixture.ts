@@ -35,6 +35,12 @@ class TestPage {
 
   public async toggleAudio() {
     const actionButtonElement = this.actionButton();
+
+    // TODO: Fix this bug
+    // We use force: true here because slotted content sometimes does not result
+    // in a correct touch target.
+    //
+    // eslint-disable-next-line playwright/no-force-option
     await actionButtonElement.click({ force: true });
   }
 

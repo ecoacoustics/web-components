@@ -42,7 +42,7 @@ class SingleSpectrogramFixture {
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `);
-    await waitForContentReady(this.page, ["oe-spectrogram"]);
+    await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithDefaultSize() {
@@ -64,10 +64,10 @@ class SingleSpectrogramFixture {
   // we cannot use the SpectrogramCanvasScaling enum here because playwright
   // will throw an error during bundling and not run these tests
   public async changeSpectrogramSizing(sizing: string) {
-    setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
+    await setBrowserAttribute<SpectrogramComponent>(this.spectrogram(), "scaling", sizing);
   }
 
-  public async changeSpectrogramHeight(height = 512) {
+  public async changeSpectrogramHeight(height = 704) {
     await this.spectrogram().evaluate((element: SpectrogramComponent, height) => {
       element.style.height = `${height}px`;
     }, height);
@@ -111,7 +111,6 @@ class SingleSpectrogramFixture {
 export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({
   fixture: async ({ page }, run) => {
     const fixture = new SingleSpectrogramFixture(page);
-    await fixture.create();
     await run(fixture);
   },
 });

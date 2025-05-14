@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { test } from "../../tests/assertions";
-import { getBrowserStyles, waitForContentReady } from "../../tests/helpers";
+import { mockDeviceSize, testBreakpoints, waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -8,9 +8,6 @@ import { EnumValue } from "../../helpers/types/advancedTypes";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
-
-  // I use the body element for snapshot (screenshot) assertions
-  public bodyElement = () => this.page.locator("body").first();
 
   public component = () => this.page.locator("oe-annotate").first();
   public tagComponents = () => this.page.locator("oe-tag").all();
@@ -30,17 +27,17 @@ class TestPage {
   public chromeTop = () => this.spectrogram().locator(".chrome-top").first();
   public chromeOverlay = () => this.spectrogram().locator(".chrome-overlay").first();
 
-  public async annotationBox(index: Readonly<number>) {
+  public async annotationBox(index: number) {
     const annotations = await this.annotationBoundingBoxes();
     return annotations[index];
   }
 
-  public async annotationLabel(index: Readonly<number>) {
+  public async annotationLabel(index: number) {
     const labels = await this.annotationLabels();
     return labels[index];
   }
 
-  public async tagComponent(index: Readonly<number>) {
+  public async tagComponent(index: number) {
     const tags = await this.tagComponents();
     return tags[index];
   }
@@ -107,7 +104,6 @@ class TestPage {
       <oe-annotate>
         <oe-spectrogram
           src="http://localhost:3000/example.flac"
-          src="/example.flac"
         ></oe-spectrogram>
 
         <oe-annotation
@@ -135,8 +131,16 @@ class TestPage {
   }
 
   public async onlyShowAnnotationOutline() {
+    const viewportMock = mockDeviceSize(testBreakpoints.desktop);
+    await viewportMock(this.page);
+
     await this.page.addStyleTag({
-      content: "body { margin: 0; height: max-content; }",
+      content: `
+        oe-spectrogram {
+          width: 1280px;
+          height: 720px;
+        }
+      `,
     });
 
     await this.spectrogramCanvas().evaluate((element: SpectrogramComponent) => {
@@ -149,7 +153,7 @@ class TestPage {
 
     const targetAnnotationLabels = await this.annotationLabels();
     for (const label of targetAnnotationLabels) {
-      label.evaluate((element: HTMLHeadingElement) => {
+      await label.evaluate((element: HTMLHeadingElement) => {
         // we make the annotation font color the same as the annotation color
         // so that the text is not visible and we are only asserting over the
         // bounding box and label positioning
@@ -182,12 +186,6 @@ class TestPage {
     await targetAnnotation.evaluate((element: HTMLElement) => {
       element.remove();
     });
-  }
-
-  public async getAnnotationColor(index: number) {
-    const target = (await this.annotationBoundingBoxes())[index];
-    const styles = await getBrowserStyles(target);
-    return styles.borderColor;
   }
 
   public annotationSelectedColor() {}

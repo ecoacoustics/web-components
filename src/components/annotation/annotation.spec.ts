@@ -102,7 +102,7 @@ test.describe("component template", () => {
       </oe-annotation>
     `);
 
-    await expect(fixture.component()).not.toBeVisible();
+    await expect(fixture.component()).toBeHidden();
   });
 });
 

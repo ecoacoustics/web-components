@@ -4,7 +4,7 @@ import { catchEvent } from "../../../tests/helpers";
 
 test("should create", async ({ fixture }) => {
   await fixture.create();
-  expect(fixture.hostComponent()).toBeDefined();
+  expect(fixture.hostComponent()).toBeTruthy();
 });
 
 test.describe.fixme("connecting providers", () => {

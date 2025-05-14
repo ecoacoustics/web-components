@@ -13,6 +13,7 @@ import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages"
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
+import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 
 export interface IPlayEvent {
   play: boolean;
@@ -57,6 +58,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadingEventName = "loading";
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
+
+  public constructor() {
+    super();
+    this.canvasResizeCallback = newAnimationIdentifier("canvas-resize");
+  }
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -178,6 +184,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   private readonly highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
+
+  private readonly canvasResizeCallback: AnimationIdentifier;
 
   // TODO: move somewhere else
   private interpolationCancelReference: number | null = null;
@@ -324,12 +332,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }),
     );
 
-    const info: IAudioInformation = await this.audioHelper.connect(
-      this.renderedSource,
-      this.canvas,
-      this.spectrogramOptions,
-    );
-
+    const info = await this.audioHelper.connect(this.renderedSource, this.canvas, this.spectrogramOptions);
     const originalRecording = { duration: info.duration, startOffset: this.offset };
 
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
@@ -507,8 +510,29 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       return;
     }
 
+    // Whenever the resize observer is triggered, we use requestAnimationFrame
+    // to resize the canvas in the next frame.
+    // We do this so that if the resize observer is triggered multiple times in
+    // a single frame, we don't have to send resize updates that have no effect
+    // on the rendered layout.
+    //
+    // TODO: I don't think this paragraph is correct. I think we're ending up in an infinite loop
+    // Because resizing the canvas can sometimes cause the resize observer to
+    // re-trigger if the canvas resize causes overflow, we have found that on
+    // fast devices, the resize observer can sometimes be triggered multiple
+    // times in a single frame (before paint).
+    // This causes an observation error in the resize observer, which can cause
+    // lead us to unexpected behavior.
+    // see: https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
+    //
+    // We cannot use "setTimeout" because while "setTimeout" will wait for the
+    // main thread to be free (layout has settled), we do not want to perform
+    // updates that have been surpassed by a more recent update.
+    //
+    // We do not use a truthy assertion here because if the bufferedFrameRef
+    // value is zero, we still want to cancel the animation frame.
     const targetEntry = entries[0];
-    this.resizeCanvas(targetEntry.contentRect);
+    runOnceOnNextAnimationFrame(this.canvasResizeCallback, () => this.resizeCanvas(targetEntry.contentRect));
   }
 
   // TODO: refactor this procedure

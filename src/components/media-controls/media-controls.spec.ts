@@ -12,7 +12,7 @@ test.describe("audio element communication", () => {
   // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
   // we have mounted the component incorrectly
   test("creating a visible web component", async ({ page }) => {
-    const mediaControls = await page.locator("oe-media-controls");
+    const mediaControls = page.locator("oe-media-controls");
     await expect(mediaControls).toBeVisible();
   });
 
@@ -51,21 +51,21 @@ test.describe("changing options", () => {
 
 test.describe("slots", () => {
   test("custom play and pause icon via slots", async ({ fixture }) => {
-    fixture.updateSlot(`
+    await fixture.updateSlot(`
       <div slot="play-icon">Play Me!</div>
       <div slot="pause-icon">Pause<div>
     `);
 
     const expectedSlotText = ["Play Me!"];
     const realSlotText = await fixture.actionButtonSlotText();
-    await expect(realSlotText).toEqual(expectedSlotText);
+    expect(realSlotText).toEqual(expectedSlotText);
 
     // start playing audio so we can see the default pause icon
     await fixture.toggleAudio();
 
     const expectedPauseSlotText = ["Pause"];
     const realPauseSlotText = await fixture.actionButtonSlotText();
-    await expect(realPauseSlotText.map((x) => x?.trim())).toEqual(expectedPauseSlotText);
+    expect(realPauseSlotText.map((x) => x?.trim())).toEqual(expectedPauseSlotText);
   });
 });
 

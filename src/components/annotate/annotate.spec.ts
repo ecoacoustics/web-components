@@ -2,7 +2,7 @@ import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
 import {
   catchLocatorEvent,
-  getBrowserStyles,
+  getBrowserStyle,
   getBrowserValue,
   getCssBackgroundColorVariable,
   removeBrowserAttribute,
@@ -27,7 +27,16 @@ function createAnnotationTests(testsToRun: ReadonlyArray<AnnotationBoundingBoxTe
     test(spec.name, async ({ fixture }) => {
       await fixture.createWithAnnotation(spec.annotation);
       await fixture.onlyShowAnnotationOutline();
-      await expect(fixture.bodyElement()).toHaveScreenshot();
+
+      // Because the spectrogram component is a ChromeHost, the annotation
+      // bounding boxes and the annotation labels are rendered by the
+      // spectrogram component.
+      // Therefore, we assert that the annotations render correctly by asserting
+      // that the spectrogram component looks correct.
+      // Note: It is not possible to assert the oe-annotate component directly
+      // because it has display: content; which means that it does not
+      // have a bounding box.
+      await expect(fixture.spectrogram()).toHaveLayoutScreenshot();
     });
   }
 }
@@ -396,12 +405,12 @@ test.describe("annotation", () => {
         "--oe-annotation-selected-color",
       );
 
-      const initialAnnotationColor = (await getBrowserStyles(target)).borderColor;
+      const initialAnnotationColor = await getBrowserStyle(target, "border-color");
       expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
 
       await target.click();
 
-      const finalAnnotationColor = (await getBrowserStyles(target)).borderColor;
+      const finalAnnotationColor = await getBrowserStyle(target, "border-color");
       expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
 
       expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
@@ -416,12 +425,12 @@ test.describe("annotation", () => {
         "--oe-annotation-selected-color",
       );
 
-      const initialAnnotationColor = (await getBrowserStyles(target)).backgroundColor;
+      const initialAnnotationColor = await getBrowserStyle(target, "background-color");
       expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
 
       await target.click();
 
-      const finalAnnotationColor = (await getBrowserStyles(target)).backgroundColor;
+      const finalAnnotationColor = await getBrowserStyle(target, "background-color");
       expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
 
       expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
@@ -536,11 +545,5 @@ test.describe("without annotations", () => {
 
   test("should have any annotations", async ({ fixture }) => {
     expect(await fixture.annotationContainers()).toHaveLength(0);
-  });
-
-  test("should correctly size all slotted content", async ({ fixture }) => {
-    const spectrogramSize = await fixture.spectrogram().boundingBox();
-    const componentSize = await fixture.component().boundingBox();
-    expect(spectrogramSize).toEqual(componentSize);
   });
 });

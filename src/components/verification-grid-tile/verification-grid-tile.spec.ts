@@ -1,4 +1,3 @@
-import { describe } from "node:test";
 import { verificationGridTileFixture as test } from "./verification-grid-tile.fixture";
 import { expect } from "../../tests/assertions";
 
@@ -12,7 +11,7 @@ test.describe("verification grid tile", () => {
     const selectionStrategy = (fixture: any) =>
       useShortcutKeys ? fixture.keyboardSelectSpectrogramTile() : fixture.mouseSelectSpectrogramTile();
 
-    describe(`selection ${shortcutKeysText}`, () => {
+    test.describe(`selection ${shortcutKeysText}`, () => {
       test.skip(`should select the tile ${shortcutKeysText}`, async ({ fixture }) => {
         await selectionStrategy(fixture);
         expect(await fixture.isSelected()).toBe(true);

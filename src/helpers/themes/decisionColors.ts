@@ -1,11 +1,11 @@
 import { unsafeCSS } from "lit";
 import colorbrewer from "colorbrewer";
 
-function classificationTrueColor(baseColor: string): Readonly<string> {
+function classificationTrueColor(baseColor: string): string {
   return baseColor;
 }
 
-function classificationFalseColor(baseColor: string): Readonly<string> {
+function classificationFalseColor(baseColor: string): string {
   // the false color is derived from the colorBrewer color and darkening the
   // color by a percentage
   // this means that the false color is always similar to the base color

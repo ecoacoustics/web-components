@@ -2,6 +2,7 @@ import { expect } from "../../../tests/assertions";
 import { verificationFixture as test } from "./verification.fixture";
 import { getCssBackgroundColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
+import { sleep } from "../../../helpers/utilities";
 
 test.describe("Verification Component", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -101,7 +102,7 @@ test.describe("Verification Component", () => {
       await page.keyboard.press("Escape");
       await fixture.decisionButton().dispatchEvent("pointerup");
 
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
@@ -116,7 +117,7 @@ test.describe("Verification Component", () => {
       await page.keyboard.press("Escape");
       await page.dispatchEvent("html", "keyup", { key: keyboardShortcut });
 
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
@@ -131,9 +132,11 @@ test.describe("Verification Component", () => {
       // however, we still want to test the event is not emitted, therefore
       // we use force = true to say "I know screen readers can't use this button
       // but test that the event is not emitted when clicked anyway"
+      //
+      // eslint-disable-next-line playwright/no-force-option
       await fixture.decisionButton().click({ force: true });
 
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
@@ -145,7 +148,7 @@ test.describe("Verification Component", () => {
       await fixture.changeDecisionDisabled(true);
       await page.keyboard.press("a");
 
-      await page.waitForTimeout(1_000);
+      await sleep(1);
 
       const events: unknown[] = await getEventLogs(page, "decision");
       expect(events).toHaveLength(0);
