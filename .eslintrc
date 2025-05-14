@@ -31,6 +31,14 @@
         "project": "./tsconfig.spec.json"
       },
       "rules": {
+        // We have added the playwright linting rules to protect against common
+        // mistakes that can cause leaky tests such as not awaiting assertions.
+        // Therefore, I have disabled rules that are stylistic and do not affect
+        // the correctness of the tests.
+        //
+        // TODO: we should consider enabling these rules in the future, but
+        // I have temporarily disabled stylistic rules to avoid unnecessary
+        // work that don't directly prevent bugs.
         "@typescript-eslint/no-floating-promises":"error",
         "playwright/valid-describe-callback": "off",
         "playwright/valid-title": "off",

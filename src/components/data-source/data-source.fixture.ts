@@ -54,9 +54,10 @@ class DataSourceFixture {
       "oe-verification-grid-tile",
     ]);
 
-    // By having an except statement here, playwright will continue running this
+    // Because we assert a JS browser property, playwright will re-run this
     // assertion until it passes or the test times out (30 seconds).
-    // We do this so that we know the entire grid has loaded.
+    // We do this so that the test will continue waiting here util the
+    // assertion passes, indicating that the verification grid has loaded.
     await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
   }
 
