@@ -13,7 +13,7 @@ import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages"
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
-import { runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 
 export interface IPlayEvent {
   play: boolean;
@@ -61,7 +61,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   public constructor() {
     super();
-    this.canvasResizeCallback = Symbol("canvas-resize-callback");
+    this.canvasResizeCallback = newAnimationIdentifier("canvas-resize");
   }
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
@@ -185,7 +185,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private readonly highAccuracyTimeBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT);
   private readonly currentTimeBuffer = new Float32Array(this.highAccuracyTimeBuffer);
 
-  private readonly canvasResizeCallback: symbol;
+  private readonly canvasResizeCallback: AnimationIdentifier;
 
   // TODO: move somewhere else
   private interpolationCancelReference: number | null = null;
