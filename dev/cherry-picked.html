@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Only Spectrogram</title>
+    <script type="module" src="/src/components/spectrogram/spectrogram.ts"></script>
+  </head>
+
+  <body>
+    <oe-spectrogram src="/example.flac"></oe-spectrogram>
+
+    <p>
+      I have purposely cherry picked components that do not require shoelace.
+      On this page, you should not see shoelace or any non-cherry picked
+      components being imported.
+    </p>
+  </body>
+</html>

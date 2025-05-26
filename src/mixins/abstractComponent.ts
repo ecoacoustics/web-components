@@ -4,10 +4,11 @@ import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 import globalStyles from "../helpers/themes/globalStyles.css?inline";
 import defaultTheming from "../helpers/themes/theming.css?inline";
+import { Injector } from "./injectors/injector";
 
 let themingInserted = false;
 
-export const AbstractComponent = <T extends Component>(superClass: T): Component => {
+export const AbstractComponent = <T extends Component>(superClass: T, ...injectors: Injector[]): Component => {
   class AbstractComponentClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       // we only want to apply the theming styles once to the documents root
@@ -34,6 +35,14 @@ export const AbstractComponent = <T extends Component>(superClass: T): Component
     }
 
     private reactiveController = new ReactiveController(this);
+
+    public firstUpdated(args: any) {
+      super.firstUpdated(args);
+
+      for (const injector of injectors) {
+        injector(this);
+      }
+    }
 
     // TODO: find out if we have to explicitly call hostConnected and
     // hostDisconnected
