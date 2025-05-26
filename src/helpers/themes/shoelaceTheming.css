@@ -1,0 +1,30 @@
+@import url("@shoelace-style/shoelace/dist/themes/light.css");
+
+:host {
+  --sl-color-primary-50: var(--oe-primary-color);
+  --sl-color-primary-100: var(--oe-primary-color);
+  --sl-color-primary-200: var(--oe-primary-color);
+  --sl-color-primary-300: var(--oe-primary-color);
+  --sl-color-primary-400: var(--oe-primary-color);
+  --sl-color-primary-500: var(--oe-primary-color);
+  --sl-color-primary-600: var(--oe-primary-color);
+  --sl-color-primary-700: var(--oe-primary-color);
+  --sl-color-primary-800: var(--oe-primary-color);
+  --sl-color-primary-900: var(--oe-primary-color);
+  --sl-color-primary-950: var(--oe-primary-color);
+
+  --sl-color-danger-50: var(--oe-danger-color);
+  --sl-color-danger-100: var(--oe-danger-color);
+  --sl-color-danger-200: var(--oe-danger-color);
+  --sl-color-danger-300: var(--oe-danger-color);
+  --sl-color-danger-400: var(--oe-danger-color);
+  --sl-color-danger-500: var(--oe-danger-color);
+  --sl-color-danger-600: var(--oe-danger-color);
+  --sl-color-danger-700: var(--oe-danger-color);
+  --sl-color-danger-800: var(--oe-danger-color);
+  --sl-color-danger-900: var(--oe-danger-color);
+  --sl-color-danger-950: var(--oe-danger-color);
+
+  --sl-color-neural-0: var(--oe-font-color);
+  --sl-color-neural-1000: var(--oe-background-color);
+}

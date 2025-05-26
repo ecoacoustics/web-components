@@ -1,6 +1,3 @@
-/* Note: This import statement is inlined by Vite at build */
-@import url("@shoelace-style/shoelace/dist/themes/light.css");
-
 /*
   Because different operating systems ship with different fonts, there might be
   slightly inconsistencies across operating systems.

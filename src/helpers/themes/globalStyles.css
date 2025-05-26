@@ -1,4 +1,13 @@
 /*
+ * Note: This import statement is inlined by Vite at build
+ * We declare the shoelace theming inside the "globalStyles" so that shoelace
+ * theming variables are scoped to our web component's shadow root.
+ * This is the same reason why our shoelace theming overrides are injected into
+ * the component's shadow root.
+ */
+@import url("./shoelaceTheming.css");
+
+/*
   Because some of our web component support going into fullscreen mode, we
   theme the backdrop color of the fullscreen mode to our custom background color
   This means that if the component doesn't fully fill up the screen when in

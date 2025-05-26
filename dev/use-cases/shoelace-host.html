@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Dani</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>Shoelace Host</h1>
+      <p>This is a header. Please test scrolling and downloading results.</p>
+
+      <p>
+        Warning This page contains some diagnostic audio samples. I strongly suggest that you
+        <u>do not play audio on this page.</u>
+      </p>
+
+      <p>
+        This page replicates loading the web componetns on a page that already
+        has shoelace and its own shoelace theming.
+        You should see that our shoelace components do not leak from our shadow
+        root into the host application.
+      </p>
+    </header>
+
+    <oe-verification-grid id="verification-grid">
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid"></oe-data-source>
+    </oe-verification-grid>
+
+    <footer>
+      <p>This is a footer. Please test scrolling past the verification grid.</p>
+    </footer>
+
+    <script type="module">
+      function randomSample(dataset) {
+        return dataset[Math.floor(Math.random() * dataset.length)];
+      }
+
+      const possibleAudioSamples = [
+        "/example_1s.wav",
+        "/example.flac",
+        "/example2.flac",
+        "/120hz.wav",
+        "/diagnostic.wav",
+        "/merged_diagnostic.wav",
+      ];
+
+      const possibleTags = ["bird", "insect", "mammal", "reptile"];
+
+      function createUrlTransformer() {
+        return (url) => `${url}?url_transformer=true`;
+      }
+
+      function gridPaginator() {
+        const subjects = Array.from({ length: 25 }).map(() => {
+          const src = randomSample(possibleAudioSamples);
+          const tag = randomSample(possibleTags);
+
+          return {
+            injector: {
+              type: "audio",
+              provider: { src },
+              warning: "you should not see this value in the downloaded result",
+            },
+            additionalData: {
+              data: "This is some additional data that should be included in results",
+              dateTime: new Date().toISOString(),
+            },
+            additionalText: "you should see this in the results",
+            src,
+            tag,
+            toJSON: function () {
+              // return all properties in this object except for the 'injector'
+              // property
+              const { injector, ...subjectData } = this;
+              return subjectData;
+            },
+          };
+        });
+
+        return { subjects };
+      }
+
+      function setup() {
+        const verificationGrid = document.querySelector("oe-verification-grid");
+        verificationGrid.urlTransformer = createUrlTransformer();
+        verificationGrid.getPage = gridPaginator;
+
+        // this is some debug info so that I can see the decision model that is
+        // produced by the verification grid
+        verificationGrid.addEventListener("decision-made", (event) => {
+          console.log("new decision", event);
+        });
+      }
+
+      window.addEventListener("load", () => setup());
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+      }
+
+      header,
+      footer {
+        background-color: #333;
+        color: white;
+        padding: 1em;
+      }
+    </style>
+  </body>
+</html>
