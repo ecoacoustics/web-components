@@ -6,16 +6,18 @@
     <title>Web Components - Theme Creator</title>
     <script type="module" src="./theme.ts"></script>
     <script type="module" src="/src/index.ts"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace.js"></script>
   </head>
 
   <body>
-    <label id="source-color-picker">
-      Source color
-      <input id="color-picker" type="color" />
-    </label>
-
     <section>
       <h2>Colours</h2>
+
+      <label id="source-color-picker">
+        Source color
+        <input id="color-picker" type="color" />
+      </label>
+
       <div id="grid-host"></div>
     </section>
 
@@ -45,6 +47,16 @@
       <span>
         <button class="oe-btn-danger">Danger</button>
         <button class="oe-btn-danger" disabled>Danger (disabled)</button>
+      </span>
+
+      <span>
+        <button class="oe-btn-success">Success</button>
+        <button class="oe-btn-success" disabled>Success (disabled)</button>
+      </span>
+
+      <span>
+        <button class="oe-btn-warning">Warning</button>
+        <button class="oe-btn-warning" disabled>Warning (disabled)</button>
       </span>
 
       <span class="group">
@@ -78,6 +90,62 @@
       </select>
 
       <span> <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Del</kbd> </span>
+    </section>
+
+    <section class="shoelace-section">
+      <h2>Shoelace Components</h2>
+
+      <span>
+        <sl-button>Default</sl-button>
+        <sl-button disabled>Default (disabled)</sl-button>
+      </span>
+
+      <span>
+        <sl-tooltip content="This is a tooltip">
+          <button>Tooltip</button>
+        </sl-tooltip>
+        <sl-tooltip content="This is a tooltip">
+          <button disabled>Tooltip (disabled)</button>
+        </sl-tooltip>
+      </span>
+
+      <span>
+        <sl-carousel
+          navigation="${showCarouselPagination}"
+          pagination="${showCarouselPagination}"
+          mouse-dragging="${showCarouselPagination}"
+        >
+          <sl-carousel-item>Item 1</sl-carousel-item>
+          <sl-carousel-item>Item 2</sl-carousel-item>
+          <sl-carousel-item>Item 3</sl-carousel-item>
+          <sl-carousel-item>Item 4</sl-carousel-item>
+        </sl-carousel>
+      </span>
+
+      <span>
+        <sl-menu>
+          <sl-menu-item>Menu item 1</sl-menu-item>
+          <sl-menu-item>Menu item 2</sl-menu-item>
+          <sl-menu-item>Menu item 3</sl-menu-item>
+          <sl-menu-item>Menu item 4</sl-menu-item>
+        </sl-menu>
+      </span>
+
+      <span>
+        <sl-dropdown placement="top-start">
+          <button id="dropdown-test" slot="trigger">
+            <sl-icon name="grid" class="large-icon"></sl-icon>
+            Dropdown
+          </button>
+
+          <sl-menu>
+            <sl-menu-item>Menu item 1</sl-menu-item>
+            <sl-menu-item>Menu item 2</sl-menu-item>
+            <sl-menu-item>Menu item 3</sl-menu-item>
+            <sl-menu-item>Menu item 4</sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
+      </span>
     </section>
 
     <script>
@@ -120,7 +188,17 @@
 
       window.onload = () => {
         const rootHost = document.getElementById("grid-host");
-        const variablesToDisplay = ["primary", "secondary", "accent", "info", "selected", "panel", "danger"];
+        const variablesToDisplay = [
+          "primary",
+          "secondary",
+          "accent",
+          "info",
+          "selected",
+          "panel",
+          "danger",
+          "success",
+          "warning",
+        ];
 
         const colorGrid = ColorGrid(variablesToDisplay);
         rootHost.appendChild(colorGrid);
@@ -174,11 +252,13 @@
 
     <style>
       body {
+        display: flex;
+        justify-content: space-evenly;
+
         margin: 0;
         background-color: var(--oe-background-color);
         color: var(--oe-font-color);
         max-height: 100vh;
-        display: flex;
       }
 
       section {
@@ -191,17 +271,23 @@
       }
 
       #source-color-picker {
-        position: absolute;
-        right: 2rem;
-        top: 1rem;
+        margin-bottom: 1rem;
       }
 
       #grid-host {
         position: relative;
       }
 
+      #dropdown-test {
+        display: inline-block;
+
+        & > sl-icon {
+          display: inline-block;
+        }
+      }
+
       .grid-row {
-        display: grid;
+        display: grid inline-block;
         grid-template-columns: 1fr 2fr;
         padding-top: 0.5rem;
       }
@@ -224,7 +310,8 @@
         position: relative;
       }
 
-      .elements-section {
+      .elements-section,
+      .shoelace-section {
         & > * {
           display: block;
           margin: 1rem;

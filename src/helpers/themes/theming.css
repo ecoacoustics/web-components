@@ -73,6 +73,8 @@
   --oe-info-color: hsl(207deg, calc(var(--oe-theme-saturation) + 45%), calc(var(--oe-theme-lightness) + 15%));
   --oe-info-bg-color: color-mix(in srgb, var(--oe-info-color) 15%, white);
   --oe-danger-color: color-mix(in srgb, hsl(0deg, 80%, 46%) 85%, var(--oe-background-color));
+  --oe-success-color: color-mix(in srgb, hsl(100deg, 80%, 36%) 85%, var(--oe-background-color));
+  --oe-warning-color: color-mix(in srgb, hsl(50deg, 80%, 56%) 85%, var(--oe-background-color));
   --oe-selected-color: hsl(
     var(--oe-theme-hue),
     var(--oe-theme-saturation),

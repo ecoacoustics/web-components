@@ -14,10 +14,20 @@ function createVariants<ColorName extends string>(
   color: string,
   backingTheme: ThemingVariable = color,
 ): ColorVariants<ColorName> {
-    return {};
+  return {};
 }
 
 function themeOverrides(): CSSResult {
+  const result = "";
+
+  const populatedVariants = {
+    primary: "var(--oe-primary-color)",
+    success: "var(--oe-success-color)",
+    warning: "var(--oe-warning-color)",
+    danger: "var(--oe-danger-color)",
+    neutral: "var(--oe-panel-color)",
+  };
+
   return css``;
 }
 
