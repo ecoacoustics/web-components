@@ -4,13 +4,14 @@ import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import progressBarStyles from "./css/style.css?inline";
+import { withShoelace } from "../../mixins/injectors/withShoelace";
 
 /**
  * @description
  * A progress bar that indicates how far through a task you are.
  */
 @customElement("oe-progress-bar")
-export class ProgressBar extends AbstractComponent(LitElement) {
+export class ProgressBar extends AbstractComponent(LitElement, withShoelace()) {
   public static styles = unsafeCSS(progressBarStyles);
 
   /** Where the verification head is at */

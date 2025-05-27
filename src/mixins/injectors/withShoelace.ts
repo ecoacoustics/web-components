@@ -1,19 +1,21 @@
 import { LitElement } from "lit";
-import { Injector } from "./injector";
+import { ComponentModifier } from "./componentModifier";
 import { shoelaceTheming } from "../../helpers/themes/shoelace/shoelaceTheme";
 import { registerBundledIcons } from "../../services/shoelaceLoader";
 
-let completedRegister = false;
+// A local variable (not exported) to keep track of if Shoelace has been
+// imported into the page
+let doneRegister = false;
 
-export function withShoelace(): Injector {
+export function withShoelace(): ComponentModifier {
   return (component: LitElement) => {
     if (component.shadowRoot) {
       const themingStyles = new CSSStyleSheet();
       themingStyles.replace(shoelaceTheming.cssText);
       document.adoptedStyleSheets.push(themingStyles);
 
-      if (!completedRegister) {
-        completedRegister = true;
+      if (!doneRegister && !customElements.get("sl-button")) {
+        doneRegister = true;
         registerShoelace();
       }
     }

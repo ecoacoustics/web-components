@@ -26,6 +26,7 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
+import { withShoelace } from "../../mixins/injectors/withShoelace";
 
 /*
   A local storage key that when set, will cause the bootstrap modal to not
@@ -44,7 +45,7 @@ const autoDismissBootstrapStorageKey = "oe-auto-dismiss-bootstrap";
  * @event close - Dispatched when the dialog is closed
  */
 @customElement("oe-verification-bootstrap")
-export class VerificationBootstrapComponent extends AbstractComponent(LitElement) {
+export class VerificationBootstrapComponent extends AbstractComponent(LitElement, withShoelace()) {
   public static styles = [
     unsafeCSS(bootstrapDialogStyles),
     decisionColors,

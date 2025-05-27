@@ -9,9 +9,10 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { verificationGridContext } from "../../helpers/constants/contextTokens";
 import settingComponentStyles from "./css/style.css?inline";
+import { withShoelace } from "../../mixins/injectors/withShoelace";
 
 @customElement("oe-verification-grid-settings")
-export class VerificationGridSettingsComponent extends SignalWatcher(AbstractComponent(LitElement)) {
+export class VerificationGridSettingsComponent extends SignalWatcher(AbstractComponent(LitElement, withShoelace())) {
   public static styles = unsafeCSS(settingComponentStyles);
 
   @consume({ context: verificationGridContext, subscribe: true })

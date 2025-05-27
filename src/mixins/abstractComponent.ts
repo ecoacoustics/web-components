@@ -4,11 +4,11 @@ import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 import globalStyles from "../helpers/themes/globalStyles.css?inline";
 import defaultTheming from "../helpers/themes/theming.css?inline";
-import { Injector } from "./injectors/injector";
+import { ComponentModifier } from "./injectors/componentModifier";
 
 let themingInserted = false;
 
-export const AbstractComponent = <T extends Component>(superClass: T, ...injectors: Injector[]): Component => {
+export const AbstractComponent = <T extends Component>(superClass: T, ...injectors: ComponentModifier[]): Component => {
   class AbstractComponentClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       // we only want to apply the theming styles once to the documents root

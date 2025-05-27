@@ -38,7 +38,7 @@ const fontSizeMapping = {
   "2x-small": 0.7,
 } as const satisfies Record<string, number>;
 
-function illuminate<T extends string>(backingVariable: ThemingVariable<T>, scalar: number) {
+function illuminate(backingVariable: ThemingVariable, scalar: number) {
   // This somewhat simple calculation has a lot of assumptions.
   // 1. The backing variable should be the "main" color of most UI elements such
   //    as buttons, sliders, dropdowns, etc...
@@ -54,10 +54,7 @@ function illuminate<T extends string>(backingVariable: ThemingVariable<T>, scala
   return `hsl(from var(${backingVariable}) h s ${luminance})`;
 }
 
-function createColorVariant<Variant extends ThemeToken, T extends string>(
-  variant: Variant,
-  backingVariable: ThemingVariable<T>,
-) {
+function createColorVariant<Variant extends ThemeToken>(variant: Variant, backingVariable: ThemingVariable) {
   let result = "";
   for (const [size, luminanceScalar] of Object.entries(intensityLuminanceMapping)) {
     const illuminatedColor = illuminate(backingVariable, luminanceScalar);
@@ -78,7 +75,7 @@ function createColorOverrides(): string {
     success: "--oe-success-color",
     warning: "--oe-warning-color",
     danger: "--oe-danger-color",
-  } as const satisfies Record<ThemeToken, ThemingVariable<string>>;
+  } as const satisfies Record<ThemeToken, ThemingVariable>;
 
   let result = "";
   for (const [variant, backingValue] of Object.entries(populatedVariants)) {
