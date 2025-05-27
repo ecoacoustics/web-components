@@ -1,22 +1,22 @@
 import { LitElement } from "lit";
 import { Injector } from "./injector";
-import { shoelaceTheming } from "../../helpers/themes/shoelaceTheme";
+import { shoelaceTheming } from "../../helpers/themes/shoelace/shoelaceTheme";
 import { registerBundledIcons } from "../../services/shoelaceLoader";
 
 let completedRegister = false;
 
 export function withShoelace(): Injector {
   return (component: LitElement) => {
-      if (component.shadowRoot) {
-        const themingStyles = new CSSStyleSheet();
-        themingStyles.replace(shoelaceTheming.cssText);
-        document.adoptedStyleSheets.push(themingStyles);
+    if (component.shadowRoot) {
+      const themingStyles = new CSSStyleSheet();
+      themingStyles.replace(shoelaceTheming.cssText);
+      document.adoptedStyleSheets.push(themingStyles);
 
-        if (!completedRegister) {
-          completedRegister = true;
-          registerShoelace();
-        }
+      if (!completedRegister) {
+        completedRegister = true;
+        registerShoelace();
       }
+    }
   };
 }
 
