@@ -2,7 +2,21 @@ import { css, CSSResult, unsafeCSS } from "lit";
 import { CssVariable } from "../../types/advancedTypes";
 import lightTheme from "@shoelace-style/shoelace/dist/themes/light.styles.js";
 
-const themeSizes = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const themeScale = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const themeScaleMapping = {
+  50: 0.95,
+  100: 0.84,
+  200: 0.73,
+  300: 0.62,
+  400: 0.49,
+  500: 0.35,
+  600: 0.23,
+  700: 0.15,
+  800: 0.1,
+  900: 0.05,
+  950: 0.02,
+} as const satisfies Record<ThemeScale, number>;
+
 const fontSizes = [
   "2x-small",
   "x-small",
@@ -27,9 +41,9 @@ const fontMapping = {
   "2x-small": 0.7,
 } as const satisfies Record<FontSize, number>;
 
-type ThemeSize = (typeof themeSizes)[number];
+type ThemeScale = (typeof themeScale)[number];
 type FontSize = (typeof fontSizes)[number];
-type ThemeTokens = "primary" | "success" | "warning" | "danger" | "neutral";
+type ThemeTokens = "primary" | "success" | "warning" | "danger" /* | "neutral" */;
 
 /** A theming variable from our theming.css file */
 type ThemingVariable<T extends string = ""> = CssVariable<`oe-${T}`>;
@@ -38,7 +52,7 @@ type ShoelaceVariable<T extends string = ""> = CssVariable<`sl-${T}`>;
 /** A shoelace theming color variable */
 type ColorVariable<
   ColorName extends ThemeTokens,
-  Variant extends ThemeSize,
+  Variant extends ThemeScale,
 > = ShoelaceVariable<`${ColorName}-${Variant}`>;
 
 type FontVariable<Variant extends FontSize> = ShoelaceVariable<`font-${Variant}`>;
@@ -57,20 +71,28 @@ function createColorVariant<Variant extends ThemeTokens, Variable extends Themin
   backingTheme: Variable,
 ) {
   let result = "";
-  for (const size of themeSizes) {
-    result += `--sl-color-${variant}-${size}: var(${backingTheme});`;
+  for (const size of themeScale) {
+    const luminanceScalar = themeScaleMapping[size];
+    const percentage = `${(1 - luminanceScalar) * 100}%`;
+
+    result += `--sl-color-${variant}-${size}: color-mix(in srgb, var(${backingTheme}) ${percentage}, #aaa);`;
   }
 
   return result;
 }
 
+/**
+ * Generates color variants are generated according to the color token generator
+ * provided by Shoelace.
+ *
+ * https://codepen.io/claviska/pen/QWveRgL
+ */
 function createColorOverrides(): string {
   const populatedVariants = {
     primary: "--oe-primary-color",
     success: "--oe-success-color",
     warning: "--oe-warning-color",
     danger: "--oe-danger-color",
-    neutral: "--oe-panel-color",
   } as const satisfies Record<ThemeTokens, ThemingVariable<string>>;
 
   let result = "";
@@ -84,6 +106,8 @@ function createColorOverrides(): string {
 function themeOverrides(): CSSResult {
   const staticOverrides = `
     --sl-font-sans: var(--oe-font-family);
+
+    --
   `;
 
   const fontOverrides = createFontOverrides();
