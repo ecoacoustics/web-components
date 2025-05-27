@@ -73,9 +73,9 @@ function createColorVariant<Variant extends ThemeTokens, Variable extends Themin
   let result = "";
   for (const size of themeScale) {
     const luminanceScalar = themeScaleMapping[size];
-    const percentage = `${(1 - luminanceScalar) * 100}%`;
+    const percentage = `${luminanceScalar * 100}%`;
 
-    result += `--sl-color-${variant}-${size}: color-mix(in srgb, var(${backingTheme}) ${percentage}, #aaa);`;
+    result += `--sl-color-${variant}-${size}: color-mix(in srgb, var(${backingTheme}), #aaa ${percentage});`;
   }
 
   return result;
