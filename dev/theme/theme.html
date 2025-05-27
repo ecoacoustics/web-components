@@ -97,15 +97,46 @@
 
       <span>
         <sl-button>Default</sl-button>
+        <sl-button outline>Default</sl-button>
         <sl-button disabled>Default (disabled)</sl-button>
       </span>
 
       <span>
+        <sl-button variant="primary">Primary</sl-button>
+        <sl-button variant="primary" outline>Primary</sl-button>
+        <sl-button variant="primary" disabled>Primary (disabled)</sl-button>
+      </span>
+
+      <span>
+        <sl-button variant="success">Success</sl-button>
+        <sl-button variant="success" outline>Success</sl-button>
+        <sl-button variant="success" disabled>Success (disabled)</sl-button>
+      </span>
+
+      <span>
+        <sl-button variant="neutral">Neutral</sl-button>
+        <sl-button variant="neutral" outline>Neutral</sl-button>
+        <sl-button variant="neutral" disabled>Neutral (disabled)</sl-button>
+      </span>
+
+      <span>
+        <sl-button variant="warning">Warning</sl-button>
+        <sl-button variant="warning" outline>Warning</sl-button>
+        <sl-button variant="warning" disabled>Warning (disabled)</sl-button>
+      </span>
+
+      <span>
+        <sl-button variant="danger">Danger</sl-button>
+        <sl-button variant="danger" outline>Danger</sl-button>
+        <sl-button variant="danger" disabled>Danger (disabled)</sl-button>
+      </span>
+
+      <span>
         <sl-tooltip content="This is a tooltip">
-          <button>Tooltip</button>
+          <sl-button>Tooltip</sl-button>
         </sl-tooltip>
         <sl-tooltip content="This is a tooltip">
-          <button disabled>Tooltip (disabled)</button>
+          <sl-button disabled>Tooltip (disabled)</sl-button>
         </sl-tooltip>
       </span>
 
@@ -133,10 +164,10 @@
 
       <span>
         <sl-dropdown placement="top-start">
-          <button id="dropdown-test" slot="trigger">
+          <sl-button id="dropdown-test" slot="trigger">
             <sl-icon name="grid" class="large-icon"></sl-icon>
             Dropdown
-          </button>
+          </sl-button>
 
           <sl-menu>
             <sl-menu-item>Menu item 1</sl-menu-item>
