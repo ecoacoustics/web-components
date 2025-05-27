@@ -2,7 +2,7 @@ import { css, CSSResult, unsafeCSS } from "lit";
 import { CssVariable } from "../../types/advancedTypes";
 import lightTheme from "@shoelace-style/shoelace/dist/themes/light.styles.js";
 
-const themeScale = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+type ThemeScale = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
 const themeScaleMapping = {
   50: 0.95,
   100: 0.84,
@@ -10,6 +10,7 @@ const themeScaleMapping = {
   300: 0.62,
   400: 0.49,
   500: 0.35,
+  // "600" is the default for buttons and UI elements.
   600: 0.23,
   700: 0.15,
   800: 0.1,
@@ -17,53 +18,51 @@ const themeScaleMapping = {
   950: 0.02,
 } as const satisfies Record<ThemeScale, number>;
 
-const fontSizes = [
-  "2x-small",
-  "x-small",
-  "small",
-  "medium",
-  "large",
-  "x-large",
-  "2x-large",
-  "3x-large",
-  "4x-large",
-] as const;
+type FontSize =
+  | "2x-small"
+  | "x-small"
+  | "small"
+  | "medium"
+  | "large"
+  | "x-large"
+  | "2x-large"
+  | "3x-large"
+  | "4x-large";
 
 const fontMapping = {
-  "4x-large": 1.5,
-  "3x-large": 1.4,
-  "2x-large": 1.3,
-  "x-large": 1.2,
-  large: 1.1,
-  medium: 1,
-  small: 0.9,
+  "4x-large": 1.6,
+  "3x-large": 1.5,
+  "2x-large": 1.4,
+  "x-large": 1.3,
+  large: 1.2,
+  medium: 1.1,
+  // "small" font size is the default buttons and inputs
+  small: 1.0,
   "x-small": 0.8,
   "2x-small": 0.7,
 } as const satisfies Record<FontSize, number>;
 
-type ThemeScale = (typeof themeScale)[number];
-type FontSize = (typeof fontSizes)[number];
 type ThemeTokens = "primary" | "success" | "warning" | "danger" /* | "neutral" */;
 
 /** A theming variable from our theming.css file */
 type ThemingVariable<T extends string = ""> = CssVariable<`oe-${T}`>;
-type ShoelaceVariable<T extends string = ""> = CssVariable<`sl-${T}`>;
-
-/** A shoelace theming color variable */
-type ColorVariable<
-  ColorName extends ThemeTokens,
-  Variant extends ThemeScale,
-> = ShoelaceVariable<`${ColorName}-${Variant}`>;
-
-type FontVariable<Variant extends FontSize> = ShoelaceVariable<`font-${Variant}`>;
 
 function createFontOverrides(): string {
   let result = "";
   for (const [size, scalar] of Object.entries(fontMapping)) {
-    result += `--sl-font-size-${size}: calc(var(--oe-font-size) * ${scalar})`;
+    result += `--sl-font-size-${size}: calc(var(--oe-font-size-large) * ${scalar});`;
   }
 
   return result;
+}
+
+function illuminate(input: string, scalar: number) {
+  const defaultValue = themeScaleMapping[600];
+  const defaultDelta = defaultValue - scalar + 0.5;
+
+  const luminance = `${defaultDelta * 100}%`;
+
+  return `hsl(from ${input} h s ${luminance})`;
 }
 
 function createColorVariant<Variant extends ThemeTokens, Variable extends ThemingVariable<T>, T extends string>(
@@ -71,11 +70,9 @@ function createColorVariant<Variant extends ThemeTokens, Variable extends Themin
   backingTheme: Variable,
 ) {
   let result = "";
-  for (const size of themeScale) {
-    const luminanceScalar = themeScaleMapping[size];
-    const percentage = `${luminanceScalar * 100}%`;
-
-    result += `--sl-color-${variant}-${size}: color-mix(in srgb, var(${backingTheme}), #aaa ${percentage});`;
+  for (const [size, luminanceScalar] of Object.entries(themeScaleMapping)) {
+    const illuminatedColor = illuminate(`var(${backingTheme})`, luminanceScalar);
+    result += `--sl-color-${variant}-${size}: ${illuminatedColor};`;
   }
 
   return result;
@@ -106,8 +103,6 @@ function createColorOverrides(): string {
 function themeOverrides(): CSSResult {
   const staticOverrides = `
     --sl-font-sans: var(--oe-font-family);
-
-    --
   `;
 
   const fontOverrides = createFontOverrides();
@@ -132,10 +127,4 @@ function createShoelaceTheming(): CSSResult {
   `;
 }
 
-/**
- * We declare the shoelace theming inside the "globalStyles" so that shoelace
- * theming variables are scoped to our web component's shadow root.
- * This is the same reason why our shoelace theming overrides are injected into
- * the component's shadow root.
- */
 export const shoelaceTheming = createShoelaceTheming();
