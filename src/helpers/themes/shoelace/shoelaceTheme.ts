@@ -3,11 +3,33 @@ import { CssVariable } from "../../types/advancedTypes";
 import lightTheme from "@shoelace-style/shoelace/dist/themes/light.styles.js";
 
 const themeSizes = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const fontSizes = [
+  "2x-small",
+  "x-small",
+  "small",
+  "medium",
+  "large",
+  "x-large",
+  "2x-large",
+  "3x-large",
+  "4x-large",
+] as const;
 
-type ThemeSizes = (typeof themeSizes)[number];
+const fontMapping = {
+  "4x-large": 1.5,
+  "3x-large": 1.4,
+  "2x-large": 1.3,
+  "x-large": 1.2,
+  large: 1.1,
+  medium: 1,
+  small: 0.9,
+  "x-small": 0.8,
+  "2x-small": 0.7,
+} as const satisfies Record<FontSize, number>;
+
+type ThemeSize = (typeof themeSizes)[number];
+type FontSize = (typeof fontSizes)[number];
 type ThemeTokens = "primary" | "success" | "warning" | "danger" | "neutral";
-type SizeVariants = "small" | "medium" | "large";
-type SizeVariantsExtended = SizeVariants | "2x-small" | "x-small" | "x-large" | "2x-large" | "3x-large" | "4x-large";
 
 /** A theming variable from our theming.css file */
 type ThemingVariable<T extends string = ""> = CssVariable<`oe-${T}`>;
@@ -16,15 +38,18 @@ type ShoelaceVariable<T extends string = ""> = CssVariable<`sl-${T}`>;
 /** A shoelace theming color variable */
 type ColorVariable<
   ColorName extends ThemeTokens,
-  Variant extends ThemeSizes,
+  Variant extends ThemeSize,
 > = ShoelaceVariable<`${ColorName}-${Variant}`>;
 
-type FontVariable<Variant extends SizeVariantsExtended> = ShoelaceVariable<`font-${Variant}`>;
+type FontVariable<Variant extends FontSize> = ShoelaceVariable<`font-${Variant}`>;
 
 function createFontOverrides(): string {
-  const result = "";
+  let result = "";
+  for (const [size, scalar] of Object.entries(fontMapping)) {
+    result += `--sl-font-size-${size}: calc(var(--oe-font-size) * ${scalar})`;
+  }
 
-  return ``;
+  return result;
 }
 
 function createColorVariant<Variant extends ThemeTokens, Variable extends ThemingVariable<T>, T extends string>(
@@ -72,8 +97,6 @@ function themeOverrides(): CSSResult {
       ${unsafeCSS(colorOverrides)}
     }
   `;
-
-  console.debug(source);
 
   return unsafeCSS(source);
 }

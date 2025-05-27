@@ -14,8 +14,7 @@
         "no-console": [
           "error",
           {
-            // TODO: Remove "debug" from this allowed list
-            "allow": ["warn", "error",  "time", "timeEnd", "debug"]
+            "allow": ["warn", "error",  "time", "timeEnd"]
           }
         ]
       },
