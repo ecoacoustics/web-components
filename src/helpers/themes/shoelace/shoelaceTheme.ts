@@ -47,11 +47,11 @@ function illuminate(backingVariable: ThemingVariable, scalar: number) {
   // 3. When we are using the "600" intensity of the color, we want to pass
   //    through the color unchanged.
   const defaultValue = intensityLuminanceMapping[600];
-  const defaultDelta = defaultValue - scalar + 0.5;
+  const defaultDelta = scalar - defaultValue;
 
   const luminance = `${defaultDelta * 100}%`;
 
-  return `hsl(from var(${backingVariable}) h s ${luminance})`;
+  return `hsl(from var(${backingVariable}) h s calc(l - ${defaultDelta}))`;
 }
 
 function createColorVariant<Variant extends ThemeToken>(variant: Variant, backingVariable: ThemingVariable) {
