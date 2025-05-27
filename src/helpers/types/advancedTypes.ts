@@ -33,4 +33,10 @@ export type ChangeEvent<T extends HTMLElement> = Event & {
 /** A type that can be used to represent a stringified css variable */
 export type CssVariable<T extends string = ""> = `--${T}`;
 
+/**
+ * A theming variable that is defined in our theming.css file and customized by
+ * the host website.
+ */
+export type ThemingVariable<T extends string = ""> = CssVariable<`oe-${T}`>;
+
 export type FixedLengthArray<T, Length> = Array<T> & { length: Length };

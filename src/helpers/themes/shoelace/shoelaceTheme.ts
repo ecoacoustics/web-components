@@ -1,9 +1,16 @@
 import { css, CSSResult, unsafeCSS } from "lit";
-import { CssVariable } from "../../types/advancedTypes";
+import { ThemingVariable } from "../../types/advancedTypes";
 import lightTheme from "@shoelace-style/shoelace/dist/themes/light.styles.js";
 
-type ThemeScale = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
-const themeScaleMapping = {
+type ThemeToken = "primary" | "success" | "warning" | "danger" /* | "neutral" */;
+
+/**
+ * Maps shoelace color token intervals to a luminance level found in
+ * https://codepen.io/claviska/pen/QWveRgL
+ *
+ * @see https://shoelace.style/tokens/color
+ */
+const intensityLuminanceMapping = {
   50: 0.95,
   100: 0.84,
   200: 0.73,
@@ -16,20 +23,9 @@ const themeScaleMapping = {
   800: 0.1,
   900: 0.05,
   950: 0.02,
-} as const satisfies Record<ThemeScale, number>;
+} as const satisfies Record<number, number>;
 
-type FontSize =
-  | "2x-small"
-  | "x-small"
-  | "small"
-  | "medium"
-  | "large"
-  | "x-large"
-  | "2x-large"
-  | "3x-large"
-  | "4x-large";
-
-const fontMapping = {
+const fontSizeMapping = {
   "4x-large": 1.6,
   "3x-large": 1.5,
   "2x-large": 1.4,
@@ -40,38 +36,31 @@ const fontMapping = {
   small: 1.0,
   "x-small": 0.8,
   "2x-small": 0.7,
-} as const satisfies Record<FontSize, number>;
+} as const satisfies Record<string, number>;
 
-type ThemeTokens = "primary" | "success" | "warning" | "danger" /* | "neutral" */;
-
-/** A theming variable from our theming.css file */
-type ThemingVariable<T extends string = ""> = CssVariable<`oe-${T}`>;
-
-function createFontOverrides(): string {
-  let result = "";
-  for (const [size, scalar] of Object.entries(fontMapping)) {
-    result += `--sl-font-size-${size}: calc(var(--oe-font-size-large) * ${scalar});`;
-  }
-
-  return result;
-}
-
-function illuminate(input: string, scalar: number) {
-  const defaultValue = themeScaleMapping[600];
+function illuminate<T extends string>(backingVariable: ThemingVariable<T>, scalar: number) {
+  // This somewhat simple calculation has a lot of assumptions.
+  // 1. The backing variable should be the "main" color of most UI elements such
+  //    as buttons, sliders, dropdowns, etc...
+  // 2. the "600" value is the "main" color used in the majority of shoelace UI
+  //    elements. (e.g. the background color of buttons)
+  // 3. When we are using the "600" intensity of the color, we want to pass
+  //    through the color unchanged.
+  const defaultValue = intensityLuminanceMapping[600];
   const defaultDelta = defaultValue - scalar + 0.5;
 
   const luminance = `${defaultDelta * 100}%`;
 
-  return `hsl(from ${input} h s ${luminance})`;
+  return `hsl(from var(${backingVariable}) h s ${luminance})`;
 }
 
-function createColorVariant<Variant extends ThemeTokens, Variable extends ThemingVariable<T>, T extends string>(
+function createColorVariant<Variant extends ThemeToken, T extends string>(
   variant: Variant,
-  backingTheme: Variable,
+  backingVariable: ThemingVariable<T>,
 ) {
   let result = "";
-  for (const [size, luminanceScalar] of Object.entries(themeScaleMapping)) {
-    const illuminatedColor = illuminate(`var(${backingTheme})`, luminanceScalar);
+  for (const [size, luminanceScalar] of Object.entries(intensityLuminanceMapping)) {
+    const illuminatedColor = illuminate(backingVariable, luminanceScalar);
     result += `--sl-color-${variant}-${size}: ${illuminatedColor};`;
   }
 
@@ -79,10 +68,9 @@ function createColorVariant<Variant extends ThemeTokens, Variable extends Themin
 }
 
 /**
- * Generates color variants are generated according to the color token generator
- * provided by Shoelace.
- *
- * https://codepen.io/claviska/pen/QWveRgL
+ * Generates shoelace variable overrides for each theming color variant and
+ * intensity to match the variables set in theming.css or set through --oe-*
+ * css variables.
  */
 function createColorOverrides(): string {
   const populatedVariants = {
@@ -90,11 +78,20 @@ function createColorOverrides(): string {
     success: "--oe-success-color",
     warning: "--oe-warning-color",
     danger: "--oe-danger-color",
-  } as const satisfies Record<ThemeTokens, ThemingVariable<string>>;
+  } as const satisfies Record<ThemeToken, ThemingVariable<string>>;
 
   let result = "";
   for (const [variant, backingValue] of Object.entries(populatedVariants)) {
-    result += createColorVariant(variant as any, backingValue);
+    result += createColorVariant(variant as ThemeToken, backingValue);
+  }
+
+  return result;
+}
+
+function createFontOverrides(): string {
+  let result = "";
+  for (const [size, scalar] of Object.entries(fontSizeMapping)) {
+    result += `--sl-font-size-${size}: calc(var(--oe-font-size-large) * ${scalar});`;
   }
 
   return result;
@@ -103,6 +100,15 @@ function createColorOverrides(): string {
 function themeOverrides(): CSSResult {
   const staticOverrides = `
     --sl-font-sans: var(--oe-font-family);
+
+    /**
+     * These "0" and "1000" intensities only exist on the neutral variant.
+     * They are used as "black" and "white" variables, and are typically used
+     * for background / foreground.
+     * https://shoelace.style/tokens/color#theme-tokens
+     */
+    --sl-color-neutral-0: var(--oe-background-color);
+    --sl-color-neutral-1000: var(--oe-font-color);
   `;
 
   const fontOverrides = createFontOverrides();
