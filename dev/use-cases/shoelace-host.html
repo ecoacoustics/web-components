@@ -31,6 +31,18 @@
       </p>
     </header>
 
+    <div class="shoelace-content">
+      <p>
+        These shoelace components are not inside a web component shadow root,
+        so should therefore not have the --oe- theming applied.
+      </p>
+
+      <sl-button>Default</sl-button>
+      <sl-button variant="primary">Primary</sl-button>
+
+      <sl-range></sl-range>
+    </div>
+
     <oe-verification-grid id="verification-grid">
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
@@ -79,6 +91,10 @@
         background-color: #333;
         color: white;
         padding: 1em;
+      }
+
+      .shoelace-content {
+        margin: 1rem;
       }
     </style>
   </body>

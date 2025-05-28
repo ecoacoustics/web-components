@@ -109,6 +109,13 @@ function themeOverrides(): CSSResult {
   const fontOverrides = createFontOverrides();
   const colorOverrides = createColorOverrides();
 
+  // These styles should ONLY be injected in a components shadow root,
+  // otherwise our shoelace themeing will leak into the host website.
+  //
+  // I have added the :root selector for purely development purposes as it
+  // allows me to inject and test these styles in a document's root.
+  // (e.g. we inject these shoelace themeing variables at the document level in
+  // theme.html development page).
   const source = `
     :root,
     :host {
