@@ -1,7 +1,8 @@
-import { LitElement } from "lit";
-import { ComponentModifier } from "./componentModifier";
+import { CSSResultGroup, LitElement } from "lit";
 import { shoelaceTheming } from "../../helpers/themes/shoelace/shoelaceTheme";
 import { registerBundledIcons } from "../../services/shoelaceLoader";
+import { Component } from "../../helpers/types/mixins";
+import { mergeStyles } from "../../helpers/styles/merge";
 
 // A local variable (not exported) to keep track of if Shoelace has been
 // imported into the page
@@ -11,18 +12,20 @@ let doneRegister = false;
   * For every component, we redeclare our shoelace override variables at the
   * web component's shadow root.
   */
-export function withShoelace(): ComponentModifier {
-  return (component: LitElement) => {
-    if (component.shadowRoot) {
-      const themingStyles = new CSSStyleSheet();
-      themingStyles.replace(shoelaceTheming.cssText);
-      component.shadowRoot.adoptedStyleSheets.push(themingStyles);
-
-      if (!doneRegister && !customElements.get("sl-button")) {
+export const WithShoelace = <T extends Component>(superClass: T): Component => {
+  return class ShoelaceClass extends superClass {
+    public static finalizeStyles(styles?: CSSResultGroup) {
+      if (!doneRegister) {
         registerShoelace();
       }
+
+      const newStyles: CSSResultGroup = mergeStyles([shoelaceTheming.cssText], styles);
+
+      // eslint-disable-next-line
+      // @ts-ignore
+      return super.finalizeStyles(newStyles);
     }
-  };
+  }
 }
 
 /**
