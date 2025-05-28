@@ -32,6 +32,7 @@ import { UrlTransformer } from "../../services/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
+import { WithShoelace } from "../../mixins/withShoelace";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -104,7 +105,7 @@ interface CurrentPage {
  * @event grid-loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
-export class VerificationGridComponent extends AbstractComponent(LitElement) {
+export class VerificationGridComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(verificationGridStyles);
 
   public static readonly decisionMadeEventName = "decision-made";

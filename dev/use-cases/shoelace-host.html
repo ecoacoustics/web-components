@@ -3,20 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Components - Ecosounds Test</title>
+    <title>Web Components - Shoelace Host</title>
     <script type="module" src="/src/index.ts"></script>
+
+    <!--
+      Note that shoelace is loaded through the cdn, meaning that it might be
+      delayed.
+      Additionally, the shoelace JavaScript is loaded using type="module"
+      meaning that the JavaScript is defered by default.
+
+      Note that the version imported by the cdn MUST match the version used by
+      our web components.
+      If the versions are mismatched, shoelace will start throwing warnings.
+    -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace.js"></script>
   </head>
 
   <body>
     <header>
-      <h1>EcoSounds</h1>
+      <h1>Shoelace Host</h1>
       <p>This is a header. Please test scrolling and downloading results.</p>
 
       <p>
-        Warning This page contains some diagnostic audio samples. I strongly suggest that you
-        <u>do not play audio on this page.</u>
+        This page replicates loading the web componetns on a page that already has shoelace and its own shoelace
+        theming. You should see that our shoelace components do not leak from our shadow root into the host application.
       </p>
     </header>
+
+    <div class="shoelace-content">
+      <p>
+        These shoelace components are not inside a web component shadow root,
+        so should therefore not have the --oe- theming applied.
+      </p>
+
+      <sl-button>Default</sl-button>
+      <sl-button variant="primary">Primary</sl-button>
+
+      <sl-range></sl-range>
+    </div>
 
     <oe-verification-grid id="verification-grid">
       <oe-verification verified="true" shortcut="Y"></oe-verification>
@@ -25,23 +50,12 @@
       <oe-data-source slot="data-source" for="verification-grid"></oe-data-source>
     </oe-verification-grid>
 
-    <footer>
-      <p>This is a footer. Please test scrolling past the verification grid.</p>
-    </footer>
-
     <script type="module">
       function randomSample(dataset) {
         return dataset[Math.floor(Math.random() * dataset.length)];
       }
 
-      const possibleAudioSamples = [
-        "/example_1s.wav",
-        "/example.flac",
-        "/example2.flac",
-        "/120hz.wav",
-        "/diagnostic.wav",
-        "/merged_diagnostic.wav",
-      ];
+      const possibleAudioSamples = ["/example_1s.wav", "/example.flac", "/example2.flac"];
 
       const possibleTags = ["bird", "insect", "mammal", "reptile"];
 
@@ -53,27 +67,7 @@
         const subjects = Array.from({ length: 25 }).map(() => {
           const src = randomSample(possibleAudioSamples);
           const tag = randomSample(possibleTags);
-
-          return {
-            injector: {
-              type: "audio",
-              provider: { src },
-              warning: "you should not see this value in the downloaded result",
-            },
-            additionalData: {
-              data: "This is some additional data that should be included in results",
-              dateTime: new Date().toISOString(),
-            },
-            additionalText: "you should see this in the results",
-            src,
-            tag,
-            toJSON: function () {
-              // return all properties in this object except for the 'injector'
-              // property
-              const { injector, ...subjectData } = this;
-              return subjectData;
-            },
-          };
+          return { src, tag };
         });
 
         return { subjects };
@@ -83,12 +77,6 @@
         const verificationGrid = document.querySelector("oe-verification-grid");
         verificationGrid.urlTransformer = createUrlTransformer();
         verificationGrid.getPage = gridPaginator;
-
-        // this is some debug info so that I can see the decision model that is
-        // produced by the verification grid
-        verificationGrid.addEventListener("decision-made", (event) => {
-          console.log("new decision", event);
-        });
       }
 
       window.addEventListener("load", () => setup());
@@ -99,11 +87,14 @@
         margin: 0;
       }
 
-      header,
-      footer {
+      header {
         background-color: #333;
         color: white;
         padding: 1em;
+      }
+
+      .shoelace-content {
+        margin: 1rem;
       }
     </style>
   </body>

@@ -9,6 +9,7 @@ import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
+import { WithShoelace } from "../../mixins/withShoelace";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -42,7 +43,7 @@ type PreferenceLocation = "default" | "toolbar" | "overflow" | "hidden";
  * @slot pause-icon - The icon to display when the media is playing
  */
 @customElement("oe-media-controls")
-export class MediaControlsComponent extends AbstractComponent(LitElement) {
+export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(mediaControlsStyles);
 
   public static readonly playShortcut = SPACE_KEY;

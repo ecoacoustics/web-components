@@ -1,8 +1,6 @@
 // we import the polyfills first so that they are available when the components
 // are imported
 import "./polyfills/polyfills";
-import { registerBundledIcons } from "./services/shoelaceLoader";
-registerBundledIcons();
 
 // oe web components barrel file
 export * from "./components/media-controls/media-controls";
@@ -25,10 +23,3 @@ export * from "./components/annotation/annotation";
 export * from "./components/tag/tag";
 
 export * from "./helpers/constants/contextTokens";
-
-// TODO: cherry pick shoelace components
-// see: https://github.com/ecoacoustics/web-components/issues/83
-// import "@shoelace-style/shoelace/dist/components/menu/menu.js";
-// import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
-// import "@shoelace-style/shoelace/dist/components/button/button.js";
-import "@shoelace-style/shoelace";

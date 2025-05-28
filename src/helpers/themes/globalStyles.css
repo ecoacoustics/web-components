@@ -356,6 +356,16 @@ button {
   color: white;
 }
 
+.oe-btn-success {
+  --background-color: var(--oe-success-color);
+  color: white;
+}
+
+.oe-btn-warning {
+  --background-color: var(--oe-warning-color);
+  color: black;
+}
+
 .oe-pill {
   display: inline-block;
   border-radius: var(--oe-border-rounding);
