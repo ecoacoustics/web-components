@@ -4,7 +4,7 @@ import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 import globalStyles from "../helpers/themes/globalStyles.css?inline";
 import defaultTheming from "../helpers/themes/theming.css?inline";
-import { ComponentModifier } from "./injectors/componentModifier";
+import { ComponentModifier } from "./modifiers/componentModifier";
 
 let themingInserted = false;
 

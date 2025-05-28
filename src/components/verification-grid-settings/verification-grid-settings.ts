@@ -9,7 +9,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { verificationGridContext } from "../../helpers/constants/contextTokens";
 import settingComponentStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 @customElement("oe-verification-grid-settings")
 export class VerificationGridSettingsComponent extends SignalWatcher(AbstractComponent(LitElement, withShoelace())) {

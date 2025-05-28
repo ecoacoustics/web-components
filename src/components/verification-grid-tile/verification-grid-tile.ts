@@ -18,7 +18,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import verificationGridTileStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
 

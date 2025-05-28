@@ -26,7 +26,7 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 /*
   A local storage key that when set, will cause the bootstrap modal to not

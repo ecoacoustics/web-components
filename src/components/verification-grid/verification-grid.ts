@@ -33,7 +33,7 @@ import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal"
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import verificationGridStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 

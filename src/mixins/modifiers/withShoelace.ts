@@ -27,6 +27,7 @@ export function withShoelace(): ComponentModifier {
 function registerShoelace(): void {
   // TODO: cherry pick shoelace components
   // see: https://github.com/ecoacoustics/web-components/issues/83
-  import("@shoelace-style/shoelace");
-  registerBundledIcons();
+  import("@shoelace-style/shoelace").then(() => {
+    registerBundledIcons();
+  });
 }

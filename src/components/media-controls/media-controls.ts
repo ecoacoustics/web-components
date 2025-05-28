@@ -10,7 +10,7 @@ import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import mediaControlsStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 /**
  * @description

@@ -49,8 +49,6 @@ function illuminate(backingVariable: ThemingVariable, scalar: number) {
   const defaultValue = intensityLuminanceMapping[600];
   const defaultDelta = scalar - defaultValue;
 
-  const luminance = `${defaultDelta * 100}%`;
-
   return `hsl(from var(${backingVariable}) h s calc(l - ${defaultDelta}))`;
 }
 

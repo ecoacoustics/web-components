@@ -4,7 +4,7 @@ import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import progressBarStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/injectors/withShoelace";
+import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 /**
  * @description
