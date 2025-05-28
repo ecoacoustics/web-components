@@ -2,7 +2,7 @@ import { css, CSSResult, unsafeCSS } from "lit";
 import { ThemingVariable } from "../../types/advancedTypes";
 import lightTheme from "@shoelace-style/shoelace/dist/themes/light.styles.js";
 
-type ThemeToken = "primary" | "success" | "warning" | "danger" /* | "neutral" */;
+type ThemeToken = "primary" | "success" | "warning" | "danger" | "neutral";
 
 /**
  * Maps shoelace color token intervals to a luminance level found in
@@ -68,12 +68,14 @@ function createColorVariant<Variant extends ThemeToken>(variant: Variant, backin
  * css variables.
  */
 function createColorOverrides(): string {
+  // I purposely exclude the "neutral" color from the shoelace passthrough
+  // because we shades of gray arn't theming specific.
   const populatedVariants = {
     primary: "--oe-primary-color",
     success: "--oe-success-color",
     warning: "--oe-warning-color",
     danger: "--oe-danger-color",
-  } as const satisfies Record<ThemeToken, ThemingVariable>;
+  } as const satisfies Record<Exclude<ThemeToken, "neutral">, ThemingVariable>;
 
   let result = "";
   for (const [variant, backingValue] of Object.entries(populatedVariants)) {
