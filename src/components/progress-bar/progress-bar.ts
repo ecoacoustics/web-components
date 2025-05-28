@@ -3,15 +3,15 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
+import { WithShoelace } from "../../mixins/withShoelace";
 import progressBarStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 /**
  * @description
  * A progress bar that indicates how far through a task you are.
  */
 @customElement("oe-progress-bar")
-export class ProgressBar extends AbstractComponent(LitElement, withShoelace()) {
+export class ProgressBar extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(progressBarStyles);
 
   /** Where the verification head is at */

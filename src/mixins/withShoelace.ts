@@ -1,8 +1,8 @@
-import { CSSResultGroup, LitElement } from "lit";
-import { shoelaceTheming } from "../../helpers/themes/shoelace/shoelaceTheme";
-import { registerBundledIcons } from "../../services/shoelaceLoader";
-import { Component } from "../../helpers/types/mixins";
-import { mergeStyles } from "../../helpers/styles/merge";
+import { CSSResultGroup } from "lit";
+import { shoelaceTheming } from "../helpers/themes/shoelace/shoelaceTheme";
+import { registerBundledIcons } from "../services/shoelaceLoader";
+import { Component } from "../helpers/types/mixins";
+import { mergeStyles } from "../helpers/styles/merge";
 
 // A local variable (not exported) to keep track of if Shoelace has been
 // imported into the page

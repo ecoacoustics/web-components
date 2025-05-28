@@ -17,8 +17,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
+import { WithShoelace } from "../../mixins/withShoelace";
 import verificationGridTileStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
 
@@ -64,7 +64,7 @@ const shortcutTranslation = {
  * @event Loaded
  */
 @customElement("oe-verification-grid-tile")
-export class VerificationGridTileComponent extends SignalWatcher(AbstractComponent(LitElement, withShoelace())) {
+export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   public static readonly selectedEventName = "selected";

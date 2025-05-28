@@ -8,11 +8,11 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { verificationGridContext } from "../../helpers/constants/contextTokens";
+import { WithShoelace } from "../../mixins/withShoelace";
 import settingComponentStyles from "./css/style.css?inline";
-import { withShoelace } from "../../mixins/modifiers/withShoelace";
 
 @customElement("oe-verification-grid-settings")
-export class VerificationGridSettingsComponent extends SignalWatcher(AbstractComponent(LitElement, withShoelace())) {
+export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
   public static styles = unsafeCSS(settingComponentStyles);
 
   @consume({ context: verificationGridContext, subscribe: true })
