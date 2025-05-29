@@ -41,7 +41,7 @@
     "fft-windowing-ts": "0.2.7",
     "lit": "3.2.1",
     "music-metadata": "11.0.0",
-    "prismjs": "1.29.0"
+    "prismjs": "1.30.0"
   },
   "devDependencies": {
     "@11ty/eleventy": "3.0.0",
