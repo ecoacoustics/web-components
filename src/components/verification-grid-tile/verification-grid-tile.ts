@@ -173,10 +173,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
   public willUpdate(): void {
-    if (this.spectrogram && this.model?.url) {
-      this.spectrogram.src = this.model.url;
-    }
-
     if (this.index > shortcutOrder.length) {
       this.shortcuts = [];
     }
@@ -368,6 +364,10 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       selected: this.selected,
     });
 
+    if (!this.model.url) {
+      return nothing;
+    }
+
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
     return html`
@@ -406,7 +406,12 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
             ?y-grid="${watch(this.settings.showAxes)}"
           >
             <oe-indicator class="vertically-fill">
-              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
+              <oe-spectrogram
+                id="spectrogram"
+                class="vertically-fill"
+                src="${this.model.url}"
+                color-map="audacity"
+              ></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

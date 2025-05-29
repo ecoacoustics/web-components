@@ -602,6 +602,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
+    console.count("updated");
+
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
