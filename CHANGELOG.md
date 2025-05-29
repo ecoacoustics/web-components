@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.0.0...web-components-v3.0.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* Scope shoelace components & styles to shadow root ([#355](https://github.com/ecoacoustics/web-components/issues/355)) ([460e387](https://github.com/ecoacoustics/web-components/commit/460e387a824e3c7d8d89c54bf5ca6c7fa00b9248)), closes [#329](https://github.com/ecoacoustics/web-components/issues/329)
+
 ## [3.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v2.1.2...web-components-v3.0.0) (2025-05-14)
 
 
