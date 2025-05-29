@@ -13,6 +13,7 @@ class DataSourceFixture {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-data-source");
+  public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
   public localFileInputButton = () => this.page.locator(".file-input").first();
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
   public decisionButtons = () => this.page.locator(".decision-button").all();

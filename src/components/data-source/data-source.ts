@@ -1,5 +1,5 @@
 import { Parser } from "@json2csv/plainjs";
-import { html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
@@ -11,6 +11,7 @@ import { PageFetcher } from "../../services/gridPageFetcher";
 import { SubjectParser } from "../../services/subjectParser";
 import { DownloadableResult } from "../../models/subject";
 import dataSourceStyles from "./css/style.css?inline";
+import { when } from "lit/directives/when.js";
 
 /**
  * @description
@@ -46,6 +47,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   /** Randomly sample rows from a local or remote data source */
   @property({ type: Boolean, converter: booleanConverter })
   public random = false;
+
+  /**
+   * Toggles the viability a "Download Results" button in the user interface.
+   * Note if allow-downloads is set to "false", results download can still be
+   * invoked by host applications through the "downloadResults" method.
+   */
+  @property({ attribute: "allow-downloads", type: Boolean, converter: booleanConverter })
+  public allowDownloads = true;
 
   @state()
   private canDownload = false;
@@ -240,7 +249,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.verificationGrid.subjects = subjectWrapperModels;
   }
 
-  private fileInputTemplate(): TemplateResult<1> {
+  private fileInputTemplate(): HTMLTemplateResult {
     const handleClick = (event: PointerEvent) => {
       event.preventDefault();
       this.fileInput.click();
@@ -267,21 +276,24 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     `;
   }
 
-  public render() {
-    const fileInputTemplate = this.local ? this.fileInputTemplate() : nothing;
+  public downloadResultsTemplate(): HTMLTemplateResult {
+    return html`
+      <button
+        data-testid="download-results-button"
+        class="oe-btn-secondary"
+        @click="${this.downloadResults}"
+        ?disabled="${!this.canDownload}"
+      >
+        Download Results
+      </button>
+    `;
+  }
 
+  public render() {
     return html`
       <div class="data-source">
-        ${fileInputTemplate}
-
-        <button
-          data-testid="download-results-button"
-          class="oe-btn-secondary"
-          @click="${this.downloadResults}"
-          ?disabled="${!this.canDownload}"
-        >
-          Download Results
-        </button>
+        ${when(this.local, () => this.fileInputTemplate())}
+        ${when(this.allowDownloads, () => this.downloadResultsTemplate())}
       </div>
     `;
   }

@@ -1,5 +1,5 @@
 import { dataSourceFixture as test } from "./data-source.fixture";
-import { catchLocatorEvent } from "../../tests/helpers";
+import { catchLocatorEvent, setBrowserAttribute } from "../../tests/helpers";
 import { expect } from "../../tests/assertions";
 
 test.describe("data source", () => {
@@ -89,6 +89,25 @@ test.describe("data source", () => {
           expect(realizedResult).toEqual(expectedResult);
         });
       });
+    });
+  });
+
+  test.describe("allow-downloads", () => {
+    test("should have download button if not present", async ({ fixture }) => {
+      await expect(fixture.downloadResultsButton()).toBeVisible();
+    });
+
+    test("should have download button visible if set", async ({ fixture }) => {
+      // We need this "as any" type cast because the setBrowserAttribute
+      // function checks the property keys, and not attributes.
+      // TODO: remove this type cast once the helper's typing issue is fixed
+      await setBrowserAttribute(fixture.component(), "allow-downloads" as any, "true");
+      await expect(fixture.downloadResultsButton()).toBeVisible();
+    });
+
+    test("should not have download button if explicitly disabled", async ({ fixture }) => {
+      await setBrowserAttribute(fixture.component(), "allow-downloads" as any, "false");
+      await expect(fixture.downloadResultsButton()).toBeHidden();
     });
   });
 
