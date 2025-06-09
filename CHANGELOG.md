@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.0.1...web-components-v3.1.0) (2025-06-09)
+
+
+### Features
+
+* Add data-source "enable-downloads" attribute ([#361](https://github.com/ecoacoustics/web-components/issues/361)) ([4151603](https://github.com/ecoacoustics/web-components/commit/4151603502ba2f501afb5e4dbe72872287c64ce0)), closes [#99](https://github.com/ecoacoustics/web-components/issues/99)
+
 ## [3.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.0.0...web-components-v3.0.1) (2025-05-28)
 
 
