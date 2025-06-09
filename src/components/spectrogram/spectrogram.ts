@@ -761,7 +761,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         id="media-element"
         src="${this.renderedSource}"
         @play="${() => this.play()}"
-        @pause="${() => this.pause()}"
         @ended="${() => this.stop()}"
         preload="metadata"
         crossorigin="anonymous"
