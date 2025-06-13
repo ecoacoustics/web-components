@@ -10,7 +10,7 @@
       Note that shoelace is loaded through the cdn, meaning that it might be
       delayed.
       Additionally, the shoelace JavaScript is loaded using type="module"
-      meaning that the JavaScript is defered by default.
+      meaning that the JavaScript is deferred by default.
 
       Note that the version imported by the cdn MUST match the version used by
       our web components.
@@ -26,15 +26,15 @@
       <p>This is a header. Please test scrolling and downloading results.</p>
 
       <p>
-        This page replicates loading the web componetns on a page that already has shoelace and its own shoelace
+        This page replicates loading the web components on a page that already has shoelace and its own shoelace
         theming. You should see that our shoelace components do not leak from our shadow root into the host application.
       </p>
     </header>
 
     <div class="shoelace-content">
       <p>
-        These shoelace components are not inside a web component shadow root,
-        so should therefore not have the --oe- theming applied.
+        These shoelace components are not inside a web component shadow root, so should therefore not have the
+        --oe-theming applied.
       </p>
 
       <sl-button>Default</sl-button>
@@ -43,7 +43,7 @@
       <sl-range></sl-range>
     </div>
 
-    <oe-verification-grid id="verification-grid">
+    <oe-verification-grid id="verification-grid" progress-bar="top">
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
 
