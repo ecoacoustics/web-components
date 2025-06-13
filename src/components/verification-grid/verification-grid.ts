@@ -56,8 +56,8 @@ export interface MousePosition {
 
 /**
  * @description
- * An enum that contains all of the possible values the "progress-bar" attribute
- * ("progressBarPosition" property) accepts.
+ * An enum that contains all of the possible values the "progress-bar-position"
+ * attribute ("progressBarPosition" property) accepts.
  *
  * @example
  * ```js
@@ -156,7 +156,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public selectionBehavior: SelectionObserverType = "default";
 
   @property({
-    attribute: "progress",
+    attribute: "progress-bar-position",
     type: String,
     converter: enumConverter(ProgressBarPosition, ProgressBarPosition.BOTTOM),
   })

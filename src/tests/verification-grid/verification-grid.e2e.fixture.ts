@@ -662,7 +662,7 @@ class TestPage {
 
   // change attributes
   public async changeProgressBarPosition(position: string) {
-    await setBrowserAttribute(this.gridComponent(), "progress" as any, position);
+    await setBrowserAttribute(this.gridComponent(), "progress-bar-position" as any, position);
   }
 
   public async changeSelectionMode(mode: SelectionObserverType) {
