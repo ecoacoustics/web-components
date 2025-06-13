@@ -1,6 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, PropertyValueMap, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -8,7 +8,7 @@ import {
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
-import { callbackConverter } from "../../helpers/attributes";
+import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
@@ -52,6 +52,23 @@ export interface VerificationGridInjector {
 export interface MousePosition {
   x: number;
   y: number;
+}
+
+/**
+ * @description
+ * An enum that contains all of the possible values the "progress-bar-position"
+ * attribute ("progressBarPosition" property) accepts.
+ *
+ * @example
+ * ```js
+ * const verificationGrid = document.GetElementById("verification-grid");
+ * verificationGrid.progressBarPosition = ProgressBarPosition.TOP;
+ * ```
+ */
+export enum ProgressBarPosition {
+  TOP = "top",
+  BOTTOM = "bottom",
+  HIDDEN = "hidden",
 }
 
 type SelectionEvent = CustomEvent<{
@@ -137,6 +154,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "default";
+
+  @property({
+    attribute: "progress-bar-position",
+    type: String,
+    converter: enumConverter(ProgressBarPosition, ProgressBarPosition.BOTTOM),
+  })
+  public progressBarPosition: ProgressBarPosition = ProgressBarPosition.BOTTOM;
 
   /** A callback function that returns a page of recordings */
   @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
@@ -1357,7 +1381,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   //#region Templates
 
-  private noItemsTemplate(): TemplateResult<1> {
+  private noItemsTemplate(): HTMLTemplateResult {
     return html`
       <div class="no-items-message">
         <p>
@@ -1368,12 +1392,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
-  private noDecisionsTemplate(): TemplateResult<1> {
+  private noDecisionsTemplate(): HTMLTemplateResult {
     return html`<strong class="no-decisions-warning">No decisions available.</strong>`;
   }
 
   // TODO: this function could definitely be refactored
-  private skipDecisionTemplate(): TemplateResult<1> {
+  private skipDecisionTemplate(): HTMLTemplateResult {
     const skipEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
@@ -1393,6 +1417,40 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<button id="skip-button" class="oe-btn-primary" @click="${skipEventHandler}">Skip</button>`;
   }
 
+  private progressBarTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="progress-bar">
+        <sl-tooltip content="${this.targetGridSize > 1 ? "Previous Page" : "Previous"}">
+          <button
+            data-testid="previous-page-button"
+            class="previous-page-button oe-btn-secondary"
+            ?disabled="${!this.canNavigatePrevious()}"
+            @click="${this.handlePreviousPageClick}"
+          >
+            &lt;
+          </button>
+        </sl-tooltip>
+
+        <sl-tooltip content="${this.targetGridSize > 1 ? "Next Page" : "Next"}">
+          <button
+            data-testid="next-page-button"
+            class="next-page-button oe-btn-secondary"
+            ?disabled="${!this.canNavigateNext()}"
+            @click="${this.handleNextPageClick}"
+          >
+            &gt;
+          </button>
+        </sl-tooltip>
+
+        <oe-progress-bar
+          history-head="${this.viewHead}"
+          total="${ifDefined(this.paginationFetcher?.totalItems)}"
+          completed="${this.decisionHead}"
+        ></oe-progress-bar>
+      </div>
+    `;
+  }
+
   public render() {
     let customTemplate: any = nothing;
     if (this.gridItemTemplate) {
@@ -1410,6 +1468,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
+        <div class="controls-container header-controls">
+          ${when(this.progressBarPosition === ProgressBarPosition.TOP, () => this.progressBarTemplate())}
+        </div>
+
         <div
           id="grid-container"
           class="verification-grid"
@@ -1442,7 +1504,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           )}
         </div>
 
-        <div class="controls-container">
+        <div class="controls-container footer-controls">
           <span id="element-container" class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
@@ -1479,35 +1541,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             <slot name="data-source"></slot>
           </span>
 
-          <div class="progress-bar">
-            <sl-tooltip content="${this.targetGridSize > 1 ? "Previous Page" : "Previous"}">
-              <button
-                data-testid="previous-page-button"
-                class="previous-page-button oe-btn-secondary"
-                ?disabled="${!this.canNavigatePrevious()}"
-                @click="${this.handlePreviousPageClick}"
-              >
-                &lt;
-              </button>
-            </sl-tooltip>
-
-            <sl-tooltip content="${this.targetGridSize > 1 ? "Next Page" : "Next"}">
-              <button
-                data-testid="next-page-button"
-                class="next-page-button oe-btn-secondary"
-                ?disabled="${!this.canNavigateNext()}"
-                @click="${this.handleNextPageClick}"
-              >
-                &gt;
-              </button>
-            </sl-tooltip>
-
-            <oe-progress-bar
-              history-head="${this.viewHead}"
-              total="${ifDefined(this.paginationFetcher?.totalItems)}"
-              completed="${this.decisionHead}"
-            ></oe-progress-bar>
-          </div>
+          ${when(this.progressBarPosition === ProgressBarPosition.BOTTOM, () => this.progressBarTemplate())}
         </div>
       </div>
     `;
