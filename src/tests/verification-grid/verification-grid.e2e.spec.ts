@@ -354,6 +354,61 @@ test.describe("single verification grid", () => {
       await fixture.changeGridSize(3);
     });
 
+    test.describe("progress bar position", () => {
+      // TODO: Use the correct fixture type instead of using a polymorphic type
+      async function assertOneProgressBar(fixture: { gridProgressBarCount: () => Promise<number> }) {
+        // We make an assertion to ensure that both the bottom and top progress
+        // bars are not visible at the same time.
+        const progressBarCount = await fixture.gridProgressBarCount();
+        expect(progressBarCount).toEqual(1);
+      }
+
+      test("should have correct default position (bottom)", async ({ fixture }) => {
+        await assertOneProgressBar(fixture);
+
+        const footerControls = fixture.footerControls();
+        const footerProgressBar = footerControls.locator("oe-progress-bar");
+
+        await expect(footerProgressBar).toBeVisible();
+      });
+
+      test("should use the default position for an invalid value", async ({ fixture }) => {
+        await fixture.changeProgressBarPosition("this is an invalid value 123");
+
+        const footerControls = fixture.footerControls();
+        const footerProgressBar = footerControls.locator("oe-progress-bar");
+
+        await assertOneProgressBar(fixture);
+        await expect(footerProgressBar).toBeVisible();
+      });
+
+      test("should have the correct explicit 'bottom' position", async ({ fixture }) => {
+        await fixture.changeProgressBarPosition("bottom");
+
+        const footerControls = fixture.footerControls();
+        const footerProgressBar = footerControls.locator("oe-progress-bar");
+
+        await assertOneProgressBar(fixture);
+        await expect(footerProgressBar).toBeVisible();
+      });
+
+      test("should have correct 'top' position", async ({ fixture }) => {
+        await fixture.changeProgressBarPosition("top");
+
+        const headerControls = fixture.headerControls();
+        const headerProgressBar = headerControls.locator("oe-progress-bar");
+
+        await assertOneProgressBar(fixture);
+        await expect(headerProgressBar).toBeVisible();
+      });
+
+      test("should have correct 'hidden' position", async ({ fixture }) => {
+        await fixture.changeProgressBarPosition("hidden");
+        const progressBarCount = await fixture.gridProgressBarCount();
+        expect(progressBarCount).toEqual(0);
+      });
+    });
+
     test("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change

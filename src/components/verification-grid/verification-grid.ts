@@ -1,15 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  TemplateResult,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -63,9 +54,21 @@ export interface MousePosition {
   y: number;
 }
 
+/**
+ * @description
+ * An enum that contains all of the possible values the "progress-bar" attribute
+ * ("progressBarPosition" property) accepts.
+ *
+ * @example
+ * ```js
+ * const verificationGrid = document.GetElementById("verification-grid");
+ * verificationGrid.progressBarPosition = ProgressBarPosition.TOP;
+ * ```
+ */
 export enum ProgressBarPosition {
   TOP = "top",
   BOTTOM = "bottom",
+  HIDDEN = "hidden",
 }
 
 type SelectionEvent = CustomEvent<{
@@ -153,7 +156,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public selectionBehavior: SelectionObserverType = "default";
 
   @property({
-    attribute: "progress-bar",
+    attribute: "progress",
     type: String,
     converter: enumConverter(ProgressBarPosition, ProgressBarPosition.BOTTOM),
   })
@@ -1465,7 +1468,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
-        <div class="controls-container">
+        <div class="controls-container header-controls">
           ${when(this.progressBarPosition === ProgressBarPosition.TOP, () => this.progressBarTemplate())}
         </div>
 
@@ -1501,7 +1504,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           )}
         </div>
 
-        <div class="controls-container">
+        <div class="controls-container footer-controls">
           <span id="element-container" class="decision-controls-left">
             <oe-verification-grid-settings></oe-verification-grid-settings>
 
