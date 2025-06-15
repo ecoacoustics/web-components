@@ -129,9 +129,9 @@
         "type": "node-terminal",
       },
       {
+        "name": "Launch Firefox",
         "type": "firefox",
         "request": "launch",
-        "name": "Launch Firefox",
         "url": "http://localhost:5173",
         "webRoot": "${workspaceFolder}",
       },
@@ -146,6 +146,12 @@
         "command": "pnpm build:components",
         "request": "launch",
         "type": "node-terminal",
+      },
+    ],
+    "compounds": [
+      {
+        "name": "Dev Environment",
+        "configurations": ["Dev Server", "Launch Firefox"],
       },
     ],
   },
