@@ -10,6 +10,7 @@ import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
 import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
+import { toTitleCase } from "../../../helpers/text/titleCase";
 
 /**
  * @description
@@ -100,32 +101,41 @@ export class VerificationComponent extends DecisionComponent {
     this._decisionModels[this.verified] = verificationModel;
 
     return html`
-      <button
-        id="decision-button"
-        class="oe-btn-primary decision-button ${buttonClasses}"
-        part="decision-button"
-        style="--ripple-color: var(${color})"
-        aria-disabled="${this.disabled}"
-        @click="${() => this.handleDecision()}"
-      >
-        <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+      <div class="decision-group">
+        <div class="decision-group-title"></div>
+      </div>
 
-        <div class="button-text">
-          <slot>${this.verified}</slot>
-        </div>
+      <div class="decision-buttons">
+        <button
+          id="decision-button"
+          class="oe-btn-primary decision-button ${buttonClasses}"
+          part="decision-button"
+          style="--ripple-color: var(${color})"
+          aria-disabled="${this.disabled}"
+          @click="${() => this.handleDecision()}"
+        >
+          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-        <div class="additional-tags">${this.additionalTagsTemplate()}</div>
+          <div class="button-text">
+            <slot>${toTitleCase(this.verified)}</slot>
+          </div>
 
-        <div>
-          <!--
-            even if there is no shortcut, we reserve a space for the shortcut
-            key so that all buttons are the same height.
-           -->
-          <span class="shortcut-legend">
-            ${when(!this.isMobile && this.shortcut, () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`)}
-          </span>
-        </div>
-      </button>
+          <div class="additional-tags">${this.additionalTagsTemplate()}</div>
+
+          <div>
+            <!--
+              even if there is no shortcut, we reserve a space for the shortcut
+              key so that all buttons are the same height.
+            -->
+            <span class="shortcut-legend">
+              ${when(
+                !this.isMobile && this.shortcut,
+                () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
+              )}
+            </span>
+          </div>
+        </button>
+      </div>
     `;
   }
 }

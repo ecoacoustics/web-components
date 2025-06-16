@@ -15,6 +15,7 @@ import {
   shiftSymbol,
   ShiftSymbolVariant,
 } from "../../../templates/keyboardShortcut";
+import { toTitleCase } from "../../../helpers/text/titleCase";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -205,7 +206,10 @@ export class ClassificationComponent extends DecisionComponent {
       >
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-        <div class="button-text">${decision}</div>
+        <div class="button-text">${toTitleCase(decision)}</div>
+
+        <div class="additional-tags"></div>
+
         ${!this.isMobile && shortcut ? keyboardShortcutTemplate(shortcut, ShiftSymbolVariant.inline) : nothing}
       </button>
     `;

@@ -1414,7 +1414,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     };
 
-    return html`<button id="skip-button" class="oe-btn-primary" @click="${skipEventHandler}">Skip</button>`;
+    return html`
+      <oe-verification
+        id="skip-button"
+        verified="skip"
+        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
+        shortcut="\`"
+      ></oe-verification>
+    `;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {

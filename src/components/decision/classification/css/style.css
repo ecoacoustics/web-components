@@ -1,35 +1,4 @@
-/*
-  A decision group includes both the true and false decision buttons and the
-  tag title at the top of the group.
-*/
-.decision-group {
-  margin-left: var(--oe-spacing);
-  margin-right: var(--oe-spacing);
-  border-radius: var(--oe-border-rounding);
-  /* box-shadow: var(--oe-box-shadow); */
-}
-
-.decision-buttons {
-  display: flex;
-}
-
-.decision-group-title {
-  display: flex;
-  justify-content: center;
-  padding: var(--oe-spacing);
-
-  border: solid var(--oe-border-width) var(--oe-border-color);
-  border-bottom: none;
-  border-top-left-radius: var(--oe-border-rounding);
-  border-top-right-radius: var(--oe-border-rounding);
-}
-
 .decision-button {
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
-  flex-grow: 1;
-  margin: 0px;
-
   /*
     As part of our default theming, each button has a box-shadow.
     We disable the box shadow because we want the two buttons to act as a single
@@ -38,11 +7,13 @@
   box-shadow: none !important;
 
   .decision-group &:not(:last-child) {
+    border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-    border-right-width: calc(var(--oe-border-width) / 2);
+    border-right-width: calc(var(--oe-border-width));
   }
 
   .decision-group & + .decision-button {
+    border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-left-width: calc(var(--oe-border-width) / 2);
   }

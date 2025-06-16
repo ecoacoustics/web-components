@@ -12,6 +12,10 @@
 * {
   font-family: var(--oe-font-family);
   font-weight: var(--oe-font-weight);
+
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
 }
 
 sl-icon {
@@ -66,45 +70,20 @@ input:disabled {
 kbd {
   position: relative;
   display: inline-flex;
+  width: max-content;
+
+  padding: 0.3rem;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+
+  border-radius: var(--oe-border-rounding);
+
   color: var(--oe-font-color);
   font-family: "Courier New", Courier, monospace;
   text-align: center;
-  align-items: center;
   font-weight: var(--oe-font-weight-bold);
-  padding: 0.2rem;
-  padding-left: 0.5em;
-  padding-right: 0.5em;
-  z-index: 0;
-  margin-top: 0.2rem;
-  margin: 0.5rem;
-  width: max-content;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    border-radius: 0.13em;
-    background: radial-gradient(circle farthest-corner at top right, #ededed, #c8c8c8);
-    box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0.2);
-    z-index: -1;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: -0.065em;
-    left: -0.065em;
-    width: 100%;
-    height: 100%;
-    padding: 0.13em;
-    border-radius: 0.15em;
-    background: radial-gradient(circle farthest-corner at bottom right, #cacaca, #cacaca);
-    box-shadow: 0.065em 0.065em 0.13em 0.13em rgba(0, 0, 0, 0.5);
-    z-index: -2;
-  }
+  background-color: var(--oe-panel-color);
 }
 
 a {

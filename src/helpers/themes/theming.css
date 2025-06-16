@@ -45,8 +45,9 @@
     calc(var(--oe-theme-saturation) - 50%),
     calc(var(--oe-theme-lightness) - 90%)
   );
+  --oe-font-color-strong: color-mix(in srgb, var(--oe-primary-color), 60% black);
 
-  --oe-border-rounding: 0.5em;
+  --oe-border-rounding: 6px;
   --oe-border-color: hsl(
     var(--oe-theme-hue),
     calc(var(--oe-theme-saturation) - 40%),
@@ -60,6 +61,7 @@
   --oe-font-size: 11px;
   --oe-font-size-large: calc(var(--oe-font-size) + 5px);
   --oe-font-weight: 400;
+  --oe-font-weight-medium: 500;
   --oe-font-weight-bold: 700;
 
   --oe-animation-time: 0.3s;
