@@ -126,18 +126,6 @@
   font-weight: var(--oe-font-weight-bold);
 }
 
-#skip-button {
-  &::part(decision-button) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left-width: 0;
-  }
-
-  &::part(decision-group) {
-    margin-left: 0;
-  }
-}
-
 /*
   We apply styles to the <template> elements here because we cannot target the
   template elements inside the verification-grid-tile because they are reflected

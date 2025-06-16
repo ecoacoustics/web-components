@@ -1,0 +1,22 @@
+:host(:not(:first-of-type)) {
+  .decision-button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 0;
+  }
+
+  .decision-group {
+    margin-left: 0;
+  }
+}
+
+:host(:not(:last-of-type)) {
+  .decision-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .decision-group {
+    margin-right: 0;
+  }
+}
