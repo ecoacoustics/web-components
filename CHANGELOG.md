@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.1.0...web-components-v3.2.0) (2025-06-16)
+
+
+### Features
+
+* Grid attribute to change progress position ([#374](https://github.com/ecoacoustics/web-components/issues/374)) ([ea3e90b](https://github.com/ecoacoustics/web-components/commit/ea3e90baa46ab07bd53aaff81eb982130dc0879e)), closes [#369](https://github.com/ecoacoustics/web-components/issues/369)
+
 ## [3.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.0.1...web-components-v3.1.0) (2025-06-09)
 
 
