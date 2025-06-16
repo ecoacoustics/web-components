@@ -76,6 +76,7 @@ class TestPage {
   public gridTileProgressMeterTooltips = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
 
+  public gridProgressBarCount = () => this.page.locator("oe-progress-bar").count();
   public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
   public gridProgressBarCompletedTooltip = () => this.gridProgressBar().getByTestId("completed-tooltip").first();
   public gridProgressBarViewHeadTooltip = () => this.gridProgressBar().getByTestId("view-head-tooltip").first();
@@ -96,6 +97,9 @@ class TestPage {
     (await this.gridTileContainers())[index].getByText("Brightness").first();
   public brightnessControlsInput = async (index = 0) =>
     (await this.gridTileContainers())[index].locator("input").first();
+
+  public headerControls = () => this.page.locator(".header-controls").first();
+  public footerControls = () => this.page.locator(".footer-controls").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
@@ -657,6 +661,10 @@ class TestPage {
   }
 
   // change attributes
+  public async changeProgressBarPosition(position: string) {
+    await setBrowserAttribute(this.gridComponent(), "progress-bar-position" as any, position);
+  }
+
   public async changeSelectionMode(mode: SelectionObserverType) {
     // we use "as any" here because the setBrowserAttribute helper typing checks
     // for class properties, but cannot identify attribute aliases

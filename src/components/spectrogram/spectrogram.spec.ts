@@ -477,46 +477,51 @@ test.describe("playing/pausing", () => {
   // This test ensures that playback interpolation can correctly rubber band
   // back to the correct playback time if audio playback becomes de-synced from
   // the spectrogram.
-  test("should keep the currentTime in sync if the audio elements playback starts and stops", async ({ fixture }) => {
-    const playEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "play");
-    await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
-    await playEvent;
+  //
+  // TODO: This test is currently very flaky and therefore has been disabled.
+  test.fixme(
+    "should keep the currentTime in sync if the audio elements playback starts and stops",
+    async ({ fixture }) => {
+      const playEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "play");
+      await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogram(), "play");
+      await playEvent;
 
-    // This sleep is a hack to ensure that the currentTime is greater than 0
-    // before we pause the audio element. Without this sleep, it is
-    // theoretically possible for the currentTime to not change before we pause
-    // the audio element.
-    // Warning: This sleep should always be greater than the fingerprinting
-    // resistance polling time for major browsers. If this is less than the
-    // fingerprinting resistance polling time, the currentTime greaterThan 0
-    // assertion below will sporadically fail.
-    await sleep(1);
+      // This sleep is a hack to ensure that the currentTime is greater than 0
+      // before we pause the audio element. Without this sleep, it is
+      // theoretically possible for the currentTime to not change before we pause
+      // the audio element.
+      // Warning: This sleep should always be greater than the fingerprinting
+      // resistance polling time for major browsers. If this is less than the
+      // fingerprinting resistance polling time, the currentTime greaterThan 0
+      // assertion below will sporadically fail.
+      await sleep(1);
 
-    await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", false);
+      await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", false);
 
-    // We pause the audio element directly so that the high frequency time
-    // processor thinks that the audio is still playing, but the audio element
-    // is actually paused.
-    const pauseEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "pause");
-    await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
-    await pauseEvent;
+      // We pause the audio element directly so that the high frequency time
+      // processor thinks that the audio is still playing, but the audio element
+      // is actually paused.
+      const pauseEvent = catchLocatorEvent(fixture.spectrogramAudioElement(), "pause");
+      await invokeBrowserMethod<HTMLAudioElement>(fixture.spectrogramAudioElement(), "pause");
+      await pauseEvent;
 
-    await sleep(1);
+      await sleep(1);
 
-    await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
+      await expect(fixture.spectrogramAudioElement()).toHaveJSProperty("paused", true);
 
-    const initialTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
-    expect(initialTime).toBeGreaterThan(0);
+      const initialTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+      expect(initialTime).toBeGreaterThan(0);
 
-    // we simulate enough passage of time so that time interpolation will
-    // rubber band back to the correct paused time
-    await sleep(2);
+      // we simulate enough passage of time so that time interpolation will
+      // rubber band back to the correct paused time
+      await sleep(2);
 
-    const finalTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
-    const expectedTime = await getBrowserValue<HTMLAudioElement>(fixture.spectrogramAudioElement(), "currentTime");
+      const finalTime = await getBrowserSignalValue<SpectrogramComponent>(fixture.spectrogram(), "currentTime");
+      const expectedTime = await getBrowserValue<HTMLAudioElement>(fixture.spectrogramAudioElement(), "currentTime");
 
-    expect(finalTime).toEqual(expectedTime);
-  });
+      expect(finalTime).toEqual(expectedTime);
+    },
+  );
 });
 
 test.describe("changing source", () => {

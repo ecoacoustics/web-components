@@ -11,9 +11,9 @@ import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/model
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
+import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
-import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 
 export interface IPlayEvent {
   play: boolean;
