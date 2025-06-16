@@ -3,7 +3,7 @@ import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
-import { html, nothing } from "lit";
+import { html, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
@@ -11,6 +11,7 @@ import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/k
 import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
 import { toTitleCase } from "../../../helpers/text/titleCase";
+import verificationStyles from "./css/style.css?inline";
 
 /**
  * @description
@@ -25,6 +26,8 @@ import { toTitleCase } from "../../../helpers/text/titleCase";
  */
 @customElement("oe-verification")
 export class VerificationComponent extends DecisionComponent {
+  public static styles = [...super.styles, unsafeCSS(verificationStyles)];
+
   @required()
   @property({ type: String, converter: enumConverter(DecisionOptions) })
   public verified: DecisionOptions = DecisionOptions.TRUE;
@@ -84,7 +87,7 @@ export class VerificationComponent extends DecisionComponent {
   }
 
   private additionalTagsTemplate() {
-    return this.additionalTags.length ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})` : nothing;
+    return html`<div class="additional-tags">${this.additionalTags.map((tag) => tag.text).join(", ")}</div>`;
   }
 
   public render() {
@@ -101,40 +104,40 @@ export class VerificationComponent extends DecisionComponent {
     this._decisionModels[this.verified] = verificationModel;
 
     return html`
-      <div class="decision-group">
+      <div class="decision-group" part="decision-group">
         <div class="decision-group-title"></div>
-      </div>
 
-      <div class="decision-buttons">
-        <button
-          id="decision-button"
-          class="oe-btn-primary decision-button ${buttonClasses}"
-          part="decision-button"
-          style="--ripple-color: var(${color})"
-          aria-disabled="${this.disabled}"
-          @click="${() => this.handleDecision()}"
-        >
-          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+        <div class="decision-buttons">
+          <button
+            id="decision-button"
+            class="oe-btn-primary decision-button ${buttonClasses}"
+            part="decision-button"
+            style="--ripple-color: var(${color})"
+            aria-disabled="${this.disabled}"
+            @click="${() => this.handleDecision()}"
+          >
+            <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-          <div class="button-text">
-            <slot>${toTitleCase(this.verified)}</slot>
-          </div>
+            <div class="button-text">
+              <slot>${toTitleCase(this.verified)}</slot>
+            </div>
 
-          <div class="additional-tags">${this.additionalTagsTemplate()}</div>
+            ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
 
-          <div>
-            <!--
-              even if there is no shortcut, we reserve a space for the shortcut
-              key so that all buttons are the same height.
-            -->
-            <span class="shortcut-legend">
-              ${when(
-                !this.isMobile && this.shortcut,
-                () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
-              )}
-            </span>
-          </div>
-        </button>
+            <div>
+              <!--
+                even if there is no shortcut, we reserve a space for the shortcut
+                key so that all buttons are the same height.
+              -->
+              <span class="shortcut-legend">
+                ${when(
+                  !this.isMobile && this.shortcut,
+                  () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
+                )}
+              </span>
+            </div>
+          </button>
+        </div>
       </div>
     `;
   }

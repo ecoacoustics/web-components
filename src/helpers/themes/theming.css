@@ -45,7 +45,7 @@
     calc(var(--oe-theme-saturation) - 50%),
     calc(var(--oe-theme-lightness) - 90%)
   );
-  --oe-font-color-strong: color-mix(in srgb, var(--oe-primary-color), 60% black);
+  --oe-font-color-strong: color-mix(in srgb, var(--oe-primary-color), 80% black);
 
   --oe-border-rounding: 6px;
   --oe-border-color: hsl(

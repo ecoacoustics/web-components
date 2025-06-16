@@ -15,7 +15,7 @@
   .decision-group & + .decision-button {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    border-left-width: calc(var(--oe-border-width) / 2);
+    border-left-width: 0;
   }
 
   .shortcut-container {

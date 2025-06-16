@@ -208,8 +208,6 @@ export class ClassificationComponent extends DecisionComponent {
 
         <div class="button-text">${toTitleCase(decision)}</div>
 
-        <div class="additional-tags"></div>
-
         ${!this.isMobile && shortcut ? keyboardShortcutTemplate(shortcut, ShiftSymbolVariant.inline) : nothing}
       </button>
     `;
