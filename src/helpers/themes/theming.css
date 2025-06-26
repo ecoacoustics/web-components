@@ -103,9 +103,13 @@
 
   --oe-panel-color: var(--oe-background-color);
   --oe-panel-color-lighter: color-mix(in oklch, var(--oe-panel-color), white 10%);
-  --oe-panel-color-darker: color-mix(in srgb, var(--oe-panel-color), black 10%);
+  --oe-panel-color-darker: hsl(
+    var(--oe-theme-hue),
+    var(--oe-theme-saturation),
+    min(calc(var(--oe-theme-lightness) + 43%), 96%)
+  );
 
-  --oe-font-color-lighter: color-mix(in oklch, var(--oe-font-color) 10%, var(--oe-background-color));
+  --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
 
   --oe-undecided-color: var(--oe-panel-color);
   --oe-box-shadow: 1px 1px 1px var(--oe-secondary-color);

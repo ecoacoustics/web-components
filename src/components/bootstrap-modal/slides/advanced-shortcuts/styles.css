@@ -22,7 +22,7 @@
     padding-right: var(--oe-spacing-large);
 
     &:nth-child(odd) {
-      background-color: var(--oe-panel-color);
+      background-color: var(--oe-panel-color-darker);
     }
 
     & > .shortcut-prompt {

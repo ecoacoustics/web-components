@@ -1,6 +1,15 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
+import {
+  html,
+  HTMLTemplateResult,
+  LitElement,
+  nothing,
+  PropertyValueMap,
+  PropertyValues,
+  render,
+  unsafeCSS,
+} from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -384,6 +393,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const targetSize = this.defaultGridSize();
       this.targetGridSize = targetSize;
     }
+
+    if (!this.skipButton) {
+      render(this.skipDecisionTemplate(), this);
+    }
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -453,7 +466,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
-    this.skipButton.isMobile = isMobile;
     for (const element of decisionElements) {
       element.isMobile = isMobile;
     }
@@ -1212,7 +1224,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     this.decisionsDisabled = disabled;
-    this.skipButton.disabled = disabled;
   }
 
   //#endregion
@@ -1542,8 +1553,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
             </h2>
             <div id="decisions-container" class="decision-control-actions">
-              <slot @slotchange="${() => this.handleSlotChange()}"></slot>
-              ${this.skipDecisionTemplate()}
+              <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
             </div>
           </span>
 
