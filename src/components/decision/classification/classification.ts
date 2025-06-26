@@ -218,17 +218,17 @@ export class ClassificationComponent extends DecisionComponent {
 
     // prettier-ignore
     return html`
-      <div class="decision-group">
-        <div class="decision-group-title">
-          <slot>${this.tag.text}</slot>
-        </div>
-
-        <div class="decision-buttons">
-          ${map(buttonOptions, (decision: DecisionOptions) =>
-            this.decisionButtonTemplate(decision)
-          )}
-        </div>
+      <div class="decision-group-title">
+        <slot>${this.tag.text}</slot>
       </div>
+
+      <div class="decision-buttons">
+        ${map(buttonOptions, (decision: DecisionOptions) =>
+          this.decisionButtonTemplate(decision)
+        )}
+      </div>
+
+      <div class="attached-info"></div>
     `;
   }
 }

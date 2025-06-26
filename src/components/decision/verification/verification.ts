@@ -11,9 +11,8 @@ import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/k
 import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
 import { toTitleCase } from "../../../helpers/text/titleCase";
-import verificationStyles from "./css/style.css?inline";
-import { loop } from "../../../helpers/directives";
 import { repeat } from "lit/directives/repeat.js";
+import verificationStyles from "./css/style.css?inline";
 
 /**
  * @description
@@ -122,41 +121,39 @@ export class VerificationComponent extends DecisionComponent {
     this._decisionModels[this.verified] = verificationModel;
 
     return html`
-      <div class="decision-group" part="decision-group">
-        <div class="decision-group-title"></div>
+      <div class="decision-group-title"></div>
 
-        <div class="decision-buttons">
-          <button
-            id="decision-button"
-            class="oe-btn-primary decision-button ${buttonClasses}"
-            part="decision-button"
-            style="--ripple-color: var(${color})"
-            aria-disabled="${this.disabled}"
-            @click="${() => this.handleDecision()}"
-          >
-            <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+      <div class="decision-buttons">
+        <button
+          id="decision-button"
+          class="oe-btn-primary decision-button ${buttonClasses}"
+          part="decision-button"
+          style="--ripple-color: var(${color})"
+          aria-disabled="${this.disabled}"
+          @click="${() => this.handleDecision()}"
+        >
+          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-            <div class="button-text">
-              <slot>${toTitleCase(this.verified)}</slot>
-            </div>
+          <div class="button-text">
+            <slot>${toTitleCase(this.verified)}</slot>
+          </div>
 
-            <div>
-              <!--
-                even if there is no shortcut, we reserve a space for the shortcut
-                key so that all buttons are the same height.
-              -->
-              <span class="shortcut-legend">
-                ${when(
-                  !this.isMobile && this.shortcut,
-                  () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
-                )}
-              </span>
-            </div>
-          </button>
-        </div>
-
-        ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
+          <div>
+            <!--
+              even if there is no shortcut, we reserve a space for the shortcut
+              key so that all buttons are the same height.
+            -->
+            <span class="shortcut-legend">
+              ${when(
+                !this.isMobile && this.shortcut,
+                () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
+              )}
+            </span>
+          </div>
+        </button>
       </div>
+
+      <div class="attached-info">${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}</div>
     `;
   }
 }

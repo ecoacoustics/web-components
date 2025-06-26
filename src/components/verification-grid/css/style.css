@@ -102,6 +102,16 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+
+    #decision-slot {
+      display: grid;
+      grid-template-rows: repeat(3, min-content);
+      /* grid-template-rows:
+        "group-title" min-content
+        "decision-buttons" min-content
+        "attached-info" min-content; */
+      grid-template-columns: repeat(300, auto);
+    }
   }
 }
 

@@ -5,9 +5,7 @@
     border-left-width: 0;
   }
 
-  .decision-group {
-    margin-left: 0;
-  }
+  margin-left: 0;
 }
 
 :host(:not(:last-of-type)) {
@@ -16,9 +14,7 @@
     border-bottom-right-radius: 0;
   }
 
-  .decision-group {
-    margin-right: 0;
-  }
+  margin-right: 0;
 }
 
 .additional-tags {
