@@ -68,8 +68,10 @@ input:disabled {
 }
 
 kbd {
-  position: relative;
   display: inline-flex;
+  align-items: center;
+
+  position: relative;
   width: max-content;
 
   padding: 0.3rem;
@@ -78,12 +80,11 @@ kbd {
 
   border-radius: var(--oe-border-rounding);
 
-  color: var(--oe-font-color);
-  font-family: "Courier New", Courier, monospace;
-  text-align: center;
+  font-family: var(--oe-font-family-mono);
   font-weight: var(--oe-font-weight-bold);
 
-  background-color: var(--oe-panel-color);
+  color: var(--oe-font-color);
+  background-color: var(--oe-panel-color-darker);
 }
 
 a {
@@ -314,7 +315,7 @@ button {
 
 .oe-btn-primary {
   border: var(--oe-border-width) solid var(--oe-primary-color);
-  --background-color: transparent;
+  --background-color: var(--oe-background-color);
 }
 
 .oe-btn-secondary {
@@ -322,7 +323,6 @@ button {
   background: none;
   box-shadow: none;
   font-weight: var(--oe-font-weight-bold);
-  color: var(--oe-primary-color);
 }
 
 .oe-btn-info {

@@ -1232,11 +1232,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // because it is possible for the new page to be a subset of the current
     // page. E.g. when decreasing the grid size, we only want to disable the
     // decision buttons if there are going to be new spectrograms loading
-    const elements = this.gridTiles;
-    if (elements.length < pageSubjects.length) {
-      this.setDecisionDisabled(true);
-    }
+    //
+    // These buttons will be re-enabled when the all of the spectrograms
+    // "loaded" events have fired.
+    // Note that if there are no spectrograms on the new page (e.g. we have
+    // reached the final page), the buttons will not be re-enabled.
+    this.setDecisionDisabled(true);
 
+    const elements = this.gridTiles;
     if (elements === undefined || elements.length === 0) {
       this.requestUpdate();
       return;

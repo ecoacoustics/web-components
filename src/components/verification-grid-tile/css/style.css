@@ -17,14 +17,13 @@
 
 .spectrogram-container {
   margin: 0px;
-  background-color: var(--oe-panel-color);
   padding: var(--oe-spacing);
 }
 
 .tile-container {
   position: relative;
   border-radius: var(--oe-border-rounding);
-  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
+  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color-darker);
   cursor: pointer;
   margin-bottom: 0;
   padding: var(--selected-border-size);

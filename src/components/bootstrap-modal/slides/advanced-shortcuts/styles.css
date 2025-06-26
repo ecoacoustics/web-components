@@ -24,5 +24,11 @@
     &:nth-child(odd) {
       background-color: var(--oe-panel-color);
     }
+
+    & > .shortcut-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
   }
 }

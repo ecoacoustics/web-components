@@ -16,6 +16,8 @@
 
   padding: 0.3em;
 
+  letter-spacing: 0.25px;
+
   kbd {
     /*
       Even though we are using a monospaced font, some utf8 symbols such as the
@@ -51,7 +53,7 @@
   }
 
   .button-text {
-    margin: 0.5rem;
+    margin: 0.75rem;
   }
 
   & > * {
@@ -81,7 +83,6 @@
 .decision-group-title {
   display: flex;
   justify-content: center;
-  padding: var(--oe-spacing);
   padding-bottom: var(--oe-spacing-small);
 
   min-height: 1.2em;
