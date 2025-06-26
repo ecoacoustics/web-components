@@ -196,6 +196,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-verification, oe-classification" })
   private decisionElements!: DecisionComponentUnion[];
 
+  // Because it's possible (although unlikely) for multiple skip buttons to
+  // exist on a page, this query selector returns an array of elements.
+  @queryAssignedElements({ selector: "oe-verification[verified='skip']" })
+  private skipButtons!: DecisionComponent[];
+
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
@@ -210,9 +215,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @query("#decisions-container")
   private decisionsContainer!: HTMLSlotElement;
-
-  @query("#skip-button")
-  private skipButton!: DecisionComponent;
 
   @query("#highlight-box")
   private highlightBox!: HTMLDivElement;
@@ -394,7 +396,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.targetGridSize = targetSize;
     }
 
-    if (!this.skipButton) {
+    if (this.skipButtons.length === 0) {
       render(this.skipDecisionTemplate(), this);
     }
   }
