@@ -95,5 +95,5 @@
 .decision-group-title slot {
   color: var(--oe-font-color-strong);
   font-weight: var(--oe-font-weight-medium);
-  letter-spacing: 0.75px;
+  letter-spacing: 0.075em;
 }
