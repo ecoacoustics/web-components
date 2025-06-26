@@ -1,6 +1,6 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
@@ -296,7 +296,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     );
   }
 
-  private keyboardShortcutTemplate(): TemplateResult<1> {
+  private keyboardShortcutTemplate(): HTMLTemplateResult {
     return html`
       <div class="keyboard-hint ${classMap({ hidden: !this.showKeyboardShortcuts })}">
         <kbd>${this.shortcuts.at(0)}</kbd>
@@ -304,7 +304,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     `;
   }
 
-  private classificationMeterTemplate(requiredTag: Tag): TemplateResult {
+  private classificationMeterTemplate(requiredTag: Tag): HTMLTemplateResult {
     const decision = this.model.classifications.get(requiredTag.text);
     const decisionText = decision ? decision.confirmed : "no decision";
 
@@ -316,7 +316,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
 
-  private verificationMeterTemplate(): TemplateResult | typeof nothing {
+  private verificationMeterTemplate(): HTMLTemplateResult | typeof nothing {
     const currentVerificationModel = this.model.verification;
     const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
     const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
@@ -331,7 +331,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
-  private meterSegmentTemplate(tooltip: string, color?: string): TemplateResult {
+  private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
     return html`
       <sl-tooltip content="${tooltip}">
         <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
@@ -339,7 +339,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     `;
   }
 
-  private progressMeterTemplate(): TemplateResult {
+  private progressMeterTemplate(): HTMLTemplateResult {
     // prettier wants to format this as a single line because it thinks it is
     // string interpolation
     // to improve readability, I have disabled prettier for this line so that we

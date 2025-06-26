@@ -50,7 +50,7 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public skipDecisionButton = () => this.page.locator("#skip-button").first();
+  public skipDecisionButton = () => this.page.locator("oe-verification[verified='skip']").first();
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();

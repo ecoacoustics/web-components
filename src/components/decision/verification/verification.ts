@@ -3,7 +3,7 @@ import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
-import { html, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
@@ -12,6 +12,8 @@ import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
 import { toTitleCase } from "../../../helpers/text/titleCase";
 import verificationStyles from "./css/style.css?inline";
+import { loop } from "../../../helpers/directives";
+import { repeat } from "lit/directives/repeat.js";
 
 /**
  * @description
@@ -86,8 +88,24 @@ export class VerificationComponent extends DecisionComponent {
     return [verification, ...classifications];
   }
 
-  private additionalTagsTemplate() {
-    return html`<div class="additional-tags">${this.additionalTags.map((tag) => tag.text).join(", ")}</div>`;
+  private additionalTagsTemplate(): HTMLTemplateResult {
+    const tagTemplate = (tag: Tag) => {
+      return html`<li class="tag">${tag.text}</li>`;
+    };
+
+    // Using a list element here means that if the user selects and copies the
+    // additional tag, the list indicator (plus sign) will not be shown.
+    //
+    // We use repeat() here so that we can target re-renders to specific tags.
+    return html`
+      <ul class="additional-tags">
+        ${repeat(
+          this.additionalTags,
+          (tag) => tag.text,
+          (tag) => html`${tagTemplate(tag)}`,
+        )}
+      </ul>
+    `;
   }
 
   public render() {
@@ -122,8 +140,6 @@ export class VerificationComponent extends DecisionComponent {
               <slot>${toTitleCase(this.verified)}</slot>
             </div>
 
-            ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
-
             <div>
               <!--
                 even if there is no shortcut, we reserve a space for the shortcut
@@ -138,6 +154,8 @@ export class VerificationComponent extends DecisionComponent {
             </div>
           </button>
         </div>
+
+        ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
       </div>
     `;
   }

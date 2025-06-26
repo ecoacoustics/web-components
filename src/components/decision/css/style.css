@@ -70,6 +70,9 @@
   tag title at the top of the group.
 */
 .decision-group {
+  height: 100%;
+  width: min-content;
+
   margin-left: var(--oe-spacing);
   margin-right: var(--oe-spacing);
 }

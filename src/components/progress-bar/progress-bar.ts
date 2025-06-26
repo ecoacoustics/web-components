@@ -1,6 +1,6 @@
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, TemplateResult, unsafeCSS } from "lit";
+import { html, LitElement, HTMLTemplateResult, unsafeCSS } from "lit";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { WithShoelace } from "../../mixins/withShoelace";
@@ -47,7 +47,7 @@ export class ProgressBar extends WithShoelace(AbstractComponent(LitElement)) {
     return value * percentagePerValue;
   }
 
-  public render(): TemplateResult {
+  public render(): HTMLTemplateResult {
     const completedPercentage = this.segmentLength(this.completed);
     const viewHeadPercentage = this.segmentLength(this.historyHead);
     const viewHeadPercentageDelta = completedPercentage - viewHeadPercentage;

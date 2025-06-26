@@ -5,7 +5,7 @@ import { Classification } from "../../../models/decisions/classification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { Tag } from "../../../models/tag";
 import { DecisionOptions } from "../../../models/decisions/decision";
-import { html, nothing, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, nothing, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
 import {
@@ -181,7 +181,7 @@ export class ClassificationComponent extends DecisionComponent {
     return event.key === shortcut;
   }
 
-  private decisionButtonTemplate(decision: DecisionOptions): TemplateResult {
+  private decisionButtonTemplate(decision: DecisionOptions): HTMLTemplateResult {
     const buttonClasses = classMap({
       disabled: !!this.disabled,
       "oe-btn-primary": decision === DecisionOptions.TRUE || decision === DecisionOptions.FALSE,

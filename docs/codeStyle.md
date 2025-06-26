@@ -58,7 +58,7 @@ and [code-workspace](/webcomponents.code-workspace).
       - `Readonly<Element>` is recommended if you element doesn't need to be modified. Using `Readonly<Element>` means that you cannot modify **properties** on the `element` variable.
 6. Prefer to use internal `@state` over user facing `@property`'s
 7. All methods on a web component that returns a HTML, or SVG template must be
-   prepended with "Template" (e.g. `private decisionPromptTemplate(): TemplateResult`)
+   prepended with "Template" (e.g. `private decisionPromptTemplate(): HTMLTemplateResult`)
 
 ## CSS Parts
 

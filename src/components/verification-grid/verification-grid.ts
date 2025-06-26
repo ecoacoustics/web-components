@@ -1432,7 +1432,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     return html`
       <oe-verification
-        id="skip-button"
         verified="skip"
         @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
         shortcut="\`"
