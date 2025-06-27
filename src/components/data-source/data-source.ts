@@ -10,8 +10,8 @@ import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { SubjectParser } from "../../services/subjectParser";
 import { DownloadableResult } from "../../models/subject";
-import dataSourceStyles from "./css/style.css?inline";
 import { when } from "lit/directives/when.js";
+import dataSourceStyles from "./css/style.css?inline";
 
 /**
  * @description
@@ -112,6 +112,35 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
+  public resultRows(): Partial<DownloadableResult>[] {
+    if (!this.verificationGrid) {
+      throw new Error("could not find verification grid component");
+    }
+
+    if (this.isUrlSourced()) {
+      const subjects = this.verificationGrid.subjects;
+      return subjects.map((model) => model.toDownloadable());
+    }
+
+    // when downloading from a callback paginated source, we only want to
+    // download the subjects that the user has seen up to (the decision head).
+    // however, because the verification grids "subjects" array contains
+    // subjects ahead of the decision head (for pre-fetching purposes)
+    // we need to create a copy of the "subjects" array up to the
+    // decision head
+    const decisionHead = this.verificationGrid.decisionHead;
+    const allSubjects = this.verificationGrid.subjects;
+    const pageSize = this.verificationGrid.effectivePageSize;
+
+    // when downloading results, we want to download all the subjects that the
+    // use has seen, including the current page.
+    // because the decisionHead represents the index of the first item on the
+    // current page, we have to add the page size so that the currently visible
+    // page is included in the downloaded output.
+    const subjects = allSubjects.slice(0, decisionHead + pageSize);
+    return subjects.map((model) => model.toDownloadable());
+  }
+
   private async downloadCallbackSourcedResults(): Promise<void> {
     const downloadableResults = this.resultRows();
     const stringifiedResults = JSON.stringify(downloadableResults);
@@ -167,35 +196,6 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const fileType = this.urlSourcedFetcher.file?.type ?? "json";
     const file = new File([formattedResults], downloadedFileName, { type: fileType });
     downloadFile(file);
-  }
-
-  private resultRows(): Partial<DownloadableResult>[] {
-    if (!this.verificationGrid) {
-      throw new Error("could not find verification grid component");
-    }
-
-    if (this.isUrlSourced()) {
-      const subjects = this.verificationGrid.subjects;
-      return subjects.map((model) => model.toDownloadable());
-    }
-
-    // when downloading from a callback paginated source, we only want to
-    // download the subjects that the user has seen up to (the decision head).
-    // however, because the verification grids "subjects" array contains
-    // subjects ahead of the decision head (for pre-fetching purposes)
-    // we need to create a copy of the "subjects" array up to the
-    // decision head
-    const decisionHead = this.verificationGrid.decisionHead;
-    const allSubjects = this.verificationGrid.subjects;
-    const pageSize = this.verificationGrid.effectivePageSize;
-
-    // when downloading results, we want to download all the subjects that the
-    // use has seen, including the current page.
-    // because the decisionHead represents the index of the first item on the
-    // current page, we have to add the page size so that the currently visible
-    // page is included in the downloaded output.
-    const subjects = allSubjects.slice(0, decisionHead + pageSize);
-    return subjects.map((model) => model.toDownloadable());
   }
 
   // TODO: remove this hack that was added to fix an issue where if the
@@ -278,14 +278,16 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   public downloadResultsTemplate(): HTMLTemplateResult {
     return html`
-      <button
-        data-testid="download-results-button"
-        class="oe-btn-secondary"
-        @click="${this.downloadResults}"
-        ?disabled="${!this.canDownload}"
-      >
-        Download Results
-      </button>
+      <slot>
+        <button
+          data-testid="download-results-button"
+          class="oe-btn-secondary"
+          @click="${() => this.downloadResults()}"
+          ?disabled="${!this.canDownload}"
+        >
+          Download Results
+        </button>
+      </slot>
     `;
   }
 
