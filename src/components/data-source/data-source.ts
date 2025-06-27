@@ -18,6 +18,8 @@ import dataSourceStyles from "./css/style.css?inline";
  * Automatically creates a PageFetcher callback that can be used on a
  * verification grid component
  *
+ * @slot - A custom result download button to use instead of the default download button.
+ *
  * @csspart file-picker - A css target to style the file picker button
  */
 @customElement("oe-data-source")
