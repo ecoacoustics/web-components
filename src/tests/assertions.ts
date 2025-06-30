@@ -58,9 +58,41 @@ async function toHaveLayoutScreenshot(
   };
 }
 
+/**
+ * Asserts that an element has specific slotted text.
+ * This assertion cannot be done through normal toHaveText() locator assertions
+ * because the selector will assert against the shadow dom locator, where the
+ * light-dom slotted content does not exist.
+ */
+export async function toHaveSlottedText(locator: Locator, expectedText: string): Promise<MatcherReturnType> {
+  const realizedText = await locator.evaluate((slot: HTMLSlotElement) => {
+    const assignedElements = slot.assignedElements({ flatten: true });
+
+    // If there are no assigned elements, we return the default text content of
+    // the slot element.
+    // This is the same behavior as web browsers.
+    if (assignedElements.length === 0) {
+      return slot.textContent;
+    }
+
+    const assignedText = assignedElements.map((element) => element.textContent);
+    const slotText = assignedText.join("");
+
+    return slotText;
+  });
+
+  const pass = realizedText === expectedText;
+
+  return {
+    pass,
+    message: () => `expected '${realizedText}' to equal '${expectedText}'`,
+  };
+}
+
 export const expect = playwrightExpect.extend({
   toHaveTrimmedText,
   toHaveLayoutScreenshot,
+  toHaveSlottedText,
 });
 
 export const test = base.extend({

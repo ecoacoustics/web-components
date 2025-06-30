@@ -18,6 +18,11 @@ class DataSourceFixture {
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
   public decisionButtons = () => this.page.locator(".decision-button").all();
 
+  // A locator for the download buttons default slot.
+  // This can be used to assert that the slot has the correct default value and
+  // can accept other content such as images.
+  public downloadResultsPrompt = () => this.page.getByTestId("download-results-button").locator("slot").first();
+
   public verificationGrid = () => this.page.locator("oe-verification-grid").first();
   public gridTiles = () => this.page.locator(".tile-container").all();
   public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
