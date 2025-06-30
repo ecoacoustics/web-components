@@ -80,7 +80,7 @@
   }
 }
 
-.decision-group-item {
+.decision-group {
   margin-left: var(--oe-spacing);
   margin-right: var(--oe-spacing);
 }

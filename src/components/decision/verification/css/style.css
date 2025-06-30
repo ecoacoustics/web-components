@@ -5,7 +5,7 @@
     border-left-width: 0;
   }
 
-  .decision-group-item {
+  .decision-group {
     margin-left: 0;
   }
 }
@@ -16,7 +16,7 @@
     border-bottom-right-radius: 0;
   }
 
-  .decision-group-item {
+  .decision-group {
     margin-right: 0;
   }
 }

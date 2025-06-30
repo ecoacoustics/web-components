@@ -441,10 +441,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // gridSize is a part of page source invalidation because if the grid size
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
-    // of sources to update / remove un-needed items
+    // of sources to update / remove un-needed items.
+    //
+    // However, if the new grid size is less than the current grid sie, we don't
+    // want to invalidate the page because that would produce unnecessary work.
     const pageInvalidationKeys: (keyof this)[] = ["targetGridSize", "columns", "rows"];
     if (pageInvalidationKeys.some((key) => change.has(key))) {
-      this.handlePageInvalidation();
+      const oldColumns = change.get("columns") ?? this.columns;
+      const oldRows = change.get("rows") ?? this.rows;
+
+      const oldGridSize = oldColumns * oldRows;
+      const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
+
+      if (oldTileCount < this.populatedTileCount) {
+        this.handlePageInvalidation();
+      }
     }
   }
 
@@ -1433,8 +1444,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <oe-verification
         verified="skip"
-        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
         shortcut="\`"
+        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
       ></oe-verification>
     `;
   }
