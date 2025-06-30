@@ -110,8 +110,7 @@
         "group-title" min-content
         "decision-buttons" min-content
         "attached-info" min-content; */
-      grid-template-columns: repeat(10, auto);
-      column-gap: var(--oe-spacing);
+      grid-template-columns: repeat(10, min-content);
     }
   }
 }

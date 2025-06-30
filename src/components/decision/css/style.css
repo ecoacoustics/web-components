@@ -9,9 +9,6 @@
   */
   display: contents;
 
-  margin-left: var(--oe-spacing);
-  margin-right: var(--oe-spacing);
-
   height: 100%;
   width: min-content;
 }
@@ -83,20 +80,24 @@
   }
 }
 
+.decision-group-item {
+  margin-left: var(--oe-spacing);
+  margin-right: var(--oe-spacing);
+}
+
 /*
   A decision group includes both the true and false decision buttons and the
   tag title at the top of the group.
 */
 .decision-group-title {
-  display: flex;
-  justify-content: center;
-  padding-bottom: var(--oe-spacing-small);
-
   display: grid;
   grid-template-rows: subgrid;
   grid-row: 1;
 
   min-height: 1.2em;
+  padding-bottom: var(--oe-spacing-small);
+
+  text-align: center;
 }
 
 .decision-group-title,
@@ -110,9 +111,7 @@
   border-radius: var(--oe-border-rounding);
   box-shadow: var(--oe-box-shadow);
 
-  /* display: flex; */
-  display: grid;
-  grid-template-columns: repeat(2, auto);
+  display: flex;
   grid-template-rows: subgrid;
   grid-row: 2;
 }

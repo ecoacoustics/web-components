@@ -121,9 +121,9 @@ export class VerificationComponent extends DecisionComponent {
     this._decisionModels[this.verified] = verificationModel;
 
     return html`
-      <div class="decision-group-title"></div>
+      <div class="decision-group-title decision-group-item"></div>
 
-      <div class="decision-buttons">
+      <div class="decision-buttons decision-group-item">
         <button
           id="decision-button"
           class="oe-btn-primary decision-button ${buttonClasses}"
@@ -153,7 +153,9 @@ export class VerificationComponent extends DecisionComponent {
         </button>
       </div>
 
-      <div class="attached-info">${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}</div>
+      <div class="attached-info decision-group-item">
+        ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
+      </div>
     `;
   }
 }
