@@ -1,5 +1,5 @@
 import { dataSourceFixture as test } from "./data-source.fixture";
-import { catchLocatorEvent, setBrowserAttribute } from "../../tests/helpers";
+import { catchLocatorEvent, insertContent, setBrowserAttribute } from "../../tests/helpers";
 import { expect } from "../../tests/assertions";
 
 test.describe("data source", () => {
@@ -108,6 +108,18 @@ test.describe("data source", () => {
     test("should not have download button if explicitly disabled", async ({ fixture }) => {
       await setBrowserAttribute(fixture.component(), "allow-downloads" as any, "false");
       await expect(fixture.downloadResultsButton()).toBeHidden();
+    });
+  });
+
+  test.describe("slotted content", () => {
+    test("should use the default 'Download Results' text", async ({ fixture }) => {
+      await expect(fixture.downloadResultsPrompt()).toHaveSlottedText("Download Results");
+    });
+
+    test("should allow slotting custom content as the download prompt", async ({ fixture }) => {
+      const testedText = "Hello World!";
+      await insertContent(fixture.component(), testedText);
+      await expect(fixture.downloadResultsPrompt()).toHaveSlottedText(testedText);
     });
   });
 

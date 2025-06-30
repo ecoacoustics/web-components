@@ -280,16 +280,14 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   public downloadResultsTemplate(): HTMLTemplateResult {
     return html`
-      <slot>
-        <button
-          data-testid="download-results-button"
-          class="oe-btn-secondary"
-          @click="${() => this.downloadResults()}"
-          ?disabled="${!this.canDownload}"
-        >
-          Download Results
-        </button>
-      </slot>
+      <button
+        data-testid="download-results-button"
+        class="oe-btn-secondary"
+        @click="${() => this.downloadResults()}"
+        ?disabled="${!this.canDownload}"
+      >
+        <slot>Download Results</slot>
+      </button>
     `;
   }
 

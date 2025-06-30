@@ -262,6 +262,19 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
   );
 }
 
+/** Appends slotted content to an element */
+export async function insertContent(target: Locator, content: string) {
+  await target.evaluate(
+    (element: HTMLElement, { content }) => {
+      const template = document.createElement("div");
+      template.innerHTML = content;
+
+      element.appendChild(template);
+    },
+    { content },
+  );
+}
+
 export async function waitForContentReady(page: Page, selectors: string[] = []) {
   // wait for the page to emit the "load"
   await page.waitForLoadState();
