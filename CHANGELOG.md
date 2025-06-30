@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.2.0...web-components-v3.3.0) (2025-06-30)
+
+
+### Features
+
+* Slottable oe-data-source downloads button ([#384](https://github.com/ecoacoustics/web-components/issues/384)) ([048f5ea](https://github.com/ecoacoustics/web-components/commit/048f5ea8609cd809a9dea0bd6426f4b626f8824c)), closes [#383](https://github.com/ecoacoustics/web-components/issues/383)
+
 ## [3.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.1.0...web-components-v3.2.0) (2025-06-16)
 
 
