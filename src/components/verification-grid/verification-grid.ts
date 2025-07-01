@@ -540,8 +540,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     let foundVerification = false;
     const result: RequiredDecision[] = [];
 
+    // We iterate over all of the decision elements (including verification
+    // components) so that the button placement order is preserved.
+    // If were to use the "hasVerificationTask" getter, the verification task
+    // segment would be appended to either the start or the end.
     for (const decisionElement of this.decisionElements) {
-      if (decisionElement instanceof VerificationComponent && !foundVerification) {
+      if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
@@ -1343,7 +1347,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private hasVerificationTask(): boolean {
-    return this.verificationDecisionElements.length > 0;
+    // Some verification components (skip) are supportive to the current task,
+    // and do not create their own verification task.
+    return this.verificationDecisionElements.some((element) => element.isTask);
   }
 
   private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {

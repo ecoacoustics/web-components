@@ -48,6 +48,16 @@ export class VerificationComponent extends DecisionComponent {
     return this._decisionModels;
   }
 
+  // TODO: Remove once we complete separate oe-skip and oe-unsure decisions
+  // https://github.com/ecoacoustics/web-components/issues/169
+  /**
+   * Returns a boolean indicating if using this verification component creates
+   * a verification task.
+   */
+  public get isTask(): boolean {
+    return this.verified !== DecisionOptions.SKIP;
+  }
+
   private _decisionModels: Partial<DecisionModels<Verification>> = {};
 
   public override shortcutKeys(): KeyboardShortcut[] {
