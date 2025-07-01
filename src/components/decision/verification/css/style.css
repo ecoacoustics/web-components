@@ -1,3 +1,11 @@
+/*
+  Square off borders for all inside edges if the current verification decision
+  component is next to another verification decision component.
+
+  This :host selector squares the right (inside) edge of the verification
+  decision button and removes the padding so that it's squared and flushed
+  against its neighboring oe-verification component.
+*/
 :host(:not(:first-of-type)) {
   .decision-button {
     border-top-left-radius: 0;
@@ -10,6 +18,11 @@
   }
 }
 
+/*
+  Similar to the right inner squaring, this selector squares and removes the
+  margin of the verification button if it is not the last oe-verification
+  component sibling.
+*/
 :host(:not(:last-of-type)) {
   .decision-button {
     border-top-right-radius: 0;
