@@ -85,6 +85,13 @@
   margin-right: var(--oe-spacing);
 }
 
+.decision-group-title,
+.decision-group-title slot {
+  color: var(--oe-font-color-strong);
+  font-weight: var(--oe-font-weight-medium);
+  letter-spacing: 0.075em;
+}
+
 /*
   A decision group includes both the true and false decision buttons and the
   tag title at the top of the group.
@@ -100,20 +107,13 @@
   text-align: center;
 }
 
-.decision-group-title,
-.decision-group-title slot {
-  color: var(--oe-font-color-strong);
-  font-weight: var(--oe-font-weight-medium);
-  letter-spacing: 0.075em;
-}
-
 .decision-buttons {
-  border-radius: var(--oe-border-rounding);
-  box-shadow: var(--oe-box-shadow);
-
   display: flex;
   grid-template-rows: subgrid;
   grid-row: 2;
+
+  border-radius: var(--oe-border-rounding);
+  box-shadow: var(--oe-box-shadow);
 }
 
 /*

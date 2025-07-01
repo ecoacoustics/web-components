@@ -106,10 +106,6 @@
     #decision-slot {
       display: grid;
       grid-template-rows: repeat(3, auto);
-      /* grid-template-rows:
-        "group-title" min-content
-        "decision-buttons" min-content
-        "attached-info" min-content; */
       grid-template-columns: repeat(auto-fit, min-content);
     }
   }
