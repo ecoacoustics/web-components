@@ -21,8 +21,10 @@
     padding-left: var(--oe-spacing-large);
     padding-right: var(--oe-spacing-large);
 
+    letter-spacing: var(--oe-font-spacing);
+
     &:nth-child(odd) {
-      background-color: var(--oe-panel-color-darker);
+      background-color: var(--oe-panel-color-dark);
     }
 
     & > .shortcut-prompt {

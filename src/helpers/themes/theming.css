@@ -81,6 +81,7 @@
   --oe-font-weight: 400;
   --oe-font-weight-medium: 450;
   --oe-font-weight-bold: 500;
+  --oe-font-spacing: 0.025em;
 
   --oe-animation-time: 0.3s;
   --oe-spacing-small: 0.3em;
@@ -102,7 +103,8 @@
   );
 
   --oe-panel-color: var(--oe-background-color);
-  --oe-panel-color-lighter: color-mix(in oklch, var(--oe-panel-color), white 10%);
+  --oe-panel-color-light: color-mix(in oklch, var(--oe-panel-color), white 10%);
+  --oe-panel-color-dark: color-mix(in oklch, var(--oe-panel-color), black 3%);
   --oe-panel-color-darker: hsl(
     var(--oe-theme-hue),
     var(--oe-theme-saturation),

@@ -191,7 +191,7 @@ select {
   padding: var(--oe-spacing);
   border: none;
   border-radius: var(--oe-border-rounding);
-  background-color: var(--oe-panel-color-lighter);
+  background-color: var(--oe-panel-color-light);
   color: var(--oe-font-color);
 
   &:focus {
