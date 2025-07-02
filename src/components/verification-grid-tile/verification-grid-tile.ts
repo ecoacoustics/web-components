@@ -104,6 +104,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   @property({ attribute: false, type: Number })
   public index = 0;
 
+  /**
+   * A property that can be set if the grid tile is the only tile in the
+   * verification grid.
+   * This is useful for disabling selection events and styling.
+   */
+  @property({ attribute: false, type: Boolean })
+  public isOnlyTile = false;
+
   @property({ attribute: false, type: Array })
   public readonly requiredDecisions: RequiredDecision[] = [];
 
@@ -361,6 +369,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
     const tileClasses = classMap({
       selected: this.selected,
+      selectable: !this.isOnlyTile,
       hidden: this.hidden,
     });
 

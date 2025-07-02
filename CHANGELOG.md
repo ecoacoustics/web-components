@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.3.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.3.0...web-components-v3.3.1) (2025-07-02)
+
+
+### Bug Fixes
+
+* Don't show "pointer" cursor on 1x1 grids ([#390](https://github.com/ecoacoustics/web-components/issues/390)) ([328cd5f](https://github.com/ecoacoustics/web-components/commit/328cd5fb5ad0e2a2dc03ab7239ff1b93048b04ca)), closes [#386](https://github.com/ecoacoustics/web-components/issues/386)
+
+## [3.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.2.0...web-components-v3.3.0) (2025-06-30)
+
+
+### Features
+
+* Slottable oe-data-source downloads button ([#384](https://github.com/ecoacoustics/web-components/issues/384)) ([048f5ea](https://github.com/ecoacoustics/web-components/commit/048f5ea8609cd809a9dea0bd6426f4b626f8824c)), closes [#383](https://github.com/ecoacoustics/web-components/issues/383)
+
 ## [3.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.1.0...web-components-v3.2.0) (2025-06-16)
 
 

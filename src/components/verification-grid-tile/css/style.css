@@ -23,8 +23,7 @@
 .tile-container {
   position: relative;
   border-radius: var(--oe-border-rounding);
-  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color-darker);
-  cursor: pointer;
+  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   margin-bottom: 0;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
@@ -74,6 +73,10 @@
 /* TODO: maybe add a border here */
 .selected {
   background-color: var(--oe-selected-color);
+}
+
+.selectable {
+  cursor: pointer;
 }
 
 .hidden {

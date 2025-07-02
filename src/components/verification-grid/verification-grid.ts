@@ -1532,6 +1532,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                     @loaded="${this.handleSpectrogramLoaded}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
+                    .isOnlyTile="${this.populatedTileCount === 1}"
                     .model="${subject as any}"
                     .index="${i}"
                   >
