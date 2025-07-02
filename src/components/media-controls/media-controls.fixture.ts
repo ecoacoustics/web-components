@@ -12,7 +12,11 @@ class TestPage {
   public actionButtonSlot = () => this.page.locator("oe-media-controls #action-button > slot").first();
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
 
-  public async create(slotTemplate = "") {
+  /**
+   * Creates a test fixture where the media controls is linked to the
+   * spectrogram by passing a spectrogram id to the "for" attribute.
+   */
+  public async createWithId(slotTemplate = "") {
     await this.page.setContent(`
         <oe-spectrogram
           id="spectrogram"
@@ -24,6 +28,30 @@ class TestPage {
         </oe-media-controls>
     `);
     await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
+  }
+
+  /**
+   * Creates a test fixture where the media controls is linked to the
+   * spectrogram by passing an element reference to the "for" property.
+   */
+  public async createWithRef() {
+    await this.page.setContent(`
+        <oe-spectrogram
+          id="spectrogram"
+          src="http://localhost:3000/example.flac"
+          style="display: relative; width: 100px; height: 100px;"
+        ></oe-spectrogram>
+        <oe-media-controls></oe-media-controls>
+    `);
+    await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
+
+    await this.spectrogram().evaluate((spectrogramElement: SpectrogramComponent) => {
+      // We know that the media controls component will exist because we created
+      // it in the fixture above.
+      // Therefore, it is safe to type cast.
+      const mediaControls = document.querySelector("oe-media-controls") as MediaControlsComponent;
+      mediaControls.for = spectrogramElement;
+    });
   }
 
   public async updateSlot(content: string) {
@@ -72,7 +100,7 @@ class TestPage {
 export const mediaControlsFixture = test.extend<{ fixture: TestPage }>({
   fixture: async ({ page }, run) => {
     const fixture = new TestPage(page);
-    await fixture.create();
+    await fixture.createWithId();
     await run(fixture);
   },
 });

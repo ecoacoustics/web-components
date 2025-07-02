@@ -60,7 +60,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   /** A DOM selector to target the spectrogram element */
   @property({ type: String })
-  public for = "";
+  public for: string | SpectrogramComponent = "";
 
   @property({ type: String })
   public playIconPosition: PreferenceLocation = "default";
@@ -125,14 +125,18 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
       // use add a keydown event listener so that we can bind space bar to play
       document.addEventListener("keydown", this.keyDownHandler);
 
-      // because we want to scope the for attribute to the current shadow root
-      // we need to use the getRootNode method to get the shadow root
-      const rootNode = this.getRootNode() as HTMLElement;
-      const locator = `#${this.for}`;
-      this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(locator);
+      if (this.for instanceof SpectrogramComponent) {
+        this.spectrogramElement = this.for;
+      } else {
+        // because we want to scope the for attribute to the current shadow root
+        // we need to use the getRootNode method to get the shadow root
+        const rootNode = this.getRootNode() as HTMLElement;
+        const locator = `#${this.for}`;
+        this.spectrogramElement = rootNode.querySelector<SpectrogramComponent>(locator);
+      }
 
       if (!this.spectrogramElement) {
-        console.warn(`Could not locate oe-media-controls target "${locator}"`);
+        console.warn(`Could not locate oe-media-controls target "${this.for}"`);
         return;
       } else if (!(this.spectrogramElement instanceof SpectrogramComponent)) {
         console.error("Attempted to attach oe-media-controls to non spectrogram element");

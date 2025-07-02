@@ -2,40 +2,48 @@ import { expect } from "../../tests/assertions";
 import { mediaControlsFixture as test } from "./media-controls.fixture";
 
 test.describe("audio element communication", () => {
-  test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
-  });
+  [false, true].forEach((useElementId: boolean) => {
+    test.describe(useElementId ? "using spectrogram id" : "using element reference", () => {
+      test.beforeEach(async ({ fixture }) => {
+        if (useElementId) {
+          await fixture.createWithId();
+        } else {
+          await fixture.createWithRef();
+        }
+      });
 
-  // this test exists because if you don't correctly import or mount the media controls component
-  // it will still create the element tag, but with no shadow content or error indicating that mounting
-  // the component failed and will make all other tests fail because no content = a "hidden" state
-  // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
-  // we have mounted the component incorrectly
-  test("creating a visible web component", async ({ page }) => {
-    const mediaControls = page.locator("oe-media-controls");
-    await expect(mediaControls).toBeVisible();
-  });
+      // this test exists because if you don't correctly import or mount the media controls component
+      // it will still create the element tag, but with no shadow content or error indicating that mounting
+      // the component failed and will make all other tests fail because no content = a "hidden" state
+      // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
+      // we have mounted the component incorrectly
+      test("creating a visible web component", async ({ page }) => {
+        const mediaControls = page.locator("oe-media-controls");
+        await expect(mediaControls).toBeVisible();
+      });
 
-  test("state before interaction", async ({ fixture }) => {
-    const isPlaying = await fixture.isPlayingAudio();
-    expect(isPlaying).toBe(false);
-  });
+      test("state before interaction", async ({ fixture }) => {
+        const isPlaying = await fixture.isPlayingAudio();
+        expect(isPlaying).toBe(false);
+      });
 
-  test("play functionality", async ({ fixture }) => {
-    await fixture.toggleAudio();
-    const isPlaying = await fixture.isPlayingAudio();
-    expect(isPlaying).toBe(true);
-  });
+      test("play functionality", async ({ fixture }) => {
+        await fixture.toggleAudio();
+        const isPlaying = await fixture.isPlayingAudio();
+        expect(isPlaying).toBe(true);
+      });
 
-  test("play pause functionality", async ({ fixture }) => {
-    // start playing audio
-    // by clicking the action button again, we should stop playing audio
-    await fixture.toggleAudio();
-    await fixture.toggleAudio();
+      test("play pause functionality", async ({ fixture }) => {
+        // start playing audio
+        // by clicking the action button again, we should stop playing audio
+        await fixture.toggleAudio();
+        await fixture.toggleAudio();
 
-    const isPlaying = await fixture.isPlayingAudio();
+        const isPlaying = await fixture.isPlayingAudio();
 
-    expect(isPlaying).toBe(false);
+        expect(isPlaying).toBe(false);
+      });
+    });
   });
 });
 
@@ -71,7 +79,7 @@ test.describe("slots", () => {
 
 test.describe("css parts", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
+    await fixture.createWithId();
   });
 
   const cssPartsStyling = `
