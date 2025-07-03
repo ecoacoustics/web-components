@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.3.1...web-components-v3.4.0) (2025-07-03)
+
+
+### Features
+
+* element ref ability inmedia-controls "for" ([#393](https://github.com/ecoacoustics/web-components/issues/393)) ([ec6cdf6](https://github.com/ecoacoustics/web-components/commit/ec6cdf6efd1fe2d75c0275760c78ce5195307e29)), closes [#360](https://github.com/ecoacoustics/web-components/issues/360)
+
 ## [3.3.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.3.0...web-components-v3.3.1) (2025-07-02)
 
 
