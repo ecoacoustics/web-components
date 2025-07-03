@@ -58,8 +58,11 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     return null;
   };
 
-  /** A DOM selector to target the spectrogram element */
-  @property({ type: String })
+  /**
+   * A DOM selector or element reference to target the attached spectrogram
+   * element.
+   */
+  @property({ type: String, reflect: true })
   public for: string | SpectrogramComponent = "";
 
   @property({ type: String })

@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { test } from "../../tests/assertions";
-import { waitForContentReady } from "../../tests/helpers";
+import { expect, test } from "../../tests/assertions";
+import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -12,6 +12,8 @@ class TestPage {
   public actionButtonSlot = () => this.page.locator("oe-media-controls #action-button > slot").first();
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
 
+  public spectrogramId = "spectrogram";
+
   /**
    * Creates a test fixture where the media controls is linked to the
    * spectrogram by passing a spectrogram id to the "for" attribute.
@@ -19,7 +21,7 @@ class TestPage {
   public async createWithId(slotTemplate = "") {
     await this.page.setContent(`
         <oe-spectrogram
-          id="spectrogram"
+          id="${this.spectrogramId}"
           src="http://localhost:3000/example.flac"
           style="display: relative; width: 100px; height: 100px;"
         ></oe-spectrogram>
@@ -27,7 +29,7 @@ class TestPage {
             ${slotTemplate ?? ""}
         </oe-media-controls>
     `);
-    await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
+    await this.waitUntilLoaded();
   }
 
   /**
@@ -37,14 +39,19 @@ class TestPage {
   public async createWithRef() {
     await this.page.setContent(`
         <oe-spectrogram
-          id="spectrogram"
+          id="${this.spectrogramId}"
           src="http://localhost:3000/example.flac"
           style="display: relative; width: 100px; height: 100px;"
         ></oe-spectrogram>
         <oe-media-controls></oe-media-controls>
     `);
-    await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
+    await this.waitUntilLoaded();
 
+    await this.setForElementReference();
+  }
+
+  /** Changes the media controls "for" attribute to use an element reference */
+  public async setForElementReference() {
     await this.spectrogram().evaluate((spectrogramElement: SpectrogramComponent) => {
       // We know that the media controls component will exist because we created
       // it in the fixture above.
@@ -52,6 +59,11 @@ class TestPage {
       const mediaControls = document.querySelector("oe-media-controls") as MediaControlsComponent;
       mediaControls.for = spectrogramElement;
     });
+  }
+
+  /** Changes the media controls "for" attribute to use an element id */
+  public async setForElementId() {
+    await setBrowserAttribute<MediaControlsComponent>(this.component(), "for", this.spectrogramId);
   }
 
   public async updateSlot(content: string) {
@@ -94,6 +106,11 @@ class TestPage {
         backgroundColor: styles.backgroundColor,
       };
     });
+  }
+
+  private async waitUntilLoaded() {
+    await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
+    await expect(this.component()).toBeVisible();
   }
 }
 
