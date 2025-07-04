@@ -1,6 +1,15 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
+import {
+  html,
+  HTMLTemplateResult,
+  LitElement,
+  nothing,
+  PropertyValueMap,
+  PropertyValues,
+  render,
+  unsafeCSS,
+} from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -187,6 +196,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-verification, oe-classification" })
   private decisionElements!: DecisionComponentUnion[];
 
+  // Because it's possible (although unlikely) for multiple skip buttons to
+  // exist on a page, this query selector returns an array of elements.
+  @queryAssignedElements({ selector: "oe-verification[verified='skip']" })
+  private skipButtons!: DecisionComponent[];
+
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
@@ -201,9 +215,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @query("#decisions-container")
   private decisionsContainer!: HTMLSlotElement;
-
-  @query("#skip-button")
-  private skipButton!: DecisionComponent;
 
   @query("#highlight-box")
   private highlightBox!: HTMLDivElement;
@@ -384,6 +395,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const targetSize = this.defaultGridSize();
       this.targetGridSize = targetSize;
     }
+
+    if (this.skipButtons.length === 0) {
+      render(this.skipDecisionTemplate(), this);
+    }
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -426,10 +441,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // gridSize is a part of page source invalidation because if the grid size
     // increases, there will be verification grid tiles without any source
     // additionally, if the grid size is decreased, we want the "currentPage"
-    // of sources to update / remove un-needed items
+    // of sources to update / remove un-needed items.
+    //
+    // However, if the new grid size is less than the current grid sie, we don't
+    // want to invalidate the page because that would produce unnecessary work.
     const pageInvalidationKeys: (keyof this)[] = ["targetGridSize", "columns", "rows"];
     if (pageInvalidationKeys.some((key) => change.has(key))) {
-      this.handlePageInvalidation();
+      const oldColumns = change.get("columns") ?? this.columns;
+      const oldRows = change.get("rows") ?? this.rows;
+
+      const oldGridSize = oldColumns * oldRows;
+      const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
+
+      if (oldTileCount < this.populatedTileCount) {
+        this.handlePageInvalidation();
+      }
     }
   }
 
@@ -453,7 +479,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // I store the decision elements inside a variable so that we don't have
     // to query the DOM every iteration of the loop
     const decisionElements = this.decisionElements ?? [];
-    this.skipButton.isMobile = isMobile;
     for (const element of decisionElements) {
       element.isMobile = isMobile;
     }
@@ -515,8 +540,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     let foundVerification = false;
     const result: RequiredDecision[] = [];
 
+    // We iterate over all of the decision elements (including verification
+    // components) so that the button placement order is preserved.
+    // If were to use the "hasVerificationTask" getter, the verification task
+    // segment would be appended to either the start or the end.
     for (const decisionElement of this.decisionElements) {
-      if (decisionElement instanceof VerificationComponent && !foundVerification) {
+      if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
@@ -1212,7 +1241,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     this.decisionsDisabled = disabled;
-    this.skipButton.disabled = disabled;
   }
 
   //#endregion
@@ -1232,11 +1260,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // because it is possible for the new page to be a subset of the current
     // page. E.g. when decreasing the grid size, we only want to disable the
     // decision buttons if there are going to be new spectrograms loading
-    const elements = this.gridTiles;
-    if (elements.length < pageSubjects.length) {
-      this.setDecisionDisabled(true);
-    }
+    //
+    // These buttons will be re-enabled when the all of the spectrograms
+    // "loaded" events have fired.
+    // Note that if there are no spectrograms on the new page (e.g. we have
+    // reached the final page), the buttons will not be re-enabled.
+    this.setDecisionDisabled(true);
 
+    const elements = this.gridTiles;
     if (elements === undefined || elements.length === 0) {
       this.requestUpdate();
       return;
@@ -1316,7 +1347,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private hasVerificationTask(): boolean {
-    return this.verificationDecisionElements.length > 0;
+    // Some verification components (skip) are supportive to the current task,
+    // and do not create their own verification task.
+    return this.verificationDecisionElements.some((element) => element.isTask);
   }
 
   private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
@@ -1414,7 +1447,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     };
 
-    return html`<button id="skip-button" class="oe-btn-primary" @click="${skipEventHandler}">Skip</button>`;
+    return html`
+      <oe-verification
+        verified="skip"
+        shortcut="\`"
+        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
+      ></oe-verification>
+    `;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
@@ -1533,8 +1572,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
             </h2>
             <div id="decisions-container" class="decision-control-actions">
-              <slot @slotchange="${() => this.handleSlotChange()}"></slot>
-              ${this.skipDecisionTemplate()}
+              <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
             </div>
           </span>
 

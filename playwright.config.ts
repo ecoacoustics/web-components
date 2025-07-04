@@ -11,7 +11,7 @@ export default defineConfig({
   // by enabling retries, playwright will automatically detect flaky tests
   // if we are running the tests locally, I want to disable retries so that
   // flakey tests are considered failures
-  retries: isCi ? 3 : 0,
+  retries: isCi ? 1 : 0,
   // we start the vite server so that we can access the public/ directory
   // that contains audio files used in testing
   webServer: {
@@ -40,7 +40,7 @@ export default defineConfig({
     ],
     // print the test results out to the console.
     // this can be useful for seeing why a test has failed in CI
-    isCi ? ["github"] : ["list"],
+    isCi ? ["list"] : ["list"],
   ],
   // be careful when updating this path template. Long path names can cause
   // Git on Windows to fail checkout

@@ -13,7 +13,7 @@
     "build:docs": "rimraf build/ && cem analyze --litelement --globs \"src/components/**/*.ts\" && vite build && eleventy --config=eleventy.config.js",
     "build:components": "vite build && tsc",
     "publish:components": "pnpm build:components && npm publish --access public",
-    "test": "playwright test .",
+    "test": "playwright test",
     "test:unit": "playwright test src/components/ src/services/",
     "test:e2e": "playwright test src/tests/",
     "test:report": "playwright show-report test-results",

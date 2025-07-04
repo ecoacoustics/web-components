@@ -1,7 +1,37 @@
+:host {
+  /*
+    I use display: contents here so that the parent grid can be passed through
+    to be used as a subgrid.
+
+    I don't directly make the :host selector a subgrid because the :host is
+    user configurable, and we don't want users to accidentally break the subgrid
+    by adding light dom styles to this element.
+  */
+  display: contents;
+
+  height: 100%;
+  width: min-content;
+}
+
 .decision-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  flex-grow: 1;
+  margin: 0px;
+
+  justify-content: space-between;
+
   position: relative;
   height: 100%;
+
+  min-width: 4.5rem;
+  min-height: 4.5rem;
+
   padding: 0.3em;
+
+  letter-spacing: var(--oe-font-spacing);
 
   kbd {
     /*
@@ -26,8 +56,19 @@
     min-height: 1em;
   }
 
+  .decision-color-pill {
+    height: 0.5em;
+    width: 1.3em;
+
+    align-self: flex-start;
+  }
+
   .additional-tags {
     font-size: var(--oe-font-size);
+  }
+
+  .button-text {
+    margin: 0.75rem;
   }
 
   & > * {
@@ -39,7 +80,49 @@
   }
 }
 
-.decision-color-pill {
-  height: 0.5em;
-  width: 1.5em;
+.decision-group {
+  margin-left: var(--oe-spacing);
+  margin-right: var(--oe-spacing);
+}
+
+.decision-group-title,
+.decision-group-title slot {
+  color: var(--oe-font-color-strong);
+  font-weight: var(--oe-font-weight-medium);
+  letter-spacing: 0.075em;
+}
+
+/*
+  A decision group includes both the true and false decision buttons and the
+  tag title at the top of the group.
+*/
+.decision-group-title {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 1;
+
+  min-height: 1.2em;
+  padding-bottom: var(--oe-spacing-small);
+
+  text-align: center;
+}
+
+.decision-buttons {
+  display: flex;
+  grid-template-rows: subgrid;
+  grid-row: 2;
+
+  border-radius: var(--oe-border-rounding);
+  box-shadow: var(--oe-box-shadow);
+}
+
+/*
+  Additional information can be attached to decision component and will be
+  shown below the decision button.
+  E.g. This is used to show "additional tag" information.
+*/
+.attached-info {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 3;
 }

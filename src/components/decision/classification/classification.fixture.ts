@@ -21,7 +21,7 @@ class ClassificationComponentFixture {
     // pull the tag out of the `tag` attribute
     await this.page.setContent("<oe-classification tag='koala'></oe-classification>");
 
-    await waitForContentReady(this.page, ["oe-classification"]);
+    await waitForContentReady(this.page, [".decision-button"]);
 
     // mock the verification grid by binding it to the document object
     // this means that we can test that the shortcut keys work correctly without

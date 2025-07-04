@@ -30,7 +30,7 @@ export function advancedShortcutsSlide(): BootstrapSlide {
               (shortcut) => html`
                 <tr class="shortcut-row">
                   <td>${shortcut.description}</td>
-                  <td>${keyboardShortcutTemplate(shortcut)}</td>
+                  <td class="shortcut-prompt">${keyboardShortcutTemplate(shortcut)}</td>
                 </tr>
               `,
             )}

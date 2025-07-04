@@ -56,8 +56,8 @@ class DataSourceFixture {
     await waitForContentReady(this.page, [
       "oe-verification-grid",
       "oe-data-source",
-      "oe-verification",
       "oe-verification-grid-tile",
+      ".decision-button",
     ]);
 
     // Because we assert a JS browser property, playwright will re-run this

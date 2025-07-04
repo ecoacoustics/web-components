@@ -1,4 +1,4 @@
-import { html, nothing, svg, TemplateResult } from "lit";
+import { html, HTMLTemplateResult, nothing, svg, SVGTemplateResult } from "lit";
 import { map } from "lit/directives/map.js";
 import { BootstrapSlide } from "../bootstrapSlide";
 import { gridTileSprite } from "../../sprites/grid-tile.sprite";
@@ -23,7 +23,7 @@ export function shortcutsSlide(
   return { slideTemplate, title };
 }
 
-function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): TemplateResult | typeof nothing {
+function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): HTMLTemplateResult | typeof nothing {
   if (shortcuts.length < 2) {
     const errorMessage =
       "Failed to create shortcut bootstrap slide: Insufficient decision shortcuts (requires 2 decision shortcuts)";
@@ -66,7 +66,7 @@ function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): Te
   `;
 }
 
-function verificationGridTemplate(hasClassificationTask: boolean): TemplateResult {
+function verificationGridTemplate(hasClassificationTask: boolean): SVGTemplateResult {
   return svg`
       ${gridTileSprite(10, 0, hasClassificationTask, true, "tile-0")}
       ${gridTileSprite(100, 0, hasClassificationTask, false, "tile-1")}
