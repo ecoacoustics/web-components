@@ -60,7 +60,7 @@ test.describe("single verification grid", () => {
 
   test.describe("initial state", () => {
     test("should have the correct decisions", async ({ fixture }) => {
-      const expectedDecisions = ["true", "false"];
+      const expectedDecisions = ["True", "False", "Skip"];
       const decisions = await fixture.availableDecision();
       expect(decisions).toEqual(expectedDecisions);
     });
@@ -1270,7 +1270,7 @@ test.describe("single verification grid", () => {
         withoutSlotShape: { columns: 1, rows: 1 },
         withSlotShape: { columns: 1, rows: 1 },
       },
-    ] as const satisfies DynamicGridSizeTest[];
+    ] satisfies DynamicGridSizeTest[];
 
     for (const testConfig of testedGridSizes) {
       const testedSlotContent = `

@@ -52,7 +52,7 @@ class VerificationGridFixture {
       "oe-verification-grid",
       "oe-verification-grid-tile",
       "oe-data-source",
-      "oe-verification",
+      ".decision-button",
     ]);
 
     await expect(this.component()).toHaveJSProperty("loaded", true);

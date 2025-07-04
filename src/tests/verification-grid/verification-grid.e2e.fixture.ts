@@ -50,7 +50,7 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public skipDecisionButton = () => this.page.locator("oe-verification[verified='skip']").first();
+  public skipDecisionButton = () => this.page.locator("oe-verification[verified='skip'] #decision-button").first();
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
@@ -139,7 +139,7 @@ class TestPage {
       <oe-classification tag="car" true-shortcut="h"></oe-classification>
       <oe-classification tag="koala" true-shortcut="j"></oe-classification>
       <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-    `, ["oe-classification"]);
+    `, [".decision-button"]);
   }
 
   public async createWithVerificationTask() {
@@ -147,7 +147,7 @@ class TestPage {
     await this.create(`
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
-    `, ["oe-verification"]);
+    `, [".decision-button"]);
   }
 
   public async createWithAppChrome() {

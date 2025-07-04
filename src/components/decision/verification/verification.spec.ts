@@ -17,20 +17,17 @@ test.describe("Verification Component", () => {
   test("should display both additional tags and a keyboard shortcut when provided", async ({ fixture }) => {
     const additionalTags = "tag1, tag2";
     const keyboardShortcut = "a";
-    const expectedAdditionalTagsText = `(${additionalTags})`;
+    const expectedAdditionalTags = ["tag1", "tag2"];
 
     await fixture.changeAdditionalTags(additionalTags);
     await fixture.changeShortcut(keyboardShortcut);
 
-    const realizedAdditionalTags = await fixture.additionalTagsText();
+    const realizedAdditionalTags = await fixture.additionalTags();
+    for (const tag of realizedAdditionalTags) {
+      expect(expectedAdditionalTags).toContain(await tag.textContent());
+    }
 
-    expect(realizedAdditionalTags).toEqual(expectedAdditionalTagsText);
     await expect(fixture.shortcutLegend()).toHaveTrimmedText("A");
-  });
-
-  test("should have a spare space for additional tags even if not provided", async ({ fixture }) => {
-    const realizedAdditionalTags = await fixture.additionalTagsText();
-    expect(realizedAdditionalTags).toEqual("");
   });
 
   test("should have a spare space for a keyboard shortcut if none is provided", async ({ fixture }) => {

@@ -64,7 +64,7 @@ test.describe("Classification Component", () => {
   });
 
   test("should have both true and false buttons from a single classification component", async ({ fixture }) => {
-    const expectedText = ["true", "false"];
+    const expectedText = ["True", "False"];
     const realizedText = await fixture.getDecisionOptions();
     expect(realizedText).toEqual(expectedText);
   });
