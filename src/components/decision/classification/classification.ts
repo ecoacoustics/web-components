@@ -232,3 +232,9 @@ export class ClassificationComponent extends DecisionComponent {
     `;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-classification": ClassificationComponent;
+  }
+}

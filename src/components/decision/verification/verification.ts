@@ -169,3 +169,9 @@ export class VerificationComponent extends DecisionComponent {
     `;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-verification": VerificationComponent;
+  }
+}

@@ -42,6 +42,7 @@ import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal"
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { DecisionOptions } from "../../models/decisions/decision";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -214,7 +215,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private gridContainer!: HTMLDivElement;
 
   @query("#decisions-container")
-  private decisionsContainer!: HTMLSlotElement;
+  private decisionsContainer!: HTMLDivElement;
+
+  @query("#decisions-slot")
+  private decisionSlot!: HTMLSlotElement;
 
   @query("#highlight-box")
   private highlightBox!: HTMLDivElement;
@@ -397,7 +401,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.skipButtons.length === 0) {
-      render(this.skipDecisionTemplate(), this);
+      this.appendChild(this.skipDecisionTemplate());
     }
   }
 
@@ -1430,7 +1434,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   // TODO: this function could definitely be refactored
-  private skipDecisionTemplate(): HTMLTemplateResult {
+  private skipDecisionTemplate(): VerificationComponent {
     const skipEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
@@ -1447,13 +1451,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     };
 
-    return html`
-      <oe-verification
-        verified="skip"
-        shortcut="\`"
-        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
-      ></oe-verification>
-    `;
+    // If we directly use the "render" function, Safari on MacOS will insert the
+    // slotted element at the start. While Chrome and Firefox will insert the
+    // slotted element at the end.
+    // Therefore, to maintain consistency between browsers, I programmatically
+    // assign the slotted element so that we can ensure that the skip button is
+    // inserted into the end.
+    const skipElement = document.createElement("oe-verification");
+    skipElement.verified = DecisionOptions.SKIP;
+    skipElement.shortcut = "`";
+    skipElement.addEventListener(VerificationComponent.decisionEventName, (event: any) => {
+      skipEventHandler(event);
+    });
+
+    return skipElement;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
