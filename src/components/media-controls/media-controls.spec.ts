@@ -24,15 +24,15 @@ test.describe("audio element communication", () => {
       expect(hasEqualReference).toEqual(true);
     });
 
-  // this test exists because if you don't correctly import or mount the media controls component
-  // it will still create the element tag, but with no shadow content or error indicating that mounting
-  // the component failed and will make all other tests fail because no content = a "hidden" state
-  // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
-  // we have mounted the component incorrectly
-  test("creating a visible web component", async ({ fixture }) => {
-    const mediaControls = fixture.page.locator("oe-media-controls");
-    await expect(mediaControls).toBeVisible();
-  });
+    // this test exists because if you don't correctly import or mount the media controls component
+    // it will still create the element tag, but with no shadow content or error indicating that mounting
+    // the component failed and will make all other tests fail because no content = a "hidden" state
+    // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
+    // we have mounted the component incorrectly
+    test("creating a visible web component", async ({ fixture }) => {
+      const mediaControls = fixture.page.locator("oe-media-controls");
+      await expect(mediaControls).toBeVisible();
+    });
 
     test("state before interaction", async ({ fixture }) => {
       const isPlaying = await fixture.isPlayingAudio();
@@ -98,7 +98,7 @@ test.describe("changing options", () => {
 
 test.describe("slots", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
+    await fixture.createWithId();
   });
 
   test("custom play and pause icon via slots", async ({ fixture }) => {
