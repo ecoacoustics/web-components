@@ -1,9 +1,9 @@
 import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { waitForContentReady, setBrowserAttribute } from "../../tests/helpers";
+import { waitForContentReady } from "../../tests/helpers";
 import { createFixture, setContent } from "../../tests/fixtures";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -18,7 +18,7 @@ class TestPage {
       this.page,
       `
         <oe-spectrogram
-          id="${this.spectrogramId}"
+          id="spectrogram"
           src="http://localhost:3000/example.flac"
           style="display: relative; width: 100px; height: 100px;"
         ></oe-spectrogram>
