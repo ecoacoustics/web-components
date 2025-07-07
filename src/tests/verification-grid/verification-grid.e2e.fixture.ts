@@ -50,7 +50,6 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public skipDecisionButton = () => this.page.locator("oe-verification[verified='skip'] #decision-button").first();
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
@@ -61,7 +60,6 @@ class TestPage {
   public classificationDecisions = () => this.page.locator("oe-classification").all();
   public decisionButtons = () => this.page.locator(".decision-button").all();
   public decisionButtonsText = () => this.page.locator(".button-text").all();
-  public decisionColorPills = () => this.page.locator(".decision-color-pill").all();
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
@@ -102,6 +100,16 @@ class TestPage {
   public footerControls = () => this.page.locator(".footer-controls").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
+
+  private verificationButton(decision: string): Locator {
+    const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
+    return targetDecision.locator("#decision-button");
+  }
+
+  private classificationButton(tag: string, decision: boolean): Locator {
+    const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
+    return targetDecision.locator(`#${decision}-decision-button`);
+  }
 
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
@@ -259,11 +267,21 @@ class TestPage {
     return selectedTiles;
   }
 
-  public async getDecisionColor(index: number): Promise<string> {
-    const targets = await this.decisionColorPills();
-    const target = targets[index];
+  public async getVerificationColor(decision: "true" | "false" | "skip") {
+    const decisionButton = this.verificationButton(decision);
+    const colorPill = decisionButton.locator(".decision-color-pill");
 
-    return await target.evaluate((element: HTMLSpanElement) => {
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
+      const styles = window.getComputedStyle(element);
+      return styles.backgroundColor;
+    });
+  }
+
+  public async getClassificationColor(tag: string, decision: boolean): Promise<string> {
+    const decisionButton = this.classificationButton(tag, decision);
+    const colorPill = decisionButton.locator(".decision-color-pill");
+
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
       return styles.backgroundColor;
     });
@@ -599,19 +617,24 @@ class TestPage {
     await dragSelection(this.page, start, end, modifiers);
   }
 
-  public async makeDecision(decision: number) {
+  public async makeVerificationDecision(decision: "true" | "false" | "skip") {
     // the decision-made event is only emitted from the verification grid
     // component once the decision has been fully processed.
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
 
-    const decisionComponents = await this.decisionButtons();
-    await decisionComponents[decision].click();
+    const decisionButton = this.verificationButton(decision);
+    await decisionButton.click();
 
     await decisionEvent;
   }
 
-  public async makeSkipDecision() {
-    await this.skipDecisionButton().click();
+  public async makeClassificationDecision(tag: string, decision: boolean) {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+
+    const decisionButton = this.classificationButton(tag, decision);
+    await decisionButton.click();
+
+    await decisionEvent;
   }
 
   public async viewPreviousHistoryPage() {

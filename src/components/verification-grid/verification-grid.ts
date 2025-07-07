@@ -42,7 +42,6 @@ import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal"
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
-import { DecisionOptions } from "../../models/decisions/decision";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -398,17 +397,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.skipButtons.length === 0) {
-      // render(this.skipDecisionTemplate(), this);
-      // this.appendChild(this.skipDecisionTemplate());
-      this.insertAdjacentHTML(
-        "beforeend",
-        `
-        <oe-verification
-          verified="skip"
-          shortcut="\`"
-        ></oe-verification>
-      `,
-      );
+      render(this.skipDecisionTemplate(), this);
     }
   }
 
@@ -1457,21 +1446,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         await this.nextPage();
       }
     };
-
-    // If we directly use the "render" function, Safari on MacOS will insert the
-    // slotted element at the start. While Chrome and Firefox will insert the
-    // slotted element at the end.
-    // Therefore, to maintain consistency between browsers, I programmatically
-    // assign the slotted element so that we can ensure that the skip button is
-    // inserted into the end.
-    const skipElement = document.createElement("oe-verification");
-    skipElement.verified = DecisionOptions.SKIP;
-    skipElement.shortcut = "`";
-    skipElement.addEventListener(VerificationComponent.decisionEventName, (event: any) => {
-      skipEventHandler(event);
-    });
-
-    // return skipElement;
 
     return html`
       <oe-verification
