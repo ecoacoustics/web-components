@@ -1,15 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  render,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -217,7 +208,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @query("#decisions-container")
   private decisionsContainer!: HTMLDivElement;
 
-  @query("#decisions-slot")
+  @query("#decision-slot")
   private decisionSlot!: HTMLSlotElement;
 
   @query("#highlight-box")
@@ -337,6 +328,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.addEventListener("keydown", this.keydownHandler);
     this.addEventListener("keyup", this.keyupHandler);
     window.addEventListener("blur", this.blurHandler);
+
+    if (this.skipButtons.length === 0) {
+      this.appendChild(this.skipDecisionTemplate());
+    }
   }
 
   public disconnectedCallback(): void {
@@ -400,9 +395,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.targetGridSize = targetSize;
     }
 
-    if (this.skipButtons.length === 0) {
-      this.appendChild(this.skipDecisionTemplate());
-    }
+    // if (this.skipButtons.length === 0) {
+    //   this.appendChild(this.skipDecisionTemplate());
+    // }
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
