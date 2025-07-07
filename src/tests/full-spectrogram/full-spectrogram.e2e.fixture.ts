@@ -9,8 +9,8 @@ import {
   waitForContentReady,
 } from "../helpers";
 import { AudioModel } from "../../models/recordings";
-import { test } from "../assertions";
 import { Size } from "../../models/rendering";
+import { createFixture } from "../fixtures";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
@@ -129,10 +129,4 @@ class TestPage {
   }
 }
 
-export const fullFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const fullFixture = createFixture(TestPage);

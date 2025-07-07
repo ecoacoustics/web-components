@@ -1,11 +1,11 @@
 import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "./spectrogram";
 import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
-import { test } from "../../tests/assertions";
 import { Size } from "../../models/rendering";
 import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { createFixture } from "../../tests/fixtures";
 
-class SingleSpectrogramFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public readonly spectrogram = () => this.page.locator("oe-spectrogram").first();
@@ -108,9 +108,4 @@ class SingleSpectrogramFixture {
   }
 }
 
-export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new SingleSpectrogramFixture(page);
-    await run(fixture);
-  },
-});
+export const singleSpectrogramFixture = createFixture(TestPage);

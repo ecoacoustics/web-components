@@ -1,10 +1,10 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
 import { mockDeviceSize, testBreakpoints, waitForContentReady } from "../../tests/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { EnumValue } from "../../helpers/types/advancedTypes";
+import { createFixture } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -204,9 +204,4 @@ class TestPage {
   }
 }
 
-export const annotateFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await run(fixture);
-  },
-});
+export const annotateFixture = createFixture(TestPage);

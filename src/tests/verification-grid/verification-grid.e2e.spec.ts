@@ -1355,6 +1355,7 @@ test.describe("single verification grid", () => {
 
 test.describe("decisions", () => {
   test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
     await fixture.changeGridSize(3);
     await fixture.dismissBootstrapDialog();
   });

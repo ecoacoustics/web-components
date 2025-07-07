@@ -1,10 +1,10 @@
 import { Page } from "@playwright/test";
-import { test } from "../../../tests/assertions";
 import { waitForContentReady } from "../../../tests/helpers";
 import { html } from "lit";
 import { IChromeProvider } from "../chromeProvider/chromeProvider";
+import { createFixture } from "../../../tests/fixtures";
 
-class ChromeHostFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public hostComponent = () => this.page.locator("oe-tests-chrome-host").first();
@@ -28,9 +28,4 @@ class ChromeHostFixture {
   }
 }
 
-export const chromeHostFixture = test.extend<{ fixture: ChromeHostFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new ChromeHostFixture(page);
-    await run(fixture);
-  },
-});
+export const chromeHostFixture = createFixture(TestPage);

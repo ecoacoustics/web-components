@@ -7,7 +7,7 @@ export default defineConfig({
   // we should aim to support fully parallel tests
   // however, it is possible that this breaks some tests down the line
   // (if we do not code good, isolated and independent tests)
-  fullyParallel: false,
+  fullyParallel: true,
   // by enabling retries, playwright will automatically detect flaky tests
   // if we are running the tests locally, I want to disable retries so that
   // flakey tests are considered failures

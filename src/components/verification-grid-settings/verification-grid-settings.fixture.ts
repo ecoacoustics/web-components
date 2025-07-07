@@ -9,7 +9,8 @@ import {
 } from "../../tests/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -102,9 +103,4 @@ class TestPage {
   }
 }
 
-export const settingsFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await run(fixture);
-  },
-});
+export const settingsFixture = createFixture(TestPage);

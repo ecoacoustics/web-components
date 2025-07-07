@@ -2,8 +2,9 @@ import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../
 import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
-import { expect, test } from "../assertions";
+import { expect } from "../assertions";
 import { Pixel } from "../../models/unitConverters";
+import { createFixture } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -109,10 +110,4 @@ class TestPage {
   }
 }
 
-export const axesSpectrogramFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const axesSpectrogramFixture = createFixture(TestPage);

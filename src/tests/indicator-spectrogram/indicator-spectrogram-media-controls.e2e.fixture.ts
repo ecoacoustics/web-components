@@ -1,8 +1,9 @@
 import { Page } from "@playwright/test";
 import { setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
-import { expect, test } from "../assertions";
+import { expect } from "../assertions";
 import { Seconds } from "../../models/unitConverters";
+import { createFixture } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -69,10 +70,4 @@ class TestPage {
   }
 }
 
-export const indicatorSpectrogramMediaControlsFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, use) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await use(fixture);
-  },
-});
+export const indicatorSpectrogramMediaControlsFixture = createFixture(TestPage);

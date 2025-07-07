@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "../../../tests/assertions";
 import { waitForContentReady } from "../../../tests/helpers";
+import { createFixture } from "../../../tests/fixtures";
 
-class ChromeProviderFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-tests-chrome-provider").first();
@@ -17,9 +17,4 @@ class ChromeProviderFixture {
   }
 }
 
-export const chromeProviderFixture = test.extend<{ fixture: ChromeProviderFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new ChromeProviderFixture(page);
-    await run(fixture);
-  },
-});
+export const chromeProviderFixture = createFixture(TestPage);

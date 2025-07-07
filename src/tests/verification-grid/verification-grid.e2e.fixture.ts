@@ -24,7 +24,7 @@ import { Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
-import { expect, test } from "../assertions";
+import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
@@ -37,6 +37,7 @@ import { MediaControlsComponent } from "../../components/media-controls/media-co
 import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
+import { createFixture } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -801,10 +802,4 @@ class TestPage {
   }
 }
 
-export const verificationGridFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const verificationGridFixture = createFixture(TestPage);

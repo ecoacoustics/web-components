@@ -50,6 +50,10 @@ test.describe("changing options", () => {
 });
 
 test.describe("slots", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("custom play and pause icon via slots", async ({ fixture }) => {
     await fixture.updateSlot(`
       <div slot="play-icon">Play Me!</div>

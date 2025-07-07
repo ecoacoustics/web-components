@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { getBrowserValue, setBrowserValue, waitForContentReady } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
-import { test } from "../../tests/assertions";
+import { createFixture } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -49,10 +49,4 @@ class TestPage {
   }
 }
 
-export const infoCardFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const infoCardFixture = createFixture(TestPage);

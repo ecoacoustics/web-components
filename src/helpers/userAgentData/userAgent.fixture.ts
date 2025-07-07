@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
 import { hasCtrlLikeModifier, isMacOs } from "./userAgent";
+import { createFixture } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -28,10 +28,4 @@ class TestPage {
   }
 }
 
-export const userAgentDataFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const userAgentDataFixture = createFixture(TestPage);

@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { test } from "../../tests/assertions";
 import { waitForContentReady } from "../../tests/helpers";
+import { createFixture } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -69,10 +69,4 @@ class TestPage {
   }
 }
 
-export const mediaControlsFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const mediaControlsFixture = createFixture(TestPage);

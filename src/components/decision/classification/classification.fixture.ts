@@ -2,9 +2,9 @@ import { Page } from "@playwright/test";
 import { catchEvent, removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../../tests/helpers";
 import { ClassificationComponent } from "./classification";
 import { DecisionEvent } from "../decision";
-import { test } from "../../../tests/assertions";
+import { createFixture } from "../../../tests/fixtures";
 
-class ClassificationComponentFixture {
+class TestPage {
   constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-classification").first();
@@ -94,9 +94,4 @@ class ClassificationComponentFixture {
   }
 }
 
-export const classificationFixture = test.extend<{ fixture: ClassificationComponentFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new ClassificationComponentFixture(page);
-    await run(fixture);
-  },
-});
+export const classificationFixture = createFixture(TestPage);

@@ -1,9 +1,10 @@
 import { Page } from "@playwright/test";
 import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { VerificationGridComponent } from "./verification-grid";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture } from "../../tests/fixtures";
 
-class VerificationGridFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-verification-grid");
@@ -63,9 +64,4 @@ class VerificationGridFixture {
   }
 }
 
-export const verificationGridFixture = test.extend<{ fixture: VerificationGridFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new VerificationGridFixture(page);
-    await run(fixture);
-  },
-});
+export const verificationGridFixture = createFixture(TestPage);

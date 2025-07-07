@@ -9,9 +9,9 @@ import {
 import { VerificationComponent } from "./verification";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
-import { test } from "../../../tests/assertions";
+import { createFixture } from "../../../tests/fixtures";
 
-class VerificationComponentFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-verification").first();
@@ -90,9 +90,4 @@ class VerificationComponentFixture {
   }
 }
 
-export const verificationFixture = test.extend<{ fixture: VerificationComponentFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new VerificationComponentFixture(page);
-    await run(fixture);
-  },
-});
+export const verificationFixture = createFixture(TestPage);

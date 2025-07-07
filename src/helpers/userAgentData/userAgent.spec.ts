@@ -2,6 +2,10 @@ import { expect } from "../../tests/assertions";
 import { userAgentDataFixture as test } from "./userAgent.fixture";
 
 test.describe("isMacOs", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should return the correct value", async ({ page, fixture }) => {
     const expectedResult = fixture.isNodeMac();
     const realizedResult = await page.evaluate(async () => {
@@ -15,6 +19,10 @@ test.describe("isMacOs", () => {
 });
 
 test.describe("hasCtrlLikeModifier", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should correctly identify ctrl like modifier for a click event", async ({ fixture }) => {
     const testTarget = fixture.buttonElement();
 

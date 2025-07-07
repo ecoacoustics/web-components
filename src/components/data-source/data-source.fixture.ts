@@ -7,9 +7,10 @@ import {
 } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture } from "../../tests/fixtures";
 
-class DataSourceFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-data-source");
@@ -138,9 +139,4 @@ class DataSourceFixture {
   }
 }
 
-export const dataSourceFixture = test.extend<{ fixture: DataSourceFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new DataSourceFixture(page);
-    await run(fixture);
-  },
-});
+export const dataSourceFixture = createFixture(TestPage);
