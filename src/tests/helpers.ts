@@ -26,11 +26,6 @@ export function mockDeviceSize(size: Size): DeviceMock {
   return (page: Page) => page.setViewportSize(size);
 }
 
-export async function insertHtml(page: Page, html: string) {
-  await page.setContent(html);
-  await page.waitForLoadState("networkidle");
-}
-
 export async function getBrowserStyle<T extends HTMLElement>(component: Locator, property: string) {
   return await component.evaluate((element: T, propertyName) => {
     const styles = window.getComputedStyle(element);

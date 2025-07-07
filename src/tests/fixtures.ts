@@ -17,5 +17,5 @@ export function createFixture<T extends TestFixture>(fixtureConstructor: Fixture
 }
 
 export async function setContent(page: Page, content: string) {
-  await page.setContent(content, { waitUntil: "commit" });
+  await page.setContent(content);
 }
