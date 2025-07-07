@@ -398,7 +398,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.skipButtons.length === 0) {
-      render(this.skipDecisionTemplate(), this);
+      // render(this.skipDecisionTemplate(), this);
+      // this.appendChild(this.skipDecisionTemplate());
+      this.insertAdjacentHTML(
+        "beforeend",
+        `
+        <oe-verification
+          verified="skip"
+          shortcut="\`"
+        ></oe-verification>
+      `,
+      );
     }
   }
 
