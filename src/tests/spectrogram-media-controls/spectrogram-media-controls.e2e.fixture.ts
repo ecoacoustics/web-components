@@ -1,7 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { getBrowserValue, hasBrowserAttribute, waitForContentReady } from "../helpers";
-import { createFixture } from "../fixtures";
+import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -15,7 +15,9 @@ class TestPage {
   private audioSource = "http://localhost:3000/example.flac";
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         data-testid="spectrogram-one"
         id="first"
@@ -27,12 +29,15 @@ class TestPage {
         src="${this.audioSource}"
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithSameIds() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         data-testid="spectrogram-one"
         id="first"
@@ -44,7 +49,8 @@ class TestPage {
         src="${this.audioSource}"
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 

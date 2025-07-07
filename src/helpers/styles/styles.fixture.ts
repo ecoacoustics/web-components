@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { css, LitElement } from "lit";
 import { removeStyleSheets } from "./remove";
 import { addStyleSheets } from "./add";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -10,7 +10,7 @@ class TestPage {
   public component = () => this.page.locator("oe-spectrogram").first();
 
   public async create() {
-    await this.page.setContent("<oe-spectrogram></oe-spectrogram>");
+    await setContent(this.page, "<oe-spectrogram></oe-spectrogram>");
 
     await this.page.addScriptTag({
       content: removeStyleSheets.toString(),

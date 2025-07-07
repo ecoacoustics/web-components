@@ -8,7 +8,7 @@ import {
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
 import { expect } from "../../tests/assertions";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -30,7 +30,9 @@ class TestPage {
   public testJsonInput = "http://localhost:3000/test-items.json";
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid" grid-size="3">
         <oe-verification verified="true">Koala</oe-verification>
         <oe-verification verified="false">Not Koala</oe-verification>
@@ -45,7 +47,8 @@ class TestPage {
           local
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",

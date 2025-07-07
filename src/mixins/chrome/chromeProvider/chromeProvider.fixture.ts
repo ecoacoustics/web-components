@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { waitForContentReady } from "../../../tests/helpers";
-import { createFixture } from "../../../tests/fixtures";
+import { createFixture, setContent } from "../../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -9,9 +9,7 @@ class TestPage {
   public componentSlot = () => this.component().locator("slot").first();
 
   public async create(content = "") {
-    await this.page.setContent(`
-      <oe-tests-chrome-provider>${content}</oe-tests-chrome-provider>
-    `);
+    await setContent(this.page, `<oe-tests-chrome-provider>${content}</oe-tests-chrome-provider>`);
 
     await waitForContentReady(this.page);
   }

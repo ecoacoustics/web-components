@@ -81,47 +81,47 @@ test.describe("Verification Component", () => {
         await expect(decisionEvent).resolves.toBeTruthy();
       });
 
-      test(`should emit the correct event for a keyboard ${decisionOption} verification`, async ({ fixture, page }) => {
+      test(`should emit the correct event for a keyboard ${decisionOption} verification`, async ({ fixture }) => {
         const keyboardShortcut = "a";
         await fixture.changeShortcut(keyboardShortcut);
         await fixture.changeVerified(decisionOption);
 
         const decisionEvent = fixture.decisionEvent();
-        await page.keyboard.press(keyboardShortcut);
+        await fixture.page.keyboard.press(keyboardShortcut);
         await expect(decisionEvent).resolves.toBeTruthy();
       });
     });
 
-    test("should be able to cancel a pointer decision with the escape key", async ({ fixture, page }) => {
-      await logEvent(page, "decision");
+    test("should be able to cancel a pointer decision with the escape key", async ({ fixture }) => {
+      await logEvent(fixture.page, "decision");
 
       await fixture.decisionButton().dispatchEvent("pointerdown");
-      await page.keyboard.press("Escape");
+      await fixture.page.keyboard.press("Escape");
       await fixture.decisionButton().dispatchEvent("pointerup");
 
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
 
-    test("should be able to cancel a keyboard decision with the escape key", async ({ fixture, page }) => {
+    test("should be able to cancel a keyboard decision with the escape key", async ({ fixture }) => {
       const keyboardShortcut = "a";
-      await logEvent(page, "decision");
+      await logEvent(fixture.page, "decision");
 
       await fixture.changeShortcut(keyboardShortcut);
-      await page.dispatchEvent("html", "keydown", { key: keyboardShortcut });
-      await page.keyboard.press("Escape");
-      await page.dispatchEvent("html", "keyup", { key: keyboardShortcut });
+      await fixture.page.dispatchEvent("html", "keydown", { key: keyboardShortcut });
+      await fixture.page.keyboard.press("Escape");
+      await fixture.page.dispatchEvent("html", "keyup", { key: keyboardShortcut });
 
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
 
-    test("should not emit an event if clicked when disabled", async ({ fixture, page }) => {
-      await logEvent(page, "decision");
+    test("should not emit an event if clicked when disabled", async ({ fixture }) => {
+      await logEvent(fixture.page, "decision");
 
       await fixture.changeDecisionDisabled(true);
       // force = true bypasses accessibility checks. Because the button should
@@ -135,19 +135,19 @@ test.describe("Verification Component", () => {
 
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
 
-    test("should not be able to make a decision with keyboard shortcuts if disabled", async ({ fixture, page }) => {
-      await logEvent(page, "decision");
+    test("should not be able to make a decision with keyboard shortcuts if disabled", async ({ fixture }) => {
+      await logEvent(fixture.page, "decision");
 
       await fixture.changeDecisionDisabled(true);
-      await page.keyboard.press("a");
+      await fixture.page.keyboard.press("a");
 
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
   });

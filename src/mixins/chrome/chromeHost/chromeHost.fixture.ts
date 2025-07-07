@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { waitForContentReady } from "../../../tests/helpers";
 import { html } from "lit";
 import { IChromeProvider } from "../chromeProvider/chromeProvider";
-import { createFixture } from "../../../tests/fixtures";
+import { createFixture, setContent } from "../../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -11,11 +11,14 @@ class TestPage {
   public providerComponent = () => this.page.locator("oe-tests-chrome-provider").first();
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-tests-chrome-provider>
         <oe-tests-chrome-host></oe-tests-chrome-host>
       </oe-tests-chrome-provider>
-    `);
+    `,
+    );
 
     await this.providerComponent().evaluate((element: HTMLElement & IChromeProvider) => {
       element.chromeTop = () => html`<div id="test-chrome-top">Top Chrome</div>`;

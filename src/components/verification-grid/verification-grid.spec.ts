@@ -14,11 +14,11 @@ test.describe("verification grid", () => {
     expect(templateElements.length).toBe(expectedTemplateElements);
   });
 
-  test("should place decision elements in the correct location", async ({ fixture, page }) => {
+  test("should place decision elements in the correct location", async ({ fixture }) => {
     await fixture.createWithDecisionElements();
 
-    const koalaDecision = page.getByText("Koala").first();
-    const notKoalaDecision = page.getByText("Not Koala").first();
+    const koalaDecision = fixture.page.getByText("Koala").first();
+    const notKoalaDecision = fixture.page.getByText("Not Koala").first();
 
     expect(koalaDecision).toBeTruthy();
     expect(notKoalaDecision).toBeTruthy();

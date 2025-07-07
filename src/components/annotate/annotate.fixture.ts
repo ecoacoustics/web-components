@@ -4,7 +4,7 @@ import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { EnumValue } from "../../helpers/types/advancedTypes";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -43,7 +43,9 @@ class TestPage {
   }
 
   public async create(tagStyle?: EnumValue<AnnotationTagStyle>) {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       ${tagStyle ? `<oe-annotate tag-style="${tagStyle}">` : "<oe-annotate>"}
         <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
 
@@ -91,7 +93,8 @@ class TestPage {
           </oe-tag>
         </oe-annotation>
       </oe-annotate>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
   }
@@ -100,7 +103,9 @@ class TestPage {
     // I use "kookaburra" here because it is a longer tag name. Therefore, it
     // pushes the tag to its limit
     // it also makes it easier to see the annotation label in the test output
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-annotate>
         <oe-spectrogram
           src="http://localhost:3000/example.flac"
@@ -115,17 +120,21 @@ class TestPage {
           high-frequency="${model.highFrequency}"
         ></oe-annotation>
       </oe-annotate>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
   }
 
   public async createWithoutAnnotations() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-annotate>
         <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
       </oe-annotate>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-annotate", "oe-spectrogram"]);
   }

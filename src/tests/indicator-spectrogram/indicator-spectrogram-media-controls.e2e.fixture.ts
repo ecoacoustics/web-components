@@ -3,7 +3,7 @@ import { setBrowserAttribute, waitForContentReady } from "../helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 import { Seconds } from "../../models/unitConverters";
-import { createFixture } from "../fixtures";
+import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -15,7 +15,9 @@ class TestPage {
   public mediaControlsActionButton = () => this.page.locator("oe-media-controls #action-button").first();
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-indicator>
         <oe-spectrogram
           id="spectrogram"
@@ -24,7 +26,8 @@ class TestPage {
         ></oe-spectrogram>
       </oe-indicator>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-   `);
+   `,
+    );
 
     await waitForContentReady(this.page, ["oe-indicator", "oe-spectrogram", "oe-media-controls"]);
   }

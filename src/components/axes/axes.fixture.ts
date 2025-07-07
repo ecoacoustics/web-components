@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { waitForContentReady } from "../../tests/helpers";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -9,11 +9,14 @@ class TestPage {
   public innerContent = () => this.page.getByTestId("inner-content");
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-axes>
         <div data-testid="inner-content"></div>
       </oe-axes>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-axes"]);
   }
 }

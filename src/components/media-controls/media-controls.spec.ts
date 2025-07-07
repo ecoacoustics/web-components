@@ -11,8 +11,8 @@ test.describe("audio element communication", () => {
   // the component failed and will make all other tests fail because no content = a "hidden" state
   // therefore, by having a mounting smoke test, we can ensure that this test will fail only if
   // we have mounted the component incorrectly
-  test("creating a visible web component", async ({ page }) => {
-    const mediaControls = page.locator("oe-media-controls");
+  test("creating a visible web component", async ({ fixture }) => {
+    const mediaControls = fixture.page.locator("oe-media-controls");
     await expect(mediaControls).toBeVisible();
   });
 
@@ -90,8 +90,8 @@ test.describe("css parts", () => {
     }
   `;
 
-  test.beforeEach(async ({ page }) => {
-    await page.addStyleTag({ content: cssPartsStyling });
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.page.addStyleTag({ content: cssPartsStyling });
   });
 
   test("custom styling for the default play/pause icons via css parts", async ({ fixture }) => {

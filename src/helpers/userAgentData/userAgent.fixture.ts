@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { hasCtrlLikeModifier, isMacOs } from "./userAgent";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -8,7 +8,7 @@ class TestPage {
   public buttonElement = () => this.page.getByTestId("test-element");
 
   public async create() {
-    await this.page.setContent("<button data-testid='test-element'>Click Me!</button>");
+    await setContent(this.page, "<button data-testid='test-element'>Click Me!</button>");
 
     await this.page.addScriptTag({
       content: isMacOs.toString(),

@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { getBrowserValue, setBrowserValue, waitForContentReady } from "../../tests/helpers";
 import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -15,7 +15,7 @@ class TestPage {
   public testAudioUrl = "http://localhost:3000/example.flac";
 
   public async create() {
-    await this.page.setContent(`<oe-info-card></oe-info-card>`);
+    await setContent(this.page, `<oe-info-card></oe-info-card>`);
     await waitForContentReady(this.page, ["oe-info-card"]);
   }
 

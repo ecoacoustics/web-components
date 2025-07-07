@@ -9,7 +9,7 @@ import {
 import { VerificationComponent } from "./verification";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
-import { createFixture } from "../../../tests/fixtures";
+import { createFixture, setContent } from "../../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -22,7 +22,7 @@ class TestPage {
   public additionalTags = () => this.page.locator(".tag").all();
 
   public async create() {
-    await this.page.setContent(`<oe-verification verified="true"></oe-verification>`);
+    await setContent(this.page, `<oe-verification verified="true"></oe-verification>`);
     await waitForContentReady(this.page, [".decision-button"]);
 
     // mock the verification grid by binding it to the document object

@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { waitForContentReady } from "../../tests/helpers";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -8,7 +8,7 @@ class TestPage {
   public component = () => this.page.locator("oe-tag").first();
 
   public async create(content: string) {
-    await this.page.setContent(content);
+    await setContent(this.page, content);
     await waitForContentReady(this.page);
   }
 }

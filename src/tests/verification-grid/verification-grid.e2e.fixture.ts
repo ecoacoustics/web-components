@@ -37,7 +37,7 @@ import { MediaControlsComponent } from "../../components/media-controls/media-co
 import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
-import { createFixture } from "../fixtures";
+import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -120,7 +120,9 @@ class TestPage {
   `;
 
   public async create(customTemplate = this.defaultTemplate, requiredSelectors: string[] = []) {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid">
         ${customTemplate}
 
@@ -130,7 +132,8 @@ class TestPage {
           src="${this.testJsonInput}"
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",
@@ -163,7 +166,9 @@ class TestPage {
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
     // this allows us to test how the verification grid interacts with scrolling
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <header>
         <h1>Host Application</h1>
       </header>
@@ -190,7 +195,8 @@ class TestPage {
 
         <input data-testid="host-app-input" type="text" />
       </div>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 

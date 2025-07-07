@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { VerificationGridComponent } from "./verification-grid";
 import { expect } from "../../tests/assertions";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -11,7 +11,9 @@ class TestPage {
   public templateElements = () => this.component().locator(".template-element").all();
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid">
         <template>
           <div class="template-element"></div>
@@ -22,7 +24,8 @@ class TestPage {
           for="verification-grid"
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 
@@ -33,7 +36,9 @@ class TestPage {
   }
 
   public async createWithDecisionElements() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid">
         <template>
           <div class="template-element"></div>
@@ -47,7 +52,8 @@ class TestPage {
           for="verification-grid"
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",

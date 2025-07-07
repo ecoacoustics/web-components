@@ -4,7 +4,7 @@ import { getBrowserValue, invokeBrowserMethod, waitForContentReady } from "../..
 import { Tag } from "../../models/tag";
 import { AnnotationComponent } from "./annotation";
 import { Annotation } from "../../models/annotation";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -22,7 +22,7 @@ class TestPage {
   `;
 
   public async create(content = this.defaultContent) {
-    await this.page.setContent(content);
+    await setContent(this.page, content);
     await waitForContentReady(this.page);
   }
 

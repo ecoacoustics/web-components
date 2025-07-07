@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 import { getBrowserStyle, waitForContentReady } from "../../tests/helpers";
 import { expect } from "../../tests/assertions";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -21,7 +21,7 @@ class TestPage {
       </oe-verification-grid>
     `;
 
-    await this.page.setContent(content ?? defaultContent);
+    await setContent(this.page, content ?? defaultContent);
     await waitForContentReady(this.page, ["oe-verification-grid-tile"]);
   }
 

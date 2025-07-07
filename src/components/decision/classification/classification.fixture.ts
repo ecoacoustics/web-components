@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { catchEvent, removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../../tests/helpers";
 import { ClassificationComponent } from "./classification";
 import { DecisionEvent } from "../decision";
-import { createFixture } from "../../../tests/fixtures";
+import { createFixture, setContent } from "../../../tests/fixtures";
 
 class TestPage {
   constructor(public readonly page: Page) {}
@@ -19,7 +19,7 @@ class TestPage {
 
   public async create() {
     // pull the tag out of the `tag` attribute
-    await this.page.setContent("<oe-classification tag='koala'></oe-classification>");
+    await setContent(this.page, "<oe-classification tag='koala'></oe-classification>");
 
     await waitForContentReady(this.page, [".decision-button"]);
 

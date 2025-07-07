@@ -3,7 +3,7 @@ import { SpectrogramComponent } from "./spectrogram";
 import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
 import { Size } from "../../models/rendering";
 import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
-import { createFixture } from "../../tests/fixtures";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -22,31 +22,37 @@ class TestPage {
   public async create() {
     // we se the spectrogram height to 632px so that the spectrogram is a nice
     // square shape in the snapshot tests
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         id="spectrogram"
         src="${this.audioSource}"
         style="position: relative; height: 632px;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithViewportSize() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         id="spectrogram"
         src="${this.audioSource}"
         style="position: relative; width: 100%; height: 100%;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithDefaultSize() {
-    await this.page.setContent(`<oe-spectrogram src="${this.audioSource}"></oe-spectrogram>`);
+    await setContent(this.page, `<oe-spectrogram src="${this.audioSource}"></oe-spectrogram>`);
     await waitForContentReady(this.page, ["oe-spectrogram"]);
   }
 
