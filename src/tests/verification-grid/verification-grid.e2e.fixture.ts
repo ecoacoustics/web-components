@@ -101,7 +101,7 @@ class TestPage {
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
-  private verificationButton(decision: string): Locator {
+  private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
   }
@@ -267,7 +267,7 @@ class TestPage {
     return selectedTiles;
   }
 
-  public async getVerificationColor(decision: "true" | "false" | "skip") {
+  public async getVerificationColor(decision: "true" | "false") {
     const decisionButton = this.verificationButton(decision);
     const colorPill = decisionButton.locator(".decision-color-pill");
 
@@ -617,7 +617,7 @@ class TestPage {
     await dragSelection(this.page, start, end, modifiers);
   }
 
-  public async makeVerificationDecision(decision: "true" | "false" | "skip") {
+  public async makeVerificationDecision(decision: "true" | "false") {
     // the decision-made event is only emitted from the verification grid
     // component once the decision has been fully processed.
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
@@ -635,6 +635,11 @@ class TestPage {
     await decisionButton.click();
 
     await decisionEvent;
+  }
+
+  public async makeSkipDecision() {
+    const decisionButton = this.verificationButton("skip");
+    await decisionButton.click();
   }
 
   public async viewPreviousHistoryPage() {

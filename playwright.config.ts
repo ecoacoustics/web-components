@@ -11,15 +11,14 @@ export default defineConfig({
   // by enabling retries, playwright will automatically detect flaky tests
   // if we are running the tests locally, I want to disable retries so that
   // flakey tests are considered failures
-  retries: isCi ? 1 : 0,
+  retries: isCi ? 3 : 0,
   // we start the vite server so that we can access the public/ directory
   // that contains audio files used in testing
   webServer: {
     command: "pnpm dev --port 3000",
   },
   // Fail in CI if there is a focused test.only
-  // forbidOnly: isCi,
-  forbidOnly: false,
+  forbidOnly: isCi,
   tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,

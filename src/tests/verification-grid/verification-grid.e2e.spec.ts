@@ -65,7 +65,7 @@ test.describe("single verification grid", () => {
       // I have manually verified that this bug doesn't exist on real devices.
       //
       // TODO: Find out why CI has the incorrect order and fix this test.
-      test.skip(process.platform === "darwin");
+      test.skip(!!process.env.CI && process.platform === "darwin");
 
       const expectedDecisions = ["True", "False", "Skip"];
       const decisions = await fixture.availableDecision();
@@ -416,7 +416,7 @@ test.describe("single verification grid", () => {
       });
     });
 
-    test.only("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
+    test("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
       await fixture.createSubSelection([0]);
@@ -1544,7 +1544,7 @@ test.describe("decision meter", () => {
     // when navigating in history
     test("should have the correct colors when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeVerificationDecision("skip");
+      await fixture.makeSkipDecision();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we
@@ -1562,7 +1562,7 @@ test.describe("decision meter", () => {
 
     test("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeVerificationDecision("skip");
+      await fixture.makeSkipDecision();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we

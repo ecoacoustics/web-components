@@ -42,6 +42,7 @@ import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal"
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { DecisionOptions } from "../../models/decisions/decision";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -1131,12 +1132,39 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
+    // userDecisions is an array because a single decision could have multiple
+    // implicit decisions.
+    // E.g. When a verification button with additional tags is clicked, it will
+    // emit one verification and multiple classification decisions.
     const userDecisions = event.detail.value;
 
     const gridTiles = Array.from(this.gridTiles);
     const subSelection = gridTiles.filter((tile) => tile.selected);
     const hasSubSelection = subSelection.length > 0;
     const trueSubSelection = hasSubSelection ? subSelection : gridTiles;
+
+    // Skip decisions have some special behavior.
+    // If nothing is selected, a skip decision will skip all undecided tiles.
+    // If the user does have a subsection, we only apply the skip decision to
+    // the selected tiles.
+    //
+    // TODO: Add support for skip decisions with additional tags
+    // TODO: Refactor this code into the handler code below
+    if (!hasSubSelection && userDecisions[0].confirmed === DecisionOptions.SKIP) {
+      const requiredTags = this.requiredClassificationTags;
+      const hasVerificationTask = this.hasVerificationTask();
+
+      const gridTiles = this.gridTiles;
+      for (const tile of gridTiles) {
+        tile.model.skipUndecided(hasVerificationTask, requiredTags);
+      }
+
+      if (!this.isViewingHistory()) {
+        await this.nextPage();
+      }
+
+      return;
+    }
 
     const emittedSubjects: SubjectWrapper[] = [];
     for (const tile of trueSubSelection) {
@@ -1431,29 +1459,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // TODO: this function could definitely be refactored
   private skipDecisionTemplate(): HTMLTemplateResult {
-    const skipEventHandler = async (event: DecisionEvent) => {
-      event.stopPropagation();
-
-      const requiredTags = this.requiredClassificationTags;
-      const hasVerificationTask = this.hasVerificationTask();
-
-      const gridTiles = this.gridTiles;
-      for (const tile of gridTiles) {
-        tile.model.skipUndecided(hasVerificationTask, requiredTags);
-      }
-
-      if (!this.isViewingHistory()) {
-        await this.nextPage();
-      }
-    };
-
-    return html`
-      <oe-verification
-        verified="skip"
-        shortcut="\`"
-        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
-      ></oe-verification>
-    `;
+    return html`<oe-verification verified="skip" shortcut="\`"></oe-verification>`;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
