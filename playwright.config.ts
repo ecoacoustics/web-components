@@ -40,7 +40,7 @@ export default defineConfig({
     ],
     // print the test results out to the console.
     // this can be useful for seeing why a test has failed in CI
-    isCi ? ["list"] : ["list"],
+    isCi ? ["github"] : ["list"],
   ],
   // be careful when updating this path template. Long path names can cause
   // Git on Windows to fail checkout
