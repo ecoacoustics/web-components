@@ -65,7 +65,7 @@ test.describe("data source", () => {
           expectedResult[2]["oe_confirmed"] = "true";
           expectedResult[2]["oe_frog"] = "true";
 
-          await fixture.sendDecision(fixture.decisions.additionalTags);
+          await fixture.sendDecision("additional-tags");
 
           const realizedResult = await fixture.getDownloadResults();
           expect(realizedResult).toEqual(expectedResult);
@@ -83,7 +83,7 @@ test.describe("data source", () => {
           expectedResult[subSelectionIndex]["oe_confirmed"] = "false";
 
           await fixture.makeSubSelection([subSelectionIndex]);
-          await fixture.sendDecision(fixture.decisions.negative);
+          await fixture.sendDecision("false");
 
           const realizedResult = await fixture.getDownloadResults();
           expect(realizedResult).toEqual(expectedResult);

@@ -16,7 +16,6 @@ class DataSourceFixture {
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
   public localFileInputButton = () => this.page.locator(".file-input").first();
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
-  public decisionButtons = () => this.page.locator(".decision-button").all();
 
   // A locator for the download buttons default slot.
   // This can be used to assert that the slot has the correct default value and
@@ -29,18 +28,12 @@ class DataSourceFixture {
 
   public testJsonInput = "http://localhost:3000/test-items.json";
 
-  public decisions = {
-    positive: 0,
-    negative: 1,
-    additionalTags: 2,
-  } as const;
-
   public async create() {
     await this.page.setContent(`
       <oe-verification-grid id="verification-grid" grid-size="3">
         <oe-verification verified="true">Koala</oe-verification>
         <oe-verification verified="false">Not Koala</oe-verification>
-        <oe-verification verified="true" additional-tags="frog">
+        <oe-verification data-testid="additional-tags" verified="true" additional-tags="frog">
           Additional Tags
         </oe-verification>
 
@@ -123,7 +116,8 @@ class DataSourceFixture {
     await this.dismissBootstrapDialogButton().click();
   }
 
-  public async sendDecision(decisionIndex: number) {
+  // TODO: The signature of this function can be greatly improved
+  public async sendDecision(decision: "true" | "false" | "skip" | "additional-tags") {
     // Because decisions are handled by the verification grid after a click
     // event, awaiting the button click does not ensure that all event listeners
     // have completed.
@@ -131,8 +125,14 @@ class DataSourceFixture {
     // the click event was handled by the verification grid component.
     const decisionEvent = catchLocatorEvent(this.verificationGrid(), "decision-made");
 
-    const decisionButtons = await this.decisionButtons();
-    await decisionButtons[decisionIndex].click();
+    const matchingComponents =
+      decision === "additional-tags"
+        ? this.page.getByTestId("additional-tags")
+        : this.page.locator(`oe-verification[verified="${decision}"]`);
+    const decisionComponent = matchingComponents.first();
+
+    const decisionButton = decisionComponent.locator("#decision-button");
+    await decisionButton.click();
 
     await decisionEvent;
   }
