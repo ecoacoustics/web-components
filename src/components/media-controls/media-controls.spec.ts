@@ -1,10 +1,28 @@
 import { expect } from "../../tests/assertions";
+import { SpectrogramComponent } from "../spectrogram/spectrogram";
+import { MediaControlsComponent } from "./media-controls";
 import { mediaControlsFixture as test } from "./media-controls.fixture";
 
 test.describe("audio element communication", () => {
-  test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
-  });
+  function elementCommunicationTests() {
+    test("should correctly attach a spectrogram component", async ({ fixture }) => {
+      // We use "evaluate" here because we want to compare browser object
+      // references which cannot be reliably passed across the nodejs/browser
+      // Playwright boundary.
+      const hasEqualReference = await fixture.component().evaluate((mediaControls: MediaControlsComponent) => {
+        // I have to use the bracket property access notation because
+        // spectrogramElement is a private field.
+        const internalRef = mediaControls["spectrogramElement"];
+
+        // This type cast here is ok because we are just removing the "null"
+        // typing because we know that the spectrogram exists in the fixture.
+        const spectrogramRef = document.querySelector("oe-spectrogram") as SpectrogramComponent;
+
+        return internalRef === spectrogramRef;
+      });
+
+      expect(hasEqualReference).toEqual(true);
+    });
 
   // this test exists because if you don't correctly import or mount the media controls component
   // it will still create the element tag, but with no shadow content or error indicating that mounting
@@ -16,26 +34,55 @@ test.describe("audio element communication", () => {
     await expect(mediaControls).toBeVisible();
   });
 
-  test("state before interaction", async ({ fixture }) => {
-    const isPlaying = await fixture.isPlayingAudio();
-    expect(isPlaying).toBe(false);
+    test("state before interaction", async ({ fixture }) => {
+      const isPlaying = await fixture.isPlayingAudio();
+      expect(isPlaying).toBe(false);
+    });
+
+    test("play functionality", async ({ fixture }) => {
+      await fixture.toggleAudio();
+      const isPlaying = await fixture.isPlayingAudio();
+      expect(isPlaying).toBe(true);
+    });
+
+    test("play pause functionality", async ({ fixture }) => {
+      // start playing audio
+      // by clicking the action button again, we should stop playing audio
+      await fixture.toggleAudio();
+      await fixture.toggleAudio();
+
+      const isPlaying = await fixture.isPlayingAudio();
+
+      expect(isPlaying).toBe(false);
+    });
+  }
+
+  test.describe("using spectrogram id", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithId();
+    });
+
+    elementCommunicationTests();
   });
 
-  test("play functionality", async ({ fixture }) => {
-    await fixture.toggleAudio();
-    const isPlaying = await fixture.isPlayingAudio();
-    expect(isPlaying).toBe(true);
+  test.describe("using element reference", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithRef();
+    });
+
+    elementCommunicationTests();
   });
 
-  test("play pause functionality", async ({ fixture }) => {
-    // start playing audio
-    // by clicking the action button again, we should stop playing audio
-    await fixture.toggleAudio();
-    await fixture.toggleAudio();
+  test("should reflect attribute if changing from spectrogram reference to element id", async ({ fixture }) => {
+    await fixture.createWithId();
+    await fixture.setForElementId();
+    await expect(fixture.component()).toHaveAttribute("for", fixture.spectrogramId);
+  });
 
-    const isPlaying = await fixture.isPlayingAudio();
-
-    expect(isPlaying).toBe(false);
+  test("should reflect attribute if changing from for attribute to element reference", async ({ fixture }) => {
+    await fixture.createWithRef();
+    await fixture.setForElementReference();
+    await expect(fixture.component()).toHaveAttribute("for", "[object HTMLElement]");
   });
 });
 
@@ -75,7 +122,7 @@ test.describe("slots", () => {
 
 test.describe("css parts", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
+    await fixture.createWithId();
   });
 
   const cssPartsStyling = `
