@@ -1,6 +1,15 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, PropertyValueMap, PropertyValues, unsafeCSS } from "lit";
+import {
+  html,
+  HTMLTemplateResult,
+  LitElement,
+  nothing,
+  PropertyValueMap,
+  PropertyValues,
+  render,
+  unsafeCSS,
+} from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -34,7 +43,6 @@ import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
-import { render } from "lit";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -208,9 +216,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @query("#decisions-container")
   private decisionsContainer!: HTMLDivElement;
-
-  @query("#decision-slot")
-  private decisionSlot!: HTMLSlotElement;
 
   @query("#highlight-box")
   private highlightBox!: HTMLDivElement;
@@ -393,8 +398,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.skipButtons.length === 0) {
-      // const newDecisions = [...this.decisionElements, this.skipDecisionTemplate()];
-      // this.appendChild(this.skipDecisionTemplate());
+      render(this.skipDecisionTemplate(), this);
     }
   }
 
@@ -454,8 +458,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.handlePageInvalidation();
       }
     }
-
-    render(this.skipDecisionTemplate(), this);
   }
 
   private defaultGridSize(): number {
@@ -1466,6 +1468,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         verified="skip"
         shortcut="\`"
         @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
+        style="order: 9999"
       ></oe-verification>
     `;
   }
