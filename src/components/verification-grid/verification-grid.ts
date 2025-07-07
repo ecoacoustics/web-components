@@ -34,6 +34,7 @@ import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
+import { render } from "lit";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -392,8 +393,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.skipButtons.length === 0) {
-      const newDecisions = [...this.decisionElements, this.skipDecisionTemplate()];
-      this.replaceChildren(...newDecisions);
+      // const newDecisions = [...this.decisionElements, this.skipDecisionTemplate()];
+      // this.appendChild(this.skipDecisionTemplate());
     }
   }
 
@@ -453,6 +454,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.handlePageInvalidation();
       }
     }
+
+    render(this.skipDecisionTemplate(), this);
   }
 
   private defaultGridSize(): number {
@@ -1426,7 +1429,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   // TODO: this function could definitely be refactored
-  private skipDecisionTemplate(): VerificationComponent {
+  private skipDecisionTemplate(): HTMLTemplateResult {
     const skipEventHandler = async (event: DecisionEvent) => {
       event.stopPropagation();
 
@@ -1456,7 +1459,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       skipEventHandler(event);
     });
 
-    return skipElement;
+    // return skipElement;
+
+    return html`
+      <oe-verification
+        verified="skip"
+        shortcut="\`"
+        @decision="${(event: DecisionEvent) => skipEventHandler(event)}"
+      ></oe-verification>
+    `;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
