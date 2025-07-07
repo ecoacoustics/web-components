@@ -1,8 +1,9 @@
 import { Page } from "@playwright/test";
 import { getBrowserStyle, waitForContentReady } from "../../tests/helpers";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture, setContent } from "../../tests/fixtures";
 
-class VerificationGridTileFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-verification-grid-tile").first();
@@ -20,7 +21,7 @@ class VerificationGridTileFixture {
       </oe-verification-grid>
     `;
 
-    await this.page.setContent(content ?? defaultContent);
+    await setContent(this.page, content ?? defaultContent);
     await waitForContentReady(this.page, ["oe-verification-grid-tile"]);
   }
 
@@ -32,9 +33,4 @@ class VerificationGridTileFixture {
   }
 }
 
-export const verificationGridTileFixture = test.extend<{ fixture: VerificationGridTileFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new VerificationGridTileFixture(page);
-    await run(fixture);
-  },
-});
+export const verificationGridTileFixture = createFixture(TestPage);

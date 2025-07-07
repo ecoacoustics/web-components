@@ -4,6 +4,10 @@ import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 
 test.describe("interactions between axes and spectrogram", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test.describe("axis step for different size spectrograms", () => {
     interface SpectrogramSizeTest {
       spectrogramSize: { width: number; height: number };

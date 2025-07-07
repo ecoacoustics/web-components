@@ -1,9 +1,9 @@
 import { Locator, Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { getBrowserValue, hasBrowserAttribute, waitForContentReady } from "../helpers";
-import { test } from "../assertions";
+import { createFixture, setContent } from "../fixtures";
 
-class MultipleSpectrogramFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public spectrogramOne = () => this.page.getByTestId("spectrogram-one").first();
@@ -15,7 +15,9 @@ class MultipleSpectrogramFixture {
   private audioSource = "http://localhost:3000/example.flac";
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         data-testid="spectrogram-one"
         id="first"
@@ -27,12 +29,15 @@ class MultipleSpectrogramFixture {
         src="${this.audioSource}"
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
   public async createWithSameIds() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-spectrogram
         data-testid="spectrogram-one"
         id="first"
@@ -44,7 +49,8 @@ class MultipleSpectrogramFixture {
         src="${this.audioSource}"
       ></oe-spectrogram>
       <oe-media-controls for="first"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
@@ -65,10 +71,4 @@ class MultipleSpectrogramFixture {
   }
 }
 
-export const multipleSpectrogramFixture = test.extend<{ fixture: MultipleSpectrogramFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new MultipleSpectrogramFixture(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const multipleSpectrogramFixture = createFixture(TestPage);

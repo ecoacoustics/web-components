@@ -47,10 +47,10 @@ test.describe("while the initial bootstrap dialog is open", () => {
 });
 
 test.describe("single verification grid", () => {
-  test.beforeEach(async ({ fixture, page }) => {
+  test.beforeEach(async ({ fixture }) => {
     await fixture.create();
 
-    await page.setViewportSize({ width: 1920, height: 1080 });
+    await fixture.page.setViewportSize({ width: 1920, height: 1080 });
 
     // because the user should not be able to start interacting with the
     // verification grid while the bootstrap dialog is open, we need to dismiss it
@@ -762,27 +762,27 @@ test.describe("single verification grid", () => {
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
       });
 
-      test("should select a tile using alt + number selection shortcuts", async ({ fixture, page }) => {
+      test("should select a tile using alt + number selection shortcuts", async ({ fixture }) => {
         // the first tile in the grid should always have Alt + 1 as its
         // selection keyboard shortcut
-        await page.keyboard.press("Alt+1");
+        await fixture.page.keyboard.press("Alt+1");
 
         const expectedSelectedTiles = [0];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
       });
 
-      test("should select a tile using ctrl & alt + number selection shortcuts", async ({ fixture, page }) => {
-        await page.keyboard.press("ControlOrMeta+Alt+1");
+      test("should select a tile using ctrl & alt + number selection shortcuts", async ({ fixture }) => {
+        await fixture.page.keyboard.press("ControlOrMeta+Alt+1");
 
         const expectedSelectedTiles = [0];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
       });
 
-      test("should be able to add a range using the alt key selection shortcuts", async ({ fixture, page }) => {
-        await page.keyboard.press("Shift+Alt+1");
-        await page.keyboard.press("Shift+Alt+3");
+      test("should be able to add a range using the alt key selection shortcuts", async ({ fixture }) => {
+        await fixture.page.keyboard.press("Shift+Alt+1");
+        await fixture.page.keyboard.press("Shift+Alt+3");
 
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
@@ -1355,6 +1355,7 @@ test.describe("single verification grid", () => {
 
 test.describe("decisions", () => {
   test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
     await fixture.changeGridSize(3);
     await fixture.dismissBootstrapDialog();
   });

@@ -7,9 +7,10 @@ import {
 } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture, setContent } from "../../tests/fixtures";
 
-class DataSourceFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-data-source");
@@ -29,7 +30,9 @@ class DataSourceFixture {
   public testJsonInput = "http://localhost:3000/test-items.json";
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid" grid-size="3">
         <oe-verification verified="true">Koala</oe-verification>
         <oe-verification verified="false">Not Koala</oe-verification>
@@ -44,7 +47,8 @@ class DataSourceFixture {
           local
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",
@@ -138,9 +142,4 @@ class DataSourceFixture {
   }
 }
 
-export const dataSourceFixture = test.extend<{ fixture: DataSourceFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new DataSourceFixture(page);
-    await run(fixture);
-  },
-});
+export const dataSourceFixture = createFixture(TestPage);

@@ -2,9 +2,13 @@ import { expect } from "../../tests/assertions";
 import { userAgentDataFixture as test } from "./userAgent.fixture";
 
 test.describe("isMacOs", () => {
-  test("should return the correct value", async ({ page, fixture }) => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
+  test("should return the correct value", async ({ fixture }) => {
     const expectedResult = fixture.isNodeMac();
-    const realizedResult = await page.evaluate(async () => {
+    const realizedResult = await fixture.page.evaluate(async () => {
       // @ts-expect-error Because we are inside an evaluate function, we are
       // running inside the browser and therefore have access to isMacOs
       return isMacOs();
@@ -15,6 +19,10 @@ test.describe("isMacOs", () => {
 });
 
 test.describe("hasCtrlLikeModifier", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should correctly identify ctrl like modifier for a click event", async ({ fixture }) => {
     const testTarget = fixture.buttonElement();
 

@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
 import { hasCtrlLikeModifier, isMacOs } from "./userAgent";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -8,7 +8,7 @@ class TestPage {
   public buttonElement = () => this.page.getByTestId("test-element");
 
   public async create() {
-    await this.page.setContent("<button data-testid='test-element'>Click Me!</button>");
+    await setContent(this.page, "<button data-testid='test-element'>Click Me!</button>");
 
     await this.page.addScriptTag({
       content: isMacOs.toString(),
@@ -28,10 +28,4 @@ class TestPage {
   }
 }
 
-export const userAgentDataFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const userAgentDataFixture = createFixture(TestPage);

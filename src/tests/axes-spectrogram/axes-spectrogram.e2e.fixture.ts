@@ -2,8 +2,9 @@ import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../
 import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
-import { expect, test } from "../assertions";
+import { expect } from "../assertions";
 import { Pixel } from "../../models/unitConverters";
+import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -20,7 +21,9 @@ class TestPage {
 
   // render window should be in the format x0, y0, x1, y1
   public async create(offset?: number, renderWindow?: string) {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-axes>
         <oe-spectrogram
           id="spectrogram"
@@ -29,7 +32,8 @@ class TestPage {
           ${renderWindow ? `window="${renderWindow}"` : ""}
         ></oe-spectrogram>
       </oe-axes>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
@@ -43,7 +47,9 @@ class TestPage {
   // TODO: There should be a similar method that tests resizing the spectrogram
   // after initialization
   public async createWithSize(size: Readonly<Size<Pixel>>) {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-axes>
         <oe-spectrogram
           id="spectrogram"
@@ -51,7 +57,8 @@ class TestPage {
           style="width: ${size.width}px; height: ${size.height}px;"
         ></oe-spectrogram>
       </oe-axes>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
@@ -109,10 +116,4 @@ class TestPage {
   }
 }
 
-export const axesSpectrogramFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const axesSpectrogramFixture = createFixture(TestPage);

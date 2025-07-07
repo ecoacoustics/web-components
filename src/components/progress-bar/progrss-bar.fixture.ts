@@ -1,9 +1,9 @@
 import { Page } from "@playwright/test";
 import { setBrowserAttribute } from "../../tests/helpers";
 import { ProgressBar } from "./progress-bar";
-import { test } from "../../tests/assertions";
+import { createFixture } from "../../tests/fixtures";
 
-class ProgressBarFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-progress-bar").first();
@@ -27,9 +27,4 @@ class ProgressBarFixture {
   }
 }
 
-export const progressBarFixture = test.extend<{ fixture: ProgressBarFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new ProgressBarFixture(page);
-    await run(fixture);
-  },
-});
+export const progressBarFixture = createFixture(TestPage);

@@ -1,26 +1,24 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
 import { waitForContentReady } from "../../tests/helpers";
+import { createFixture, setContent } from "../../tests/fixtures";
 
-class AxesFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-axes").first();
   public innerContent = () => this.page.getByTestId("inner-content");
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-axes>
         <div data-testid="inner-content"></div>
       </oe-axes>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-axes"]);
   }
 }
 
-export const axesFixture = test.extend<{ fixture: AxesFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new AxesFixture(page);
-    await run(fixture);
-  },
-});
+export const axesFixture = createFixture(TestPage);

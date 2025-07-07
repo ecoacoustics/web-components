@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { test } from "../../tests/assertions";
 import { waitForContentReady } from "../../tests/helpers";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -13,7 +13,9 @@ class TestPage {
   public spectrogram = () => this.page.locator("oe-spectrogram").first();
 
   public async create(slotTemplate = "") {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
         <oe-spectrogram
           id="spectrogram"
           src="http://localhost:3000/example.flac"
@@ -22,7 +24,8 @@ class TestPage {
         <oe-media-controls for="spectrogram">
             ${slotTemplate ?? ""}
         </oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-media-controls", "oe-spectrogram"]);
   }
 
@@ -69,10 +72,4 @@ class TestPage {
   }
 }
 
-export const mediaControlsFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const mediaControlsFixture = createFixture(TestPage);
