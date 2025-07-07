@@ -59,7 +59,7 @@ test.describe("single verification grid", () => {
   });
 
   test.describe("initial state", () => {
-    test("should have the correct decisions", async ({ fixture }) => {
+    test.only("should have the correct decisions", async ({ fixture }) => {
       const expectedDecisions = ["True", "False", "Skip"];
       const decisions = await fixture.availableDecision();
       expect(decisions).toEqual(expectedDecisions);

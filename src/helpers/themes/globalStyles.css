@@ -140,6 +140,15 @@ dialog {
   width: fit-content;
   height: fit-content;
 
+  /*
+    On Chrome and Firefox, the UA styles set the dialog's font color to the
+    canvasText instead of inheriting the text color.
+    This means that we have to explicitly set it on the dialog element.
+
+    https://web.dev/learn/html/dialog#css_defaults
+  */
+  color: var(--oe-font-color);
+
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);
   background-color: var(--oe-background-color);
