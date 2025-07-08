@@ -34,8 +34,8 @@ class TestPage {
       this.page,
       `
       <oe-verification-grid id="verification-grid" grid-size="3">
-        <oe-verification verified="true">Koala</oe-verification>
-        <oe-verification verified="false">Not Koala</oe-verification>
+        <oe-verification data-testid="true" verified="true">Koala</oe-verification>
+        <oe-verification data-testid="false" verified="false">Not Koala</oe-verification>
         <oe-verification data-testid="additional-tags" verified="true" additional-tags="frog">
           Additional Tags
         </oe-verification>
@@ -121,7 +121,7 @@ class TestPage {
   }
 
   // TODO: The signature of this function can be greatly improved
-  public async sendDecision(decision: "true" | "false" | "skip" | "additional-tags") {
+  public async sendDecision(decision: "true" | "false" | "additional-tags") {
     // Because decisions are handled by the verification grid after a click
     // event, awaiting the button click does not ensure that all event listeners
     // have completed.
@@ -129,13 +129,8 @@ class TestPage {
     // the click event was handled by the verification grid component.
     const decisionEvent = catchLocatorEvent(this.verificationGrid(), "decision-made");
 
-    const matchingComponents =
-      decision === "additional-tags"
-        ? this.page.getByTestId("additional-tags")
-        : this.page.locator(`oe-verification[verified="${decision}"]`);
-    const decisionComponent = matchingComponents.first();
-
-    const decisionButton = decisionComponent.locator("#decision-button");
+    const targetComponent = this.page.getByTestId(decision);
+    const decisionButton = targetComponent.locator("#decision-button");
     await decisionButton.click();
 
     await decisionEvent;
