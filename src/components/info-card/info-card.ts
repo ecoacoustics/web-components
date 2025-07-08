@@ -1,6 +1,6 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, LitElement, nothing, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { consume } from "@lit/context";
 import { Subject, SubjectWrapper } from "../../models/subject";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
@@ -29,7 +29,7 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
 
   private identityStrategy: InfoCardTemplate = (value: unknown): typeof value => value;
   private numberStrategy: InfoCardTemplate = (value: number | string): string => Number(value).toLocaleString();
-  private urlStrategy = (value: string): TemplateResult<1> =>
+  private urlStrategy = (value: string): HTMLTemplateResult =>
     html`<a href="${value}" target="_blank">${this.formatUrl(value)}</a>`;
 
   private subjectRowCount(): number {

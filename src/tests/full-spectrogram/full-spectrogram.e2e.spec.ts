@@ -142,6 +142,10 @@ test.describe("interactions between all components", () => {
 });
 
 test.describe("sizing", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
   test("should include chrome height in spectrogram host sizing", async ({ fixture }) => {
     const testedSize = { width: 300, height: 300 } as const satisfies Size<Pixel>;
     await setElementSize(fixture.spectrogramComponent(), testedSize);

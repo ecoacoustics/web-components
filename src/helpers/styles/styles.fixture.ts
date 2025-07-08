@@ -1,8 +1,8 @@
 import { Page } from "@playwright/test";
-import { test } from "../../tests/assertions";
 import { css, LitElement } from "lit";
 import { removeStyleSheets } from "./remove";
 import { addStyleSheets } from "./add";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -10,7 +10,7 @@ class TestPage {
   public component = () => this.page.locator("oe-spectrogram").first();
 
   public async create() {
-    await this.page.setContent("<oe-spectrogram></oe-spectrogram>");
+    await setContent(this.page, "<oe-spectrogram></oe-spectrogram>");
 
     await this.page.addScriptTag({
       content: removeStyleSheets.toString(),
@@ -44,9 +44,4 @@ class TestPage {
   }
 }
 
-export const stylesFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await run(fixture);
-  },
-});
+export const stylesFixture = createFixture(TestPage);

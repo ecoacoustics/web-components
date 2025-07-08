@@ -22,6 +22,18 @@
     U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"); */
+@font-face {
+  font-family: "Roboto Mono";
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/robotomono/v30/L0x5DF4xlVMF-BfR8bXMIjhLq38.woff2) format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* TODO: we probably only need :host here */
 :host,
 :root {
@@ -36,8 +48,13 @@
 
   /* Ecosounds Colours */
   /* --oe-theme-hue: 207;
-    --oe-theme-saturation: 100%;
-    --oe-theme-lightness: 25%; */
+  --oe-theme-saturation: 100%;
+  --oe-theme-lightness: 25%; */
+
+  /* Microsite Colours */
+  /* --oe-theme-hue: 30deg;
+  --oe-theme-saturation: 62%;
+  --oe-theme-lightness: 49%; */
 
   --oe-background-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), 100%);
   --oe-font-color: hsl(
@@ -45,8 +62,13 @@
     calc(var(--oe-theme-saturation) - 50%),
     calc(var(--oe-theme-lightness) - 90%)
   );
+  --oe-font-color-strong: color-mix(in oklch, var(--oe-primary-color), 80% black);
+  --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
 
-  --oe-border-rounding: 0.5em;
+  /* --oe-background-color: blue;
+  --oe-font-color: red; */
+
+  --oe-border-rounding: 6px;
   --oe-border-color: hsl(
     var(--oe-theme-hue),
     calc(var(--oe-theme-saturation) - 40%),
@@ -57,10 +79,13 @@
   --oe-backdrop-shadow: 3px 3px 4px;
 
   --oe-font-family: "Roboto", sans-serif;
+  --oe-font-family-mono: "Roboto Mono", monospace;
   --oe-font-size: 11px;
   --oe-font-size-large: calc(var(--oe-font-size) + 5px);
   --oe-font-weight: 400;
-  --oe-font-weight-bold: 700;
+  --oe-font-weight-medium: 450;
+  --oe-font-weight-bold: 500;
+  --oe-font-spacing: 0.025em;
 
   --oe-animation-time: 0.3s;
   --oe-spacing-small: 0.3em;
@@ -71,23 +96,20 @@
   --oe-secondary-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 25%));
   --oe-accent-color: hsl(var(--oe-theme-hue), var(--oe-theme-saturation), calc(var(--oe-theme-lightness) + 20%));
   --oe-info-color: hsl(207deg, calc(var(--oe-theme-saturation) + 45%), calc(var(--oe-theme-lightness) + 15%));
-  --oe-info-bg-color: color-mix(in srgb, var(--oe-info-color) 15%, white);
-  --oe-danger-color: color-mix(in srgb, hsl(0deg, 80%, 46%) 85%, var(--oe-background-color));
-  --oe-success-color: color-mix(in srgb, hsl(100deg, 80%, 36%) 85%, var(--oe-background-color));
-  --oe-warning-color: color-mix(in srgb, hsl(50deg, 80%, 56%) 85%, var(--oe-background-color));
+  --oe-info-bg-color: color-mix(in oklch, var(--oe-info-color) 15%, white);
+  --oe-danger-color: color-mix(in oklch, hsl(0deg, 80%, 46%) 95%, var(--oe-background-color));
+  --oe-success-color: color-mix(in oklch, hsl(100deg, 80%, 36%) 95%, var(--oe-background-color));
+  --oe-warning-color: color-mix(in oklch, hsl(50deg, 80%, 56%) 95%, var(--oe-background-color));
   --oe-selected-color: hsl(
     var(--oe-theme-hue),
     var(--oe-theme-saturation),
     max(calc(var(--oe-theme-lightness) + 25%), 90%)
   );
-  --oe-panel-color: hsl(
-    var(--oe-theme-hue),
-    var(--oe-theme-saturation),
-    max(calc(var(--oe-theme-lightness) + 43%), 96%)
-  );
 
-  --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
-  --oe-panel-color-lighter: color-mix(in srgb, var(--oe-panel-color) 1%, var(--oe-background-color));
+  --oe-panel-color: var(--oe-background-color);
+  --oe-panel-color-light: color-mix(in oklch, var(--oe-panel-color), white 10%);
+  --oe-panel-color-dark: color-mix(in oklch, var(--oe-panel-color), black 3%);
+  --oe-panel-color-darker: color-mix(in oklch, var(--oe-panel-color), black 10%);
 
   --oe-undecided-color: var(--oe-panel-color);
   --oe-box-shadow: 1px 1px 1px var(--oe-secondary-color);

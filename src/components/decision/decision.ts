@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, TemplateResult, unsafeCSS } from "lit";
+import { LitElement, PropertyValues, HTMLTemplateResult, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { booleanConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
@@ -157,7 +157,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public abstract render(): TemplateResult;
+  public abstract render(): HTMLTemplateResult;
 }
 
 declare global {

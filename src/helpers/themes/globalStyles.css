@@ -12,6 +12,9 @@
 * {
   font-family: var(--oe-font-family);
   font-weight: var(--oe-font-weight);
+
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 sl-icon {
@@ -56,6 +59,25 @@ sl-carousel {
   }
 }
 
+sl-menu-item[checked]::part(base) {
+  background-color: var(--oe-selected-color);
+  color: var(--oe-font-color);
+}
+
+sl-menu-item::part(base) {
+  background-color: var(--oe-panel-color);
+  color: var(--oe-font-color);
+
+  &:hover {
+    background-color: var(--oe-panel-color-dark);
+  }
+}
+
+sl-tooltip {
+  --sl-tooltip-background-color: var(--oe-panel-color-darker);
+  --sl-tooltip-color: var(--oe-font-color);
+}
+
 button:disabled,
 input:disabled {
   filter: grayscale(100%);
@@ -64,47 +86,23 @@ input:disabled {
 }
 
 kbd {
-  position: relative;
   display: inline-flex;
-  color: var(--oe-font-color);
-  font-family: "Courier New", Courier, monospace;
-  text-align: center;
   align-items: center;
-  font-weight: var(--oe-font-weight-bold);
-  padding: 0.2rem;
-  padding-left: 0.5em;
-  padding-right: 0.5em;
-  z-index: 0;
-  margin-top: 0.2rem;
-  margin: 0.5rem;
+
+  position: relative;
   width: max-content;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    border-radius: 0.13em;
-    background: radial-gradient(circle farthest-corner at top right, #ededed, #c8c8c8);
-    box-shadow: 0.13em 0.13em 0 0.1em rgba(0, 0, 0, 0.2);
-    z-index: -1;
-  }
+  padding: 0.3rem;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 
-  &::after {
-    content: "";
-    position: absolute;
-    top: -0.065em;
-    left: -0.065em;
-    width: 100%;
-    height: 100%;
-    padding: 0.13em;
-    border-radius: 0.15em;
-    background: radial-gradient(circle farthest-corner at bottom right, #cacaca, #cacaca);
-    box-shadow: 0.065em 0.065em 0.13em 0.13em rgba(0, 0, 0, 0.5);
-    z-index: -2;
-  }
+  border-radius: var(--oe-border-rounding);
+
+  font-family: var(--oe-font-family-mono);
+  font-weight: var(--oe-font-weight-bold);
+
+  color: var(--oe-font-color);
+  background-color: var(--oe-panel-color-dark);
 }
 
 a {
@@ -161,6 +159,15 @@ dialog {
   width: fit-content;
   height: fit-content;
 
+  /*
+    On Chrome and Firefox, the UA styles set the dialog's font color to the
+    canvasText instead of inheriting the text color.
+    This means that we have to explicitly set it on the dialog element.
+
+    https://web.dev/learn/html/dialog#css_defaults
+  */
+  color: var(--oe-font-color);
+
   box-shadow: var(--oe-box-shadow);
   border: var(--oe-border-width) solid var(--oe-selected-color);
   background-color: var(--oe-background-color);
@@ -212,7 +219,7 @@ select {
   padding: var(--oe-spacing);
   border: none;
   border-radius: var(--oe-border-rounding);
-  background-color: var(--oe-panel-color-lighter);
+  background-color: var(--oe-panel-color-light);
   color: var(--oe-font-color);
 
   &:focus {
@@ -335,7 +342,7 @@ button {
 
 .oe-btn-primary {
   border: var(--oe-border-width) solid var(--oe-primary-color);
-  --background-color: transparent;
+  --background-color: var(--oe-background-color);
 }
 
 .oe-btn-secondary {
@@ -343,7 +350,6 @@ button {
   background: none;
   box-shadow: none;
   font-weight: var(--oe-font-weight-bold);
-  color: var(--oe-primary-color);
 }
 
 .oe-btn-info {

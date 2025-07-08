@@ -1,9 +1,10 @@
 import { Page } from "@playwright/test";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
 import { getBrowserValue, invokeBrowserMethod, waitForContentReady } from "../../tests/helpers";
 import { Tag } from "../../models/tag";
 import { AnnotationComponent } from "./annotation";
 import { Annotation } from "../../models/annotation";
+import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -21,7 +22,7 @@ class TestPage {
   `;
 
   public async create(content = this.defaultContent) {
-    await this.page.setContent(content);
+    await setContent(this.page, content);
     await waitForContentReady(this.page);
   }
 
@@ -45,9 +46,4 @@ class TestPage {
   }
 }
 
-export const annotationFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await run(fixture);
-  },
-});
+export const annotationFixture = createFixture(TestPage);

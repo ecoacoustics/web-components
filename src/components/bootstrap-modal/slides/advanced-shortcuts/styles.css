@@ -21,8 +21,16 @@
     padding-left: var(--oe-spacing-large);
     padding-right: var(--oe-spacing-large);
 
+    letter-spacing: var(--oe-font-spacing);
+
     &:nth-child(odd) {
-      background-color: var(--oe-panel-color);
+      background-color: var(--oe-panel-color-darker);
+    }
+
+    & > .shortcut-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
     }
   }
 }

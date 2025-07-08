@@ -20,11 +20,6 @@
   pointer-events: none;
 }
 
-#skip-button {
-  height: min-content;
-  align-self: center;
-}
-
 /* TODO: fix placement */
 .statistics-section {
   position: relative;
@@ -107,6 +102,12 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+
+    #decision-slot {
+      display: grid;
+      grid-template-rows: repeat(3, auto);
+      grid-template-columns: repeat(auto-fit, min-content);
+    }
   }
 }
 

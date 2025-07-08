@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, TemplateResult, html, nothing, unsafeCSS } from "lit";
+import { HTMLTemplateResult, LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -220,7 +220,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     values: string[] | number[] | ReadonlyArray<number | string>,
     currentValue: string | number | boolean,
     changeHandler: (event: CustomEvent<{ item: SlMenuItem }>) => void,
-  ): TemplateResult {
+  ): HTMLTemplateResult {
     return html`
       <sl-menu-item>
         ${text}
@@ -247,7 +247,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     step: number,
     currentValue: number,
     changeHandler: any,
-  ): TemplateResult {
+  ): HTMLTemplateResult {
     return html`
       <sl-menu-item>
         ${text}

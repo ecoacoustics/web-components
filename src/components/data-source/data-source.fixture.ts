@@ -7,16 +7,16 @@ import {
 } from "../../tests/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
-import { expect, test } from "../../tests/assertions";
+import { expect } from "../../tests/assertions";
+import { createFixture, setContent } from "../../tests/fixtures";
 
-class DataSourceFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-data-source");
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
   public localFileInputButton = () => this.page.locator(".file-input").first();
   public browserFileInput = () => this.page.locator("#browser-file-input").first();
-  public decisionButtons = () => this.page.locator(".decision-button").all();
 
   // A locator for the download buttons default slot.
   // This can be used to assert that the slot has the correct default value and
@@ -29,18 +29,14 @@ class DataSourceFixture {
 
   public testJsonInput = "http://localhost:3000/test-items.json";
 
-  public decisions = {
-    positive: 0,
-    negative: 1,
-    additionalTags: 2,
-  } as const;
-
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid" grid-size="3">
-        <oe-verification verified="true">Koala</oe-verification>
-        <oe-verification verified="false">Not Koala</oe-verification>
-        <oe-verification verified="true" additional-tags="frog">
+        <oe-verification data-testid="true" verified="true">Koala</oe-verification>
+        <oe-verification data-testid="false" verified="false">Not Koala</oe-verification>
+        <oe-verification data-testid="additional-tags" verified="true" additional-tags="frog">
           Additional Tags
         </oe-verification>
 
@@ -51,13 +47,14 @@ class DataSourceFixture {
           local
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",
       "oe-data-source",
-      "oe-verification",
       "oe-verification-grid-tile",
+      ".decision-button",
     ]);
 
     // Because we assert a JS browser property, playwright will re-run this
@@ -123,7 +120,8 @@ class DataSourceFixture {
     await this.dismissBootstrapDialogButton().click();
   }
 
-  public async sendDecision(decisionIndex: number) {
+  // TODO: The signature of this function can be greatly improved
+  public async sendDecision(decision: "true" | "false" | "additional-tags") {
     // Because decisions are handled by the verification grid after a click
     // event, awaiting the button click does not ensure that all event listeners
     // have completed.
@@ -131,16 +129,12 @@ class DataSourceFixture {
     // the click event was handled by the verification grid component.
     const decisionEvent = catchLocatorEvent(this.verificationGrid(), "decision-made");
 
-    const decisionButtons = await this.decisionButtons();
-    await decisionButtons[decisionIndex].click();
+    const targetComponent = this.page.getByTestId(decision);
+    const decisionButton = targetComponent.locator("#decision-button");
+    await decisionButton.click();
 
     await decisionEvent;
   }
 }
 
-export const dataSourceFixture = test.extend<{ fixture: DataSourceFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new DataSourceFixture(page);
-    await run(fixture);
-  },
-});
+export const dataSourceFixture = createFixture(TestPage);

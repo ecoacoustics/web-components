@@ -9,21 +9,21 @@ import {
 import { VerificationComponent } from "./verification";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";
-import { test } from "../../../tests/assertions";
+import { createFixture, setContent } from "../../../tests/fixtures";
 
-class VerificationComponentFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public component = () => this.page.locator("oe-verification").first();
   public decisionButton = () => this.page.locator("#decision-button").first();
-  public tagLegend = () => this.decisionButton().locator(".button-text").first();
-  public additionalTagsLegend = () => this.decisionButton().locator(".additional-tags").first();
-  public shortcutLegend = () => this.decisionButton().locator(".shortcut-legend").first();
-  public colorPill = () => this.decisionButton().locator(".decision-color-pill").first();
+  public tagLegend = () => this.page.locator(".button-text").first();
+  public shortcutLegend = () => this.page.locator(".shortcut-legend").first();
+  public colorPill = () => this.page.locator(".decision-color-pill").first();
+  public additionalTags = () => this.page.locator(".tag").all();
 
   public async create() {
-    await this.page.setContent(`<oe-verification verified="true"></oe-verification>`);
-    await waitForContentReady(this.page, ["oe-verification"]);
+    await setContent(this.page, `<oe-verification verified="true"></oe-verification>`);
+    await waitForContentReady(this.page, [".decision-button"]);
 
     // mock the verification grid by binding it to the document object
     // this means that we can test that the shortcut keys work correctly without
@@ -46,10 +46,6 @@ class VerificationComponentFixture {
   // getters
   public async decisionTagText(): Promise<string | null> {
     return await this.tagLegend().textContent();
-  }
-
-  public async additionalTagsText(): Promise<string | null> {
-    return await this.additionalTagsLegend().textContent();
   }
 
   // change attributes
@@ -94,9 +90,4 @@ class VerificationComponentFixture {
   }
 }
 
-export const verificationFixture = test.extend<{ fixture: VerificationComponentFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new VerificationComponentFixture(page);
-    await run(fixture);
-  },
-});
+export const verificationFixture = createFixture(TestPage);

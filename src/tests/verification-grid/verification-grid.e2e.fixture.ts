@@ -24,7 +24,7 @@ import { Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
-import { expect, test } from "../assertions";
+import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
 import { decisionColor } from "../../services/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
@@ -37,6 +37,7 @@ import { MediaControlsComponent } from "../../components/media-controls/media-co
 import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
+import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -50,7 +51,6 @@ class TestPage {
   public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
-  public skipDecisionButton = () => this.page.locator("#skip-button").first();
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
@@ -61,7 +61,6 @@ class TestPage {
   public classificationDecisions = () => this.page.locator("oe-classification").all();
   public decisionButtons = () => this.page.locator(".decision-button").all();
   public decisionButtonsText = () => this.page.locator(".button-text").all();
-  public decisionColorPills = () => this.page.locator(".decision-color-pill").all();
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
@@ -103,6 +102,16 @@ class TestPage {
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
 
+  private verificationButton(decision: "true" | "false" | "skip"): Locator {
+    const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
+    return targetDecision.locator("#decision-button");
+  }
+
+  private classificationButton(tag: string, decision: boolean): Locator {
+    const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
+    return targetDecision.locator(`#${decision}-decision-button`);
+  }
+
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
   private defaultTemplate = `
@@ -111,7 +120,9 @@ class TestPage {
   `;
 
   public async create(customTemplate = this.defaultTemplate, requiredSelectors: string[] = []) {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-verification-grid id="verification-grid">
         ${customTemplate}
 
@@ -121,7 +132,8 @@ class TestPage {
           src="${this.testJsonInput}"
         ></oe-data-source>
       </oe-verification-grid>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, [
       "oe-verification-grid",
@@ -139,7 +151,7 @@ class TestPage {
       <oe-classification tag="car" true-shortcut="h"></oe-classification>
       <oe-classification tag="koala" true-shortcut="j"></oe-classification>
       <oe-classification tag="bird" true-shortcut="k"></oe-classification>
-    `, ["oe-classification"]);
+    `, [".decision-button"]);
   }
 
   public async createWithVerificationTask() {
@@ -147,14 +159,16 @@ class TestPage {
     await this.create(`
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
-    `, ["oe-verification"]);
+    `, [".decision-button"]);
   }
 
   public async createWithAppChrome() {
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
     // this allows us to test how the verification grid interacts with scrolling
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <header>
         <h1>Host Application</h1>
       </header>
@@ -181,7 +195,8 @@ class TestPage {
 
         <input data-testid="host-app-input" type="text" />
       </div>
-    `);
+    `,
+    );
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 
@@ -259,11 +274,21 @@ class TestPage {
     return selectedTiles;
   }
 
-  public async getDecisionColor(index: number): Promise<string> {
-    const targets = await this.decisionColorPills();
-    const target = targets[index];
+  public async getVerificationColor(decision: "true" | "false") {
+    const decisionButton = this.verificationButton(decision);
+    const colorPill = decisionButton.locator(".decision-color-pill");
 
-    return await target.evaluate((element: HTMLSpanElement) => {
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
+      const styles = window.getComputedStyle(element);
+      return styles.backgroundColor;
+    });
+  }
+
+  public async getClassificationColor(tag: string, decision: boolean): Promise<string> {
+    const decisionButton = this.classificationButton(tag, decision);
+    const colorPill = decisionButton.locator(".decision-color-pill");
+
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
       return styles.backgroundColor;
     });
@@ -599,19 +624,29 @@ class TestPage {
     await dragSelection(this.page, start, end, modifiers);
   }
 
-  public async makeDecision(decision: number) {
+  public async makeVerificationDecision(decision: "true" | "false") {
     // the decision-made event is only emitted from the verification grid
     // component once the decision has been fully processed.
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
 
-    const decisionComponents = await this.decisionButtons();
-    await decisionComponents[decision].click();
+    const decisionButton = this.verificationButton(decision);
+    await decisionButton.click();
+
+    await decisionEvent;
+  }
+
+  public async makeClassificationDecision(tag: string, decision: boolean) {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+
+    const decisionButton = this.classificationButton(tag, decision);
+    await decisionButton.click();
 
     await decisionEvent;
   }
 
   public async makeSkipDecision() {
-    await this.skipDecisionButton().click();
+    const decisionButton = this.verificationButton("skip");
+    await decisionButton.click();
   }
 
   public async viewPreviousHistoryPage() {
@@ -773,10 +808,4 @@ class TestPage {
   }
 }
 
-export const verificationGridFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const verificationGridFixture = createFixture(TestPage);

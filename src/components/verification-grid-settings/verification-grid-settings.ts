@@ -156,3 +156,9 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
     `;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-verification-grid-settings": VerificationGridSettingsComponent;
+  }
+}

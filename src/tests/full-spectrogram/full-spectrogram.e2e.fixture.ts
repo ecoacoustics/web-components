@@ -9,8 +9,8 @@ import {
   waitForContentReady,
 } from "../helpers";
 import { AudioModel } from "../../models/recordings";
-import { test } from "../assertions";
 import { Size } from "../../models/rendering";
+import { createFixture, setContent } from "../fixtures";
 
 // this fixture involves all the components that we have developed interacting together
 // in their expected use cases
@@ -32,7 +32,9 @@ class TestPage {
   public chromeRightContainer = () => this.page.locator(".chrome-right").first();
 
   public async create() {
-    await this.page.setContent(`
+    await setContent(
+      this.page,
+      `
       <oe-axes>
         <oe-indicator>
           <oe-spectrogram
@@ -42,7 +44,8 @@ class TestPage {
         </oe-indicator>
       </oe-axes>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `);
+    `,
+    );
     await waitForContentReady(this.page, ["oe-axes", "oe-indicator", "oe-spectrogram", "oe-media-controls"]);
   }
 
@@ -129,10 +132,4 @@ class TestPage {
   }
 }
 
-export const fullFixture = test.extend<{ fixture: TestPage }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new TestPage(page);
-    await fixture.create();
-    await run(fixture);
-  },
-});
+export const fullFixture = createFixture(TestPage);

@@ -111,6 +111,7 @@ export const test = base.extend({
 // I suspect that this is not the correct fix and that there are underlying
 // issues within our tests.
 // see: https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
-test.afterEach(async ({ page }) => {
+test.afterEach(async ({ page, context }) => {
   await page.close();
+  await context.close();
 });

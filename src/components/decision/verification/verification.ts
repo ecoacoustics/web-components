@@ -3,13 +3,16 @@ import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
-import { html, nothing } from "lit";
+import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
 import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
+import { toTitleCase } from "../../../helpers/text/titleCase";
+import { repeat } from "lit/directives/repeat.js";
+import verificationStyles from "./css/style.css?inline";
 
 /**
  * @description
@@ -24,6 +27,8 @@ import { when } from "lit/directives/when.js";
  */
 @customElement("oe-verification")
 export class VerificationComponent extends DecisionComponent {
+  public static styles = [...super.styles, unsafeCSS(verificationStyles)];
+
   @required()
   @property({ type: String, converter: enumConverter(DecisionOptions) })
   public verified: DecisionOptions = DecisionOptions.TRUE;
@@ -41,6 +46,16 @@ export class VerificationComponent extends DecisionComponent {
 
   public override get decisionModels(): Partial<DecisionModels<Verification>> {
     return this._decisionModels;
+  }
+
+  // TODO: Remove once we complete separate oe-skip and oe-unsure decisions
+  // https://github.com/ecoacoustics/web-components/issues/169
+  /**
+   * Returns a boolean indicating if using this verification component creates
+   * a verification task.
+   */
+  public get isTask(): boolean {
+    return this.verified !== DecisionOptions.SKIP;
   }
 
   private _decisionModels: Partial<DecisionModels<Verification>> = {};
@@ -82,8 +97,24 @@ export class VerificationComponent extends DecisionComponent {
     return [verification, ...classifications];
   }
 
-  private additionalTagsTemplate() {
-    return this.additionalTags.length ? html`(${this.additionalTags.map((tag) => tag.text).join(", ")})` : nothing;
+  private additionalTagsTemplate(): HTMLTemplateResult {
+    const tagTemplate = (tag: Tag) => {
+      return html`<li class="tag">${tag.text}</li>`;
+    };
+
+    // Using a list element here means that if the user selects and copies the
+    // additional tag, the list indicator (plus sign) will not be shown.
+    //
+    // We use repeat() here so that we can target re-renders to specific tags.
+    return html`
+      <ul class="additional-tags">
+        ${repeat(
+          this.additionalTags,
+          (tag) => tag.text,
+          (tag) => html`${tagTemplate(tag)}`,
+        )}
+      </ul>
+    `;
   }
 
   public render() {
@@ -100,32 +131,47 @@ export class VerificationComponent extends DecisionComponent {
     this._decisionModels[this.verified] = verificationModel;
 
     return html`
-      <button
-        id="decision-button"
-        class="oe-btn-primary decision-button ${buttonClasses}"
-        part="decision-button"
-        style="--ripple-color: var(${color})"
-        aria-disabled="${this.disabled}"
-        @click="${() => this.handleDecision()}"
-      >
-        <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+      <div class="decision-group-title decision-group"></div>
 
-        <div class="button-text">
-          <slot>${this.verified}</slot>
-        </div>
+      <div class="decision-buttons decision-group">
+        <button
+          id="decision-button"
+          class="oe-btn-primary decision-button ${buttonClasses}"
+          part="decision-button"
+          style="--ripple-color: var(${color})"
+          aria-disabled="${this.disabled}"
+          @click="${() => this.handleDecision()}"
+        >
+          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-        <div class="additional-tags">${this.additionalTagsTemplate()}</div>
+          <div class="button-text">
+            <slot>${toTitleCase(this.verified)}</slot>
+          </div>
 
-        <div>
-          <!--
-            even if there is no shortcut, we reserve a space for the shortcut
-            key so that all buttons are the same height.
-           -->
-          <span class="shortcut-legend">
-            ${when(!this.isMobile && this.shortcut, () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`)}
-          </span>
-        </div>
-      </button>
+          <div>
+            <!--
+              even if there is no shortcut, we reserve a space for the shortcut
+              key so that all buttons are the same height.
+            -->
+            <span class="shortcut-legend">
+              ${when(
+                !this.isMobile && this.shortcut,
+                () => html`${keyboardShortcutTemplate({ keys: [this.shortcut] })}`,
+              )}
+            </span>
+          </div>
+        </button>
+      </div>
+
+      <div class="attached-info decision-group">
+        ${when(this.additionalTags.length > 0, () => this.additionalTagsTemplate())}
+      </div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-verification": VerificationComponent;
   }
 }

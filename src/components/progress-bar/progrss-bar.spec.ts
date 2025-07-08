@@ -1,19 +1,9 @@
 import { expect } from "../../tests/assertions";
-import { waitForContentReady } from "../../tests/helpers";
-import { ProgressBar } from "./progress-bar";
 import { progressBarFixture as test } from "./progrss-bar.fixture";
 
 test.describe("ProgressBar", () => {
-  test.beforeEach(async ({ fixture, mount }) => {
-    await mount(ProgressBar, {
-      props: {
-        total: 100,
-        historyHead: 0,
-        completed: 0,
-      },
-    });
-
-    await waitForContentReady(fixture.page, ["oe-progress-bar"]);
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
   });
 
   test("should not have a completed segment if there are no decisions", async ({ fixture }) => {

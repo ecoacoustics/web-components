@@ -1,7 +1,7 @@
-import { TemplateResult } from "lit";
+import { HTMLTemplateResult } from "lit";
 
 export interface BootstrapSlide {
-  slideTemplate: TemplateResult;
+  slideTemplate: HTMLTemplateResult;
   title: string;
   description?: string;
 }

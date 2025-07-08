@@ -1,11 +1,11 @@
 import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "./spectrogram";
 import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
-import { test } from "../../tests/assertions";
 import { Size } from "../../models/rendering";
 import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
+import { createFixture, setContent } from "../../tests/fixtures";
 
-class SingleSpectrogramFixture {
+class TestPage {
   public constructor(public readonly page: Page) {}
 
   public readonly spectrogram = () => this.page.locator("oe-spectrogram").first();
@@ -19,34 +19,38 @@ class SingleSpectrogramFixture {
   public readonly audioSource = "http://localhost:3000/example.flac";
   public readonly secondaryAudioSource = "http://localhost:3000/example2.flac";
 
-  public async create() {
-    // we se the spectrogram height to 632px so that the spectrogram is a nice
-    // square shape in the snapshot tests
-    await this.page.setContent(`
+  public async create(src = this.audioSource) {
+    const content = `
       <oe-spectrogram
         id="spectrogram"
-        src="${this.audioSource}"
+        src="${src}"
         style="position: relative; height: 632px;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `);
+    `;
+
+    // we se the spectrogram height to 632px so that the spectrogram is a nice
+    // square shape in the snapshot tests
+    await setContent(this.page, content);
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
-  public async createWithViewportSize() {
-    await this.page.setContent(`
+  public async createWithViewportSize(src = this.audioSource) {
+    const content = `
       <oe-spectrogram
         id="spectrogram"
-        src="${this.audioSource}"
+        src="${src}"
         style="position: relative; width: 100%; height: 100%;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `);
+    `;
+
+    await setContent(this.page, content);
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
-  public async createWithDefaultSize() {
-    await this.page.setContent(`<oe-spectrogram src="${this.audioSource}"></oe-spectrogram>`);
+  public async createWithDefaultSize(src = this.audioSource) {
+    await setContent(this.page, `<oe-spectrogram src="${src}"></oe-spectrogram>`);
     await waitForContentReady(this.page, ["oe-spectrogram"]);
   }
 
@@ -108,9 +112,4 @@ class SingleSpectrogramFixture {
   }
 }
 
-export const singleSpectrogramFixture = test.extend<{ fixture: SingleSpectrogramFixture }>({
-  fixture: async ({ page }, run) => {
-    const fixture = new SingleSpectrogramFixture(page);
-    await run(fixture);
-  },
-});
+export const singleSpectrogramFixture = createFixture(TestPage);

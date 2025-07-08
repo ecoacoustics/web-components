@@ -64,7 +64,7 @@ test.describe("Classification Component", () => {
   });
 
   test("should have both true and false buttons from a single classification component", async ({ fixture }) => {
-    const expectedText = ["true", "false"];
+    const expectedText = ["True", "False"];
     const realizedText = await fixture.getDecisionOptions();
     expect(realizedText).toEqual(expectedText);
   });
@@ -91,16 +91,16 @@ test.describe("Classification Component", () => {
       await expect(decisionEvent).resolves.toBeTruthy();
     });
 
-    test("should be able to cancel a pointer decision with the escape key", async ({ fixture, page }) => {
-      await logEvent(page, "decision");
+    test("should be able to cancel a pointer decision with the escape key", async ({ fixture }) => {
+      await logEvent(fixture.page, "decision");
 
       await fixture.decisionTrueButton().dispatchEvent("pointerdown");
-      await page.keyboard.press("Escape");
+      await fixture.page.keyboard.press("Escape");
       await fixture.decisionTrueButton().dispatchEvent("pointerup");
 
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
 
@@ -113,8 +113,8 @@ test.describe("Classification Component", () => {
       await expect(decisionEvent).resolves.toBeTruthy();
     });
 
-    test("should not emit an event if clicked when disabled", async ({ fixture, page }) => {
-      await logEvent(page, "decision");
+    test("should not emit an event if clicked when disabled", async ({ fixture }) => {
+      await logEvent(fixture.page, "decision");
 
       await fixture.changeDecisionDisabled(true);
       // force = true bypasses accessibility checks. Because the button should
@@ -127,23 +127,20 @@ test.describe("Classification Component", () => {
       await fixture.decisionTrueButton().click({ force: true });
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, "decision");
+      const events: unknown[] = await getEventLogs(fixture.page, "decision");
       expect(events).toHaveLength(0);
     });
 
-    test("should emit an event when clicked if a decision is re-enabled after being disabled", async ({
-      fixture,
-      page,
-    }) => {
+    test("should emit an event when clicked if a decision is re-enabled after being disabled", async ({ fixture }) => {
       const loggedEventName = "decision";
-      await logEvent(page, loggedEventName);
+      await logEvent(fixture.page, loggedEventName);
       await fixture.changeDecisionDisabled(true);
       await fixture.changeDecisionDisabled(false);
 
       await fixture.decisionTrueButton().click();
       await sleep(1);
 
-      const events: unknown[] = await getEventLogs(page, loggedEventName);
+      const events: unknown[] = await getEventLogs(fixture.page, loggedEventName);
       expect(events).toHaveLength(1);
     });
   });

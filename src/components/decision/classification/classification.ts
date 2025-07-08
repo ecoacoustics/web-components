@@ -5,7 +5,7 @@ import { Classification } from "../../../models/decisions/classification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { Tag } from "../../../models/tag";
 import { DecisionOptions } from "../../../models/decisions/decision";
-import { html, nothing, TemplateResult, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, nothing, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
 import {
@@ -15,6 +15,7 @@ import {
   shiftSymbol,
   ShiftSymbolVariant,
 } from "../../../templates/keyboardShortcut";
+import { toTitleCase } from "../../../helpers/text/titleCase";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -180,7 +181,7 @@ export class ClassificationComponent extends DecisionComponent {
     return event.key === shortcut;
   }
 
-  private decisionButtonTemplate(decision: DecisionOptions): TemplateResult {
+  private decisionButtonTemplate(decision: DecisionOptions): HTMLTemplateResult {
     const buttonClasses = classMap({
       disabled: !!this.disabled,
       "oe-btn-primary": decision === DecisionOptions.TRUE || decision === DecisionOptions.FALSE,
@@ -205,7 +206,8 @@ export class ClassificationComponent extends DecisionComponent {
       >
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 
-        <div class="button-text">${decision}</div>
+        <div class="button-text">${toTitleCase(decision)}</div>
+
         ${!this.isMobile && shortcut ? keyboardShortcutTemplate(shortcut, ShiftSymbolVariant.inline) : nothing}
       </button>
     `;
@@ -216,17 +218,23 @@ export class ClassificationComponent extends DecisionComponent {
 
     // prettier-ignore
     return html`
-      <div class="decision-group">
-        <div class="decision-group-title">
-          <slot>${this.tag.text}</slot>
-        </div>
-
-        <div class="decision-buttons">
-          ${map(buttonOptions, (decision: DecisionOptions) =>
-            this.decisionButtonTemplate(decision)
-          )}
-        </div>
+      <div class="decision-group-title decision-group">
+        <slot>${this.tag.text}</slot>
       </div>
+
+      <div class="decision-buttons decision-group">
+        ${map(buttonOptions, (decision: DecisionOptions) =>
+          this.decisionButtonTemplate(decision)
+        )}
+      </div>
+
+      <div class="attached-info decision-group"></div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-classification": ClassificationComponent;
   }
 }
