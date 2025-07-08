@@ -1,5 +1,4 @@
 import {
-  catchEvent,
   catchLocatorEvent,
   getBrowserSignalValue,
   getBrowserValue,
