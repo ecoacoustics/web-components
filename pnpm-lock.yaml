@@ -61,7 +61,7 @@ importers:
         specifier: 1.53.1
         version: 1.53.1
       '@sand4rt/experimental-ct-web':
-        specifier: 1.53.1
+        specifier: ^1.53.1
         version: 1.53.1(@types/node@22.13.5)(terser@5.39.0)
       '@types/audioworklet':
         specifier: 0.0.71

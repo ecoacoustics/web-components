@@ -19,40 +19,38 @@ class TestPage {
   public readonly audioSource = "http://localhost:3000/example.flac";
   public readonly secondaryAudioSource = "http://localhost:3000/example2.flac";
 
-  public async create() {
-    // we se the spectrogram height to 632px so that the spectrogram is a nice
-    // square shape in the snapshot tests
-    await setContent(
-      this.page,
-      `
+  public async create(src = this.audioSource) {
+    const content = `
       <oe-spectrogram
         id="spectrogram"
-        src="${this.audioSource}"
+        src="${src}"
         style="position: relative; height: 632px;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `,
-    );
+    `;
+
+    // we se the spectrogram height to 632px so that the spectrogram is a nice
+    // square shape in the snapshot tests
+    await setContent(this.page, content);
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
-  public async createWithViewportSize() {
-    await setContent(
-      this.page,
-      `
+  public async createWithViewportSize(src = this.audioSource) {
+    const content = `
       <oe-spectrogram
         id="spectrogram"
-        src="${this.audioSource}"
+        src="${src}"
         style="position: relative; width: 100%; height: 100%;"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
-    `,
-    );
+    `;
+
+    await setContent(this.page, content);
     await waitForContentReady(this.page, ["oe-spectrogram", "oe-media-controls"]);
   }
 
-  public async createWithDefaultSize() {
-    await setContent(this.page, `<oe-spectrogram src="${this.audioSource}"></oe-spectrogram>`);
+  public async createWithDefaultSize(src = this.audioSource) {
+    await setContent(this.page, `<oe-spectrogram src="${src}"></oe-spectrogram>`);
     await waitForContentReady(this.page, ["oe-spectrogram"]);
   }
 

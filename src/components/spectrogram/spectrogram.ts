@@ -42,8 +42,8 @@ const domRenderWindowConverter = (value: string | null): RenderWindow | undefine
  *
  * @csspart canvas - Allows you to size the spectrogram component from the size of the canvas
  *
- * @fires Loading
- * @fires Finished
+ * @fires loading
+ * @fires loaded
  * @fires play
  * @fires options-change
  *
