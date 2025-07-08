@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.4.0...web-components-v3.5.0) (2025-07-08)
+
+
+### Features
+
+* Uniform buttons heights and styling ([#376](https://github.com/ecoacoustics/web-components/issues/376)) ([c01adf5](https://github.com/ecoacoustics/web-components/commit/c01adf524b9a30d2887b82bafe51d01d891e01fd)), closes [#185](https://github.com/ecoacoustics/web-components/issues/185) [#372](https://github.com/ecoacoustics/web-components/issues/372)
+
 ## [3.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.3.1...web-components-v3.4.0) (2025-07-03)
 
 
