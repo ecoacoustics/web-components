@@ -127,13 +127,13 @@
       function changeSource() {
         const element = spectrogram();
 
-        if (element.src === "/example.flac") {
-          element.setAttribute("src", "/example_34s.flac");
-        } else if (element.src === "/example_34s.flac") {
-          element.setAttribute("src", "/404-file.flac");
-        } else {
-          element.setAttribute("src", "/example.flac");
-        }
+        const nextSources = new Map(
+          ["/example.flac", "/example_34s.flac"],
+          ["/example_34s.flac", "/404-file.flac"],
+          ["/404-file.flac", "/examples.flac"],
+        );
+
+        element.setAttribute("src", nextSources(element.src));
       }
 
       function changeTagStyle() {

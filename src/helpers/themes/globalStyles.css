@@ -59,6 +59,10 @@ sl-carousel {
   }
 }
 
+sl-menu {
+  --sl-panel-background-color: var(--oe-panel-color);
+}
+
 sl-menu-item[checked]::part(base) {
   background-color: var(--oe-selected-color);
   color: var(--oe-font-color);
@@ -342,7 +346,7 @@ button {
 
 .oe-btn-primary {
   border: var(--oe-border-width) solid var(--oe-primary-color);
-  --background-color: var(--oe-background-color);
+  --background-color: var(--oe-panel-color);
 }
 
 .oe-btn-secondary {

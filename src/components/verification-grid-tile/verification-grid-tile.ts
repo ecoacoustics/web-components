@@ -154,13 +154,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public firstUpdated(): void {
-    if (!this.spectrogram) {
-      throw new Error("Could not find spectrogram component");
-    }
-
-    this.spectrogram.addEventListener("loading", this.loadingHandler);
-    this.spectrogram.addEventListener("loaded", this.loadedHandler);
-
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
@@ -387,7 +380,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         class="tile-container vertically-fill ${tileClasses}"
         part="tile-container"
         role="button"
-        tabindex="0"
+        tabindex="${this.isOnlyTile ? -1 : 1}"
         aria-hidden="${this.hidden}"
       >
         ${this.keyboardShortcutTemplate()}
@@ -415,7 +408,13 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
             ?y-grid="${watch(this.settings.showAxes)}"
           >
             <oe-indicator class="vertically-fill">
-              <oe-spectrogram id="spectrogram" class="vertically-fill" color-map="audacity"></oe-spectrogram>
+              <oe-spectrogram
+                id="spectrogram"
+                class="vertically-fill"
+                color-map="audacity"
+                @loading="${this.loadingHandler}"
+                @loaded="${this.loadedHandler}"
+              ></oe-spectrogram>
             </oe-indicator>
           </oe-axes>
 

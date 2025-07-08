@@ -68,7 +68,14 @@
 }
 
 .no-items-message {
-  font-size: 1.2rem;
+  display: subgrid / subgrid;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+
+  align-content: center;
+  text-align: center;
+
+  font-size: var(--oe-font-size-large);
 }
 
 .controls-container {
