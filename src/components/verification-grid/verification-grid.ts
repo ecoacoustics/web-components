@@ -1412,7 +1412,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (hasMultipleTiles) {
       return "Do all of the audio segments have the correct applied tag";
     } else {
-      return "Does the show audio segment have the correct applied tag";
+      return "Does the shown audio segment have the correct applied tag";
     }
   }
 

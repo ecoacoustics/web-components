@@ -3,20 +3,6 @@
   display: inline-block;
 }
 
-sl-menu-item[checked]::part(base) {
-  background-color: var(--oe-selected-color);
-  color: var(--oe-font-color);
-}
-
-sl-menu-item::part(base) {
-  background-color: var(--oe-panel-color);
-  color: var(--oe-font-color);
-
-  &:hover {
-    background-color: var(--oe-panel-color-dark);
-  }
-}
-
 sl-icon.large-icon {
   --enlargement-factor: 1.5;
 

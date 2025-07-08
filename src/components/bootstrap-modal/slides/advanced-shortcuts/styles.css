@@ -24,7 +24,7 @@
     letter-spacing: var(--oe-font-spacing);
 
     &:nth-child(odd) {
-      background-color: var(--oe-panel-color-dark);
+      background-color: var(--oe-panel-color-darker);
     }
 
     & > .shortcut-prompt {
