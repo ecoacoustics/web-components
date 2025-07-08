@@ -47,10 +47,6 @@
   transition:
     border-color var(--oe-animation-time) ease-out,
     border-size var(--oe-animation-time) ease-out;
-
-  &:hover {
-    box-shadow: var(--oe-backdrop-shadow) var(--oe-selected-color);
-  }
 }
 
 .vertically-fill {
@@ -77,6 +73,10 @@
 
 .selectable {
   cursor: pointer;
+
+  &:hover {
+    box-shadow: var(--oe-backdrop-shadow) var(--oe-selected-color);
+  }
 }
 
 .hidden {
