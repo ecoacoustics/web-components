@@ -112,7 +112,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** A color map to use for the spectrogram */
   @property({ type: String, attribute: "color-map", reflect: true })
-  public colorMap = "";
+  public colorMap = "grayscale";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number, reflect: true })
