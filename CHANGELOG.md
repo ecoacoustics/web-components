@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.0...web-components-v3.5.1) (2025-07-10)
+
+
+### Bug Fixes
+
+* Do not show tooltips when target expanded ([#410](https://github.com/ecoacoustics/web-components/issues/410)) ([a4e27cf](https://github.com/ecoacoustics/web-components/commit/a4e27cf2a518db96eb6195079ecf7b61a2f6bba7)), closes [#405](https://github.com/ecoacoustics/web-components/issues/405)
+
 ## [3.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.4.0...web-components-v3.5.0) (2025-07-08)
 
 
