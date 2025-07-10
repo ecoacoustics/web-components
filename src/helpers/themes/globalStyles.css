@@ -78,6 +78,13 @@ sl-tooltip {
   --sl-tooltip-color: var(--oe-font-color);
 }
 
+sl-tooltip:is([aria-expanded="true"]) {
+  &::part(base__popup),
+  &::part(base_arrow) {
+    display: none;
+  }
+}
+
 button:disabled,
 input:disabled {
   filter: grayscale(100%);
