@@ -47,7 +47,7 @@ function keyboardButtonsTemplate(shortcuts: ReadonlyArray<KeyboardShortcut>): HT
   // 7. Deselect all tiles (to reset the animation)
   const displayedShortcuts = [
     { keys: ["Ctrl", "a"], description: "Select all" },
-    { keys: ["Ctrl", mouseClick], description: "Toggle selection" },
+    { keys: ["Ctrl", mouseClick], description: "Add/Remove tile" },
     positiveShortcut,
     { keys: ["Esc"], description: "Deselect all" },
     negativeShortcut,
