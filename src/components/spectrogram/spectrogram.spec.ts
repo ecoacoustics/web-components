@@ -566,6 +566,27 @@ test.describe("changing source", () => {
   });
 });
 
+test.describe("attributes", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
+  test("should not allow a non-power of 2 window size", async ({ fixture }) => {
+    const originalWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
+
+    await setBrowserAttribute(fixture.spectrogram(), "window-size" as any, "92");
+
+    const newWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
+    expect(newWindowSize).toEqual(originalWindowSize);
+  });
+
+  test("should allow a power of 2 window size", async ({ fixture }) => {
+    await setBrowserAttribute(fixture.spectrogram(), "window-size" as any, "1024");
+    const newWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
+    expect(newWindowSize).toEqual(1024);
+  });
+});
+
 test.describe("chrome", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();

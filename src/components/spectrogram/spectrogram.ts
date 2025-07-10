@@ -12,6 +12,8 @@ import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { isPowerOfTwo } from "../../helpers/powers";
+import { isValidNumber } from "../../helpers/numbers";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -296,6 +298,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     highAccuracyTimeWorklet.port.postMessage(setupMessage);
 
     source.connect(highAccuracyTimeWorklet);
+  }
+
+  public willUpdate(change: PropertyValues<this>): void {
+    if (change.has("windowSize")) {
+      const oldWindowSize = change.get("windowSize") as number;
+      const newWindowSize = this.windowSize;
+
+      if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize)) {
+        this.windowSize = oldWindowSize;
+        console.error(`window-size "${newWindowSize}" must be a power of 2`);
+      }
+    }
   }
 
   public updated(change: PropertyValues<this>) {
