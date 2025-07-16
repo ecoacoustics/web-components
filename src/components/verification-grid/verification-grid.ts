@@ -1338,16 +1338,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return Array.from(this.decisionElements ?? []).length > 0;
   }
 
-  private areSpectrogramsLoaded(): boolean {
+  private areTilesLoaded(): boolean {
     const gridTilesArray = Array.from(this.gridTiles);
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
   private handleTileLoaded(): void {
-    const loaded = this.areSpectrogramsLoaded();
-
-    // If we a spectrogram is loaded
-    if (loaded) {
+    // This method is run when a tile has completely finished loading.
+    // Therefore, if this loaded event was emitted from the last tile needed to
+    // have a fully loaded verification grid, we want to perform some actions
+    // such as enabling the decision buttons and emitting the verification
+    // grid's "grid-loaded" event.
+    if (this.areTilesLoaded()) {
       // We set the "loaded" property before dispatching the loaded event to
       // minimize the risk of a race condition.
       // E.g. if someone created an event listener for the "grid-loaded" event
@@ -1530,7 +1532,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
                     class="grid-tile"
-                    @tile-loaded="${() => this.handleTileLoaded()}"
+                    @tile-loaded="${this.handleTileLoaded}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
                     .isOnlyTile="${this.populatedTileCount === 1}"
