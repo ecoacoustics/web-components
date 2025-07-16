@@ -379,7 +379,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // if we were previously lacking the data to fill a verification grid and
     // we just appended more items, we should re-render the verification grid
     // so that the new data can be added
-    this.renderVirtualPage();
+    if (this.hiddenTiles > 0) {
+      this.renderVirtualPage();
+    }
   }
 
   public firstUpdated(): void {
