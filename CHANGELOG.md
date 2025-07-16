@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.1...web-components-v4.0.0) (2025-07-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* verification-grid-tile component now emits "tile-loaded" event instead of "loaded"
+
+### Bug Fixes
+
+* Overloaded "loaded" event ([#421](https://github.com/ecoacoustics/web-components/issues/421)) ([99efc9e](https://github.com/ecoacoustics/web-components/commit/99efc9e3fb865a1f86efbd54534a622023f66973)), closes [#420](https://github.com/ecoacoustics/web-components/issues/420)
+
 ## [3.5.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.0...web-components-v3.5.1) (2025-07-10)
 
 
