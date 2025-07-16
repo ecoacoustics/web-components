@@ -61,7 +61,7 @@ const shortcutTranslation = {
  * @cssproperty [--selected-border-size] - The size of the border when a
  * decision is being shown
  *
- * @event Loaded
+ * @event tile-loaded
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
@@ -249,7 +249,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
     this.loaded = true;
-    this.dispatchEvent(new CustomEvent("loaded", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent("tile-loaded", { bubbles: true }));
   }
 
   private handleFocusedKeyDown(event: KeyboardEvent): void {

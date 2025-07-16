@@ -316,7 +316,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
-  private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private anyOverlap = signal<boolean>(false);
@@ -380,7 +379,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // if we were previously lacking the data to fill a verification grid and
     // we just appended more items, we should re-render the verification grid
     // so that the new data can be added
-    this.renderVirtualPage();
+    if (this.hiddenTiles > 0) {
+      this.renderVirtualPage();
+    }
   }
 
   public firstUpdated(): void {
@@ -1267,8 +1268,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
     }
-
-    this.decisionsDisabled = disabled;
   }
 
   //#endregion
@@ -1341,20 +1340,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return Array.from(this.decisionElements ?? []).length > 0;
   }
 
-  private areSpectrogramsLoaded(): boolean {
+  private areTilesLoaded(): boolean {
     const gridTilesArray = Array.from(this.gridTiles);
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
-  private handleSpectrogramLoaded(): void {
-    const decisionsDisabled = this.decisionsDisabled;
-    const loading = !this.areSpectrogramsLoaded();
-
-    if (decisionsDisabled !== loading) {
-      this.setDecisionDisabled(loading);
-    }
-
-    if (!loading) {
+  private handleTileLoaded(): void {
+    // This method is run when a tile has completely finished loading.
+    // Therefore, if this loaded event was emitted from the last tile needed to
+    // have a fully loaded verification grid, we want to perform some actions
+    // such as enabling the decision buttons and emitting the verification
+    // grid's "grid-loaded" event.
+    if (this.areTilesLoaded()) {
       // We set the "loaded" property before dispatching the loaded event to
       // minimize the risk of a race condition.
       // E.g. if someone created an event listener for the "grid-loaded" event
@@ -1363,6 +1360,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // event.
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
+
+      this.setDecisionDisabled(false);
     }
   }
 
@@ -1535,7 +1534,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
                     class="grid-tile"
-                    @loaded="${this.handleSpectrogramLoaded}"
+                    @tile-loaded="${this.handleTileLoaded}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
                     .isOnlyTile="${this.populatedTileCount === 1}"
