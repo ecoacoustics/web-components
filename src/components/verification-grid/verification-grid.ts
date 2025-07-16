@@ -316,7 +316,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
-  private decisionsDisabled = false;
   private showingSelectionShortcuts = false;
   private selectionHead: number | null = null;
   private anyOverlap = signal<boolean>(false);
@@ -1267,8 +1266,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
     }
-
-    this.decisionsDisabled = disabled;
   }
 
   //#endregion
@@ -1346,15 +1343,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
-  private handleSpectrogramLoaded(): void {
-    const decisionsDisabled = this.decisionsDisabled;
-    const loading = !this.areSpectrogramsLoaded();
+  private handleTileLoaded(): void {
+    const loaded = this.areSpectrogramsLoaded();
 
-    if (decisionsDisabled !== loading) {
-      this.setDecisionDisabled(loading);
-    }
-
-    if (!loading) {
+    // If we a spectrogram is loaded
+    if (loaded) {
       // We set the "loaded" property before dispatching the loaded event to
       // minimize the risk of a race condition.
       // E.g. if someone created an event listener for the "grid-loaded" event
@@ -1363,6 +1356,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // event.
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
+
+      this.setDecisionDisabled(false);
     }
   }
 
@@ -1535,7 +1530,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 (subject: SubjectWrapper, i: number) => html`
                   <oe-verification-grid-tile
                     class="grid-tile"
-                    @loaded="${this.handleSpectrogramLoaded}"
+                    @tile-loaded="${() => this.handleTileLoaded()}"
                     @play="${this.handleTilePlay}"
                     .requiredDecisions="${this.requiredDecisions}"
                     .isOnlyTile="${this.populatedTileCount === 1}"
