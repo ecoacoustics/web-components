@@ -65,9 +65,6 @@
   --oe-font-color-strong: color-mix(in oklch, var(--oe-primary-color), 80% black);
   --oe-font-color-lighter: color-mix(in srgb, var(--oe-font-color) 10%, var(--oe-background-color));
 
-  /* --oe-background-color: blue;
-  --oe-font-color: red; */
-
   --oe-border-rounding: 6px;
   --oe-border-color: hsl(
     var(--oe-theme-hue),
@@ -113,6 +110,11 @@
 
   --oe-undecided-color: var(--oe-panel-color);
   --oe-box-shadow: 1px 1px 1px var(--oe-secondary-color);
+
+  /*? These styles can be used to debug background, font, and panel color interactions */
+  /* --oe-background-color: blue;
+  --oe-font-color: red;
+  --oe-panel-color: yellow; */
 
   /* Breakpoints */
   --oe-mobile-breakpoint: 600px;
