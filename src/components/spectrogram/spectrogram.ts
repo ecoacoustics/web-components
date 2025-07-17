@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
-import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, ReadonlySignal, signal, SignalWatcher, watch } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
@@ -172,6 +172,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private readonly audio = signal<AudioModel | undefined>(undefined);
   private readonly renderCanvasSize = signal<RenderCanvasSize>({ width: 0, height: 0 });
   private readonly _unitConverters = signal<UnitConverter | undefined>(undefined);
+  private readonly isRendering = signal(false);
 
   // we have a getter for the unit converters property so that the internal
   // typing of the signal can be mutable while the exported signal is readonly
@@ -325,6 +326,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     if (!this.hasSource()) {
       return;
     }
+
+    this.isRendering.value = true;
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadingEventName, {
@@ -754,7 +757,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   public renderSurface() {
     return html`
-      <div id="spectrogram-container" part="canvas">
+      <div id="spectrogram-container" class="${watch(this.isRendering) && "rendering"}" part="canvas">
         <canvas></canvas>
       </div>
       <audio

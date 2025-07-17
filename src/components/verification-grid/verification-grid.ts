@@ -1,15 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  render,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -29,7 +20,6 @@ import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
-import { repeat } from "lit/directives/repeat.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
@@ -43,6 +33,9 @@ import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
+import { repeat } from "lit/directives/repeat.js";
+import { range } from "lit/directives/range.js";
+import { map } from "lit/directives/map.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -165,6 +158,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "default";
 
+  @property({ attribute: "empty-subject-message", type: String })
+  public emptySubjectText = "No content";
+
   @property({
     attribute: "progress-bar-position",
     type: String,
@@ -280,7 +276,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // computed grid size which is the maximum number of tiles that we could
     // fit on the page
     const gridSize = this.rows * this.columns;
-    return Math.min(gridSize, this.targetGridSize);
+    return Math.min(gridSize, this.targetGridSize, this.subjects.length);
   }
 
   /** A count of the number of tiles currently visible on the screen */
@@ -584,11 +580,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private *currentPage(): Generator<SubjectWrapper, void, void> {
+  private currentPage(): SubjectWrapper[] {
     const page = this.currentPageIndices;
-    for (let i = page.start; i < page.end; i++) {
-      yield this.subjects[i];
-    }
+    return this.subjects.slice(page.start, page.end);
   }
 
   //#endregion
@@ -1496,7 +1490,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public render() {
-    let customTemplate: any = nothing;
+    let customTemplate: any | undefined;
     if (this.gridItemTemplate) {
       customTemplate = this.gridItemTemplate.cloneNode(true);
     }
@@ -1528,10 +1522,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           ${when(
             this.currentPageIndices.start === this.currentPageIndices.end,
             () => this.noItemsTemplate(),
-            () => html`
-              ${repeat(
+            () =>
+              repeat(
                 this.currentPage(),
-                (subject: SubjectWrapper, i: number) => html`
+                (subject: SubjectWrapper, index: number) => html`
                   <oe-verification-grid-tile
                     class="grid-tile"
                     @tile-loaded="${this.handleTileLoaded}"
@@ -1539,13 +1533,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                     .requiredDecisions="${this.requiredDecisions}"
                     .isOnlyTile="${this.populatedTileCount === 1}"
                     .model="${subject as any}"
-                    .index="${i}"
+                    .index="${index}"
                   >
-                    ${unsafeHTML(customTemplate.innerHTML)}
+                    ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
                   </oe-verification-grid-tile>
                 `,
-              )}
-            `,
+              ),
+          )}
+          ${map(
+            range(this.targetGridSize - this.populatedTileCount),
+            () => html`<div class="tile-placeholder">${this.emptySubjectText}</div>`,
           )}
         </div>
 

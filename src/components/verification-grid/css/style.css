@@ -65,10 +65,34 @@
     screen.
   */
   gap: var(--oe-spacing);
+
+  & > .tile-placeholder {
+    position: relative;
+    box-shadow:
+      var(--oe-backdrop-shadow) var(--oe-panel-color-dark),
+      inset 0 0 1rem var(--oe-panel-color-dark);
+    border-radius: var(--oe-border-rounding);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: var(--oe-font-color-light);
+    font-size: var(--oe-font-size-large);
+    font-weight: var(--oe-font-weight-light);
+    letter-spacing: 0.05em;
+  }
 }
 
 .no-items-message {
-  font-size: 1.2rem;
+  display: subgrid / subgrid;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+
+  align-content: center;
+  text-align: center;
+
+  font-size: var(--oe-font-size-large);
 }
 
 .controls-container {

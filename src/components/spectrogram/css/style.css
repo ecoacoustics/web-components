@@ -10,6 +10,34 @@
   background-color: var(--oe-panel-color-light);
   width: 100%;
   min-height: var(--min-height);
+
+  /*
+    We use a "rendering" class so that once the spectrogram has completed
+    rendering, we don't have to keep playing the animation behind the canvas.
+
+    Additionally, it means that if there is a fatal error when rendering the
+    spectrogram, we can remove the "rendering" class and the loading animation
+    will stop. Indicating that something has gone wrong and we have stopped
+    rendering.
+  */
+  &.rendering {
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      background: linear-gradient(
+        110deg,
+        var(--oe-panel-color-dark),
+        var(--oe-panel-color-darker),
+        var(--oe-panel-color-dark)
+      );
+      background-size: 300%;
+
+      animation: loadingGradient 2s ease-in-out infinite;
+      animation-timing-function: cubic-bezier(0.39, 0.575, 0.565, 1);
+    }
+  }
 }
 
 #spectrogram-container > canvas {
@@ -17,4 +45,16 @@
   display: inherit;
   height: 100%;
   width: 100%;
+}
+
+@keyframes loadingGradient {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
 }

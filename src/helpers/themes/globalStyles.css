@@ -17,6 +17,20 @@
   font-style: normal;
 }
 
+svg {
+  text {
+    /*
+      By default, svg text will just use the browser default text color.
+      However, we typically want svg text to blend seamlessly into the text
+      content that it's contained within.
+
+      By using "currentcolor", the svg's text color will be set to the current
+      scope's "color" property.
+    */
+    fill: currentcolor;
+  }
+}
+
 sl-icon {
   display: flex;
   font-size: calc(var(--oe-font-size) * 1.2);
@@ -57,6 +71,10 @@ sl-carousel {
       display: none;
     }
   }
+}
+
+sl-menu {
+  --sl-panel-background-color: var(--oe-panel-color);
 }
 
 sl-menu-item[checked]::part(base) {
@@ -349,7 +367,7 @@ button {
 
 .oe-btn-primary {
   border: var(--oe-border-width) solid var(--oe-primary-color);
-  --background-color: var(--oe-background-color);
+  --background-color: var(--oe-panel-color);
 }
 
 .oe-btn-secondary {

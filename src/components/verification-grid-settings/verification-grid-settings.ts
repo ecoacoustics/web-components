@@ -1,4 +1,4 @@
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, unsafeCSS } from "lit";
 import { VerificationGridComponent, VerificationGridSettings } from "../verification-grid/verification-grid";
@@ -18,6 +18,9 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
   @consume({ context: verificationGridContext, subscribe: true })
   @state()
   public settings!: VerificationGridSettings;
+
+  @property({ attribute: "max-grid-size", type: Number })
+  public maxGridSize = 36;
 
   /** An internal representation of the verification grids size */
   @state()
@@ -109,7 +112,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
               type="range"
               value="${ifDefined(this.gridSize)}"
               min="1"
-              max="36"
+              max="${this.maxGridSize}"
             />
           </label>
         </sl-menu>

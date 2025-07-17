@@ -9,6 +9,5 @@ title: Open Ecoacoustics | Examples | Verification | Multiple Class
   <oe-verification verified="true" shortcut="Y"></oe-verification>
   <oe-verification verified="false" shortcut="N"></oe-verification>
 
-  <oe-data-source slot="data-source" for="verification-grid" src="/public/kaleidoscope.csv" local>
-  </oe-data-source>
+  <oe-data-source slot="data-source" for="verification-grid" src="/public/kaleidoscope.csv" local></oe-data-source>
 </oe-verification-grid>
