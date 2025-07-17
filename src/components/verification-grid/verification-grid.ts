@@ -297,6 +297,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return { start, end };
   }
 
+  private get emptyTileCount() {
+    const availableTiles = this.rows * this.columns;
+    const visibleSubjectCount = this.currentPage().length;
+    return availableTiles - visibleSubjectCount;
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -1540,10 +1546,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 `,
               ),
           )}
-          ${map(
-            range(this.targetGridSize - this.populatedTileCount),
-            () => html`<div class="tile-placeholder">${this.emptySubjectText}</div>`,
-          )}
+          ${map(range(this.emptyTileCount), () => html`<div class="tile-placeholder">${this.emptySubjectText}</div>`)}
         </div>
 
         <div class="controls-container footer-controls">
