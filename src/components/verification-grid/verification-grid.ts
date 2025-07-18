@@ -1208,7 +1208,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      await this.nextPage(this.gridTiles.length);
+      await this.nextPage(gridTiles.length);
     }
   }
 
