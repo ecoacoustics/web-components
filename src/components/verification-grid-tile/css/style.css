@@ -15,20 +15,10 @@
   flex-direction: column;
 
   /*
-    This contain statement is acting like overflow: hidden because the "content"
-    value is a shorthand that contains the "paint" value (which stops the
-    browser from painting outside the box model).
-
-    By using "contain" instead of the overflow, property, the browser can better
-    optimize painting.
-
-    Note that using contain: content means that this component's box model must
-    be correct and contain no hacky code.
-
     The reason why we want to hide overflow content is so that border rounding
     on the :host element (which is a subtractive property) clips content.
   */
-  contain: content;
+  overflow: hidden;
 }
 
 .spectrogram-container {
