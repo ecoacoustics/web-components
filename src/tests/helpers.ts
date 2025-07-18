@@ -94,10 +94,20 @@ export async function dragSelection(
   // can usually not instantly move their mouse across the screen
   await page.mouse.move(end.x, end.y, { steps: 10 });
 
-  await page.mouse.up();
-  for (const modifier of modifiers) {
-    await page.keyboard.up(modifier);
-  }
+  // We use RAF here so that if the browser is being really fast, we don't make
+  // a pointerdown and pointerup event in the same frame.
+  const mouseUpComplete = new Promise<void>((res) => {
+    requestAnimationFrame(async () => {
+      await page.mouse.up();
+      for (const modifier of modifiers) {
+        await page.keyboard.up(modifier);
+      }
+
+      res();
+    });
+  });
+
+  await mouseUpComplete;
 }
 
 /**
