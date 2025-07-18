@@ -97,7 +97,7 @@ export async function dragSelection(
 
   // We use sleep here so that if the browser is being really fast, we don't make
   // a pointerdown and pointerup event in the same frame.
-  await sleep(100);
+  await sleep(0.1);
 
   await page.mouse.up();
   for (const modifier of modifiers) {
