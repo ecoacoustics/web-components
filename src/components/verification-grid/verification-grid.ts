@@ -343,8 +343,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
-    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
     super.disconnectedCallback();
   }
@@ -388,8 +388,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public firstUpdated(): void {
-    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
     // if the user has explicitly set a grid size through the `grid-size`
     // attribute, we should use that grid size
@@ -754,13 +754,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private handleBootstrapDialogOpen(): void {
-    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
   }
 
   private handleBootstrapDialogClose(): void {
-    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
   }
 
   private handleSlotChange(): void {

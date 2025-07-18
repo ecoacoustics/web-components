@@ -144,8 +144,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     document.removeEventListener("keydown", this.keyDownHandler);
 
     if (this.spectrogram) {
-      this.spectrogram.removeEventListener("loading", this.loadingHandler);
-      this.spectrogram.removeEventListener("loaded", this.loadedHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
     }
 
     this.intersectionObserver.disconnect();
@@ -158,8 +158,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       throw new Error("Could not find spectrogram component");
     }
 
-    this.spectrogram.addEventListener("loading", this.loadingHandler);
-    this.spectrogram.addEventListener("loaded", this.loadedHandler);
+    this.spectrogram.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
 
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
