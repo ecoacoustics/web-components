@@ -5,6 +5,7 @@ import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
 import { MousePosition } from "../components/verification-grid/verification-grid";
+import { sleep } from "../helpers/utilities";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -94,20 +95,14 @@ export async function dragSelection(
   // can usually not instantly move their mouse across the screen
   await page.mouse.move(end.x, end.y, { steps: 10 });
 
-  // We use RAF here so that if the browser is being really fast, we don't make
+  // We use sleep here so that if the browser is being really fast, we don't make
   // a pointerdown and pointerup event in the same frame.
-  const mouseUpComplete = new Promise<void>((res) => {
-    requestAnimationFrame(async () => {
-      await page.mouse.up();
-      for (const modifier of modifiers) {
-        await page.keyboard.up(modifier);
-      }
+  await sleep(100);
 
-      res();
-    });
-  });
-
-  await mouseUpComplete;
+  await page.mouse.up();
+  for (const modifier of modifiers) {
+    await page.keyboard.up(modifier);
+  }
 }
 
 /**
