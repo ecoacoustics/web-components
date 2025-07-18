@@ -275,7 +275,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // computed grid size which is the maximum number of tiles that we could
     // fit on the page
     const gridSize = this.rows * this.columns;
-    return Math.min(gridSize, this.targetGridSize, this.subjects.length);
+    return Math.min(gridSize, this.targetGridSize);
   }
 
   /** A count of the number of tiles currently visible on the screen */
@@ -1208,7 +1208,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      await this.nextPage();
+      await this.nextPage(this.gridTiles.length);
     }
   }
 
