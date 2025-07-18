@@ -1353,6 +1353,34 @@ test.describe("single verification grid", () => {
   test.describe("progressive creation of a verification grid", () => {});
 });
 
+test.describe("small datasets", () => {
+  const datasetSize = 3;
+
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create(undefined, undefined, fixture.smallJsonInput);
+  });
+
+  test("should have a placeholder tile for small datasets", async ({ fixture }) => {
+    const testedGridSize = 4;
+    const expectedPlaceholderCount = testedGridSize - datasetSize;
+
+    await fixture.changeGridSize(testedGridSize);
+
+    const spectrogramGridTiles = await fixture.gridTileContainers();
+    expect(spectrogramGridTiles).toHaveLength(datasetSize);
+
+    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
+    expect(gridTilePlaceholders).toHaveLength(expectedPlaceholderCount);
+  });
+
+  test("should not have any placeholders if the grid size is large enough", async ({ fixture }) => {
+    await fixture.changeGridSize(2);
+
+    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
+    expect(gridTilePlaceholders).toHaveLength(0);
+  });
+});
+
 test.describe("decisions", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();

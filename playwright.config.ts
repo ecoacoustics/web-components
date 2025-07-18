@@ -17,8 +17,14 @@ export default defineConfig({
   webServer: {
     command: "pnpm dev --port 3000",
   },
-  // Fail in CI if there is a focused test.only
-  forbidOnly: isCi,
+  // We do not fail in CI if there is an "only" because sometimes we want to use
+  // focused tests when debugging a bug in CI.
+  // If debugging a test in CI, I want to be able to use the CI exit code when
+  // trying to see if the bug has been fixed.
+  // Note that you will not be able to merge with a focused test because our
+  // Playwright eslint rules will prevent the linting CI task from passing if
+  // there is a focused test.
+  forbidOnly: false,
   tsconfig: "tsconfig.json",
   use: {
     bypassCSP: true,
