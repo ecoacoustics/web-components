@@ -80,7 +80,7 @@
   --oe-font-family-mono: "Roboto Mono", monospace;
   --oe-font-size: 11px;
   --oe-font-size-large: calc(var(--oe-font-size) + 5px);
-  --oe-font-weight: 200;
+  --oe-font-weight-light: 300;
   --oe-font-weight: 400;
   --oe-font-weight-medium: 450;
   --oe-font-weight-bold: 500;

@@ -85,7 +85,6 @@
 
     color: var(--oe-font-color-light);
     font-size: var(--oe-font-size-large);
-    font-weight: var(--oe-font-weight-light);
     letter-spacing: 0.05em;
   }
 }
