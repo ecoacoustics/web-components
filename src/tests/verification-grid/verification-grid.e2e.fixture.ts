@@ -75,6 +75,8 @@ class TestPage {
   public gridTileProgressMeterTooltips = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
 
+  public gridTilePlaceholders = () => this.page.locator(".tile-placeholder").all();
+
   public gridProgressBarCount = () => this.page.locator("oe-progress-bar").count();
   public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
   public gridProgressBarCompletedTooltip = () => this.gridProgressBar().getByTestId("completed-tooltip").first();
@@ -112,6 +114,7 @@ class TestPage {
     return targetDecision.locator(`#${decision}-decision-button`);
   }
 
+  public smallJsonInput = "http://localhost:3000/test-items-small.json";
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
   private defaultTemplate = `
@@ -119,7 +122,11 @@ class TestPage {
     <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
 
-  public async create(customTemplate = this.defaultTemplate, requiredSelectors: string[] = []) {
+  public async create(
+    customTemplate = this.defaultTemplate,
+    requiredSelectors: string[] = [],
+    src = this.testJsonInput,
+  ) {
     await setContent(
       this.page,
       `
@@ -129,7 +136,7 @@ class TestPage {
         <oe-data-source
           slot="data-source"
           for="verification-grid"
-          src="${this.testJsonInput}"
+          src="${src}"
         ></oe-data-source>
       </oe-verification-grid>
     `,
@@ -665,8 +672,8 @@ class TestPage {
     await targetButton.dispatchEvent("click");
   }
 
-  public async selectFile() {
-    await this.fileInputButton().setInputFiles("file.json");
+  public async selectFile(fileName = "file.json") {
+    await this.fileInputButton().setInputFiles(fileName);
   }
 
   public async getPopulatedGridSize(): Promise<number> {
