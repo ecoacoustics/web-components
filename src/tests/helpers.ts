@@ -90,7 +90,10 @@ export async function dragSelection(
   }
   await page.mouse.down();
 
-  await page.mouse.move(end.x, end.y);
+  // by using step 10, there will be 10 intermediate points between the start
+  // and end destination. Better simulating a user drag action because users
+  // can usually not instantly move their mouse across the screen
+  await page.mouse.move(end.x, end.y, { steps: 10 });
 
   // We use sleep here so that if the browser is being really fast, we don't make
   // a pointerdown and pointerup event in the same frame.

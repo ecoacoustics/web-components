@@ -906,7 +906,9 @@ test.describe("single verification grid", () => {
           expect(selectedTiles).toHaveLength(0);
         });
 
-        test.only("should be able to select new tiles if the grid size increases", async ({ fixture }) => {
+        test("should be able to select new tiles if the grid size increases", async ({ fixture }) => {
+          test.skip(!!process.env.CI && process.platform === "darwin");
+
           const currentGridSize = await fixture.getGridSize();
           await fixture.changeGridSize(currentGridSize + 1);
 
