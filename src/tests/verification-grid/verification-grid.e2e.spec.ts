@@ -871,7 +871,7 @@ test.describe("single verification grid", () => {
           expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
         });
 
-        test.only("should be able to select multiple tiles", async ({ fixture }) => {
+        test("should be able to select multiple tiles", async ({ fixture }) => {
           const targetStartTile = (await fixture.gridTileComponents())[0];
           const targetEndTile = (await fixture.gridTileComponents())[1];
 
