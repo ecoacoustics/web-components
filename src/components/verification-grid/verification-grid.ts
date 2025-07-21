@@ -503,6 +503,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
     this.removeSubSelection();
+    this.resetSelectionHead();
   }
 
   /**
@@ -950,8 +951,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // shift clicks, it will be the start of a shift selection range
     // this.selectionHead = null;
     this.updateSubSelection();
-
-    this.resetSelectionHead();
   }
 
   private canSubSelect(): boolean {
@@ -989,9 +988,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateSelectionHead(value: number | null): void {
     this.selectionHead = value;
 
-    if (value === null) {
-      this.removeSubSelection();
-    } else {
+    this.removeSubSelection();
+    if (value !== null) {
       this.toggleTileSelection(value);
     }
   }
@@ -1180,6 +1178,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const proposedViewHead = this.viewHead + this.populatedTileCount;
     this.viewHead = proposedViewHead;
     this.removeSubSelection();
+    this.resetSelectionHead();
   }
 
   private pageBackward(): void {
@@ -1189,6 +1188,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const proposedHead = this.viewHead - this.populatedTileCount;
     this.viewHead = proposedHead;
     this.removeSubSelection();
+    this.resetSelectionHead();
   }
 
   /** Changes the viewHead to the current page of undecided results */
@@ -1200,6 +1200,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   // when the user pages
   private async nextPage(count: number = this.effectivePageSize): Promise<void> {
     this.removeSubSelection();
+    this.resetSelectionHead();
     this.resetSpectrogramSettings();
 
     if (!this.paginationFetcher) {
