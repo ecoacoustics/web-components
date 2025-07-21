@@ -1,6 +1,5 @@
 :host {
   --decision-color: var(--oe-panel-color);
-  --selected-border-size: 4px;
 
   /*
     It is okay to change the display property here because we do not expect
@@ -29,7 +28,7 @@
 .tile-container {
   position: relative;
   margin-bottom: 0;
-  padding: var(--selected-border-size);
+  padding: 4px;
   background-color: var(--oe-panel-color);
   overflow: hidden;
 
@@ -47,10 +46,6 @@
     that users can zoom into a spectrogram.
   */
   touch-action: manipulation;
-
-  transition:
-    border-color var(--oe-animation-time) ease-out,
-    border-size var(--oe-animation-time) ease-out;
 }
 
 .vertically-fill {
@@ -95,18 +90,6 @@
   transform: translate(0%, calc(-50% - 1rem));
   z-index: 2;
   font-size: 2rem;
-}
-
-.overlay-text {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  font-size: 4em;
-
-  background-color: var(--oe-panel-color);
-  border-radius: var(--oe-border-rounding);
 }
 
 .progress-meter {

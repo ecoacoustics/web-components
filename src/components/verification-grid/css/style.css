@@ -83,6 +83,13 @@
     justify-content: center;
     align-items: center;
 
+    /*
+      We set the text-align so that if the user sets a custom
+      empty-subject-message that involves wrapping text, the wrapped text will
+      still be centered.
+    */
+    text-align: center;
+
     color: var(--oe-font-color-light);
     font-size: var(--oe-font-size-large);
     letter-spacing: 0.05em;

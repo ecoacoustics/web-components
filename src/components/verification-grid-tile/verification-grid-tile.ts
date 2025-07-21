@@ -58,8 +58,6 @@ const shortcutTranslation = {
  *
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
- * @cssproperty [--selected-border-size] - The size of the border when a
- * decision is being shown
  *
  * @event tile-loaded
  */
@@ -134,6 +132,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   public loaded = false;
   private shortcuts: string[] = [];
   private intersectionObserver!: IntersectionObserver;
+
+  /**
+   * An override of the default HTMLElement focus() method so that
+   * tab index's and location is consistent.
+   */
+  public override focus() {
+    this.contentsWrapper.focus();
+  }
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -266,6 +272,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // https://stackoverflow.com/q/11818637
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.altKey && this.shortcuts.includes(event.key.toLowerCase())) {
+      // Because Alt + number is used to switch tabs in browsers, we
+      // preventDefault so that the tab doesn't lose focus during alt + number
+      // selection.
+      event.preventDefault();
+
       this.dispatchEvent(
         new CustomEvent(VerificationGridTileComponent.selectedEventName, {
           bubbles: true,

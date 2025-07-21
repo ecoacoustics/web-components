@@ -867,7 +867,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private toggleTileSelection(index: number): void {
     const gridItems = this.gridTiles;
-    gridItems[index].selected = !gridItems[index].selected;
+    const targetGridItem = gridItems[index];
+    targetGridItem.selected = !targetGridItem.selected;
+
+    targetGridItem.focus();
   }
 
   private addSubSelectionRange(start: number, end: number): void {
@@ -1037,11 +1040,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const targetLeft = target.offsetLeft;
       const targetRight = targetLeft + target.offsetWidth;
 
-      // seeing each of these conditions individually is a lot easier to
-      // understand than seeing them all condensed into a single line
-      // since prettier wants to consolidate all these conditions into one
-      // line, I use prettier ignore
-      // prettier-ignore
       const isOverlapping =
         targetLeft <= selectionRightSide &&
         targetRight >= selectionLeftSide &&
