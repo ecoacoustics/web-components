@@ -267,18 +267,11 @@ class TestPage {
     return indexes;
   }
 
-  public async selectedTiles(): Promise<Locator[]> {
-    const tiles = await this.gridTileComponents();
-    const selectedTiles: Locator[] = [];
-
-    for (const tile of tiles) {
-      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
-      if (isSelected) {
-        selectedTiles.push(tile);
-      }
-    }
-
-    return selectedTiles;
+  public async selectedTiles(): Promise<SubjectWrapper[]> {
+    return await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
+      this.gridComponent(),
+      "currentSubSelection" as any,
+    );
   }
 
   public async getVerificationColor(decision: "true" | "false") {

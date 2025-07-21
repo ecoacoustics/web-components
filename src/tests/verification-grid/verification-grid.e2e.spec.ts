@@ -816,7 +816,7 @@ test.describe("single verification grid", () => {
         const targetTile = 2;
         await fixture.changeBrightness(targetTile, 0.5);
 
-        const selectedTiles = await fixture.selectedTileIndexes();
+        const selectedTiles = await fixture.selectedTiles();
         expect(selectedTiles).toHaveLength(0);
       });
 
@@ -845,9 +845,8 @@ test.describe("single verification grid", () => {
 
           await fixture.createSelectionBox(start, end);
 
-          const expectedSelectedTiles = [];
-          const realizedSelectedTiles = await fixture.selectedTileIndexes();
-          expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+          const realizedSelectedTiles = await fixture.selectedTiles();
+          expect(realizedSelectedTiles).toHaveLength(0);
         });
 
         test("should be able to select a tile", async ({ fixture }) => {
@@ -1014,7 +1013,7 @@ test.describe("single verification grid", () => {
         await fixture.createSubSelection([0]);
         await fixture.createSubSelection([0]);
 
-        const realizedSelectedTiles = await fixture.selectedTileIndexes();
+        const realizedSelectedTiles = await fixture.selectedTiles();
         expect(realizedSelectedTiles).toHaveLength(0);
       });
 
@@ -1051,30 +1050,30 @@ test.describe("single verification grid", () => {
       await fixture.page.keyboard.press("ControlOrMeta+a");
 
       const expectedNumberOfSelected = await fixture.getGridSize();
-      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
+      const realizedNumberOfSelected = await fixture.selectedTiles();
 
       expect(realizedNumberOfSelected).toHaveLength(expectedNumberOfSelected);
     });
 
     test("should deselect all tiles if ctrl + D is pressed", async ({ fixture }) => {
       await fixture.createSubSelection([0]);
-      const initialSelectedTiles = await fixture.selectedTileIndexes();
+      const initialSelectedTiles = await fixture.selectedTiles();
       expect(initialSelectedTiles).toHaveLength(1);
 
       await fixture.page.keyboard.press("ControlOrMeta+d");
 
-      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
+      const realizedNumberOfSelected = await fixture.selectedTiles();
       expect(realizedNumberOfSelected).toHaveLength(0);
     });
 
     test("should deselect all tiles if the escape key is pressed", async ({ fixture }) => {
       await fixture.createSubSelection([0]);
-      const initialSelectedTiles = await fixture.selectedTileIndexes();
+      const initialSelectedTiles = await fixture.selectedTiles();
       expect(initialSelectedTiles).toHaveLength(1);
 
       await fixture.page.keyboard.press(ESCAPE_KEY);
 
-      const realizedNumberOfSelected = await fixture.selectedTileIndexes();
+      const realizedNumberOfSelected = await fixture.selectedTiles();
       expect(realizedNumberOfSelected).toHaveLength(0);
     });
   });
@@ -1769,7 +1768,7 @@ test.describe("verification grid interaction with the host application", () => {
 
   test("should not select all tiles when ctrl + A is pressed inside the input box", async ({ fixture }) => {
     await fixture.hostAppInput().press("ControlOrMeta+a");
-    const selectedTiles = await fixture.selectedTileIndexes();
+    const selectedTiles = await fixture.selectedTiles();
     expect(selectedTiles).toHaveLength(0);
   });
 
@@ -1804,7 +1803,7 @@ test.describe("verification grid interaction with the host application", () => {
     await fixture.page.keyboard.press("ControlOrMeta+a");
 
     const expectedSelectedTiles = await fixture.getGridSize();
-    const selectedTiles = await fixture.selectedTileIndexes();
+    const selectedTiles = await fixture.selectedTiles();
     expect(selectedTiles).toHaveLength(expectedSelectedTiles);
   });
 
