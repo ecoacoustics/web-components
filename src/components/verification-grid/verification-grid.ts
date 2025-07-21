@@ -335,7 +335,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
   private showingSelectionShortcuts = false;
-  private selectionHead: number | null = null;
   private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
@@ -345,6 +344,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     highlighting: false,
     observedElements: [],
   };
+
+  private _selectionHead: number | null = null;
+  private focusHead: number | null = null;
+
+  private get selectionHead() {
+    return this._selectionHead;
+  }
+
+  private set selectionHead(value: number | null) {
+    this._selectionHead = value;
+    this.focusHead = value;
+  }
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
 
@@ -941,10 +952,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       element.selected = false;
     }
 
-    // TODO: I used to remove subSelection for a reason, but it doesn't seem to be needed
-    // by setting the subSelection head to null, it means that if the user
-    // shift clicks, it will be the start of a shift selection range
-    // this.selectionHead = null;
+    // We reset the selection head so that if the user deselects all of the
+    // tiles (e.g. through the esc key), the next shift click will start a new
+    // range selection instead of starting from the old range selection
+    // position.
+    this.resetSelectionHead();
     this.updateSubSelection();
   }
 
@@ -1004,7 +1016,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // still overwrite the selection behavior using the selection-behavior
     // attribute. Therefore, we have to check that we are not on explicitly
     // using tablet selection mode.
-    if (selectionBehavior === "desktop" && !toggle && !additive) {
+    if (selectionBehavior === "desktop" && !toggle && !additive && !focus) {
       this.removeSubSelection();
     }
 
@@ -1012,6 +1024,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // not select it.
     if (focus) {
       this.focusTile(selectionIndex);
+      this.focusHead = selectionIndex;
     } else if (range) {
       // if the user has never selected an item before, the multiSelectHead will be "null"
       // in this case, we want to start selecting from the clicked tile
@@ -1038,11 +1051,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private resetSelectionHead(): void {
     this.selectionHead = null;
+    this.focusHead = null;
   }
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
-    this.selectionHead = value;
-
     const refinedOptions: SelectionOptions = {
       focus: options?.toggle,
       range: options?.range,
@@ -1056,34 +1068,34 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private selectionHeadLeft(options?: SelectionOptions): void {
-    if (this.selectionHead === null) {
+    if (this.focusHead === null) {
       this.updateSelectionHead(this.lastTileIndex, options);
     } else {
-      this.updateSelectionHead(Math.max(this.selectionHead - 1, 0), options);
+      this.updateSelectionHead(Math.max(this.focusHead - 1, 0), options);
     }
   }
 
   private selectionHeadRight(options?: SelectionOptions): void {
-    if (this.selectionHead === null) {
+    if (this.focusHead === null) {
       this.updateSelectionHead(0, options);
     } else {
-      this.updateSelectionHead(Math.min(this.selectionHead + 1, this.lastTileIndex), options);
+      this.updateSelectionHead(Math.min(this.focusHead + 1, this.lastTileIndex), options);
     }
   }
 
   private selectionHeadUp(options?: SelectionOptions): void {
-    if (this.selectionHead === null) {
+    if (this.focusHead === null) {
       this.updateSelectionHead(this.lastTileIndex, options);
     } else {
-      this.updateSelectionHead(Math.max(this.selectionHead - this.columns, 0), options);
+      this.updateSelectionHead(Math.max(this.focusHead - this.columns, 0), options);
     }
   }
 
   private selectionHeadDown(options?: SelectionOptions): void {
-    if (this.selectionHead === null) {
+    if (this.focusHead === null) {
       this.updateSelectionHead(0, options);
     } else {
-      this.updateSelectionHead(Math.min(this.selectionHead + this.columns, this.lastTileIndex), options);
+      this.updateSelectionHead(Math.min(this.focusHead + this.columns, this.lastTileIndex), options);
     }
   }
 
