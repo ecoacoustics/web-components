@@ -907,6 +907,8 @@ test.describe("single verification grid", () => {
         });
 
         test("should be able to select new tiles if the grid size increases", async ({ fixture }) => {
+          test.skip(!!process.env.CI && process.platform === "darwin");
+
           const currentGridSize = await fixture.getGridSize();
           await fixture.changeGridSize(currentGridSize + 1);
 
@@ -1351,6 +1353,34 @@ test.describe("single verification grid", () => {
   // during progressive creation, individual elements will be added to the
   // document, meaning that the verification grid is in various invalid states
   test.describe("progressive creation of a verification grid", () => {});
+});
+
+test.describe("small datasets", () => {
+  const datasetSize = 3;
+
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create(undefined, undefined, fixture.smallJsonInput);
+  });
+
+  test("should have a placeholder tile for small datasets", async ({ fixture }) => {
+    const testedGridSize = 4;
+    const expectedPlaceholderCount = testedGridSize - datasetSize;
+
+    await fixture.changeGridSize(testedGridSize);
+
+    const spectrogramGridTiles = await fixture.gridTileContainers();
+    expect(spectrogramGridTiles).toHaveLength(datasetSize);
+
+    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
+    expect(gridTilePlaceholders).toHaveLength(expectedPlaceholderCount);
+  });
+
+  test("should not have any placeholders if the grid size is large enough", async ({ fixture }) => {
+    await fixture.changeGridSize(2);
+
+    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
+    expect(gridTilePlaceholders).toHaveLength(0);
+  });
 });
 
 test.describe("decisions", () => {

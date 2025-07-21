@@ -1,15 +1,6 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  render,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -29,7 +20,6 @@ import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
-import { repeat } from "lit/directives/repeat.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
@@ -43,6 +33,8 @@ import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
+import { repeat } from "lit/directives/repeat.js";
+import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -164,6 +156,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   @property({ attribute: "selection-behavior", type: String, reflect: true })
   public selectionBehavior: SelectionObserverType = "default";
+
+  @property({ attribute: "empty-subject-message", type: String })
+  public emptySubjectText = "No content";
 
   @property({
     attribute: "progress-bar-position",
@@ -301,6 +296,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return { start, end };
   }
 
+  private get emptyTileCount() {
+    const availableTiles = this.rows * this.columns;
+    const visibleSubjectCount = this.currentPageIndices.end - this.currentPageIndices.start;
+    return availableTiles - visibleSubjectCount;
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -327,6 +328,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     highlighting: false,
     observedElements: [],
   };
+
+  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -584,10 +587,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private *currentPage(): Generator<SubjectWrapper, void, void> {
+  private *currentPage(): Generator<SubjectWrapper | null, void, void> {
     const page = this.currentPageIndices;
     for (let i = page.start; i < page.end; i++) {
       yield this.subjects[i];
+    }
+
+    // If there are any additional empty tiles, we emit a "null" value to
+    // so that we can render a placeholder.
+    for (let i = 0; i < this.emptyTileCount; i++) {
+      yield null;
     }
   }
 
@@ -1199,7 +1208,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      await this.nextPage();
+      await this.nextPage(gridTiles.length);
     }
   }
 
@@ -1495,8 +1504,29 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
+  private gridTileTemplate(subject: SubjectWrapper | null, customTemplate: any, index: number): HTMLTemplateResult {
+    // If there is no subject, we
+    if (subject === null) {
+      return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
+    }
+
+    return html`
+      <oe-verification-grid-tile
+        class="grid-tile"
+        @tile-loaded="${this.handleTileLoaded}"
+        @play="${this.handleTilePlay}"
+        .requiredDecisions="${this.requiredDecisions}"
+        .isOnlyTile="${this.populatedTileCount === 1}"
+        .model="${subject as any}"
+        .index="${index}"
+      >
+        ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
+      </oe-verification-grid-tile>
+    `;
+  }
+
   public render() {
-    let customTemplate: any = nothing;
+    let customTemplate: any | undefined;
     if (this.gridItemTemplate) {
       customTemplate = this.gridItemTemplate.cloneNode(true);
     }
@@ -1522,30 +1552,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
-          @pointermove="${this.resizeHighlightBox}"
+          @pointermove="${(event: PointerEvent) =>
+            runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
           @overlap="${this.handleTileOverlap}"
         >
           ${when(
             this.currentPageIndices.start === this.currentPageIndices.end,
             () => this.noItemsTemplate(),
-            () => html`
-              ${repeat(
-                this.currentPage(),
-                (subject: SubjectWrapper, i: number) => html`
-                  <oe-verification-grid-tile
-                    class="grid-tile"
-                    @tile-loaded="${this.handleTileLoaded}"
-                    @play="${this.handleTilePlay}"
-                    .requiredDecisions="${this.requiredDecisions}"
-                    .isOnlyTile="${this.populatedTileCount === 1}"
-                    .model="${subject as any}"
-                    .index="${i}"
-                  >
-                    ${unsafeHTML(customTemplate.innerHTML)}
-                  </oe-verification-grid-tile>
-                `,
-              )}
-            `,
+            () =>
+              repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
+                this.gridTileTemplate(subject, customTemplate, index),
+              ),
           )}
         </div>
 

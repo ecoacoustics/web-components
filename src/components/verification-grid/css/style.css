@@ -20,14 +20,6 @@
   pointer-events: none;
 }
 
-/* TODO: fix placement */
-.statistics-section {
-  position: relative;
-  display: inline-block;
-  width: fit-content;
-  padding: var(--oe-spacing);
-}
-
 /* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;
@@ -65,10 +57,47 @@
     screen.
   */
   gap: var(--oe-spacing);
+
+  /*
+    These styles will be applied to all grid items to maintain consistency
+    between the oe-verification-grid-tile's, tile placeholders, and other items
+    we might add in the future.
+  */
+  & > .grid-tile {
+    border-radius: var(--oe-border-rounding);
+    box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color-dark);
+  }
+
+  /*
+    If there is no subject to be shown in a verification grid tile, we render a
+    placeholder div.
+  */
+  & > .tile-placeholder {
+    position: relative;
+    box-shadow:
+      var(--oe-backdrop-shadow) var(--oe-panel-color-dark),
+      inset 0 0 1rem var(--oe-panel-color-dark);
+    border-radius: var(--oe-border-rounding);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: var(--oe-font-color-light);
+    font-size: var(--oe-font-size-large);
+    letter-spacing: 0.05em;
+  }
 }
 
 .no-items-message {
-  font-size: 1.2rem;
+  display: subgrid / subgrid;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+
+  align-content: center;
+  text-align: center;
+
+  font-size: var(--oe-font-size-large);
 }
 
 .controls-container {

@@ -5,6 +5,7 @@ import { expect } from "./assertions";
 import { Pixel } from "../models/unitConverters";
 import { CssVariable } from "../helpers/types/advancedTypes";
 import { MousePosition } from "../components/verification-grid/verification-grid";
+import { sleep } from "../helpers/utilities";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -93,6 +94,10 @@ export async function dragSelection(
   // and end destination. Better simulating a user drag action because users
   // can usually not instantly move their mouse across the screen
   await page.mouse.move(end.x, end.y, { steps: 10 });
+
+  // We use sleep here so that if the browser is being really fast, we don't make
+  // a pointerdown and pointerup event in the same frame.
+  await sleep(0.5);
 
   await page.mouse.up();
   for (const modifier of modifiers) {

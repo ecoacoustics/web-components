@@ -13,6 +13,12 @@
   */
   display: flex;
   flex-direction: column;
+
+  /*
+    The reason why we want to hide overflow content is so that border rounding
+    on the :host element (which is a subtractive property) clips content.
+  */
+  overflow: hidden;
 }
 
 .spectrogram-container {
@@ -22,8 +28,6 @@
 
 .tile-container {
   position: relative;
-  border-radius: var(--oe-border-rounding);
-  box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color);
   margin-bottom: 0;
   padding: var(--selected-border-size);
   background-color: var(--oe-panel-color);
