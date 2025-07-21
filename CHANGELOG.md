@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.0.0...web-components-v4.1.0) (2025-07-21)
+
+
+### Features
+
+* Add empty tiles placeholders ([#424](https://github.com/ecoacoustics/web-components/issues/424)) ([f3ab541](https://github.com/ecoacoustics/web-components/commit/f3ab5410da7a66aec2970f34878160011931e8dd)), closes [#423](https://github.com/ecoacoustics/web-components/issues/423)
+
 ## [4.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.1...web-components-v4.0.0) (2025-07-16)
 
 
