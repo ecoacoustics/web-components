@@ -16,9 +16,9 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["f11"], description: "Fullscreen" },
     { keys: ["Ctrl", "a"], description: "Select all" },
     { keys: ["Esc"], description: "Deselect all" },
-    { keys: ["Ctrl", mouseClick], description: "Toggle selection" },
-    { keys: [shiftSymbol, mouseClick], description: "Exclusive range selection" },
-    { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Additive range selection" },
+    { keys: ["Ctrl", mouseClick], description: "Add or remove a tile from selection" },
+    { keys: [shiftSymbol, mouseClick], description: "Select all tiles between two points" },
+    { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Add range to selection" },
   ] satisfies KeyboardShortcut[];
 
   const slideTemplate = html`
