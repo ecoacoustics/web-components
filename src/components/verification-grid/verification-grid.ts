@@ -1170,8 +1170,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     const options: SelectionOptions = {
-      toggle: event.ctrlKey,
-      range: event.shiftKey,
+      additive: true,
     };
 
     const intersectingTiles = this.calculateHighlightIntersection();
