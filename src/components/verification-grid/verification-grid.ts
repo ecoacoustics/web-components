@@ -12,7 +12,7 @@ import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
-import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../helpers/keyboard";
+import { END_KEY, ESCAPE_KEY, PAGE_DOWN_KEY, PAGE_UP_KEY, SPACE_KEY } from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
@@ -633,15 +633,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const isHoldingCtrl = hasCtrlLikeModifier(event);
 
     switch (event.key) {
-      case LEFT_ARROW_KEY: {
+      case PAGE_DOWN_KEY: {
         event.preventDefault();
         this.handlePreviousPageClick();
         break;
       }
 
-      case RIGHT_ARROW_KEY: {
+      case PAGE_UP_KEY: {
         event.preventDefault();
         this.handleNextPageClick();
+        break;
+      }
+
+      case END_KEY: {
+        event.preventDefault();
+        this.resumeVerification();
         break;
       }
 

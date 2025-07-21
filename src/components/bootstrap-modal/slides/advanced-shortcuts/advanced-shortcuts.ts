@@ -19,6 +19,11 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["Ctrl", mouseClick], description: "Toggle selection" },
     { keys: [shiftSymbol, mouseClick], description: "Exclusive range selection" },
     { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Additive range selection" },
+    { keys: ["Left"], description: "Move selection back" },
+    { keys: ["Right"], description: "Move selection forwards" },
+    { keys: ["PageUp"], description: "Previous Page" },
+    { keys: ["PageNext"], description: "Next Page" },
+    { keys: ["End"], description: "Resume verification" },
   ] satisfies KeyboardShortcut[];
 
   const slideTemplate = html`
