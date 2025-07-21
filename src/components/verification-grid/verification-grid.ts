@@ -105,6 +105,13 @@ interface CurrentPage {
   end: number;
 }
 
+interface SelectionOptions {
+  additive?: boolean;
+  toggle?: boolean;
+  range?: boolean;
+  focus?: boolean;
+}
+
 /**
  * @description
  * A verification grid component that can be used to verify audio events
@@ -315,7 +322,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
-  private selectionHandler = this.handleSelection.bind(this);
+  private selectionHandler = this.handleTileSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
 
   public subjects: SubjectWrapper[] = [];
@@ -642,6 +649,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // the ctrl key if the user is on a Mac
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/metaKey
     const isHoldingCtrl = hasCtrlLikeModifier(event);
+    const selectionOptions: SelectionOptions = {
+      toggle: isHoldingCtrl,
+      range: event.shiftKey,
+    };
 
     switch (event.key) {
       case PAGE_DOWN_KEY: {
@@ -664,25 +675,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       case LEFT_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadLeft();
+        this.selectionHeadLeft(selectionOptions);
         break;
       }
 
       case RIGHT_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadRight();
+        this.selectionHeadRight(selectionOptions);
         break;
       }
 
       case UP_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadUp();
+        this.selectionHeadUp(selectionOptions);
         break;
       }
 
       case DOWN_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadDown();
+        this.selectionHeadDown(selectionOptions);
         break;
       }
 
@@ -858,54 +869,38 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.showingSelectionShortcuts = false;
   }
 
-  private handleSelection(selectionEvent: SelectionEvent): void {
+  private handleTileSelection(selectionEvent: SelectionEvent): void {
     if (!this.canSubSelect()) {
       return;
     }
 
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
+    const options: SelectionOptions = {
+      toggle: selectionEvent.detail.ctrlKey,
+      range: selectionEvent.detail.shiftKey,
+    };
 
-    const selectionIndex = selectionEvent.detail.index;
-
-    // in desktop mode, unless the ctrl key is held down, clicking an element
-    // removes all other selected items
-    // while it is not possible to press the ctrl key on a tablet, the user can
-    // still overwrite the selection behavior using the selection-behavior
-    // attribute. Therefore, we have to check that we are not on explicitly
-    // using tablet selection mode.
-    if (selectionBehavior === "desktop" && !selectionEvent.detail.ctrlKey) {
-      this.removeSubSelection();
-    }
-
-    // there are two different types of selections, range selection and single selection
-    // if the shift key is held down, then we perform a "range" selection, if not
-    // then we should perform a single selection
-    if (selectionEvent.detail.shiftKey) {
-      // if the user has never selected an item before, the multiSelectHead will be "null"
-      // in this case, we want to start selecting from the clicked tile
-      this.selectionHead ??= selectionIndex;
-      const selectionTail = selectionIndex;
-
-      this.addSubSelectionRange(this.selectionHead, selectionTail);
-    } else {
-      // if we reach this point, we know that the user is not performing a
-      // range selection because range selection performs an early return
-      this.toggleTileSelection(selectionIndex);
-      this.selectionHead = selectionIndex;
-    }
-
-    this.updateSubSelection();
+    this.processSelection(selectionEvent.detail.index, options);
   }
 
   private toggleTileSelection(index: number): void {
-    const gridItems = this.gridTiles;
-    const targetGridItem = gridItems[index];
-    targetGridItem.selected = !targetGridItem.selected;
+    const targetGridTile = this.gridTiles[index];
+    targetGridTile.selected = !targetGridTile.selected;
+    this.focusTile(targetGridTile);
+  }
 
-    targetGridItem.focus();
+  private selectTile(index: number): void {
+    const targetGridTile = this.gridTiles[index];
+    targetGridTile.selected = true;
+    this.focusTile(targetGridTile);
+  }
+
+  private focusTile(target: VerificationGridTileComponent | number): void {
+    if (target instanceof VerificationGridTileComponent) {
+      target.focus();
+    } else {
+      const targetGridItem = this.gridTiles[target];
+      targetGridItem.focus();
+    }
   }
 
   private addSubSelectionRange(start: number, end: number): void {
@@ -977,6 +972,66 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
   }
 
+  /**
+   * Processes a selection request
+   *
+   * @param tileIndex
+   * @param options
+   *    toggle - Whether the selection should be added to the current
+   *               selection. This is typically used when ctrl is held.
+   *
+   *    range - Whether the selection should be treated as a start/end range
+   *            This is typically used when shift is held.
+   */
+  private processSelection(
+    tileIndex: number,
+    { additive = false, toggle = false, range = false, focus = false }: SelectionOptions = {},
+  ): void {
+    if (!this.canSubSelect()) {
+      return;
+    }
+
+    let selectionBehavior = this.selectionBehavior;
+    if (selectionBehavior === "default") {
+      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
+    }
+
+    const selectionIndex = tileIndex;
+
+    // in desktop mode, unless the ctrl key is held down, clicking an element
+    // removes all other selected items
+    // while it is not possible to press the ctrl key on a tablet, the user can
+    // still overwrite the selection behavior using the selection-behavior
+    // attribute. Therefore, we have to check that we are not on explicitly
+    // using tablet selection mode.
+    if (selectionBehavior === "desktop" && !toggle && !additive) {
+      this.removeSubSelection();
+    }
+
+    // If the "focus" selection behavior is set, we want to focus the tile but
+    // not select it.
+    if (focus) {
+      this.focusTile(selectionIndex);
+    } else if (range) {
+      // if the user has never selected an item before, the multiSelectHead will be "null"
+      // in this case, we want to start selecting from the clicked tile
+      this.selectionHead ??= selectionIndex;
+      const selectionTail = selectionIndex;
+
+      this.addSubSelectionRange(this.selectionHead, selectionTail);
+    } else if (additive) {
+      this.selectTile(selectionIndex);
+      this.selectionHead = selectionIndex;
+    } else {
+      // if we reach this point, we know that the user is not performing a
+      // range selection because range selection performs an early return
+      this.toggleTileSelection(selectionIndex);
+      this.selectionHead = selectionIndex;
+    }
+
+    this.updateSubSelection();
+  }
+
   private get lastTileIndex(): number {
     return this.populatedTileCount - 1;
   }
@@ -985,44 +1040,50 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.selectionHead = null;
   }
 
-  private updateSelectionHead(value: number | null): void {
+  private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
     this.selectionHead = value;
 
-    this.removeSubSelection();
+    const refinedOptions: SelectionOptions = {
+      focus: options?.toggle,
+      range: options?.range,
+    };
+
     if (value !== null) {
-      this.toggleTileSelection(value);
+      this.processSelection(value, refinedOptions);
+    } else {
+      this.removeSubSelection();
     }
   }
 
-  private selectionHeadLeft(): void {
+  private selectionHeadLeft(options?: SelectionOptions): void {
     if (this.selectionHead === null) {
-      this.updateSelectionHead(this.lastTileIndex);
+      this.updateSelectionHead(this.lastTileIndex, options);
     } else {
-      this.updateSelectionHead(Math.max(this.selectionHead - 1, 0));
+      this.updateSelectionHead(Math.max(this.selectionHead - 1, 0), options);
     }
   }
 
-  private selectionHeadRight(): void {
+  private selectionHeadRight(options?: SelectionOptions): void {
     if (this.selectionHead === null) {
-      this.updateSelectionHead(0);
+      this.updateSelectionHead(0, options);
     } else {
-      this.updateSelectionHead(Math.min(this.selectionHead + 1, this.lastTileIndex));
+      this.updateSelectionHead(Math.min(this.selectionHead + 1, this.lastTileIndex), options);
     }
   }
 
-  private selectionHeadUp(): void {
+  private selectionHeadUp(options?: SelectionOptions): void {
     if (this.selectionHead === null) {
-      this.updateSelectionHead(this.lastTileIndex);
+      this.updateSelectionHead(this.lastTileIndex, options);
     } else {
-      this.updateSelectionHead(Math.max(this.selectionHead - this.columns, 0));
+      this.updateSelectionHead(Math.max(this.selectionHead - this.columns, 0), options);
     }
   }
 
-  private selectionHeadDown(): void {
+  private selectionHeadDown(options?: SelectionOptions): void {
     if (this.selectionHead === null) {
-      this.updateSelectionHead(0);
+      this.updateSelectionHead(0, options);
     } else {
-      this.updateSelectionHead(Math.min(this.selectionHead + this.columns, this.lastTileIndex));
+      this.updateSelectionHead(Math.min(this.selectionHead + this.columns, this.lastTileIndex), options);
     }
   }
 
@@ -1108,17 +1169,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       highlightBoxElement.style.top = `${pageY}px`;
     }
 
-    this.calculateHighlightIntersection();
+    const options: SelectionOptions = {
+      toggle: event.ctrlKey,
+      range: event.shiftKey,
+    };
+
+    const intersectingTiles = this.calculateHighlightIntersection();
+    for (const tile of intersectingTiles) {
+      this.processSelection(tile.index, options);
+    }
   }
 
-  private calculateHighlightIntersection(): void {
+  private calculateHighlightIntersection(): VerificationGridTileComponent[] {
     const selectionLeftSide = Math.min(this.highlight.start.x, this.highlight.current.x);
     const selectionTopSide = Math.min(this.highlight.start.y, this.highlight.current.y);
 
     const selectionRightSide = Math.max(this.highlight.start.x, this.highlight.current.x);
     const selectionBottomSide = Math.max(this.highlight.start.y, this.highlight.current.y);
 
-    for (const target of this.highlight.observedElements) {
+    return this.highlight.observedElements.filter((target) => {
       const targetTop = target.offsetTop;
       const targetBottom = targetTop + target.offsetHeight;
       const targetLeft = target.offsetLeft;
@@ -1130,10 +1199,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         targetTop <= selectionBottomSide &&
         targetBottom >= selectionTopSide;
 
-      target.selected = isOverlapping;
-    }
-
-    this.updateSubSelection();
+      return isOverlapping;
+    });
   }
 
   private hideHighlightBox(): void {
