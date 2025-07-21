@@ -1300,6 +1300,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
       await this.nextPage(gridTiles.length);
+      return;
+    }
+
+    // If there is only one tile selected, and all of the tiles tasks are
+    // completed, we want to automatically advance the selection head.
+    if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
+      const selectedTile = subSelection[0];
+      const hasVerificationDecision = selectedTile.model.verification !== undefined;
+
+      if (hasVerificationDecision) {
+        if (this.selectionHead === this.lastTileIndex) {
+          this.updateSelectionHead(0);
+        } else {
+          this.selectionHeadRight();
+        }
+      }
     }
   }
 
