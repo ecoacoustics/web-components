@@ -12,7 +12,17 @@ import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
-import { END_KEY, ESCAPE_KEY, PAGE_DOWN_KEY, PAGE_UP_KEY, SPACE_KEY } from "../../helpers/keyboard";
+import {
+  DOWN_ARROW_KEY,
+  END_KEY,
+  ESCAPE_KEY,
+  LEFT_ARROW_KEY,
+  PAGE_DOWN_KEY,
+  PAGE_UP_KEY,
+  RIGHT_ARROW_KEY,
+  SPACE_KEY,
+  UP_ARROW_KEY,
+} from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
@@ -635,19 +645,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     switch (event.key) {
       case PAGE_DOWN_KEY: {
         event.preventDefault();
-        this.handlePreviousPageClick();
+        this.handleNextPageClick();
         break;
       }
 
       case PAGE_UP_KEY: {
         event.preventDefault();
-        this.handleNextPageClick();
+        this.handlePreviousPageClick();
         break;
       }
 
       case END_KEY: {
         event.preventDefault();
         this.resumeVerification();
+        break;
+      }
+
+      case LEFT_ARROW_KEY: {
+        event.preventDefault();
+        this.selectionHeadLeft();
+        break;
+      }
+
+      case RIGHT_ARROW_KEY: {
+        event.preventDefault();
+        this.selectionHeadRight();
+        break;
+      }
+
+      case UP_ARROW_KEY: {
+        event.preventDefault();
+        this.selectionHeadUp();
+        break;
+      }
+
+      case DOWN_ARROW_KEY: {
+        event.preventDefault();
+        this.selectionHeadDown();
         break;
       }
 
@@ -916,6 +950,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // shift clicks, it will be the start of a shift selection range
     // this.selectionHead = null;
     this.updateSubSelection();
+
+    this.resetSelectionHead();
   }
 
   private canSubSelect(): boolean {
@@ -940,6 +976,56 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
     this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+  }
+
+  private get lastTileIndex(): number {
+    return this.populatedTileCount - 1;
+  }
+
+  private resetSelectionHead(): void {
+    this.selectionHead = null;
+  }
+
+  private updateSelectionHead(value: number | null): void {
+    this.selectionHead = value;
+
+    if (value === null) {
+      this.removeSubSelection();
+    } else {
+      this.toggleTileSelection(value);
+    }
+  }
+
+  private selectionHeadLeft(): void {
+    if (this.selectionHead === null) {
+      this.updateSelectionHead(this.lastTileIndex);
+    } else {
+      this.updateSelectionHead(Math.max(this.selectionHead - 1, 0));
+    }
+  }
+
+  private selectionHeadRight(): void {
+    if (this.selectionHead === null) {
+      this.updateSelectionHead(0);
+    } else {
+      this.updateSelectionHead(Math.min(this.selectionHead + 1, this.lastTileIndex));
+    }
+  }
+
+  private selectionHeadUp(): void {
+    if (this.selectionHead === null) {
+      this.updateSelectionHead(this.lastTileIndex);
+    } else {
+      this.updateSelectionHead(Math.max(this.selectionHead - this.columns, 0));
+    }
+  }
+
+  private selectionHeadDown(): void {
+    if (this.selectionHead === null) {
+      this.updateSelectionHead(0);
+    } else {
+      this.updateSelectionHead(Math.min(this.selectionHead + this.columns, this.lastTileIndex));
+    }
   }
 
   //#endregion
