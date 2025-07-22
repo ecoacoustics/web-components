@@ -47,6 +47,15 @@
     that users can zoom into a spectrogram.
   */
   touch-action: manipulation;
+
+  &:focus {
+    /*
+      Set the offset to -1px so that the outline does not overflow or contribute
+      to the box model's sizing.
+    */
+    outline: 1px solid black;
+    outline-offset: -1px;
+  }
 }
 
 .vertically-fill {
