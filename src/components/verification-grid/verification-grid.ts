@@ -1105,7 +1105,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private selectionHeadUp(options?: SelectionOptions): void {
     if (this.focusHead === null) {
       this.updateSelectionHead(this.lastTileIndex, options);
-    } else {
+      return;
+    }
+
+    // If the selection head is on the last row, pressing down should have no
+    // action.
+    if (this.focusHead > this.columns - 1) {
       this.updateSelectionHead(Math.max(this.focusHead - this.columns, 0), options);
     }
   }
@@ -1113,7 +1118,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private selectionHeadDown(options?: SelectionOptions): void {
     if (this.focusHead === null) {
       this.updateSelectionHead(0, options);
-    } else {
+      return;
+    }
+
+    // If the selection head is on the last row, pressing down should have no
+    // action.
+    if (this.focusHead < (this.rows - 1) * this.columns) {
       this.updateSelectionHead(Math.min(this.focusHead + this.columns, this.lastTileIndex), options);
     }
   }
