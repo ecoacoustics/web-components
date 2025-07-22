@@ -1223,6 +1223,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     };
 
     const intersectingTiles = this.calculateHighlightIntersection();
+
+    // If the user drags from the right to the left, we have a "negative
+    // selection".
+    // In this case, we want to select the tiles in reverse order (in the same
+    // order that the user selected them).
+    // This is done so that the correct focus order is maintained, and any
+    // future selection order behavior is automatically implemented.
+    const isNegativeSelection = highlightWidth < 0;
+    if (isNegativeSelection) {
+      intersectingTiles.reverse();
+    }
+
     for (const tile of intersectingTiles) {
       this.processSelection(tile.index, options);
     }
