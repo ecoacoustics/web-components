@@ -13,7 +13,15 @@ import {
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect } from "../assertions";
 import { SubjectWrapper } from "../../models/subject";
-import { DOWN_ARROW_KEY, ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import {
+  DOWN_ARROW_KEY,
+  END_KEY,
+  ESCAPE_KEY,
+  HOME_KEY,
+  LEFT_ARROW_KEY,
+  RIGHT_ARROW_KEY,
+  UP_ARROW_KEY,
+} from "../../helpers/keyboard";
 import { Pixel } from "../../models/unitConverters";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
@@ -976,39 +984,6 @@ test.describe("single verification grid", () => {
           expect(selectedTiles).toEqual([0, 2, 3]);
         });
       });
-
-      test.describe("keyboard selection", () => {
-        test("should select the first tile if RIGHT key is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(RIGHT_ARROW_KEY);
-          expect(await fixture.selectedTileIndexes()).toEqual([0]);
-          expect(await fixture.focusedIndex()).toEqual(0);
-        });
-
-        test("should select the first tile if DOWN key is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(DOWN_ARROW_KEY);
-          expect(await fixture.selectedTileIndexes()).toEqual([0]);
-          expect(await fixture.focusedIndex()).toEqual(0);
-        });
-
-        test("should select the last tile if LEFT key is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(LEFT_ARROW_KEY);
-
-          // I purposely get the last tile index after the down arrow so (if for
-          // some reason), pressing down creates a new tile, this test will
-          // correctly fail.
-          const lastTileIndex = (await fixture.getGridSize()) - 1;
-          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
-          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
-        });
-
-        test("should select the last tile if UP key is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(UP_ARROW_KEY);
-
-          const lastTileIndex = (await fixture.getGridSize()) - 1;
-          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
-          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
-        });
-      });
     };
 
     const desktopSelectionTests = () => {
@@ -1044,6 +1019,82 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = [1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+      });
+
+      // These keyboard selection tests are only run for
+      test.describe("keyboard selection", () => {
+        test("should select the first tile if RIGHT is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(RIGHT_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+        });
+
+        test("should select the first tile if DOWN is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(DOWN_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+        });
+
+        test("should select the first tile if HOME is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(HOME_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+        });
+
+        test("should select the last tile if LEFT is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(LEFT_ARROW_KEY);
+
+          // I purposely get the last tile index after the down arrow so (if for
+          // some reason), pressing down creates a new tile, this test will
+          // correctly fail.
+          const lastTileIndex = (await fixture.getGridSize()) - 1;
+          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
+        });
+
+        test("should select the last tile if the UP is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(UP_ARROW_KEY);
+
+          const lastTileIndex = (await fixture.getGridSize()) - 1;
+          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
+        });
+
+        test("should select the last tile if END is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(END_KEY);
+
+          const lastTileIndex = (await fixture.getGridSize()) - 1;
+          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
+        });
+
+        test("should be able to move the selection with keyboard shortcuts", async ({ fixture }) => {
+          // I purposely select the third tile so that this test will fail if
+          // we incorrectly start moving from 0,0 instead of the selection head.
+          // Also I use the third tile to prevent off by 1 errors
+          // (e.g. incorrectly starting from 1,0/1,1/0,1)
+          await fixture.createSubSelection(2);
+
+          await fixture.page.keyboard.press(RIGHT_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([3]);
+          expect(await fixture.focusedIndex()).toEqual(3);
+
+          const columnCount = await getBrowserValue<VerificationGridComponent, number>(
+            fixture.gridComponent(),
+            "columns",
+          );
+          const downIndex = 3 + columnCount;
+
+          await fixture.page.keyboard.press(DOWN_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([downIndex]);
+          expect(await fixture.focusedIndex()).toEqual(downIndex);
+
+          // Pressing the "down arrow key" while on the last row should not
+          // have any action.
+          await fixture.page.keyboard.press(DOWN_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([downIndex]);
+          expect(await fixture.focusedIndex()).toEqual(downIndex);
+        });
       });
     };
 
