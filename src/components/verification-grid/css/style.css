@@ -20,6 +20,15 @@
   pointer-events: none;
 }
 
+/*
+  The grid-container can be auto-focused if the "autofocus" attribute is set.
+  Most browsers indicate focus by adding an outline around the currently focused
+  element, but causes more confusion and looks bad.
+*/
+#grid-container {
+  outline: none;
+}
+
 /* The container that contains both decision buttons and grid tiles */
 .verification-container {
   display: flex;

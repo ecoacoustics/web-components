@@ -1821,6 +1821,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           @pointermove="${(event: PointerEvent) =>
             runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
           @overlap="${this.handleTileOverlap}"
+          tabindex="-1"
         >
           ${when(
             this.currentPageIndices.start === this.currentPageIndices.end,

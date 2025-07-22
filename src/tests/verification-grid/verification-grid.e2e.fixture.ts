@@ -130,7 +130,7 @@ class TestPage {
     await setContent(
       this.page,
       `
-      <oe-verification-grid id="verification-grid">
+      <oe-verification-grid id="verification-grid" autofocus>
         ${customTemplate}
 
         <oe-data-source
@@ -181,7 +181,7 @@ class TestPage {
       </header>
 
       <div id="host-application-wrapper">
-        <oe-verification-grid id="verification-grid">
+        <oe-verification-grid id="verification-grid" autofocus>
           ${this.defaultTemplate}
 
           <oe-data-source

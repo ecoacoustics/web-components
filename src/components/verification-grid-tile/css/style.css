@@ -48,7 +48,7 @@
   */
   touch-action: manipulation;
 
-  &:focus {
+  &:focus-visible {
     /*
       Set the offset to -1px so that the outline does not overflow or contribute
       to the box model's sizing.
