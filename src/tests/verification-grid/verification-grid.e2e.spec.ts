@@ -981,11 +981,13 @@ test.describe("single verification grid", () => {
         test("should select the first tile if RIGHT key is pressed with nothing selected", async ({ fixture }) => {
           await fixture.page.keyboard.press(RIGHT_ARROW_KEY);
           expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
         });
 
         test("should select the first tile if DOWN key is pressed with nothing selected", async ({ fixture }) => {
           await fixture.page.keyboard.press(DOWN_ARROW_KEY);
           expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
         });
 
         test("should select the last tile if LEFT key is pressed with nothing selected", async ({ fixture }) => {
@@ -996,6 +998,7 @@ test.describe("single verification grid", () => {
           // correctly fail.
           const lastTileIndex = (await fixture.getGridSize()) - 1;
           expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
         });
 
         test("should select the last tile if UP key is pressed with nothing selected", async ({ fixture }) => {
@@ -1003,6 +1006,7 @@ test.describe("single verification grid", () => {
 
           const lastTileIndex = (await fixture.getGridSize()) - 1;
           expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
         });
       });
     };
