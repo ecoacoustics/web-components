@@ -136,6 +136,13 @@
         "webRoot": "${workspaceFolder}",
       },
       {
+        "name": "Launch Chrome",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://localhost:5173",
+        "webRoot": "${workspaceFolder}",
+      },
+      {
         "name": "Lint",
         "command": "pnpm lint",
         "request": "launch",
