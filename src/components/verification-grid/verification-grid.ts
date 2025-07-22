@@ -16,6 +16,7 @@ import {
   DOWN_ARROW_KEY,
   END_KEY,
   ESCAPE_KEY,
+  HOME_KEY,
   LEFT_ARROW_KEY,
   PAGE_DOWN_KEY,
   PAGE_UP_KEY,
@@ -688,9 +689,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         break;
       }
 
+      case HOME_KEY: {
+        event.preventDefault();
+        this.selectFirstTile();
+        break;
+      }
+
       case END_KEY: {
         event.preventDefault();
-        this.resumeVerification();
+        this.selectLastTile();
         break;
       }
 
@@ -1109,6 +1116,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     } else {
       this.updateSelectionHead(Math.min(this.focusHead + this.columns, this.lastTileIndex), options);
     }
+  }
+
+  private selectFirstTile(options?: SelectionOptions): void {
+    this.updateSelectionHead(0, options);
+  }
+
+  private selectLastTile(options?: SelectionOptions): void {
+    this.updateSelectionHead(this.lastTileIndex, options);
   }
 
   //#endregion

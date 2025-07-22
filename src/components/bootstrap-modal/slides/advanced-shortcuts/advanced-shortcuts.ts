@@ -23,7 +23,8 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["Right"], description: "Move selection forwards" },
     { keys: ["PageUp"], description: "Previous Page" },
     { keys: ["PageNext"], description: "Next Page" },
-    { keys: ["End"], description: "Resume verification" },
+    { keys: ["Home"], description: "Select first tile on page" },
+    { keys: ["End"], description: "Select last tile on page" },
   ] satisfies KeyboardShortcut[];
 
   const slideTemplate = html`
