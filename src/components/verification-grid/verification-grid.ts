@@ -1004,7 +1004,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   /**
    * Processes a selection request
    *
-   * @param tileIndex
+   * @param tileIndices
    * @param options
    *    toggle - Whether the selection should be added to the current
    *               selection. This is typically used when ctrl is held.
@@ -1013,7 +1013,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    *            This is typically used when shift is held.
    */
   private processSelection(
-    tileIndex: number,
+    tileIndices: number | number[],
     { additive = false, toggle = false, range = false, focus = false }: SelectionOptions = {},
   ): void {
     if (!this.canSubSelect()) {
@@ -1027,7 +1027,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
     }
 
-    const selectionIndex = tileIndex;
+    const selectionIndex = tileIndices;
 
     // in desktop mode, unless the ctrl key is held down, clicking an element
     // removes all other selected items
@@ -1039,26 +1039,29 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.removeSubSelection();
     }
 
-    // If the "focus" selection behavior is set, we want to focus the tile but
-    // not select it.
-    if (focus) {
-      this.focusTile(selectionIndex);
-      this.focusHead = selectionIndex;
-    } else if (range) {
-      // if the user has never selected an item before, the multiSelectHead will be "null"
-      // in this case, we want to start selecting from the clicked tile
-      this.selectionHead ??= selectionIndex;
-      const selectionTail = selectionIndex;
+    const iterableIndices = Array.isArray(selectionIndex) ? selectionIndex : [selectionIndex];
+    for (const tileIndex of iterableIndices) {
+      // If the "focus" selection behavior is set, we want to focus the tile but
+      // not select it.
+      if (focus) {
+        this.focusTile(tileIndex);
+        this.focusHead = tileIndex;
+      } else if (range) {
+        // if the user has never selected an item before, the multiSelectHead will be "null"
+        // in this case, we want to start selecting from the clicked tile
+        this.selectionHead ??= tileIndex;
+        const selectionTail = tileIndex;
 
-      this.addSubSelectionRange(this.selectionHead, selectionTail);
-    } else if (additive) {
-      this.selectTile(selectionIndex);
-      this.selectionHead = selectionIndex;
-    } else {
-      // if we reach this point, we know that the user is not performing a
-      // range selection because range selection performs an early return
-      this.toggleTileSelection(selectionIndex);
-      this.selectionHead = selectionIndex;
+        this.addSubSelectionRange(this.selectionHead, selectionTail);
+      } else if (additive) {
+        this.selectTile(tileIndex);
+        this.selectionHead = tileIndex;
+      } else {
+        // if we reach this point, we know that the user is not performing a
+        // range selection because range selection performs an early return
+        this.toggleTileSelection(tileIndex);
+        this.selectionHead = tileIndex;
+      }
     }
 
     this.updateSubSelection();
@@ -1198,6 +1201,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
+
+      // This mimics the behavior of Windows explorer where de-selecting items
+      // during drag-selection only occurs during the initial draw of the
+      // selection box.
+      const maintainSelection = hasCtrlLikeModifier(event) || event.shiftKey;
+      if (!maintainSelection) {
+        this.removeSubSelection();
+      }
     } else {
       return;
     }
@@ -1218,6 +1229,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       highlightBoxElement.style.top = `${pageY}px`;
     }
 
+    // We mimic the selection behavior of windows explorer where the selection
+    // is always additive.
+    //
+    // Note that Windows explorer will deselect tiles if you do not hold down
+    // ctrl or shift during the initial mousedown event, but you can lift the
+    // ctrl of shift key while highlighting.
     const options: SelectionOptions = {
       additive: true,
     };
