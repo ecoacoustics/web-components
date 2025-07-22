@@ -1013,6 +1013,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
+    this.isCurrentAutoSelected = false;
+
     let selectionBehavior = this.selectionBehavior;
     if (selectionBehavior === "default") {
       selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
@@ -1388,6 +1390,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
       await this.nextPage(gridTiles.length);
+
+      // If the last tile that was selected was auto-selected, we should
+      // continue auto-selection onto the next page.
+      if (this.isCurrentAutoSelected) {
+        this.updateSelectionHead(0);
+      }
+
       return;
     }
 
@@ -1402,6 +1411,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           this.updateSelectionHead(0);
         } else {
           this.selectionHeadRight();
+          this.isCurrentAutoSelected = true;
         }
       }
     }
