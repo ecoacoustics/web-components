@@ -694,13 +694,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       case HOME_KEY: {
         event.preventDefault();
-        this.selectFirstTile();
+        this.selectFirstTile(selectionOptions);
         break;
       }
 
       case END_KEY: {
         event.preventDefault();
-        this.selectLastTile();
+        this.selectLastTile(selectionOptions);
         break;
       }
 
