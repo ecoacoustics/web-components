@@ -711,11 +711,13 @@ test.describe("single verification grid", () => {
   test.describe("sub-selection", () => {
     const commonSelectionTests = () => {
       test("should select a tile when clicked", async ({ fixture }) => {
-        const testSubSelection = [0];
+        const testSubSelection = 0;
         await fixture.createSubSelection(testSubSelection);
 
         const selectedTiles = await fixture.selectedTileIndexes();
-        expect(selectedTiles).toEqual(testSubSelection);
+        expect(selectedTiles).toEqual([testSubSelection]);
+
+        expect(await fixture.focusedIndex()).toEqual(0);
       });
 
       test("should add a tile to a selection when the ctrl key is held", async ({ fixture }) => {
@@ -727,6 +729,8 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = firstSubSelection.concat(secondSubSelection);
         const selectedTiles = await fixture.selectedTileIndexes();
         expect(selectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(await fixture.focusedIndex()).toEqual(2);
       });
 
       test("should select a positive range of tiles when the shift key is held", async ({ fixture }) => {
@@ -738,6 +742,8 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(await fixture.focusedIndex()).toEqual(2);
       });
 
       test("should select a negative range of tiles when the shift key is held", async ({ fixture }) => {
@@ -749,9 +755,11 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(await fixture.focusedIndex()).toEqual(0);
       });
 
-      test("should add negative a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
+      test("should add a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
         const selectionStart = 0;
         const selectionEnd = 2;
 
@@ -760,6 +768,8 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(await fixture.focusedIndex()).toEqual(2);
       });
 
       test("should select a tile using alt + number selection shortcuts", async ({ fixture }) => {
@@ -767,17 +777,21 @@ test.describe("single verification grid", () => {
         // selection keyboard shortcut
         await fixture.page.keyboard.press("Alt+1");
 
-        const expectedSelectedTiles = [0];
+        const expectedSelectedTile = 0;
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
-        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(realizedSelectedTiles).toEqual([expectedSelectedTile]);
+        expect(await fixture.focusedIndex()).toEqual(expectedSelectedTile);
       });
 
       test("should select a tile using ctrl & alt + number selection shortcuts", async ({ fixture }) => {
         await fixture.page.keyboard.press("ControlOrMeta+Alt+1");
 
-        const expectedSelectedTiles = [0];
+        const expectedSelectedTile = 0;
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
-        expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(realizedSelectedTiles).toEqual([expectedSelectedTile]);
+        expect(await fixture.focusedIndex()).toEqual(expectedSelectedTile);
       });
 
       test("should be able to add a range using the alt key selection shortcuts", async ({ fixture }) => {
@@ -786,7 +800,9 @@ test.describe("single verification grid", () => {
 
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
+
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+        expect(await fixture.focusedIndex()).toEqual(2);
       });
 
       test("should add positive a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
@@ -798,6 +814,8 @@ test.describe("single verification grid", () => {
         const expectedSelectedTiles = [0, 1, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+        expect(await fixture.focusedIndex()).toEqual(0);
       });
 
       test("should have no operation if the same tile if shift clicked twice", async ({ fixture }) => {
@@ -808,6 +826,8 @@ test.describe("single verification grid", () => {
 
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
         expect(realizedSelectedTiles).toEqual(subSelection);
+
+        expect(await fixture.focusedIndex()).toEqual(1);
       });
 
       // if this test is failing, it might be because the selection box is
