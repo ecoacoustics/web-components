@@ -361,7 +361,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private set selectionHead(value: number | null) {
     this._selectionHead = value;
-    this.focusHead = value;
+
+    if (value !== null) {
+      this.focusHead = value;
+    }
   }
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
@@ -734,6 +737,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           // ctrl + D to remove the current selection
           event.preventDefault();
           this.removeSubSelection();
+
+          // We reset the selection head so that if the user deselects all of the
+          // tiles (e.g. through the esc key), the next shift click will start a new
+          // range selection instead of starting from the old range selection
+          // position.
+          this.resetSelectionHead();
         }
         break;
       }
@@ -761,6 +770,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // related to: https://stackoverflow.com/a/78872316
     if (event.key === ESCAPE_KEY) {
       this.removeSubSelection();
+
+      // We reset the selection head so that if the user deselects all of the
+      // tiles (e.g. through the esc key), the next shift click will start a new
+      // range selection instead of starting from the old range selection
+      // position.
+      this.resetSelectionHead();
       return;
     }
 
@@ -913,25 +928,24 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private toggleTileSelection(index: number): void {
     const targetGridTile = this.gridTiles[index];
     targetGridTile.selected = !targetGridTile.selected;
-    this.focusTile(targetGridTile);
+    this.focusTile(index);
   }
 
   private selectTile(index: number): void {
     const targetGridTile = this.gridTiles[index];
     targetGridTile.selected = true;
-    this.focusTile(targetGridTile);
+    this.focusTile(index);
   }
 
-  private focusTile(target: VerificationGridTileComponent | number): void {
-    if (target instanceof VerificationGridTileComponent) {
-      target.focus();
-    } else {
-      const targetGridItem = this.gridTiles[target];
-      targetGridItem.focus();
-    }
+  private focusTile(target: number): void {
+    const targetGridItem = this.gridTiles[target];
+    targetGridItem.focus();
+    this.focusHead = target;
   }
 
   private addSubSelectionRange(start: number, end: number): void {
+    this.focusTile(end);
+
     // if the user shift + clicks in a negative direction
     // e.g. select item 5 and then shift click item 2
     // we want to select all items from 2 to 5. Therefore, we swap the start and end values
@@ -969,11 +983,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       element.selected = false;
     }
 
-    // We reset the selection head so that if the user deselects all of the
-    // tiles (e.g. through the esc key), the next shift click will start a new
-    // range selection instead of starting from the old range selection
-    // position.
-    this.resetSelectionHead();
     this.updateSubSelection();
   }
 
@@ -1070,7 +1079,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private resetSelectionHead(): void {
     this.selectionHead = null;
-    this.focusHead = null;
+    // this.focusHead = null;
   }
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
