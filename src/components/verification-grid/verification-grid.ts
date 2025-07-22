@@ -177,6 +177,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @property({ attribute: "empty-subject-message", type: String })
   public emptySubjectText = "No content";
 
+  // This mimics the HTMLInputElement's "autofocus" attribute, but has some
+  // special functionality to auto-focus to the shortcut target.
+  @property({ attribute: "autofocus", type: Boolean })
+  public autofocus = false;
+
   @property({
     attribute: "progress-bar-position",
     type: String,
@@ -330,6 +335,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _loaded = false;
   private decisionHeadIndex = 0;
   private viewHeadIndex = 0;
+  private isCurrentAutoSelected = false;
 
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
@@ -431,6 +437,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     if (this.skipButtons.length === 0) {
       render(this.skipDecisionTemplate(), this);
+    }
+
+    if (this.autofocus) {
+      this.gridContainer.focus();
     }
   }
 
