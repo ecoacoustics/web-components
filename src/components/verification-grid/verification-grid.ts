@@ -198,6 +198,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
   public urlTransformer: UrlTransformer = (url) => url;
 
+  @property({ type: Boolean })
+  public autofocus = false;
+
   /** selector for oe-verification elements */
   @queryAssignedElements({ selector: "oe-verification" })
   private verificationDecisionElements!: VerificationComponent[];
@@ -436,6 +439,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     if (this.skipButtons.length === 0) {
       render(this.skipDecisionTemplate(), this);
+    }
+
+    if (this.autofocus) {
+      this.gridContainer.focus();
     }
   }
 

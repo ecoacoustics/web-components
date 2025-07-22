@@ -419,7 +419,7 @@ test.describe("single verification grid", () => {
     test("should not show the completed segment if a partial page of decisions is made", async ({ fixture }) => {
       // make a decision about one of the tiles. Meaning that the grid should
       // not auto-page and the progress bar should not change
-      await fixture.createSubSelection([0]);
+      await fixture.createSubSelection(0);
       await fixture.makeVerificationDecision("true");
 
       const completedSegments = await fixture.gridProgressCompletedSegment().count();
@@ -699,7 +699,7 @@ test.describe("single verification grid", () => {
       test("should only pause selected tiles when the pause shortcut is pressed", async ({ fixture }) => {
         await fixture.shortcutGridPlay();
 
-        await fixture.createSubSelection([1]);
+        await fixture.createSubSelection(1);
         await fixture.shortcutGridPause();
 
         const realizedPlayingStates = await fixture.playingSpectrograms();
@@ -850,51 +850,38 @@ test.describe("single verification grid", () => {
         });
 
         test("should be able to select a tile", async ({ fixture }) => {
-          const targetTile = (await fixture.gridTileComponents())[0];
-          const targetLocation = await targetTile.boundingBox();
-          if (!targetLocation) {
-            throw new Error("Could not get the bounding box of the target tile");
-          }
+          const testedTile = 0;
 
-          const selectionBoxSize = { width: 100, height: 100 };
-          const start: MousePosition = { x: targetLocation.x, y: targetLocation.y };
-          const end: MousePosition = {
-            x: targetLocation.x + selectionBoxSize.width,
-            y: targetLocation.y + selectionBoxSize.height,
-          };
+          await fixture.highlightSelectTiles(testedTile);
 
-          await fixture.createSelectionBox(start, end);
-
-          const expectedSelectedTiles = [0];
           const realizedSelectedTiles = await fixture.selectedTileIndexes();
-          expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+          expect(realizedSelectedTiles).toEqual([testedTile]);
         });
 
-        test("should be able to select multiple tiles", async ({ fixture }) => {
-          const targetStartTile = (await fixture.gridTileComponents())[0];
-          const targetEndTile = (await fixture.gridTileComponents())[1];
-
-          const targetStartLocation = await targetStartTile.boundingBox();
-          if (!targetStartLocation) {
-            throw new Error("Could not get the bounding box of the start tile");
-          }
-
-          const targetEndLocation = await targetEndTile.boundingBox();
-          if (!targetEndLocation) {
-            throw new Error("Could not get the bounding box of the end tile");
-          }
-
-          const start: MousePosition = { x: targetStartLocation.x, y: targetStartLocation.y };
-          const end: MousePosition = {
-            x: targetEndLocation.x + targetEndLocation.width,
-            y: targetEndLocation.y + targetEndLocation.height,
-          };
-
-          await fixture.createSelectionBox(start, end);
+        test("should be able to select multiple tiles in the positive direction", async ({ fixture }) => {
+          await fixture.highlightSelectTiles(0, 1);
 
           const expectedSelectedTiles = [0, 1];
           const realizedSelectedTiles = await fixture.selectedTileIndexes();
           expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+          // Because we selected in a positive direction, we expect the last
+          // selected index to be focused.
+          expect(await fixture.focusedIndex()).toEqual(1);
+        });
+
+        // TODO: The highlightSelectTiles fixture method doesn't currently
+        // support negative highlight selection.
+        test.fixme("should be able to select multiple tiles in the negative direction", async ({ fixture }) => {
+          await fixture.highlightSelectTiles(1, 0);
+
+          const expectedSelectedTiles = [0, 1];
+          const realizedSelectedTiles = await fixture.selectedTileIndexes();
+          expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+
+          // Because we selected in a positive direction, we expect the first
+          // selected index to be focused.
+          expect(await fixture.focusedIndex()).toEqual(0);
         });
 
         test("should not be able to sub-select for a grid size of one", async ({ fixture }) => {
@@ -935,33 +922,37 @@ test.describe("single verification grid", () => {
           expect(realizedSelectedTiles).toHaveLength(expectedNumberOfSelected);
         });
 
-        // TODO: for some reason, nothing is being selected in this test
-        // I have manually verified that this test passes in a real browser
-        test.fixme("should select tiles correctly after scrolling", async ({ fixture }) => {
-          await fixture.createWithAppChrome();
-          await fixture.dismissBootstrapDialog();
+        test("should select tiles correctly after scrolling", async ({ fixture }) => {
+          await fixture.page.mouse.wheel(0, 300);
 
-          const scrollX: Pixel = 0;
-          const scrollY: Pixel = 100;
-          await fixture.page.mouse.wheel(scrollX, scrollY);
+          // We select the 6th tile because it is on the second row.
+          // Meaning that the entire tile wll be in view after scrolling.
+          const testedTile = 6;
+          await fixture.highlightSelectTiles(testedTile);
 
-          // we test selecting less than the amount that we have scrolled
-          // because it is the most likely region of the application to break
-          //
-          // we start selecting from the amount that we have scrolled because
-          // that will be the very top left of the screen
-          const selectionBoxSize: Pixel = 50;
-          const selectionBoxStart = { x: scrollX, y: scrollY };
-          const selectionBoxEnd = {
-            x: selectionBoxStart.x + selectionBoxSize,
-            y: selectionBoxStart.y + selectionBoxSize,
-          };
-
-          await fixture.createSelectionBox(selectionBoxStart, selectionBoxEnd);
-
-          const expectedSelectedTiles = [0];
           const realizedSelectedTiles = await fixture.selectedTileIndexes();
-          expect(realizedSelectedTiles).toEqual(expectedSelectedTiles);
+          expect(realizedSelectedTiles).toEqual([testedTile]);
+        });
+
+        test("should remove the current sub-selection if the ctrl key is not held", async ({ fixture }) => {
+          await fixture.createSubSelection(0);
+
+          await fixture.highlightSelectTiles(2, 3);
+
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toEqual([2, 3]);
+        });
+
+        test("should add to the current selection if ctrl key is held", async ({ fixture }) => {
+          await fixture.createSubSelection(0);
+
+          await fixture.highlightSelectTiles(2, 3, ["ControlOrMeta"]);
+
+          // Note that the tile at index 1 is missing from the expected result
+          // because I want to assert that it is not just doing a range
+          // selection.
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toEqual([0, 2, 3]);
         });
       });
     };
@@ -990,7 +981,7 @@ test.describe("single verification grid", () => {
       });
 
       test("should deselect other tiles the shift key is held", async ({ fixture }) => {
-        await fixture.createSubSelection([0]);
+        await fixture.createSubSelection(0);
 
         const rangeStart = 1;
         const rangeEnd = 2;
@@ -1010,16 +1001,16 @@ test.describe("single verification grid", () => {
       commonSelectionTests();
 
       test("should toggle a tiles selection state if the same tile is clicked twice", async ({ fixture }) => {
-        await fixture.createSubSelection([0]);
-        await fixture.createSubSelection([0]);
+        await fixture.createSubSelection(0);
+        await fixture.createSubSelection(0);
 
         const realizedSelectedTiles = await fixture.selectedTiles();
         expect(realizedSelectedTiles).toHaveLength(0);
       });
 
       test("should not de-select other tiles when a tile is selected", async ({ fixture }) => {
-        await fixture.createSubSelection([0]);
-        await fixture.createSubSelection([2]);
+        await fixture.createSubSelection(0);
+        await fixture.createSubSelection(2);
 
         const expectedSelectedTiles = [0, 2];
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
@@ -1027,7 +1018,7 @@ test.describe("single verification grid", () => {
       });
 
       test("should not de-select tiles when a range selection occurs", async ({ fixture }) => {
-        await fixture.createSubSelection([0]);
+        await fixture.createSubSelection(0);
 
         const rangeStart = 1;
         const rangeEnd = 2;
@@ -1056,7 +1047,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should deselect all tiles if ctrl + D is pressed", async ({ fixture }) => {
-      await fixture.createSubSelection([0]);
+      await fixture.createSubSelection(0);
       const initialSelectedTiles = await fixture.selectedTiles();
       expect(initialSelectedTiles).toHaveLength(1);
 
@@ -1067,7 +1058,7 @@ test.describe("single verification grid", () => {
     });
 
     test("should deselect all tiles if the escape key is pressed", async ({ fixture }) => {
-      await fixture.createSubSelection([0]);
+      await fixture.createSubSelection(0);
       const initialSelectedTiles = await fixture.selectedTiles();
       expect(initialSelectedTiles).toHaveLength(1);
 
@@ -1197,7 +1188,7 @@ test.describe("single verification grid", () => {
       // we sub-select the first tile and make a decision about it so that the
       // verification grid will not auto-page, because the second tile doesn't
       // have a decision applied to it
-      await fixture.createSubSelection([0]);
+      await fixture.createSubSelection(0);
       await fixture.makeVerificationDecision("true");
 
       const newGridSize = initialGridSize + 1;
@@ -1219,7 +1210,7 @@ test.describe("single verification grid", () => {
 
       // we sub-select the last tile and make a decision about it so that when
       // we decrease the grid size, this last tile will be hidden first
-      await fixture.createSubSelection([1]);
+      await fixture.createSubSelection(1);
       await fixture.makeVerificationDecision("true");
 
       const newGridSize = initialGridSize - 1;
@@ -1390,7 +1381,7 @@ test.describe("decisions", () => {
   });
 
   test("should be able to add a decisions to a sub-selection", async ({ fixture }) => {
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.makeVerificationDecision("true");
 
     const firstTileDecisions = await fixture.getAppliedDecisions(0);
@@ -1401,7 +1392,7 @@ test.describe("decisions", () => {
       },
     ]);
 
-    await fixture.createSubSelection([1]);
+    await fixture.createSubSelection(1);
     await fixture.makeVerificationDecision("true");
 
     // we test selecting two tiles with different tags because this test
@@ -1437,7 +1428,7 @@ test.describe("decisions", () => {
   });
 
   test("should be able to change a decision", async ({ fixture }) => {
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.makeVerificationDecision("true");
 
     const firstTileDecisions = await fixture.getAppliedDecisions(0);
@@ -1464,7 +1455,7 @@ test.describe("decisions", () => {
     const targetTile = 0;
 
     const decisionEvent = catchLocatorEvent<CustomEvent<SubjectWrapper[]>>(fixture.gridComponent(), "decision-made");
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.makeVerificationDecision("true");
 
     const gridTiles = await fixture.gridTileComponents();
@@ -1788,7 +1779,7 @@ test.describe("verification grid interaction with the host application", () => {
   test("should not play spectrograms when the spacebar is pressed in the host app input", async ({ fixture }) => {
     // to give the grid tiles the best chance at playing the audio
     // (if the logic is faulty), we make a sub-selection first
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.hostAppInput().press("Space");
 
     const isPlaying = await fixture.isAudioPlaying(0);
@@ -1799,7 +1790,7 @@ test.describe("verification grid interaction with the host application", () => {
     await fixture.hostAppInput().press("ControlOrMeta+a");
 
     // select a tile to ensure that the grid has focus
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.page.keyboard.press("ControlOrMeta+a");
 
     const expectedSelectedTiles = await fixture.getGridSize();
@@ -1813,7 +1804,7 @@ test.describe("verification grid interaction with the host application", () => {
     await logEvent(fixture.page, "decision");
 
     // select a tile to ensure that the grid has focus
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.page.keyboard.press("y");
 
     const events: unknown[] = await getEventLogs(fixture.page, "decision");
@@ -1824,7 +1815,7 @@ test.describe("verification grid interaction with the host application", () => {
     await fixture.hostAppInput().press("Space");
 
     // select a tile to ensure that the grid has focus
-    await fixture.createSubSelection([0]);
+    await fixture.createSubSelection(0);
     await fixture.page.keyboard.press("Space");
 
     const isPlaying = await fixture.isAudioPlaying(0);

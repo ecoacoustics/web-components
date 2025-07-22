@@ -20,7 +20,7 @@ import {
   VerificationGridComponent,
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
-import { Size } from "../../models/rendering";
+import { Rect, Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
@@ -253,18 +253,10 @@ class TestPage {
   }
 
   public async selectedTileIndexes(): Promise<number[]> {
-    const tiles = await this.gridTileComponents();
-    const indexes: number[] = [];
-
-    for (const tile of tiles) {
-      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
-      if (isSelected) {
-        const tileIndex = await getBrowserValue<VerificationGridTileComponent, number>(tile, "index");
-        indexes.push(tileIndex);
-      }
-    }
-
-    return indexes;
+    return await this.gridComponent().evaluate((element: VerificationGridComponent) => {
+      const tileElements = Array.from(element["gridTiles"]);
+      return tileElements.filter((tile) => tile.selected).map((tile) => tile.index);
+    });
   }
 
   public async selectedTiles(): Promise<SubjectWrapper[]> {
@@ -272,6 +264,10 @@ class TestPage {
       this.gridComponent(),
       "currentSubSelection" as any,
     );
+  }
+
+  public async focusedIndex(): Promise<number> {
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "focusHead" as any);
   }
 
   public async getVerificationColor(decision: "true" | "false") {
@@ -604,10 +600,11 @@ class TestPage {
     return slideTitle ?? "";
   }
 
-  public async createSubSelection(items: number[], modifiers?: KeyboardModifiers) {
+  public async createSubSelection(items: number | number[], modifiers?: KeyboardModifiers) {
     const gridTiles = await this.gridTileContainers();
 
-    for (const index of items) {
+    const itemArray = Array.isArray(items) ? items : [items];
+    for (const index of itemArray) {
       await gridTiles[index].click({ modifiers });
     }
   }
@@ -618,6 +615,39 @@ class TestPage {
     // selecting the end of the range
     await this.createSubSelection([start], modifiers);
     await this.createSubSelection([end], ["Shift", ...modifiers]);
+  }
+
+  // TODO: Add support for negative selection
+  public async highlightSelectTiles(
+    startTileIndex: number,
+    endTileIndex = startTileIndex,
+    modifiers: KeyboardModifiers = [],
+  ) {
+    const startTile = (await this.gridTileComponents())[startTileIndex];
+    const startLocation = await startTile.boundingBox();
+    if (!startLocation) {
+      throw new Error("Could not get bounding box of the start tile");
+    }
+
+    let endLocation: Rect | null = null;
+    if (startTileIndex !== endTileIndex) {
+      const endTile = (await this.gridTileComponents())[endTileIndex];
+      endLocation = await endTile.boundingBox();
+    } else {
+      endLocation = startLocation;
+    }
+
+    if (!endLocation) {
+      throw new Error("Could not get bounding box of end tile");
+    }
+
+    const start: MousePosition = { x: startLocation.x, y: startLocation.y };
+    const end: MousePosition = {
+      x: endLocation.x + endLocation.width,
+      y: endLocation.y + endLocation.height,
+    };
+
+    await this.createSelectionBox(start, end, modifiers);
   }
 
   public async createSelectionBox(start: MousePosition, end: MousePosition, modifiers: KeyboardModifiers = []) {
