@@ -114,14 +114,19 @@ test.describe("single verification grid", () => {
       expect(viewHeadSegments).toBe(0);
     });
 
-    test("should not have any applied decisions", () => {});
+    test("should not have any applied decisions", async ({ fixture }) => {
+      const gridDecisions = await fixture.gridDecisions();
+      expect(gridDecisions).toHaveLength(0);
+    });
 
     test("should be automatically focused", async ({ fixture }) => {
-      const isGridFocused = await fixture.page.evaluate(() => {
-        const activeElement = document.activeElement;
-        console.log(activeElement?.id);
-        return activeElement?.matches("#grid-container");
+      const isGridFocused = await fixture.gridComponent().evaluate((gridElement) => {
+        const isComponentFocused = document.activeElement?.matches("oe-verification-grid");
+        const isGridFocused = gridElement.shadowRoot?.activeElement?.matches("#grid-container");
+
+        return isComponentFocused && isGridFocused;
       });
+
       expect(isGridFocused).toBe(true);
     });
   });

@@ -364,6 +364,15 @@ class TestPage {
     });
   }
 
+  public async gridDecisions(): Promise<Decision[]> {
+    const gridSubjects = await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
+      this.gridComponent(),
+      "subjects",
+    );
+
+    return gridSubjects.flatMap((subject) => this.subjectDecisions(subject));
+  }
+
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
     // although the SubjectWrapper's classification property is a map, it gets
     // converted into a regular object when it is serialized from the browser
