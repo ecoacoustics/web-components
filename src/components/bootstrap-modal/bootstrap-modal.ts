@@ -202,7 +202,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     // is open, will be removed when closed.
     // Additionally, it is never attached if the tutorial is skipped.
     if (event.key === ESCAPE_KEY) {
-      // event.preventDefault();
+      event.preventDefault();
       this.closeDialog();
     }
   }
