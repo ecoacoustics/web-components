@@ -323,6 +323,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
+  private get nextUndecidedTile() {
+    return Array.from(this.gridTiles).find(
+      (tile: VerificationGridTileComponent) =>
+        tile.model.verification === undefined && tile.model.classifications.size === 0,
+    );
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -1108,6 +1115,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
+  private selectionHeadUndecided(): void {
+    this.updateSelectionHead(this.nextUndecidedTile?.index ?? 0);
+  }
+
   private selectionHeadLeft(options?: SelectionOptions): void {
     if (this.focusHead === null) {
       this.updateSelectionHead(this.lastTileIndex, options);
@@ -1480,12 +1491,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const hasVerificationDecision = selectedTile.model.verification !== undefined;
 
       if (hasVerificationDecision) {
-        if (this.selectionHead === this.lastTileIndex) {
-          this.updateSelectionHead(0);
-        } else {
-          this.selectionHeadRight();
-          this.isCurrentAutoSelected = true;
-        }
+        this.selectionHeadUndecided();
+        this.isCurrentAutoSelected = true;
       }
     }
   }

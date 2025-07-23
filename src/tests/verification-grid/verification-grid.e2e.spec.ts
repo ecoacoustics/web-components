@@ -1765,6 +1765,32 @@ test.describe("decisions", () => {
       expect(await fixture.selectedTileIndexes()).toEqual([0, 1]);
       expect(await fixture.focusedIndex()).toEqual(1);
     });
+
+    test("should skip tiles with decisions", async ({ fixture }) => {
+      await fixture.createSubSelection(1);
+      await fixture.makeVerificationDecision("true");
+
+      await fixture.createSubSelection(0);
+      await fixture.makeVerificationDecision("true");
+
+      // We should see that the tile at index 1 was skipped because it already
+      // has a decision applied, and the auto-advancement should place the
+      // selection and focus head on the third tile.
+      expect(await fixture.selectedTileIndexes()).toEqual([2]);
+      expect(await fixture.focusedIndex()).toEqual(2);
+    });
+
+    test("should advance to the first undecided tile if advancing past the end", async ({ fixture }) => {
+      await fixture.createSubSelection(0);
+      await fixture.makeVerificationDecision("true");
+
+      const lastTileIndex = (await fixture.getGridSize()) - 1;
+      await fixture.createSubSelection(lastTileIndex);
+      await fixture.makeVerificationDecision("false");
+
+      expect(await fixture.selectedTileIndexes()).toEqual([1]);
+      expect(await fixture.focusedIndex()).toEqual(1);
+    });
   });
 });
 
