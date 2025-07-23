@@ -90,7 +90,7 @@ test.describe("single verification grid", () => {
       const expectedCompleted = 0;
       const expectedHistoryHeadOffset = 0;
 
-      const progressBar = fixture.gridProgressBar();
+      const progressBar = fixture.gridProgressBars().first();
       const realizedTotal = await getBrowserValue<ProgressBar>(progressBar, "total");
       const realizedCompleted = await getBrowserValue<ProgressBar>(progressBar, "completed");
       const realizedHistoryHeadOffset = await getBrowserValue<ProgressBar>(progressBar, "historyHead");
@@ -298,16 +298,10 @@ test.describe("single verification grid", () => {
     });
 
     test.describe("progress bar position", () => {
-      // TODO: Use the correct fixture type instead of using a polymorphic type
-      async function assertOneProgressBar(fixture: { gridProgressBarCount: () => Promise<number> }) {
+      test("should have correct default position (bottom)", async ({ fixture }) => {
         // We make an assertion to ensure that both the bottom and top progress
         // bars are not visible at the same time.
-        const progressBarCount = await fixture.gridProgressBarCount();
-        expect(progressBarCount).toEqual(1);
-      }
-
-      test("should have correct default position (bottom)", async ({ fixture }) => {
-        await assertOneProgressBar(fixture);
+        await expect(fixture.gridProgressBars()).toHaveCount(1);
 
         const footerControls = fixture.footerControls();
         const footerProgressBar = footerControls.locator("oe-progress-bar");
@@ -321,7 +315,7 @@ test.describe("single verification grid", () => {
         const footerControls = fixture.footerControls();
         const footerProgressBar = footerControls.locator("oe-progress-bar");
 
-        await assertOneProgressBar(fixture);
+        await expect(fixture.gridProgressBars()).toHaveCount(1);
         await expect(footerProgressBar).toBeVisible();
       });
 
@@ -331,7 +325,7 @@ test.describe("single verification grid", () => {
         const footerControls = fixture.footerControls();
         const footerProgressBar = footerControls.locator("oe-progress-bar");
 
-        await assertOneProgressBar(fixture);
+        await expect(fixture.gridProgressBars()).toHaveCount(1);
         await expect(footerProgressBar).toBeVisible();
       });
 
@@ -341,14 +335,13 @@ test.describe("single verification grid", () => {
         const headerControls = fixture.headerControls();
         const headerProgressBar = headerControls.locator("oe-progress-bar");
 
-        await assertOneProgressBar(fixture);
+        await expect(fixture.gridProgressBars()).toHaveCount(1);
         await expect(headerProgressBar).toBeVisible();
       });
 
       test("should have correct 'hidden' position", async ({ fixture }) => {
         await fixture.changeProgressBarPosition("hidden");
-        const progressBarCount = await fixture.gridProgressBarCount();
-        expect(progressBarCount).toEqual(0);
+        await expect(fixture.gridProgressBars()).toHaveCount(0);
       });
     });
 
@@ -445,15 +438,9 @@ test.describe("single verification grid", () => {
 
   test.describe("changing settings", () => {
     test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
-      // we check the initial state of the axes component visibility to protect
-      // against test state pollution/leakage
-      const initialState = await fixture.areAxesVisible();
-      expect(initialState).toBe(true);
-
+      await expect(fixture.areAxesVisible()).resolves.toBe(true);
       await fixture.showAxes(false);
-
-      const realizedState = await fixture.areAxesVisible();
-      expect(realizedState).toBe(false);
+      await expect(fixture.areAxesVisible()).resolves.toBe(false);
     });
 
     test("disabling the media controls in the settings should hide the media controls", async ({ fixture }) => {
@@ -1679,9 +1666,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      const expectedSegments = 3;
-      const realizedSegments = await fixture.gridTileProgressMeterSegments();
-      expect(realizedSegments).toHaveLength(expectedSegments);
+      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(3);
     });
 
     test("should have the correct colors without a decision", async ({ fixture }) => {
@@ -1802,9 +1787,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      const expectedSegments = 1;
-      const realizedSegments = await fixture.gridTileProgressMeterSegments();
-      expect(realizedSegments).toHaveLength(expectedSegments);
+      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(1);
     });
 
     test("should have the correct colors when a decision is made", async ({ fixture }) => {
@@ -1839,9 +1822,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      const expectedSegments = 4;
-      const realizedSegments = await fixture.gridTileProgressMeterSegments();
-      expect(realizedSegments).toHaveLength(expectedSegments);
+      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(4);
     });
 
     // make a verification decision and then make a classification decision

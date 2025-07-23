@@ -515,6 +515,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       if (oldTileCount < this.populatedTileCount) {
         this.handlePageInvalidation();
+      } else {
+        if (this.areTilesLoaded()) {
+          this._loaded = true;
+          this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
+          this.setDecisionDisabled(false);
+        }
       }
     }
   }
@@ -1663,15 +1669,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
-      // We set the "loaded" property before dispatching the loaded event to
-      // minimize the risk of a race condition.
-      // E.g. if someone created an event listener for the "grid-loaded" event
-      // that then checked the "loaded" property, we want the loaded property
-      // to return "true", reflecting the updated value change emitted by the
-      // event.
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-
       this.setDecisionDisabled(false);
     }
   }

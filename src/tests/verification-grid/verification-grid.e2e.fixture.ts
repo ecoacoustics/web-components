@@ -33,7 +33,6 @@ import { SPACE_KEY } from "../../helpers/keyboard";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
-import { MediaControlsComponent } from "../../components/media-controls/media-controls";
 import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
@@ -48,8 +47,8 @@ class TestPage {
   public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
-  public axesComponents = () => this.page.locator("oe-axes").all();
-  public infoCardComponents = () => this.page.locator("oe-info-card").all();
+  public axesComponents = () => this.page.locator("oe-axes");
+  public infoCardComponents = () => this.page.locator("oe-info-card");
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitle = () => this.page.locator(".slide-title").first();
@@ -68,20 +67,18 @@ class TestPage {
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
   public gridTileContainers = () => this.page.locator(".tile-container");
-  public gridTileProgressMeters = () => this.page.locator(".progress-meter").all();
-  public gridTileProgressMeterSegments = async (index = 0) =>
-    (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
-  public gridTileProgressMeterTooltips = async (index = 0) =>
-    (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
+  public gridTileProgressMeters = () => this.page.locator(".progress-meter");
+  public gridTileProgressMeterSegments = (index = 0) =>
+    this.gridTileProgressMeters().nth(index).locator(".progress-meter-segment");
+  public gridTileProgressMeterTooltips = (index = 0) => this.gridTileProgressMeters().nth(index).locator("sl-tooltip");
 
   public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
 
-  public gridProgressBarCount = () => this.page.locator("oe-progress-bar").count();
-  public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
-  public gridProgressBarCompletedTooltip = () => this.gridProgressBar().getByTestId("completed-tooltip").first();
-  public gridProgressBarViewHeadTooltip = () => this.gridProgressBar().getByTestId("view-head-tooltip").first();
-  public gridProgressCompletedSegment = () => this.gridProgressBar().locator(".completed-segment").first();
-  public gridProgressHeadSegment = () => this.gridProgressBar().locator(".head-segment").first();
+  public gridProgressBars = () => this.page.locator("oe-progress-bar");
+  public gridProgressBarCompletedTooltip = () => this.gridProgressBars().getByTestId("completed-tooltip").first();
+  public gridProgressBarViewHeadTooltip = () => this.gridProgressBars().getByTestId("view-head-tooltip").first();
+  public gridProgressCompletedSegment = () => this.gridProgressBars().locator(".completed-segment").first();
+  public gridProgressHeadSegment = () => this.gridProgressBars().locator(".head-segment").first();
 
   public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
   public spectrogramComponent = async (index = 0) =>
@@ -89,17 +86,15 @@ class TestPage {
   public gridTileComponent = async (index = 0) => (await this.gridTileComponents())[index].first();
   public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
 
-  public mediaControlsComponent = async (index = 0) =>
-    this.gridTileContainers().nth(index).locator("oe-media-controls");
-  public mediaControlsAdditionalSettings = async (index = 0) =>
-    (await this.mediaControlsComponent(index)).locator(".settings-menu-item");
-  public brightnessControlsMenu = async (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
-  public brightnessControlsInput = async (index = 0) => this.gridTileContainers().nth(index).locator("input");
+  public mediaControlsComponent = (index = 0) =>
+    this.gridTileContainers().nth(index).locator("oe-media-controls").first();
+  public brightnessControlsMenu = (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
+  public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
   public headerControls = () => this.page.locator(".header-controls").first();
   public footerControls = () => this.page.locator(".footer-controls").first();
 
-  public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
+  public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
   private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
@@ -440,11 +435,6 @@ class TestPage {
     return await Promise.all(gridTileModels);
   }
 
-  public async areMediaControlsPlaying(index: number): Promise<boolean> {
-    const mediaControls: Locator = (await this.mediaControlsComponent())[index];
-    return await invokeBrowserMethod<MediaControlsComponent, boolean>(mediaControls, "isSpectrogramPlaying");
-  }
-
   public async isAudioPlaying(index: number): Promise<boolean> {
     const spectrogram = await this.spectrogramComponent(index);
     const value = await getBrowserValue<SpectrogramComponent, number>(spectrogram, "paused");
@@ -457,7 +447,7 @@ class TestPage {
   }
 
   public async indicatorPosition(index: number): Promise<number> {
-    const indicatorLine = (await this.indicatorLines())[index];
+    const indicatorLine = this.indicatorLines().nth(index);
 
     return indicatorLine.evaluate((element: SVGLineElement) => {
       const styles = window.getComputedStyle(element);
@@ -477,7 +467,7 @@ class TestPage {
   }
 
   public async progressBarValueToPercentage(value: number): Promise<string> {
-    const progressBar = this.gridProgressBar();
+    const progressBar = this.gridProgressBars().first();
 
     const maxValue = await getBrowserValue<ProgressBar, number>(progressBar, "total");
     const percentage = 100 * (value / maxValue);
@@ -505,7 +495,7 @@ class TestPage {
   }
 
   public async infoCardItem(index: number): Promise<{ key: unknown; value: unknown }[]> {
-    const infoCard: Locator = (await this.infoCardComponents())[index];
+    const infoCard = this.infoCardComponents().nth(index);
     const subjectContent = infoCard.locator(".subject-content");
 
     return await subjectContent.evaluate((el) => {
@@ -519,7 +509,7 @@ class TestPage {
   }
 
   public async progressMeterColors(index = 0): Promise<string[]> {
-    const segments = await this.gridTileProgressMeterSegments(index);
+    const segments = await this.gridTileProgressMeterSegments(index).all();
 
     const colors = segments.map(
       async (item: Locator) =>
@@ -532,18 +522,17 @@ class TestPage {
     return await Promise.all(colors);
   }
 
-  public async progressMeterTooltips(index = 0): Promise<string[]> {
-    const segments = await this.gridTileProgressMeterTooltips(index);
-    const tooltips = segments.map(async (tooltip: Locator) => await getBrowserAttribute(tooltip, "content"));
-    return await Promise.all(tooltips);
+  public async progressMeterTooltips(index = 0): Promise<(string | null)[]> {
+    return await this.gridTileProgressMeterTooltips(index).evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("content")),
+    );
   }
 
   public async areAxesVisible(): Promise<boolean> {
     // we don't want to check each axes component individually because it is
     // slow and does not provide much benefit
     // therefore, we check if the first axes component is visible
-    const axesComponents = await this.axesComponents();
-    const axesComponentToTest = axesComponents[0];
+    const axesComponentToTest = this.axesComponents().first();
 
     // when the axes component is hidden, all of its elements are hidden
     return await axesComponentToTest.evaluate((element: AxesComponent) => {
@@ -612,7 +601,7 @@ class TestPage {
   }
 
   public async openSettingsMenu(index: number) {
-    const settingsTarget = await this.mediaControlsComponent(index);
+    const settingsTarget = this.mediaControlsComponent(index);
     await settingsTarget.locator(".settings-menu-item").click();
   }
 
@@ -623,10 +612,10 @@ class TestPage {
   public async changeBrightness(index: number, value: number) {
     await this.openSettingsMenu(index);
 
-    const brightnessMenu = await this.brightnessControlsMenu(index);
+    const brightnessMenu = this.brightnessControlsMenu(index);
     await brightnessMenu.click();
 
-    const input = await this.brightnessControlsInput(index);
+    const input = this.brightnessControlsInput(index);
     await dragSlider(this.page, input, value);
   }
 
