@@ -237,17 +237,35 @@ test.describe("single verification grid", () => {
       test.skip("should scale up grid tiles if the grid size doesn't fill up the screen", async ({ fixture }) => {
         await fixture.changeGridSize(1);
         const expectedTileSize: Size = { width: 0, height: 0 };
-        const realizedTileSize = (await fixture.tileSizes())[0];
-        expect(realizedTileSize).toEqual(expectedTileSize);
+
+        const realizedBox = await fixture.gridTileComponents().first().boundingBox();
+        if (!realizedBox) {
+          throw new Error("could not get bounding box");
+        }
+
+        const realizedSize: Size = {
+          width: realizedBox.width,
+          height: realizedBox.height,
+        };
+
+        expect(realizedSize).toEqual(expectedTileSize);
       });
 
       test.skip("should not scale up grid tiles if the grid size fills up the screen", async ({ fixture }) => {
         await fixture.changeGridSize(8);
-
         const expectedTileSize: Size = { width: 0, height: 0 };
-        const realizedTileSize = (await fixture.tileSizes())[0];
 
-        expect(realizedTileSize).toEqual(expectedTileSize);
+        const realizedBox = await fixture.gridTileComponents().first().boundingBox();
+        if (!realizedBox) {
+          throw new Error("could not get bounding box");
+        }
+
+        const realizedSize: Size = {
+          width: realizedBox.width,
+          height: realizedBox.height,
+        };
+
+        expect(realizedSize).toEqual(expectedTileSize);
       });
 
       test.skip("should decrease the number of grid tiles if the grid size doesn't fit on the screen", () => {});
@@ -748,7 +766,7 @@ test.describe("single verification grid", () => {
         test("should not create a selection box if the user drags a small px amount", async ({ fixture }) => {
           const dragAmount: Pixel = 10;
 
-          const targetTile = (await fixture.gridTileComponents())[0];
+          const targetTile = fixture.gridTileComponents().first();
           const targetLocation = await targetTile.boundingBox();
           if (!targetLocation) {
             throw new Error("Could not get the bounding box of the target tile");
@@ -1261,7 +1279,7 @@ test.describe("single verification grid", () => {
       const newGridSize = initialGridSize + 1;
       await fixture.changeGridSize(newGridSize);
 
-      const gridTileOfInterest = (await fixture.gridTileComponents()).at(-1);
+      const gridTileOfInterest = fixture.gridTileComponents().last();
 
       // because the first index of the verification grid (size = 1) is index 0
       // we subtract one from the grid size to get the expected index of the
@@ -1596,8 +1614,7 @@ test.describe("decisions", () => {
     await fixture.createSubSelection(0);
     await fixture.makeVerificationDecision("true");
 
-    const gridTiles = await fixture.gridTileComponents();
-    const targetGridTile = gridTiles[targetTile];
+    const targetGridTile = fixture.gridTileComponents().nth(targetTile);
     const expectedSubjectWrapper = (await getBrowserValue<VerificationGridTileComponent>(
       targetGridTile,
       "model",

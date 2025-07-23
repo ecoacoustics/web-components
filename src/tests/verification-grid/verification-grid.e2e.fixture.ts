@@ -46,7 +46,7 @@ class TestPage {
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
   public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
-  public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
+  public gridTileComponents = () => this.page.locator("oe-verification-grid-tile");
   public axesComponents = () => this.page.locator("oe-axes");
   public infoCardComponents = () => this.page.locator("oe-info-card");
 
@@ -82,8 +82,8 @@ class TestPage {
 
   public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
   public spectrogramComponent = async (index = 0) =>
-    (await this.gridTileComponents())[index].locator("oe-spectrogram").first();
-  public gridTileComponent = async (index = 0) => (await this.gridTileComponents())[index].first();
+    this.gridTileComponents().nth(index).locator("oe-spectrogram").first();
+  public gridTileComponent = async (index = 0) => this.gridTileComponents().nth(index);
   public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
 
   public mediaControlsComponent = (index = 0) =>
@@ -194,6 +194,8 @@ class TestPage {
   }
 
   public async createWithAppChrome() {
+    await this.setNoBootstrap();
+
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
     // this allows us to test how the verification grid interacts with scrolling
@@ -258,8 +260,7 @@ class TestPage {
   }
 
   public async getGridSize(): Promise<number> {
-    const gridTiles = await this.gridTileComponents();
-    return gridTiles.length;
+    return await this.gridTileComponents().count();
   }
 
   public async getViewHead(): Promise<number> {
@@ -268,22 +269,6 @@ class TestPage {
 
   public async getVerificationHead(): Promise<number> {
     return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHead");
-  }
-
-  public async tileSizes(): Promise<Size[]> {
-    const gridTiles = await this.gridTileComponents();
-
-    const sizes: Size[] = [];
-
-    for (const tile of gridTiles) {
-      const styles: any = await getBrowserValue<VerificationGridTileComponent>(tile, "style");
-      const width = styles.width;
-      const height = styles.height;
-
-      sizes.push({ width, height });
-    }
-
-    return sizes;
   }
 
   public async selectedTileIndexes(): Promise<number[]> {
@@ -339,7 +324,7 @@ class TestPage {
   public async allAppliedDecisions(): Promise<Decision[]> {
     const result: Decision[] = [];
 
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
     for (let i = 0; i < gridTiles.length; i++) {
       const tileDecisions = await this.getAppliedDecisions(i);
       result.push(...tileDecisions);
@@ -349,16 +334,15 @@ class TestPage {
   }
 
   public async getAppliedDecisions(index: number): Promise<Decision[]> {
-    const tileModels = await this.gridTileComponents();
-    const tileTarget = tileModels[index];
-
+    const tileTarget = this.gridTileComponents().nth(index);
     const tileModel = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tileTarget, "model");
+
     return this.subjectDecisions(tileModel);
   }
 
   public async tileHighlightColors(): Promise<CssVariable[]> {
     const values: CssVariable[] = [];
-    const tiles = await this.gridTileComponents();
+    const tiles = await this.gridTileComponents().all();
 
     for (const tile of tiles) {
       const model = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
@@ -374,7 +358,7 @@ class TestPage {
   }
 
   public async highlightedTiles(): Promise<number[]> {
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
 
     const highlightedTiles: Locator[] = [];
 
@@ -426,13 +410,9 @@ class TestPage {
   }
 
   public async verificationGridTileModels(): Promise<SubjectWrapper[]> {
-    const gridTiles = await this.gridTileComponents();
-
-    const gridTileModels = gridTiles.map(async (tile) => {
-      return await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
-    });
-
-    return await Promise.all(gridTileModels);
+    return this.gridTileComponents().evaluateAll((tiles: VerificationGridTileComponent[]) =>
+      tiles.map((tile) => tile.model),
+    );
   }
 
   public async isAudioPlaying(index: number): Promise<boolean> {
@@ -595,8 +575,8 @@ class TestPage {
   }
 
   public async pauseSpectrogram(index: number) {
-    const gridTiles = await this.gridTileComponents();
-    const pauseButton = gridTiles[index].locator("sl-icon[name='pause']").first();
+    const gridTile = this.gridTileComponents().nth(index);
+    const pauseButton = gridTile.locator("sl-icon[name='pause']").first();
     await pauseButton.click();
   }
 
@@ -646,7 +626,7 @@ class TestPage {
     endTileIndex = startTileIndex,
     modifiers: KeyboardModifiers = [],
   ) {
-    const startTile = (await this.gridTileComponents())[startTileIndex];
+    const startTile = this.gridTileComponents().nth(startTileIndex);
     const startLocation = await startTile.boundingBox();
     if (!startLocation) {
       throw new Error("Could not get bounding box of the start tile");
@@ -654,7 +634,7 @@ class TestPage {
 
     let endLocation: Rect | null = null;
     if (startTileIndex !== endTileIndex) {
-      const endTile = (await this.gridTileComponents())[endTileIndex];
+      const endTile = this.gridTileComponents().nth(endTileIndex);
       endLocation = await endTile.boundingBox();
     } else {
       endLocation = startLocation;
@@ -737,8 +717,7 @@ class TestPage {
   public async getGridTileSize(): Promise<Size> {
     // because all the grid tiles should be the same size, we can just check the
     // first grid tile and get its size
-    const gridTiles = await this.gridTileComponents();
-    const targetGridTile = gridTiles[0];
+    const targetGridTile = this.gridTileComponents().first();
 
     const boundingBox = await targetGridTile.boundingBox();
     if (!boundingBox) {
@@ -793,7 +772,7 @@ class TestPage {
       content: "* { visibility: hidden; }",
     });
 
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
     for (const tile of gridTiles) {
       await tile.evaluate((element: VerificationGridTileComponent) => {
         element.style.border = "red 2px solid";
