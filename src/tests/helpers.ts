@@ -106,6 +106,15 @@ export async function dragSelection(
 }
 
 /**
+ * A test helper that can be used to send a keypress to the page.
+ * This helper function exists to unify the keyboard functionality.
+ */
+export async function pressKey(page: Page, key: string, modifiers: KeyboardModifiers = []) {
+  const keyboardCombination = modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
+  await page.keyboard.press(keyboardCombination);
+}
+
+/**
  * @description
  * Simulates the user dragging a slider to a location
  * You should use this instead of setting a sliders value directly because it

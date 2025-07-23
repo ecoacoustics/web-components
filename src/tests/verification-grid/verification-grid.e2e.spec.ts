@@ -7,6 +7,7 @@ import {
   getEventLogs,
   logEvent,
   mockDeviceSize,
+  pressKey,
   setBrowserAttribute,
   testBreakpoints,
 } from "../helpers";
@@ -1068,6 +1069,26 @@ test.describe("single verification grid", () => {
           expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
         });
 
+        test("should be able to select to the start/end of the grid using shift + HOME/END", async ({ fixture }) => {
+          await fixture.changeGridSize(6);
+
+          // We select the tile at index 1, so that the first tile is selected.
+          // We do this so that the there will always only be 1 tile selected,
+          // or one tile missing from the selection.
+          await fixture.createSubSelection(1);
+
+          await pressKey(fixture.page, HOME_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+          expect(await fixture.selectedTileIndexes()).toEqual([0, 1]);
+
+          // When performing a range selection with the END + shift keys, we
+          // expect that the range selection will start from the originally
+          // selected tile. Not the final tile of the HOME range selection.
+          await pressKey(fixture.page, END_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(5);
+          expect(await fixture.selectedTileIndexes()).toEqual([1, 2, 3, 4, 5]);
+        });
+
         test("should be able to move the selection with keyboard shortcuts", async ({ fixture }) => {
           // I purposely select the third tile so that this test will fail if
           // we incorrectly start moving from 0,0 instead of the selection head.
@@ -1094,6 +1115,133 @@ test.describe("single verification grid", () => {
           await fixture.page.keyboard.press(DOWN_ARROW_KEY);
           expect(await fixture.selectedTileIndexes()).toEqual([downIndex]);
           expect(await fixture.focusedIndex()).toEqual(downIndex);
+        });
+
+        test("should be able to move the focus head with ctrl + arrow keys", async ({ fixture }) => {
+          await fixture.createSubSelection(2);
+
+          // Because we are currently on the first row, clicking the up arrow
+          // key should have no operation.
+          await pressKey(fixture.page, UP_ARROW_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(2);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+
+          // Even though we press the left arrow, because the ctrl key is being
+          // held, only the focus head should move, meaning that the selection
+          // head should not move either.
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(1);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+
+          const columnCount = await getBrowserValue<VerificationGridComponent, number>(
+            fixture.gridComponent(),
+            "columns",
+          );
+
+          await pressKey(fixture.page, DOWN_ARROW_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(1 + columnCount);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+
+          // Because we are testing on a 2 row grid, pressing the down arrow
+          // again should have no operation on the focus head.
+          await pressKey(fixture.page, DOWN_ARROW_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(1 + columnCount);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+        });
+
+        // If the focus head becomes unaligned with the selection head, the next
+        // selection movement should move from the focus head position.
+        // This mimics the behavior of the Window's file explorer where
+        // selection will always start from the focus head.
+        test("should resume selection from the focus head", async ({ fixture }) => {
+          await fixture.createSubSelection(2);
+
+          // We have already asserted in a previous test that this correctly
+          // moves the focus head without moving the selection head.
+          await pressKey(fixture.page, RIGHT_ARROW_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(3);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+
+          await pressKey(fixture.page, RIGHT_ARROW_KEY);
+          expect(await fixture.focusedIndex()).toEqual(4);
+          expect(await fixture.selectedTileIndexes()).toEqual([4]);
+        });
+
+        test("should be able to range select with the arrow keys", async ({ fixture }) => {
+          await fixture.createSubSelection(2);
+
+          // | | |x|
+          // |x| | |
+          await pressKey(fixture.page, RIGHT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(3);
+          expect(await fixture.selectedTileIndexes()).toEqual([2, 3]);
+
+          // | | |x|
+          // |x|x| |
+          await pressKey(fixture.page, RIGHT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(4);
+          expect(await fixture.selectedTileIndexes()).toEqual([2, 3, 4]);
+
+          // By going back over what I previously selected, I should see that
+          // the tiles should be de-selected.
+
+          // | | |x|
+          // |x| | |
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(3);
+          expect(await fixture.selectedTileIndexes()).toEqual([2, 3]);
+
+          // I do the same action again to ensure that if there is an off-by-one
+          // bug, this test will fail here.
+          // | | |x|
+          // | | | |
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(2);
+          expect(await fixture.selectedTileIndexes()).toEqual([2]);
+
+          // | |x|x|
+          // | | | |
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(1);
+          expect(await fixture.selectedTileIndexes()).toEqual([1, 2]);
+
+          // |x|x|x|
+          // | | | |
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+          expect(await fixture.selectedTileIndexes()).toEqual([0, 1, 2]);
+
+          // If I press shift + down, it should make a range selection starting
+          // from my original selection tile (tile two).
+          //
+          // | | |x|
+          // |x|x|x|
+          await pressKey(fixture.page, DOWN_ARROW_KEY, ["Shift"]);
+          expect(await fixture.focusedIndex()).toEqual(5);
+          expect(await fixture.selectedTileIndexes()).toEqual([2, 3, 4, 5]);
+        });
+
+        test("should keyboard select from the last selected tile after positive range select", async ({ fixture }) => {
+          await fixture.createSubSelection(2);
+
+          // We have made assertions above that this works correctly, therefore
+          // I do not need to make another assertion here.
+          // We should be on tile index three (3).
+          await pressKey(fixture.page, RIGHT_ARROW_KEY, ["Shift"]);
+
+          await pressKey(fixture.page, RIGHT_ARROW_KEY);
+          expect(await fixture.focusedIndex()).toEqual(4);
+          expect(await fixture.selectedTileIndexes()).toEqual([4]);
+        });
+
+        test("should keyboard select from the last selected tile after negative range select", async ({ fixture }) => {
+          await fixture.createSubSelection(2);
+
+          await pressKey(fixture.page, LEFT_ARROW_KEY, ["Shift"]);
+
+          await pressKey(fixture.page, LEFT_ARROW_KEY);
+          expect(await fixture.focusedIndex()).toEqual(0);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
         });
       });
     };
