@@ -115,6 +115,15 @@ test.describe("single verification grid", () => {
     });
 
     test("should not have any applied decisions", () => {});
+
+    test("should be automatically focused", async ({ fixture }) => {
+      const isGridFocused = await fixture.page.evaluate(() => {
+        const activeElement = document.activeElement;
+        console.log(activeElement?.id);
+        return activeElement?.matches("#grid-container");
+      });
+      expect(isGridFocused).toBe(true);
+    });
   });
 
   // unlike the initial bootstrap dialog, these tests assert that the bootstrap dialog

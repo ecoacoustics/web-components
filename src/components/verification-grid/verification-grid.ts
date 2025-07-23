@@ -367,6 +367,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
 
+  // This overrides the element's focus() method so that it focuses the grid
+  // tiles instead of the component host.
+  // This allows host applications to focus the grid container at the level
+  // where event listeners and tab index's are correctly scoped.
+  public override focus() {
+    this.gridContainer.focus();
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     this.addEventListener("keydown", this.keydownHandler);
@@ -442,7 +450,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.autofocus) {
-      this.gridContainer.focus();
+      this.focus();
     }
   }
 
@@ -854,6 +862,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private handleBootstrapDialogClose(): void {
     this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
+
+    if (this.autofocus) {
+      this.focus();
+    }
   }
 
   private handleSlotChange(): void {
