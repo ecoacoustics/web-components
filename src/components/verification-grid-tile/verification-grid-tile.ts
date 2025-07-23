@@ -133,6 +133,16 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   private shortcuts: string[] = [];
   private intersectionObserver!: IntersectionObserver;
 
+  public get taskCompleted(): boolean {
+    return this.requiredDecisions.every((requiredDecision) => {
+      if (requiredDecision === requiredVerificationPlaceholder) {
+        return this.model.verification !== undefined;
+      }
+
+      return this.model.classifications.has(requiredDecision.text);
+    });
+  }
+
   /**
    * An override of the default HTMLElement focus() method so that
    * tab index's and location is consistent.

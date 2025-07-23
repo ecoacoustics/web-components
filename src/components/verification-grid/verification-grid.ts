@@ -323,11 +323,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
-  private get nextUndecidedTile() {
-    return Array.from(this.gridTiles).find(
-      (tile: VerificationGridTileComponent) =>
-        tile.model.verification === undefined && tile.model.classifications.size === 0,
-    );
+  private get nextUndecidedTile(): VerificationGridTileComponent | undefined {
+    return Array.from(this.gridTiles).find((tile) => !tile.taskCompleted);
   }
 
   private keydownHandler = this.handleKeyDown.bind(this);
@@ -1520,64 +1517,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  // TODO: finish this function
   private shouldAutoPage(): boolean {
+    const allTileTaskCompleted = Array.from(this.gridTiles).every((tile) => tile.taskCompleted);
+
     // I have disabled auto paging when viewing history so that the user can see
     // the colors change when they change an applied decision
-
-    return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
-  }
-
-  // for verification tasks, the user will be adding one verification decision
-  // to each grid tile. Therefore, we can test that there is some sort of
-  // verifications applied to every tile
-  private hasOutstandingVerification(): boolean {
-    // we short circuit this function if there are no possible verification
-    // decisions
-    if (!this.hasVerificationTask()) {
-      return false;
-    }
-
-    const verificationTiles = this.gridTiles;
-    for (const tile of verificationTiles) {
-      const hasVerificationDecision = tile.model.verification !== undefined;
-
-      if (!hasVerificationDecision) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // during a classification task, we want to ensure that every tile has a
-  // decision about every tag (not classification decision)
-  // we don't check against classification decisions because we want to support
-  // adding "negative" classifications against a tile
-  private hasOutstandingClassification(): boolean {
-    // because computing outstanding classification tasks is expensive, we can
-    // short circuit this function if there are no classification tasks
-    if (!this.hasClassificationTask()) {
-      return false;
-    }
-
-    // we use the tag to check if there are outstanding classifications
-    // (instead of the decision identifier) so that negative/positive decisions
-    // on the same tag are not counted as two separate decisions
-    // meaning that we only have to make a classification about each tag once
-    const requiredClassificationTags: Tag[] = this.classificationDecisionElements.map(
-      (element: ClassificationComponent) => element.tag,
-    );
-
-    const verificationTiles = Array.from(this.gridTiles);
-    for (const tile of verificationTiles) {
-      const hasAllTags = requiredClassificationTags.every((tag) => tile.model.classifications.has(tag.text));
-      if (!hasAllTags) {
-        return true;
-      }
-    }
-
-    return false;
+    return !this.isViewingHistory() && allTileTaskCompleted;
   }
 
   private setDecisionDisabled(disabled: boolean): void {

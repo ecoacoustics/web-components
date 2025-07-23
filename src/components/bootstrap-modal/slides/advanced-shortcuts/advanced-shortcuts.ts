@@ -21,6 +21,8 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Additive range selection" },
     { keys: ["Left"], description: "Move selection back" },
     { keys: ["Right"], description: "Move selection forwards" },
+    { keys: ["Down"], description: "Move selection down" },
+    { keys: ["Up"], description: "Move selection up" },
     { keys: ["PageUp"], description: "Previous Page" },
     { keys: ["PageNext"], description: "Next Page" },
     { keys: ["Home"], description: "Select first tile on page" },
