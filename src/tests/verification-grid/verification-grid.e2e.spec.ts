@@ -266,117 +266,36 @@ test.describe("single verification grid", () => {
       });
     });
 
-    // these tests are broken because grid source has been moved to the
-    // oe-data-source component
-    // TODO: Move these test to the data-source component
-    //
-    // test.describe("changing the grid source", () => {
-    //   test("should reset all decision when changing the grid source", async ({ fixture }) => {
-    //     const expectedDecisionLength = await fixture.getGridSize();
-    //     await fixture.makeDecision(0);
-    //     const initialDecisions = await fixture.userDecisions();
-    //     expect(initialDecisions).toHaveLength(expectedDecisionLength);
+    test.describe("changing the grid source", () => {
+      test("should reset all decision when changing the grid source", async ({ fixture }) => {
+        const expectedDecisionLength = await fixture.getGridSize();
+        await fixture.makeVerificationDecision("true");
+        expect(await fixture.gridDecisions()).toHaveLength(expectedDecisionLength);
 
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newDecisions = await fixture.userDecisions();
-    //     expect(newDecisions).toHaveLength(0);
-    //   });
+        await fixture.changeGridSource(fixture.secondJsonInput);
+        expect(await fixture.gridDecisions()).toHaveLength(0);
+      });
 
-    //   test("should remove all sub-selections when changing the grid source", async ({ fixture }) => {
-    //     const subSelection = [0, 1];
-    //     await fixture.createSubSelection(subSelection);
-    //     const selectedTiles = await fixture.selectedTiles();
-    //     expect(selectedTiles).toHaveLength(subSelection.length);
+      test("should remove all sub-selections when changing the grid source", async ({ fixture }) => {
+        const subSelection = [0, 1];
+        await fixture.createSubSelection(subSelection, ["ControlOrMeta"]);
+        expect(await fixture.selectedTiles()).toHaveLength(subSelection.length);
 
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newSelectedTiles = await fixture.selectedTiles();
-    //     expect(newSelectedTiles).toHaveLength(0);
-    //   });
+        await fixture.changeGridSource(fixture.secondJsonInput);
+        expect(await fixture.selectedTiles()).toHaveLength(0);
+      });
 
-    //   test("should remove all decision button highlights when changing the grid source", async ({ fixture }) => {
-    //     const decision = 0;
-    //     await fixture.makeDecision(decision);
-    //     await fixture.viewPreviousHistoryPage();
-    //     const initialHighlightedDecisions = await fixture.highlightedButtons();
-    //     expect(initialHighlightedDecisions).toStrictEqual([decision]);
+      test("should stop viewing history", async ({ fixture }) => {
+        await fixture.makeVerificationDecision("true");
+        await fixture.viewPreviousHistoryPage();
+        const initialHistoryState = await fixture.isViewingHistory();
+        expect(initialHistoryState).toBe(true);
 
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newHighlightedDecisions = await fixture.highlightedButtons();
-    //     expect(newHighlightedDecisions).toHaveLength(0);
-    //   });
-
-    //   test("should remove all tile highlights when changing the grid source", async ({ fixture }) => {
-    //     const decision = 0;
-    //     await fixture.makeDecision(decision);
-    //     await fixture.viewPreviousHistoryPage();
-
-    //     const initialTileHighlights = await fixture.highlightedTiles();
-    //     const gridSize = await fixture.getGridSize();
-    //     expect(initialTileHighlights).toHaveLength(gridSize);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newHighlightedDecisions = await fixture.buttonHighlightColors();
-    //     expect(newHighlightedDecisions).toHaveLength(0);
-    //   });
-
-    //   test("should correctly reset all the information cards", async ({ fixture }) => {
-    //     const testIndex = 0;
-    //     const initialInfoContent = await fixture.infoCardItem(testIndex);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newInfoContent = await fixture.infoCardItem(testIndex);
-
-    //     expect(newInfoContent).not.toEqual(initialInfoContent);
-    //   });
-
-    //   test("should correctly move all indicators to the start of the recordings", async ({ fixture, page }) => {
-    //     const targetedTile = 0;
-
-    //     // TODO: we should use the new Playwright clock API when
-    //     // web-ctx-playwright gets upgraded to version 1.45.0
-    //     // https://playwright.dev/docs/api/class-clock
-    //     await fixture.playSpectrogram(targetedTile);
-    //     await sleep(1);
-    //     const indicatorPosition = await fixture.indicatorPosition(targetedTile);
-    //     expect(indicatorPosition).toBeGreaterThan(0);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newIndicatorPosition = await fixture.indicatorPosition(targetedTile);
-    //     expect(newIndicatorPosition).toBe(0);
-    //   });
-
-    //   test("should reset all media controls to the paused state", async ({ fixture }) => {
-    //     const targetedTile = 0;
-    //     await fixture.playSpectrogram(targetedTile);
-
-    //     const initialMediaControlsState = await fixture.areMediaControlsPlaying(targetedTile);
-    //     expect(initialMediaControlsState).toBe(true);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-
-    //     const stateAfterSourceChange = await fixture.areMediaControlsPlaying(targetedTile);
-    //     expect(stateAfterSourceChange).toBe(false);
-    //   });
-
-    //   test("should stop viewing history", async ({ fixture }) => {
-    //     await fixture.makeDecision(0);
-    //     await fixture.viewPreviousHistoryPage();
-    //     const initialHistoryState = await fixture.isViewingHistory();
-    //     expect(initialHistoryState).toBe(true);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     const newHistoryState = await fixture.isViewingHistory();
-    //     expect(newHistoryState).toBe(false);
-    //   });
-
-    //   test("should deselect all sub-selections", async ({ fixture }) => {
-    //     await fixture.createSubSelection([0, 1]);
-    //     expect(await fixture.selectedTiles()).toHaveLength(2);
-
-    //     await fixture.changeGridSource(fixture.secondJsonInput);
-    //     expect(await fixture.selectedTiles()).toHaveLength(0);
-    //   });
-    // });
+        await fixture.changeGridSource(fixture.secondJsonInput);
+        const newHistoryState = await fixture.isViewingHistory();
+        expect(newHistoryState).toBe(false);
+      });
+    });
   });
 
   test.describe("progress bar", () => {
@@ -569,32 +488,6 @@ test.describe("single verification grid", () => {
       await expect(fixture.fileInputButton()).toBeHidden();
     });
   });
-
-  // test.describe("viewing history", () => {
-  //   test("should display a border around selected items", async ({ fixture }) => {
-  //     const decisionToMake = 0;
-  //     const expectedDecisionColor = await fixture.getDecisionColor(decisionToMake);
-  //     const expectedSelectionHighlights = await fixture.getGridSize();
-
-  //     await fixture.makeDecision(decisionToMake);
-  //     await fixture.viewPreviousHistoryPage();
-
-  //     const realizedColors = await fixture.tileHighlightColors();
-  //     expect(realizedColors).toHaveLength(expectedSelectionHighlights);
-  //     expect(realizedColors.every((color) => color === expectedDecisionColor)).toBe(true);
-  //   });
-
-  //   test("should only highlight decision buttons that have been used", async ({ fixture }) => {
-  //     const decisionToMake = 0;
-  //     await fixture.makeDecision(decisionToMake);
-  //     await fixture.viewPreviousHistoryPage();
-
-  //     const expectedHighlights = [decisionToMake];
-  //     const realizedHighlights = await fixture.highlightedButtons();
-
-  //     expect(realizedHighlights).toStrictEqual(expectedHighlights);
-  //   });
-  // });
 
   test.describe("pagination", () => {
     test.beforeEach(async ({ fixture }) => {
@@ -1791,6 +1684,8 @@ test.describe("decisions", () => {
       expect(await fixture.selectedTileIndexes()).toEqual([1]);
       expect(await fixture.focusedIndex()).toEqual(1);
     });
+
+    test("should auto-select the first tile after paging if the last tile auto-selected", async ({ fixture }) => {});
   });
 });
 

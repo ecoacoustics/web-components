@@ -570,6 +570,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.renderVirtualPage();
     }
 
+    // After changing the data source, we want to remove the current
+    // sub-selection for multiple reasons:
+    // 1. It provides a UX hint that something has changed and there is a new
+    //    task
+    //
+    // 2. For SPA host's where the verification grid might be re-used between
+    //    tasks, we want to provide a fresh verification grid between distinct
+    //    tasks.
+    //
+    // 3. As a defensive programming measure, we should reset the state, so that
+    //    we don't end up in undefined behavior.
+    //    While I have never seen a bug that was caused by not de-selecting the
+    //    grid in-between data-sources, it's a good defensive programming
+    //    practice to reset state in cases such as this, because the behavior
+    //    hasn't been explicitly defined.
+    this.removeSubSelection();
+
     // if grid tile elements change during a selection event, we want to add
     // observe the overlap with new elements and remove the overlap checks of
     // old elements that no longer exist
