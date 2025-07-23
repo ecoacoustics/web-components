@@ -32,7 +32,7 @@ import { sleep } from "../../helpers/utilities";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
+    await fixture.createWithBootstrap();
   });
 
   test("should show an initial bootstrap dialog", async ({ fixture }) => {
@@ -58,13 +58,7 @@ test.describe("while the initial bootstrap dialog is open", () => {
 test.describe("single verification grid", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
-
     await fixture.page.setViewportSize({ width: 1920, height: 1080 });
-
-    // because the user should not be able to start interacting with the
-    // verification grid while the bootstrap dialog is open, we need to dismiss it
-    // before we start asserting the functionality of the verification grid
-    await fixture.dismissBootstrapDialog();
   });
 
   test.describe("initial state", () => {
@@ -144,8 +138,8 @@ test.describe("single verification grid", () => {
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
 
-      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
-      expect(realizedSlideTitle).toBe(advancedShortcutSlideTitle);
+      const slideTitle = fixture.bootstrapSlideTitle();
+      await expect(slideTitle).toHaveTrimmedText(advancedShortcutSlideTitle);
     });
 
     // If the user is on a mobile device, there is no purpose in opening the
@@ -159,8 +153,8 @@ test.describe("single verification grid", () => {
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
 
-      const realizedSlideTitle = await fixture.bootstrapDialogSlideTitle();
-      expect(realizedSlideTitle).not.toBe(advancedShortcutSlideTitle);
+      const bootstrapTitle = fixture.bootstrapSlideTitle();
+      await expect(bootstrapTitle).not.toHaveTrimmedText(advancedShortcutSlideTitle);
     });
   });
 
@@ -1458,7 +1452,6 @@ test.describe("single verification grid", () => {
         test(`should have the correct grid shape`, async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create();
-          await fixture.dismissBootstrapDialog();
 
           const realizedGridShape = await fixture.getGridShape();
           expect(realizedGridShape).toEqual(testConfig.withoutSlotShape);
@@ -1469,7 +1462,6 @@ test.describe("single verification grid", () => {
         test("should have the correct grid shape with slot content", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create(testedSlotContent);
-          await fixture.dismissBootstrapDialog();
 
           const realizedGridShape = await fixture.getGridShape();
           expect(realizedGridShape).toEqual(testConfig.withSlotShape);
@@ -1478,7 +1470,6 @@ test.describe("single verification grid", () => {
         test("should look correct", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create();
-          await fixture.dismissBootstrapDialog();
 
           await fixture.onlyShowTileOutlines();
           await expect(fixture.page).toHaveScreenshot();
@@ -1487,7 +1478,6 @@ test.describe("single verification grid", () => {
         test("should look correct with slot content", async ({ fixture }) => {
           await testConfig.device(fixture.page);
           await fixture.create(testedSlotContent);
-          await fixture.dismissBootstrapDialog();
 
           // to reduce the maintainability burden of this test, we only check
           // the grid container for visual correctness
@@ -1518,18 +1508,13 @@ test.describe("small datasets", () => {
 
     await fixture.changeGridSize(testedGridSize);
 
-    const spectrogramGridTiles = await fixture.gridTileContainers();
-    expect(spectrogramGridTiles).toHaveLength(datasetSize);
-
-    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
-    expect(gridTilePlaceholders).toHaveLength(expectedPlaceholderCount);
+    await expect(fixture.gridTileContainers()).toHaveCount(datasetSize);
+    await expect(fixture.gridTilePlaceholders()).toHaveCount(expectedPlaceholderCount);
   });
 
   test("should not have any placeholders if the grid size is large enough", async ({ fixture }) => {
     await fixture.changeGridSize(2);
-
-    const gridTilePlaceholders = await fixture.gridTilePlaceholders();
-    expect(gridTilePlaceholders).toHaveLength(0);
+    await expect(fixture.gridTilePlaceholders()).toHaveCount(0);
   });
 });
 
@@ -1537,7 +1522,6 @@ test.describe("decisions", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.create();
     await fixture.changeGridSize(3);
-    await fixture.dismissBootstrapDialog();
   });
 
   test("should be able to add a decisions to a sub-selection", async ({ fixture }) => {
@@ -1684,8 +1668,6 @@ test.describe("decisions", () => {
       expect(await fixture.selectedTileIndexes()).toEqual([1]);
       expect(await fixture.focusedIndex()).toEqual(1);
     });
-
-    test("should auto-select the first tile after paging if the last tile auto-selected", async ({ fixture }) => {});
   });
 });
 
@@ -1694,7 +1676,6 @@ test.describe("decision meter", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithClassificationTask();
       await fixture.changeGridSize(3);
-      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
@@ -1818,7 +1799,6 @@ test.describe("decision meter", () => {
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithVerificationTask();
-      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
@@ -1856,8 +1836,6 @@ test.describe("decision meter", () => {
         <oe-classification tag="bird">Bird</oe-classification>
         <oe-classification tag="cat">Cat</oe-classification>
 			`);
-
-      await fixture.dismissBootstrapDialog();
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
@@ -1973,7 +1951,6 @@ test.describe("verification grid with custom template", () => {
 test.describe("verification grid interaction with the host application", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.createWithAppChrome();
-    await fixture.dismissBootstrapDialog();
   });
 
   test("should not select all tiles when ctrl + A is pressed inside the input box", async ({ fixture }) => {

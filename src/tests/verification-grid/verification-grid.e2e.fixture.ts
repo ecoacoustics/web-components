@@ -48,12 +48,11 @@ class TestPage {
   public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
-  public indicatorComponents = () => this.page.locator("oe-indicator").all();
   public axesComponents = () => this.page.locator("oe-axes").all();
   public infoCardComponents = () => this.page.locator("oe-info-card").all();
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
-  public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
+  public bootstrapSlideTitle = () => this.page.locator(".slide-title").first();
   public bootstrapDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
@@ -68,14 +67,14 @@ class TestPage {
   public previousPageButton = () => this.page.getByTestId("previous-page-button").first();
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
-  public gridTileContainers = () => this.page.locator(".tile-container").all();
+  public gridTileContainers = () => this.page.locator(".tile-container");
   public gridTileProgressMeters = () => this.page.locator(".progress-meter").all();
   public gridTileProgressMeterSegments = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
   public gridTileProgressMeterTooltips = async (index = 0) =>
     (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
 
-  public gridTilePlaceholders = () => this.page.locator(".tile-placeholder").all();
+  public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
 
   public gridProgressBarCount = () => this.page.locator("oe-progress-bar").count();
   public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
@@ -91,13 +90,11 @@ class TestPage {
   public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
 
   public mediaControlsComponent = async (index = 0) =>
-    (await this.gridTileContainers())[index].locator("oe-media-controls").first();
+    this.gridTileContainers().nth(index).locator("oe-media-controls");
   public mediaControlsAdditionalSettings = async (index = 0) =>
-    (await this.mediaControlsComponent(index)).locator(".settings-menu-item").first();
-  public brightnessControlsMenu = async (index = 0) =>
-    (await this.gridTileContainers())[index].getByText("Brightness").first();
-  public brightnessControlsInput = async (index = 0) =>
-    (await this.gridTileContainers())[index].locator("input").first();
+    (await this.mediaControlsComponent(index)).locator(".settings-menu-item");
+  public brightnessControlsMenu = async (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
+  public brightnessControlsInput = async (index = 0) => this.gridTileContainers().nth(index).locator("input");
 
   public headerControls = () => this.page.locator(".header-controls").first();
   public footerControls = () => this.page.locator(".footer-controls").first();
@@ -123,6 +120,38 @@ class TestPage {
   `;
 
   public async create(
+    customTemplate = this.defaultTemplate,
+    requiredSelectors: string[] = [],
+    src = this.testJsonInput,
+  ) {
+    await this.setNoBootstrap();
+
+    await setContent(
+      this.page,
+      `
+      <oe-verification-grid id="verification-grid" autofocus>
+        ${customTemplate}
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          src="${src}"
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      ...requiredSelectors,
+    ]);
+
+    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+  }
+
+  public async createWithBootstrap(
     customTemplate = this.defaultTemplate,
     requiredSelectors: string[] = [],
     src = this.testJsonInput,
@@ -208,6 +237,16 @@ class TestPage {
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 
     await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+  }
+
+  /**
+   * Stops the bootstrap from opening so that each test doesn't have to dismiss
+   * the bootstrap dialog.
+   */
+  public async setNoBootstrap() {
+    await this.page.evaluate(() => {
+      localStorage.setItem("oe-auto-dismiss-bootstrap", "true");
+    });
   }
 
   // getters
@@ -408,8 +447,8 @@ class TestPage {
 
   public async isAudioPlaying(index: number): Promise<boolean> {
     const spectrogram = await this.spectrogramComponent(index);
-    const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
-    return !value as boolean;
+    const value = await getBrowserValue<SpectrogramComponent, number>(spectrogram, "paused");
+    return !value;
   }
 
   public async audioPlaybackTime(index: number): Promise<number> {
@@ -595,26 +634,12 @@ class TestPage {
     await this.bootstrapDialogButton().click();
   }
 
-  public async dismissBootstrapDialog() {
-    const isInitialBootstrapDialogOpen = await this.isBootstrapDialogOpen();
-    if (!isInitialBootstrapDialogOpen) {
-      return;
-    }
-
-    await this.dismissBootstrapDialogButton().click();
-  }
-
-  public async bootstrapDialogSlideTitle(): Promise<string> {
-    const slideTitle = await this.bootstrapSlideTitleElement().textContent();
-    return slideTitle ?? "";
-  }
-
   public async createSubSelection(items: number | number[], modifiers?: KeyboardModifiers) {
-    const gridTiles = await this.gridTileContainers();
+    const gridTiles = this.gridTileContainers();
 
     const itemArray = Array.isArray(items) ? items : [items];
     for (const index of itemArray) {
-      await gridTiles[index].click({ modifiers });
+      await gridTiles.nth(index).click({ modifiers });
     }
   }
 
@@ -787,12 +812,11 @@ class TestPage {
       });
     }
 
-    const tileContents = await this.gridTileContainers();
-    for (const tile of tileContents) {
-      await tile.evaluate((element: HTMLElement) => {
-        element.style.visibility = "hidden";
-      });
-    }
+    await this.gridTileContainers().evaluateAll((tiles) => {
+      for (const tile of tiles) {
+        tile.style.visibility = "hidden";
+      }
+    });
   }
 
   public async highlightSelectAllTiles() {
