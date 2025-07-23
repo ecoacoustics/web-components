@@ -1695,10 +1695,12 @@ test.describe("decisions", () => {
   });
 
   test("should be able to change a decision", async ({ fixture }) => {
-    await fixture.createSubSelection(0);
+    const testedTileIndex = 0;
+
+    await fixture.createSubSelection(testedTileIndex);
     await fixture.makeVerificationDecision("true");
 
-    const firstTileDecisions = await fixture.getAppliedDecisions(0);
+    const firstTileDecisions = await fixture.getAppliedDecisions(testedTileIndex);
     expect(firstTileDecisions).toEqual([
       {
         confirmed: DecisionOptions.TRUE,
@@ -1706,10 +1708,15 @@ test.describe("decisions", () => {
       },
     ]);
 
+    // Because the decision head would have automatically advanced because there
+    // was only one tile selected, we have to re-select the same tile to change
+    // the decision.
+    await fixture.createSubSelection(testedTileIndex);
+
     // notice that the "confirmed" value has change from "true" to "false"
     // because we changed the decision
     await fixture.makeVerificationDecision("false");
-    const finalTileDecisions = await fixture.getAppliedDecisions(0);
+    const finalTileDecisions = await fixture.getAppliedDecisions(testedTileIndex);
     expect(finalTileDecisions).toEqual([
       {
         confirmed: DecisionOptions.FALSE,
@@ -1734,6 +1741,30 @@ test.describe("decisions", () => {
 
     const realizedEvent = await decisionEvent;
     expect(realizedEvent).toEqual([expectedSubjectWrapper]);
+  });
+
+  test.describe("auto advancing head", () => {
+    test("should advance the selection head if one item is selected", async ({ fixture }) => {
+      await fixture.createSubSelection(0);
+      await fixture.makeVerificationDecision("true");
+
+      expect(await fixture.selectedTileIndexes()).toEqual([1]);
+      expect(await fixture.focusedIndex()).toEqual(1);
+    });
+
+    test("should not advance the selection head if multiple items are selected", async ({ fixture }) => {
+      // Note that I make the same verification decision in tests asserting the
+      // automatically advancing head so that I can isolate any failures to the
+      // selection, and not the decision.
+      await fixture.createSubSelection([0, 1], ["ControlOrMeta"]);
+      expect(await fixture.selectedTileIndexes()).toEqual([0, 1]);
+      expect(await fixture.focusedIndex()).toEqual(1);
+
+      await fixture.makeVerificationDecision("true");
+
+      expect(await fixture.selectedTileIndexes()).toEqual([0, 1]);
+      expect(await fixture.focusedIndex()).toEqual(1);
+    });
   });
 });
 
