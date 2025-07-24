@@ -299,6 +299,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return Math.min(gridSize, this.targetGridSize);
   }
 
+  private get lastTileIndex(): number {
+    return this.populatedTileCount - 1;
+  }
+
   /** A count of the number of tiles currently visible on the screen */
   public get effectivePageSize(): number {
     return this.populatedTileCount - this.hiddenTiles;
@@ -347,6 +351,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
+
+  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
@@ -354,22 +360,26 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     observedElements: [],
   };
 
-  private _selectionHead: number | null = null;
   private focusHead: number | null = null;
+  private _rangeSelectionHead: number | null = null;
 
-  private get selectionHead() {
-    return this._selectionHead;
+  /**
+   * Where range selection will start from.
+   * This pointer moves independently from the focus head.
+   */
+  private get rangeSelectionHead() {
+    return this._rangeSelectionHead;
   }
 
-  private set selectionHead(value: number | null) {
-    this._selectionHead = value;
+  private set rangeSelectionHead(value: number | null) {
+    this._rangeSelectionHead = value;
 
+    // When unsetting the selection head (e.g. with ESC key) we want to keep the
+    // focus head at the same index, so that if you start moving again
     if (value !== null) {
       this.focusHead = value;
     }
   }
-
-  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
 
   // This overrides the element's focus() method so that it focuses the grid
   // tiles instead of the component host.
@@ -589,6 +599,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     //    practice to reset state in cases such as this, because the behavior
     //    hasn't been explicitly defined.
     this.removeSubSelection();
+    this.resetSelectionHead();
 
     // if grid tile elements change during a selection event, we want to add
     // observe the overlap with new elements and remove the overlap checks of
@@ -1048,15 +1059,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   /**
-   * Processes a selection request
-   *
-   * @param tileIndices
-   * @param options
-   *    toggle - Whether the selection should be added to the current
-   *               selection. This is typically used when ctrl is held.
-   *
-   *    range - Whether the selection should be treated as a start/end range
-   *            This is typically used when shift is held.
+   * A common method that can be used to create consistent selection behavior
+   * across the different selection methods (click, alt, arrow, tab & highlight)
    */
   private processSelection(
     tileIndices: number | number[],
@@ -1095,31 +1099,26 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       } else if (range) {
         // if the user has never selected an item before, the multiSelectHead will be "null"
         // in this case, we want to start selecting from the clicked tile
-        this.selectionHead ??= tileIndex;
+        this.rangeSelectionHead ??= tileIndex;
         const selectionTail = tileIndex;
 
-        this.addSubSelectionRange(this.selectionHead, selectionTail);
+        this.addSubSelectionRange(this.rangeSelectionHead, selectionTail);
       } else if (additive) {
         this.selectTile(tileIndex);
-        this.selectionHead = tileIndex;
+        this.rangeSelectionHead = tileIndex;
       } else {
         // if we reach this point, we know that the user is not performing a
         // range selection because range selection performs an early return
         this.toggleTileSelection(tileIndex);
-        this.selectionHead = tileIndex;
+        this.rangeSelectionHead = tileIndex;
       }
     }
 
     this.updateSubSelection();
   }
 
-  private get lastTileIndex(): number {
-    return this.populatedTileCount - 1;
-  }
-
   private resetSelectionHead(): void {
-    this.selectionHead = null;
-    // this.focusHead = null;
+    this.rangeSelectionHead = null;
   }
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
@@ -1139,25 +1138,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(this.nextUndecidedTile?.index ?? 0);
   }
 
-  private selectionHeadLeft(options?: SelectionOptions): void {
+  private selectionHeadLeft(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.updateSelectionHead(this.lastTileIndex, options);
+      this.selectLastTile(options);
     } else {
       this.updateSelectionHead(Math.max(this.focusHead - 1, 0), options);
     }
   }
 
-  private selectionHeadRight(options?: SelectionOptions): void {
+  private selectionHeadRight(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.updateSelectionHead(0, options);
+      this.selectFirstTile(options);
     } else {
       this.updateSelectionHead(Math.min(this.focusHead + 1, this.lastTileIndex), options);
     }
   }
 
-  private selectionHeadUp(options?: SelectionOptions): void {
+  private selectionHeadUp(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.updateSelectionHead(this.lastTileIndex, options);
+      this.selectLastTile(options);
       return;
     }
 
@@ -1168,9 +1167,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private selectionHeadDown(options?: SelectionOptions): void {
+  private selectionHeadDown(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.updateSelectionHead(0, options);
+      this.selectFirstTile(options);
       return;
     }
 
@@ -1181,11 +1180,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private selectFirstTile(options?: SelectionOptions): void {
+  private selectFirstTile(options: SelectionOptions): void {
     this.updateSelectionHead(0, options);
   }
 
-  private selectLastTile(options?: SelectionOptions): void {
+  private selectLastTile(options: SelectionOptions): void {
     this.updateSelectionHead(this.lastTileIndex, options);
   }
 
