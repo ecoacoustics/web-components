@@ -327,6 +327,19 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
+  /**
+   * Returns the current users selection behavior, collapsing the "default"
+   * behavior into either "tablet" or "desktop" depending on the users device
+   * type.
+   */
+  private get userSelectionBehavior(): SelectionObserverType {
+    if (this.selectionBehavior === "default") {
+      return this.isMobileDevice() ? "tablet" : "desktop";
+    }
+
+    return this.selectionBehavior;
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -338,7 +351,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _loaded = false;
   private decisionHeadIndex = 0;
   private viewHeadIndex = 0;
-  private isCurrentAutoSelected = false;
+
+  /**
+   * "single decision mode" will automatically advance the selection head if:
+   *    1. There is only one tile selected
+   *    2. All tasks on the selected tile is completed
+   *
+   * You can enter this mode at any time, by simply completing all tasks on a
+   * single tile.
+   * Once in this mode, there is some special functionality like the first tile
+   * of each new page being automatically selected.
+   */
+  private singleDecisionMode = false;
 
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
@@ -368,10 +392,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private set rangeSelectionHead(value: number | null) {
+    // Note that the bounds check upper limit is the populated tile count
+    // subtract one.
+    // This is because the populatedTileCount is indexed from 1 while the range
+    // selection value is indexed from 0.
+    const upperBound = this.populatedTileCount - 1;
+    const isInBounds = value === null || (value >= 0 && value <= upperBound);
+    if (!isInBounds) {
+      console.error(`new range selection value: '${value}' is not valid. Value must be in range [0,${upperBound}]`);
+      return;
+    }
+
     this._rangeSelectionHead = value;
 
     // When unsetting the selection head (e.g. with ESC key) we want to keep the
-    // focus head at the same index, so that if you start moving again
+    // focus head at the same index, so that if you start moving again, it will
+    // start from where the current focus head is (where you deselected from).
     if (value !== null) {
       this.focusHead = value;
     }
@@ -556,8 +592,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
-    this.removeSubSelection();
-    this.resetSelectionHead();
+    this.clearSelection();
   }
 
   /**
@@ -594,8 +629,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     //    grid in-between data-sources, it's a good defensive programming
     //    practice to reset state in cases such as this, because the behavior
     //    hasn't been explicitly defined.
-    this.removeSubSelection();
-    this.resetSelectionHead();
+    this.clearSelection();
 
     // if grid tile elements change during a selection event, we want to add
     // observe the overlap with new elements and remove the overlap checks of
@@ -776,13 +810,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           // the current page. We prevent default so that the user can use
           // ctrl + D to remove the current selection
           event.preventDefault();
-          this.removeSubSelection();
 
           // We reset the selection head so that if the user deselects all of the
           // tiles (e.g. through the esc key), the next shift click will start a new
           // range selection instead of starting from the old range selection
           // position.
-          this.resetSelectionHead();
+          this.clearSelection();
         }
         break;
       }
@@ -801,6 +834,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.handleHelpRequest();
         break;
       }
+
+      // We don't handle the de-selection case here because we have deemed that
+      // de-selection on keyup is more intuitive.
+      // However, we have to preventDefault on the keydown because in some
+      // browsers (e.g. Chrome), pressing escape while the page is loading will
+      // cause the browser to stop page load.
+      // Therefore, if the user starts selecting the grid tiles before the page
+      // load finishes, and presses escape to de-select tiles, we don't want to
+      // cancel the page load.
+      case ESCAPE_KEY: {
+        // If the user has nothing selected, we still allow canceling the page
+        // navigation by pressing escape.
+        if (this.currentSubSelection.length > 0) {
+          event.preventDefault();
+        }
+        break;
+      }
     }
   }
 
@@ -809,13 +859,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // events when the escape key is pressed
     // related to: https://stackoverflow.com/a/78872316
     if (event.key === ESCAPE_KEY) {
-      this.removeSubSelection();
-
       // We reset the selection head so that if the user deselects all of the
       // tiles (e.g. through the esc key), the next shift click will start a new
       // range selection instead of starting from the old range selection
       // position.
-      this.resetSelectionHead();
+      this.clearSelection();
       return;
     }
 
@@ -956,11 +1004,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.showingSelectionShortcuts = false;
   }
 
+  /**
+   * An event handler for the verification-grid-tile's "selected" event.
+   * This handles alt + number selection, and click selection.
+   */
   private handleTileSelection(selectionEvent: SelectionEvent): void {
-    if (!this.canSubSelect()) {
-      return;
-    }
-
     const options: SelectionOptions = {
       toggle: selectionEvent.detail.ctrlKey,
       range: selectionEvent.detail.shiftKey,
@@ -981,10 +1029,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.focusTile(index);
   }
 
-  private focusTile(target: number): void {
-    const targetGridItem = this.gridTiles[target];
+  private focusTile(index: number): void {
+    const targetGridItem = this.gridTiles[index];
     targetGridItem.focus();
-    this.focusHead = target;
+    this.focusHead = index;
   }
 
   private addSubSelectionRange(start: number, end: number): void {
@@ -1066,14 +1114,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    this.isCurrentAutoSelected = false;
-
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
-
-    const selectionIndex = tileIndices;
+    this.singleDecisionMode = false;
 
     // in desktop mode, unless the ctrl key is held down, clicking an element
     // removes all other selected items
@@ -1081,17 +1122,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // still overwrite the selection behavior using the selection-behavior
     // attribute. Therefore, we have to check that we are not on explicitly
     // using tablet selection mode.
-    if (selectionBehavior === "desktop" && !toggle && !additive && !focus) {
+    if (this.userSelectionBehavior === "desktop" && !toggle && !additive && !focus) {
       this.removeSubSelection();
     }
 
-    const iterableIndices = Array.isArray(selectionIndex) ? selectionIndex : [selectionIndex];
+    const iterableIndices = Array.isArray(tileIndices) ? tileIndices : [tileIndices];
     for (const tileIndex of iterableIndices) {
       // If the "focus" selection behavior is set, we want to focus the tile but
       // not select it.
       if (focus) {
         this.focusTile(tileIndex);
-        this.focusHead = tileIndex;
       } else if (range) {
         // if the user has never selected an item before, the multiSelectHead will be "null"
         // in this case, we want to start selecting from the clicked tile
@@ -1117,6 +1157,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.rangeSelectionHead = null;
   }
 
+  private clearSelection(): void {
+    this.removeSubSelection();
+    this.resetSelectionHead();
+  }
+
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
     const refinedOptions: SelectionOptions = {
       focus: options?.toggle,
@@ -1130,7 +1175,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private selectionHeadUndecided(selectionIndex: number): void {
+  private moveSelectionHeadToNextUndecided(selectionIndex: number): void {
+    // Find both the first undecided tile, and the next undecided tile after the
+    // current selection.
+    // The first undecided will be different if the user has undecided tiles
+    // before the current selection.
     let firstUndecidedTile: number | null = null;
     const nextUndecidedTile = Array.from(this.gridTiles).findIndex((tile, index) => {
       // We include the current index in the undecided tile check, so that if
@@ -1319,9 +1368,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       intersectingTiles.reverse();
     }
 
-    for (const tile of intersectingTiles) {
-      this.processSelection(tile.index, options);
-    }
+    const tileIndices = intersectingTiles.map((tile) => tile.index);
+    this.processSelection(tileIndices, options);
   }
 
   private calculateHighlightIntersection(): VerificationGridTileComponent[] {
@@ -1388,8 +1436,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private async pageForward(): Promise<void> {
     const proposedViewHead = this.viewHead + this.populatedTileCount;
     this.viewHead = proposedViewHead;
-    this.removeSubSelection();
-    this.resetSelectionHead();
+    this.clearSelection();
   }
 
   private pageBackward(): void {
@@ -1398,8 +1445,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // than zero or exceeds the length of the subjects array
     const proposedHead = this.viewHead - this.populatedTileCount;
     this.viewHead = proposedHead;
-    this.removeSubSelection();
-    this.resetSelectionHead();
+    this.clearSelection();
   }
 
   /** Changes the viewHead to the current page of undecided results */
@@ -1410,8 +1456,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   // we ue the effective grid size here so that hidden tiles are not counted
   // when the user pages
   private async nextPage(count: number = this.effectivePageSize): Promise<void> {
-    this.removeSubSelection();
-    this.resetSelectionHead();
+    this.clearSelection();
     this.resetSpectrogramSettings();
 
     if (!this.paginationFetcher) {
@@ -1514,7 +1559,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.
-      if (this.isCurrentAutoSelected) {
+      if (this.singleDecisionMode) {
         this.selectFirstTile();
       }
 
@@ -1527,8 +1572,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const selectedTile = subSelection[0];
 
       if (selectedTile.taskCompleted) {
-        this.selectionHeadUndecided(selectedTile.index);
-        this.isCurrentAutoSelected = true;
+        this.moveSelectionHeadToNextUndecided(selectedTile.index);
+        this.singleDecisionMode = true;
       }
     }
   }
