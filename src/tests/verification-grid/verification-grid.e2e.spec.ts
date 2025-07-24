@@ -1627,11 +1627,17 @@ test.describe("decisions", () => {
 
   test.describe("auto advancing head", () => {
     test("should advance the selection head if one item is selected", async ({ fixture }) => {
-      await fixture.createSubSelection(0);
+      // I purposely select the second tile here without making a decision about
+      // the first tile, so that this test will fail if we are just picking the
+      // first incomplete tile.
+      // Note that the correct expected behavior is to only auto-select
+      // incomplete tiles ahead of the current selection and wrap to the first
+      // incomplete if there are no more ahead of the current selection.
+      await fixture.createSubSelection(1);
       await fixture.makeVerificationDecision("true");
 
-      expect(await fixture.selectedTileIndexes()).toEqual([1]);
-      expect(await fixture.focusedIndex()).toEqual(1);
+      expect(await fixture.selectedTileIndexes()).toEqual([2]);
+      expect(await fixture.focusedIndex()).toEqual(2);
     });
 
     test("should not advance the selection head if multiple items are selected", async ({ fixture }) => {

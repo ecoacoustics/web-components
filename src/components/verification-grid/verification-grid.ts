@@ -327,10 +327,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
-  private get nextUndecidedTile(): VerificationGridTileComponent | undefined {
-    return Array.from(this.gridTiles).find((tile) => !tile.taskCompleted);
-  }
-
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
@@ -1134,8 +1130,30 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private selectionHeadUndecided(): void {
-    this.updateSelectionHead(this.nextUndecidedTile?.index ?? 0);
+  private selectionHeadUndecided(selectionIndex: number): void {
+    let firstUndecidedTile: number | null = null;
+    const nextUndecidedTile = Array.from(this.gridTiles).findIndex((tile, index) => {
+      // We include the current index in the undecided tile check, so that if
+      // the current tile that the user is on is still undenied, we will stay
+      // on the current tile.
+      // Note that you should not be calling this function if the current tile
+      // is incomplete, but this is a defensive programming / double check to
+      // ensure that we don't skip over the currently incomplete tile.
+      if (index < selectionIndex) {
+        if (firstUndecidedTile === null && !tile.taskCompleted) {
+          firstUndecidedTile = index;
+        }
+
+        return false;
+      }
+
+      return !tile.taskCompleted;
+    });
+
+    // nextUndecidedTile will have a value of -1 if there are no undecided tiles
+    // ahead of the current selection head (because I am using findIndex).
+    const nextSelection = nextUndecidedTile !== -1 ? nextUndecidedTile : firstUndecidedTile;
+    this.updateSelectionHead(nextSelection);
   }
 
   private selectionHeadLeft(options: SelectionOptions): void {
@@ -1180,11 +1198,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private selectFirstTile(options: SelectionOptions): void {
+  private selectFirstTile(options?: SelectionOptions): void {
     this.updateSelectionHead(0, options);
   }
 
-  private selectLastTile(options: SelectionOptions): void {
+  private selectLastTile(options?: SelectionOptions): void {
     this.updateSelectionHead(this.lastTileIndex, options);
   }
 
@@ -1497,7 +1515,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.
       if (this.isCurrentAutoSelected) {
-        this.updateSelectionHead(0);
+        this.selectFirstTile();
       }
 
       return;
@@ -1507,10 +1525,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // completed, we want to automatically advance the selection head.
     if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
       const selectedTile = subSelection[0];
-      const hasVerificationDecision = selectedTile.model.verification !== undefined;
 
-      if (hasVerificationDecision) {
-        this.selectionHeadUndecided();
+      if (selectedTile.taskCompleted) {
+        this.selectionHeadUndecided(selectedTile.index);
         this.isCurrentAutoSelected = true;
       }
     }
