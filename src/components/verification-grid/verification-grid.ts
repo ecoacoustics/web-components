@@ -1154,6 +1154,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
+    // If you want to set "singleDecisionMode", you will need to set it after
+    // selection has succeeded/failed.
     this.singleDecisionMode = false;
 
     // in desktop mode, unless the ctrl key is held down, clicking an element
