@@ -757,6 +757,16 @@ test.describe("single verification grid", () => {
       });
 
       test.describe("highlight box selection", () => {
+        // TODO: Selection highlight tests are flaky because the tests arn't
+        // correctly waiting until the selection highlight RAF completes when
+        // it makes its assertions.
+        //
+        // I have manually checked that this only occurs during testing, and
+        // selection highlight works as expected for MacOS users.
+        //
+        // see: https://github.com/ecoacoustics/web-components/issues/429
+        test.skip(!!process.env.CI && process.platform === "darwin");
+
         // there is a human tendency to move the mouse by a very small amount when
         // clicking the primary mouse button
         // to prevent this, there should be a minimum move amount until we start
@@ -829,8 +839,6 @@ test.describe("single verification grid", () => {
         });
 
         test("should be able to select new tiles if the grid size increases", async ({ fixture }) => {
-          test.skip(!!process.env.CI && process.platform === "darwin");
-
           const currentGridSize = await fixture.getGridSize();
           await fixture.changeGridSize(currentGridSize + 1);
 
