@@ -110,7 +110,6 @@ interface SelectionOptions {
   additive?: boolean;
   toggle?: boolean;
   range?: boolean;
-  focus?: boolean;
 }
 
 /**
@@ -299,10 +298,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return Math.min(gridSize, this.targetGridSize);
   }
 
-  private get lastTileIndex(): number {
-    return this.populatedTileCount - 1;
-  }
-
   /** A count of the number of tiles currently visible on the screen */
   public get effectivePageSize(): number {
     return this.populatedTileCount - this.hiddenTiles;
@@ -411,6 +406,48 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (value !== null) {
       this.focusHead = value;
     }
+  }
+
+  private get focusLeftIndex(): number {
+    return this.focusHead === null ? 0 : Math.max(this.focusHead - 1, 0);
+  }
+
+  private get focusRightIndex(): number {
+    return this.focusHead === null ? 0 : Math.min(this.focusHead + 1, this.lastTileIndex);
+  }
+
+  private get focusUpIndex(): number {
+    if (this.focusHead === null) {
+      return 0;
+    }
+
+    // If the selection head is on the top row, pressing up should have no
+    // action.
+    const proposedIndex = this.focusHead - this.columns;
+    if (proposedIndex < 0) {
+      return this.focusHead;
+    }
+
+    return proposedIndex;
+  }
+
+  private get focusDownIndex(): number {
+    if (this.focusHead === null) {
+      return 0;
+    }
+
+    // If the selection head is on the last row, pressing down should have no
+    // action.
+    const proposedIndex = this.focusHead + this.columns;
+    if (proposedIndex > this.lastTileIndex) {
+      return this.focusHead;
+    }
+
+    return proposedIndex;
+  }
+
+  private get lastTileIndex(): number {
+    return this.populatedTileCount - 1;
   }
 
   // This overrides the element's focus() method so that it focuses the grid
@@ -753,6 +790,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       range: event.shiftKey,
     };
 
+    const keySelectionHandler = isHoldingCtrl ? this.focusTile.bind(this) : this.processSelection.bind(this);
+
     switch (event.key) {
       case PAGE_DOWN_KEY: {
         event.preventDefault();
@@ -768,37 +807,38 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       case HOME_KEY: {
         event.preventDefault();
+        keySelectionHandler(0, selectionOptions);
         this.selectFirstTile(selectionOptions);
         break;
       }
 
       case END_KEY: {
         event.preventDefault();
-        this.selectLastTile(selectionOptions);
+        keySelectionHandler(this.lastTileIndex, selectionOptions);
         break;
       }
 
       case LEFT_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadLeft(selectionOptions);
+        keySelectionHandler(this.focusLeftIndex, selectionOptions);
         break;
       }
 
       case RIGHT_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadRight(selectionOptions);
+        keySelectionHandler(this.focusRightIndex, selectionOptions);
         break;
       }
 
       case UP_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadUp(selectionOptions);
+        keySelectionHandler(this.focusUpIndex, selectionOptions);
         break;
       }
 
       case DOWN_ARROW_KEY: {
         event.preventDefault();
-        this.selectionHeadDown(selectionOptions);
+        keySelectionHandler(this.focusDownIndex, selectionOptions);
         break;
       }
 
@@ -1108,7 +1148,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private processSelection(
     tileIndices: number | number[],
-    { additive = false, toggle = false, range = false, focus = false }: SelectionOptions = {},
+    { additive = false, toggle = false, range = false }: SelectionOptions = {},
   ): void {
     if (!this.canSubSelect()) {
       return;
@@ -1128,11 +1168,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const iterableIndices = Array.isArray(tileIndices) ? tileIndices : [tileIndices];
     for (const tileIndex of iterableIndices) {
-      // If the "focus" selection behavior is set, we want to focus the tile but
-      // not select it.
-      if (focus) {
-        this.focusTile(tileIndex);
-      } else if (range) {
+      if (range) {
         // if the user has never selected an item before, the multiSelectHead will be "null"
         // in this case, we want to start selecting from the clicked tile
         this.rangeSelectionHead ??= tileIndex;
@@ -1164,7 +1200,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
     const refinedOptions: SelectionOptions = {
-      focus: options?.toggle,
       range: options?.range,
     };
 
@@ -1205,54 +1240,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(nextSelection);
   }
 
-  private selectionHeadLeft(options: SelectionOptions): void {
-    if (this.focusHead === null) {
-      this.selectFirstTile(options);
-    } else {
-      this.updateSelectionHead(Math.max(this.focusHead - 1, 0), options);
-    }
-  }
-
-  private selectionHeadRight(options: SelectionOptions): void {
-    if (this.focusHead === null) {
-      this.selectFirstTile(options);
-    } else {
-      this.updateSelectionHead(Math.min(this.focusHead + 1, this.lastTileIndex), options);
-    }
-  }
-
-  private selectionHeadUp(options: SelectionOptions): void {
-    if (this.focusHead === null) {
-      this.selectFirstTile(options);
-      return;
-    }
-
-    // If the selection head is on the last row, pressing down should have no
-    // action.
-    if (this.focusHead > this.columns - 1) {
-      this.updateSelectionHead(Math.max(this.focusHead - this.columns, 0), options);
-    }
-  }
-
-  private selectionHeadDown(options: SelectionOptions): void {
-    if (this.focusHead === null) {
-      this.selectFirstTile(options);
-      return;
-    }
-
-    // If the selection head is on the last row, pressing down should have no
-    // action.
-    if (this.focusHead < (this.rows - 1) * this.columns) {
-      this.updateSelectionHead(Math.min(this.focusHead + this.columns, this.lastTileIndex), options);
-    }
-  }
-
   private selectFirstTile(options?: SelectionOptions): void {
     this.updateSelectionHead(0, options);
-  }
-
-  private selectLastTile(options?: SelectionOptions): void {
-    this.updateSelectionHead(this.lastTileIndex, options);
   }
 
   //#endregion
