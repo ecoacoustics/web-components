@@ -298,3 +298,58 @@ This follows our rule of "auto page when all required decisions have been made"
 
 You must make a verification decision and a decision about each classification
 tag for the grid to auto page.
+
+## Use case 8: Compound Verification + (classification trigger) Task
+
+### HTML
+
+```html
+<!-- Decision buttons -->
+<oe-verified verified="true" shortcut="Y"></oe-verified>
+<oe-verified verified="false" shortcut="N"></oe-verified>
+
+<!-- Host application can handle logic to hide/show -->
+<template id=alternate-task"" slot="tile-popup">
+  <h4>Rejected Because:</h4>
+  <oe-classification>Incorrect Species</oe-classification>
+  <oe-classification>Incorrect Call Type</oe-classification>
+
+  <label>
+      Correct Label
+      <input appDirective />
+  </label>
+</template>
+
+<script>
+  const gridComponent = document.getElementById("verification-grid");
+  const alternateTaskPopup = document.getElementById("alternate-task");
+
+  gridComponent.addEventListener("decision-made", (decision) => {
+    if (decision === Verification.FALSE) {
+      alternateTaskPopup.style.visible = "visible";
+    }
+  });
+
+  alternateTaskPopup.addEventListener("decision-made", (decision) => {
+    alternateTaskPopup.style.visible = "hidden";
+
+    // Host application can handle compound logic here
+    // <snip>
+  });
+</script>
+```
+
+OR
+
+```html
+<!-- Decision buttons -->
+<oe-verified verified="true" shortcut="Y"></oe-verified>
+<oe-verified verified="false" shortcut="N"></oe-verified>
+
+<oe-task trigger="false">
+  <input appTypeahead />
+
+  <!-- Potential new component -->
+  <oe-notes></oe-notes>
+</oe-task>
+```
