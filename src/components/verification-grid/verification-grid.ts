@@ -1162,7 +1162,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // still overwrite the selection behavior using the selection-behavior
     // attribute. Therefore, we have to check that we are not on explicitly
     // using tablet selection mode.
-    if (this.userSelectionBehavior === "desktop" && !toggle && !additive && !focus) {
+    if (this.userSelectionBehavior === "desktop" && !toggle && !additive) {
       this.removeSubSelection();
     }
 
