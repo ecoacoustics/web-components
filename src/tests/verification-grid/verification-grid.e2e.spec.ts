@@ -950,29 +950,22 @@ test.describe("single verification grid", () => {
           expect(await fixture.focusedIndex()).toEqual(0);
         });
 
-        test("should select the first tile if HOME is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(HOME_KEY);
+        test("should select the last tile if LEFT is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(LEFT_ARROW_KEY);
           expect(await fixture.selectedTileIndexes()).toEqual([0]);
           expect(await fixture.focusedIndex()).toEqual(0);
         });
 
-        test("should select the last tile if LEFT is pressed with nothing selected", async ({ fixture }) => {
-          await fixture.page.keyboard.press(LEFT_ARROW_KEY);
-
-          // I purposely get the last tile index after the down arrow so (if for
-          // some reason), pressing down creates a new tile, this test will
-          // correctly fail.
-          const lastTileIndex = (await fixture.getGridSize()) - 1;
-          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
-          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
-        });
-
         test("should select the last tile if the UP is pressed with nothing selected", async ({ fixture }) => {
           await fixture.page.keyboard.press(UP_ARROW_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+        });
 
-          const lastTileIndex = (await fixture.getGridSize()) - 1;
-          expect(await fixture.selectedTileIndexes()).toEqual([lastTileIndex]);
-          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
+        test("should select the first tile if HOME is pressed with nothing selected", async ({ fixture }) => {
+          await fixture.page.keyboard.press(HOME_KEY);
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
         });
 
         test("should select the last tile if END is pressed with nothing selected", async ({ fixture }) => {

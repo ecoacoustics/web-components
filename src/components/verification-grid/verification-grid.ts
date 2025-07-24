@@ -1140,7 +1140,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private selectionHeadLeft(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.selectLastTile(options);
+      this.selectFirstTile(options);
     } else {
       this.updateSelectionHead(Math.max(this.focusHead - 1, 0), options);
     }
@@ -1156,7 +1156,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private selectionHeadUp(options: SelectionOptions): void {
     if (this.focusHead === null) {
-      this.selectLastTile(options);
+      this.selectFirstTile(options);
       return;
     }
 
