@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.1.0...web-components-v4.2.0) (2025-07-25)
+
+
+### Features
+
+* Arrow key sub-selection ([#430](https://github.com/ecoacoustics/web-components/issues/430)) ([f2649af](https://github.com/ecoacoustics/web-components/commit/f2649afdafb4958c887f79b415839f7b072c7534))
+
 ## [4.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.0.0...web-components-v4.1.0) (2025-07-21)
 
 
