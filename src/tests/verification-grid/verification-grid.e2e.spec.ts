@@ -1056,6 +1056,21 @@ test.describe("single verification grid", () => {
           expect(await fixture.selectedTileIndexes()).toEqual([2]);
         });
 
+        test("should be able to move the focus head to the start/end with ctrl + home/end", async ({ fixture }) => {
+          await fixture.createSubSelection(1);
+
+          // Because we moved the focus head with Ctrl + Home, we expect that
+          // the selection head will not move.
+          await pressKey(fixture.page, HOME_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+          expect(await fixture.selectedTileIndexes()).toEqual([1]);
+
+          const lastTileIndex = (await fixture.getGridSize()) - 1;
+          await pressKey(fixture.page, END_KEY, ["ControlOrMeta"]);
+          expect(await fixture.focusedIndex()).toEqual(lastTileIndex);
+          expect(await fixture.selectedTileIndexes()).toEqual([1]);
+        });
+
         // If the focus head becomes unaligned with the selection head, the next
         // selection movement should move from the focus head position.
         // This mimics the behavior of the Window's file explorer where

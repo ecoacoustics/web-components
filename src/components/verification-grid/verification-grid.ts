@@ -808,7 +808,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       case HOME_KEY: {
         event.preventDefault();
         keySelectionHandler(0, selectionOptions);
-        this.selectFirstTile(selectionOptions);
         break;
       }
 
