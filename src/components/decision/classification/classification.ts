@@ -184,8 +184,6 @@ export class ClassificationComponent extends DecisionComponent {
   private decisionButtonTemplate(decision: DecisionOptions): HTMLTemplateResult {
     const buttonClasses = classMap({
       disabled: !!this.disabled,
-      "oe-btn-primary": decision === DecisionOptions.TRUE || decision === DecisionOptions.FALSE,
-      "oe-btn-secondary": decision === DecisionOptions.UNSURE || decision === DecisionOptions.SKIP,
     });
 
     const shortcut = decision === DecisionOptions.TRUE ? this.trueKeyboardShortcut : this.falseKeyboardShortcut;
@@ -197,7 +195,7 @@ export class ClassificationComponent extends DecisionComponent {
     return html`
       <button
         id="${decision}-decision-button"
-        class="decision-button ${buttonClasses}"
+        class="decision-button oe-btn-primary ${buttonClasses}"
         part="${decision}-decision-button"
         style="--ripple-color: var(${color})"
         aria-label="${decision} decision for ${this.tag.text}"

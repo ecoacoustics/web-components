@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Dani</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid id="verification-grid">
+      <oe-verification verified="true" shortcut="1"></oe-verification>
+      <oe-verification verified="false" shortcut="2"></oe-verification>
+
+      <oe-tag-prompt
+        when="(subject) => subject.verification == 'false'"
+        search="(fragment) => ['a', 'b', 'c']"
+      ></oe-tag-prompt>
+
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
+    </oe-verification-grid>
+  </body>
+</html>

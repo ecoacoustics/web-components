@@ -16,6 +16,7 @@ export * from "./components/bootstrap-modal/bootstrap-modal";
 export * from "./components/decision/decision";
 export * from "./components/decision/classification/classification";
 export * from "./components/decision/verification/verification";
+export * from "./components/decision/tag-prompt/tag-prompt";
 export * from "./components/verification-grid-settings/verification-grid-settings";
 export * from "./components/progress-bar/progress-bar";
 export * from "./components/annotate/annotate";

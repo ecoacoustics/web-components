@@ -136,7 +136,7 @@ export class VerificationComponent extends DecisionComponent {
       <div class="decision-buttons decision-group">
         <button
           id="decision-button"
-          class="oe-btn-primary decision-button ${buttonClasses}"
+          class="decision-button oe-btn-primary ${buttonClasses}"
           part="decision-button"
           style="--ripple-color: var(${color})"
           aria-disabled="${this.disabled}"

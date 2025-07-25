@@ -74,6 +74,7 @@ export class SubjectWrapper {
   public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
+  public revisedTag?: Tag;
 
   /**
    * Adds a decision to the subject and removes any decisions that have been
