@@ -790,6 +790,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       range: event.shiftKey,
     };
 
+    // While holding control, only move the focus, don't change the selection.
     const keySelectionHandler = isHoldingCtrl ? this.focusTile.bind(this) : this.processSelection.bind(this);
 
     switch (event.key) {
@@ -1561,6 +1562,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
       const selectedTile = subSelection[0];
 
+      // We always set singleDecisionMode after a tile is automatically selected
+      // due to auto-advancement because the selection handler method disables
+      // the singleDecisionMode.
+      // This method upsets the single decision mode because all selection apart
+      // from this single caller is the result of explicit user selection that
+      // takes the user out of the automatic advancement "single decision mode".
+      //
+      // We need to set singleDecisionMode so that when we autoPage the first
+      // tile on the following page will be automatically selected.
       if (selectedTile.taskCompleted) {
         this.moveSelectionHeadToNextUndecided(selectedTile.index);
         this.singleDecisionMode = true;
