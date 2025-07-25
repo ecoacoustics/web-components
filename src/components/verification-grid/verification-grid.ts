@@ -1171,9 +1171,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const iterableIndices = Array.isArray(tileIndices) ? tileIndices : [tileIndices];
     for (const tileIndex of iterableIndices) {
       if (range) {
-        // if the user has never selected an item before, the multiSelectHead will be "null"
-        // in this case, we want to start selecting from the clicked tile
-        this.rangeSelectionHead ??= tileIndex;
+        // if the user has never selected an item before, the multiSelectHead
+        // will be "null" in this case, we want to start selecting from the
+        // first tile of the verification grid.
+        // This is the behavior seen in Windows file explorer.
+        this.rangeSelectionHead ??= 0;
         const selectionTail = tileIndex;
 
         this.addSubSelectionRange(this.rangeSelectionHead, selectionTail);

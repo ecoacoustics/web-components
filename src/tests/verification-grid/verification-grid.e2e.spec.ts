@@ -675,6 +675,12 @@ test.describe("single verification grid", () => {
         expect(await fixture.focusedIndex()).toEqual(0);
       });
 
+      test("should range select from the start if nothing is selected", async ({ fixture }) => {
+        await fixture.createSubSelection(3, ["Shift"]);
+        expect(await fixture.selectedTileIndexes()).toEqual([0, 1, 2, 3]);
+        expect(await fixture.focusedIndex()).toEqual(3);
+      });
+
       test("should add a range of tiles to a selection if ctrl + shift is held", async ({ fixture }) => {
         const selectionStart = 0;
         const selectionEnd = 2;
