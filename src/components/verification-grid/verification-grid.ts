@@ -352,8 +352,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    *    1. There is only one tile selected
    *    2. All tasks on the selected tile is completed
    *
-   * You can enter this mode at any time, by simply completing all tasks on a
-   * single tile.
+   * A user can enter this mode at any time by selecting just one tile.
+   * They remain in the mode by completing all tasks on the single selected
+   * tile, at which point the selection is advanced.
    * Once in this mode, there is some special functionality like the first tile
    * of each new page being automatically selected.
    */
@@ -391,7 +392,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // subtract one.
     // This is because the populatedTileCount is indexed from 1 while the range
     // selection value is indexed from 0.
-    const upperBound = this.populatedTileCount - 1;
+    const upperBound = this.lastTileIndex;
     const isInBounds = value === null || (value >= 0 && value <= upperBound);
     if (!isInBounds) {
       console.error(`new range selection value: '${value}' is not valid. Value must be in range [0,${upperBound}]`);
@@ -408,15 +409,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private get focusLeftIndex(): number {
+  private get nextLeftIndex(): number {
     return this.focusHead === null ? 0 : Math.max(this.focusHead - 1, 0);
   }
 
-  private get focusRightIndex(): number {
+  private get nextRightIndex(): number {
     return this.focusHead === null ? 0 : Math.min(this.focusHead + 1, this.lastTileIndex);
   }
 
-  private get focusUpIndex(): number {
+  private get nextUpIndex(): number {
     if (this.focusHead === null) {
       return 0;
     }
@@ -431,7 +432,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return proposedIndex;
   }
 
-  private get focusDownIndex(): number {
+  private get nextDownIndex(): number {
     if (this.focusHead === null) {
       return 0;
     }
@@ -820,25 +821,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       case LEFT_ARROW_KEY: {
         event.preventDefault();
-        keySelectionHandler(this.focusLeftIndex, selectionOptions);
+        keySelectionHandler(this.nextLeftIndex, selectionOptions);
         break;
       }
 
       case RIGHT_ARROW_KEY: {
         event.preventDefault();
-        keySelectionHandler(this.focusRightIndex, selectionOptions);
+        keySelectionHandler(this.nextRightIndex, selectionOptions);
         break;
       }
 
       case UP_ARROW_KEY: {
         event.preventDefault();
-        keySelectionHandler(this.focusUpIndex, selectionOptions);
+        keySelectionHandler(this.nextUpIndex, selectionOptions);
         break;
       }
 
       case DOWN_ARROW_KEY: {
         event.preventDefault();
-        keySelectionHandler(this.focusDownIndex, selectionOptions);
+        keySelectionHandler(this.nextDownIndex, selectionOptions);
         break;
       }
 
@@ -884,11 +885,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // load finishes, and presses escape to de-select tiles, we don't want to
       // cancel the page load.
       case ESCAPE_KEY: {
-        // If the user has nothing selected, we still allow canceling the page
-        // navigation by pressing escape.
-        if (this.currentSubSelection.length > 0) {
-          event.preventDefault();
-        }
+        // Pressing escape while the page is loading will cause some browsers
+        // (e.g. Chrome) to stop loading the page.
+        // We preventDefault so that if the user makes a selection before the
+        // page/spectrograms had loaded, and then presses escape to remove the
+        // selection, it doesn't stop the page from loading, and break the
+        // verification grid.
+        event.preventDefault();
         break;
       }
     }
