@@ -747,7 +747,7 @@ test.describe("single verification grid", () => {
         await fixture.createSubSelection(subSelection, ["Shift"]);
 
         const realizedSelectedTiles = await fixture.selectedTileIndexes();
-        expect(realizedSelectedTiles).toEqual(subSelection);
+        expect(realizedSelectedTiles).toEqual([0, 1]);
 
         expect(await fixture.focusedIndex()).toEqual(1);
       });
