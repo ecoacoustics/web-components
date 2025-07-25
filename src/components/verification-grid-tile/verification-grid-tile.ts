@@ -58,8 +58,6 @@ const shortcutTranslation = {
  *
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
- * @cssproperty [--selected-border-size] - The size of the border when a
- * decision is being shown
  *
  * @event tile-loaded
  */
@@ -135,6 +133,24 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   private shortcuts: string[] = [];
   private intersectionObserver!: IntersectionObserver;
 
+  public get taskCompleted(): boolean {
+    return this.requiredDecisions.every((requiredDecision) => {
+      if (requiredDecision === requiredVerificationPlaceholder) {
+        return this.model.verification !== undefined;
+      }
+
+      return this.model.classifications.has(requiredDecision.text);
+    });
+  }
+
+  /**
+   * An override of the default HTMLElement focus() method so that
+   * tab index's and location is consistent.
+   */
+  public override focus() {
+    this.contentsWrapper.focus();
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("keydown", this.keyDownHandler);
@@ -144,8 +160,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     document.removeEventListener("keydown", this.keyDownHandler);
 
     if (this.spectrogram) {
-      this.spectrogram.removeEventListener("loading", this.loadingHandler);
-      this.spectrogram.removeEventListener("loaded", this.loadedHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
     }
 
     this.intersectionObserver.disconnect();
@@ -158,8 +174,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       throw new Error("Could not find spectrogram component");
     }
 
-    this.spectrogram.addEventListener("loading", this.loadingHandler);
-    this.spectrogram.addEventListener("loaded", this.loadedHandler);
+    this.spectrogram.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
 
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
@@ -266,6 +282,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // https://stackoverflow.com/q/11818637
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.altKey && this.shortcuts.includes(event.key.toLowerCase())) {
+      // Because Alt + number is used to switch tabs in browsers, we
+      // preventDefault so that the tab doesn't lose focus during alt + number
+      // selection.
+      event.preventDefault();
+
       this.dispatchEvent(
         new CustomEvent(VerificationGridTileComponent.selectedEventName, {
           bubbles: true,

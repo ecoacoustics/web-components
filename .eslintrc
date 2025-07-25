@@ -31,6 +31,8 @@
         "project": "./tsconfig.spec.json"
       },
       "rules": {
+        "@typescript-eslint/await-thenable": "warn",
+
         // We have added the playwright linting rules to protect against common
         // mistakes that can cause leaky tests such as not awaiting assertions.
         // Therefore, I have disabled rules that are stylistic and do not affect

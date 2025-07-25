@@ -10,6 +10,5 @@ title: Open Ecoacoustics | Examples | Verification | Single Class - Additional T
   <oe-verification verified="true" shortcut="J" additional-tags="juvenile"></oe-verification>
   <oe-verification verified="true" shortcut="K" additional-tags="fledgeling"></oe-verification>
   <oe-verification verified="false" shortcut="L"></oe-verification>
-
   <oe-data-source slot="data-source" for="verification-grid" src="/public/kaleidoscope.csv" local></oe-data-source>
 </oe-verification-grid>

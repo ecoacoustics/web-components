@@ -72,6 +72,7 @@
       "appender",
       "whipbird",
       "desync",
+      "autofocused",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],
@@ -131,6 +132,13 @@
       {
         "name": "Launch Firefox",
         "type": "firefox",
+        "request": "launch",
+        "url": "http://localhost:5173",
+        "webRoot": "${workspaceFolder}",
+      },
+      {
+        "name": "Launch Chrome",
+        "type": "chrome",
         "request": "launch",
         "url": "http://localhost:5173",
         "webRoot": "${workspaceFolder}",

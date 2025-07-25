@@ -12,7 +12,18 @@ import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
-import { ESCAPE_KEY, LEFT_ARROW_KEY, RIGHT_ARROW_KEY, SPACE_KEY } from "../../helpers/keyboard";
+import {
+  DOWN_ARROW_KEY,
+  END_KEY,
+  ESCAPE_KEY,
+  HOME_KEY,
+  LEFT_ARROW_KEY,
+  PAGE_DOWN_KEY,
+  PAGE_UP_KEY,
+  RIGHT_ARROW_KEY,
+  SPACE_KEY,
+  UP_ARROW_KEY,
+} from "../../helpers/keyboard";
 import { SubjectWrapper } from "../../models/subject";
 import { ClassificationComponent } from "../decision/classification/classification";
 import { VerificationComponent } from "../decision/verification/verification";
@@ -93,6 +104,12 @@ interface HighlightSelection {
 interface CurrentPage {
   start: number;
   end: number;
+}
+
+interface SelectionOptions {
+  additive?: boolean;
+  toggle?: boolean;
+  range?: boolean;
 }
 
 /**
@@ -179,6 +196,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
   public urlTransformer: UrlTransformer = (url) => url;
+
+  @property({ type: Boolean })
+  public autofocus = false;
 
   /** selector for oe-verification elements */
   @queryAssignedElements({ selector: "oe-verification" })
@@ -302,10 +322,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
+  /**
+   * Returns the current users selection behavior, collapsing the "default"
+   * behavior into either "tablet" or "desktop" depending on the users device
+   * type.
+   */
+  private get userSelectionBehavior(): SelectionObserverType {
+    if (this.selectionBehavior === "default") {
+      return this.isMobileDevice() ? "tablet" : "desktop";
+    }
+
+    return this.selectionBehavior;
+  }
+
   private keydownHandler = this.handleKeyDown.bind(this);
   private keyupHandler = this.handleKeyUp.bind(this);
   private blurHandler = this.handleWindowBlur.bind(this);
-  private selectionHandler = this.handleSelection.bind(this);
+  private selectionHandler = this.handleTileSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
 
   public subjects: SubjectWrapper[] = [];
@@ -314,14 +347,28 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private decisionHeadIndex = 0;
   private viewHeadIndex = 0;
 
+  /**
+   * "single decision mode" will automatically advance the selection head if:
+   *    1. There is only one tile selected
+   *    2. All tasks on the selected tile is completed
+   *
+   * A user can enter this mode at any time by selecting just one tile.
+   * They remain in the mode by completing all tasks on the single selected
+   * tile, at which point the selection is advanced.
+   * Once in this mode, there is some special functionality like the first tile
+   * of each new page being automatically selected.
+   */
+  private singleDecisionMode = false;
+
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private hiddenTiles = 0;
   private showingSelectionShortcuts = false;
-  private selectionHead: number | null = null;
   private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
+
+  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
   private highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
@@ -329,7 +376,88 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     observedElements: [],
   };
 
-  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
+  private focusHead: number | null = null;
+  private _rangeSelectionHead: number | null = null;
+
+  /**
+   * Where range selection will start from.
+   * This pointer moves independently from the focus head.
+   */
+  private get rangeSelectionHead() {
+    return this._rangeSelectionHead;
+  }
+
+  private set rangeSelectionHead(value: number | null) {
+    // Note that the bounds check upper limit is the populated tile count
+    // subtract one.
+    // This is because the populatedTileCount is indexed from 1 while the range
+    // selection value is indexed from 0.
+    const upperBound = this.lastTileIndex;
+    const isInBounds = value === null || (value >= 0 && value <= upperBound);
+    if (!isInBounds) {
+      console.error(`new range selection value: '${value}' is not valid. Value must be in range [0,${upperBound}]`);
+      return;
+    }
+
+    this._rangeSelectionHead = value;
+
+    // When unsetting the selection head (e.g. with ESC key) we want to keep the
+    // focus head at the same index, so that if you start moving again, it will
+    // start from where the current focus head is (where you deselected from).
+    if (value !== null) {
+      this.focusHead = value;
+    }
+  }
+
+  private get nextLeftIndex(): number {
+    return this.focusHead === null ? 0 : Math.max(this.focusHead - 1, 0);
+  }
+
+  private get nextRightIndex(): number {
+    return this.focusHead === null ? 0 : Math.min(this.focusHead + 1, this.lastTileIndex);
+  }
+
+  private get nextUpIndex(): number {
+    if (this.focusHead === null) {
+      return 0;
+    }
+
+    // If the selection head is on the top row, pressing up should have no
+    // action.
+    const proposedIndex = this.focusHead - this.columns;
+    if (proposedIndex < 0) {
+      return this.focusHead;
+    }
+
+    return proposedIndex;
+  }
+
+  private get nextDownIndex(): number {
+    if (this.focusHead === null) {
+      return 0;
+    }
+
+    // If the selection head is on the last row, pressing down should have no
+    // action.
+    const proposedIndex = this.focusHead + this.columns;
+    if (proposedIndex > this.lastTileIndex) {
+      return this.focusHead;
+    }
+
+    return proposedIndex;
+  }
+
+  private get lastTileIndex(): number {
+    return this.populatedTileCount - 1;
+  }
+
+  // This overrides the element's focus() method so that it focuses the grid
+  // tiles instead of the component host.
+  // This allows host applications to focus the grid container at the level
+  // where event listeners and tab index's are correctly scoped.
+  public override focus() {
+    this.gridContainer.focus();
+  }
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -343,8 +471,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
-    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
     super.disconnectedCallback();
   }
@@ -388,8 +516,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public firstUpdated(): void {
-    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
     // if the user has explicitly set a grid size through the `grid-size`
     // attribute, we should use that grid size
@@ -403,6 +531,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     if (this.skipButtons.length === 0) {
       render(this.skipDecisionTemplate(), this);
+    }
+
+    if (this.autofocus) {
+      this.focus();
     }
   }
 
@@ -460,6 +592,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       if (oldTileCount < this.populatedTileCount) {
         this.handlePageInvalidation();
+      } else {
+        if (this.areTilesLoaded()) {
+          this._loaded = true;
+          this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
+          this.setDecisionDisabled(false);
+        }
       }
     }
   }
@@ -492,7 +630,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // we remove the current sub-selection last so that if the change fails
     // there will be no feedback to the user that the operation succeeded
-    this.removeSubSelection();
+    this.clearSelection();
   }
 
   /**
@@ -513,6 +651,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       await this.paginationFetcher.populateSubjects(this.decisionHead);
       this.renderVirtualPage();
     }
+
+    // After changing the data source, we want to remove the current
+    // sub-selection for multiple reasons:
+    // 1. It provides a UX hint that something has changed and there is a new
+    //    task
+    //
+    // 2. For SPA host's where the verification grid might be re-used between
+    //    tasks, we want to provide a fresh verification grid between distinct
+    //    tasks.
+    //
+    // 3. As a defensive programming measure, we should reset the state, so that
+    //    we don't end up in undefined behavior.
+    //    While I have never seen a bug that was caused by not de-selecting the
+    //    grid in-between data-sources, it's a good defensive programming
+    //    practice to reset state in cases such as this, because the behavior
+    //    hasn't been explicitly defined.
+    this.clearSelection();
 
     // if grid tile elements change during a selection event, we want to add
     // observe the overlap with new elements and remove the overlap checks of
@@ -631,17 +786,60 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // the ctrl key if the user is on a Mac
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/metaKey
     const isHoldingCtrl = hasCtrlLikeModifier(event);
+    const selectionOptions: SelectionOptions = {
+      toggle: isHoldingCtrl,
+      range: event.shiftKey,
+    };
+
+    // While holding control, only move the focus, don't change the selection.
+    const keySelectionHandler = isHoldingCtrl ? this.focusTile.bind(this) : this.processSelection.bind(this);
 
     switch (event.key) {
-      case LEFT_ARROW_KEY: {
+      case PAGE_DOWN_KEY: {
+        event.preventDefault();
+        this.handleNextPageClick();
+        break;
+      }
+
+      case PAGE_UP_KEY: {
         event.preventDefault();
         this.handlePreviousPageClick();
         break;
       }
 
+      case HOME_KEY: {
+        event.preventDefault();
+        keySelectionHandler(0, selectionOptions);
+        break;
+      }
+
+      case END_KEY: {
+        event.preventDefault();
+        keySelectionHandler(this.lastTileIndex, selectionOptions);
+        break;
+      }
+
+      case LEFT_ARROW_KEY: {
+        event.preventDefault();
+        keySelectionHandler(this.nextLeftIndex, selectionOptions);
+        break;
+      }
+
       case RIGHT_ARROW_KEY: {
         event.preventDefault();
-        this.handleNextPageClick();
+        keySelectionHandler(this.nextRightIndex, selectionOptions);
+        break;
+      }
+
+      case UP_ARROW_KEY: {
+        event.preventDefault();
+        keySelectionHandler(this.nextUpIndex, selectionOptions);
+        break;
+      }
+
+      case DOWN_ARROW_KEY: {
+        event.preventDefault();
+        keySelectionHandler(this.nextDownIndex, selectionOptions);
         break;
       }
 
@@ -653,7 +851,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           // the current page. We prevent default so that the user can use
           // ctrl + D to remove the current selection
           event.preventDefault();
-          this.removeSubSelection();
+
+          // We reset the selection head so that if the user deselects all of the
+          // tiles (e.g. through the esc key), the next shift click will start a new
+          // range selection instead of starting from the old range selection
+          // position.
+          this.clearSelection();
         }
         break;
       }
@@ -672,6 +875,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.handleHelpRequest();
         break;
       }
+
+      // We don't handle the de-selection case here because we have deemed that
+      // de-selection on keyup is more intuitive.
+      // However, we have to preventDefault on the keydown because in some
+      // browsers (e.g. Chrome), pressing escape while the page is loading will
+      // cause the browser to stop page load.
+      // Therefore, if the user starts selecting the grid tiles before the page
+      // load finishes, and presses escape to de-select tiles, we don't want to
+      // cancel the page load.
+      case ESCAPE_KEY: {
+        // Pressing escape while the page is loading will cause some browsers
+        // (e.g. Chrome) to stop loading the page.
+        // We preventDefault so that if the user makes a selection before the
+        // page/spectrograms had loaded, and then presses escape to remove the
+        // selection, it doesn't stop the page from loading, and break the
+        // verification grid.
+        event.preventDefault();
+        break;
+      }
     }
   }
 
@@ -680,7 +902,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // events when the escape key is pressed
     // related to: https://stackoverflow.com/a/78872316
     if (event.key === ESCAPE_KEY) {
-      this.removeSubSelection();
+      // We reset the selection head so that if the user deselects all of the
+      // tiles (e.g. through the esc key), the next shift click will start a new
+      // range selection instead of starting from the old range selection
+      // position.
+      this.clearSelection();
       return;
     }
 
@@ -754,13 +980,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private handleBootstrapDialogOpen(): void {
-    this.gridContainer.removeEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.removeEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
   }
 
   private handleBootstrapDialogClose(): void {
-    this.gridContainer.addEventListener<any>("selected", this.selectionHandler);
-    this.decisionsContainer.addEventListener<any>("decision", this.decisionHandler);
+    this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
+    this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
+
+    if (this.autofocus) {
+      this.focus();
+    }
   }
 
   private handleSlotChange(): void {
@@ -817,54 +1047,40 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.showingSelectionShortcuts = false;
   }
 
-  private handleSelection(selectionEvent: SelectionEvent): void {
-    if (!this.canSubSelect()) {
-      return;
-    }
+  /**
+   * An event handler for the verification-grid-tile's "selected" event.
+   * This handles alt + number selection, and click selection.
+   */
+  private handleTileSelection(selectionEvent: SelectionEvent): void {
+    const options: SelectionOptions = {
+      toggle: selectionEvent.detail.ctrlKey,
+      range: selectionEvent.detail.shiftKey,
+    };
 
-    let selectionBehavior = this.selectionBehavior;
-    if (selectionBehavior === "default") {
-      selectionBehavior = this.isMobileDevice() ? "tablet" : "desktop";
-    }
-
-    const selectionIndex = selectionEvent.detail.index;
-
-    // in desktop mode, unless the ctrl key is held down, clicking an element
-    // removes all other selected items
-    // while it is not possible to press the ctrl key on a tablet, the user can
-    // still overwrite the selection behavior using the selection-behavior
-    // attribute. Therefore, we have to check that we are not on explicitly
-    // using tablet selection mode.
-    if (selectionBehavior === "desktop" && !selectionEvent.detail.ctrlKey) {
-      this.removeSubSelection();
-    }
-
-    // there are two different types of selections, range selection and single selection
-    // if the shift key is held down, then we perform a "range" selection, if not
-    // then we should perform a single selection
-    if (selectionEvent.detail.shiftKey) {
-      // if the user has never selected an item before, the multiSelectHead will be "null"
-      // in this case, we want to start selecting from the clicked tile
-      this.selectionHead ??= selectionIndex;
-      const selectionTail = selectionIndex;
-
-      this.addSubSelectionRange(this.selectionHead, selectionTail);
-    } else {
-      // if we reach this point, we know that the user is not performing a
-      // range selection because range selection performs an early return
-      this.toggleTileSelection(selectionIndex);
-      this.selectionHead = selectionIndex;
-    }
-
-    this.updateSubSelection();
+    this.processSelection(selectionEvent.detail.index, options);
   }
 
   private toggleTileSelection(index: number): void {
-    const gridItems = this.gridTiles;
-    gridItems[index].selected = !gridItems[index].selected;
+    const targetGridTile = this.gridTiles[index];
+    targetGridTile.selected = !targetGridTile.selected;
+    this.focusTile(index);
+  }
+
+  private selectTile(index: number): void {
+    const targetGridTile = this.gridTiles[index];
+    targetGridTile.selected = true;
+    this.focusTile(index);
+  }
+
+  private focusTile(index: number): void {
+    const targetGridItem = this.gridTiles[index];
+    targetGridItem.focus();
+    this.focusHead = index;
   }
 
   private addSubSelectionRange(start: number, end: number): void {
+    this.focusTile(end);
+
     // if the user shift + clicks in a negative direction
     // e.g. select item 5 and then shift click item 2
     // we want to select all items from 2 to 5. Therefore, we swap the start and end values
@@ -902,10 +1118,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       element.selected = false;
     }
 
-    // TODO: I used to remove subSelection for a reason, but it doesn't seem to be needed
-    // by setting the subSelection head to null, it means that if the user
-    // shift clicks, it will be the start of a shift selection range
-    // this.selectionHead = null;
     this.updateSubSelection();
   }
 
@@ -931,6 +1143,112 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
     this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+  }
+
+  /**
+   * A common method that can be used to create consistent selection behavior
+   * across the different selection methods (click, alt, arrow, tab & highlight)
+   */
+  private processSelection(
+    tileIndices: number | number[],
+    { additive = false, toggle = false, range = false }: SelectionOptions = {},
+  ): void {
+    if (!this.canSubSelect()) {
+      return;
+    }
+
+    // If you want to set "singleDecisionMode", you will need to set it after
+    // selection has succeeded/failed.
+    this.singleDecisionMode = false;
+
+    // in desktop mode, unless the ctrl key is held down, clicking an element
+    // removes all other selected items
+    // while it is not possible to press the ctrl key on a tablet, the user can
+    // still overwrite the selection behavior using the selection-behavior
+    // attribute. Therefore, we have to check that we are not on explicitly
+    // using tablet selection mode.
+    if (this.userSelectionBehavior === "desktop" && !toggle && !additive) {
+      this.removeSubSelection();
+    }
+
+    const iterableIndices = Array.isArray(tileIndices) ? tileIndices : [tileIndices];
+    for (const tileIndex of iterableIndices) {
+      if (range) {
+        // if the user has never selected an item before, the multiSelectHead
+        // will be "null" in this case, we want to start selecting from the
+        // first tile of the verification grid.
+        // This is the behavior seen in Windows file explorer.
+        this.rangeSelectionHead ??= 0;
+        const selectionTail = tileIndex;
+
+        this.addSubSelectionRange(this.rangeSelectionHead, selectionTail);
+      } else if (additive) {
+        this.selectTile(tileIndex);
+        this.rangeSelectionHead = tileIndex;
+      } else {
+        // if we reach this point, we know that the user is not performing a
+        // range selection because range selection performs an early return
+        this.toggleTileSelection(tileIndex);
+        this.rangeSelectionHead = tileIndex;
+      }
+    }
+
+    this.updateSubSelection();
+  }
+
+  private resetSelectionHead(): void {
+    this.rangeSelectionHead = null;
+  }
+
+  private clearSelection(): void {
+    this.removeSubSelection();
+    this.resetSelectionHead();
+  }
+
+  private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
+    const refinedOptions: SelectionOptions = {
+      range: options?.range,
+    };
+
+    if (value !== null) {
+      this.processSelection(value, refinedOptions);
+    } else {
+      this.removeSubSelection();
+    }
+  }
+
+  private moveSelectionHeadToNextUndecided(selectionIndex: number): void {
+    // Find both the first undecided tile, and the next undecided tile after the
+    // current selection.
+    // The first undecided will be different if the user has undecided tiles
+    // before the current selection.
+    let firstUndecidedTile: number | null = null;
+    const nextUndecidedTile = Array.from(this.gridTiles).findIndex((tile, index) => {
+      // We include the current index in the undecided tile check, so that if
+      // the current tile that the user is on is still undenied, we will stay
+      // on the current tile.
+      // Note that you should not be calling this function if the current tile
+      // is incomplete, but this is a defensive programming / double check to
+      // ensure that we don't skip over the currently incomplete tile.
+      if (index < selectionIndex) {
+        if (firstUndecidedTile === null && !tile.taskCompleted) {
+          firstUndecidedTile = index;
+        }
+
+        return false;
+      }
+
+      return !tile.taskCompleted;
+    });
+
+    // nextUndecidedTile will have a value of -1 if there are no undecided tiles
+    // ahead of the current selection head (because I am using findIndex).
+    const nextSelection = nextUndecidedTile !== -1 ? nextUndecidedTile : firstUndecidedTile;
+    this.updateSelectionHead(nextSelection);
+  }
+
+  private selectFirstTile(options?: SelectionOptions): void {
+    this.updateSelectionHead(0, options);
   }
 
   //#endregion
@@ -995,6 +1313,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
+
+      // This mimics the behavior of Windows explorer where de-selecting items
+      // during drag-selection only occurs during the initial draw of the
+      // selection box.
+      const maintainSelection = hasCtrlLikeModifier(event) || event.shiftKey;
+      if (!maintainSelection) {
+        this.removeSubSelection();
+      }
     } else {
       return;
     }
@@ -1015,37 +1341,54 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       highlightBoxElement.style.top = `${pageY}px`;
     }
 
-    this.calculateHighlightIntersection();
+    // We mimic the selection behavior of windows explorer where the selection
+    // is always additive.
+    //
+    // Note that Windows explorer will deselect tiles if you do not hold down
+    // ctrl or shift during the initial mousedown event, but you can lift the
+    // ctrl of shift key while highlighting.
+    const options: SelectionOptions = {
+      additive: true,
+    };
+
+    const intersectingTiles = this.calculateHighlightIntersection();
+
+    // If the user drags from the right to the left, we have a "negative
+    // selection".
+    // In this case, we want to select the tiles in reverse order (in the same
+    // order that the user selected them).
+    // This is done so that the correct focus order is maintained, and any
+    // future selection order behavior is automatically implemented.
+    const isNegativeSelection = highlightWidth < 0;
+    if (isNegativeSelection) {
+      intersectingTiles.reverse();
+    }
+
+    const tileIndices = intersectingTiles.map((tile) => tile.index);
+    this.processSelection(tileIndices, options);
   }
 
-  private calculateHighlightIntersection(): void {
+  private calculateHighlightIntersection(): VerificationGridTileComponent[] {
     const selectionLeftSide = Math.min(this.highlight.start.x, this.highlight.current.x);
     const selectionTopSide = Math.min(this.highlight.start.y, this.highlight.current.y);
 
     const selectionRightSide = Math.max(this.highlight.start.x, this.highlight.current.x);
     const selectionBottomSide = Math.max(this.highlight.start.y, this.highlight.current.y);
 
-    for (const target of this.highlight.observedElements) {
+    return this.highlight.observedElements.filter((target) => {
       const targetTop = target.offsetTop;
       const targetBottom = targetTop + target.offsetHeight;
       const targetLeft = target.offsetLeft;
       const targetRight = targetLeft + target.offsetWidth;
 
-      // seeing each of these conditions individually is a lot easier to
-      // understand than seeing them all condensed into a single line
-      // since prettier wants to consolidate all these conditions into one
-      // line, I use prettier ignore
-      // prettier-ignore
       const isOverlapping =
         targetLeft <= selectionRightSide &&
         targetRight >= selectionLeftSide &&
         targetTop <= selectionBottomSide &&
         targetBottom >= selectionTopSide;
 
-      target.selected = isOverlapping;
-    }
-
-    this.updateSubSelection();
+      return isOverlapping;
+    });
   }
 
   private hideHighlightBox(): void {
@@ -1089,7 +1432,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private async pageForward(): Promise<void> {
     const proposedViewHead = this.viewHead + this.populatedTileCount;
     this.viewHead = proposedViewHead;
-    this.removeSubSelection();
+    this.clearSelection();
   }
 
   private pageBackward(): void {
@@ -1098,7 +1441,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // than zero or exceeds the length of the subjects array
     const proposedHead = this.viewHead - this.populatedTileCount;
     this.viewHead = proposedHead;
-    this.removeSubSelection();
+    this.clearSelection();
   }
 
   /** Changes the viewHead to the current page of undecided results */
@@ -1109,7 +1452,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   // we ue the effective grid size here so that hidden tiles are not counted
   // when the user pages
   private async nextPage(count: number = this.effectivePageSize): Promise<void> {
-    this.removeSubSelection();
+    this.clearSelection();
     this.resetSpectrogramSettings();
 
     if (!this.paginationFetcher) {
@@ -1209,67 +1552,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
       await this.nextPage(gridTiles.length);
+
+      // If the last tile that was selected was auto-selected, we should
+      // continue auto-selection onto the next page.
+      if (this.singleDecisionMode) {
+        this.selectFirstTile();
+      }
+
+      return;
+    }
+
+    // If there is only one tile selected, and all of the tiles tasks are
+    // completed, we want to automatically advance the selection head.
+    if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
+      const selectedTile = subSelection[0];
+
+      // We always set singleDecisionMode after a tile is automatically selected
+      // due to auto-advancement because the selection handler method disables
+      // the singleDecisionMode.
+      // This method upsets the single decision mode because all selection apart
+      // from this single caller is the result of explicit user selection that
+      // takes the user out of the automatic advancement "single decision mode".
+      //
+      // We need to set singleDecisionMode so that when we autoPage the first
+      // tile on the following page will be automatically selected.
+      if (selectedTile.taskCompleted) {
+        this.moveSelectionHeadToNextUndecided(selectedTile.index);
+        this.singleDecisionMode = true;
+      }
     }
   }
 
-  // TODO: finish this function
   private shouldAutoPage(): boolean {
+    const allTileTaskCompleted = Array.from(this.gridTiles).every((tile) => tile.taskCompleted);
+
     // I have disabled auto paging when viewing history so that the user can see
     // the colors change when they change an applied decision
-
-    return !this.isViewingHistory() && !this.hasOutstandingVerification() && !this.hasOutstandingClassification();
-  }
-
-  // for verification tasks, the user will be adding one verification decision
-  // to each grid tile. Therefore, we can test that there is some sort of
-  // verifications applied to every tile
-  private hasOutstandingVerification(): boolean {
-    // we short circuit this function if there are no possible verification
-    // decisions
-    if (!this.hasVerificationTask()) {
-      return false;
-    }
-
-    const verificationTiles = this.gridTiles;
-    for (const tile of verificationTiles) {
-      const hasVerificationDecision = tile.model.verification !== undefined;
-
-      if (!hasVerificationDecision) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // during a classification task, we want to ensure that every tile has a
-  // decision about every tag (not classification decision)
-  // we don't check against classification decisions because we want to support
-  // adding "negative" classifications against a tile
-  private hasOutstandingClassification(): boolean {
-    // because computing outstanding classification tasks is expensive, we can
-    // short circuit this function if there are no classification tasks
-    if (!this.hasClassificationTask()) {
-      return false;
-    }
-
-    // we use the tag to check if there are outstanding classifications
-    // (instead of the decision identifier) so that negative/positive decisions
-    // on the same tag are not counted as two separate decisions
-    // meaning that we only have to make a classification about each tag once
-    const requiredClassificationTags: Tag[] = this.classificationDecisionElements.map(
-      (element: ClassificationComponent) => element.tag,
-    );
-
-    const verificationTiles = Array.from(this.gridTiles);
-    for (const tile of verificationTiles) {
-      const hasAllTags = requiredClassificationTags.every((tag) => tile.model.classifications.has(tag.text));
-      if (!hasAllTags) {
-        return true;
-      }
-    }
-
-    return false;
+    return !this.isViewingHistory() && allTileTaskCompleted;
   }
 
   private setDecisionDisabled(disabled: boolean): void {
@@ -1361,15 +1680,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
-      // We set the "loaded" property before dispatching the loaded event to
-      // minimize the risk of a race condition.
-      // E.g. if someone created an event listener for the "grid-loaded" event
-      // that then checked the "loaded" property, we want the loaded property
-      // to return "true", reflecting the updated value change emitted by the
-      // event.
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-
       this.setDecisionDisabled(false);
     }
   }
@@ -1555,6 +1867,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           @pointermove="${(event: PointerEvent) =>
             runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
           @overlap="${this.handleTileOverlap}"
+          tabindex="-1"
         >
           ${when(
             this.currentPageIndices.start === this.currentPageIndices.end,

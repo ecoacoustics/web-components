@@ -20,7 +20,7 @@ import {
   VerificationGridComponent,
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
-import { Size } from "../../models/rendering";
+import { Rect, Size } from "../../models/rendering";
 import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
@@ -33,7 +33,6 @@ import { SPACE_KEY } from "../../helpers/keyboard";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
-import { MediaControlsComponent } from "../../components/media-controls/media-controls";
 import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
@@ -47,13 +46,12 @@ class TestPage {
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
   public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
-  public gridTileComponents = () => this.page.locator("oe-verification-grid-tile").all();
-  public indicatorComponents = () => this.page.locator("oe-indicator").all();
-  public axesComponents = () => this.page.locator("oe-axes").all();
-  public infoCardComponents = () => this.page.locator("oe-info-card").all();
+  public gridTileComponents = () => this.page.locator("oe-verification-grid-tile");
+  public axesComponents = () => this.page.locator("oe-axes");
+  public infoCardComponents = () => this.page.locator("oe-info-card");
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
-  public bootstrapSlideTitleElement = () => this.page.locator(".slide-title").first();
+  public bootstrapSlideTitle = () => this.page.locator(".slide-title").first();
   public bootstrapDialogButton = () => this.page.getByTestId("help-dialog-button").first();
   public dismissBootstrapDialogButton = () => this.page.getByTestId("dismiss-bootstrap-dialog-btn").first();
 
@@ -68,41 +66,35 @@ class TestPage {
   public previousPageButton = () => this.page.getByTestId("previous-page-button").first();
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
-  public gridTileContainers = () => this.page.locator(".tile-container").all();
-  public gridTileProgressMeters = () => this.page.locator(".progress-meter").all();
-  public gridTileProgressMeterSegments = async (index = 0) =>
-    (await this.gridTileProgressMeters())[index].locator(".progress-meter-segment").all();
-  public gridTileProgressMeterTooltips = async (index = 0) =>
-    (await this.gridTileProgressMeters())[index].locator("sl-tooltip").all();
+  public gridTileContainers = () => this.page.locator(".tile-container");
+  public gridTileProgressMeters = () => this.page.locator(".progress-meter");
+  public gridTileProgressMeterSegments = (index = 0) =>
+    this.gridTileProgressMeters().nth(index).locator(".progress-meter-segment");
+  public gridTileProgressMeterTooltips = (index = 0) => this.gridTileProgressMeters().nth(index).locator("sl-tooltip");
 
-  public gridTilePlaceholders = () => this.page.locator(".tile-placeholder").all();
+  public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
 
-  public gridProgressBarCount = () => this.page.locator("oe-progress-bar").count();
-  public gridProgressBar = () => this.page.locator("oe-progress-bar").first();
-  public gridProgressBarCompletedTooltip = () => this.gridProgressBar().getByTestId("completed-tooltip").first();
-  public gridProgressBarViewHeadTooltip = () => this.gridProgressBar().getByTestId("view-head-tooltip").first();
-  public gridProgressCompletedSegment = () => this.gridProgressBar().locator(".completed-segment").first();
-  public gridProgressHeadSegment = () => this.gridProgressBar().locator(".head-segment").first();
+  public gridProgressBars = () => this.page.locator("oe-progress-bar");
+  public gridProgressBarCompletedTooltip = () => this.gridProgressBars().getByTestId("completed-tooltip").first();
+  public gridProgressBarViewHeadTooltip = () => this.gridProgressBars().getByTestId("view-head-tooltip").first();
+  public gridProgressCompletedSegment = () => this.gridProgressBars().locator(".completed-segment").first();
+  public gridProgressHeadSegment = () => this.gridProgressBars().locator(".head-segment").first();
 
   public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
   public spectrogramComponent = async (index = 0) =>
-    (await this.gridTileComponents())[index].locator("oe-spectrogram").first();
-  public gridTileComponent = async (index = 0) => (await this.gridTileComponents())[index].first();
+    this.gridTileComponents().nth(index).locator("oe-spectrogram").first();
+  public gridTileComponent = async (index = 0) => this.gridTileComponents().nth(index);
   public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
 
-  public mediaControlsComponent = async (index = 0) =>
-    (await this.gridTileContainers())[index].locator("oe-media-controls").first();
-  public mediaControlsAdditionalSettings = async (index = 0) =>
-    (await this.mediaControlsComponent(index)).locator(".settings-menu-item").first();
-  public brightnessControlsMenu = async (index = 0) =>
-    (await this.gridTileContainers())[index].getByText("Brightness").first();
-  public brightnessControlsInput = async (index = 0) =>
-    (await this.gridTileContainers())[index].locator("input").first();
+  public mediaControlsComponent = (index = 0) =>
+    this.gridTileContainers().nth(index).locator("oe-media-controls").first();
+  public brightnessControlsMenu = (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
+  public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
   public headerControls = () => this.page.locator(".header-controls").first();
   public footerControls = () => this.page.locator(".footer-controls").first();
 
-  public indicatorLines = () => this.page.locator("oe-indicator #indicator-line").all();
+  public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
   private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
@@ -127,10 +119,42 @@ class TestPage {
     requiredSelectors: string[] = [],
     src = this.testJsonInput,
   ) {
+    await this.setNoBootstrap();
+
     await setContent(
       this.page,
       `
-      <oe-verification-grid id="verification-grid">
+      <oe-verification-grid id="verification-grid" autofocus>
+        ${customTemplate}
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          src="${src}"
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      ...requiredSelectors,
+    ]);
+
+    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+  }
+
+  public async createWithBootstrap(
+    customTemplate = this.defaultTemplate,
+    requiredSelectors: string[] = [],
+    src = this.testJsonInput,
+  ) {
+    await setContent(
+      this.page,
+      `
+      <oe-verification-grid id="verification-grid" autofocus>
         ${customTemplate}
 
         <oe-data-source
@@ -170,6 +194,8 @@ class TestPage {
   }
 
   public async createWithAppChrome() {
+    await this.setNoBootstrap();
+
     // this test fixture has an app chrome with a header so that the grid is not
     // flush with the top of the page
     // this allows us to test how the verification grid interacts with scrolling
@@ -181,7 +207,7 @@ class TestPage {
       </header>
 
       <div id="host-application-wrapper">
-        <oe-verification-grid id="verification-grid">
+        <oe-verification-grid id="verification-grid" autofocus>
           ${this.defaultTemplate}
 
           <oe-data-source
@@ -210,6 +236,16 @@ class TestPage {
     await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
   }
 
+  /**
+   * Stops the bootstrap from opening so that each test doesn't have to dismiss
+   * the bootstrap dialog.
+   */
+  public async setNoBootstrap() {
+    await this.page.evaluate(() => {
+      localStorage.setItem("oe-auto-dismiss-bootstrap", "true");
+    });
+  }
+
   // getters
   public async decisionComponents(): Promise<Locator[]> {
     const verificationDecisions = await this.verificationDecisions();
@@ -224,8 +260,7 @@ class TestPage {
   }
 
   public async getGridSize(): Promise<number> {
-    const gridTiles = await this.gridTileComponents();
-    return gridTiles.length;
+    return await this.gridTileComponents().count();
   }
 
   public async getViewHead(): Promise<number> {
@@ -236,49 +271,22 @@ class TestPage {
     return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHead");
   }
 
-  public async tileSizes(): Promise<Size[]> {
-    const gridTiles = await this.gridTileComponents();
-
-    const sizes: Size[] = [];
-
-    for (const tile of gridTiles) {
-      const styles: any = await getBrowserValue<VerificationGridTileComponent>(tile, "style");
-      const width = styles.width;
-      const height = styles.height;
-
-      sizes.push({ width, height });
-    }
-
-    return sizes;
-  }
-
   public async selectedTileIndexes(): Promise<number[]> {
-    const tiles = await this.gridTileComponents();
-    const indexes: number[] = [];
-
-    for (const tile of tiles) {
-      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
-      if (isSelected) {
-        const tileIndex = await getBrowserValue<VerificationGridTileComponent, number>(tile, "index");
-        indexes.push(tileIndex);
-      }
-    }
-
-    return indexes;
+    return await this.gridComponent().evaluate((element: VerificationGridComponent) => {
+      const tileElements = Array.from(element["gridTiles"]);
+      return tileElements.filter((tile) => tile.selected).map((tile) => tile.index);
+    });
   }
 
-  public async selectedTiles(): Promise<Locator[]> {
-    const tiles = await this.gridTileComponents();
-    const selectedTiles: Locator[] = [];
+  public async selectedTiles(): Promise<SubjectWrapper[]> {
+    return await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
+      this.gridComponent(),
+      "currentSubSelection" as any,
+    );
+  }
 
-    for (const tile of tiles) {
-      const isSelected = await getBrowserValue<VerificationGridTileComponent, boolean>(tile, "selected");
-      if (isSelected) {
-        selectedTiles.push(tile);
-      }
-    }
-
-    return selectedTiles;
+  public async focusedIndex(): Promise<number> {
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "focusHead" as any);
   }
 
   public async getVerificationColor(decision: "true" | "false") {
@@ -316,7 +324,7 @@ class TestPage {
   public async allAppliedDecisions(): Promise<Decision[]> {
     const result: Decision[] = [];
 
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
     for (let i = 0; i < gridTiles.length; i++) {
       const tileDecisions = await this.getAppliedDecisions(i);
       result.push(...tileDecisions);
@@ -326,16 +334,15 @@ class TestPage {
   }
 
   public async getAppliedDecisions(index: number): Promise<Decision[]> {
-    const tileModels = await this.gridTileComponents();
-    const tileTarget = tileModels[index];
-
+    const tileTarget = this.gridTileComponents().nth(index);
     const tileModel = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tileTarget, "model");
+
     return this.subjectDecisions(tileModel);
   }
 
   public async tileHighlightColors(): Promise<CssVariable[]> {
     const values: CssVariable[] = [];
-    const tiles = await this.gridTileComponents();
+    const tiles = await this.gridTileComponents().all();
 
     for (const tile of tiles) {
       const model = await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
@@ -351,7 +358,7 @@ class TestPage {
   }
 
   public async highlightedTiles(): Promise<number[]> {
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
 
     const highlightedTiles: Locator[] = [];
 
@@ -375,6 +382,15 @@ class TestPage {
     });
   }
 
+  public async gridDecisions(): Promise<Decision[]> {
+    const gridSubjects = await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
+      this.gridComponent(),
+      "subjects",
+    );
+
+    return gridSubjects.flatMap((subject) => this.subjectDecisions(subject));
+  }
+
   public subjectDecisions(subject: SubjectWrapper): Decision[] {
     // although the SubjectWrapper's classification property is a map, it gets
     // converted into a regular object when it is serialized from the browser
@@ -394,24 +410,15 @@ class TestPage {
   }
 
   public async verificationGridTileModels(): Promise<SubjectWrapper[]> {
-    const gridTiles = await this.gridTileComponents();
-
-    const gridTileModels = gridTiles.map(async (tile) => {
-      return await getBrowserValue<VerificationGridTileComponent, SubjectWrapper>(tile, "model");
-    });
-
-    return await Promise.all(gridTileModels);
-  }
-
-  public async areMediaControlsPlaying(index: number): Promise<boolean> {
-    const mediaControls: Locator = (await this.mediaControlsComponent())[index];
-    return await invokeBrowserMethod<MediaControlsComponent, boolean>(mediaControls, "isSpectrogramPlaying");
+    return this.gridTileComponents().evaluateAll((tiles: VerificationGridTileComponent[]) =>
+      tiles.map((tile) => tile.model),
+    );
   }
 
   public async isAudioPlaying(index: number): Promise<boolean> {
     const spectrogram = await this.spectrogramComponent(index);
-    const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
-    return !value as boolean;
+    const value = await getBrowserValue<SpectrogramComponent, number>(spectrogram, "paused");
+    return !value;
   }
 
   public async audioPlaybackTime(index: number): Promise<number> {
@@ -420,7 +427,7 @@ class TestPage {
   }
 
   public async indicatorPosition(index: number): Promise<number> {
-    const indicatorLine = (await this.indicatorLines())[index];
+    const indicatorLine = this.indicatorLines().nth(index);
 
     return indicatorLine.evaluate((element: SVGLineElement) => {
       const styles = window.getComputedStyle(element);
@@ -440,7 +447,7 @@ class TestPage {
   }
 
   public async progressBarValueToPercentage(value: number): Promise<string> {
-    const progressBar = this.gridProgressBar();
+    const progressBar = this.gridProgressBars().first();
 
     const maxValue = await getBrowserValue<ProgressBar, number>(progressBar, "total");
     const percentage = 100 * (value / maxValue);
@@ -468,7 +475,7 @@ class TestPage {
   }
 
   public async infoCardItem(index: number): Promise<{ key: unknown; value: unknown }[]> {
-    const infoCard: Locator = (await this.infoCardComponents())[index];
+    const infoCard = this.infoCardComponents().nth(index);
     const subjectContent = infoCard.locator(".subject-content");
 
     return await subjectContent.evaluate((el) => {
@@ -482,7 +489,7 @@ class TestPage {
   }
 
   public async progressMeterColors(index = 0): Promise<string[]> {
-    const segments = await this.gridTileProgressMeterSegments(index);
+    const segments = await this.gridTileProgressMeterSegments(index).all();
 
     const colors = segments.map(
       async (item: Locator) =>
@@ -495,18 +502,17 @@ class TestPage {
     return await Promise.all(colors);
   }
 
-  public async progressMeterTooltips(index = 0): Promise<string[]> {
-    const segments = await this.gridTileProgressMeterTooltips(index);
-    const tooltips = segments.map(async (tooltip: Locator) => await getBrowserAttribute(tooltip, "content"));
-    return await Promise.all(tooltips);
+  public async progressMeterTooltips(index = 0): Promise<(string | null)[]> {
+    return await this.gridTileProgressMeterTooltips(index).evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("content")),
+    );
   }
 
   public async areAxesVisible(): Promise<boolean> {
     // we don't want to check each axes component individually because it is
     // slow and does not provide much benefit
     // therefore, we check if the first axes component is visible
-    const axesComponents = await this.axesComponents();
-    const axesComponentToTest = axesComponents[0];
+    const axesComponentToTest = this.axesComponents().first();
 
     // when the axes component is hidden, all of its elements are hidden
     return await axesComponentToTest.evaluate((element: AxesComponent) => {
@@ -569,13 +575,13 @@ class TestPage {
   }
 
   public async pauseSpectrogram(index: number) {
-    const gridTiles = await this.gridTileComponents();
-    const pauseButton = gridTiles[index].locator("sl-icon[name='pause']").first();
+    const gridTile = this.gridTileComponents().nth(index);
+    const pauseButton = gridTile.locator("sl-icon[name='pause']").first();
     await pauseButton.click();
   }
 
   public async openSettingsMenu(index: number) {
-    const settingsTarget = await this.mediaControlsComponent(index);
+    const settingsTarget = this.mediaControlsComponent(index);
     await settingsTarget.locator(".settings-menu-item").click();
   }
 
@@ -586,10 +592,10 @@ class TestPage {
   public async changeBrightness(index: number, value: number) {
     await this.openSettingsMenu(index);
 
-    const brightnessMenu = await this.brightnessControlsMenu(index);
+    const brightnessMenu = this.brightnessControlsMenu(index);
     await brightnessMenu.click();
 
-    const input = await this.brightnessControlsInput(index);
+    const input = this.brightnessControlsInput(index);
     await dragSlider(this.page, input, value);
   }
 
@@ -597,25 +603,12 @@ class TestPage {
     await this.bootstrapDialogButton().click();
   }
 
-  public async dismissBootstrapDialog() {
-    const isInitialBootstrapDialogOpen = await this.isBootstrapDialogOpen();
-    if (!isInitialBootstrapDialogOpen) {
-      return;
-    }
+  public async createSubSelection(items: number | number[], modifiers?: KeyboardModifiers) {
+    const gridTiles = this.gridTileContainers();
 
-    await this.dismissBootstrapDialogButton().click();
-  }
-
-  public async bootstrapDialogSlideTitle(): Promise<string> {
-    const slideTitle = await this.bootstrapSlideTitleElement().textContent();
-    return slideTitle ?? "";
-  }
-
-  public async createSubSelection(items: number[], modifiers?: KeyboardModifiers) {
-    const gridTiles = await this.gridTileContainers();
-
-    for (const index of items) {
-      await gridTiles[index].click({ modifiers });
+    const itemArray = Array.isArray(items) ? items : [items];
+    for (const index of itemArray) {
+      await gridTiles.nth(index).click({ modifiers });
     }
   }
 
@@ -625,6 +618,39 @@ class TestPage {
     // selecting the end of the range
     await this.createSubSelection([start], modifiers);
     await this.createSubSelection([end], ["Shift", ...modifiers]);
+  }
+
+  // TODO: Add support for negative selection
+  public async highlightSelectTiles(
+    startTileIndex: number,
+    endTileIndex = startTileIndex,
+    modifiers: KeyboardModifiers = [],
+  ) {
+    const startTile = this.gridTileComponents().nth(startTileIndex);
+    const startLocation = await startTile.boundingBox();
+    if (!startLocation) {
+      throw new Error("Could not get bounding box of the start tile");
+    }
+
+    let endLocation: Rect | null = null;
+    if (startTileIndex !== endTileIndex) {
+      const endTile = this.gridTileComponents().nth(endTileIndex);
+      endLocation = await endTile.boundingBox();
+    } else {
+      endLocation = startLocation;
+    }
+
+    if (!endLocation) {
+      throw new Error("Could not get bounding box of end tile");
+    }
+
+    const start: MousePosition = { x: startLocation.x, y: startLocation.y };
+    const end: MousePosition = {
+      x: endLocation.x + endLocation.width,
+      y: endLocation.y + endLocation.height,
+    };
+
+    await this.createSelectionBox(start, end, modifiers);
   }
 
   public async createSelectionBox(start: MousePosition, end: MousePosition, modifiers: KeyboardModifiers = []) {
@@ -691,8 +717,7 @@ class TestPage {
   public async getGridTileSize(): Promise<Size> {
     // because all the grid tiles should be the same size, we can just check the
     // first grid tile and get its size
-    const gridTiles = await this.gridTileComponents();
-    const targetGridTile = gridTiles[0];
+    const targetGridTile = this.gridTileComponents().first();
 
     const boundingBox = await targetGridTile.boundingBox();
     if (!boundingBox) {
@@ -747,7 +772,7 @@ class TestPage {
       content: "* { visibility: hidden; }",
     });
 
-    const gridTiles = await this.gridTileComponents();
+    const gridTiles = await this.gridTileComponents().all();
     for (const tile of gridTiles) {
       await tile.evaluate((element: VerificationGridTileComponent) => {
         element.style.border = "red 2px solid";
@@ -755,12 +780,11 @@ class TestPage {
       });
     }
 
-    const tileContents = await this.gridTileContainers();
-    for (const tile of tileContents) {
-      await tile.evaluate((element: HTMLElement) => {
-        element.style.visibility = "hidden";
-      });
-    }
+    await this.gridTileContainers().evaluateAll((tiles) => {
+      for (const tile of tiles) {
+        tile.style.visibility = "hidden";
+      }
+    });
   }
 
   public async highlightSelectAllTiles() {
