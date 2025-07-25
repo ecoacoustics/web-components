@@ -19,7 +19,7 @@ class TestPage {
   public tagLegend = () => this.page.locator(".button-text").first();
   public shortcutLegend = () => this.page.locator(".shortcut-legend").first();
   public colorPill = () => this.page.locator(".decision-color-pill").first();
-  public additionalTags = () => this.page.locator(".tag").all();
+  public additionalTags = () => this.page.locator(".tag");
 
   public async create() {
     await setContent(this.page, `<oe-verification verified="true"></oe-verification>`);

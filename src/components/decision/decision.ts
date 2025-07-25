@@ -83,13 +83,9 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
 
-  public connectedCallback(): void {
-    super.connectedCallback();
-  }
-
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {
-      return;
+      throw new Error("A decision button component must be slotted in a verification grid.");
     }
 
     this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
@@ -99,8 +95,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
 
   public willUpdate(change: PropertyValues<this>): void {
     if (change.has("verificationGrid") && this.verificationGrid) {
-      // if we are currently attached to a verification grid, we should remove
-      // the event listeners from the old grid
+      // If we are currently attached to a verification grid, we should remove
+      // the event listeners from the old grid.
       if (change.get("verificationGrid")) {
         this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
         this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);
@@ -146,6 +142,10 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
     if (this.isShortcutKey(event)) {
       this.keyboardHeldDown = true;
       return;

@@ -1,6 +1,6 @@
 import { DecisionComponent, DecisionModels } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { when } from "lit/directives/when.js";
@@ -19,12 +19,15 @@ export class TagPromptComponent extends DecisionComponent {
   @property({ type: String })
   public shortcut = "";
 
+  @query("#tag-popover")
+  private readonly tagPopover!: HTMLFormElement;
+
   protected handleShortcutKey(event: KeyboardEvent): void {
-    throw new Error("Method not implemented.");
+    this.tagPopover.togglePopover();
   }
 
   protected isShortcutKey(event: KeyboardEvent): boolean {
-    throw new Error("Method not implemented.");
+    return event.key.toLowerCase() === this.shortcut.toLowerCase();
   }
 
   public get decisionModels(): Partial<DecisionModels<Decision>> {
@@ -33,10 +36,12 @@ export class TagPromptComponent extends DecisionComponent {
 
   private popoverTemplate(): HTMLTemplateResult {
     return html`
-      <div id="tag-popover" popover>
-        adjksahfjkdhsfkjdh afjkh ajksdfh kladshfjkl hdsjkf hdjkshf kjahsdl aksljdsjkfdsfj dsjfkj saddf sajfkl sdjkf
-        jsakl;fj
-      </div>
+      <form id="tag-popover" popover>
+        <label>
+          Provide tag correction:
+          <input type="search" placeholder="Type to search for tags" />
+        </label>
+      </form>
     `;
   }
 

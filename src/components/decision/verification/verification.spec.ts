@@ -22,9 +22,9 @@ test.describe("Verification Component", () => {
     await fixture.changeAdditionalTags(additionalTags);
     await fixture.changeShortcut(keyboardShortcut);
 
-    const realizedAdditionalTags = await fixture.additionalTags();
-    for (const tag of realizedAdditionalTags) {
-      expect(expectedAdditionalTags).toContain(await tag.textContent());
+    const realizedAdditionalTags = fixture.additionalTags();
+    for (let i = 0; i < expectedAdditionalTags.length; i++) {
+      await expect(realizedAdditionalTags.nth(i)).toHaveText(expectedAdditionalTags[i]);
     }
 
     await expect(fixture.shortcutLegend()).toHaveTrimmedText("A");

@@ -209,7 +209,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private classificationDecisionElements!: ClassificationComponent[];
 
   /** A selector for all oe-verification and oe-classification elements */
-  @queryAssignedElements({ selector: "oe-verification, oe-classification" })
+  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
   private decisionElements!: DecisionComponentUnion[];
 
   // Because it's possible (although unlikely) for multiple skip buttons to
