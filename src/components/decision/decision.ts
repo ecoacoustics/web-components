@@ -95,8 +95,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
 
   public willUpdate(change: PropertyValues<this>): void {
     if (change.has("verificationGrid") && this.verificationGrid) {
-      // If we are currently attached to a verification grid, we should remove
-      // the event listeners from the old grid.
+      // if we are currently attached to a verification grid, we should remove
+      // the event listeners from the old grid
       if (change.get("verificationGrid")) {
         this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
         this.verificationGrid.removeEventListener("keyup", this.keyUpHandler);

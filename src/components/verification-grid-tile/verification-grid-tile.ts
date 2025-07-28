@@ -418,6 +418,10 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       selected: this.selected,
     });
 
+    const tooltipContent = this.model.tagAdjustment
+      ? `This item has been corrected to '${this.model.tagAdjustment.tag.text}'`
+      : `This item was tagged as '${tagText}' in your data source`;
+
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
     return html`
@@ -435,12 +439,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         <figure class="spectrogram-container vertically-fill ${figureClasses}">
           <div class="figure-head">
             <figcaption class="tag-label">
-              <sl-tooltip
-                content="This item was tagged as '${tagText}' in your data source"
-                placement="bottom-start"
-                hoist
-              >
-                <span>${tagText}</span>
+              <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
+                <span>
+                  ${when(
+                    this.model.tagAdjustment,
+                    () => html`<del>${tagText}</del> <ins>${this.model.tagAdjustment?.tag.text}</ins>`,
+                    () => html`${tagText}`,
+                  )}
+                </span>
               </sl-tooltip>
             </figcaption>
 
