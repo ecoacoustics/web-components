@@ -148,6 +148,11 @@ a {
   }
 }
 
+del {
+  text-decoration: line-through;
+  text-decoration-color: var(--oe-danger-color);
+}
+
 ins {
   text-decoration: none;
 }
