@@ -1,5 +1,7 @@
 :host {
   display: block;
+  contain: content;
+  padding: var(--oe-border-rounding);
 }
 
 #typeahead-input {
@@ -7,7 +9,7 @@
   width: 100%;
 }
 
-.typeahead-results {
+#typeahead-results {
   list-style-type: none;
   padding-left: 0;
 }
@@ -24,6 +26,12 @@
 
     text-align: start;
     letter-spacing: var(--oe-font-spacing);
+
+    /*
+      Disable background animations because they make the typeahead look laggy
+      when switching between the buttons.
+    */
+    transition: none;
 
     &.selected {
       --background-color: var(--oe-selected-color) !important;

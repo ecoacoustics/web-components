@@ -185,6 +185,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private handleKeyDown(event: KeyboardEvent) {
+    console.debug("handle");
     // We have to intercept and preventDefault() on the escape key because
     // Chrome will cancel the page load if the escape key is pressed.
     //

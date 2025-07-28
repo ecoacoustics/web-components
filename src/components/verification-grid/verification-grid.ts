@@ -8,7 +8,7 @@ import {
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
-import { DecisionComponent, DecisionComponentUnion, DecisionEvent, WhenPredicate } from "../decision/decision";
+import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
@@ -1020,7 +1020,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.anyOverlap.value = false;
   }
 
-  private handlePointerMove(event: PointerEvent) {
+  private handlePointerMove(event: PointerEvent): void {
     runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
   }
 
@@ -1151,6 +1151,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
     this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+
+    this.updateDecisionWhen();
   }
 
   /**
@@ -1568,8 +1570,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    this.updateDecisionWhen(this.subjects[0]);
-
     // If there is only one tile selected, and all of the tiles tasks are
     // completed, we want to automatically advance the selection head.
     if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
@@ -1589,6 +1589,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.singleDecisionMode = true;
       }
     }
+
+    // If we automatically move the decision head, there is no use in updating
+    // the decision buttons "disabled" state because it will immediately be
+    // updated again when the selection head auto advances.
+    if (!this.singleDecisionMode) {
+      this.updateDecisionWhen();
+    }
   }
 
   private shouldAutoPage(): boolean {
@@ -1606,10 +1613,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private updateDecisionWhen(subject: Parameters<WhenPredicate>[0]): void {
+  private updateDecisionWhen(): void {
+    const selectedTiles = this.currentSubSelection;
+
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      decisionElement.disabled = !decisionElement.when(subject);
+      decisionElement.disabled = !selectedTiles.some((subject) => decisionElement.when(subject));
     }
   }
 
@@ -1699,7 +1708,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.setDecisionDisabled(false);
 
-      this.updateDecisionWhen(null);
+      this.updateDecisionWhen();
     }
   }
 

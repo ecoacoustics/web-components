@@ -42,7 +42,7 @@ export class TagPromptComponent extends DecisionComponent {
   }
 
   protected handleShortcutKey(event: KeyboardEvent): void {
-    if (this.isShortcutKey(event) && !(event.target instanceof this.constructor)) {
+    if (this.isShortcutKey(event) && !(event.target instanceof this.constructor) && !this.disabled) {
       this.tagPopover.togglePopover();
     }
   }
