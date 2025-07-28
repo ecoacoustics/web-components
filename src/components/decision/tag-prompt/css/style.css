@@ -19,33 +19,13 @@
 
 #tag-input-label {
   display: block;
-
-  #tag-input {
-    display: block;
-    margin-top: var(--oe-spacing);
-
-    min-width: min(500px, 90dvi);
-  }
 }
 
-.typeahead-results {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.typeahead-result {
+#tag-typeahead {
   display: block;
-  margin-top: var(--oe-spacing-small);
+  margin-top: var(--oe-spacing);
 
-  & > .typeahead-result-action {
-    --background-color: var(--oe-panel-color-dark);
-
-    display: block;
-    width: 100%;
-
-    text-align: start;
-    letter-spacing: var(--oe-font-spacing);
-  }
+  min-width: min(500px, 90dvi);
 }
 
 ::backdrop {

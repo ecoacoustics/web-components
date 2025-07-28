@@ -1,21 +1,15 @@
 import { DecisionComponent, DecisionModels } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { Tag } from "../../../models/tag";
 import { callbackConverter } from "../../../helpers/attributes";
-import { repeat } from "lit/directives/repeat.js";
-import { ESCAPE_KEY } from "../../../helpers/keyboard";
 import { TagAdjustment } from "../../../models/decisions/tag-adjustment";
+import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
 import tagPromptStyles from "./css/style.css?inline";
-
-type TypeaheadCallback = <Value, Context extends Record<PropertyKey, unknown>>(
-  text: string,
-  context: Context,
-) => Value[];
 
 @customElement("oe-tag-prompt")
 export class TagPromptComponent extends DecisionComponent {
@@ -25,16 +19,13 @@ export class TagPromptComponent extends DecisionComponent {
   public shortcut = "";
 
   @property({ type: Function, converter: callbackConverter as any })
-  public search!: TypeaheadCallback;
-
-  @state()
-  private typeaheadResults: Tag[] = [];
+  public search!: TypeaheadCallback<Tag>;
 
   @query("#tag-popover")
   private readonly tagPopover!: HTMLDivElement;
 
-  @query("#tag-input")
-  private readonly tagInput!: HTMLInputElement;
+  @query("#tag-typeahead")
+  private readonly tagTypeahead!: TypeaheadComponent;
 
   public get decisionModels(): Partial<DecisionModels<Decision>> {
     throw new Error("Method not implemented.");
@@ -62,46 +53,18 @@ export class TagPromptComponent extends DecisionComponent {
 
   private handleToggle(event: ToggleEvent): void {
     if (event.newState === "open") {
-      this.typeaheadResults = [];
-      this.tagInput.value = "";
-      this.tagInput.focus();
+      this.tagTypeahead.reset();
+      this.tagTypeahead.focus();
     } else {
       this.verificationGrid?.focus();
     }
   }
 
-  private handleInput(event: KeyboardEvent): void {
-    if (event.key === ESCAPE_KEY) {
-      this.close();
-      return;
-    } else if (!(event.target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    const value = event.target.value;
-    if (value.length > 0) {
-      console.debug(this.search);
-      this.typeaheadResults = this.search(event.target.value, {});
-    } else {
-      this.typeaheadResults = [];
-    }
-  }
-
-  private handleDecision(decisionModel: TagAdjustment): void {
-    this.emitDecision([decisionModel]);
-    this.close();
-  }
-
-  private tagTemplate(tag: Tag): HTMLTemplateResult {
+  private handleDecision(tag: Tag): void {
     const decisionModel = new TagAdjustment(tag);
+    this.emitDecision([decisionModel]);
 
-    return html`
-      <li class="typeahead-result">
-        <button class="typeahead-result-action oe-btn" @click="${() => this.handleDecision(decisionModel)}">
-          ${tag.text}
-        </button>
-      </li>
-    `;
+    this.close();
   }
 
   private popoverTemplate(): HTMLTemplateResult {
@@ -113,28 +76,13 @@ export class TagPromptComponent extends DecisionComponent {
         </div>
 
         <div class="tag-popover-body">
-          <label id="tag-input-label">
-            Provide tag correction:
-            <input
-              id="tag-input"
-              type="search"
-              placeholder="Type to search for tags"
-              enterkeyhint="done"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              @keyup="${this.handleInput}"
-            />
-          </label>
-
-          <ol class="typeahead-results">
-            ${repeat(
-              this.typeaheadResults,
-              (tag) => tag.text,
-              (tag) => this.tagTemplate(tag),
-            )}
-          </ol>
+          <label id="tag-input-label" for="tag-typeahead">Provide tag correction:</label>
+          <oe-typeahead
+            id="tag-typeahead"
+            .search="${this.search}"
+            .textConverter="${(tag: Tag) => tag.text}"
+            @typeahead-selected="${this.handleDecision}"
+          ></oe-typeahead>
         </div>
       </div>
     `;

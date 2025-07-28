@@ -1020,6 +1020,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.anyOverlap.value = false;
   }
 
+  private handlePointerMove(event: PointerEvent) {
+    runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
+  }
+
   //#endregion
 
   //#region SelectionHandlers
@@ -1877,8 +1881,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
-          @pointermove="${(event: PointerEvent) =>
-            runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
+          @pointermove="${this.handlePointerMove}"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >

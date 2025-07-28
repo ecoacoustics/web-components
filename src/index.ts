@@ -10,6 +10,7 @@ export * from "./components/logger/logger";
 export * from "./components/axes/axes";
 export * from "./components/verification-grid/verification-grid";
 export * from "./components/verification-grid-tile/verification-grid-tile";
+export * from "./components/typeahead/typeahead";
 export * from "./components/info-card/info-card";
 export * from "./components/data-source/data-source";
 export * from "./components/bootstrap-modal/bootstrap-modal";

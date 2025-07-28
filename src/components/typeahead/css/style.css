@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+#typeahead-input {
+  display: block;
+  width: 100%;
+}
+
+.typeahead-results {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.typeahead-result {
+  display: block;
+  margin-top: var(--oe-spacing-small);
+
+  & > .typeahead-result-action {
+    --background-color: var(--oe-panel-color-dark);
+
+    display: block;
+    width: 100%;
+
+    text-align: start;
+    letter-spacing: var(--oe-font-spacing);
+  }
+}
