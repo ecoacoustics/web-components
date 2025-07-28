@@ -33,6 +33,9 @@ export class TagPromptComponent extends DecisionComponent {
   @query("#tag-popover")
   private readonly tagPopover!: HTMLDivElement;
 
+  @query("#tag-input")
+  private readonly tagInput!: HTMLInputElement;
+
   public get decisionModels(): Partial<DecisionModels<Decision>> {
     throw new Error("Method not implemented.");
   }
@@ -59,8 +62,9 @@ export class TagPromptComponent extends DecisionComponent {
 
   private handleToggle(event: ToggleEvent): void {
     if (event.newState === "open") {
-      const searchInput = this.tagPopover.querySelector("input") as HTMLInputElement;
-      searchInput.focus();
+      this.typeaheadResults = [];
+      this.tagInput.value = "";
+      this.tagInput.focus();
     } else {
       this.verificationGrid?.focus();
     }

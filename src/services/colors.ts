@@ -21,11 +21,9 @@ export function decisionColor(decision: Decision): CssVariable {
   }
 
   const tagName = decision.tag?.text ?? decision.tag;
-  if (tagColors.has(tagName)) {
-    // because we have already checked that the key exists, we can safely
-    // use a TypeScript type override here
-    const decisionColor = tagColors.get(tagName) as CssVariable;
-    return `${decisionColor}-${decision.confirmed}`;
+  const tagColor = tagColors.get(tagName);
+  if (tagColor) {
+    return `${tagColor}-${decision.confirmed}`;
   }
 
   const nextColorId = tagColors.size;

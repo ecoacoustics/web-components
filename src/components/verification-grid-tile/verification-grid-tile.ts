@@ -381,7 +381,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
     return html`
       <sl-tooltip content="${tooltip}">
-        <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
+        <span class="progress-meter-segment" style="background: var(${ifDefined(color)})"></span>
       </sl-tooltip>
     `;
   }
