@@ -14,8 +14,11 @@
 
       <oe-tag-prompt
         shortcut="3"
-        when="(subject) => subject.verification?.confirmed === 'false'"
-        search="() => [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }]"
+        when="(subject) => subject?.verification?.confirmed === 'false'"
+        search="(fragment) => {
+          const options = [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }];
+          return options.filter((option) => option.text.includes(fragment));
+        }"
       ></oe-tag-prompt>
 
       <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>

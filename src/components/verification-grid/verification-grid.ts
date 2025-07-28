@@ -8,7 +8,7 @@ import {
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
-import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
+import { DecisionComponent, DecisionComponentUnion, DecisionEvent, WhenPredicate } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
 import { classMap } from "lit/directives/class-map.js";
@@ -1604,7 +1604,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private updateDecisionWhen(subject: SubjectWrapper): void {
+  private updateDecisionWhen(subject: Parameters<WhenPredicate>[0]): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = !decisionElement.when(subject);
@@ -1696,6 +1696,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.setDecisionDisabled(false);
+
+      this.updateDecisionWhen(null);
     }
   }
 

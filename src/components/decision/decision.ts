@@ -29,7 +29,7 @@ interface DecisionContent {
   value: Decision[];
 }
 
-type WhenPredicate = (subject: SubjectWrapper) => boolean;
+export type WhenPredicate = (subject: SubjectWrapper | null) => boolean;
 
 /**
  * @description
