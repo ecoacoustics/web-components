@@ -4,6 +4,7 @@ import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues,
 import {
   OverflowEvent,
   RequiredDecision,
+  requiredTagAdjustmentPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
@@ -46,6 +47,7 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -708,6 +710,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
+      } else if (decisionElement instanceof TagPromptComponent) {
+        result.push(requiredTagAdjustmentPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
         result.push(decisionElement.tag);
       }

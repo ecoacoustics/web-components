@@ -1,0 +1,71 @@
+.tag-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: var(--oe-spacing);
+  padding-inline: var(--oe-spacing-large);
+
+  background-color: var(--oe-panel-color-darker);
+
+  .tag-popover-title {
+    margin: 0;
+  }
+}
+
+.tag-popover-body {
+  padding: var(--oe-spacing);
+}
+
+#tag-input-label {
+  display: block;
+
+  #tag-input {
+    display: block;
+    margin-top: var(--oe-spacing);
+
+    min-width: min(500px, 90dvi);
+  }
+}
+
+.typeahead-results {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.typeahead-result {
+  display: block;
+  margin-top: var(--oe-spacing-small);
+
+  & > .typeahead-result-action {
+    --background-color: var(--oe-panel-color-dark);
+
+    display: block;
+    width: 100%;
+
+    text-align: start;
+    letter-spacing: var(--oe-font-spacing);
+  }
+}
+
+::backdrop {
+  animation: backdrop-fade-in 0.2s forwards;
+
+  /*
+    We use a timing function that gets past the first part of the animation very
+    fast because a slow/linear backdrop blur animation makes the UI feel slow.
+  */
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+
+  to {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(1px);
+  }
+}

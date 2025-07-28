@@ -1,10 +1,15 @@
 import { DecisionComponent, DecisionModels } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
+import { Tag } from "../../../models/tag";
+import { callbackConverter } from "../../../helpers/attributes";
+import { repeat } from "lit/directives/repeat.js";
+import { ESCAPE_KEY } from "../../../helpers/keyboard";
+import { TagAdjustment } from "../../../models/decisions/tag-adjustment";
 import tagPromptStyles from "./css/style.css?inline";
 
 type TypeaheadCallback = <Value, Context extends Record<PropertyKey, unknown>>(
@@ -19,29 +24,114 @@ export class TagPromptComponent extends DecisionComponent {
   @property({ type: String })
   public shortcut = "";
 
+  @property({ type: Function, converter: callbackConverter as any })
+  public search!: TypeaheadCallback;
+
+  @state()
+  private typeaheadResults: Tag[] = [];
+
   @query("#tag-popover")
-  private readonly tagPopover!: HTMLFormElement;
+  private readonly tagPopover!: HTMLDivElement;
+
+  public get decisionModels(): Partial<DecisionModels<Decision>> {
+    throw new Error("Method not implemented.");
+  }
+
+  /** Open the tag prompt popover */
+  public open(): void {
+    this.tagPopover.showPopover();
+  }
+
+  /** Close the tag prompt popover */
+  public close(): void {
+    this.tagPopover.hidePopover();
+  }
 
   protected handleShortcutKey(event: KeyboardEvent): void {
-    this.tagPopover.togglePopover();
+    if (this.isShortcutKey(event) && !(event.target instanceof this.constructor)) {
+      this.tagPopover.togglePopover();
+    }
   }
 
   protected isShortcutKey(event: KeyboardEvent): boolean {
     return event.key.toLowerCase() === this.shortcut.toLowerCase();
   }
 
-  public get decisionModels(): Partial<DecisionModels<Decision>> {
-    throw new Error("Method not implemented.");
+  private handleToggle(event: ToggleEvent): void {
+    if (event.newState === "open") {
+      const searchInput = this.tagPopover.querySelector("input") as HTMLInputElement;
+      searchInput.focus();
+    } else {
+      this.verificationGrid?.focus();
+    }
+  }
+
+  private handleInput(event: KeyboardEvent): void {
+    if (event.key === ESCAPE_KEY) {
+      this.close();
+      return;
+    } else if (!(event.target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const value = event.target.value;
+    if (value.length > 0) {
+      this.typeaheadResults = this.search(event.target.value, {});
+    } else {
+      this.typeaheadResults = [];
+    }
+  }
+
+  private handleDecision(decisionModel: TagAdjustment): void {
+    this.emitDecision([decisionModel]);
+    this.close();
+  }
+
+  private tagTemplate(tag: Tag): HTMLTemplateResult {
+    const decisionModel = new TagAdjustment(tag);
+
+    return html`
+      <li class="typeahead-result">
+        <button class="typeahead-result-action oe-btn" @click="${() => this.handleDecision(decisionModel)}">
+          ${tag.text}
+        </button>
+      </li>
+    `;
   }
 
   private popoverTemplate(): HTMLTemplateResult {
     return html`
-      <form id="tag-popover" popover>
-        <label>
-          Provide tag correction:
-          <input type="search" placeholder="Type to search for tags" />
-        </label>
-      </form>
+      <div id="tag-popover" popover @toggle="${this.handleToggle}">
+        <div class="tag-popover-header">
+          <h3 class="tag-popover-title">Tag Correction</h3>
+          <button class="tag-popover-close" @click="${this.close}">Close</button>
+        </div>
+
+        <div class="tag-popover-body">
+          <label id="tag-input-label">
+            Provide tag correction:
+            <input
+              id="tag-input"
+              type="search"
+              placeholder="Type to search for tags"
+              enterkeyhint="done"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              @keyup="${this.handleInput}"
+            />
+          </label>
+
+          <ol class="typeahead-results">
+            ${repeat(
+              this.typeaheadResults,
+              (tag) => tag.text,
+              (tag) => this.tagTemplate(tag),
+            )}
+          </ol>
+        </div>
+      </div>
     `;
   }
 

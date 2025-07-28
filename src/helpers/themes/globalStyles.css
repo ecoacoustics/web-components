@@ -221,14 +221,25 @@ dialog {
   }
 }
 
-:popover-open {
-  padding: var(--oe-spacing);
+[popover] {
+  position: relative;
 
-  box-shadow: var(--oe-box-shadow);
-  border: var(--oe-border-width) solid var(--oe-selected-color);
-  border-radius: var(--oe-border-rounding);
+  /* Make the popover use the animation where it grows/shrinks when shown/hidden */
+  animation:
+    scale-in 0.1s forwards,
+    fade-in 0.2s forwards;
+  animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
 
-  outline: none;
+  &:popover-open {
+    /* A css reset ot make popover padding consistent across browsers */
+    padding: 0;
+
+    box-shadow: var(--oe-box-shadow);
+    border: var(--oe-border-width) solid var(--oe-selected-color);
+    border-radius: var(--oe-border-rounding);
+
+    outline: none;
+  }
 }
 
 p {
@@ -431,5 +442,15 @@ slot.hide-slot-content {
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* An animation that can be applied to popovers where they grow/shrink when hiding/showing */
+@keyframes scale-in {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
   }
 }

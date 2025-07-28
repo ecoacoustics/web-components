@@ -8,17 +8,24 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid">
+    <oe-verification-grid id="verification-grid" grid-size="1" autofocus>
       <oe-verification verified="true" shortcut="1"></oe-verification>
       <oe-verification verified="false" shortcut="2"></oe-verification>
 
-      <oe-tag-prompt
-        when="(subject) => subject.verification == 'false'"
-        search="(fragment) => ['a', 'b', 'c']"
-        shortcut="3"
-      ></oe-tag-prompt>
+      <oe-tag-prompt shortcut="3"></oe-tag-prompt>
 
       <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
     </oe-verification-grid>
+
+    <script type="module">
+      const tagPromptComponents = document.querySelectorAll("oe-tag-prompt");
+      for (const tagPromptComponent of tagPromptComponents) {
+        tagPromptComponent.search = () => [
+          { text: "Abbot's Babbler" },
+          { text: "Brush Turkey" },
+          { text: "Noisy Miner" },
+        ];
+      }
+    </script>
   </body>
 </html>

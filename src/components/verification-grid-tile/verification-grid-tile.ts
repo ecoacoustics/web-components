@@ -1,6 +1,6 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
@@ -21,10 +21,12 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
+export const requiredTagAdjustmentPlaceholder = Symbol("requiredAdjustmentPlaceholder");
 
 export type RequiredVerification = typeof requiredVerificationPlaceholder;
+export type RequiredTagAdjustment = typeof requiredTagAdjustmentPlaceholder;
 export type RequiredClassification = Tag;
-export type RequiredDecision = RequiredVerification | RequiredClassification;
+export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredTagAdjustment;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
 
@@ -137,6 +139,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.requiredDecisions.every((requiredDecision) => {
       if (requiredDecision === requiredVerificationPlaceholder) {
         return this.model.verification !== undefined;
+      } else if (requiredDecision === requiredTagAdjustmentPlaceholder) {
+        return this.model.tagAdjustment !== undefined;
       }
 
       return this.model.classifications.has(requiredDecision.text);
@@ -345,7 +349,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
 
-  private verificationMeterTemplate(): HTMLTemplateResult | typeof nothing {
+  private verificationMeterTemplate(): HTMLTemplateResult {
     const currentVerificationModel = this.model.verification;
     const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
     const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
@@ -357,6 +361,20 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     }
 
     const meterColor = this.injector.colorService(currentVerificationModel);
+    return this.meterSegmentTemplate(tooltipText, meterColor);
+  }
+
+  private tagAdjustmentMeterTemplate(): HTMLTemplateResult {
+    const currentTagAdjustment = this.model.tagAdjustment;
+    const tooltipText = currentTagAdjustment
+      ? `tag adjustment: ${currentTagAdjustment.tag.text}`
+      : "tag adjustment: Incomplete";
+
+    if (!currentTagAdjustment) {
+      return this.meterSegmentTemplate(tooltipText);
+    }
+
+    const meterColor = this.injector.colorService(currentTagAdjustment);
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
@@ -378,6 +396,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
         if (requiredDecision === requiredVerificationPlaceholder) {
           return this.verificationMeterTemplate();
+        } else if (requiredDecision === requiredTagAdjustmentPlaceholder) {
+          return this.tagAdjustmentMeterTemplate();
         }
 
         return this.classificationMeterTemplate(requiredDecision);

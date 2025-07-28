@@ -3,6 +3,7 @@ import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
 import { EnumValue } from "../helpers/types/advancedTypes";
+import { TagAdjustment } from "./decisions/tag-adjustment";
 
 export enum AudioCachedState {
   COLD,
@@ -22,6 +23,7 @@ const columnNamespace = "oe_";
 // to the original data input with "oe"
 const tagColumnName = `${columnNamespace}tag`;
 const confirmedColumnName = `${columnNamespace}confirmed`;
+const tagAdjustmentColumnName = `${columnNamespace}adjusted_tag`;
 type ClassificationColumn = `${typeof columnNamespace}${string}`;
 
 export interface DownloadableResult extends Subject {
@@ -71,6 +73,7 @@ export class SubjectWrapper {
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
   public verification?: Verification;
+  public tagAdjustment?: TagAdjustment;
   public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
@@ -87,6 +90,8 @@ export class SubjectWrapper {
       this.addVerification(decision);
     } else if (decision instanceof Classification) {
       this.addClassification(decision);
+    } else if (decision instanceof TagAdjustment) {
+      this.addTagAdjustment(decision);
     } else {
       throw new Error("Invalid decision type");
     }
@@ -98,6 +103,8 @@ export class SubjectWrapper {
       this.removeVerification();
     } else if (decision instanceof Classification) {
       this.removeClassification(decision.tag);
+    } else if (decision instanceof TagAdjustment) {
+      this.removeTagAdjustment();
     } else {
       throw new Error("Invalid decision type");
     }
@@ -162,6 +169,12 @@ export class SubjectWrapper {
         }
       : {};
 
+    const tagCorrectionColumns = this.tagAdjustment
+      ? {
+          [tagAdjustmentColumnName]: this.tagAdjustment.tag.text,
+        }
+      : {};
+
     const classificationModels = this.classifications.values();
     for (const classification of classificationModels) {
       const column = `${namespace}${classification.tag.text}`;
@@ -179,6 +192,7 @@ export class SubjectWrapper {
 
     return {
       ...originalSubject,
+      ...tagCorrectionColumns,
       ...verificationColumns,
       ...classificationColumns,
     };
@@ -197,11 +211,19 @@ export class SubjectWrapper {
     this.classifications.set(model.tag.text, model);
   }
 
+  private addTagAdjustment(model: TagAdjustment): void {
+    this.tagAdjustment = model;
+  }
+
   private removeVerification(): void {
     this.verification = undefined;
   }
 
   private removeClassification(tag: Tag): void {
     this.classifications.delete(tag.text);
+  }
+
+  private removeTagAdjustment(): void {
+    this.tagAdjustment = undefined;
   }
 }
