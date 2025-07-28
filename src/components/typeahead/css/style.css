@@ -24,5 +24,9 @@
 
     text-align: start;
     letter-spacing: var(--oe-font-spacing);
+
+    &.selected {
+      --background-color: var(--oe-selected-color) !important;
+    }
   }
 }

@@ -5,6 +5,8 @@ import { callbackConverter } from "../../helpers/attributes";
 import { required } from "../../helpers/decorators";
 import { map } from "lit/directives/map.js";
 import typeaheadStyles from "./css/style.css?inline";
+import { DOWN_ARROW_KEY, ENTER_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import { classMap } from "lit/directives/class-map.js";
 
 export type TypeaheadCallback<Value> = <Context extends Record<PropertyKey, unknown>>(
   text: string,
@@ -35,6 +37,9 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
   @state()
   private typeaheadResults: T[] = [];
 
+  @state()
+  private focusedIndex = -1;
+
   @query("#typeahead-input")
   private readonly tagInput!: HTMLInputElement;
 
@@ -60,9 +65,45 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
     }
   }
 
-  private handleKeyDown(event: KeyboardEvent): void {}
+  private handleKeyDown(event: KeyboardEvent): void {
+    event.stopPropagation();
 
-  private handleSelected(model: T): T {
+    switch (event.key) {
+      case DOWN_ARROW_KEY: {
+        event.preventDefault();
+        this.handleFocusDown();
+        break;
+      }
+
+      case UP_ARROW_KEY: {
+        event.preventDefault();
+        this.handleFocusUp();
+        break;
+      }
+
+      case ENTER_KEY: {
+        this.handleFocusSelection();
+        break;
+      }
+    }
+  }
+
+  private handleFocusUp(): void {
+    this.focusedIndex = Math.max(this.focusedIndex - 1, -1);
+  }
+
+  private handleFocusDown(): void {
+    this.focusedIndex = Math.min(this.focusedIndex + 1, this.typeaheadResults.length - 1);
+  }
+
+  private handleFocusSelection(): void {
+    const model = this.typeaheadResults[this.focusedIndex];
+    if (model) {
+      this.handleDecision(model);
+    }
+  }
+
+  private handleDecision(model: T): void {
     const event = new CustomEvent(TypeaheadComponent.selectedEventName, {
       detail: model,
     });
@@ -70,10 +111,13 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
     this.dispatchEvent(event);
   }
 
-  private resultTemplate(model: T): HTMLTemplateResult {
+  private resultTemplate(model: T, index: number): HTMLTemplateResult {
+    const selected = this.focusedIndex === index;
+    const classes = classMap({ selected });
+
     return html`
       <li class="typeahead-result">
-        <button class="typeahead-result-action oe-btn" @click="${() => this.handleSelected(model)}">
+        <button class="typeahead-result-action oe-btn ${classes}" @click="${() => this.handleDecision(model)}">
           ${this.textConverter(model)}
         </button>
       </li>
@@ -96,7 +140,7 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
       />
 
       <ol class="typeahead-results">
-        ${map(this.typeaheadResults, (model) => this.resultTemplate(model))}
+        ${map(this.typeaheadResults, (model, index) => this.resultTemplate(model, index))}
       </ol>
     `;
   }

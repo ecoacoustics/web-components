@@ -60,7 +60,8 @@ export class TagPromptComponent extends DecisionComponent {
     }
   }
 
-  private handleDecision(tag: Tag): void {
+  private handleDecision(event: CustomEvent<Tag>): void {
+    const tag = event.detail;
     const decisionModel = new TagAdjustment(tag);
     this.emitDecision([decisionModel]);
 
