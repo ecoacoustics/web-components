@@ -1,6 +1,6 @@
 ---
 layout: layouts/verification.11ty.js
-title: Open Ecoacoustics | Examples | Verification | Single Class
+title: Open Ecoacoustics | Examples | Verification | Compound
 ---
 
 <h2 class="grid-title">Verification Interface (Compound Task)</h2>

@@ -29,11 +29,11 @@ const verificationColors = `
   --verification-true: green;
   --verification-false: red;
   --verification-skip: repeating-linear-gradient(
-  45deg,
-  #ddd 0rem,
-  #ddd 0.5rem,
-  var(--oe-panel-color) 0.5rem,
-  var(--oe-panel-color) 1rem
+    45deg,
+    #ddd 0rem,
+    #ddd 0.5rem,
+    var(--oe-panel-color) 0.5rem,
+    var(--oe-panel-color) 1rem
   );
 `;
 
