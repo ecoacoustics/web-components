@@ -155,7 +155,7 @@ export class TagPromptComponent extends DecisionComponent {
           popovertarget="tag-popover"
           part="decision-button"
           style="--ripple-color: var(${color})"
-          aria-disabled="${this.disabled}"
+          ?disabled="${this.disabled}"
         >
           <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 

@@ -14,6 +14,7 @@
 
       <oe-tag-prompt
         shortcut="3"
+        when="(subject) => subject.verification?.confirmed === 'false'"
         search="() => [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }]"
       ></oe-tag-prompt>
 

@@ -1566,6 +1566,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
+    this.updateDecisionWhen(this.subjects[0]);
+
     // If there is only one tile selected, and all of the tiles tasks are
     // completed, we want to automatically advance the selection head.
     if (hasSubSelection && subSelection.length === 1 && !this.hasClassificationTask()) {
@@ -1599,6 +1601,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
+    }
+  }
+
+  private updateDecisionWhen(subject: SubjectWrapper): void {
+    const decisionElements = this.decisionElements ?? [];
+    for (const decisionElement of decisionElements) {
+      decisionElement.disabled = !decisionElement.when(subject);
     }
   }
 
