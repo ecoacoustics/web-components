@@ -1282,14 +1282,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       this.highlight.highlighting = true;
 
-      const highlightBoxElement = this.highlightBox;
       this.updateHighlightObservedElements();
 
       const { pageX, pageY } = event;
-
-      highlightBoxElement.style.left = `${pageX}px`;
-      highlightBoxElement.style.top = `${pageY}px`;
-
       this.highlight.start = { x: pageX, y: pageY };
     }
   }
@@ -1313,10 +1308,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
-    const highlightThreshold = 15 as const;
+    const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
+
+      highlightBoxElement.style.left = `${this.highlight.start.x}px`;
+      highlightBoxElement.style.top = `${this.highlight.start.y}px`;
 
       // This mimics the behavior of Windows explorer where de-selecting items
       // during drag-selection only occurs during the initial draw of the
