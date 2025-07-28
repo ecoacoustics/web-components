@@ -76,6 +76,7 @@ export class TagPromptComponent extends DecisionComponent {
 
     const value = event.target.value;
     if (value.length > 0) {
+      console.debug(this.search);
       this.typeaheadResults = this.search(event.target.value, {});
     } else {
       this.typeaheadResults = [];

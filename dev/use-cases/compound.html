@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Components - Dani</title>
+    <title>Web Components - Compound Tasks</title>
     <script type="module" src="/src/index.ts"></script>
   </head>
 
@@ -12,20 +12,12 @@
       <oe-verification verified="true" shortcut="1"></oe-verification>
       <oe-verification verified="false" shortcut="2"></oe-verification>
 
-      <oe-tag-prompt shortcut="3"></oe-tag-prompt>
+      <oe-tag-prompt
+        shortcut="3"
+        search="() => [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }]"
+      ></oe-tag-prompt>
 
       <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
     </oe-verification-grid>
-
-    <script type="module">
-      const tagPromptComponents = document.querySelectorAll("oe-tag-prompt");
-      for (const tagPromptComponent of tagPromptComponents) {
-        tagPromptComponent.search = () => [
-          { text: "Abbot's Babbler" },
-          { text: "Brush Turkey" },
-          { text: "Noisy Miner" },
-        ];
-      }
-    </script>
   </body>
 </html>
