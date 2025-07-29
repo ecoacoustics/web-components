@@ -24,12 +24,12 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(typeaheadStyles);
 
   @required()
-  @property({ type: Function, converter: callbackConverter as any })
-  public search!: TypeaheadCallback<T>;
+  @property({ attribute: "text-converter", type: Function, converter: callbackConverter as any })
+  public textConverter!: (model: T) => string;
 
   @required()
-  @property({ attribute: false })
-  public textConverter!: (model: T) => string;
+  @property({ type: Function, converter: callbackConverter as any })
+  public search!: TypeaheadCallback<T>;
 
   @state()
   private typeaheadResults: T[] = [];
