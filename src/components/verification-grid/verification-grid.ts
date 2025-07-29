@@ -1299,7 +1299,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.highlight.observedElements = Array.from(this.gridTiles);
   }
 
-  private resizeHighlightBox(event: PointerEvent) {
+  private resizeHighlightBox(event: PointerEvent): void {
     if (!this.highlight.highlighting) {
       return;
     }
@@ -1319,8 +1319,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
 
-      highlightBoxElement.style.left = `${this.highlight.start.x}px`;
-      highlightBoxElement.style.top = `${this.highlight.start.y}px`;
+      const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
+      const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
+
+      // If the user selects from the right to the left, we change the position
+      // of the highlight box to so that the top left of the highlight box is
+      // always aligned with the users pointer.
+      //
+      // We use "transform" (instead of left & top) so that there is zero layout
+      // shift or layout recalculation when moving the highlight box.
+      highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
 
       // This mimics the behavior of Windows explorer where de-selecting items
       // during drag-selection only occurs during the initial draw of the
@@ -1337,17 +1345,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // top or left of the screen
     highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
     highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
-
-    // if the user selects from the right to the left, we change the position
-    // of the highlight box to so that the top left of the highlight box is
-    // always aligned with the users pointer
-    if (highlightWidth < 0) {
-      highlightBoxElement.style.left = `${pageX}px`;
-    }
-
-    if (highlightHeight < 0) {
-      highlightBoxElement.style.top = `${pageY}px`;
-    }
 
     // We mimic the selection behavior of windows explorer where the selection
     // is always additive.
