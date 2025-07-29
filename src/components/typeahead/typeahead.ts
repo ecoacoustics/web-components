@@ -1,8 +1,7 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { callbackConverter } from "../../helpers/attributes";
-import { required } from "../../helpers/decorators";
 import { map } from "lit/directives/map.js";
 import { DOWN_ARROW_KEY, ENTER_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
@@ -13,32 +12,41 @@ export type TypeaheadCallback<Value> = <Context extends Record<PropertyKey, unkn
   context: Context,
 ) => Value[];
 
+export type TypeaheadTextConverter<T> = (model: T) => string;
+
 /**
  * @description
  * An internal typeahead component
  */
 @customElement("oe-typeahead")
-export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
+export class TypeaheadComponent<T extends object = any> extends AbstractComponent(LitElement) {
   public static readonly selectedEventName = "typeahead-selected";
 
   public static styles = unsafeCSS(typeaheadStyles);
 
-  @required()
   @property({ attribute: "text-converter", type: Function, converter: callbackConverter as any })
-  public textConverter!: (model: T) => string;
+  public textConverter: TypeaheadTextConverter<T> = (model: T) => model.toString();
 
-  @required()
   @property({ type: Function, converter: callbackConverter as any })
-  public search!: TypeaheadCallback<T>;
+  public search: TypeaheadCallback<T> = () => [];
+
+  @property({ attribute: "max-items", type: Number, reflect: true })
+  public maxItems = 10;
 
   @state()
   private typeaheadResults: T[] = [];
 
   @state()
-  private focusedIndex = -1;
+  private focusedIndex = 0;
 
   @query("#typeahead-input")
   private readonly tagInput!: HTMLInputElement;
+
+  public updated(change: PropertyValues<this>): void {
+    if (change.has("search")) {
+      this.handleSearchInvalidation();
+    }
+  }
 
   public override focus(): void {
     this.tagInput.focus();
@@ -46,8 +54,21 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
 
   public reset(): void {
     this.tagInput.value = "";
-    this.typeaheadResults = [];
-    this.focusedIndex = -1;
+    this.focusedIndex = 0;
+
+    // Let the consumer decide what to do if the input is empty.
+    // (e.g. should we display all results, or nothing)
+    this.handleSearchInvalidation("");
+  }
+
+  /**
+   * Fetches new search results from the "search" callback
+   * If a searchTerm is not provided, a DOM query will be performed to get the
+   * typeahead text input value.
+   */
+  private handleSearchInvalidation(searchTerm?: string) {
+    searchTerm ??= this.tagInput.value;
+    this.typeaheadResults = this.search(searchTerm, {});
   }
 
   private handleInput(event: KeyboardEvent): void {
@@ -56,12 +77,7 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
     }
 
     const value = event.target.value;
-    if (value.length > 0) {
-      this.typeaheadResults = this.search(event.target.value, {});
-    } else {
-      this.typeaheadResults = [];
-      this.focusedIndex = -1;
-    }
+    this.handleSearchInvalidation(value);
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -102,7 +118,7 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
   }
 
   private handleFocusUp(): void {
-    this.focusedIndex = Math.max(this.focusedIndex - 1, -1);
+    this.focusedIndex = Math.max(this.focusedIndex - 1, 0);
   }
 
   private handleFocusDown(): void {
@@ -144,6 +160,11 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
   // To make the typeahead a11y friendly, I followed this guide
   // https://rebeccamdeprey.com/blog/building-an-accessible-autocomplete-component-with-react
   public render(): HTMLTemplateResult {
+    // We slice the results in the render function, and store results that
+    // cannot be shown so that if the maxItems changes while results are
+    // visible, it can automatically expand.
+    const truncatedResults = this.typeaheadResults.slice(0, this.maxItems);
+
     return html`
       <input
         id="typeahead-input"
@@ -160,12 +181,12 @@ export class TypeaheadComponent<T = any> extends AbstractComponent(LitElement) {
         aria-activedescendant="result-${this.focusedIndex}"
         aria-controls="typeahead-results"
         aria-autocomplete="list"
-        @keyup="${this.handleInput}"
+        @input="${this.handleInput}"
         @keydown="${this.handleKeyDown}"
       />
 
       <ol id="typeahead-results" role="listbox">
-        ${map(this.typeaheadResults, (model, index) => this.resultTemplate(model, index))}
+        ${map(truncatedResults, (model, index) => this.resultTemplate(model, index))}
       </ol>
     `;
   }

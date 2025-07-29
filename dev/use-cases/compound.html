@@ -18,7 +18,12 @@
         when="(subject) => subject?.verification?.confirmed === 'false'"
         search="(fragment) => {
           const options = [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }];
-          return options.filter((option) => option.text.includes(fragment));
+          console.debug(fragment);
+          if (fragment === '') {
+            return options;
+          }
+
+          return options.filter((option) => option.text.toLowerCase().includes(fragment));
         }"
       ></oe-tag-prompt>
 

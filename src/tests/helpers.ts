@@ -106,12 +106,17 @@ export async function dragSelection(
 }
 
 /**
- * A test helper that can be used to send a keypress to the page.
+ * A test helper that can be used to send a keypress to a locator.
  * This helper function exists to unify the keyboard functionality.
  */
-export async function pressKey(page: Page, key: string, modifiers: KeyboardModifiers = []) {
+export async function pressKey(locator: Page | Locator, key: string, modifiers: KeyboardModifiers = []) {
   const keyboardCombination = modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
-  await page.keyboard.press(keyboardCombination);
+
+  if (isPage(locator)) {
+    await locator.keyboard.press(keyboardCombination);
+  } else {
+    await locator.press(keyboardCombination);
+  }
 }
 
 /**
@@ -301,4 +306,8 @@ export async function setElementSize(target: Locator, shape: Size<Pixel>) {
     element.style.width = `${shape.width}px`;
     element.style.height = `${shape.height}px`;
   }, shape);
+}
+
+function isPage(locator: Page | Locator): locator is Page {
+  return Object.hasOwn(locator, "keyboard");
 }

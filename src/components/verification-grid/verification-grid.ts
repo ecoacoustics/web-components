@@ -1300,7 +1300,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private resizeHighlightBox(event: PointerEvent) {
-    if (!this.highlight.highlighting || !this.shadowRoot) {
+    if (!this.highlight.highlighting) {
       return;
     }
 
