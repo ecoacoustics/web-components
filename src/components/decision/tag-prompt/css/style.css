@@ -23,7 +23,6 @@
 
 #tag-typeahead {
   display: block;
-  margin-top: var(--oe-spacing);
 
   min-width: min(500px, 90dvi);
 }

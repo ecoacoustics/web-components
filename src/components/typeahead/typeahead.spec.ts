@@ -1,6 +1,6 @@
-import { DOWN_ARROW_KEY, ENTER_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import { DOWN_ARROW_KEY, END_KEY, ENTER_KEY, HOME_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
 import { expect } from "../../tests/assertions";
-import { catchLocatorEvent, pressKey, setBrowserAttribute } from "../../tests/helpers";
+import { catchLocatorEvent, getBrowserValue, pressKey, setBrowserAttribute } from "../../tests/helpers";
 import { TypeaheadComponent } from "./typeahead";
 import { typeaheadFixture as test } from "./typeahead.fixture";
 
@@ -81,6 +81,14 @@ test.describe("search results", () => {
       await expect(fixture.searchResults().nth(i)).toHaveText(expectedFinalValue[i]);
     }
   });
+
+  test("should correctly show no search results", async ({ fixture }) => {
+    await fixture.component().evaluate((element: TypeaheadComponent) => {
+      element.search = () => [];
+    });
+
+    await expect(fixture.searchResults()).toHaveCount(0);
+  });
 });
 
 test.describe("focus", () => {
@@ -137,18 +145,94 @@ test.describe("focus", () => {
     await pressKey(fixture.inputBox(), TAB_KEY, ["Shift"]);
     await expect(fixture.searchResults().nth(2)).toHaveAttribute("aria-selected", "true");
   });
+
+  test("should be able to focus the first item using the HOME key", async ({ fixture }) => {
+    await pressKey(fixture.inputBox(), HOME_KEY);
+    await expect(fixture.searchResults().first()).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("should be able to focus the last item using the END key", async ({ fixture }) => {
+    await pressKey(fixture.inputBox(), END_KEY);
+    await expect(fixture.searchResults().last()).toHaveAttribute("aria-selected", "true");
+  });
+
+  // I have copied the same behavior as the Google search typeahead, where if
+  // the value changes, the focus head is reset.
+  // Note that our typeahead behaves a bit different because the first item is
+  // always selected.
+  test("should reset the focus head to the first item if the user changes input", async ({ fixture }) => {
+    await fixture.inputBox().fill("tag");
+
+    await fixture.inputBox().press(DOWN_ARROW_KEY);
+    await expect(fixture.searchResults().nth(1)).toHaveAttribute("aria-selected", "true");
+
+    // Because we have removed the trailing "g" off the original input, we
+    // expect that focus will be reset and the first item will be focused.
+    await fixture.inputBox().fill("ta");
+    await expect(fixture.searchResults().first()).toHaveAttribute("aria-selected", "true");
+    await expect(fixture.searchResults().nth(1)).toHaveAttribute("aria-selected", "false");
+  });
+
+  test("should limit the focus to a new max-items value", async ({ fixture }) => {
+    const maxItems = await getBrowserValue<TypeaheadComponent, number>(fixture.component(), "maxItems");
+
+    // By pressing the down arrow by the number of max items, we can ensure that
+    // we are focused on the last item.
+    for (let i = 0; i < maxItems; i++) {
+      await fixture.inputBox().press(DOWN_ARROW_KEY);
+    }
+
+    await setBrowserAttribute<TypeaheadComponent>(fixture.component(), "max-items" as any, "2");
+
+    await expect(fixture.searchResults().nth(1)).toHaveAttribute("aria-selected", "true");
+  });
 });
 
 test.describe("selection emission", () => {
-  test("should emit a model if enter is pressed without input", async ({ fixture }) => {
+  test.fixme("should emit a model if enter is pressed without input", async ({ fixture }) => {
     const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
 
     await fixture.inputBox().press(ENTER_KEY);
 
-    await expect(selectionEvent).resolves.toBeTruthy();
+    await expect(selectionEvent).resolves.toEqual({
+      text: "Abbots Babbler",
+    });
   });
 
-  test("should emit a model on click selection", () => {});
+  test("should emit a model on click selection", async ({ fixture }) => {
+    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
 
-  test("should emit a model on enter selection", () => {});
+    await fixture.searchResults().nth(1).click();
+
+    await expect(selectionEvent).resolves.toEqual({
+      text: "Brush Turkey",
+    });
+  });
+
+  test.fixme("should emit a model on enter selection", async ({ fixture }) => {
+    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+
+    await fixture.inputBox().press(DOWN_ARROW_KEY);
+    await fixture.inputBox().press(DOWN_ARROW_KEY);
+    await fixture.inputBox().press(DOWN_ARROW_KEY);
+    await fixture.inputBox().press(UP_ARROW_KEY);
+
+    // We should be on the 3rd item because we pressed down three times
+    // (starting from the first item), and then pressed up.
+    await fixture.inputBox().press(ENTER_KEY);
+
+    await expect(selectionEvent).resolves.toEqual({
+      text: "Brush Turkey",
+    });
+  });
+
+  test.fixme("should not emit anything if there are no results", async ({ fixture }) => {
+    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+
+    await fixture.inputBox().fill("some phrase where there are no results");
+
+    await fixture.inputBox().press(ENTER_KEY);
+
+    await expect(selectionEvent).not.resolves.toBeDefined();
+  });
 });

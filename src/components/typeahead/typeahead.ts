@@ -3,7 +3,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { callbackConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
-import { DOWN_ARROW_KEY, ENTER_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import { DOWN_ARROW_KEY, END_KEY, ENTER_KEY, HOME_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
 import typeaheadStyles from "./css/style.css?inline";
 
@@ -12,7 +12,7 @@ export type TypeaheadCallback<Value> = <Context extends Record<PropertyKey, unkn
   context: Context,
 ) => Value[];
 
-export type TypeaheadTextConverter<T> = (model: T) => string;
+export type TypeaheadTextConverter = (model: any) => string;
 
 /**
  * @description
@@ -25,7 +25,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   public static styles = unsafeCSS(typeaheadStyles);
 
   @property({ attribute: "text-converter", type: Function, converter: callbackConverter as any })
-  public textConverter: TypeaheadTextConverter<T> = (model: T) => model.toString();
+  public textConverter: TypeaheadTextConverter = (model: T) => model.toString();
 
   @property({ type: Function, converter: callbackConverter as any })
   public search: TypeaheadCallback<T> = () => [];
@@ -45,6 +45,8 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   public updated(change: PropertyValues<this>): void {
     if (change.has("search")) {
       this.handleSearchInvalidation();
+    } else if (change.has("maxItems")) {
+      this.focusedIndex = Math.min(this.focusedIndex, this.maxItems - 1);
     }
   }
 
@@ -54,7 +56,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
 
   public reset(): void {
     this.tagInput.value = "";
-    this.focusedIndex = 0;
+    this.handleFocusStart();
 
     // Let the consumer decide what to do if the input is empty.
     // (e.g. should we display all results, or nothing)
@@ -69,6 +71,12 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   private handleSearchInvalidation(searchTerm?: string) {
     searchTerm ??= this.tagInput.value;
     this.typeaheadResults = this.search(searchTerm, {});
+
+    // Similar to Google search, I reset the index of the focus index if the
+    // user performs input.
+    // Note that unlike Google search, we do not allow the focus head to have
+    // nothing selected.
+    this.focusedIndex = 0;
   }
 
   private handleInput(event: KeyboardEvent): void {
@@ -93,6 +101,18 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
       case UP_ARROW_KEY: {
         event.preventDefault();
         this.handleFocusUp();
+        break;
+      }
+
+      case HOME_KEY: {
+        event.preventDefault();
+        this.handleFocusStart();
+        break;
+      }
+
+      case END_KEY: {
+        event.preventDefault();
+        this.handleFocusEnd();
         break;
       }
 
@@ -123,6 +143,14 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
 
   private handleFocusDown(): void {
     this.focusedIndex = Math.min(this.focusedIndex + 1, this.typeaheadResults.length - 1);
+  }
+
+  private handleFocusStart(): void {
+    this.focusedIndex = 0;
+  }
+
+  private handleFocusEnd(): void {
+    this.focusedIndex = this.typeaheadResults.length - 1;
   }
 
   private handleFocusSelection(): void {

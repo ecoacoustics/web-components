@@ -74,7 +74,7 @@ class TestPage {
   public async getPillColor(): Promise<string> {
     return await this.colorPill().evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
+      return styles.background;
     });
   }
 

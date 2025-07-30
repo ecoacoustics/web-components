@@ -3,6 +3,7 @@ import { verificationFixture as test } from "./verification.fixture";
 import { getCssBackgroundColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { sleep } from "../../../helpers/utilities";
+import { CssVariable } from "../../../helpers/types/advancedTypes";
 
 test.describe("Verification Component", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -48,24 +49,32 @@ test.describe("Verification Component", () => {
     await expect(fixture.shortcutLegend()).toHaveTrimmedText("");
   });
 
-  test("should have the correct color for a true decision", async ({ fixture }) => {
-    await fixture.changeVerified(DecisionOptions.TRUE);
+  test.describe("decision colors", () => {
+    interface DecisionColorTest {
+      decision: DecisionOptions;
+      expectedColor: CssVariable;
+    }
 
-    const expectedColor = await getCssBackgroundColorVariable(fixture.component(), "--verification-true");
-    const realizedColor = await fixture.getPillColor();
-    expect(realizedColor).toEqual(expectedColor);
-  });
+    const decisionColorTests: DecisionColorTest[] = [
+      { decision: DecisionOptions.TRUE, expectedColor: "--verification-true" },
+      { decision: DecisionOptions.FALSE, expectedColor: "--verification-false" },
+      { decision: DecisionOptions.SKIP, expectedColor: "--verification-skip" },
+      { decision: DecisionOptions.UNSURE, expectedColor: "--verification-unsure" },
+    ];
 
-  test("should have the correct color for a false decision", async ({ fixture }) => {
-    await fixture.changeVerified(DecisionOptions.FALSE);
+    decisionColorTests.forEach((testCase) => {
+      test(`should have the correct color for a ${testCase.decision} decision`, async ({ fixture }) => {
+        await fixture.changeVerified(DecisionOptions.TRUE);
 
-    const expectedColor = await getCssBackgroundColorVariable(fixture.component(), "--verification-false");
-    const realizedColor = await fixture.getPillColor();
-    expect(realizedColor).toEqual(expectedColor);
+        const expectedColor = await getCssBackgroundColorVariable(fixture.component(), testCase.expectedColor);
+        const realizedColor = await fixture.getPillColor();
+        expect(realizedColor).toEqual(expectedColor);
+      });
+    });
   });
 
   test.describe("events", () => {
-    const testedDecisionOptions = [
+    const testedDecisionOptions: DecisionOptions[] = [
       DecisionOptions.FALSE,
       DecisionOptions.TRUE,
       DecisionOptions.SKIP,

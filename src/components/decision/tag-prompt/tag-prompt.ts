@@ -1,7 +1,7 @@
 import { DecisionComponent, DecisionModels } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import { Decision, DecisionOptions } from "../../../models/decisions/decision";
+import { Decision } from "../../../models/decisions/decision";
 import { keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -19,7 +19,7 @@ export class TagPromptComponent extends DecisionComponent {
   public shortcut = "";
 
   @property({ type: Function, converter: callbackConverter as any })
-  public search!: TypeaheadCallback<Tag>;
+  public search: TypeaheadCallback<Tag> = () => [];
 
   @query("#tag-popover")
   private readonly tagPopover!: HTMLDivElement;
@@ -77,7 +77,6 @@ export class TagPromptComponent extends DecisionComponent {
         </div>
 
         <div class="tag-popover-body">
-          <label id="tag-input-label" for="tag-typeahead">Provide tag correction:</label>
           <oe-typeahead
             id="tag-typeahead"
             .search="${this.search}"
@@ -94,7 +93,7 @@ export class TagPromptComponent extends DecisionComponent {
       disabled: !!this.disabled,
     });
 
-    const color = this.injector.colorService(new Decision(DecisionOptions.TRUE));
+    const color = this.injector.colorService(new TagAdjustment({ text: "" }));
 
     return html`
       ${this.popoverTemplate()}
@@ -110,7 +109,7 @@ export class TagPromptComponent extends DecisionComponent {
           style="--ripple-color: var(${color})"
           ?disabled="${this.disabled}"
         >
-          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+          <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 
           <div class="button-text">
             <slot>Select Tag</slot>

@@ -324,6 +324,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
+  private get behavingSubSelection(): SubjectWrapper[] {
+    if (this.currentSubSelection.length > 0) {
+      return this.currentSubSelection;
+    }
+
+    return this.subjects;
+  }
+
   /**
    * Returns the current users selection behavior, collapsing the "default"
    * behavior into either "tablet" or "desktop" depending on the users device
@@ -1312,23 +1320,28 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const highlightWidth = this.highlight.current.x - this.highlight.start.x;
     const highlightHeight = this.highlight.current.y - this.highlight.start.y;
 
+    const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
+    const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
+
+    // If the user selects from the right to the left, we change the position
+    // of the highlight box to so that the top left of the highlight box is
+    // always aligned with the users pointer.
+    //
+    // We use "transform" (instead of left & top) so that there is zero layout
+    // shift or layout recalculation when moving the highlight box.
+    highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
+
+    // the highlights width / height can be negative if the user drags to the
+    // top or left of the screen
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
+
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
     const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
-
-      const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
-      const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
-
-      // If the user selects from the right to the left, we change the position
-      // of the highlight box to so that the top left of the highlight box is
-      // always aligned with the users pointer.
-      //
-      // We use "transform" (instead of left & top) so that there is zero layout
-      // shift or layout recalculation when moving the highlight box.
-      highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
 
       // This mimics the behavior of Windows explorer where de-selecting items
       // during drag-selection only occurs during the initial draw of the
@@ -1340,11 +1353,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     } else {
       return;
     }
-
-    // the highlights width / height can be negative if the user drags to the
-    // top or left of the screen
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
 
     // We mimic the selection behavior of windows explorer where the selection
     // is always additive.
@@ -1587,12 +1595,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     }
 
-    // If we automatically move the decision head, there is no use in updating
-    // the decision buttons "disabled" state because it will immediately be
-    // updated again when the selection head auto advances.
-    if (!this.singleDecisionMode) {
-      this.updateDecisionWhen();
-    }
+    this.updateDecisionWhen();
   }
 
   private shouldAutoPage(): boolean {
@@ -1611,7 +1614,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private updateDecisionWhen(): void {
-    const selectedTiles = this.currentSubSelection;
+    const selectedTiles = this.behavingSubSelection;
 
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
@@ -1800,9 +1803,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<strong class="no-decisions-warning">No decisions available.</strong>`;
   }
 
-  // TODO: this function could definitely be refactored
   private skipDecisionTemplate(): HTMLTemplateResult {
-    return html`<oe-verification verified="skip" shortcut="\`"></oe-verification>`;
+    return html`<oe-verification verified="skip" shortcut="s"></oe-verification>`;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {

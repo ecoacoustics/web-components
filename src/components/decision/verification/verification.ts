@@ -142,7 +142,7 @@ export class VerificationComponent extends DecisionComponent {
           aria-disabled="${this.disabled}"
           @click="${() => this.handleDecision()}"
         >
-          <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
+          <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 
           <div class="button-text">
             <slot>${toTitleCase(this.verified)}</slot>

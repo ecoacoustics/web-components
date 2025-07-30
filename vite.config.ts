@@ -71,7 +71,7 @@ export default defineConfig({
         "components/axes": "./src/components/axes/axes.ts",
         "components/verification-grid": "./src/components/verification-grid/verification-grid.ts",
         "components/verification-grid-tile": "./src/components/verification-grid-tile/verification-grid-tile.ts",
-        "components/typeahead": "./src/components/verification-grid-tile/typeahead.ts",
+        "components/typeahead": "./src/components/typeahead/typeahead.ts",
         "components/info-card": "./src/components/info-card/info-card.ts",
         "components/data-source": "./src/components/data-source/data-source.ts",
         "components/bootstrap-modal": "./src/components/bootstrap-modal/bootstrap-modal.ts",

@@ -4,6 +4,7 @@ import {
   keyboardShortcutTemplate,
   mouseClick,
   shiftSymbol,
+  ShiftSymbolVariant,
 } from "../../../../templates/keyboardShortcut";
 import { BootstrapSlide } from "../bootstrapSlide";
 
@@ -38,7 +39,7 @@ export function advancedShortcutsSlide(): BootstrapSlide {
               (shortcut) => html`
                 <tr class="shortcut-row">
                   <td>${shortcut.description}</td>
-                  <td class="shortcut-prompt">${keyboardShortcutTemplate(shortcut)}</td>
+                  <td class="shortcut-prompt">${keyboardShortcutTemplate(shortcut, ShiftSymbolVariant.long, true)}</td>
                 </tr>
               `,
             )}
