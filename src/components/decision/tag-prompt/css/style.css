@@ -1,3 +1,16 @@
+#tag-popover {
+  animation:
+    scale-in 0.1s forwards,
+    fade-in 0.2s forwards;
+  animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+}
+
+#tag-typeahead {
+  display: block;
+
+  min-width: min(500px, 90dvi);
+}
+
 .tag-popover-header {
   display: flex;
   justify-content: space-between;
@@ -15,36 +28,4 @@
 
 .tag-popover-body {
   padding: var(--oe-spacing);
-}
-
-#tag-input-label {
-  display: block;
-}
-
-#tag-typeahead {
-  display: block;
-
-  min-width: min(500px, 90dvi);
-}
-
-::backdrop {
-  animation: backdrop-fade-in 0.2s forwards;
-
-  /*
-    We use a timing function that gets past the first part of the animation very
-    fast because a slow/linear backdrop blur animation makes the UI feel slow.
-  */
-  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-@keyframes backdrop-fade-in {
-  from {
-    background-color: rgba(0, 0, 0, 0);
-    backdrop-filter: blur(0px);
-  }
-
-  to {
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(1px);
-  }
 }

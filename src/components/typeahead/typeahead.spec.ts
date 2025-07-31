@@ -1,4 +1,12 @@
-import { DOWN_ARROW_KEY, END_KEY, ENTER_KEY, HOME_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import {
+  DOWN_ARROW_KEY,
+  END_KEY,
+  ENTER_KEY,
+  ESCAPE_KEY,
+  HOME_KEY,
+  TAB_KEY,
+  UP_ARROW_KEY,
+} from "../../helpers/keyboard";
 import { expect } from "../../tests/assertions";
 import { catchLocatorEvent, getBrowserValue, pressKey, setBrowserAttribute } from "../../tests/helpers";
 import { TypeaheadComponent } from "./typeahead";
@@ -39,7 +47,7 @@ test.describe("search results", () => {
 
     // When the search box is empty, we expect that all of the possible
     // decisions will be shown.
-    await fixture.page.keyboard.press("Escape");
+    await pressKey(fixture.inputBox(), ESCAPE_KEY);
     await expect(fixture.searchResults()).toHaveCount(7);
   });
 

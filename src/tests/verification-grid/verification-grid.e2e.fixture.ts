@@ -38,6 +38,8 @@ import { VerificationBootstrapComponent } from "../../components/bootstrap-modal
 import { DataSourceComponent } from "../../components/data-source/data-source";
 import { createFixture, setContent } from "../fixtures";
 
+type TagCorrectionOptions = "Abbots Babbler" | "Brush Turkey" | "Noisy Miner" | "tag1" | "tag2" | "tag3" | "tag4";
+
 class TestPage {
   public constructor(public readonly page: Page) {}
 
@@ -96,6 +98,8 @@ class TestPage {
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
+  private tagCorrectionResult = () => this.page.locator(".typeahead-result-action");
+
   private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
@@ -104,6 +108,11 @@ class TestPage {
   private classificationButton(tag: string, decision: boolean): Locator {
     const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
     return targetDecision.locator(`#${decision}-decision-button`);
+  }
+
+  public tagCorrectionButton(): Locator {
+    const targetDecision = this.page.locator("oe-tag-prompt").first();
+    return targetDecision.locator(`#decision-button`);
   }
 
   public smallJsonInput = "http://localhost:3000/test-items-small.json";
@@ -193,6 +202,31 @@ class TestPage {
     `, [".decision-button"]);
   }
 
+  public async createWithCompoundTask() {
+    await this.create(`
+      <oe-verification verified="true"></oe-verification>
+      <oe-verification verified="false"></oe-verification>
+      <oe-verification verified="skip"></oe-verification>
+
+      <oe-tag-prompt
+        when="(subject) => subject?.verification?.confirmed === 'false'"
+        search="(searchTerm) => {
+          const testedTags = [
+            { text: 'Abbots Babbler' },
+            { text: 'Brush Turkey' },
+            { text: 'Noisy Miner' },
+            { text: 'tag1' },
+            { text: 'tag2' },
+            { text: 'tag3' },
+            { text: 'tag4' },
+          ];
+
+          return testedTags.filter((tag) => tag.text.includes(searchTerm));
+        }"
+      ></oe-tag-prompt>
+    `);
+  }
+
   public async createWithAppChrome() {
     await this.setNoBootstrap();
 
@@ -254,9 +288,11 @@ class TestPage {
   }
 
   public async panelColor(): Promise<string> {
-    // I have hard coded the panel color here because we use HSL for the panel
-    // color css variable, but DOM queries and assertions use RGB
     return await getCssBackgroundColorVariable(this.gridComponent(), "--oe-panel-color");
+  }
+
+  public async notRequiredColor(): Promise<string> {
+    return await getCssBackgroundColorVariable(this.verificationButton("false"), "--not-required-color");
   }
 
   public async getGridSize(): Promise<number> {
@@ -295,7 +331,7 @@ class TestPage {
 
     return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
+      return styles.background;
     });
   }
 
@@ -305,7 +341,17 @@ class TestPage {
 
     return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
+      return styles.background;
+    });
+  }
+
+  public async getTagCorrectionColor(): Promise<string> {
+    const decisionButton = this.tagCorrectionButton();
+    const colorPill = decisionButton.locator(".decision-color-pill");
+
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
+      const styles = window.getComputedStyle(element);
+      return styles.background;
     });
   }
 
@@ -495,7 +541,7 @@ class TestPage {
       async (item: Locator) =>
         await item.evaluate((element: HTMLSpanElement) => {
           const styles = window.getComputedStyle(element);
-          return styles.backgroundColor;
+          return styles.background;
         }),
     );
 
@@ -603,7 +649,7 @@ class TestPage {
     await this.bootstrapDialogButton().click();
   }
 
-  public async createSubSelection(items: number | number[], modifiers?: KeyboardModifiers) {
+  public async subSelect(items: number | number[], modifiers?: KeyboardModifiers) {
     const gridTiles = this.gridTileContainers();
 
     const itemArray = Array.isArray(items) ? items : [items];
@@ -616,8 +662,8 @@ class TestPage {
     // when sub-selecting a range, we want the first item to be selected without
     // holding down the shift key, then we should hold down the shift key when
     // selecting the end of the range
-    await this.createSubSelection([start], modifiers);
-    await this.createSubSelection([end], ["Shift", ...modifiers]);
+    await this.subSelect([start], modifiers);
+    await this.subSelect([end], ["Shift", ...modifiers]);
   }
 
   // TODO: Add support for negative selection
@@ -673,6 +719,18 @@ class TestPage {
 
     const decisionButton = this.classificationButton(tag, decision);
     await decisionButton.click();
+
+    await decisionEvent;
+  }
+
+  public async makeTagCorrectionDecision(selectedOption: TagCorrectionOptions) {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+
+    // Clicking this button will open up the tag prompt dialog.
+    await this.tagCorrectionButton().click();
+
+    const resultButton = this.tagCorrectionResult().filter({ hasText: selectedOption }).first();
+    await resultButton.click();
 
     await decisionEvent;
   }

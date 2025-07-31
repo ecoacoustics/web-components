@@ -19,7 +19,6 @@ import { gridTileContext, injectionContext, verificationGridContext } from "../.
 import { Tag } from "../../models/tag";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { decisionNotRequired } from "../../models/decisions/decisionNotRequired";
-import { TagAdjustment } from "../../models/decisions/tagAdjustment";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
@@ -385,7 +384,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     } else if (currentTagAdjustment) {
       tooltipText = `tag adjustment: ${currentTagAdjustment.tag.text}`;
     } else {
-      tooltipText = "tag adjustment: incomplete";
+      tooltipText = "tag adjustment: no decision";
     }
 
     if (!currentTagAdjustment) {
@@ -437,12 +436,12 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     });
 
     let tooltipContent = "";
-    if (!this.model.tagAdjustment) {
+    if (!this.model?.tagAdjustment) {
       tooltipContent = `This item was tagged as '${tagText}' in your data source`;
-    } else if (this.model.tagAdjustment === decisionNotRequired) {
+    } else if (this.model?.tagAdjustment === decisionNotRequired) {
       tooltipContent = `The requirements for this task have not been met`;
     } else {
-      tooltipContent = `This item has been corrected to '${this.model.tagAdjustment.tag.text}'`;
+      tooltipContent = `This item has been corrected to '${this.model?.tagAdjustment?.tag?.text}'`;
     }
 
     // use a pointerdown event instead of a click event because MacOS doesn't
@@ -465,12 +464,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
             <figcaption class="tag-label">
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
                 <span>
-                  ${when(
-                    this.model.tagAdjustment && this.model.tagAdjustment !== decisionNotRequired,
-                    () =>
-                      html`<del>${tagText}</del> <ins>${(this.model.tagAdjustment as TagAdjustment)?.tag.text}</ins>`,
-                    () => html`${tagText}`,
-                  )}
+                  ${this.model?.tagAdjustment && this.model?.tagAdjustment !== decisionNotRequired
+                    ? html`<del>${tagText}</del> <ins>${this.model?.tagAdjustment?.tag.text}</ins>`
+                    : html`${tagText}`}
                 </span>
               </sl-tooltip>
             </figcaption>

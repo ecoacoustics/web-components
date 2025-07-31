@@ -67,8 +67,7 @@ test.describe("Verification Component", () => {
         await fixture.changeVerified(DecisionOptions.TRUE);
 
         const expectedColor = await getCssBackgroundColorVariable(fixture.component(), testCase.expectedColor);
-        const realizedColor = await fixture.getPillColor();
-        expect(realizedColor).toEqual(expectedColor);
+        await expect(fixture.colorPill()).toHaveCSS("background", expectedColor);
       });
     });
   });

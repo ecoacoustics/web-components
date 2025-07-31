@@ -58,6 +58,9 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     unsafeCSS(advancedShortcutStyles),
   ];
 
+  public static readonly openEventName = "open";
+  public static readonly closeEventName = "close";
+
   @consume({ context: injectionContext, subscribe: true })
   @state()
   private injector!: VerificationGridInjector;
@@ -171,7 +174,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
     this.autoDismissPreference = "true";
     this.dialogElement.close();
-    this.dispatchEvent(new CustomEvent("close"));
+    this.dispatchEvent(new CustomEvent(VerificationBootstrapComponent.closeEventName));
   }
 
   // this method is private because you should be explicitly opening the modal
@@ -181,11 +184,10 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
     this.slides = slides;
     this.dialogElement.showModal();
-    this.dispatchEvent(new CustomEvent("open"));
+    this.dispatchEvent(new CustomEvent(VerificationBootstrapComponent.openEventName));
   }
 
   private handleKeyDown(event: KeyboardEvent) {
-    console.debug("handle");
     // We have to intercept and preventDefault() on the escape key because
     // Chrome will cancel the page load if the escape key is pressed.
     //
@@ -290,7 +292,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog id="dialog-element" @pointerdown="${() => this.closeDialog()}">
+      <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button

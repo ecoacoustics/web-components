@@ -3,7 +3,15 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { callbackConverter } from "../../helpers/attributes";
 import { map } from "lit/directives/map.js";
-import { DOWN_ARROW_KEY, END_KEY, ENTER_KEY, HOME_KEY, TAB_KEY, UP_ARROW_KEY } from "../../helpers/keyboard";
+import {
+  DOWN_ARROW_KEY,
+  END_KEY,
+  ENTER_KEY,
+  ESCAPE_KEY,
+  HOME_KEY,
+  TAB_KEY,
+  UP_ARROW_KEY,
+} from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
 import typeaheadStyles from "./css/style.css?inline";
 
@@ -134,6 +142,33 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
         this.handleFocusSelection();
         break;
       }
+
+      case ESCAPE_KEY: {
+        // If this typeahead is inside of a dialog and the user presses escape
+        // with user input, we want to handle the escape key inside of this
+        // component and prevent the dialog from closing.
+        // If there is no input inside of the text input to clear, we allow the
+        // the event to close the dialog.
+        // This provides a way for users to close the dialog by double pressing
+        // escape.
+        if (this.tagInput.value.length > 0) {
+          event.preventDefault();
+        }
+
+        break;
+      }
+    }
+  }
+
+  private handleKeyUp(event: KeyboardEvent) {
+    // We stop propagation so that shortcut event listeners are not triggered.
+    event.stopPropagation();
+
+    // we bind the escape key to keyUp because MacOS doesn't trigger keydown
+    // events when the escape key is pressed
+    // related to: https://stackoverflow.com/a/78872316
+    if (event.key === ESCAPE_KEY) {
+      this.reset();
     }
   }
 
@@ -212,7 +247,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
         aria-autocomplete="list"
         @input="${this.handleInput}"
         @keydown="${this.handleKeyDown}"
-        @keyup="${(event: KeyboardEvent) => event.stopPropagation()}"
+        @keyup="${this.handleKeyUp}"
       />
 
       <ol id="typeahead-results" role="listbox">

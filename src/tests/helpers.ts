@@ -54,10 +54,10 @@ export async function getCssBackgroundColorVariable<T extends HTMLElement>(
     const cssColorToRgb = (color: string) => {
       const temp = document.createElement("div");
       temp.style.display = "none";
-      temp.style.backgroundColor = color;
+      temp.style.background = color;
       document.body.appendChild(temp);
 
-      const rgb = window.getComputedStyle(temp).backgroundColor;
+      const rgb = window.getComputedStyle(temp).background;
       document.body.removeChild(temp);
 
       return rgb;

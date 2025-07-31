@@ -17,12 +17,6 @@
   font-style: normal;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 svg {
   text {
     /*
@@ -176,18 +170,6 @@ hr {
 dialog {
   position: relative;
 
-  height: max-content;
-  width: max-content;
-
-  /*
-    We have a minimum width and height so that all dialogs are clearly not a
-    part of the main content.
-    By setting a minimum width and height of 50%, we ensure that the dialog will
-    always look raised against the main content.
-  */
-  min-width: 80%;
-  min-height: 80%;
-
   /*
     Similar to the minimum width and height, we set a maximum width and height
     to ensure that there is always a clear distinction between the dialog and
@@ -227,6 +209,18 @@ dialog {
 
   animation: fade-in 600ms forwards;
 
+  /* An overlay dialog can be used if the dialog covers the entire screen. */
+  &.overlay {
+    /*
+      We have a minimum width and height so that all dialogs are clearly not a
+      part of the main content.
+      By setting a minimum width and height of 50%, we ensure that the dialog
+      will always look raised against the main content.
+    */
+    min-width: 80%;
+    min-height: 80%;
+  }
+
   dialog[open] {
     animation: fade-in 600ms forwards;
   }
@@ -240,7 +234,7 @@ dialog {
   }
 }
 
-[popover] {
+[popover]:not(dialog) {
   position: relative;
 
   /* Make the popover use the animation where it grows/shrinks when shown/hidden */

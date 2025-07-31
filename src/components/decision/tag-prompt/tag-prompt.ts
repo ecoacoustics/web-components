@@ -75,7 +75,7 @@ export class TagPromptComponent extends DecisionComponent {
 
   private popoverTemplate(): HTMLTemplateResult {
     return html`
-      <div id="tag-popover" popover @toggle="${this.handleToggle}">
+      <dialog id="tag-popover" popover @toggle="${this.handleToggle}">
         <div class="tag-popover-header">
           <h3 class="tag-popover-title">Tag Correction</h3>
           <button class="tag-popover-close" @click="${this.close}">Close</button>
@@ -89,7 +89,7 @@ export class TagPromptComponent extends DecisionComponent {
             @typeahead-selected="${this.handleDecision}"
           ></oe-typeahead>
         </div>
-      </div>
+      </dialog>
     `;
   }
 
@@ -118,7 +118,7 @@ export class TagPromptComponent extends DecisionComponent {
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 
           <div class="button-text">
-            <slot>Select Tag</slot>
+            <slot>Correct Tag</slot>
           </div>
 
           <div>

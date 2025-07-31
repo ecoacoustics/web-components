@@ -16,7 +16,6 @@ class TestPage {
 
   public async create() {
     await setContent(this.page, `<oe-tag-prompt></oe-tag-prompt>`);
-
     await waitForContentReady(this.page, [".decision-button"]);
   }
 
