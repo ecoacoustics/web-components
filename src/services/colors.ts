@@ -54,5 +54,5 @@ function classificationColor(decision: Classification): CssVariable {
 }
 
 function notRequiredColor(): CssVariable {
-  return "--oe-danger-color";
+  return "--not-required-color";
 }

@@ -50,10 +50,15 @@ const verificationColors = `
   --verification-unsure: ${hashedBackground(unsureColor)};
 `;
 
+const noDecisionColors = `
+  --not-required-color: #ddd;
+`;
+
 export const decisionColors = unsafeCSS(`
   :host {
     ${verificationColors}
     ${classificationColors}
     ${tagPromptColors}
+    ${noDecisionColors}
   }
 `);

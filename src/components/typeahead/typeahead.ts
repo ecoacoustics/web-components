@@ -178,6 +178,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
           class="typeahead-result-action oe-btn ${classes}"
           aria-selected="${selected}"
           @click="${() => this.handleDecision(model)}"
+          @pointerover="${() => (this.focusedIndex = index)}"
         >
           ${this.textConverter(model)}
         </button>

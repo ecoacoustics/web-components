@@ -5,7 +5,7 @@ import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
-import { ENTER_KEY } from "../../helpers/keyboard";
+import { ALT_KEY, ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
@@ -457,7 +457,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
-        aria-keyshortcuts="${this.shortcuts.join(",")}"
+        aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container vertically-fill ${figureClasses}">

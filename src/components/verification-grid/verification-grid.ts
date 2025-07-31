@@ -324,16 +324,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
-  // private get behavingSubSelection(): SubjectWrapper[] {
-  //   if (this.currentSubSelection.length > 0) {
-  //     return this.currentSubSelection;
-  //   }
-  //
-  //   return this.subjects;
-  // }
+  private get behavingSubSelection(): SubjectWrapper[] {
+    if (this.currentSubSelection.length > 0) {
+      return this.currentSubSelection;
+    }
 
-  private get tileModels(): SubjectWrapper[] {
-    return Array.from(this.gridTiles).map((tile) => tile.model);
+    return this.subjects;
   }
 
   /**
@@ -1619,23 +1615,33 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private updateDecisionWhen(subSelection = this.tileModels): void {
+  private updateDecisionWhen(subSelection = this.behavingSubSelection): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      const passingSubjects = subSelection.filter((subject) => {
-        const passing = decisionElement.when(subject);
-
-        if (!passing) {
-          subject.setDecisionNoRequired(decisionElement.decisionConstructor);
-        } else {
-          subject.setDecisionRequired(decisionElement.decisionConstructor);
-        }
-
-        return passing;
-      });
-
-      decisionElement.disabled = passingSubjects.length === 0;
+      decisionElement.disabled = !subSelection.some((subject) => decisionElement.when(subject));
     }
+
+    const gridTiles = Array.from(this.gridTiles);
+    for (const tile of gridTiles) {
+      this.updateDecisionWhenForSubject(tile);
+    }
+  }
+
+  private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
+    const subject = tile.model;
+    const decisionElements = this.decisionElements ?? [];
+
+    for (const decisionElement of decisionElements) {
+      const passes = decisionElement.when(subject);
+      if (passes) {
+        subject.setDecisionRequired(decisionElement.decisionConstructor);
+      } else {
+        subject.setDecisionNoRequired(decisionElement.decisionConstructor);
+      }
+    }
+
+    tile.model = subject;
+    tile.requestUpdate();
   }
 
   //#endregion
