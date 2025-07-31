@@ -8,6 +8,7 @@ title: Open Ecoacoustics | Examples | Verification | Compound
 <oe-verification-grid id="verification-grid" grid-size="8">
   <oe-verification verified="true" shortcut="Y"></oe-verification>
   <oe-verification verified="false" shortcut="N"></oe-verification>
+  <oe-verification verified="skip" shortcut="S"></oe-verification>
   <oe-tag-prompt
     shortcut="3"
     when="(subject) => subject?.verification?.confirmed === 'false'"
