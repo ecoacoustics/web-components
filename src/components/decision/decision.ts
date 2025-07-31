@@ -13,8 +13,8 @@ import { decisionColor } from "../../services/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { SubjectWrapper } from "../../models/subject";
-import decisionStyles from "./css/style.css?inline";
 import { Constructor } from "../../helpers/types/advancedTypes";
+import decisionStyles from "./css/style.css?inline";
 
 export interface DecisionModels<T extends Decision> {
   [DecisionOptions.TRUE]: T;

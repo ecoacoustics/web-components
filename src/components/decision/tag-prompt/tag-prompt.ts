@@ -9,8 +9,8 @@ import { Tag } from "../../../models/tag";
 import { callbackConverter } from "../../../helpers/attributes";
 import { TagAdjustment } from "../../../models/decisions/tagAdjustment";
 import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
-import tagPromptStyles from "./css/style.css?inline";
 import { Constructor } from "../../../helpers/types/advancedTypes";
+import tagPromptStyles from "./css/style.css?inline";
 
 @customElement("oe-tag-prompt")
 export class TagPromptComponent extends DecisionComponent {

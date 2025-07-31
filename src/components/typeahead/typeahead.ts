@@ -212,6 +212,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
         aria-autocomplete="list"
         @input="${this.handleInput}"
         @keydown="${this.handleKeyDown}"
+        @keyup="${(event: KeyboardEvent) => event.stopPropagation()}"
       />
 
       <ol id="typeahead-results" role="listbox">
