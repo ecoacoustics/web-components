@@ -7,9 +7,10 @@ import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { Tag } from "../../../models/tag";
 import { callbackConverter } from "../../../helpers/attributes";
-import { TagAdjustment } from "../../../models/decisions/tag-adjustment";
+import { TagAdjustment } from "../../../models/decisions/tagAdjustment";
 import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
 import tagPromptStyles from "./css/style.css?inline";
+import { Constructor } from "../../../helpers/types/advancedTypes";
 
 @customElement("oe-tag-prompt")
 export class TagPromptComponent extends DecisionComponent {
@@ -29,6 +30,10 @@ export class TagPromptComponent extends DecisionComponent {
 
   public get decisionModels(): Partial<DecisionModels<Decision>> {
     throw new Error("Method not implemented.");
+  }
+
+  public get decisionConstructor(): Constructor<Decision> {
+    return TagAdjustment;
   }
 
   /** Open the tag prompt popover */
@@ -107,6 +112,7 @@ export class TagPromptComponent extends DecisionComponent {
           popovertarget="tag-popover"
           part="decision-button"
           style="--ripple-color: var(${color})"
+          aria-keyshortcuts="${this.shortcut}"
           ?disabled="${this.disabled}"
         >
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>

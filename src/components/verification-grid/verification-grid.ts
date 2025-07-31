@@ -324,12 +324,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
-  private get behavingSubSelection(): SubjectWrapper[] {
-    if (this.currentSubSelection.length > 0) {
-      return this.currentSubSelection;
-    }
+  // private get behavingSubSelection(): SubjectWrapper[] {
+  //   if (this.currentSubSelection.length > 0) {
+  //     return this.currentSubSelection;
+  //   }
+  //
+  //   return this.subjects;
+  // }
 
-    return this.subjects;
+  private get tileModels(): SubjectWrapper[] {
+    return Array.from(this.gridTiles).map((tile) => tile.model);
   }
 
   /**
@@ -1559,6 +1563,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
     );
 
+    // Because auto-paging and automatic tile selection are dependent upon the
+    // "no decision required" states, it must be performed first.
+    this.updateDecisionWhen();
+
     if (this.shouldAutoPage()) {
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
@@ -1594,8 +1602,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.singleDecisionMode = true;
       }
     }
-
-    this.updateDecisionWhen();
   }
 
   private shouldAutoPage(): boolean {
@@ -1613,12 +1619,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private updateDecisionWhen(): void {
-    const selectedTiles = this.behavingSubSelection;
-
+  private updateDecisionWhen(subSelection = this.tileModels): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      decisionElement.disabled = !selectedTiles.some((subject) => decisionElement.when(subject));
+      const passingSubjects = subSelection.filter((subject) => {
+        const passing = decisionElement.when(subject);
+
+        if (!passing) {
+          subject.setDecisionNoRequired(decisionElement.decisionConstructor);
+        } else {
+          subject.setDecisionRequired(decisionElement.decisionConstructor);
+        }
+
+        return passing;
+      });
+
+      decisionElement.disabled = passingSubjects.length === 0;
     }
   }
 
@@ -1697,7 +1713,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
-  private handleTileLoaded(): void {
+  private handleTileLoaded(event: CustomEvent): void {
+    if (!(event.target instanceof VerificationGridTileComponent)) {
+      console.error(`caught ${VerificationGridTileComponent.loadedEventName} event from non-grid tile element`);
+      return;
+    }
+
     // This method is run when a tile has completely finished loading.
     // Therefore, if this loaded event was emitted from the last tile needed to
     // have a fully loaded verification grid, we want to perform some actions

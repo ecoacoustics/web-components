@@ -18,6 +18,8 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { decisionNotRequired } from "../../models/decisions/decisionNotRequired";
+import { TagAdjustment } from "../../models/decisions/tagAdjustment";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
@@ -29,6 +31,7 @@ export type RequiredClassification = Tag;
 export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredTagAdjustment;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
+export type LoadedEvent = CustomEvent;
 
 interface OverflowEventDetail {
   isOverlapping: boolean;
@@ -61,6 +64,7 @@ const shortcutTranslation = {
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
  *
+ * @event selected
  * @event tile-loaded
  */
 @customElement("oe-verification-grid-tile")
@@ -68,6 +72,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   public static readonly selectedEventName = "selected";
+  public static readonly loadedEventName = "tile-loaded";
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })
@@ -269,7 +274,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
     this.loaded = true;
-    this.dispatchEvent(new CustomEvent("tile-loaded", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent<LoadedEvent>(VerificationGridTileComponent.loadedEventName, { bubbles: true }));
   }
 
   private handleFocusedKeyDown(event: KeyboardEvent): void {
@@ -351,7 +356,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
   private verificationMeterTemplate(): HTMLTemplateResult {
     const currentVerificationModel = this.model.verification;
-    const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
+
+    let decisionText = "no decision";
+    if (currentVerificationModel === decisionNotRequired) {
+      decisionText = "not required";
+    } else if (currentVerificationModel) {
+      decisionText = currentVerificationModel.confirmed;
+    }
+
     const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
 
     // if there is no verification decision on the tiles subject model, then
@@ -366,9 +378,15 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
   private tagAdjustmentMeterTemplate(): HTMLTemplateResult {
     const currentTagAdjustment = this.model.tagAdjustment;
-    const tooltipText = currentTagAdjustment
-      ? `tag adjustment: ${currentTagAdjustment.tag.text}`
-      : "tag adjustment: Incomplete";
+
+    let tooltipText = "";
+    if (currentTagAdjustment === decisionNotRequired) {
+      tooltipText = "tag adjustment: not required";
+    } else if (currentTagAdjustment) {
+      tooltipText = `tag adjustment: ${currentTagAdjustment.tag.text}`;
+    } else {
+      tooltipText = "tag adjustment: incomplete";
+    }
 
     if (!currentTagAdjustment) {
       return this.meterSegmentTemplate(tooltipText);
@@ -418,9 +436,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       selected: this.selected,
     });
 
-    const tooltipContent = this.model.tagAdjustment
-      ? `This item has been corrected to '${this.model.tagAdjustment.tag.text}'`
-      : `This item was tagged as '${tagText}' in your data source`;
+    let tooltipContent = "";
+    if (!this.model.tagAdjustment) {
+      tooltipContent = `This item was tagged as '${tagText}' in your data source`;
+    } else if (this.model.tagAdjustment === decisionNotRequired) {
+      tooltipContent = `The requirements for this task have not been met`;
+    } else {
+      tooltipContent = `This item has been corrected to '${this.model.tagAdjustment.tag.text}'`;
+    }
 
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
@@ -434,6 +457,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
+        aria-keyshortcuts="${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container vertically-fill ${figureClasses}">
@@ -442,8 +466,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
                 <span>
                   ${when(
-                    this.model.tagAdjustment,
-                    () => html`<del>${tagText}</del> <ins>${this.model.tagAdjustment?.tag.text}</ins>`,
+                    this.model.tagAdjustment && this.model.tagAdjustment !== decisionNotRequired,
+                    () =>
+                      html`<del>${tagText}</del> <ins>${(this.model.tagAdjustment as TagAdjustment)?.tag.text}</ins>`,
                     () => html`${tagText}`,
                   )}
                 </span>

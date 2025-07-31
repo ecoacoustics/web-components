@@ -14,6 +14,7 @@ import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { SubjectWrapper } from "../../models/subject";
 import decisionStyles from "./css/style.css?inline";
+import { Constructor } from "../../helpers/types/advancedTypes";
 
 export interface DecisionModels<T extends Decision> {
   [DecisionOptions.TRUE]: T;
@@ -76,6 +77,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   public verificationGrid?: VerificationGridComponent;
 
   public abstract get decisionModels(): Partial<DecisionModels<Decision>>;
+  public abstract get decisionConstructor(): Constructor<Decision>;
 
   private shouldEmitNext = true;
   private keyboardHeldDown = false;

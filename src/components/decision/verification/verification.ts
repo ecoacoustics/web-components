@@ -5,13 +5,14 @@ import { DecisionComponent, DecisionModels } from "../decision";
 import { required } from "../../../helpers/decorators";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
-import { DecisionOptions } from "../../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { enumConverter, tagArrayConverter } from "../../../helpers/attributes";
 import { KeyboardShortcut, keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { Tag } from "../../../models/tag";
 import { when } from "lit/directives/when.js";
 import { toTitleCase } from "../../../helpers/text/titleCase";
 import { repeat } from "lit/directives/repeat.js";
+import { Constructor } from "../../../helpers/types/advancedTypes";
 import verificationStyles from "./css/style.css?inline";
 
 /**
@@ -44,8 +45,12 @@ export class VerificationComponent extends DecisionComponent {
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
-  public override get decisionModels(): Partial<DecisionModels<Verification>> {
+  public get decisionModels(): Partial<DecisionModels<Verification>> {
     return this._decisionModels;
+  }
+
+  public get decisionConstructor(): Constructor<Decision> {
+    return Verification;
   }
 
   // TODO: Remove once we complete separate oe-skip and oe-unsure decisions
@@ -140,6 +145,7 @@ export class VerificationComponent extends DecisionComponent {
           part="decision-button"
           style="--ripple-color: var(${color})"
           aria-disabled="${this.disabled}"
+          aria-keyshortcuts="${this.shortcut}"
           @click="${() => this.handleDecision()}"
         >
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>

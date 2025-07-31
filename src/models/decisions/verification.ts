@@ -1,4 +1,3 @@
-import { EnumValue } from "../../helpers/types/advancedTypes";
 import { Tag } from "../tag";
 import { Decision, DecisionOptions } from "./decision";
 
@@ -10,7 +9,7 @@ import { Decision, DecisionOptions } from "./decision";
  * @extends Decision
  */
 export class Verification extends Decision {
-  public constructor(confirmed: EnumValue<DecisionOptions>, tag?: Tag) {
+  public constructor(confirmed: DecisionOptions, tag?: Tag) {
     super(confirmed, tag);
   }
 

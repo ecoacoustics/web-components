@@ -2,8 +2,9 @@ import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
-import { EnumValue } from "../helpers/types/advancedTypes";
-import { TagAdjustment } from "./decisions/tag-adjustment";
+import { Constructor, EnumValue } from "../helpers/types/advancedTypes";
+import { TagAdjustment } from "./decisions/tagAdjustment";
+import { decisionNotRequired, OptionalDecision } from "./decisions/decisionNotRequired";
 
 export enum AudioCachedState {
   COLD,
@@ -72,8 +73,8 @@ export class SubjectWrapper {
   // but can have multiple classification decisions
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
-  public verification?: Verification;
-  public tagAdjustment?: TagAdjustment;
+  public verification?: OptionalDecision<Verification>;
+  public tagAdjustment?: OptionalDecision<TagAdjustment>;
   public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
@@ -142,9 +143,35 @@ export class SubjectWrapper {
     }
   }
 
+  public setDecisionNoRequired(decision: Constructor<Decision>): void {
+    if (decision === Verification) {
+      this.verification = decisionNotRequired;
+    } else if (decision === TagAdjustment) {
+      this.tagAdjustment = decisionNotRequired;
+    } else {
+      console.error("Could not invalidate decision requirement:", decision);
+      return;
+    }
+  }
+
+  public setDecisionRequired(decision: Constructor<Decision>): void {
+    if (decision === Verification) {
+      this.verification = this.verification === decisionNotRequired ? undefined : this.verification;
+    } else if (decision === TagAdjustment) {
+      this.tagAdjustment = this.tagAdjustment === decisionNotRequired ? undefined : this.tagAdjustment;
+    } else {
+      console.error("Could not invalidate decision requirement:", decision);
+      return;
+    }
+  }
+
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
     if (queryingDecision instanceof Verification) {
+      if (this.verification === decisionNotRequired) {
+        return true;
+      }
+
       return this.verification?.confirmed === queryingDecision.confirmed;
     }
 
@@ -162,18 +189,20 @@ export class SubjectWrapper {
     const namespace = columnNamespace;
     const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
 
-    const verificationColumns = this.verification
-      ? {
-          [tagColumnName]: this.verification.tag.text,
-          [confirmedColumnName]: this.verification.confirmed,
-        }
-      : {};
+    const verificationColumns =
+      this.verification && this.verification !== decisionNotRequired
+        ? {
+            [tagColumnName]: this.verification.tag.text,
+            [confirmedColumnName]: this.verification.confirmed,
+          }
+        : {};
 
-    const tagCorrectionColumns = this.tagAdjustment
-      ? {
-          [tagAdjustmentColumnName]: this.tagAdjustment.tag.text,
-        }
-      : {};
+    const tagCorrectionColumns =
+      this.tagAdjustment && this.tagAdjustment !== decisionNotRequired
+        ? {
+            [tagAdjustmentColumnName]: this.tagAdjustment.tag.text,
+          }
+        : {};
 
     const classificationModels = this.classifications.values();
     for (const classification of classificationModels) {

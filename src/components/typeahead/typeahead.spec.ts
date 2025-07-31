@@ -226,13 +226,13 @@ test.describe("selection emission", () => {
     });
   });
 
-  test.fixme("should not emit anything if there are no results", async ({ fixture }) => {
-    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
-
-    await fixture.inputBox().fill("some phrase where there are no results");
-
-    await fixture.inputBox().press(ENTER_KEY);
-
-    await expect(selectionEvent).not.resolves.toBeDefined();
-  });
+  // test.fixme("should not emit anything if there are no results", async ({ fixture }) => {
+  //   const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+  //
+  //   await fixture.inputBox().fill("some phrase where there are no results");
+  //
+  //   await fixture.inputBox().press(ENTER_KEY);
+  //
+  //   await expect(selectionEvent).not.resolves.toBeDefined();
+  // });
 });

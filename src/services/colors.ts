@@ -1,7 +1,8 @@
-import { CssVariable } from "../helpers/types/advancedTypes";
+import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
 import { Classification } from "../models/decisions/classification";
 import { Decision } from "../models/decisions/decision";
-import { TagAdjustment } from "../models/decisions/tag-adjustment";
+import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
+import { TagAdjustment } from "../models/decisions/tagAdjustment";
 import { Verification } from "../models/decisions/verification";
 
 const tagColors = new Map<string, CssVariable>();
@@ -14,13 +15,17 @@ const tagColors = new Map<string, CssVariable>();
  *
  * @param decision
  */
-export function decisionColor(decision: Decision): CssVariable {
+export function decisionColor(decision: OptionalDecision): CssVariable {
   const isClassification = decision instanceof Classification;
   if (isClassification) {
     return classificationColor(decision);
   }
 
-  const colorNamespaces = new Map([
+  if (decision === decisionNotRequired) {
+    return notRequiredColor();
+  }
+
+  const colorNamespaces = new Map<Constructor<Decision>, string>([
     [Verification, "verification"],
     [TagAdjustment, "adjustment"],
   ]);
@@ -46,4 +51,8 @@ function classificationColor(decision: Classification): CssVariable {
   tagColors.set(tagName, newDecisionColor);
 
   return `${newDecisionColor}-${decision.confirmed}`;
+}
+
+function notRequiredColor(): CssVariable {
+  return "--oe-danger-color";
 }
