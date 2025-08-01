@@ -1,11 +1,11 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
-import { ENTER_KEY } from "../../helpers/keyboard";
+import { ALT_KEY, ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
@@ -18,15 +18,19 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { decisionNotRequired } from "../../models/decisions/decisionNotRequired";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
+export const requiredTagCorrectionPlaceholder = Symbol("requiredCorrectionPlaceholder");
 
 export type RequiredVerification = typeof requiredVerificationPlaceholder;
+export type RequiredTagCorrection = typeof requiredTagCorrectionPlaceholder;
 export type RequiredClassification = Tag;
-export type RequiredDecision = RequiredVerification | RequiredClassification;
+export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredTagCorrection;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
+export type LoadedEvent = CustomEvent;
 
 interface OverflowEventDetail {
   isOverlapping: boolean;
@@ -59,6 +63,7 @@ const shortcutTranslation = {
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
  *
+ * @event selected
  * @event tile-loaded
  */
 @customElement("oe-verification-grid-tile")
@@ -66,6 +71,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   public static readonly selectedEventName = "selected";
+  public static readonly loadedEventName = "tile-loaded";
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })
@@ -137,6 +143,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.requiredDecisions.every((requiredDecision) => {
       if (requiredDecision === requiredVerificationPlaceholder) {
         return this.model.verification !== undefined;
+      } else if (requiredDecision === requiredTagCorrectionPlaceholder) {
+        return this.model.tagCorrection !== undefined;
       }
 
       return this.model.classifications.has(requiredDecision.text);
@@ -265,7 +273,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
     this.loaded = true;
-    this.dispatchEvent(new CustomEvent("tile-loaded", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent<LoadedEvent>(VerificationGridTileComponent.loadedEventName, { bubbles: true }));
   }
 
   private handleFocusedKeyDown(event: KeyboardEvent): void {
@@ -345,9 +353,16 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
 
-  private verificationMeterTemplate(): HTMLTemplateResult | typeof nothing {
+  private verificationMeterTemplate(): HTMLTemplateResult {
     const currentVerificationModel = this.model.verification;
-    const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
+
+    let decisionText = "no decision";
+    if (currentVerificationModel === decisionNotRequired) {
+      decisionText = "not required";
+    } else if (currentVerificationModel) {
+      decisionText = currentVerificationModel.confirmed;
+    }
+
     const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
 
     // if there is no verification decision on the tiles subject model, then
@@ -360,10 +375,30 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
+  private tagCorrectionMeterTemplate(): HTMLTemplateResult {
+    const currentTagCorrection = this.model.tagCorrection;
+
+    let tooltipText = "";
+    if (currentTagCorrection === decisionNotRequired) {
+      tooltipText = "tag correction: not required";
+    } else if (currentTagCorrection) {
+      tooltipText = `tag correction: ${currentTagCorrection.tag.text}`;
+    } else {
+      tooltipText = "tag correction: no decision";
+    }
+
+    if (!currentTagCorrection) {
+      return this.meterSegmentTemplate(tooltipText);
+    }
+
+    const meterColor = this.injector.colorService(currentTagCorrection);
+    return this.meterSegmentTemplate(tooltipText, meterColor);
+  }
+
   private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
     return html`
       <sl-tooltip content="${tooltip}">
-        <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
+        <span class="progress-meter-segment" style="background: var(${ifDefined(color)})"></span>
       </sl-tooltip>
     `;
   }
@@ -378,6 +413,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
         if (requiredDecision === requiredVerificationPlaceholder) {
           return this.verificationMeterTemplate();
+        } else if (requiredDecision === requiredTagCorrectionPlaceholder) {
+          return this.tagCorrectionMeterTemplate();
         }
 
         return this.classificationMeterTemplate(requiredDecision);
@@ -398,6 +435,15 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       selected: this.selected,
     });
 
+    let tooltipContent = "";
+    if (!this.model?.tagCorrection) {
+      tooltipContent = `This item was tagged as '${tagText}' in your data source`;
+    } else if (this.model?.tagCorrection === decisionNotRequired) {
+      tooltipContent = `The requirements for this task have not been met`;
+    } else {
+      tooltipContent = `This item has been corrected to '${this.model?.tagCorrection?.tag?.text}'`;
+    }
+
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
     return html`
@@ -410,17 +456,18 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         role="button"
         tabindex="0"
         aria-hidden="${this.hidden}"
+        aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container vertically-fill ${figureClasses}">
           <div class="figure-head">
             <figcaption class="tag-label">
-              <sl-tooltip
-                content="This item was tagged as '${tagText}' in your data source"
-                placement="bottom-start"
-                hoist
-              >
-                <span>${tagText}</span>
+              <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
+                <span>
+                  ${this.model?.tagCorrection && this.model?.tagCorrection !== decisionNotRequired
+                    ? html`<del>${tagText}</del> <ins>${this.model?.tagCorrection?.tag.text}</ins>`
+                    : html`${tagText}`}
+                </span>
               </sl-tooltip>
             </figcaption>
 

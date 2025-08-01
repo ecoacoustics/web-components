@@ -130,6 +130,12 @@
         "type": "node-terminal",
       },
       {
+        "name": "Docs Site Dev Server",
+        "command": "pnpm dev:docs",
+        "request": "launch",
+        "type": "node-terminal",
+      },
+      {
         "name": "Launch Firefox",
         "type": "firefox",
         "request": "launch",

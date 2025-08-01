@@ -4,6 +4,7 @@ import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues,
 import {
   OverflowEvent,
   RequiredDecision,
+  requiredTagCorrectionPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
@@ -46,6 +47,7 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -185,7 +187,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public progressBarPosition: ProgressBarPosition = ProgressBarPosition.BOTTOM;
 
   /** A callback function that returns a page of recordings */
-  @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "get-page", type: Function, converter: callbackConverter })
   public getPage?: PageFetcher;
 
   /**
@@ -194,7 +196,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * @default
    * an identity function that returns the url unchanged
    */
-  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter })
   public urlTransformer: UrlTransformer = (url) => url;
 
   @property({ type: Boolean })
@@ -209,7 +211,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private classificationDecisionElements!: ClassificationComponent[];
 
   /** A selector for all oe-verification and oe-classification elements */
-  @queryAssignedElements({ selector: "oe-verification, oe-classification" })
+  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
   private decisionElements!: DecisionComponentUnion[];
 
   // Because it's possible (although unlikely) for multiple skip buttons to
@@ -320,6 +322,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const availableTiles = this.rows * this.columns;
     const visibleSubjectCount = this.currentPageIndices.end - this.currentPageIndices.start;
     return availableTiles - visibleSubjectCount;
+  }
+
+  private get behavingSubSelection(): SubjectWrapper[] {
+    if (this.currentSubSelection.length > 0) {
+      return this.currentSubSelection;
+    }
+
+    return this.subjects;
   }
 
   /**
@@ -708,6 +718,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
+      } else if (decisionElement instanceof TagPromptComponent) {
+        result.push(requiredTagCorrectionPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
         result.push(decisionElement.tag);
       }
@@ -1016,6 +1028,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.anyOverlap.value = false;
   }
 
+  private handlePointerMove(event: PointerEvent): void {
+    runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
+  }
+
   //#endregion
 
   //#region SelectionHandlers
@@ -1143,6 +1159,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
     this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+
+    this.updateDecisionWhen();
   }
 
   /**
@@ -1278,14 +1296,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       this.highlight.highlighting = true;
 
-      const highlightBoxElement = this.highlightBox;
       this.updateHighlightObservedElements();
 
       const { pageX, pageY } = event;
-
-      highlightBoxElement.style.left = `${pageX}px`;
-      highlightBoxElement.style.top = `${pageY}px`;
-
       this.highlight.start = { x: pageX, y: pageY };
     }
   }
@@ -1294,8 +1307,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.highlight.observedElements = Array.from(this.gridTiles);
   }
 
-  private resizeHighlightBox(event: PointerEvent) {
-    if (!this.highlight.highlighting || !this.shadowRoot) {
+  private resizeHighlightBox(event: PointerEvent): void {
+    if (!this.highlight.highlighting) {
       return;
     }
 
@@ -1307,9 +1320,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const highlightWidth = this.highlight.current.x - this.highlight.start.x;
     const highlightHeight = this.highlight.current.y - this.highlight.start.y;
 
+    const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
+    const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
+
+    // If the user selects from the right to the left, we change the position
+    // of the highlight box to so that the top left of the highlight box is
+    // always aligned with the users pointer.
+    //
+    // We use "transform" (instead of left & top) so that there is zero layout
+    // shift or layout recalculation when moving the highlight box.
+    highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
+
+    // the highlights width / height can be negative if the user drags to the
+    // top or left of the screen
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
+
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
-    const highlightThreshold = 15 as const;
+    const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
@@ -1323,22 +1352,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     } else {
       return;
-    }
-
-    // the highlights width / height can be negative if the user drags to the
-    // top or left of the screen
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
-
-    // if the user selects from the right to the left, we change the position
-    // of the highlight box to so that the top left of the highlight box is
-    // always aligned with the users pointer
-    if (highlightWidth < 0) {
-      highlightBoxElement.style.left = `${pageX}px`;
-    }
-
-    if (highlightHeight < 0) {
-      highlightBoxElement.style.top = `${pageY}px`;
     }
 
     // We mimic the selection behavior of windows explorer where the selection
@@ -1546,6 +1559,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
     );
 
+    // Because auto-paging and automatic tile selection are dependent upon the
+    // "no decision required" states, it must be performed first.
+    this.updateDecisionWhen();
+
     if (this.shouldAutoPage()) {
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
@@ -1596,6 +1613,54 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
     }
+  }
+
+  private updateDecisionWhen(subSelection = this.behavingSubSelection): void {
+    // If any of the decision buttons predicate's pass with the current
+    // sub-selection, the button should not be disabled.
+    const decisionElements = this.decisionElements ?? [];
+    for (const decisionElement of decisionElements) {
+      decisionElement.disabled = !subSelection.some((subject) => decisionElement.when(subject));
+    }
+
+    // Each tiles required decisions are determined from the decision buttons
+    // "when" predicates.
+    // Therefore, when we update the decision buttons disabled state, we also
+    // need to update the required decisions.
+    const gridTiles = Array.from(this.gridTiles);
+    for (const tile of gridTiles) {
+      this.updateDecisionWhenForSubject(tile);
+    }
+  }
+
+  private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
+    const subject = tile.model;
+    const decisionElements = this.decisionElements ?? [];
+
+    // Each subject has required decisions that must be completed.
+    // Required decisions are determined from the decision buttons "when"
+    // predicates.
+    // If the predicate doesn't pass for the current decision button, we mark
+    // the task as "not required" in the subject.
+    for (const decisionElement of decisionElements) {
+      const passes = decisionElement.when(subject);
+      if (passes) {
+        subject.setDecisionRequired(decisionElement.decisionConstructor);
+      } else {
+        subject.setDecisionNoRequired(decisionElement.decisionConstructor);
+      }
+    }
+
+    // We call "requestUpdate" on the tile so that the progress meter is updated
+    // with its new required decisions.
+    // I don't like manually calling "requestUpdate" here, but the component is
+    // an internal component that we control, so while this is an indication of
+    // bad state updates, it's not user facing, so I have just done a dirty
+    // requestUpdate here.
+    // TODO: Correctly fix the update triggers in the tile component so that we
+    // don't have to manually request an update.
+    tile.model = subject;
+    tile.requestUpdate();
   }
 
   //#endregion
@@ -1673,7 +1738,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
-  private handleTileLoaded(): void {
+  private handleTileLoaded(event: CustomEvent): void {
+    if (!(event.target instanceof VerificationGridTileComponent)) {
+      console.error(`caught ${VerificationGridTileComponent.loadedEventName} event from non-grid tile element`);
+      return;
+    }
+
     // This method is run when a tile has completely finished loading.
     // Therefore, if this loaded event was emitted from the last tile needed to
     // have a fully loaded verification grid, we want to perform some actions
@@ -1683,6 +1753,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.setDecisionDisabled(false);
+
+      this.updateDecisionWhen();
     }
   }
 
@@ -1777,9 +1849,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<strong class="no-decisions-warning">No decisions available.</strong>`;
   }
 
-  // TODO: this function could definitely be refactored
   private skipDecisionTemplate(): HTMLTemplateResult {
-    return html`<oe-verification verified="skip" shortcut="\`"></oe-verification>`;
+    return html`<oe-verification verified="skip" shortcut="s"></oe-verification>`;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
@@ -1864,8 +1935,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
-          @pointermove="${(event: PointerEvent) =>
-            runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
+          @pointermove="${this.handlePointerMove}"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >

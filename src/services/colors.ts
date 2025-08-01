@@ -1,5 +1,8 @@
-import { CssVariable } from "../helpers/types/advancedTypes";
+import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
+import { Classification } from "../models/decisions/classification";
 import { Decision } from "../models/decisions/decision";
+import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
+import { TagCorrection } from "../models/decisions/tagCorrection";
 import { Verification } from "../models/decisions/verification";
 
 const tagColors = new Map<string, CssVariable>();
@@ -12,25 +15,44 @@ const tagColors = new Map<string, CssVariable>();
  *
  * @param decision
  */
-export function decisionColor(decision: Decision): CssVariable {
-  const isVerification = decision instanceof Verification;
-  const colorNamespace = isVerification ? "verification" : "class";
-
-  if (isVerification) {
-    return `--${colorNamespace}-${decision.confirmed}`;
+export function decisionColor(decision: OptionalDecision): CssVariable {
+  const isClassification = decision instanceof Classification;
+  if (isClassification) {
+    return classificationColor(decision);
   }
 
+  if (decision === decisionNotRequired) {
+    return notRequiredColor();
+  }
+
+  const colorNamespaces = new Map<Constructor<Decision>, string>([
+    [Verification, "verification"],
+    [TagCorrection, "correction"],
+  ]);
+
+  const decisionConstructor = Object.getPrototypeOf(decision).constructor;
+  const colorNamespace = colorNamespaces.get(decisionConstructor);
+  if (!colorNamespace) {
+    throw new Error("Could not find color namespace for decision type");
+  }
+
+  return `--${colorNamespace}-${decision.confirmed}`;
+}
+
+function classificationColor(decision: Classification): CssVariable {
   const tagName = decision.tag?.text ?? decision.tag;
-  if (tagColors.has(tagName)) {
-    // because we have already checked that the key exists, we can safely
-    // use a TypeScript type override here
-    const decisionColor = tagColors.get(tagName) as CssVariable;
-    return `${decisionColor}-${decision.confirmed}`;
+  const tagColor = tagColors.get(tagName);
+  if (tagColor) {
+    return `${tagColor}-${decision.confirmed}`;
   }
 
   const nextColorId = tagColors.size;
-  const newDecisionColor: CssVariable = `--${colorNamespace}-${nextColorId}`;
+  const newDecisionColor: CssVariable = `--class-${nextColorId}`;
   tagColors.set(tagName, newDecisionColor);
 
   return `${newDecisionColor}-${decision.confirmed}`;
+}
+
+function notRequiredColor(): CssVariable {
+  return "--not-required-color";
 }

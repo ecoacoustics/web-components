@@ -1,6 +1,5 @@
 import { Page } from "@playwright/test";
-import { getBrowserStyle, waitForContentReady } from "../../tests/helpers";
-import { expect } from "../../tests/assertions";
+import { waitForContentReady } from "../../tests/helpers";
 import { createFixture, setContent } from "../../tests/fixtures";
 
 class TestPage {
@@ -23,13 +22,6 @@ class TestPage {
 
     await setContent(this.page, content ?? defaultContent);
     await waitForContentReady(this.page, ["oe-verification-grid-tile"]);
-  }
-
-  public async assertCursor(expectedCursor: string) {
-    // getBrowserStyles uses getComputedStyles and can therefore assert that the
-    // correct cursor is applied, even if it comes from the user agent styles.
-    const realizedCursor = await getBrowserStyle(this.tileContainer(), "cursor");
-    expect(realizedCursor).toEqual(expectedCursor);
   }
 }
 

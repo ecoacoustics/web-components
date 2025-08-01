@@ -2,7 +2,9 @@ import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
-import { EnumValue } from "../helpers/types/advancedTypes";
+import { Constructor, EnumValue } from "../helpers/types/advancedTypes";
+import { TagCorrection } from "./decisions/tagCorrection";
+import { decisionNotRequired, OptionalDecision } from "./decisions/decisionNotRequired";
 
 export enum AudioCachedState {
   COLD,
@@ -22,6 +24,7 @@ const columnNamespace = "oe_";
 // to the original data input with "oe"
 const tagColumnName = `${columnNamespace}tag`;
 const confirmedColumnName = `${columnNamespace}confirmed`;
+const tagCorrectionColumnName = `${columnNamespace}corrected_tag`;
 type ClassificationColumn = `${typeof columnNamespace}${string}`;
 
 export interface DownloadableResult extends Subject {
@@ -70,7 +73,8 @@ export class SubjectWrapper {
   // but can have multiple classification decisions
   // verification decisions will be reflected in the oe-confirmed
   // column, while each classification will get its own row
-  public verification?: Verification;
+  public verification?: OptionalDecision<Verification>;
+  public tagCorrection?: OptionalDecision<TagCorrection>;
   public classifications = new Map<TagName, Classification>();
   public url: string;
   public tag: Tag;
@@ -86,6 +90,8 @@ export class SubjectWrapper {
       this.addVerification(decision);
     } else if (decision instanceof Classification) {
       this.addClassification(decision);
+    } else if (decision instanceof TagCorrection) {
+      this.addTagCorrection(decision);
     } else {
       throw new Error("Invalid decision type");
     }
@@ -97,6 +103,8 @@ export class SubjectWrapper {
       this.removeVerification();
     } else if (decision instanceof Classification) {
       this.removeClassification(decision.tag);
+    } else if (decision instanceof TagCorrection) {
+      this.removeTagCorrection();
     } else {
       throw new Error("Invalid decision type");
     }
@@ -134,9 +142,35 @@ export class SubjectWrapper {
     }
   }
 
+  public setDecisionNoRequired(decision: Constructor<Decision>): void {
+    if (decision === Verification) {
+      this.verification = decisionNotRequired;
+    } else if (decision === TagCorrection) {
+      this.tagCorrection = decisionNotRequired;
+    } else {
+      console.error("Could not invalidate decision requirement:", decision);
+      return;
+    }
+  }
+
+  public setDecisionRequired(decision: Constructor<Decision>): void {
+    if (decision === Verification) {
+      this.verification = this.verification === decisionNotRequired ? undefined : this.verification;
+    } else if (decision === TagCorrection) {
+      this.tagCorrection = this.tagCorrection === decisionNotRequired ? undefined : this.tagCorrection;
+    } else {
+      console.error("Could not invalidate decision requirement:", decision);
+      return;
+    }
+  }
+
   /** Checks if the current subject has a decision */
   public hasDecision(queryingDecision: Decision): boolean {
     if (queryingDecision instanceof Verification) {
+      if (this.verification === decisionNotRequired) {
+        return true;
+      }
+
       return this.verification?.confirmed === queryingDecision.confirmed;
     }
 
@@ -154,12 +188,20 @@ export class SubjectWrapper {
     const namespace = columnNamespace;
     const classificationColumns: Record<string, EnumValue<DecisionOptions>> = {};
 
-    const verificationColumns = this.verification
-      ? {
-          [tagColumnName]: this.verification.tag.text,
-          [confirmedColumnName]: this.verification.confirmed,
-        }
-      : {};
+    const verificationColumns =
+      this.verification && this.verification !== decisionNotRequired
+        ? {
+            [tagColumnName]: this.verification.tag.text,
+            [confirmedColumnName]: this.verification.confirmed,
+          }
+        : {};
+
+    const tagCorrectionColumns =
+      this.tagCorrection && this.tagCorrection !== decisionNotRequired
+        ? {
+            [tagCorrectionColumnName]: this.tagCorrection.tag.text,
+          }
+        : {};
 
     const classificationModels = this.classifications.values();
     for (const classification of classificationModels) {
@@ -178,6 +220,7 @@ export class SubjectWrapper {
 
     return {
       ...originalSubject,
+      ...tagCorrectionColumns,
       ...verificationColumns,
       ...classificationColumns,
     };
@@ -196,11 +239,19 @@ export class SubjectWrapper {
     this.classifications.set(model.tag.text, model);
   }
 
+  private addTagCorrection(model: TagCorrection): void {
+    this.tagCorrection = model;
+  }
+
   private removeVerification(): void {
     this.verification = undefined;
   }
 
   private removeClassification(tag: Tag): void {
     this.classifications.delete(tag.text);
+  }
+
+  private removeTagCorrection(): void {
+    this.tagCorrection = undefined;
   }
 }

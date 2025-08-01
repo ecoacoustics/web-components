@@ -1,0 +1,33 @@
+#tag-popover {
+  animation:
+    scale-in 0.1s forwards,
+    fade-in 0.2s forwards;
+  animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+}
+
+#tag-typeahead {
+  display: block;
+
+  min-width: min(500px, 90dvi);
+}
+
+.tag-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: var(--oe-spacing) var(--oe-spacing-large);
+
+  background-color: var(--oe-panel-color-darker);
+
+  font-size: var(--oe-font-size-large);
+
+  .tag-popover-title {
+    font-size: var(--oe-font-size-large);
+    margin: 0;
+  }
+}
+
+.tag-popover-body {
+  padding: var(--oe-spacing-small) var(--oe-spacing);
+}

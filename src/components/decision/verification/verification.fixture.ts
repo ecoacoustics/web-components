@@ -19,7 +19,7 @@ class TestPage {
   public tagLegend = () => this.page.locator(".button-text").first();
   public shortcutLegend = () => this.page.locator(".shortcut-legend").first();
   public colorPill = () => this.page.locator(".decision-color-pill").first();
-  public additionalTags = () => this.page.locator(".tag").all();
+  public additionalTags = () => this.page.locator(".tag");
 
   public async create() {
     await setContent(this.page, `<oe-verification verified="true"></oe-verification>`);
@@ -69,13 +69,6 @@ class TestPage {
 
   public async changeVerified(verified: DecisionOptions) {
     await setBrowserAttribute<VerificationComponent>(this.component(), "verified", verified);
-  }
-
-  public async getPillColor(): Promise<string> {
-    return await this.colorPill().evaluate((element: HTMLSpanElement) => {
-      const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
-    });
   }
 
   public async changeDecisionDisabled(disabled: boolean) {

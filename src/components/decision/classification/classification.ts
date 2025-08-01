@@ -4,7 +4,7 @@ import { required } from "../../../helpers/decorators";
 import { Classification } from "../../../models/decisions/classification";
 import { DecisionComponent, DecisionModels } from "../decision";
 import { Tag } from "../../../models/tag";
-import { DecisionOptions } from "../../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { html, HTMLTemplateResult, nothing, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
@@ -16,6 +16,8 @@ import {
   ShiftSymbolVariant,
 } from "../../../templates/keyboardShortcut";
 import { toTitleCase } from "../../../helpers/text/titleCase";
+import { Constructor } from "../../../helpers/types/advancedTypes";
+import { ifDefined } from "lit/directives/if-defined.js";
 import classificationStyles from "./css/style.css?inline";
 
 /**
@@ -60,6 +62,10 @@ export class ClassificationComponent extends DecisionComponent {
 
   public get decisionModels(): Partial<DecisionModels<Classification>> {
     return this._decisionModels;
+  }
+
+  public get decisionConstructor(): Constructor<Decision> {
+    return Classification;
   }
 
   private _decisionModels: Partial<DecisionModels<Classification>> = {};
@@ -184,8 +190,6 @@ export class ClassificationComponent extends DecisionComponent {
   private decisionButtonTemplate(decision: DecisionOptions): HTMLTemplateResult {
     const buttonClasses = classMap({
       disabled: !!this.disabled,
-      "oe-btn-primary": decision === DecisionOptions.TRUE || decision === DecisionOptions.FALSE,
-      "oe-btn-secondary": decision === DecisionOptions.UNSURE || decision === DecisionOptions.SKIP,
     });
 
     const shortcut = decision === DecisionOptions.TRUE ? this.trueKeyboardShortcut : this.falseKeyboardShortcut;
@@ -197,11 +201,12 @@ export class ClassificationComponent extends DecisionComponent {
     return html`
       <button
         id="${decision}-decision-button"
-        class="decision-button ${buttonClasses}"
+        class="decision-button oe-btn-primary ${buttonClasses}"
         part="${decision}-decision-button"
         style="--ripple-color: var(${color})"
         aria-label="${decision} decision for ${this.tag.text}"
         aria-disabled="${this.disabled}"
+        aria-keyshortcuts="${ifDefined(shortcut)}"
         @click="${() => this.emitDecision([decisionModel])}"
       >
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>

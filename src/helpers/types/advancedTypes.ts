@@ -40,3 +40,6 @@ export type CssVariable = `--${string}`;
 export type ThemingVariable = `--oe-${string}`;
 
 export type FixedLengthArray<T, Length> = Array<T> & { length: Length };
+
+/** Extracts the constructor of a class that can be used as a type */
+export type Constructor<T extends object, Args extends unknown[] = any[]> = new (...args: Args) => T;

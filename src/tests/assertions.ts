@@ -65,7 +65,11 @@ async function toHaveLayoutScreenshot(
  * light-dom slotted content does not exist.
  */
 export async function toHaveSlottedText(locator: Locator, expectedText: string): Promise<MatcherReturnType> {
-  const realizedText = await locator.evaluate((slot: HTMLSlotElement) => {
+  const realizedText = await locator.evaluate((slot: HTMLElement) => {
+    if (!(slot instanceof HTMLSlotElement)) {
+      throw new Error("toHaveSlottedText can only be used on a slot element");
+    }
+
     const assignedElements = slot.assignedElements({ flatten: true });
 
     // If there are no assigned elements, we return the default text content of
