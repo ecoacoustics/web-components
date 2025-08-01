@@ -27,13 +27,6 @@ export function mockDeviceSize(size: Size): DeviceMock {
   return (page: Page) => page.setViewportSize(size);
 }
 
-export async function getBrowserStyle<T extends HTMLElement>(component: Locator, property: string) {
-  return await component.evaluate((element: T, propertyName) => {
-    const styles = window.getComputedStyle(element);
-    return styles.getPropertyValue(propertyName);
-  }, property);
-}
-
 export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
     const styles = window.getComputedStyle(element);

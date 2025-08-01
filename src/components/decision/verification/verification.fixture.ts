@@ -71,13 +71,6 @@ class TestPage {
     await setBrowserAttribute<VerificationComponent>(this.component(), "verified", verified);
   }
 
-  public async getPillColor(): Promise<string> {
-    return await this.colorPill().evaluate((element: HTMLSpanElement) => {
-      const styles = window.getComputedStyle(element);
-      return styles.background;
-    });
-  }
-
   public async changeDecisionDisabled(disabled: boolean) {
     const disabledAttributeName = "disabled";
 
