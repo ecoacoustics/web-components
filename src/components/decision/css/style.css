@@ -65,8 +65,12 @@
       the font size (e.g. color pills with backgrounds).
       Will shrink so that the pattern is smaller when put inside of the small
       button pills.
+
+      Note that I also hard code the value of 16px instead of using "rem" units
+      because we don't want the background patterns to change if the user zooms
+      in or changes their browsers font-size.
     */
-    font-size: 0.4rem;
+    font-size: 16px;
 
     align-self: flex-start;
   }

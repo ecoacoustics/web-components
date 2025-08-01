@@ -6,7 +6,7 @@ import {
   getBrowserAttribute,
   getBrowserSignalValue,
   getBrowserValue,
-  getCssBackgroundVariable,
+  getCssVariableStyle,
   invokeBrowserMethod,
   mockDeviceSize,
   removeBrowserAttribute,
@@ -288,11 +288,11 @@ class TestPage {
   }
 
   public async panelColor(): Promise<string> {
-    return await getCssBackgroundVariable(this.gridComponent(), "--oe-panel-color");
+    return await getCssVariableStyle(this.gridComponent(), "--oe-panel-color", "background");
   }
 
   public async notRequiredColor(): Promise<string> {
-    return await getCssBackgroundVariable(this.verificationButton("false"), "--not-required-color");
+    return await getCssVariableStyle(this.verificationButton("false"), "--not-required-color", "background");
   }
 
   public async getGridSize(): Promise<number> {

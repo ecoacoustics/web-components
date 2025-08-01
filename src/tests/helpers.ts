@@ -41,31 +41,36 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   }, name);
 }
 
-// for some reason new versions of chrome return the background color as rgba,
-// but the foreground color as standard rgb.
-// this can break tests if you are comparing background colors to foreground
-// colors.
-// therefore, this function is only reliable for background colors assertions
-export async function getCssBackgroundVariable<T extends HTMLElement>(
+/**
+ * Evaluates a css variable's computed value when applied to a css property.
+ * This can be to get an expected value for a toHaveCSS() assertion that asserts
+ * over computed values which might be slightly different across browsers.
+ * E.g. Some browsers report computed values in rgb while some report in rgba.
+ */
+export async function getCssVariableStyle<T extends HTMLElement>(
   locator: Locator,
   name: CssVariable,
+  property: keyof CSSStyleDeclaration,
 ): Promise<string> {
-  return await locator.evaluate((element: T, variable: string) => {
-    const cssColorToRgb = (color: string) => {
-      const temp = document.createElement("div");
-      temp.style.display = "none";
-      temp.style.background = color;
-      document.body.appendChild(temp);
+  return await locator.evaluate(
+    (element: T, { variable, cssProperty }) => {
+      const browserStyles = (color: string) => {
+        const temp = document.createElement("div");
+        temp.style.display = "none";
+        temp.style[cssProperty as any] = color;
+        document.body.appendChild(temp);
 
-      const rgb = window.getComputedStyle(temp).background;
-      document.body.removeChild(temp);
+        const value = window.getComputedStyle(temp)[cssProperty];
+        document.body.removeChild(temp);
 
-      return rgb;
-    };
+        return value;
+      };
 
-    const variableValue = window.getComputedStyle(element).getPropertyValue(variable);
-    return cssColorToRgb(variableValue);
-  }, name);
+      const variableValue = window.getComputedStyle(element).getPropertyValue(variable);
+      return browserStyles(variableValue);
+    },
+    { variable: name, cssProperty: property },
+  );
 }
 
 /**

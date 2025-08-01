@@ -18,13 +18,6 @@ class TestPage {
     await setContent(this.page, `<oe-tag-prompt></oe-tag-prompt>`);
     await waitForContentReady(this.page, [".decision-button"]);
   }
-
-  public async getPillColor(): Promise<string> {
-    return await this.decisionColorPill().evaluate((element: HTMLSpanElement) => {
-      const styles = window.getComputedStyle(element);
-      return styles.background;
-    });
-  }
 }
 
 export const tagPromptFixture = createFixture(TestPage);
