@@ -4,7 +4,7 @@ import { booleanConverter, callbackConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { Decision, DecisionOptions, TagDecision } from "../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { VerificationGridComponent, VerificationGridInjector } from "../verification-grid/verification-grid";
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
@@ -27,7 +27,7 @@ export type DecisionEvent = CustomEvent<DecisionContent>;
 export type DecisionComponentUnion = DecisionComponent | VerificationComponent | ClassificationComponent;
 
 interface DecisionContent {
-  value: TagDecision[];
+  value: Decision[];
 }
 
 export type WhenPredicate = (subject: SubjectWrapper | null) => boolean;
@@ -114,7 +114,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
     return [];
   }
 
-  protected emitDecision(value: TagDecision[]): void {
+  protected emitDecision(value: Decision[]): void {
     this.keyboardHeldDown = false;
 
     if (this.disabled) {
