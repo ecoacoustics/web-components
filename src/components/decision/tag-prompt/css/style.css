@@ -16,16 +16,18 @@
   justify-content: space-between;
   align-items: center;
 
-  padding: var(--oe-spacing);
-  padding-inline: var(--oe-spacing-large);
+  padding: var(--oe-spacing) var(--oe-spacing-large);
 
   background-color: var(--oe-panel-color-darker);
 
+  font-size: var(--oe-font-size-large);
+
   .tag-popover-title {
+    font-size: var(--oe-font-size-large);
     margin: 0;
   }
 }
 
 .tag-popover-body {
-  padding: var(--oe-spacing);
+  padding: var(--oe-spacing-small) var(--oe-spacing);
 }

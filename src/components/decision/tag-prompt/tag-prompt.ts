@@ -80,7 +80,7 @@ export class TagPromptComponent extends DecisionComponent {
       <dialog id="tag-popover" popover @toggle="${this.handleToggle}">
         <div class="tag-popover-header">
           <h3 class="tag-popover-title">Tag Correction</h3>
-          <button class="tag-popover-close" @click="${this.close}">Close</button>
+          <button class="tag-popover-close oe-btn-secondary oe-btn-small" @click="${this.close}">x</button>
         </div>
 
         <div class="tag-popover-body">

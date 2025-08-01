@@ -427,6 +427,10 @@ button {
   color: black;
 }
 
+.oe-btn-small {
+  padding-block: var(--oe-spacing-small);
+}
+
 .oe-pill {
   display: inline-block;
   border-radius: var(--oe-border-rounding);
