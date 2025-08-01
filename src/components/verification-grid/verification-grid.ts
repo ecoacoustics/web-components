@@ -4,7 +4,7 @@ import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues,
 import {
   OverflowEvent,
   RequiredDecision,
-  requiredTagAdjustmentPlaceholder,
+  requiredTagCorrectionPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
@@ -187,7 +187,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public progressBarPosition: ProgressBarPosition = ProgressBarPosition.BOTTOM;
 
   /** A callback function that returns a page of recordings */
-  @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "get-page", type: Function, converter: callbackConverter })
   public getPage?: PageFetcher;
 
   /**
@@ -196,7 +196,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * @default
    * an identity function that returns the url unchanged
    */
-  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter })
   public urlTransformer: UrlTransformer = (url) => url;
 
   @property({ type: Boolean })
@@ -719,7 +719,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
       } else if (decisionElement instanceof TagPromptComponent) {
-        result.push(requiredTagAdjustmentPlaceholder);
+        result.push(requiredTagCorrectionPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
         result.push(decisionElement.tag);
       }

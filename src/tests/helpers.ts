@@ -46,7 +46,7 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
 // this can break tests if you are comparing background colors to foreground
 // colors.
 // therefore, this function is only reliable for background colors assertions
-export async function getCssBackgroundColorVariable<T extends HTMLElement>(
+export async function getCssBackgroundVariable<T extends HTMLElement>(
   locator: Locator,
   name: CssVariable,
 ): Promise<string> {

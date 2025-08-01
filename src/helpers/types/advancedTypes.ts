@@ -42,4 +42,4 @@ export type ThemingVariable = `--oe-${string}`;
 export type FixedLengthArray<T, Length> = Array<T> & { length: Length };
 
 /** Extracts the constructor of a class to be used as a type */
-export type Constructor<T = any> = new (...args: any[]) => T;
+export type Constructor<T extends object, Args extends unknown[] = any[]> = new (...args: Args) => T;

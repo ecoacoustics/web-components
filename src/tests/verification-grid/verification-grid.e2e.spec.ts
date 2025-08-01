@@ -1979,15 +1979,15 @@ test.describe("compound tasks", () => {
     // I can click the tag correction button.
     await fixture.makeVerificationDecision("false");
 
-    // I make an assertion over the tagAdjustment property to ensure that the
-    // "false" decision didn't incorrectly modify the "tagAdjustment".
+    // I make an assertion over the tagCorrection property to ensure that the
+    // "false" decision didn't incorrectly modify the "tagCorrection".
     const initialModel = (await fixture.verificationGridTileModels())[testedTile];
-    expect(initialModel.tagAdjustment).toBeUndefined();
+    expect(initialModel.tagCorrection).toBeUndefined();
 
     await fixture.makeTagCorrectionDecision("Brush Turkey");
 
     const newModel = (await fixture.verificationGridTileModels())[testedTile];
-    expect(newModel.tagAdjustment).toBeDefined();
+    expect(newModel.tagCorrection).toBeDefined();
   });
 });
 

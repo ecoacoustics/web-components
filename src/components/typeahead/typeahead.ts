@@ -32,10 +32,10 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
 
   public static styles = unsafeCSS(typeaheadStyles);
 
-  @property({ attribute: "text-converter", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "text-converter", type: Function, converter: callbackConverter })
   public textConverter: TypeaheadTextConverter = (model: T) => model.toString();
 
-  @property({ type: Function, converter: callbackConverter as any })
+  @property({ type: Function, converter: callbackConverter })
   public search: TypeaheadCallback<T> = () => [];
 
   @property({ attribute: "max-items", type: Number, reflect: true })
@@ -51,6 +51,9 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   private readonly tagInput!: HTMLInputElement;
 
   public updated(change: PropertyValues<this>): void {
+    // If the max-item's is decreased while the user is focused on an item that
+    // no longer exists (due to a decreasing max-items), we focus the last
+    // element that is now shown.
     if (change.has("search")) {
       this.handleSearchInvalidation();
     } else if (change.has("maxItems")) {

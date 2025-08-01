@@ -1,7 +1,6 @@
 import { html, HTMLTemplateResult } from "lit";
 import { when } from "lit/directives/when.js";
 import { loop } from "../helpers/directives";
-import { classMap } from "lit/directives/class-map.js";
 
 export type KeyboardShortcutKey = string | typeof shiftSymbol | typeof mouseClick;
 
@@ -27,7 +26,6 @@ export const mouseClick = Symbol("mouseClick");
 export function keyboardShortcutTemplate(
   shortcut: KeyboardShortcut,
   shiftSymbolVariant: ShiftSymbolVariant = ShiftSymbolVariant.long,
-  compact = false,
 ): HTMLTemplateResult {
   const shortShiftCharacter = "⇧";
 
@@ -49,15 +47,13 @@ export function keyboardShortcutTemplate(
     }
   }
 
-  const classes = classMap({ compact });
-
   return html`
     ${loop(
       normalized,
       (key, { last }) => html`
         ${key === mouseClick
           ? html`<sl-icon name="mouse" class="inline-icon xl-icon"></sl-icon>`
-          : html`<kbd class="${classes}">${key.toLocaleUpperCase()}</kbd>`}
+          : html`<kbd>${key.toLocaleUpperCase()}</kbd>`}
         ${when(!last, () => "+")}
       `,
     )}

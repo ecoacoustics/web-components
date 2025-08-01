@@ -1,7 +1,15 @@
 import { unsafeCSS } from "lit";
 import colorbrewer from "colorbrewer";
 
-function hashedBackground(color: string): string {
+/**
+ * Creates a diagonal (45deg) line hatching pattern that can be used in a CSS
+ * "background" property.
+ *
+ * The size & thickness of the lines will be determined by the selected elements
+ * font size so that smaller elements (with smaller fonts) can have tighter
+ * hatching.
+ */
+function hatchedBackground(color: string): string {
   return `repeating-linear-gradient(
     45deg,
     ${color} 0em,
@@ -36,8 +44,8 @@ const classificationColors = `
 `;
 
 const tagPromptColors = `
-  --adjustment-true: ${hashedBackground("#dd0")};
-  --adjustment-false: ${hashedBackground("#dd0")};
+  --correction-true: ${hatchedBackground("#dd0")};
+  --correction-false: ${hatchedBackground("#dd0")};
 `;
 
 const skipColor = "#ddd";
@@ -46,8 +54,8 @@ const unsureColor = "#d0d";
 const verificationColors = `
   --verification-true: green;
   --verification-false: red;
-  --verification-skip: ${hashedBackground(skipColor)};
-  --verification-unsure: ${hashedBackground(unsureColor)};
+  --verification-skip: ${hatchedBackground(skipColor)};
+  --verification-unsure: ${hatchedBackground(unsureColor)};
 `;
 
 const noDecisionColors = `

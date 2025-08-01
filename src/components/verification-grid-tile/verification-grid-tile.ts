@@ -22,12 +22,12 @@ import { decisionNotRequired } from "../../models/decisions/decisionNotRequired"
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
-export const requiredTagAdjustmentPlaceholder = Symbol("requiredAdjustmentPlaceholder");
+export const requiredTagCorrectionPlaceholder = Symbol("requiredCorrectionPlaceholder");
 
 export type RequiredVerification = typeof requiredVerificationPlaceholder;
-export type RequiredTagAdjustment = typeof requiredTagAdjustmentPlaceholder;
+export type RequiredTagCorrection = typeof requiredTagCorrectionPlaceholder;
 export type RequiredClassification = Tag;
-export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredTagAdjustment;
+export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredTagCorrection;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
 export type LoadedEvent = CustomEvent;
@@ -143,8 +143,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.requiredDecisions.every((requiredDecision) => {
       if (requiredDecision === requiredVerificationPlaceholder) {
         return this.model.verification !== undefined;
-      } else if (requiredDecision === requiredTagAdjustmentPlaceholder) {
-        return this.model.tagAdjustment !== undefined;
+      } else if (requiredDecision === requiredTagCorrectionPlaceholder) {
+        return this.model.tagCorrection !== undefined;
       }
 
       return this.model.classifications.has(requiredDecision.text);
@@ -375,23 +375,23 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
-  private tagAdjustmentMeterTemplate(): HTMLTemplateResult {
-    const currentTagAdjustment = this.model.tagAdjustment;
+  private tagCorrectionMeterTemplate(): HTMLTemplateResult {
+    const currentTagCorrection = this.model.tagCorrection;
 
     let tooltipText = "";
-    if (currentTagAdjustment === decisionNotRequired) {
-      tooltipText = "tag adjustment: not required";
-    } else if (currentTagAdjustment) {
-      tooltipText = `tag adjustment: ${currentTagAdjustment.tag.text}`;
+    if (currentTagCorrection === decisionNotRequired) {
+      tooltipText = "tag correction: not required";
+    } else if (currentTagCorrection) {
+      tooltipText = `tag correction: ${currentTagCorrection.tag.text}`;
     } else {
-      tooltipText = "tag adjustment: no decision";
+      tooltipText = "tag correction: no decision";
     }
 
-    if (!currentTagAdjustment) {
+    if (!currentTagCorrection) {
       return this.meterSegmentTemplate(tooltipText);
     }
 
-    const meterColor = this.injector.colorService(currentTagAdjustment);
+    const meterColor = this.injector.colorService(currentTagCorrection);
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
@@ -413,8 +413,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
         if (requiredDecision === requiredVerificationPlaceholder) {
           return this.verificationMeterTemplate();
-        } else if (requiredDecision === requiredTagAdjustmentPlaceholder) {
-          return this.tagAdjustmentMeterTemplate();
+        } else if (requiredDecision === requiredTagCorrectionPlaceholder) {
+          return this.tagCorrectionMeterTemplate();
         }
 
         return this.classificationMeterTemplate(requiredDecision);
@@ -436,12 +436,12 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     });
 
     let tooltipContent = "";
-    if (!this.model?.tagAdjustment) {
+    if (!this.model?.tagCorrection) {
       tooltipContent = `This item was tagged as '${tagText}' in your data source`;
-    } else if (this.model?.tagAdjustment === decisionNotRequired) {
+    } else if (this.model?.tagCorrection === decisionNotRequired) {
       tooltipContent = `The requirements for this task have not been met`;
     } else {
-      tooltipContent = `This item has been corrected to '${this.model?.tagAdjustment?.tag?.text}'`;
+      tooltipContent = `This item has been corrected to '${this.model?.tagCorrection?.tag?.text}'`;
     }
 
     // use a pointerdown event instead of a click event because MacOS doesn't
@@ -464,8 +464,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
             <figcaption class="tag-label">
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
                 <span>
-                  ${this.model?.tagAdjustment && this.model?.tagAdjustment !== decisionNotRequired
-                    ? html`<del>${tagText}</del> <ins>${this.model?.tagAdjustment?.tag.text}</ins>`
+                  ${this.model?.tagCorrection && this.model?.tagCorrection !== decisionNotRequired
+                    ? html`<del>${tagText}</del> <ins>${this.model?.tagCorrection?.tag.text}</ins>`
                     : html`${tagText}`}
                 </span>
               </sl-tooltip>

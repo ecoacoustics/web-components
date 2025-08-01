@@ -109,10 +109,7 @@
   width: 100%;
   min-height: var(--oe-spacing);
 
-  /*
-    We use outline to minimize background-bleed seen with borders
-    TODO: This is not a correct fix, but it gets us 99% of the way there.
-  */
+  /* We use outline to minimize background-bleed seen with borders */
   outline: var(--oe-border-width) solid var(--oe-border-color);
   border-radius: var(--progress-meter-rounding);
   background-clip: padding-box;

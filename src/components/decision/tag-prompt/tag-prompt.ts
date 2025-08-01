@@ -7,7 +7,7 @@ import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { Tag } from "../../../models/tag";
 import { callbackConverter } from "../../../helpers/attributes";
-import { TagAdjustment } from "../../../models/decisions/tagAdjustment";
+import { TagCorrection } from "../../../models/decisions/tagCorrection";
 import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
 import { Constructor } from "../../../helpers/types/advancedTypes";
 import tagPromptStyles from "./css/style.css?inline";
@@ -19,11 +19,11 @@ export class TagPromptComponent extends DecisionComponent {
   @property({ type: String })
   public shortcut = "";
 
-  @property({ type: Function, converter: callbackConverter as any })
+  @property({ type: Function, converter: callbackConverter })
   public search: TypeaheadCallback<Tag> = () => [];
 
   @query("#tag-popover")
-  private readonly tagPopover!: HTMLDivElement;
+  private readonly tagPopover!: HTMLDialogElement;
 
   @query("#tag-typeahead")
   private readonly tagTypeahead!: TypeaheadComponent;
@@ -33,17 +33,20 @@ export class TagPromptComponent extends DecisionComponent {
   }
 
   public get decisionConstructor(): Constructor<Decision> {
-    return TagAdjustment;
+    return TagCorrection;
   }
 
   /** Open the tag prompt popover */
-  public open(): void {
+  private open(): void {
     this.tagPopover.showPopover();
+    this.tagTypeahead.reset();
+    this.tagTypeahead.focus();
   }
 
   /** Close the tag prompt popover */
   public close(): void {
     this.tagPopover.hidePopover();
+    this.verificationGrid?.focus();
   }
 
   protected handleShortcutKey(event: KeyboardEvent): void {
@@ -58,16 +61,15 @@ export class TagPromptComponent extends DecisionComponent {
 
   private handleToggle(event: ToggleEvent): void {
     if (event.newState === "open") {
-      this.tagTypeahead.reset();
-      this.tagTypeahead.focus();
+      this.open();
     } else {
-      this.verificationGrid?.focus();
+      this.close();
     }
   }
 
   private handleDecision(event: CustomEvent<Tag>): void {
     const tag = event.detail;
-    const decisionModel = new TagAdjustment(tag);
+    const decisionModel = new TagCorrection(tag);
     this.emitDecision([decisionModel]);
 
     this.close();
@@ -98,7 +100,7 @@ export class TagPromptComponent extends DecisionComponent {
       disabled: !!this.disabled,
     });
 
-    const color = this.injector.colorService(new TagAdjustment({ text: "" }));
+    const color = this.injector.colorService(new TagCorrection({ text: "" }));
 
     return html`
       ${this.popoverTemplate()}

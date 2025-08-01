@@ -2,7 +2,7 @@ import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
 import { Classification } from "../models/decisions/classification";
 import { Decision } from "../models/decisions/decision";
 import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
-import { TagAdjustment } from "../models/decisions/tagAdjustment";
+import { TagCorrection } from "../models/decisions/tagCorrection";
 import { Verification } from "../models/decisions/verification";
 
 const tagColors = new Map<string, CssVariable>();
@@ -27,7 +27,7 @@ export function decisionColor(decision: OptionalDecision): CssVariable {
 
   const colorNamespaces = new Map<Constructor<Decision>, string>([
     [Verification, "verification"],
-    [TagAdjustment, "adjustment"],
+    [TagCorrection, "correction"],
   ]);
 
   const decisionConstructor = Object.getPrototypeOf(decision).constructor;

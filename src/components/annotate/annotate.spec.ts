@@ -4,7 +4,7 @@ import {
   catchLocatorEvent,
   getBrowserStyle,
   getBrowserValue,
-  getCssBackgroundColorVariable,
+  getCssBackgroundVariable,
   removeBrowserAttribute,
   setBrowserAttribute,
 } from "../../tests/helpers";
@@ -399,11 +399,8 @@ test.describe("annotation", () => {
     test("should change the annotations color if inside the bounding box is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationBoundingBoxes())[0];
 
-      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
-      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
-        target,
-        "--oe-annotation-selected-color",
-      );
+      const expectedAnnotationColor = await getCssBackgroundVariable(target, "--oe-annotation-color");
+      const expectedFocusedAnnotationColor = await getCssBackgroundVariable(target, "--oe-annotation-selected-color");
 
       const initialAnnotationColor = await getBrowserStyle(target, "border-color");
       expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
@@ -419,11 +416,8 @@ test.describe("annotation", () => {
     test("should change the annotations color if the label is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationLabels())[0];
 
-      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
-      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
-        target,
-        "--oe-annotation-selected-color",
-      );
+      const expectedAnnotationColor = await getCssBackgroundVariable(target, "--oe-annotation-color");
+      const expectedFocusedAnnotationColor = await getCssBackgroundVariable(target, "--oe-annotation-selected-color");
 
       const initialAnnotationColor = await getBrowserStyle(target, "background-color");
       expect(initialAnnotationColor).toEqual(expectedAnnotationColor);

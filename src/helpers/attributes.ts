@@ -43,7 +43,7 @@ export const tagConverter = (value: string | null): Tag => {
  * </oe-spectrogram>
  * ```
  */
-export const callbackConverter = (value: string | ((...params: any) => any)) => {
+export const callbackConverter = <T>(value: string | null | ((...params: any[]) => T)) => {
   if (typeof value === "function") {
     return value;
   }
@@ -66,7 +66,7 @@ export const callbackConverter = (value: string | ((...params: any) => any)) => 
     }
   }
 
-  throw new Error("Callback attribute must be a function or string", value);
+  throw new Error(`Callback attribute must be a function or string. Found type: ${typeof value}`);
 };
 
 export const enumConverter = <T extends Enum>(

@@ -1,6 +1,6 @@
 import { expect } from "../../../tests/assertions";
 import { verificationFixture as test } from "./verification.fixture";
-import { getCssBackgroundColorVariable, getEventLogs, logEvent } from "../../../tests/helpers";
+import { getCssBackgroundVariable, getEventLogs, logEvent } from "../../../tests/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { sleep } from "../../../helpers/utilities";
 import { CssVariable } from "../../../helpers/types/advancedTypes";
@@ -66,7 +66,7 @@ test.describe("Verification Component", () => {
       test(`should have the correct color for a ${testCase.decision} decision`, async ({ fixture }) => {
         await fixture.changeVerified(DecisionOptions.TRUE);
 
-        const expectedColor = await getCssBackgroundColorVariable(fixture.component(), testCase.expectedColor);
+        const expectedColor = await getCssBackgroundVariable(fixture.component(), testCase.expectedColor);
         await expect(fixture.colorPill()).toHaveCSS("background", expectedColor);
       });
     });

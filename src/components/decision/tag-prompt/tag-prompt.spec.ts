@@ -1,7 +1,7 @@
 import { DOWN_ARROW_KEY, ENTER_KEY } from "../../../helpers/keyboard";
 import { expect } from "../../../tests/assertions";
 import {
-  getCssBackgroundColorVariable,
+  getCssBackgroundVariable,
   insertContent,
   pressKey,
   setBrowserAttribute,
@@ -42,7 +42,7 @@ test.describe("keyboard shortcuts", () => {
 
 test.describe("decision colors", () => {
   test("should have the correct decision color", async ({ fixture }) => {
-    const expectedColor = await getCssBackgroundColorVariable(fixture.component(), "--adjustment-true");
+    const expectedColor = await getCssBackgroundVariable(fixture.component(), "--correction-true");
     const realizedColor = await fixture.getPillColor();
     expect(realizedColor).toEqual(expectedColor);
   });
