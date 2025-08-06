@@ -155,6 +155,7 @@ del {
 
 ins {
   text-decoration: none;
+  color: var(--oe-success-color);
 }
 
 hr {

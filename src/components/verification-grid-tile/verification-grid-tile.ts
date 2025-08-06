@@ -225,6 +225,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     }
   }
 
+  public updateSubject(subject: SubjectWrapper): void {
+    this.model = subject;
+    this.requestUpdate();
+  }
+
   public resetSettings(): void {
     if (this.spectrogram) {
       this.spectrogram.resetSettings();

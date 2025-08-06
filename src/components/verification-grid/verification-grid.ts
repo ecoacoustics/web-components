@@ -324,14 +324,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return availableTiles - visibleSubjectCount;
   }
 
-  private get behavingSubSelection(): SubjectWrapper[] {
-    if (this.currentSubSelection.length > 0) {
-      return this.currentSubSelection;
-    }
-
-    return this.subjects;
-  }
-
   /**
    * Returns the current users selection behavior, collapsing the "default"
    * behavior into either "tablet" or "desktop" depending on the users device
@@ -1158,7 +1150,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
-    this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+    const selectedTiles = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+
+    if (selectedTiles.length === 0) {
+      this.currentSubSelection = gridTiles.map((tile) => tile.model);
+    } else {
+      this.currentSubSelection = selectedTiles;
+    }
 
     this.updateDecisionWhen();
   }
@@ -1615,7 +1613,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private updateDecisionWhen(subSelection = this.behavingSubSelection): void {
+  private updateDecisionWhen(subSelection = this.currentSubSelection): void {
     // If any of the decision buttons predicate's pass with the current
     // sub-selection, the button should not be disabled.
     const decisionElements = this.decisionElements ?? [];
@@ -1651,16 +1649,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     }
 
-    // We call "requestUpdate" on the tile so that the progress meter is updated
-    // with its new required decisions.
-    // I don't like manually calling "requestUpdate" here, but the component is
-    // an internal component that we control, so while this is an indication of
-    // bad state updates, it's not user facing, so I have just done a dirty
-    // requestUpdate here.
-    // TODO: Correctly fix the update triggers in the tile component so that we
-    // don't have to manually request an update.
-    tile.model = subject;
-    tile.requestUpdate();
+    tile.updateSubject(subject);
   }
 
   //#endregion

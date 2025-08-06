@@ -18,7 +18,7 @@ import typeaheadStyles from "./css/style.css?inline";
 export type TypeaheadCallback<Value> = <Context extends Record<PropertyKey, unknown>>(
   text: string,
   context: Context,
-) => Value[];
+) => Promise<Value[]> | Value[];
 
 export type TypeaheadTextConverter = (model: any) => string;
 
@@ -83,13 +83,28 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
    */
   private handleSearchInvalidation(searchTerm?: string) {
     searchTerm ??= this.tagInput.value;
-    this.typeaheadResults = this.search(searchTerm, {});
+    const searchResults = this.search(searchTerm, {});
 
-    // Similar to Google search, I reset the index of the focus index if the
-    // user performs input.
-    // Note that unlike Google search, we do not allow the focus head to have
-    // nothing selected.
-    this.focusedIndex = 0;
+    // Use Promise.resolve here to unwrap the promise.
+    // So non-async functions can continue to work because they will be resolved
+    // immediately, but async functions can take some time to resolve.
+    // Note that we use "then" instead of await here because if the async
+    // callback is taking a long time to complete (e.g. server lag), we do not
+    // wait to lock up the main thread awaiting a response.
+    Promise.resolve(searchResults).then((value) => {
+      this.typeaheadResults = value;
+
+      // Similar to Google search, I reset the index of the focus index if the
+      // user performs input.
+      // Note that unlike Google search, we do not allow the focus head to have
+      // nothing selected.
+      //
+      // I only move the focus index after the new results have been populated
+      // so if the async function is taking a long time to complete
+      // (e.g. server lag), the focus head cannot move to a position that would
+      // not exist in the new search results.
+      this.focusedIndex = 0;
+    });
   }
 
   private handleInput(event: KeyboardEvent): void {
