@@ -25,6 +25,8 @@ export type TypeaheadTextConverter = (model: any) => string;
 /**
  * @description
  * An internal typeahead component
+ *
+ * @event oe-typeahead-selected
  */
 @customElement("oe-typeahead")
 export class TypeaheadComponent<T extends object = any> extends AbstractComponent(LitElement) {

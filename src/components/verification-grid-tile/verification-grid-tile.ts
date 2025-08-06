@@ -63,15 +63,15 @@ const shortcutTranslation = {
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
  *
- * @event selected
- * @event tile-loaded
+ * @event oe-selected
+ * @event oe-tile-loaded
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
-  public static readonly selectedEventName = "selected";
-  public static readonly loadedEventName = "tile-loaded";
+  public static readonly selectedEventName = "oe-selected";
+  public static readonly loadedEventName = "oe-tile-loaded";
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })

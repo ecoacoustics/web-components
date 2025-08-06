@@ -1064,7 +1064,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   /**
-   * An event handler for the verification-grid-tile's "selected" event.
+   * An event handler for the verification-grid-tile's "oe-selected" event.
    * This handles alt + number selection, and click selection.
    */
   private handleTileSelection(selectionEvent: SelectionEvent): void {
@@ -1896,7 +1896,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <oe-verification-grid-tile
         class="grid-tile"
-        @tile-loaded="${this.handleTileLoaded}"
+        @oe-tile-loaded="${this.handleTileLoaded}"
         @play="${this.handleTilePlay}"
         .requiredDecisions="${this.requiredDecisions}"
         .isOnlyTile="${this.populatedTileCount === 1}"
