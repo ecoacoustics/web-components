@@ -198,7 +198,7 @@ test.describe("focus", () => {
 
 test.describe("selection emission", () => {
   test.fixme("should emit a model if enter is pressed without input", async ({ fixture }) => {
-    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+    const selectionEvent = catchLocatorEvent(fixture.component(), "oe-typeahead-selected");
 
     await fixture.inputBox().press(ENTER_KEY);
 
@@ -208,7 +208,7 @@ test.describe("selection emission", () => {
   });
 
   test("should emit a model on click selection", async ({ fixture }) => {
-    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+    const selectionEvent = catchLocatorEvent(fixture.component(), "oe-typeahead-selected");
 
     await fixture.searchResults().nth(1).click();
 
@@ -218,7 +218,7 @@ test.describe("selection emission", () => {
   });
 
   test.fixme("should emit a model on enter selection", async ({ fixture }) => {
-    const selectionEvent = catchLocatorEvent(fixture.component(), "typeahead-selected");
+    const selectionEvent = catchLocatorEvent(fixture.component(), "oe-typeahead-selected");
 
     await fixture.inputBox().press(DOWN_ARROW_KEY);
     await fixture.inputBox().press(DOWN_ARROW_KEY);

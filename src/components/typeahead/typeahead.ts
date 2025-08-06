@@ -28,7 +28,7 @@ export type TypeaheadTextConverter = (model: any) => string;
  */
 @customElement("oe-typeahead")
 export class TypeaheadComponent<T extends object = any> extends AbstractComponent(LitElement) {
-  public static readonly selectedEventName = "typeahead-selected";
+  public static readonly selectedEventName = "oe-typeahead-selected";
 
   public static styles = unsafeCSS(typeaheadStyles);
 

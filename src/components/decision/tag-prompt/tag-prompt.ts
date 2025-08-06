@@ -91,7 +91,7 @@ export class TagPromptComponent extends DecisionComponent {
             id="tag-typeahead"
             .search="${this.search}"
             .textConverter="${(tag: Tag) => tag.text}"
-            @typeahead-selected="${this.handleDecision}"
+            @oe-typeahead-selected="${this.handleDecision}"
           ></oe-typeahead>
         </div>
       </dialog>
