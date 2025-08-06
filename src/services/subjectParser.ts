@@ -52,7 +52,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     return new SubjectWrapper(original, transformedUrl, tag);
   }
 
-  private static tagParser(subjectTag: any): Tag | null {
+  private static tagParser(subjectTag: unknown): Tag | null {
     if (subjectTag === null || subjectTag === undefined) {
       return SubjectParser.defaultTag;
     }

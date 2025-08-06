@@ -50,6 +50,7 @@ const colorBrewerColors = `
 `;
 
 const skipColor = "#ddd";
+const notRequiredColor = "#ddd";
 const unsureColor = "#d0d";
 
 const verificationColors = `
@@ -60,7 +61,7 @@ const verificationColors = `
 `;
 
 const noDecisionColors = `
-  --not-required-color: #ddd;
+  --not-required-color: ${hatchedBackground(notRequiredColor)};
 `;
 
 export const decisionColors = unsafeCSS(`

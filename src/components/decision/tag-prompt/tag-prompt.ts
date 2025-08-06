@@ -99,7 +99,7 @@ export class TagPromptComponent extends DecisionComponent {
       disabled: !!this.disabled,
     });
 
-    const color = this.injector.colorService(new NewTag());
+    const color = this.injector.colorService(new NewTag(null));
 
     return html`
       ${this.popoverTemplate()}

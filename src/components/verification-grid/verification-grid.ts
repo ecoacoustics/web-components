@@ -601,6 +601,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           this.setDecisionDisabled(false);
         }
       }
+
+      this.updateSubSelection();
     }
   }
 
@@ -941,7 +943,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // so don't cancel any of the play events.
     // This is handled here and not in the tiles, because the tile's don't know the total
     // selected count.
-    if (this.currentSubSelection.length === 0) {
+    if (this.currentSubSelection.length === this.effectivePageSize) {
       return;
     }
 
@@ -1150,12 +1152,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
-    const selectedTiles = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+    const selectedTiles = gridTiles.filter((tile) => tile.selected);
 
     if (selectedTiles.length === 0) {
       this.currentSubSelection = gridTiles.map((tile) => tile.model);
     } else {
-      this.currentSubSelection = selectedTiles;
+      this.currentSubSelection = selectedTiles.map((tile) => tile.model);
     }
 
     this.updateDecisionWhen();

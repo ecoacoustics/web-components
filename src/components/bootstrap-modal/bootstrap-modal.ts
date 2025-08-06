@@ -20,6 +20,8 @@ import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-sho
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
+import { closeIconTemplate } from "../../templates/closeButton";
+import { ClassificationComponent } from "../decision/classification/classification";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -28,8 +30,6 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
-import { closeIconTemplate } from "../../templates/closeButton";
-import { ClassificationComponent } from "decision/classification/classification";
 
 /*
   A local storage key that when set, will cause the bootstrap modal to not

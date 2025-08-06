@@ -9,6 +9,7 @@ import {
   getCssVariableStyle,
   invokeBrowserMethod,
   mockDeviceSize,
+  pressKey,
   removeBrowserAttribute,
   setBrowserAttribute,
   testBreakpoints,
@@ -314,13 +315,6 @@ class TestPage {
     });
   }
 
-  public async selectedTiles(): Promise<SubjectWrapper[]> {
-    return await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
-      this.gridComponent(),
-      "currentSubSelection" as any,
-    );
-  }
-
   public async focusedIndex(): Promise<number> {
     return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "focusHead" as any);
   }
@@ -597,11 +591,7 @@ class TestPage {
 
   /** Plays selected grid tiles using the play/pause keyboard shortcut */
   public async shortcutGridPlay() {
-    // TODO: We should use the playShortcut definition here
-    // see: https://github.com/ecoacoustics/web-components/issues/289
-    // await this.page.keyboard.press(MediaControlsComponent.playShortcut);
-
-    await this.page.keyboard.press(SPACE_KEY);
+    await pressKey(this.gridComponent(), SPACE_KEY);
   }
 
   public async shortcutGridPause() {
@@ -761,8 +751,12 @@ class TestPage {
   }
 
   public async getPopulatedGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "populatedTileCount");
-    return gridSize as number;
+    const gridSize = await getBrowserValue<VerificationGridComponent, number>(
+      this.gridComponent(),
+      "populatedTileCount",
+    );
+
+    return gridSize;
   }
 
   public async getGridShape(): Promise<GridShape> {
