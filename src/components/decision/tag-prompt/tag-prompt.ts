@@ -1,4 +1,4 @@
-import { DecisionComponent, DecisionModels } from "../decision";
+import { DecisionComponent } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { Decision } from "../../../models/decisions/decision";
@@ -28,10 +28,6 @@ export class TagPromptComponent extends DecisionComponent {
 
   @query("#tag-typeahead")
   private readonly tagTypeahead!: TypeaheadComponent;
-
-  public get decisionModels(): Partial<DecisionModels<Decision>> {
-    throw new Error("Method not implemented.");
-  }
 
   public get decisionConstructor(): Constructor<Decision> {
     return NewTag;

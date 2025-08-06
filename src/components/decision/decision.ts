@@ -76,7 +76,6 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   @state()
   public verificationGrid?: VerificationGridComponent;
 
-  public abstract get decisionModels(): Partial<DecisionModels<Decision>>;
   public abstract get decisionConstructor(): Constructor<Decision>;
 
   private shouldEmitNext = true;

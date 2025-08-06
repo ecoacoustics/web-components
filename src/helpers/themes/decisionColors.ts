@@ -31,7 +31,10 @@ function classificationFalseColor(baseColor: string): string {
   return `color-mix(in srgb, ${baseColor} ${falseDarkenPercentage}%, black)`;
 }
 
-const colorBrewerColorSet = colorbrewer.Set1[9];
+// We reverse the color brewer Set1 because the first two colors out of this set
+// are close to red and green (which we use for true/false).
+// To reduce the number of colors
+const colorBrewerColorSet = colorbrewer.Set1[9].reverse();
 
 // Because color brewer is shipped under the Apache license. I don't want to
 // export any css variables under the "color-brewer" namespace.

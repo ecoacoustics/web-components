@@ -1,7 +1,7 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { Classification } from "../../../models/decisions/classification";
 import { Verification } from "../../../models/decisions/verification";
-import { DecisionComponent, DecisionModels } from "../decision";
+import { DecisionComponent } from "../decision";
 import { required } from "../../../helpers/decorators";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { classMap } from "lit/directives/class-map.js";
@@ -45,10 +45,6 @@ export class VerificationComponent extends DecisionComponent {
   @query("#decision-button")
   private decisionButton!: HTMLButtonElement;
 
-  public get decisionModels(): Partial<DecisionModels<Verification>> {
-    return this._decisionModels;
-  }
-
   public get decisionConstructor(): Constructor<Decision> {
     return Verification;
   }
@@ -62,8 +58,6 @@ export class VerificationComponent extends DecisionComponent {
   public get isTask(): boolean {
     return this.verified !== DecisionOptions.SKIP;
   }
-
-  private _decisionModels: Partial<DecisionModels<Verification>> = {};
 
   public override shortcutKeys(): KeyboardShortcut[] {
     let description = `Decide ${this.verified}`;
@@ -91,7 +85,7 @@ export class VerificationComponent extends DecisionComponent {
   }
 
   private generateDecisionModels(): [Verification, ...Classification[]] {
-    const verification = new Verification(this.verified);
+    const verification = new Verification(this.verified, null);
 
     const classifications: Classification[] = [];
     for (const additionalTag of this.additionalTags) {
@@ -132,8 +126,6 @@ export class VerificationComponent extends DecisionComponent {
     const decisionModels = this.generateDecisionModels();
     const verificationModel: Verification = decisionModels[0];
     const color = this.injector.colorService(verificationModel);
-
-    this._decisionModels[this.verified] = verificationModel;
 
     return html`
       <div class="decision-group-title decision-group"></div>
