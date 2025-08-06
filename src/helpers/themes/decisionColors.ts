@@ -31,21 +31,19 @@ function classificationFalseColor(baseColor: string): string {
   return `color-mix(in srgb, ${baseColor} ${falseDarkenPercentage}%, black)`;
 }
 
-const colorBrewerColors = colorbrewer.Set1[9];
+const colorBrewerColorSet = colorbrewer.Set1[9];
 
+// Because color brewer is shipped under the Apache license. I don't want to
+// export any css variables under the "color-brewer" namespace.
+// I've therefore used "unique-color" for the color brewer namespace.
 // prettier-ignore
-const classificationColors = `
-    ${colorBrewerColors.map(
+const colorBrewerColors = `
+    ${colorBrewerColorSet.map(
       (color: string, i: number) => `
-        --class-${i}-true: ${classificationTrueColor(color)};
-        --class-${i}-false: ${classificationFalseColor(color)};
+        --unique-color-${i}-true: ${classificationTrueColor(color)};
+        --unique-color-${i}-false: ${classificationFalseColor(color)};
       `,
     ).join("")}
-`;
-
-const tagPromptColors = `
-  --new-tag-true: ${hatchedBackground("#dd0")};
-  --new-tag-false: ${hatchedBackground("#dd0")};
 `;
 
 const skipColor = "#ddd";
@@ -65,8 +63,7 @@ const noDecisionColors = `
 export const decisionColors = unsafeCSS(`
   :host {
     ${verificationColors}
-    ${classificationColors}
-    ${tagPromptColors}
+    ${colorBrewerColors}
     ${noDecisionColors}
   }
 `);

@@ -16,19 +16,16 @@ const tagColors = new Map<string, CssVariable>();
  * @param decision
  */
 export function decisionColor(decision: OptionalDecision): CssVariable {
-  const isClassification = decision instanceof Classification;
-  if (isClassification) {
-    return classificationColor(decision);
-  }
-
   if (decision === decisionNotRequired) {
     return notRequiredColor();
   }
 
-  const colorNamespaces = new Map<Constructor<Decision>, string>([
-    [Verification, "verification"],
-    [NewTag, "new-tag"],
-  ]);
+  const colorBrewerDecisions = new Set([Classification, NewTag]);
+  if (colorBrewerDecisions.has(Object.getPrototypeOf(decision).constructor)) {
+    return colorBrewerColor(decision);
+  }
+
+  const colorNamespaces = new Map<Constructor<Decision>, string>([[Verification, "verification"]]);
 
   const decisionConstructor = Object.getPrototypeOf(decision).constructor;
   const colorNamespace = colorNamespaces.get(decisionConstructor);
@@ -39,7 +36,7 @@ export function decisionColor(decision: OptionalDecision): CssVariable {
   return `--${colorNamespace}-${decision.confirmed}`;
 }
 
-function classificationColor(decision: Classification): CssVariable {
+function colorBrewerColor(decision: Decision): CssVariable {
   const tagName = decision.tag?.text ?? decision.tag;
   const tagColor = tagColors.get(tagName);
   if (tagColor) {
@@ -47,7 +44,7 @@ function classificationColor(decision: Classification): CssVariable {
   }
 
   const nextColorId = tagColors.size;
-  const newDecisionColor: CssVariable = `--class-${nextColorId}`;
+  const newDecisionColor: CssVariable = `--unique-color-${nextColorId}`;
   tagColors.set(tagName, newDecisionColor);
 
   return `${newDecisionColor}-${decision.confirmed}`;
