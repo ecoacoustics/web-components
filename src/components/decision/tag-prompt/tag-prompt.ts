@@ -11,6 +11,7 @@ import { NewTag } from "../../../models/decisions/newTag";
 import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
 import { Constructor } from "../../../helpers/types/advancedTypes";
 import tagPromptStyles from "./css/style.css?inline";
+import { closeIconTemplate } from "../../../templates/closeButton";
 
 @customElement("oe-tag-prompt")
 export class TagPromptComponent extends DecisionComponent {
@@ -80,7 +81,9 @@ export class TagPromptComponent extends DecisionComponent {
       <dialog id="tag-popover" popover @toggle="${this.handleToggle}">
         <div class="tag-popover-header">
           <h3 class="tag-popover-title">New Tag</h3>
-          <button class="tag-popover-close oe-btn-secondary oe-btn-small" @click="${this.close}">x</button>
+          <button class="tag-popover-close oe-btn-secondary oe-btn-small" @click="${this.close}">
+            ${closeIconTemplate()}
+          </button>
         </div>
 
         <div class="tag-popover-body">

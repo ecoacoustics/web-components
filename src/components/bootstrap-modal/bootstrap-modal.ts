@@ -28,6 +28,7 @@ import pagingSlideStyles from "./slides/paging/styles.css?inline";
 import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
+import { closeIconTemplate } from "../../templates/closeButton";
 
 /*
   A local storage key that when set, will cause the bootstrap modal to not
@@ -300,7 +301,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
               @click="${() => this.closeDialog()}"
               data-testid="dismiss-bootstrap-dialog-btn"
             >
-              x
+              ${closeIconTemplate()}
             </button>
           </header>
 
