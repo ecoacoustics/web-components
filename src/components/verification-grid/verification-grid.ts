@@ -4,7 +4,7 @@ import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues,
 import {
   OverflowEvent,
   RequiredDecision,
-  requiredTagCorrectionPlaceholder,
+  requiredNewTagPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
@@ -719,7 +719,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
       } else if (decisionElement instanceof TagPromptComponent) {
-        result.push(requiredTagCorrectionPlaceholder);
+        result.push(requiredNewTagPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
         result.push(decisionElement.tag);
       }

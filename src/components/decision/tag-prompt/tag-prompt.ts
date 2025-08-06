@@ -7,7 +7,7 @@ import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { Tag } from "../../../models/tag";
 import { callbackConverter } from "../../../helpers/attributes";
-import { TagCorrection } from "../../../models/decisions/tagCorrection";
+import { NewTag } from "../../../models/decisions/newTag";
 import { TypeaheadCallback, TypeaheadComponent } from "../../../components/typeahead/typeahead";
 import { Constructor } from "../../../helpers/types/advancedTypes";
 import tagPromptStyles from "./css/style.css?inline";
@@ -33,7 +33,7 @@ export class TagPromptComponent extends DecisionComponent {
   }
 
   public get decisionConstructor(): Constructor<Decision> {
-    return TagCorrection;
+    return NewTag;
   }
 
   /** Open the tag prompt popover */
@@ -69,7 +69,7 @@ export class TagPromptComponent extends DecisionComponent {
 
   private handleDecision(event: CustomEvent<Tag>): void {
     const tag = event.detail;
-    const decisionModel = new TagCorrection(tag);
+    const decisionModel = new NewTag(tag);
     this.emitDecision([decisionModel]);
 
     this.close();
@@ -79,7 +79,7 @@ export class TagPromptComponent extends DecisionComponent {
     return html`
       <dialog id="tag-popover" popover @toggle="${this.handleToggle}">
         <div class="tag-popover-header">
-          <h3 class="tag-popover-title">Tag Correction</h3>
+          <h3 class="tag-popover-title">New Tag</h3>
           <button class="tag-popover-close oe-btn-secondary oe-btn-small" @click="${this.close}">x</button>
         </div>
 
@@ -100,7 +100,7 @@ export class TagPromptComponent extends DecisionComponent {
       disabled: !!this.disabled,
     });
 
-    const color = this.injector.colorService(new TagCorrection({ text: "" }));
+    const color = this.injector.colorService(new NewTag({ text: "" }));
 
     return html`
       ${this.popoverTemplate()}

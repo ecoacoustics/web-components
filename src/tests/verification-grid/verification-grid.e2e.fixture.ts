@@ -38,7 +38,7 @@ import { VerificationBootstrapComponent } from "../../components/bootstrap-modal
 import { DataSourceComponent } from "../../components/data-source/data-source";
 import { createFixture, setContent } from "../fixtures";
 
-type TagCorrectionOptions = "Abbots Babbler" | "Brush Turkey" | "Noisy Miner" | "tag1" | "tag2" | "tag3" | "tag4";
+type MockNewTagOptions = "Abbots Babbler" | "Brush Turkey" | "Noisy Miner" | "tag1" | "tag2" | "tag3" | "tag4";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -98,7 +98,7 @@ class TestPage {
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
-  private tagCorrectionResult = () => this.page.locator(".typeahead-result-action");
+  private newTagSearchResults = () => this.page.locator(".typeahead-result-action");
 
   private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
@@ -110,7 +110,7 @@ class TestPage {
     return targetDecision.locator(`#${decision}-decision-button`);
   }
 
-  public tagCorrectionButton(): Locator {
+  public tagPromptButton(): Locator {
     const targetDecision = this.page.locator("oe-tag-prompt").first();
     return targetDecision.locator(`#decision-button`);
   }
@@ -345,8 +345,8 @@ class TestPage {
     });
   }
 
-  public async getTagCorrectionColor(): Promise<string> {
-    const decisionButton = this.tagCorrectionButton();
+  public async getNewTagColor(): Promise<string> {
+    const decisionButton = this.tagPromptButton();
     const colorPill = decisionButton.locator(".decision-color-pill");
 
     return await colorPill.evaluate((element: HTMLSpanElement) => {
@@ -723,13 +723,13 @@ class TestPage {
     await decisionEvent;
   }
 
-  public async makeTagCorrectionDecision(selectedOption: TagCorrectionOptions) {
+  public async makeNewTagDecision(selectedOption: MockNewTagOptions) {
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
 
     // Clicking this button will open up the tag prompt dialog.
-    await this.tagCorrectionButton().click();
+    await this.tagPromptButton().click();
 
-    const resultButton = this.tagCorrectionResult().filter({ hasText: selectedOption }).first();
+    const resultButton = this.newTagSearchResults().filter({ hasText: selectedOption }).first();
     await resultButton.click();
 
     await decisionEvent;

@@ -42,14 +42,14 @@ test.describe("keyboard shortcuts", () => {
 
 test.describe("decision colors", () => {
   test("should have the correct decision color", async ({ fixture }) => {
-    const expectedColor = await getCssVariableStyle(fixture.component(), "--correction-true", "background");
+    const expectedColor = await getCssVariableStyle(fixture.component(), "--new-tag-true", "background");
     await expect(fixture.decisionColorPill()).toHaveCSS("background", expectedColor);
   });
 });
 
 // Asserting that the correct item is selected / emitted from the typeahead is
 // tested inside of the typeahead component tests.
-// The purpose of these tests is to assert that the correct TagCorrection
+// The purpose of these tests is to assert that the correct NewTag
 // decision model is constructed and that event listeners are connected
 // correctly.
 test.describe("decision emission", () => {

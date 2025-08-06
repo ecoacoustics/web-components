@@ -3,19 +3,19 @@ import { Decision, DecisionOptions } from "./decision";
 
 /**
  * @description
- * A decision that represents that the tag is incorrect and should be changed.
+ * A decision that represents that a new tag should be supplied to a subject.
+ * This can be used to correct an incorrectly tagged annotation.
  *
  * @extends Decision
  */
-export class TagCorrection extends Decision {
+export class NewTag extends Decision {
   public constructor(tag: Tag) {
     // Because the base "decision" class requires a "booleanish" decision
-    // (FALSE, TRUE, SKIP, UNSURE), I use a "dummy" true value for tag
-    // corrections.
+    // (FALSE, TRUE, SKIP, UNSURE), I use a "dummy" true value for new tags.
     //
     // TODO: We should probably make a different base "Decision" class that
     // doesn't require a "booleanish" decision so that we can have improved
-    // typing for TagCorrection decisions.
+    // typing for NewTag decisions.
     // I originally started mocking this out, but it effected almost every place
     // that uses a "decision" because I'd have to narrow the decision into
     // either having a "booleanish" decision or not.

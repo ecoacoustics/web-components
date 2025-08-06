@@ -44,8 +44,8 @@ const classificationColors = `
 `;
 
 const tagPromptColors = `
-  --correction-true: ${hatchedBackground("#dd0")};
-  --correction-false: ${hatchedBackground("#dd0")};
+  --new-tag-true: ${hatchedBackground("#dd0")};
+  --new-tag-false: ${hatchedBackground("#dd0")};
 `;
 
 const skipColor = "#ddd";
