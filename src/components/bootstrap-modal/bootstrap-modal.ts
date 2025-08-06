@@ -29,6 +29,7 @@ import selectionSlideStyles from "./slides/selection/styles.css?inline";
 import shortcutSlideStyles from "./slides/shortcuts/styles.css?inline";
 import advancedShortcutStyles from "./slides/advanced-shortcuts/styles.css?inline";
 import { closeIconTemplate } from "../../templates/closeButton";
+import { ClassificationComponent } from "decision/classification/classification";
 
 /*
   A local storage key that when set, will cause the bootstrap modal to not
@@ -212,23 +213,35 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private positiveDecisionColor(): Readonly<CssVariable> {
-    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
-    if (!decisionModel) {
-      console.warn("Bootstrap could not determine positive decision color. Falling back to --verification-true");
-      return "--verification-true";
+    const defaultPositiveDecision = "--verification-true";
+
+    if (this.demoDecisionButton instanceof ClassificationComponent) {
+      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
+      if (!decisionModel) {
+        console.warn(`Bootstrap could not find positive decision color. Falling back to ${defaultPositiveDecision}`);
+        return defaultPositiveDecision;
+      }
+
+      return this.injector.colorService(decisionModel);
     }
 
-    return this.injector.colorService(decisionModel);
+    return defaultPositiveDecision;
   }
 
   private negativeDecisionColor(): Readonly<CssVariable> {
-    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
-    if (!decisionModel) {
-      console.warn("Bootstrap could not determine negative decision color. Falling back to --verification-false");
-      return "--verification-false";
+    const defaultNegativeColor = "--verification-false";
+
+    if (this.demoDecisionButton instanceof ClassificationComponent) {
+      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
+      if (!decisionModel) {
+        console.warn(`Bootstrap could not find negative decision color. Falling back to ${defaultNegativeColor}`);
+        return defaultNegativeColor;
+      }
+
+      return this.injector.colorService(decisionModel);
     }
 
-    return this.injector.colorService(decisionModel);
+    return "--verification-false";
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
