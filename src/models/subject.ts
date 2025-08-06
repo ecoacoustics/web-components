@@ -45,7 +45,7 @@ export interface DownloadableResult extends Subject {
  * The tag that has been extracted from the original data source
  */
 export class SubjectWrapper {
-  public constructor(subject: Subject, url: string, tag: Tag) {
+  public constructor(subject: Subject, url: string, tag: Tag | null) {
     this.subject = subject;
     this.url = url;
     this.tag = tag;
@@ -77,7 +77,7 @@ export class SubjectWrapper {
   public newTag?: OptionalDecision<NewTag>;
   public classifications = new Map<TagName, Classification>();
   public url: string;
-  public tag: Tag;
+  public tag: Tag | null;
 
   /**
    * Adds a decision to the subject and removes any decisions that have been

@@ -368,7 +368,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       decisionText = currentVerificationModel.confirmed;
     }
 
-    const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
+    // Sometimes there is no tag. On the subject. In this case, we have to
+    // change the tooltip a bit.
+    const tooltipText = this.model.tag?.text
+      ? `verification: ${this.model.tag.text} (${decisionText})`
+      : `verification: ${decisionText}`;
 
     // if there is no verification decision on the tiles subject model, then
     // return the verification meter segment with no color
@@ -445,7 +449,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       tooltipContent = `This item was tagged as '${tagText}' in your data source`;
     } else if (this.model?.newTag === decisionNotRequired) {
       tooltipContent = `The requirements for this task have not been met`;
+    } else if (!this.model.tag) {
+      // If we didn't originally have a tag to correct
+      tooltipContent = `'${this.model?.newTag?.tag?.text}' has been added to this subject`;
     } else {
+      // We replaced the original tag with a new tag
       tooltipContent = `This item has been corrected to '${this.model?.newTag?.tag?.text}'`;
     }
 

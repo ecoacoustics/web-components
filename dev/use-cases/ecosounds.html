@@ -22,6 +22,20 @@
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
       <oe-verification verified="unsure" shortcut="U"></oe-verification>
+      <oe-verification verified="skip" shortcut="S"></oe-verification>
+
+      <oe-tag-prompt
+        shortcut="S"
+        when="(subject) => !subject.tag || subject.verification?.confirmed === 'false'"
+        search="(fragment) => {
+          const options = [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }];
+          if (fragment === '') {
+            return options;
+          }
+
+          return options.filter((option) => option.text.toLowerCase().includes(fragment));
+        }"
+      ></oe-tag-prompt>
 
       <oe-data-source slot="data-source" for="verification-grid" allow-downloads="false"></oe-data-source>
     </oe-verification-grid>
@@ -44,7 +58,11 @@
         "/merged_diagnostic.wav",
       ];
 
-      const possibleTags = ["bird", "insect", "mammal", "reptile"];
+      // Some events in Ecosounds do not have a tag.
+      // For this dev page, I represent this by setting the value as undefined.
+      // If the tag is not defined, we expect that the tag prompt task will be
+      // required.
+      const possibleTags = ["bird", "insect", "mammal", "reptile", undefined];
 
       function createUrlTransformer() {
         return (url) => `${url}?url_transformer=true`;

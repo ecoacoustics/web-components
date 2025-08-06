@@ -17,7 +17,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   // the type is compatible with the Tag interface
   // if we typed this as a Tag, it would reduce the type from a constant to a
   // generic type, which would reduce linting and bundling optimizations
-  private static defaultTag = { text: "" } as const satisfies Tag;
+  private static defaultTag = null;
 
   public static parse(original: Subject, urlTransformer: UrlTransformer): SubjectWrapper {
     const transformer: Transformer = {
@@ -47,12 +47,12 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     const originalUrl = (partialModel.url as string) ?? "";
     const transformedUrl = urlTransformer(originalUrl, original);
 
-    const tag: Tag = SubjectParser.tagParser(partialModel.tag);
+    const tag = SubjectParser.tagParser(partialModel.tag);
 
-    return new SubjectWrapper(original as Subject, transformedUrl, tag);
+    return new SubjectWrapper(original, transformedUrl, tag);
   }
 
-  private static tagParser(subjectTag: any): Tag {
+  private static tagParser(subjectTag: any): Tag | null {
     if (subjectTag === null || subjectTag === undefined) {
       return SubjectParser.defaultTag;
     }
@@ -62,9 +62,8 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return { text: subjectTag };
     }
 
-    const isTagArray = subjectTag instanceof Array;
-    if (isTagArray) {
-      return SubjectParser.tagArrayParser(subjectTag as any[]);
+    if (Array.isArray(subjectTag)) {
+      return SubjectParser.tagArrayParser(subjectTag);
     }
 
     // although arrays are objects, the condition above will catch arrays
@@ -86,7 +85,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     return { text: tagText };
   }
 
-  private static tagArrayParser(subjectTags: unknown[]): Tag {
+  private static tagArrayParser(subjectTags: ReadonlyArray<unknown>): Tag | null {
     if (subjectTags.length === 0) {
       return SubjectParser.defaultTag;
     }

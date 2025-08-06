@@ -70,7 +70,7 @@
       because we don't want the background patterns to change if the user zooms
       in or changes their browsers font-size.
     */
-    font-size: 16px;
+    font-size: 0.4em;
 
     align-self: flex-start;
   }

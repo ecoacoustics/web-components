@@ -14,7 +14,7 @@ export enum DecisionOptions {
  * that implements the abstract class
  */
 export class Decision {
-  public constructor(confirmed: DecisionOptions, tag?: Tag) {
+  public constructor(confirmed: DecisionOptions, tag: Tag | null) {
     this.confirmed = confirmed;
     this.tag = tag ?? { text: "" };
   }

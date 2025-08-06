@@ -9,12 +9,12 @@ import { Decision, DecisionOptions } from "./decision";
  * @extends Decision
  */
 export class Verification extends Decision {
-  public constructor(confirmed: DecisionOptions, tag?: Tag) {
+  public constructor(confirmed: DecisionOptions, tag: Tag | null) {
     super(confirmed, tag);
   }
 
   /** returns a new verification instance with the tag property changed */
-  public withTag(tag: Tag): Verification {
+  public withTag(tag: Tag | null): Verification {
     // we return a new instance of the verification model instead of mutating
     // the original tag model because Verification models are shared between
     // all descendants of a creator

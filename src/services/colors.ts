@@ -5,7 +5,7 @@ import { decisionNotRequired, OptionalDecision } from "../models/decisions/decis
 import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
 
-const tagColors = new Map<string, CssVariable>();
+const tagColors = new Map<unknown, CssVariable>();
 
 /**
  * @description
@@ -37,15 +37,19 @@ export function decisionColor(decision: OptionalDecision): CssVariable {
 }
 
 function colorBrewerColor(decision: Decision): CssVariable {
-  const tagName = decision.tag?.text ?? decision.tag;
-  const tagColor = tagColors.get(tagName);
+  const decisionIdentifier =
+    decision instanceof Classification
+      ? (decision.tag?.text ?? decision.tag)
+      : Object.getPrototypeOf(decision).constructor;
+
+  const tagColor = tagColors.get(decisionIdentifier);
   if (tagColor) {
     return `${tagColor}-${decision.confirmed}`;
   }
 
   const nextColorId = tagColors.size;
   const newDecisionColor: CssVariable = `--unique-color-${nextColorId}`;
-  tagColors.set(tagName, newDecisionColor);
+  tagColors.set(decisionIdentifier, newDecisionColor);
 
   return `${newDecisionColor}-${decision.confirmed}`;
 }

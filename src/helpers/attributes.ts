@@ -24,9 +24,9 @@ export const tagArrayConverter = (value: string | null): Tag[] => {
   return value.split(",").map((item) => ({ text: item.trim() }));
 };
 
-export const tagConverter = (value: string | null): Tag => {
+export const tagConverter = (value: string | null): Tag | null => {
   if (value === null) {
-    return { text: "" };
+    return null;
   }
 
   return { text: value };

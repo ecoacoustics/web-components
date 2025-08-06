@@ -9,7 +9,7 @@ import { Decision, DecisionOptions } from "./decision";
  * @extends Decision
  */
 export class NewTag extends Decision {
-  public constructor(tag: Tag) {
+  public constructor(tag?: Tag) {
     // Because the base "decision" class requires a "booleanish" decision
     // (FALSE, TRUE, SKIP, UNSURE), I use a "dummy" true value for new tags.
     //
