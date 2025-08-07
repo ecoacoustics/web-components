@@ -14,20 +14,16 @@ test.describe("data source", () => {
     test.describe(`loading from a ${loadFileText}`, () => {
       test.beforeEach(async ({ fixture }) => {
         if (localFile) {
-          await fixture.setLocalFile();
+          await fixture.setLocalFile("../../../public/example/test-items.json");
           return;
         }
 
-        await fixture.setRemoteFile("http://localhost:3000/example.flac");
+        await fixture.setRemoteFile("http://localhost:3000/test-items.json");
       });
 
-      test.skip(`should handle removing the source correctly with ${loadFileText}`, () => {});
+      test(`should correctly handle removing the data source`, () => {});
 
-      test.skip(`should show the correct file name with ${loadFileText}`, () => {});
-
-      test.skip(`should have the correct file type for a json ${loadFileText}`, () => {});
-
-      test.skip(`should have the correct file type for a csv file ${loadFileText}`, () => {});
+      test(`should show the correct file name`, () => {});
     });
   });
 

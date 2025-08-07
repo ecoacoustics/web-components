@@ -598,7 +598,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         if (this.areTilesLoaded()) {
           this._loaded = true;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-          this.setDecisionDisabled(false);
+          this.updateDecisionWhen();
         }
       }
 
@@ -939,8 +939,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * handler runs grid size times when the play shortcut is pressed.
    */
   private handleTilePlay(event: CustomEvent<IPlayEvent>): void {
-    // If there are no tiles selected, then we want to play everything
-    // so don't cancel any of the play events.
+    // If all of the tiles are selected (either through explicit selection or
+    // implicitly by having everything de-selected), then we want to play
+    // everything so don't cancel any of the play events.
     // This is handled here and not in the tiles, because the tile's don't know the total
     // selected count.
     if (this.currentSubSelection.length === this.effectivePageSize) {
@@ -1743,7 +1744,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.areTilesLoaded()) {
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-      this.setDecisionDisabled(false);
 
       this.updateDecisionWhen();
     }

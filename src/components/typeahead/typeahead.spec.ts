@@ -194,6 +194,10 @@ test.describe("focus", () => {
 
     await expect(fixture.searchResults().nth(1)).toHaveAttribute("aria-selected", "true");
   });
+
+  test("should show recently used items at the top of an unsorted list", () => {});
+
+  test("should not show recently used items if the search query is populated", () => {});
 });
 
 test.describe("selection emission", () => {

@@ -33,8 +33,13 @@ function classificationFalseColor(baseColor: string): string {
 
 // We reverse the color brewer Set1 because the first two colors out of this set
 // are close to red and green (which we use for true/false).
-// To reduce the number of colors
-const colorBrewerColorSet = colorbrewer.Set1[9].reverse();
+// I also remove the last color because it is a light grey which has a sematic
+// meaning in our design system of a "disabled" state.
+//
+// Additionally, note that we are using "slice" first which creates a copy of
+// the array, so that when we use "reverse" (an in-place operation) it does not
+// mutate the libraries array.
+const colorBrewerColorSet = colorbrewer.Set1[9].slice(0, -1).reverse();
 
 // Because color brewer is shipped under the Apache license. I don't want to
 // export any css variables under the "color-brewer" namespace.

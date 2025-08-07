@@ -66,6 +66,10 @@ export const callbackConverter = <T>(value: string | null | ((...params: any[]) 
     }
   }
 
+  if (value === null) {
+    return null;
+  }
+
   throw new Error(`Callback attribute must be a function or string. Found type: ${typeof value}`);
 };
 

@@ -43,6 +43,9 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   @property({ attribute: "max-items", type: Number, reflect: true })
   public maxItems = 10;
 
+  @property({ attribute: "recent-used-count", type: Number, reflect: true })
+  public recentlyUsedCount = 3;
+
   @state()
   private typeaheadResults: T[] = [];
 
@@ -52,12 +55,19 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   @query("#typeahead-input")
   private readonly tagInput!: HTMLInputElement;
 
+  private readonly recentlyUsed: T[] = [];
+
   public updated(change: PropertyValues<this>): void {
     // If the max-item's is decreased while the user is focused on an item that
     // no longer exists (due to a decreasing max-items), we focus the last
     // element that is now shown.
     if (change.has("search")) {
       this.handleSearchInvalidation();
+
+      // We clear the recently used items if the search callback changes so that
+      // if the algorithm or logic for searching changes, we do not show stale
+      // results in the recently used items.
+      this.clearRecentlyUsed();
     } else if (change.has("maxItems")) {
       this.focusedIndex = Math.min(this.focusedIndex, this.maxItems - 1);
     }
@@ -92,7 +102,27 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
     // callback is taking a long time to complete (e.g. server lag), we do not
     // wait to lock up the main thread awaiting a response.
     Promise.resolve(searchResults).then((value) => {
-      this.typeaheadResults = value;
+      // If there is no search term, we want to append the recently used items
+      // to the top of the results.
+      // If there is a search term, we do not want to inject results, so we
+      // return the search results as is.
+      if (!searchTerm) {
+        // To avoid duplicates in the recently used items, and the initial
+        // results returned from the search callback with no search term,
+        // we match the recently used items against the search results using the
+        // text converter.
+        // Note that we use the text converter instead of the model because
+        // new references might be re-created for each search.
+        // Matching by the text converter allows us to de-duplicate the results
+        // without the host application needing to worry about stable object
+        // references.
+        const recentlyUsedSet = new Set(this.recentlyUsed.map((model) => this.textConverter(model)));
+        const filteredSearchResults = value.filter((model) => !recentlyUsedSet.has(this.textConverter(model)));
+
+        this.typeaheadResults = [...this.recentlyUsed, ...filteredSearchResults];
+      } else {
+        this.typeaheadResults = value;
+      }
 
       // Similar to Google search, I reset the index of the focus index if the
       // user performs input.
@@ -221,6 +251,32 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
     });
 
     this.dispatchEvent(event);
+
+    this.addToRecentlyUsed(model);
+  }
+
+  // TODO: This logic can definitely be improved. We are currently using unshift
+  // to add the most recently used item to the front of the array.
+  // But this means that we are constantly moving every item in the array.
+  // However, I have deemed that this is acceptable for now because the MRU
+  // list is only used for a small number of items (default is 3).
+  private addToRecentlyUsed(model: T): void {
+    // If the model is already in the recently used set, we remove it so that
+    // it can be added to the end of the array.
+    const currentlyUsedIndex = this.recentlyUsed.indexOf(model);
+    if (currentlyUsedIndex !== -1) {
+      this.recentlyUsed.splice(currentlyUsedIndex, 1);
+    }
+
+    this.recentlyUsed.unshift(model);
+
+    if (this.recentlyUsed.length > this.recentlyUsedCount) {
+      this.recentlyUsed.pop();
+    }
+  }
+
+  public clearRecentlyUsed(): void {
+    this.recentlyUsed.length = 0;
   }
 
   private resultTemplate(model: T, index: number): HTMLTemplateResult {
