@@ -1,6 +1,12 @@
 import { DOWN_ARROW_KEY, ENTER_KEY } from "../../../helpers/keyboard";
 import { expect } from "../../../tests/assertions";
-import { insertContent, pressKey, setBrowserAttribute, setBrowserValue } from "../../../tests/helpers";
+import {
+  getCssVariableStyle,
+  insertContent,
+  pressKey,
+  setBrowserAttribute,
+  setBrowserValue,
+} from "../../../tests/helpers";
 import { TagPromptComponent } from "./tag-prompt";
 import { tagPromptFixture as test } from "./tag-prompt.fixture";
 
@@ -34,12 +40,12 @@ test.describe("keyboard shortcuts", () => {
   });
 });
 
-// test.describe("decision colors", () => {
-//   test("should have the correct decision color", async ({ fixture }) => {
-//     const expectedColor = await getCssVariableStyle(fixture.component(), "--new-tag-true", "background");
-//     await expect(fixture.decisionColorPill()).toHaveCSS("background", expectedColor);
-//   });
-// });
+test.describe("decision colors", () => {
+  test("should have the correct decision color", async ({ fixture }) => {
+    const expectedColor = await getCssVariableStyle(fixture.decisionColorPill(), "--unique-color-0-true", "background");
+    await expect(fixture.decisionColorPill()).toHaveCSS("background", expectedColor);
+  });
+});
 
 // Asserting that the correct item is selected / emitted from the typeahead is
 // tested inside of the typeahead component tests.

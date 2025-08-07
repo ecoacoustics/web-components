@@ -47,10 +47,14 @@ export async function getCssVariableStyle<T extends HTMLElement>(
 ): Promise<string> {
   return await locator.evaluate(
     (element: T, { variable, cssProperty }) => {
-      const browserStyles = (color: string) => {
+      const browserStyles = (variableValue: string, fontSize: string) => {
         const temp = document.createElement("div");
+
+        // We have to set the font size to the same as the target elements font
+        // size so that "em" units are calculated correctly.
         temp.style.display = "none";
-        temp.style[cssProperty as any] = color;
+        temp.style.fontSize = fontSize;
+        temp.style[cssProperty as any] = variableValue;
         document.body.appendChild(temp);
 
         const value = window.getComputedStyle(temp)[cssProperty];
@@ -59,8 +63,11 @@ export async function getCssVariableStyle<T extends HTMLElement>(
         return value;
       };
 
-      const variableValue = window.getComputedStyle(element).getPropertyValue(variable);
-      return browserStyles(variableValue);
+      const elementComputedStyle = window.getComputedStyle(element);
+      const variableValue = elementComputedStyle.getPropertyValue(variable);
+      const fontSize = elementComputedStyle.fontSize;
+
+      return browserStyles(variableValue, fontSize);
     },
     { variable: name, cssProperty: property },
   );

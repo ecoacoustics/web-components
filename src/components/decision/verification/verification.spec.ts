@@ -58,15 +58,15 @@ test.describe("Verification Component", () => {
     const decisionColorTests: DecisionColorTest[] = [
       { decision: DecisionOptions.TRUE, expectedColor: "--verification-true" },
       { decision: DecisionOptions.FALSE, expectedColor: "--verification-false" },
-      // { decision: DecisionOptions.SKIP, expectedColor: "--verification-skip" },
-      // { decision: DecisionOptions.UNSURE, expectedColor: "--verification-unsure" },
+      { decision: DecisionOptions.SKIP, expectedColor: "--verification-skip" },
+      { decision: DecisionOptions.UNSURE, expectedColor: "--verification-unsure" },
     ];
 
     decisionColorTests.forEach((testCase) => {
       test(`should have the correct color for a ${testCase.decision} decision`, async ({ fixture }) => {
         await fixture.changeVerified(testCase.decision);
 
-        const expectedColor = await getCssVariableStyle(fixture.component(), testCase.expectedColor, "background");
+        const expectedColor = await getCssVariableStyle(fixture.colorPill(), testCase.expectedColor, "background");
         await expect(fixture.colorPill()).toHaveCSS("background", expectedColor);
       });
     });
