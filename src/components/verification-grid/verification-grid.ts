@@ -1648,7 +1648,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       if (passes) {
         subject.setDecisionRequired(decisionElement.decisionConstructor);
       } else {
-        subject.setDecisionNoRequired(decisionElement.decisionConstructor);
+        subject.setDecisionNotRequired(decisionElement.decisionConstructor);
       }
     }
 

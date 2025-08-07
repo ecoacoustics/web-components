@@ -142,7 +142,7 @@ export class SubjectWrapper {
     }
   }
 
-  public setDecisionNoRequired(decision: Constructor<Decision>): void {
+  public setDecisionNotRequired(decision: Constructor<Decision>): void {
     if (decision === Verification) {
       this.verification = decisionNotRequired;
     } else if (decision === NewTag) {

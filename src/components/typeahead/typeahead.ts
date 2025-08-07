@@ -44,7 +44,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   public maxItems = 10;
 
   @property({ attribute: "recent-used-count", type: Number, reflect: true })
-  public recentlyUsedCount = 3;
+  public recentlyUsedCount = 5;
 
   @state()
   private typeaheadResults: T[] = [];
@@ -261,18 +261,14 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   // However, I have deemed that this is acceptable for now because the MRU
   // list is only used for a small number of items (default is 3).
   private addToRecentlyUsed(model: T): void {
-    // If the model is already in the recently used set, we remove it so that
-    // it can be added to the end of the array.
+    // If the model is already in the recently used array, we remove it so that
+    // it can be added to the start of the array.
     const currentlyUsedIndex = this.recentlyUsed.indexOf(model);
     if (currentlyUsedIndex !== -1) {
       this.recentlyUsed.splice(currentlyUsedIndex, 1);
     }
 
-    this.recentlyUsed.unshift(model);
-
-    if (this.recentlyUsed.length > this.recentlyUsedCount) {
-      this.recentlyUsed.pop();
-    }
+    this.recentlyUsed.splice(0, Infinity, ...this.recentlyUsed.slice(0, this.recentlyUsedCount));
   }
 
   public clearRecentlyUsed(): void {

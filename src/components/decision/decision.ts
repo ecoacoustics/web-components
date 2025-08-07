@@ -86,7 +86,7 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
 
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {
-      throw new Error("A decision button component must be slotted in a verification grid.");
+      return;
     }
 
     this.verificationGrid.removeEventListener("keydown", this.keyDownHandler);
