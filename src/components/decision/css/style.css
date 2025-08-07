@@ -61,16 +61,16 @@
     width: 1.3rem;
 
     /*
-      We set the font size to 0.4em so that decision pill backgrounds that use
+      We set the font size to 6px because decision pill backgrounds that use
       the font size (e.g. color pills with backgrounds).
       Will shrink so that the pattern is smaller when put inside of the small
       button pills.
 
-      Note that I also hard code the value of 16px instead of using "rem" units
+      Note that I also hard code the value of 6px instead of using "rem" units
       because we don't want the background patterns to change if the user zooms
       in or changes their browsers font-size.
     */
-    font-size: 0.4em;
+    font-size: 6px;
 
     align-self: flex-start;
   }

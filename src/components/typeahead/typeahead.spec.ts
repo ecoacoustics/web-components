@@ -195,9 +195,35 @@ test.describe("focus", () => {
     await expect(fixture.searchResults().nth(1)).toHaveAttribute("aria-selected", "true");
   });
 
-  test("should show recently used items at the top of an unsorted list", () => {});
+  test("should show recently used items at the top of an unsorted list", async ({ fixture }) => {
+    await fixture.inputBox().fill("tag");
 
-  test("should not show recently used items if the search query is populated", () => {});
+    await expect(fixture.searchResults()).toHaveCount(4);
+
+    await fixture.searchResults().nth(2).click();
+    await fixture.searchResults().nth(3).click();
+
+    // MRU items should only be shown if the search query is empty.
+    // At this stage, there is still a search query.
+    await expect(fixture.searchResults()).toHaveCount(4);
+    await expect(fixture.searchResults().nth(0)).toHaveTrimmedText("tag1");
+    await expect(fixture.searchResults().nth(1)).toHaveTrimmedText("tag2");
+
+    await fixture.inputBox().clear();
+
+    // After clearing the input, we expect that the MRU items will be shown
+    // at the top of the list.
+    // Additionally, the search results should be shown after the MRU items, and
+    // there should be no duplicates.
+    await expect(fixture.searchResults()).toHaveCount(7);
+    await expect(fixture.searchResults().nth(0)).toHaveTrimmedText("tag4");
+    await expect(fixture.searchResults().nth(1)).toHaveTrimmedText("tag3");
+
+    // Once we start typing the MRU results should disappear.
+    await fixture.inputBox().fill("tag");
+
+    await expect(fixture.searchResults()).toHaveCount(4);
+  });
 });
 
 test.describe("selection emission", () => {

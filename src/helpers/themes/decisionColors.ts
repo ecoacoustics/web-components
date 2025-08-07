@@ -31,15 +31,21 @@ function classificationFalseColor(baseColor: string): string {
   return `color-mix(in srgb, ${baseColor} ${falseDarkenPercentage}%, black)`;
 }
 
-// We reverse the color brewer Set1 because the first two colors out of this set
-// are close to red and green (which we use for true/false).
-// I also remove the last color because it is a light grey which has a sematic
-// meaning in our design system of a "disabled" state.
+// I remove the colors for "gray", "red", and "green" from this set because
+// they all have semantic meaning in our design language.
+// red: indicates a false decision
+// green: indicates a true decision
+// gray: indicates a disabled state
 //
-// Additionally, note that we are using "slice" first which creates a copy of
-// the array, so that when we use "reverse" (an in-place operation) it does not
-// mutate the libraries array.
-const colorBrewerColorSet = colorbrewer.Set1[9].slice(0, -1).reverse();
+// https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
+const colorBrewerSetRedIndex = 0;
+const colorBrewerSetGreenIndex = 2;
+const colorBrewerSetGrayIndex = 8;
+const removedColorBrewerIndexes = [colorBrewerSetRedIndex, colorBrewerSetGreenIndex, colorBrewerSetGrayIndex];
+
+const colorBrewerColorSet = colorbrewer.Set1[9].filter(
+  (_: string, i: number) => !removedColorBrewerIndexes.includes(i),
+);
 
 // Because color brewer is shipped under the Apache license. I don't want to
 // export any css variables under the "color-brewer" namespace.
