@@ -48,6 +48,9 @@ test.describe("keyboard shortcuts", () => {
 // correctly.
 test.describe("decision emission", () => {
   test("should not open the popup if clicked when disabled", async ({ fixture }) => {
+    await setBrowserValue(fixture.component(), "disabled", true);
+    await expect(fixture.decisionButton()).toBeDisabled();
+
     // force = true bypasses accessibility checks. Because the button should
     // be disabled, it will fail accessability checked.
     // eslint-disable-next-line playwright/no-force-option

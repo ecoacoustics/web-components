@@ -8,24 +8,24 @@ test.describe("data source", () => {
     await fixture.dismissBootstrapDialog();
   });
 
-  [false, true].forEach((localFile: boolean) => {
-    const loadFileText = localFile ? "local file" : "remote file";
-
-    test.describe(`loading from a ${loadFileText}`, () => {
-      test.beforeEach(async ({ fixture }) => {
-        if (localFile) {
-          await fixture.setLocalFile("../../../public/example/test-items.json");
-          return;
-        }
-
-        await fixture.setRemoteFile("http://localhost:3000/test-items.json");
-      });
-
-      test(`should correctly handle removing the data source`, () => {});
-
-      test(`should show the correct file name`, () => {});
-    });
-  });
+  // [false, true].forEach((localFile: boolean) => {
+  //   const loadFileText = localFile ? "local file" : "remote file";
+  //
+  //   test.describe(`loading from a ${loadFileText}`, () => {
+  //     test.beforeEach(async ({ fixture }) => {
+  //       if (localFile) {
+  //         await fixture.setLocalFile("../../../public/example/test-items.json");
+  //         return;
+  //       }
+  //
+  //       await fixture.setRemoteFile("http://localhost:3000/test-items.json");
+  //     });
+  //
+  //     test(`should correctly handle removing the data source`, () => {});
+  //
+  //     test(`should show the correct file name`, () => {});
+  //   });
+  // });
 
   ["json", "csv", "tsv"].forEach((fileType) => {
     test.describe(`file type ${fileType}`, () => {

@@ -147,9 +147,6 @@ export class SubjectWrapper {
       this.verification = decisionNotRequired;
     } else if (decision === NewTag) {
       this.newTag = decisionNotRequired;
-    } else {
-      console.error("Could not invalidate decision requirement:", decision);
-      return;
     }
   }
 
@@ -158,9 +155,6 @@ export class SubjectWrapper {
       this.verification = this.verification === decisionNotRequired ? undefined : this.verification;
     } else if (decision === NewTag) {
       this.newTag = this.newTag === decisionNotRequired ? undefined : this.newTag;
-    } else {
-      console.error("Could not invalidate decision requirement:", decision);
-      return;
     }
   }
 
