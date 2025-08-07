@@ -10,7 +10,11 @@ import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
-import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
+import {
+  SubjectChange,
+  VerificationGridInjector,
+  VerificationGridSettings,
+} from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
@@ -236,8 +240,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     }
   }
 
-  public addDecision(decision: Decision) {
-    this.model.addDecision(decision);
+  public addDecision(decision: Decision): SubjectChange {
+    const change = this.model.addDecision(decision);
 
     // because the model is an object (not a primitive), modifying a property
     // does not cause the re-render which is needed to display the new decision
@@ -245,11 +249,15 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     // to fix this, we call requestUpdate which will re-render the component
     // TODO: We can probably replace this with a guard directive
     this.requestUpdate();
+
+    return change;
   }
 
-  public removeDecision(decision: Decision) {
-    this.model.removeDecision(decision);
+  public removeDecision(decision: Decision): SubjectChange {
+    const change = this.model.removeDecision(decision);
     this.requestUpdate();
+
+    return change;
   }
 
   private hasAlternativeShortcut(shortcut: string): shortcut is keyof typeof shortcutTranslation {

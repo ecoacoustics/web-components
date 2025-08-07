@@ -48,11 +48,45 @@ import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
+import { HeapVariable } from "../../helpers/types/advancedTypes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
 export type PageOperation = <T = unknown>(subject: SubjectWrapper) => T;
+
+/**
+ * A map of new subjects to changed decisions.
+ * The map is designed in this way so that you should be able to perform partial
+ * updates because you know exactly what decisions were changed on a subject.
+ */
+export type DecisionMadeEvent = Map<SubjectWrapper, DecisionMadeEventValue>;
+
+// Additionally, we break down each property type into a separate key so
+// that we can explicitly unset the property by setting the value to `null`.
+//
+// The typing here is a bit complex, but can be explained as:
+//
+// 1. If the property is a pointer to a value it must be readonly so that
+//    host applications don't accidentally modify the subject object by
+//    modifying the map or object references.
+//
+// 2. If not a map or object, we allow an object that contains the new value for
+//    each property
+//
+// 3. If the property was explicitly unset, we allow the value to be `null`
+export type SubjectChange = {
+  [K in keyof SubjectWrapper]?: SubjectWrapper[K] extends HeapVariable
+    ? Readonly<SubjectWrapper[K]> | null
+    : SubjectWrapper[K] | null;
+};
+
+// We emit an object as the value so that if we want to expand the emitted value
+// in the future (e.g. add additional information/properties), we do not have to
+// do a breaking change.
+export interface DecisionMadeEventValue {
+  change: SubjectChange;
+}
 
 export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
@@ -139,7 +173,7 @@ interface SelectionOptions {
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
  *
- * @event { SubjectModel[] } decision-made - Emits information about the decision that was made
+ * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
@@ -1465,7 +1499,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // we ue the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private async nextPage(count: number = this.effectivePageSize): Promise<void> {
+  private nextPage(count: number = this.effectivePageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -1510,6 +1544,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const hasSubSelection = subSelection.length > 0;
     const trueSubSelection = hasSubSelection ? subSelection : gridTiles;
 
+    const decisionMap: DecisionMadeEvent = new Map();
+
     // Skip decisions have some special behavior.
     // If nothing is selected, a skip decision will skip all undecided tiles.
     // If the user does have a subsection, we only apply the skip decision to
@@ -1523,11 +1559,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       const gridTiles = this.gridTiles;
       for (const tile of gridTiles) {
-        tile.model.skipUndecided(hasVerificationTask, requiredTags);
+        const change = tile.model.skipUndecided(hasVerificationTask, requiredTags);
+        decisionMap.set(tile.model, { change });
       }
 
       if (!this.isViewingHistory()) {
-        await this.nextPage();
+        this.nextPage();
       }
 
       return;
@@ -1539,17 +1576,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         continue;
       }
 
+      let tileChanges = {};
+
       for (const decision of userDecisions) {
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
         if (tile.model.hasDecision(decision)) {
-          tile.removeDecision(decision);
+          tileChanges = { ...tileChanges, ...tile.removeDecision(decision) };
         } else {
-          tile.addDecision(decision);
+          tileChanges = { ...tileChanges, ...tile.addDecision(decision) };
           emittedSubjects.push(tile.model);
         }
       }
+
+      decisionMap.set(tile.model, { change: tileChanges });
     }
 
     // We only dispatch the "decisionMade" event after the decision has been
@@ -1557,7 +1598,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // This is important for third party event listeners who may want to see the
     // entire decision set after a decision is made.
     this.dispatchEvent(
-      new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
+      new CustomEvent<DecisionMadeEvent>(VerificationGridComponent.decisionMadeEventName, {
+        detail: decisionMap,
+      }),
     );
 
     // Because auto-paging and automatic tile selection are dependent upon the
@@ -1569,7 +1612,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      await this.nextPage(gridTiles.length);
+      this.nextPage(gridTiles.length);
 
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.

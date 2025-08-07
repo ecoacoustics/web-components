@@ -268,7 +268,11 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
       this.recentlyUsed.splice(currentlyUsedIndex, 1);
     }
 
-    this.recentlyUsed.splice(0, Infinity, ...this.recentlyUsed.slice(0, this.recentlyUsedCount));
+    this.recentlyUsed.unshift(model);
+
+    if (this.recentlyUsed.length > this.recentlyUsedCount) {
+      this.recentlyUsed.pop();
+    }
   }
 
   public clearRecentlyUsed(): void {

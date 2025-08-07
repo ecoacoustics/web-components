@@ -5,6 +5,7 @@ import { Tag, TagName } from "./tag";
 import { Constructor, EnumValue } from "../helpers/types/advancedTypes";
 import { NewTag } from "./decisions/newTag";
 import { decisionNotRequired, OptionalDecision } from "./decisions/decisionNotRequired";
+import { SubjectChange } from "verification-grid/verification-grid";
 
 export enum AudioCachedState {
   COLD,
@@ -85,26 +86,26 @@ export class SubjectWrapper {
    * Decisions that are made about the same tag are removed so that it is not
    * possible to have both a positive and negative decision about a tag
    */
-  public addDecision(decision: Decision): void {
+  public addDecision(decision: Decision): SubjectChange {
     if (decision instanceof Verification) {
-      this.addVerification(decision);
+      return this.addVerification(decision);
     } else if (decision instanceof Classification) {
-      this.addClassification(decision);
+      return this.addClassification(decision);
     } else if (decision instanceof NewTag) {
-      this.applyNewTag(decision);
+      return this.applyNewTag(decision);
     } else {
       throw new Error("Invalid decision type");
     }
   }
 
   /** Removes a decision from the subject */
-  public removeDecision(decision: Decision) {
+  public removeDecision(decision: Decision): SubjectChange {
     if (decision instanceof Verification) {
-      this.removeVerification();
+      return this.removeVerification();
     } else if (decision instanceof Classification) {
-      this.removeClassification(decision.tag);
+      return this.removeClassification(decision.tag);
     } else if (decision instanceof NewTag) {
-      this.removeNewTag();
+      return this.removeNewTag();
     } else {
       throw new Error("Invalid decision type");
     }
@@ -116,20 +117,26 @@ export class SubjectWrapper {
    * applies a skip decision to any required tags that do not have a decision
    * made about them
    *
-   * @param {Boolean} requiresVerification
+   * @param requiresVerification
    * Looks at the subject model and applies a skip decision to the
    * verification task if none is applied
    *
-   * @param {Array} requiredClassifications
+   * @param requiredClassifications
    * Classifications that will be * applied as a skip decision if not present
    * on the subject
+   *
+   * @returns
+   * An SubjectChange object that describes what changes were made to the
+   * subject as part of this method call.
    */
-  public skipUndecided(requiresVerification: boolean, requiredClassifications: Tag[]): void {
+  public skipUndecided(requiresVerification: boolean, requiredClassifications: Tag[]): SubjectChange {
+    let changeReceipt: SubjectChange = {};
+
     // each subject can only have one verification decision
     const isMissingVerification = requiresVerification && this.verification === undefined;
     if (isMissingVerification) {
       const skipVerification = new Verification(DecisionOptions.SKIP, this.tag);
-      this.addDecision(skipVerification);
+      changeReceipt = { ...changeReceipt, ...this.addDecision(skipVerification) };
     }
 
     for (const tag of requiredClassifications) {
@@ -138,18 +145,32 @@ export class SubjectWrapper {
       }
 
       const skipClassification = new Classification(DecisionOptions.SKIP, tag);
-      this.addDecision(skipClassification);
+      changeReceipt = { ...changeReceipt, ...this.addDecision(skipClassification) };
     }
+
+    return changeReceipt;
   }
 
-  public setDecisionNotRequired(decision: Constructor<Decision>): void {
+  /**
+   * @returns
+   * A SubjectChange object that explicitly states if any decisions were set to
+   * "null" as a result of their decision no longer being required, and
+   * therefore removed.
+   */
+  public setDecisionNotRequired(decision: Constructor<Decision>): SubjectChange {
     if (decision === Verification) {
       this.verification = decisionNotRequired;
+      return { verification: decisionNotRequired };
     } else if (decision === NewTag) {
       this.newTag = decisionNotRequired;
+      return { newTag: decisionNotRequired };
     }
+
+    return {};
   }
 
+  // This method does not return a SubjectChange because it cannot change any
+  // decision values from being called.
   public setDecisionRequired(decision: Constructor<Decision>): void {
     if (decision === Verification) {
       this.verification = this.verification === decisionNotRequired ? undefined : this.verification;
@@ -220,32 +241,57 @@ export class SubjectWrapper {
     };
   }
 
-  private addVerification(model: Verification): void {
+  private addVerification(model: Verification): SubjectChange {
     // when a verification decision is made, it doesn't have a tag on the model.
     // This is because the tag is usually associated with the subject, which the
     // verification button cannot know about when it makes the verification
     // model
     const populatedVerification = model.withTag(this.tag);
     this.verification = populatedVerification;
+
+    return { verification: populatedVerification };
   }
 
-  private addClassification(model: Classification): void {
+  private addClassification(model: Classification): SubjectChange {
     this.classifications.set(model.tag.text, model);
+    return {
+      classifications: Object.freeze(this.classifications),
+    };
   }
 
-  private applyNewTag(model: NewTag): void {
+  private applyNewTag(model: NewTag): SubjectChange {
+    // If the person selects the same tag again, we don't want to declare
+    // another newTag change.
+    if (model === this.newTag) {
+      return {};
+    }
+
     this.newTag = model;
+    return { newTag: model };
   }
 
-  private removeVerification(): void {
+  private removeVerification(): SubjectChange {
     this.verification = undefined;
+    return { verification: null };
   }
 
-  private removeClassification(tag: Tag): void {
+  private removeClassification(tag: Tag): SubjectChange {
     this.classifications.delete(tag.text);
+
+    // We use Object.freeze here because SubjectChange's are emitted to the host
+    // application as part of decision-made events.
+    // Therefore, to stop the host application from modifying the
+    // classifications map directly, we freeze the object.
+    // We use Object.freeze instead of a TypeScript Readonly annotation so that
+    // applications that do not use TypeScript can still get assurance that they
+    // are not directly modifying internal state.
+    return {
+      classifications: Object.freeze(this.classifications),
+    };
   }
 
-  private removeNewTag(): void {
+  private removeNewTag(): SubjectChange {
     this.newTag = undefined;
+    return { newTag: null };
   }
 }
