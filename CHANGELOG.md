@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.0.0...web-components-v5.1.0) (2025-08-08)
+
+
+### Features
+
+* Emit oldSubject in decision-made event ([#450](https://github.com/ecoacoustics/web-components/issues/450)) ([6022d7c](https://github.com/ecoacoustics/web-components/commit/6022d7c6a8a0516a65771e2f774721c1de23f057))
+
 ## [5.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.2.0...web-components-v5.0.0) (2025-08-08)
 
 
