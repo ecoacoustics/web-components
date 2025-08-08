@@ -358,10 +358,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     const decision = this.model.classifications.get(requiredTag.text);
     const decisionText = decision ? decision.confirmed : "no decision";
 
-    let color: string | undefined;
-    if (decision && decision.confirmed !== DecisionOptions.SKIP) {
-      color = this.injector.colorService(decision);
-    }
+    const color: string | undefined = decision ? this.injector.colorService(decision) : undefined;
 
     return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
@@ -399,7 +396,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     if (currentNewTag === decisionNotRequired) {
       tooltipText = "new tag: not required";
     } else if (currentNewTag) {
-      tooltipText = `new tag: ${currentNewTag.tag.text}`;
+      if (currentNewTag.confirmed === DecisionOptions.SKIP) {
+        tooltipText = `new tag: ${currentNewTag.confirmed}`;
+      } else {
+        tooltipText = `new tag: ${currentNewTag.tag.text}`;
+      }
     } else {
       tooltipText = "new tag: no decision";
     }

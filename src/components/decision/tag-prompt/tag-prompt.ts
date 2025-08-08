@@ -1,7 +1,7 @@
 import { DecisionComponent } from "../decision";
 import { html, HTMLTemplateResult, unsafeCSS } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import { Decision } from "../../../models/decisions/decision";
+import { Decision, DecisionOptions } from "../../../models/decisions/decision";
 import { keyboardShortcutTemplate } from "../../../templates/keyboardShortcut";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -66,7 +66,7 @@ export class TagPromptComponent extends DecisionComponent {
 
   private handleDecision(event: CustomEvent<Tag>): void {
     const tag = event.detail;
-    const decisionModel = new NewTag(tag);
+    const decisionModel = new NewTag(DecisionOptions.TRUE, tag);
     this.emitDecision([decisionModel]);
 
     this.close();
@@ -99,7 +99,7 @@ export class TagPromptComponent extends DecisionComponent {
       disabled: !!this.disabled,
     });
 
-    const color = this.injector.colorService(new NewTag(null));
+    const color = this.injector.colorService(new NewTag(DecisionOptions.TRUE, null));
 
     return html`
       ${this.popoverTemplate()}

@@ -244,6 +244,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-classification" })
   private classificationDecisionElements!: ClassificationComponent[];
 
+  /** selector for oe-classification elements */
+  @queryAssignedElements({ selector: "oe-tag-prompt" })
+  private tagPromptDecisionElements!: TagPromptComponent[];
+
   /** A selector for all oe-verification and oe-classification elements */
   @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
   private decisionElements!: DecisionComponentUnion[];
@@ -1546,30 +1550,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const decisionMap: DecisionMadeEvent = new Map();
 
-    // Skip decisions have some special behavior.
-    // If nothing is selected, a skip decision will skip all undecided tiles.
-    // If the user does have a subsection, we only apply the skip decision to
-    // the selected tiles.
-    //
-    // TODO: Add support for skip decisions with additional tags
-    // TODO: Refactor this code into the handler code below
-    if (!hasSubSelection && userDecisions[0].confirmed === DecisionOptions.SKIP) {
-      const requiredTags = this.requiredClassificationTags;
-      const hasVerificationTask = this.hasVerificationTask();
-
-      const gridTiles = this.gridTiles;
-      for (const tile of gridTiles) {
-        const change = tile.model.skipUndecided(hasVerificationTask, requiredTags);
-        decisionMap.set(tile.model, { change });
-      }
-
-      if (!this.isViewingHistory()) {
-        this.nextPage();
-      }
-
-      return;
-    }
-
     const emittedSubjects: SubjectWrapper[] = [];
     for (const tile of trueSubSelection) {
       if (tile.hidden) {
@@ -1579,6 +1559,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       let tileChanges = {};
 
       for (const decision of userDecisions) {
+        // Skip decisions have some special behavior.
+        // If nothing is selected, a skip decision will skip all undecided tiles.
+        // If the user does have a subsection, we only apply the skip decision to
+        // the selected tiles.
+        if (decision.confirmed === DecisionOptions.SKIP) {
+          const skipChanges = tile.model.skipUndecided(
+            this.hasVerificationTask(),
+            this.hasNewTagTask(),
+            this.requiredClassificationTags,
+          );
+
+          tileChanges = { ...tileChanges, ...skipChanges };
+
+          continue;
+        }
+
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
@@ -1804,6 +1800,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // Some verification components (skip) are supportive to the current task,
     // and do not create their own verification task.
     return this.verificationDecisionElements.some((element) => element.isTask);
+  }
+
+  private hasNewTagTask(): boolean {
+    return this.tagPromptDecisionElements.length > 0;
   }
 
   private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {

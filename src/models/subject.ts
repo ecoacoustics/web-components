@@ -129,7 +129,11 @@ export class SubjectWrapper {
    * An SubjectChange object that describes what changes were made to the
    * subject as part of this method call.
    */
-  public skipUndecided(requiresVerification: boolean, requiredClassifications: Tag[]): SubjectChange {
+  public skipUndecided(
+    requiresVerification: boolean,
+    requiresNewTag: boolean,
+    requiredClassifications: Tag[],
+  ): SubjectChange {
     let changeReceipt: SubjectChange = {};
 
     // each subject can only have one verification decision
@@ -137,6 +141,12 @@ export class SubjectWrapper {
     if (isMissingVerification) {
       const skipVerification = new Verification(DecisionOptions.SKIP, this.tag);
       changeReceipt = { ...changeReceipt, ...this.addDecision(skipVerification) };
+    }
+
+    const isMissingNewTag = requiresNewTag && this.newTag === undefined;
+    if (isMissingNewTag) {
+      const skipNewTag = new NewTag(DecisionOptions.SKIP, null);
+      changeReceipt = { ...changeReceipt, ...this.addDecision(skipNewTag) };
     }
 
     for (const tag of requiredClassifications) {
@@ -260,12 +270,6 @@ export class SubjectWrapper {
   }
 
   private applyNewTag(model: NewTag): SubjectChange {
-    // If the person selects the same tag again, we don't want to declare
-    // another newTag change.
-    if (model === this.newTag) {
-      return {};
-    }
-
     this.newTag = model;
     return { newTag: model };
   }

@@ -67,11 +67,11 @@ const unsureColor = "#d0d";
 const verificationColors = `
   --verification-true: green;
   --verification-false: red;
-  --verification-skip: ${hatchedBackground(skipColor)};
   --verification-unsure: ${hatchedBackground(unsureColor)};
 `;
 
-const noDecisionColors = `
+const specialColors = `
+  --decision-skip: ${hatchedBackground(skipColor)};
   --not-required-color: ${hatchedBackground(notRequiredColor)};
 `;
 
@@ -79,6 +79,6 @@ export const decisionColors = unsafeCSS(`
   :host {
     ${verificationColors}
     ${colorBrewerColors}
-    ${noDecisionColors}
+    ${specialColors}
   }
 `);

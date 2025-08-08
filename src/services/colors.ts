@@ -1,6 +1,6 @@
 import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
 import { Classification } from "../models/decisions/classification";
-import { Decision } from "../models/decisions/decision";
+import { Decision, DecisionOptions } from "../models/decisions/decision";
 import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
 import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
@@ -18,6 +18,8 @@ const tagColors = new Map<unknown, CssVariable>();
 export function decisionColor(decision: OptionalDecision): CssVariable {
   if (decision === decisionNotRequired) {
     return notRequiredColor();
+  } else if (decision.confirmed === DecisionOptions.SKIP) {
+    return skippedDecisionColor();
   }
 
   const colorBrewerDecisions = new Set([Classification, NewTag]);
@@ -56,4 +58,8 @@ function colorBrewerColor(decision: Decision): CssVariable {
 
 function notRequiredColor(): CssVariable {
   return "--not-required-color";
+}
+
+function skippedDecisionColor(): CssVariable {
+  return "--decision-skip";
 }
