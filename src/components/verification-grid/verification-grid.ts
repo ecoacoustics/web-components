@@ -1569,11 +1569,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         continue;
       }
 
-      let tileChanges = {};
+      // TODO: Remove this subject copy once we have an finalized spec to
+      // represent the old value of properties that were unset.
+      // see: https://github.com/ecoacoustics/web-components/issues/448
       const oldSubject = Object.assign({}, tile.model);
+      let tileChanges = {};
 
       for (const decision of userDecisions) {
-        // TODO: Remove this subject copy once
         // Skip decisions have some special behavior.
         // If nothing is selected, a skip decision will skip all undecided tiles.
         // If the user does have a subsection, we only apply the skip decision to
@@ -1711,13 +1713,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     tile.updateSubject(subject);
 
-    // We only dispatch the "decisionWhenUpdated" event after updateSubject so
-    // the risk reading of a race condition is minimized.
-    this.dispatchEvent(
-      new CustomEvent<DecisionMadeEvent>(VerificationGridComponent.decisionMadeEventName, {
-        detail: new Map([[subject, { change, oldSubject }]]),
-      }),
-    );
+    if (Object.keys(change).length > 0) {
+      // We only dispatch the "decisionWhenUpdated" event after updateSubject so
+      // the risk reading of a race condition is minimized.
+      this.dispatchEvent(
+        new CustomEvent<DecisionMadeEvent>(VerificationGridComponent.decisionMadeEventName, {
+          detail: new Map([[subject, { change, oldSubject }]]),
+        }),
+      );
+    }
   }
 
   //#endregion
