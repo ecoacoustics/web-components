@@ -86,6 +86,19 @@ export type SubjectChange = {
 // do a breaking change.
 export interface DecisionMadeEventValue {
   change: SubjectChange;
+
+  /**
+   * @deprecated
+   * This property is subject to removal and is a hacky escape hatch that was
+   * used to determine the previous values of the subject properties that were
+   * deleted so that API calls can correctly make DELETE requests on old
+   * out-dated sub-models such as decisions.
+   *
+   * This should be replaced with a more robust solution once the decision-made
+   * spec has been finalized.
+   * https://github.com/ecoacoustics/web-components/issues/448
+   */
+  oldSubject: SubjectWrapper;
 }
 
 export interface VerificationGridSettings {
@@ -1557,8 +1570,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
 
       let tileChanges = {};
+      const oldSubject = Object.assign({}, tile.model);
 
       for (const decision of userDecisions) {
+        // TODO: Remove this subject copy once
         // Skip decisions have some special behavior.
         // If nothing is selected, a skip decision will skip all undecided tiles.
         // If the user does have a subsection, we only apply the skip decision to
@@ -1586,7 +1601,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         }
       }
 
-      decisionMap.set(tile.model, { change: tileChanges });
+      decisionMap.set(tile.model, { change: tileChanges, oldSubject });
     }
 
     // We only dispatch the "decisionMade" event after the decision has been
@@ -1677,6 +1692,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const subject = tile.model;
     const decisionElements = this.decisionElements ?? [];
 
+    const oldSubject = Object.assign({}, subject);
+    let change: SubjectChange = {};
+
     // Each subject has required decisions that must be completed.
     // Required decisions are determined from the decision buttons "when"
     // predicates.
@@ -1687,11 +1705,19 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       if (passes) {
         subject.setDecisionRequired(decisionElement.decisionConstructor);
       } else {
-        subject.setDecisionNotRequired(decisionElement.decisionConstructor);
+        change = { ...change, ...subject.setDecisionNotRequired(decisionElement.decisionConstructor) };
       }
     }
 
     tile.updateSubject(subject);
+
+    // We only dispatch the "decisionWhenUpdated" event after updateSubject so
+    // the risk reading of a race condition is minimized.
+    this.dispatchEvent(
+      new CustomEvent<DecisionMadeEvent>(VerificationGridComponent.decisionMadeEventName, {
+        detail: new Map([[subject, { change, oldSubject }]]),
+      }),
+    );
   }
 
   //#endregion
