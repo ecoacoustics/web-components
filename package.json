@@ -26,7 +26,8 @@
   ],
   "exports": {
     ".": "./dist/components.js",
-    "./dist/components/*": "./dist/components/*.js"
+    "./dist/components/*": "./dist/components/*.js",
+    "./dist/models/*": "./dist/models/*.js"
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {

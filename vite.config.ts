@@ -86,6 +86,7 @@ export default defineConfig({
         "components/tag": "./src/components/tag/tag.ts",
 
         "components/helpers/constants/contextTokens": "./src/helpers/constants/contextTokens.ts",
+        "models/decisions/decisionNotRequired": "./src/models/decisions/decisionNotRequired.ts",
       },
       formats: ["es"],
     },
