@@ -58,8 +58,8 @@ test.describe("Verification Component", () => {
     const decisionColorTests: DecisionColorTest[] = [
       { decision: DecisionOptions.TRUE, expectedColor: "--verification-true" },
       { decision: DecisionOptions.FALSE, expectedColor: "--verification-false" },
-      { decision: DecisionOptions.SKIP, expectedColor: "--verification-skip" },
       { decision: DecisionOptions.UNSURE, expectedColor: "--verification-unsure" },
+      { decision: DecisionOptions.SKIP, expectedColor: "--decision-skip-color" },
     ];
 
     decisionColorTests.forEach((testCase) => {

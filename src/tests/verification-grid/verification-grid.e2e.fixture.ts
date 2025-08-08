@@ -292,6 +292,10 @@ class TestPage {
     return await getCssVariableStyle(this.gridComponent(), "--oe-panel-color", "background");
   }
 
+  public async skipColor(): Promise<string> {
+    return await getCssVariableStyle(this.verificationButton("skip"), "--decision-skip-color", "background");
+  }
+
   public async notRequiredColor(): Promise<string> {
     return await getCssVariableStyle(this.verificationButton("false"), "--not-required-color", "background");
   }

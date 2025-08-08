@@ -61,5 +61,5 @@ function notRequiredColor(): CssVariable {
 }
 
 function skippedDecisionColor(): CssVariable {
-  return "--decision-skip";
+  return "--decision-skip-color";
 }

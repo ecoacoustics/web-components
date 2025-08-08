@@ -71,7 +71,7 @@ const verificationColors = `
 `;
 
 const specialColors = `
-  --decision-skip: ${hatchedBackground(skipColor)};
+  --decision-skip-color: ${hatchedBackground(skipColor)};
   --not-required-color: ${hatchedBackground(notRequiredColor)};
 `;
 

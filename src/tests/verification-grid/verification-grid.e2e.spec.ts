@@ -1821,8 +1821,8 @@ test.describe("decision meter", () => {
 
       const expectedColors = [
         await fixture.getClassificationColor("car", true),
-        await fixture.panelColor(),
-        await fixture.panelColor(),
+        await fixture.skipColor(),
+        await fixture.skipColor(),
       ];
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual(expectedColors);

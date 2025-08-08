@@ -132,7 +132,7 @@ export class SubjectWrapper {
   public skipUndecided(
     requiresVerification: boolean,
     requiresNewTag: boolean,
-    requiredClassifications: Tag[],
+    requiredClassifications: Tag[] = [],
   ): SubjectChange {
     let changeReceipt: SubjectChange = {};
 
