@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.2.0...web-components-v5.0.0) (2025-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* decision-made verification event now emits a map of SubjectWrapper -> { change: { ...snip } }. This replaces emitting just SubjectWrapper's, and is needed for compound tasks since it's hard to efficiently determine if the SubjectWrapper emitted in the decision-made event was the res	ult of a verification update or a newTag change.
+
+### Features
+
+* Compound tasks ([#435](https://github.com/ecoacoustics/web-components/issues/435)) ([13fa034](https://github.com/ecoacoustics/web-components/commit/13fa03439fbe6cb74a6b16e5c2f55f399a042416))
+
 ## [4.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.1.0...web-components-v4.2.0) (2025-07-25)
 
 
