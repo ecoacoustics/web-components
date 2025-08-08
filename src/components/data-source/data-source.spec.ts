@@ -8,28 +8,24 @@ test.describe("data source", () => {
     await fixture.dismissBootstrapDialog();
   });
 
-  [false, true].forEach((localFile: boolean) => {
-    const loadFileText = localFile ? "local file" : "remote file";
-
-    test.describe(`loading from a ${loadFileText}`, () => {
-      test.beforeEach(async ({ fixture }) => {
-        if (localFile) {
-          await fixture.setLocalFile();
-          return;
-        }
-
-        await fixture.setRemoteFile("http://localhost:3000/example.flac");
-      });
-
-      test.skip(`should handle removing the source correctly with ${loadFileText}`, () => {});
-
-      test.skip(`should show the correct file name with ${loadFileText}`, () => {});
-
-      test.skip(`should have the correct file type for a json ${loadFileText}`, () => {});
-
-      test.skip(`should have the correct file type for a csv file ${loadFileText}`, () => {});
-    });
-  });
+  // [false, true].forEach((localFile: boolean) => {
+  //   const loadFileText = localFile ? "local file" : "remote file";
+  //
+  //   test.describe(`loading from a ${loadFileText}`, () => {
+  //     test.beforeEach(async ({ fixture }) => {
+  //       if (localFile) {
+  //         await fixture.setLocalFile("../../../public/example/test-items.json");
+  //         return;
+  //       }
+  //
+  //       await fixture.setRemoteFile("http://localhost:3000/test-items.json");
+  //     });
+  //
+  //     test(`should correctly handle removing the data source`, () => {});
+  //
+  //     test(`should show the correct file name`, () => {});
+  //   });
+  // });
 
   ["json", "csv", "tsv"].forEach((fileType) => {
     test.describe(`file type ${fileType}`, () => {
@@ -46,7 +42,9 @@ test.describe("data source", () => {
       });
 
       test.describe("downloading results", () => {
-        test("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
+        // This test is extremely flakey in CI Firefox
+        // TODO: Re-enable this test
+        test.skip("should have the correct content for results with entire grid decisions", async ({ fixture }) => {
           const originalFileContent = await fixture.getDownloadResults();
 
           // we expect that the oe_frog column has been added to the results

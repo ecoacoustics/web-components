@@ -20,8 +20,8 @@ class TestPage {
   }
 
   public async changeSubject(subject: Subject) {
-    const mockTag = { text: "" };
-    const model = new SubjectWrapper(subject, this.testAudioUrl, mockTag);
+    const initialTag = null;
+    const model = new SubjectWrapper(subject, this.testAudioUrl, initialTag);
 
     await setBrowserValue<InfoCardComponent>(this.component(), "model", model);
   }

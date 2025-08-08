@@ -1,4 +1,3 @@
-import { EnumValue } from "../../helpers/types/advancedTypes";
 import { Tag } from "../tag";
 
 /** The decision states that can be applied to a tag */
@@ -15,13 +14,13 @@ export enum DecisionOptions {
  * that implements the abstract class
  */
 export class Decision {
-  public constructor(confirmed: EnumValue<DecisionOptions>, tag?: Tag) {
+  public constructor(confirmed: DecisionOptions, tag: Tag | null) {
     this.confirmed = confirmed;
     this.tag = tag ?? { text: "" };
   }
 
   /** Stores the decision outcome */
-  public readonly confirmed: EnumValue<DecisionOptions>;
+  public readonly confirmed: DecisionOptions;
 
   /** A tag that the decision was made about */
   public readonly tag: Tag;

@@ -39,7 +39,7 @@
       shift key icon are taller than other characters
       To fix this, I make each keyboard element the same height.
     */
-    height: 1rem;
+    height: 1em;
   }
 
   > div {
@@ -57,8 +57,20 @@
   }
 
   .decision-color-pill {
-    height: 0.5em;
-    width: 1.3em;
+    height: 0.5rem;
+    width: 1.3rem;
+
+    /*
+      We set the font size to 6px because decision pill backgrounds that use
+      the font size (e.g. color pills with backgrounds).
+      Will shrink so that the pattern is smaller when put inside of the small
+      button pills.
+
+      Note that I also hard code the value of 6px instead of using "rem" units
+      because we don't want the background patterns to change if the user zooms
+      in or changes their browsers font-size.
+    */
+    font-size: 6px;
 
     align-self: flex-start;
   }

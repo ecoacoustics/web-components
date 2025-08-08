@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Shoelace Host</title>
+    <script type="module" src="/src/index.ts"></script>
+
+    <!--
+      Note that shoelace is loaded through the cdn, meaning that it might be
+      delayed.
+      Additionally, the shoelace JavaScript is loaded using type="module"
+      meaning that the JavaScript is deferred by default.
+
+      Note that the version imported by the cdn MUST match the version used by
+      our web components.
+      If the versions are mismatched, shoelace will start throwing warnings.
+    -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace.js"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>Shoelace Host</h1>
+      <p>This is a header. Please test scrolling and downloading results.</p>
+
+      <p>
+        This page replicates loading the web components on a page that already has shoelace and its own shoelace
+        theming. You should see that our shoelace components do not leak from our shadow root into the host application.
+      </p>
+    </header>
+
+    <div class="shoelace-content">
+      <p>
+        These shoelace components are not inside a web component shadow root, so should therefore not have the
+        --oe-theming applied.
+      </p>
+
+      <sl-button>Default</sl-button>
+      <sl-button variant="primary">Primary</sl-button>
+
+      <sl-range></sl-range>
+    </div>
+
+    <oe-verification-grid id="verification-grid" progress-bar-position="top" autofocus>
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid"></oe-data-source>
+    </oe-verification-grid>
+
+    <script type="module">
+      function randomSample(dataset) {
+        return dataset[Math.floor(Math.random() * dataset.length)];
+      }
+
+      const possibleAudioSamples = ["/example_1s.wav", "/example.flac", "/example2.flac"];
+
+      const possibleTags = ["bird", "insect", "mammal", "reptile"];
+
+      function createUrlTransformer() {
+        return (url) => `${url}?url_transformer=true`;
+      }
+
+      function gridPaginator() {
+        const subjects = Array.from({ length: 25 }).map(() => {
+          const src = randomSample(possibleAudioSamples);
+          const tag = randomSample(possibleTags);
+          return { src, tag };
+        });
+
+        return { subjects };
+      }
+
+      function setup() {
+        const verificationGrid = document.querySelector("oe-verification-grid");
+        verificationGrid.urlTransformer = createUrlTransformer();
+        verificationGrid.getPage = gridPaginator;
+      }
+
+      window.addEventListener("load", () => setup());
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+      }
+
+      header {
+        background-color: #333;
+        color: white;
+        padding: 1em;
+      }
+
+      #verification-grid {
+        margin-bottom: 2rem;
+      }
+
+      .shoelace-content {
+        margin: 1rem;
+      }
+    </style>
+
+    <style>
+      :root {
+        --oe-theme-hue: 59deg !important;
+        --oe-theme-saturation: 82.1% !important;
+        --oe-theme-lightness: 51.8% !important;
+
+        --oe-font-color: #fff !important;
+        --oe-background-color: rgb(88, 88, 90) !important;
+
+        --oe-selected-color: rgba(255, 255, 255, 0.1) !important;
+
+        --oe-info-bg-color: transparent !important;
+
+        --oe-panel-color: rgb(88, 88, 90) !important;
+
+        --oe-border-rounding: 0.2rem !important;
+
+        /* Disable the box shadow */
+        --oe-box-shadow: none;
+
+        --sl-color-neutral-0: rgb(45, 45, 46) !important;
+        --sl-color-neutral-100: rgb(88, 88, 90) !important;
+        --sl-color-neutral-700: white !important;
+        --sl-color-neutral-1000: white !important;
+      }
+    </style>
+  </body>
+</html>

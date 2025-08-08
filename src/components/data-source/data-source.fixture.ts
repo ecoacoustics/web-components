@@ -73,9 +73,13 @@ class TestPage {
     await removeBrowserAttribute<DataSourceComponent>(this.component(), "local");
   }
 
-  public async setLocalFile() {}
+  public async setLocalFile(filePath: string) {
+    await this.browserFileInput().setInputFiles(filePath);
+  }
 
-  public async removeLocalFile() {}
+  public async removeLocalFile() {
+    await this.browserFileInput().setInputFiles([]);
+  }
 
   public async setRemoteFile(value: string) {
     const loadedEvent = catchLocatorEvent(this.verificationGrid(), "grid-loaded");

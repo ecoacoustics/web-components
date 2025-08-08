@@ -1,3 +1,4 @@
 import { LitElement } from "lit";
+import { Constructor } from "./advancedTypes";
 
-export type Component = new (...args: any[]) => LitElement;
+export type Component = Constructor<LitElement>;

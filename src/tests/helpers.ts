@@ -27,13 +27,6 @@ export function mockDeviceSize(size: Size): DeviceMock {
   return (page: Page) => page.setViewportSize(size);
 }
 
-export async function getBrowserStyle<T extends HTMLElement>(component: Locator, property: string) {
-  return await component.evaluate((element: T, propertyName) => {
-    const styles = window.getComputedStyle(element);
-    return styles.getPropertyValue(propertyName);
-  }, property);
-}
-
 export async function getCssVariable<T extends HTMLElement>(locator: Locator, name: CssVariable): Promise<string> {
   return await locator.evaluate((element: T, variable: string) => {
     const styles = window.getComputedStyle(element);
@@ -41,31 +34,43 @@ export async function getCssVariable<T extends HTMLElement>(locator: Locator, na
   }, name);
 }
 
-// for some reason new versions of chrome return the background color as rgba,
-// but the foreground color as standard rgb.
-// this can break tests if you are comparing background colors to foreground
-// colors.
-// therefore, this function is only reliable for background colors assertions
-export async function getCssBackgroundColorVariable<T extends HTMLElement>(
+/**
+ * Evaluates a css variable's computed value when applied to a css property.
+ * This can be to get an expected value for a toHaveCSS() assertion that asserts
+ * over computed values which might be slightly different across browsers.
+ * E.g. Some browsers report computed values in rgb while some report in rgba.
+ */
+export async function getCssVariableStyle<T extends HTMLElement>(
   locator: Locator,
   name: CssVariable,
+  property: keyof CSSStyleDeclaration,
 ): Promise<string> {
-  return await locator.evaluate((element: T, variable: string) => {
-    const cssColorToRgb = (color: string) => {
-      const temp = document.createElement("div");
-      temp.style.display = "none";
-      temp.style.backgroundColor = color;
-      document.body.appendChild(temp);
+  return await locator.evaluate(
+    (element: T, { variable, cssProperty }) => {
+      const browserStyles = (variableValue: string, fontSize: string) => {
+        const temp = document.createElement("div");
 
-      const rgb = window.getComputedStyle(temp).backgroundColor;
-      document.body.removeChild(temp);
+        // We have to set the font size to the same as the target elements font
+        // size so that "em" units are calculated correctly.
+        temp.style.display = "none";
+        temp.style.fontSize = fontSize;
+        temp.style[cssProperty as any] = variableValue;
+        document.body.appendChild(temp);
 
-      return rgb;
-    };
+        const value = window.getComputedStyle(temp)[cssProperty];
+        document.body.removeChild(temp);
 
-    const variableValue = window.getComputedStyle(element).getPropertyValue(variable);
-    return cssColorToRgb(variableValue);
-  }, name);
+        return value;
+      };
+
+      const elementComputedStyle = window.getComputedStyle(element);
+      const variableValue = elementComputedStyle.getPropertyValue(variable);
+      const fontSize = elementComputedStyle.fontSize;
+
+      return browserStyles(variableValue, fontSize);
+    },
+    { variable: name, cssProperty: property },
+  );
 }
 
 /**
@@ -106,12 +111,17 @@ export async function dragSelection(
 }
 
 /**
- * A test helper that can be used to send a keypress to the page.
+ * A test helper that can be used to send a keypress to a locator.
  * This helper function exists to unify the keyboard functionality.
  */
-export async function pressKey(page: Page, key: string, modifiers: KeyboardModifiers = []) {
+export async function pressKey(locator: Page | Locator, key: string, modifiers: KeyboardModifiers = []) {
   const keyboardCombination = modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
-  await page.keyboard.press(keyboardCombination);
+
+  if (isPage(locator)) {
+    await locator.keyboard.press(keyboardCombination);
+  } else {
+    await locator.press(keyboardCombination);
+  }
 }
 
 /**
@@ -301,4 +311,8 @@ export async function setElementSize(target: Locator, shape: Size<Pixel>) {
     element.style.width = `${shape.width}px`;
     element.style.height = `${shape.height}px`;
   }, shape);
+}
+
+function isPage(locator: Page | Locator): locator is Page {
+  return Object.hasOwn(locator, "keyboard");
 }

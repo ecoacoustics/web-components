@@ -4,6 +4,7 @@ import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues,
 import {
   OverflowEvent,
   RequiredDecision,
+  requiredNewTagPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
 } from "../verification-grid-tile/verification-grid-tile";
@@ -46,11 +47,46 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
+import { HeapVariable } from "../../helpers/types/advancedTypes";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
 export type PageOperation = <T = unknown>(subject: SubjectWrapper) => T;
+
+/**
+ * A map of new subjects to changed decisions.
+ * The map is designed in this way so that you should be able to perform partial
+ * updates because you know exactly what decisions were changed on a subject.
+ */
+export type DecisionMadeEvent = Map<SubjectWrapper, DecisionMadeEventValue>;
+
+// Additionally, we break down each property type into a separate key so
+// that we can explicitly unset the property by setting the value to `null`.
+//
+// The typing here is a bit complex, but can be explained as:
+//
+// 1. If the property is a pointer to a value it must be readonly so that
+//    host applications don't accidentally modify the subject object by
+//    modifying the map or object references.
+//
+// 2. If not a map or object, we allow an object that contains the new value for
+//    each property
+//
+// 3. If the property was explicitly unset, we allow the value to be `null`
+export type SubjectChange = {
+  [K in keyof SubjectWrapper]?: SubjectWrapper[K] extends HeapVariable
+    ? Readonly<SubjectWrapper[K]> | null
+    : SubjectWrapper[K] | null;
+};
+
+// We emit an object as the value so that if we want to expand the emitted value
+// in the future (e.g. add additional information/properties), we do not have to
+// do a breaking change.
+export interface DecisionMadeEventValue {
+  change: SubjectChange;
+}
 
 export interface VerificationGridSettings {
   showAxes: Signal<boolean>;
@@ -137,7 +173,7 @@ interface SelectionOptions {
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
  *
- * @event { SubjectModel[] } decision-made - Emits information about the decision that was made
+ * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
  */
 @customElement("oe-verification-grid")
@@ -185,7 +221,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public progressBarPosition: ProgressBarPosition = ProgressBarPosition.BOTTOM;
 
   /** A callback function that returns a page of recordings */
-  @property({ attribute: "get-page", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "get-page", type: Function, converter: callbackConverter })
   public getPage?: PageFetcher;
 
   /**
@@ -194,7 +230,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * @default
    * an identity function that returns the url unchanged
    */
-  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter as any })
+  @property({ attribute: "url-transformer", type: Function, converter: callbackConverter })
   public urlTransformer: UrlTransformer = (url) => url;
 
   @property({ type: Boolean })
@@ -208,8 +244,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-classification" })
   private classificationDecisionElements!: ClassificationComponent[];
 
+  /** selector for oe-classification elements */
+  @queryAssignedElements({ selector: "oe-tag-prompt" })
+  private tagPromptDecisionElements!: TagPromptComponent[];
+
   /** A selector for all oe-verification and oe-classification elements */
-  @queryAssignedElements({ selector: "oe-verification, oe-classification" })
+  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
   private decisionElements!: DecisionComponentUnion[];
 
   // Because it's possible (although unlikely) for multiple skip buttons to
@@ -596,9 +636,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         if (this.areTilesLoaded()) {
           this._loaded = true;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-          this.setDecisionDisabled(false);
+          this.updateDecisionWhen();
         }
       }
+
+      this.updateSubSelection();
     }
   }
 
@@ -708,6 +750,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
+      } else if (decisionElement instanceof TagPromptComponent) {
+        result.push(requiredNewTagPlaceholder);
       } else if (decisionElement instanceof ClassificationComponent) {
         result.push(decisionElement.tag);
       }
@@ -933,11 +977,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * handler runs grid size times when the play shortcut is pressed.
    */
   private handleTilePlay(event: CustomEvent<IPlayEvent>): void {
-    // If there are no tiles selected, then we want to play everything
-    // so don't cancel any of the play events.
+    // If all of the tiles are selected (either through explicit selection or
+    // implicitly by having everything de-selected), then we want to play
+    // everything so don't cancel any of the play events.
     // This is handled here and not in the tiles, because the tile's don't know the total
     // selected count.
-    if (this.currentSubSelection.length === 0) {
+    if (this.currentSubSelection.length === this.effectivePageSize) {
       return;
     }
 
@@ -1016,6 +1061,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.anyOverlap.value = false;
   }
 
+  private handlePointerMove(event: PointerEvent): void {
+    runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
+  }
+
   //#endregion
 
   //#region SelectionHandlers
@@ -1048,7 +1097,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   /**
-   * An event handler for the verification-grid-tile's "selected" event.
+   * An event handler for the verification-grid-tile's "oe-selected" event.
    * This handles alt + number selection, and click selection.
    */
   private handleTileSelection(selectionEvent: SelectionEvent): void {
@@ -1142,7 +1191,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private updateSubSelection(): void {
     const gridTiles = Array.from(this.gridTiles);
-    this.currentSubSelection = gridTiles.filter((tile) => tile.selected).map((tile) => tile.model);
+    const selectedTiles = gridTiles.filter((tile) => tile.selected);
+
+    if (selectedTiles.length === 0) {
+      this.currentSubSelection = gridTiles.map((tile) => tile.model);
+    } else {
+      this.currentSubSelection = selectedTiles.map((tile) => tile.model);
+    }
+
+    this.updateDecisionWhen();
   }
 
   /**
@@ -1278,14 +1335,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       this.highlight.highlighting = true;
 
-      const highlightBoxElement = this.highlightBox;
       this.updateHighlightObservedElements();
 
       const { pageX, pageY } = event;
-
-      highlightBoxElement.style.left = `${pageX}px`;
-      highlightBoxElement.style.top = `${pageY}px`;
-
       this.highlight.start = { x: pageX, y: pageY };
     }
   }
@@ -1294,8 +1346,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.highlight.observedElements = Array.from(this.gridTiles);
   }
 
-  private resizeHighlightBox(event: PointerEvent) {
-    if (!this.highlight.highlighting || !this.shadowRoot) {
+  private resizeHighlightBox(event: PointerEvent): void {
+    if (!this.highlight.highlighting) {
       return;
     }
 
@@ -1307,9 +1359,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const highlightWidth = this.highlight.current.x - this.highlight.start.x;
     const highlightHeight = this.highlight.current.y - this.highlight.start.y;
 
+    const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
+    const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
+
+    // If the user selects from the right to the left, we change the position
+    // of the highlight box to so that the top left of the highlight box is
+    // always aligned with the users pointer.
+    //
+    // We use "transform" (instead of left & top) so that there is zero layout
+    // shift or layout recalculation when moving the highlight box.
+    highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
+
+    // the highlights width / height can be negative if the user drags to the
+    // top or left of the screen
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
+
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
-    const highlightThreshold = 15 as const;
+    const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
@@ -1323,22 +1391,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
     } else {
       return;
-    }
-
-    // the highlights width / height can be negative if the user drags to the
-    // top or left of the screen
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
-
-    // if the user selects from the right to the left, we change the position
-    // of the highlight box to so that the top left of the highlight box is
-    // always aligned with the users pointer
-    if (highlightWidth < 0) {
-      highlightBoxElement.style.left = `${pageX}px`;
-    }
-
-    if (highlightHeight < 0) {
-      highlightBoxElement.style.top = `${pageY}px`;
     }
 
     // We mimic the selection behavior of windows explorer where the selection
@@ -1451,7 +1503,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // we ue the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private async nextPage(count: number = this.effectivePageSize): Promise<void> {
+  private nextPage(count: number = this.effectivePageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -1496,28 +1548,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const hasSubSelection = subSelection.length > 0;
     const trueSubSelection = hasSubSelection ? subSelection : gridTiles;
 
-    // Skip decisions have some special behavior.
-    // If nothing is selected, a skip decision will skip all undecided tiles.
-    // If the user does have a subsection, we only apply the skip decision to
-    // the selected tiles.
-    //
-    // TODO: Add support for skip decisions with additional tags
-    // TODO: Refactor this code into the handler code below
-    if (!hasSubSelection && userDecisions[0].confirmed === DecisionOptions.SKIP) {
-      const requiredTags = this.requiredClassificationTags;
-      const hasVerificationTask = this.hasVerificationTask();
-
-      const gridTiles = this.gridTiles;
-      for (const tile of gridTiles) {
-        tile.model.skipUndecided(hasVerificationTask, requiredTags);
-      }
-
-      if (!this.isViewingHistory()) {
-        await this.nextPage();
-      }
-
-      return;
-    }
+    const decisionMap: DecisionMadeEvent = new Map();
 
     const emittedSubjects: SubjectWrapper[] = [];
     for (const tile of trueSubSelection) {
@@ -1525,17 +1556,37 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         continue;
       }
 
+      let tileChanges = {};
+
       for (const decision of userDecisions) {
+        // Skip decisions have some special behavior.
+        // If nothing is selected, a skip decision will skip all undecided tiles.
+        // If the user does have a subsection, we only apply the skip decision to
+        // the selected tiles.
+        if (decision.confirmed === DecisionOptions.SKIP) {
+          const skipChanges = tile.model.skipUndecided(
+            this.hasVerificationTask(),
+            this.hasNewTagTask(),
+            this.requiredClassificationTags,
+          );
+
+          tileChanges = { ...tileChanges, ...skipChanges };
+
+          continue;
+        }
+
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
         if (tile.model.hasDecision(decision)) {
-          tile.removeDecision(decision);
+          tileChanges = { ...tileChanges, ...tile.removeDecision(decision) };
         } else {
-          tile.addDecision(decision);
+          tileChanges = { ...tileChanges, ...tile.addDecision(decision) };
           emittedSubjects.push(tile.model);
         }
       }
+
+      decisionMap.set(tile.model, { change: tileChanges });
     }
 
     // We only dispatch the "decisionMade" event after the decision has been
@@ -1543,15 +1594,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // This is important for third party event listeners who may want to see the
     // entire decision set after a decision is made.
     this.dispatchEvent(
-      new CustomEvent<SubjectWrapper[]>(VerificationGridComponent.decisionMadeEventName, { detail: emittedSubjects }),
+      new CustomEvent<DecisionMadeEvent>(VerificationGridComponent.decisionMadeEventName, {
+        detail: decisionMap,
+      }),
     );
+
+    // Because auto-paging and automatic tile selection are dependent upon the
+    // "no decision required" states, it must be performed first.
+    this.updateDecisionWhen();
 
     if (this.shouldAutoPage()) {
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      await this.nextPage(gridTiles.length);
+      this.nextPage(gridTiles.length);
 
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.
@@ -1596,6 +1653,45 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = disabled;
     }
+  }
+
+  private updateDecisionWhen(subSelection = this.currentSubSelection): void {
+    // If any of the decision buttons predicate's pass with the current
+    // sub-selection, the button should not be disabled.
+    const decisionElements = this.decisionElements ?? [];
+    for (const decisionElement of decisionElements) {
+      decisionElement.disabled = !subSelection.some((subject) => decisionElement.when(subject));
+    }
+
+    // Each tiles required decisions are determined from the decision buttons
+    // "when" predicates.
+    // Therefore, when we update the decision buttons disabled state, we also
+    // need to update the required decisions.
+    const gridTiles = Array.from(this.gridTiles);
+    for (const tile of gridTiles) {
+      this.updateDecisionWhenForSubject(tile);
+    }
+  }
+
+  private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
+    const subject = tile.model;
+    const decisionElements = this.decisionElements ?? [];
+
+    // Each subject has required decisions that must be completed.
+    // Required decisions are determined from the decision buttons "when"
+    // predicates.
+    // If the predicate doesn't pass for the current decision button, we mark
+    // the task as "not required" in the subject.
+    for (const decisionElement of decisionElements) {
+      const passes = decisionElement.when(subject);
+      if (passes) {
+        subject.setDecisionRequired(decisionElement.decisionConstructor);
+      } else {
+        subject.setDecisionNotRequired(decisionElement.decisionConstructor);
+      }
+    }
+
+    tile.updateSubject(subject);
   }
 
   //#endregion
@@ -1673,7 +1769,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
   }
 
-  private handleTileLoaded(): void {
+  private handleTileLoaded(event: CustomEvent): void {
+    if (!(event.target instanceof VerificationGridTileComponent)) {
+      console.error(`caught ${VerificationGridTileComponent.loadedEventName} event from non-grid tile element`);
+      return;
+    }
+
     // This method is run when a tile has completely finished loading.
     // Therefore, if this loaded event was emitted from the last tile needed to
     // have a fully loaded verification grid, we want to perform some actions
@@ -1682,7 +1783,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.areTilesLoaded()) {
       this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-      this.setDecisionDisabled(false);
+
+      this.updateDecisionWhen();
     }
   }
 
@@ -1698,6 +1800,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // Some verification components (skip) are supportive to the current task,
     // and do not create their own verification task.
     return this.verificationDecisionElements.some((element) => element.isTask);
+  }
+
+  private hasNewTagTask(): boolean {
+    return this.tagPromptDecisionElements.length > 0;
   }
 
   private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
@@ -1777,9 +1883,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<strong class="no-decisions-warning">No decisions available.</strong>`;
   }
 
-  // TODO: this function could definitely be refactored
   private skipDecisionTemplate(): HTMLTemplateResult {
-    return html`<oe-verification verified="skip" shortcut="\`"></oe-verification>`;
+    return html`<oe-verification verified="skip" shortcut="s"></oe-verification>`;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
@@ -1825,7 +1930,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <oe-verification-grid-tile
         class="grid-tile"
-        @tile-loaded="${this.handleTileLoaded}"
+        @oe-tile-loaded="${this.handleTileLoaded}"
         @play="${this.handleTilePlay}"
         .requiredDecisions="${this.requiredDecisions}"
         .isOnlyTile="${this.populatedTileCount === 1}"
@@ -1864,8 +1969,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           @pointerdown="${this.renderHighlightBox}"
           @pointerup="${this.hideHighlightBox}"
-          @pointermove="${(event: PointerEvent) =>
-            runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event))}"
+          @pointermove="${this.handlePointerMove}"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >

@@ -15,6 +15,14 @@ and [code-workspace](/webcomponents.code-workspace).
 4. All files should end in a new line to be POSIX compliant
 5. All quotations should use double quotation marks
 
+## Casing
+
+1. Custom element selectors should use kebab-case
+2. Symbols should use kebab-case
+3. Variables should use camelCase
+4. Functions should use camelCase
+5. Classes should use PascalCase
+
 ## Lit attributes and properties
 
 1. Should follow the order

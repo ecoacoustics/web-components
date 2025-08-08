@@ -6,9 +6,10 @@ import {
   getBrowserAttribute,
   getBrowserSignalValue,
   getBrowserValue,
-  getCssBackgroundColorVariable,
+  getCssVariableStyle,
   invokeBrowserMethod,
   mockDeviceSize,
+  pressKey,
   removeBrowserAttribute,
   setBrowserAttribute,
   testBreakpoints,
@@ -37,6 +38,8 @@ import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
 import { createFixture, setContent } from "../fixtures";
+
+type MockNewTagOptions = "Abbots Babbler" | "Brush Turkey" | "Noisy Miner" | "tag1" | "tag2" | "tag3" | "tag4";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -96,6 +99,8 @@ class TestPage {
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
+  private newTagSearchResults = () => this.page.locator(".typeahead-result-action");
+
   private verificationButton(decision: "true" | "false" | "skip"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
@@ -104,6 +109,11 @@ class TestPage {
   private classificationButton(tag: string, decision: boolean): Locator {
     const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
     return targetDecision.locator(`#${decision}-decision-button`);
+  }
+
+  public tagPromptButton(): Locator {
+    const targetDecision = this.page.locator("oe-tag-prompt").first();
+    return targetDecision.locator(`#decision-button`);
   }
 
   public smallJsonInput = "http://localhost:3000/test-items-small.json";
@@ -193,6 +203,31 @@ class TestPage {
     `, [".decision-button"]);
   }
 
+  public async createWithCompoundTask() {
+    await this.create(`
+      <oe-verification verified="true"></oe-verification>
+      <oe-verification verified="false"></oe-verification>
+      <oe-verification verified="skip"></oe-verification>
+
+      <oe-tag-prompt
+        when="(subject) => subject?.verification?.confirmed === 'false'"
+        search="(searchTerm) => {
+          const testedTags = [
+            { text: 'Abbots Babbler' },
+            { text: 'Brush Turkey' },
+            { text: 'Noisy Miner' },
+            { text: 'tag1' },
+            { text: 'tag2' },
+            { text: 'tag3' },
+            { text: 'tag4' },
+          ];
+
+          return testedTags.filter((tag) => tag.text.includes(searchTerm));
+        }"
+      ></oe-tag-prompt>
+    `);
+  }
+
   public async createWithAppChrome() {
     await this.setNoBootstrap();
 
@@ -254,9 +289,15 @@ class TestPage {
   }
 
   public async panelColor(): Promise<string> {
-    // I have hard coded the panel color here because we use HSL for the panel
-    // color css variable, but DOM queries and assertions use RGB
-    return await getCssBackgroundColorVariable(this.gridComponent(), "--oe-panel-color");
+    return await getCssVariableStyle(this.gridComponent(), "--oe-panel-color", "background");
+  }
+
+  public async skipColor(): Promise<string> {
+    return await getCssVariableStyle(this.verificationButton("skip"), "--decision-skip-color", "background");
+  }
+
+  public async notRequiredColor(): Promise<string> {
+    return await getCssVariableStyle(this.verificationButton("false"), "--not-required-color", "background");
   }
 
   public async getGridSize(): Promise<number> {
@@ -278,13 +319,6 @@ class TestPage {
     });
   }
 
-  public async selectedTiles(): Promise<SubjectWrapper[]> {
-    return await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
-      this.gridComponent(),
-      "currentSubSelection" as any,
-    );
-  }
-
   public async focusedIndex(): Promise<number> {
     return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "focusHead" as any);
   }
@@ -295,7 +329,7 @@ class TestPage {
 
     return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
+      return styles.background;
     });
   }
 
@@ -305,7 +339,17 @@ class TestPage {
 
     return await colorPill.evaluate((element: HTMLSpanElement) => {
       const styles = window.getComputedStyle(element);
-      return styles.backgroundColor;
+      return styles.background;
+    });
+  }
+
+  public async getNewTagColor(): Promise<string> {
+    const decisionButton = this.tagPromptButton();
+    const colorPill = decisionButton.locator(".decision-color-pill");
+
+    return await colorPill.evaluate((element: HTMLSpanElement) => {
+      const styles = window.getComputedStyle(element);
+      return styles.background;
     });
   }
 
@@ -495,7 +539,7 @@ class TestPage {
       async (item: Locator) =>
         await item.evaluate((element: HTMLSpanElement) => {
           const styles = window.getComputedStyle(element);
-          return styles.backgroundColor;
+          return styles.background;
         }),
     );
 
@@ -551,11 +595,7 @@ class TestPage {
 
   /** Plays selected grid tiles using the play/pause keyboard shortcut */
   public async shortcutGridPlay() {
-    // TODO: We should use the playShortcut definition here
-    // see: https://github.com/ecoacoustics/web-components/issues/289
-    // await this.page.keyboard.press(MediaControlsComponent.playShortcut);
-
-    await this.page.keyboard.press(SPACE_KEY);
+    await pressKey(this.gridComponent(), SPACE_KEY);
   }
 
   public async shortcutGridPause() {
@@ -603,7 +643,7 @@ class TestPage {
     await this.bootstrapDialogButton().click();
   }
 
-  public async createSubSelection(items: number | number[], modifiers?: KeyboardModifiers) {
+  public async subSelect(items: number | number[], modifiers?: KeyboardModifiers) {
     const gridTiles = this.gridTileContainers();
 
     const itemArray = Array.isArray(items) ? items : [items];
@@ -616,8 +656,8 @@ class TestPage {
     // when sub-selecting a range, we want the first item to be selected without
     // holding down the shift key, then we should hold down the shift key when
     // selecting the end of the range
-    await this.createSubSelection([start], modifiers);
-    await this.createSubSelection([end], ["Shift", ...modifiers]);
+    await this.subSelect([start], modifiers);
+    await this.subSelect([end], ["Shift", ...modifiers]);
   }
 
   // TODO: Add support for negative selection
@@ -677,6 +717,18 @@ class TestPage {
     await decisionEvent;
   }
 
+  public async makeNewTagDecision(selectedOption: MockNewTagOptions) {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+
+    // Clicking this button will open up the tag prompt dialog.
+    await this.tagPromptButton().click();
+
+    const resultButton = this.newTagSearchResults().filter({ hasText: selectedOption }).first();
+    await resultButton.click();
+
+    await decisionEvent;
+  }
+
   public async makeSkipDecision() {
     const decisionButton = this.verificationButton("skip");
     await decisionButton.click();
@@ -703,8 +755,12 @@ class TestPage {
   }
 
   public async getPopulatedGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent>(this.gridComponent(), "populatedTileCount");
-    return gridSize as number;
+    const gridSize = await getBrowserValue<VerificationGridComponent, number>(
+      this.gridComponent(),
+      "populatedTileCount",
+    );
+
+    return gridSize;
   }
 
   public async getGridShape(): Promise<GridShape> {

@@ -40,3 +40,17 @@ export type CssVariable = `--${string}`;
 export type ThemingVariable = `--oe-${string}`;
 
 export type FixedLengthArray<T, Length> = Array<T> & { length: Length };
+
+export type FixedLengthSet<T, Length> = Set<T> & { size: Length };
+
+/** Extracts the constructor of a class that can be used as a type */
+export type Constructor<T extends object, Args extends unknown[] = any[]> = new (...args: Args) => T;
+
+/**
+ * A JavaScript variable that is stored in the heap, and variables store a
+ * reference to instead of the value itself.
+ * This is useful for conditional typing where you might want to make all
+ * reference/pointer variables readonly when exposing them to user space so that
+ * the user cannot accidentally modify the internal state of the program.
+ */
+export type HeapVariable = Record<PropertyKey, unknown> | unknown[] | Map<PropertyKey, unknown> | Set<unknown>;
