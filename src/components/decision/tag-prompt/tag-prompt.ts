@@ -119,7 +119,7 @@ export class TagPromptComponent extends DecisionComponent {
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 
           <div class="button-text">
-            <slot>Correct Tag</slot>
+            <slot>Choose a Tag</slot>
           </div>
 
           <div>
