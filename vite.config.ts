@@ -78,6 +78,7 @@ export default defineConfig({
         "components/decision": "./src/components/decision/decision.ts",
         "components/classification": "./src/components/decision/classification/classification.ts",
         "components/verification": "./src/components/decision/verification/verification.ts",
+        "components/skip": "./src/components/decision/skip/skip.ts",
         "components/tag-prompt": "./src/components/decision/tag-prompt/tag-prompt.ts",
         "components/verification-grid-settings": "./src/components/verification-grid-settings/verification-grid-settings.ts",
         "components/progress-bar": "./src/components/progress-bar/progress-bar.ts",
