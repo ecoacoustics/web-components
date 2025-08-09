@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.1.0...web-components-v5.2.0) (2025-08-09)
+
+
+### Features
+
+* Add oe-skip button ([#452](https://github.com/ecoacoustics/web-components/issues/452)) ([906129c](https://github.com/ecoacoustics/web-components/commit/906129cf4fc5d4a4015552a0d76241ed602d6121)), closes [#446](https://github.com/ecoacoustics/web-components/issues/446)
+
 ## [5.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.0.0...web-components-v5.1.0) (2025-08-08)
 
 
