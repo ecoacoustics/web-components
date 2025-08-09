@@ -267,7 +267,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // Because it's possible (although unlikely) for multiple skip buttons to
   // exist on a page, this query selector returns an array of elements.
-  @queryAssignedElements({ selector: "oe-verification[verified='skip']" })
+  @queryAssignedElements({ selector: "oe-verification[verified='skip'], oe-skip" })
   private skipButtons!: DecisionComponent[];
 
   @queryDeeplyAssignedElement({ selector: "template" })
@@ -1914,7 +1914,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private skipDecisionTemplate(): HTMLTemplateResult {
-    return html`<oe-verification verified="skip" shortcut="s"></oe-verification>`;
+    return html`<oe-skip shortcut="s"></oe-skip>`;
   }
 
   private progressBarTemplate(): HTMLTemplateResult {
