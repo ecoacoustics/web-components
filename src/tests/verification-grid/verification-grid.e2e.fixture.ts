@@ -101,7 +101,10 @@ class TestPage {
 
   private newTagSearchResults = () => this.page.locator(".typeahead-result-action");
 
-  private verificationButton(decision: "true" | "false" | "skip"): Locator {
+  private skipComponent = () => this.page.locator("oe-skip").first();
+  private skipButton = () => this.skipComponent().locator("#decision-button").first();
+
+  private verificationButton(decision: "true" | "false"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
   }
@@ -293,7 +296,7 @@ class TestPage {
   }
 
   public async skipColor(): Promise<string> {
-    return await getCssVariableStyle(this.verificationButton("skip"), "--decision-skip-color", "background");
+    return await getCssVariableStyle(this.skipButton(), "--decision-skip-color", "background");
   }
 
   public async notRequiredColor(): Promise<string> {
@@ -730,8 +733,7 @@ class TestPage {
   }
 
   public async makeSkipDecision() {
-    const decisionButton = this.verificationButton("skip");
-    await decisionButton.click();
+    await this.skipButton().click();
   }
 
   public async viewPreviousHistoryPage() {
