@@ -36,14 +36,6 @@
   }
 }
 
-.decision-group {
-  /*
-    By using box-decoration-break, it will round the edges if the content
-    wraps.
-  */
-  box-decoration-break: clone;
-}
-
 .additional-tags {
   padding: 0.3em;
   padding-top: 0;
