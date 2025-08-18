@@ -9,11 +9,15 @@ title: Open Ecoacoustics | Examples
 
 [Verification Grid (Single Class)](./verification/single/index.html)
 
+[Verification Grid (Single Class - Dark Mode)](./verification/dark-mode/index.html)
+
 [Verification Grid (Single Class - Additional Tags)](./verification/single-additional/index.html)
 
 [Verification Grid (Multiple Classes)](./verification/multi/index.html)
 
 [Verification Grid (Multiple Classes - Additional Tags)](./verification/multi-additional/index.html)
+
+[Verification Grid (Compound Task)](./verification/compound/index.html)
 
 [Classification Grid](./verification/classification/index.html)
 

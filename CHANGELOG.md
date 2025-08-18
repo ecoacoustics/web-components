@@ -1,5 +1,62 @@
 # Changelog
 
+## [5.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.1.0...web-components-v5.2.0) (2025-08-09)
+
+
+### Features
+
+* Add oe-skip button ([#452](https://github.com/ecoacoustics/web-components/issues/452)) ([906129c](https://github.com/ecoacoustics/web-components/commit/906129cf4fc5d4a4015552a0d76241ed602d6121)), closes [#446](https://github.com/ecoacoustics/web-components/issues/446)
+
+## [5.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.0.0...web-components-v5.1.0) (2025-08-08)
+
+
+### Features
+
+* Emit oldSubject in decision-made event ([#450](https://github.com/ecoacoustics/web-components/issues/450)) ([6022d7c](https://github.com/ecoacoustics/web-components/commit/6022d7c6a8a0516a65771e2f774721c1de23f057))
+
+## [5.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.2.0...web-components-v5.0.0) (2025-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* decision-made verification event now emits a map of SubjectWrapper -> { change: { ...snip } }. This replaces emitting just SubjectWrapper's, and is needed for compound tasks since it's hard to efficiently determine if the SubjectWrapper emitted in the decision-made event was the res	ult of a verification update or a newTag change.
+
+### Features
+
+* Compound tasks ([#435](https://github.com/ecoacoustics/web-components/issues/435)) ([13fa034](https://github.com/ecoacoustics/web-components/commit/13fa03439fbe6cb74a6b16e5c2f55f399a042416))
+
+## [4.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.1.0...web-components-v4.2.0) (2025-07-25)
+
+
+### Features
+
+* Arrow key sub-selection ([#430](https://github.com/ecoacoustics/web-components/issues/430)) ([f2649af](https://github.com/ecoacoustics/web-components/commit/f2649afdafb4958c887f79b415839f7b072c7534))
+
+## [4.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v4.0.0...web-components-v4.1.0) (2025-07-21)
+
+
+### Features
+
+* Add empty tiles placeholders ([#424](https://github.com/ecoacoustics/web-components/issues/424)) ([f3ab541](https://github.com/ecoacoustics/web-components/commit/f3ab5410da7a66aec2970f34878160011931e8dd)), closes [#423](https://github.com/ecoacoustics/web-components/issues/423)
+
+## [4.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.1...web-components-v4.0.0) (2025-07-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* verification-grid-tile component now emits "tile-loaded" event instead of "loaded"
+
+### Bug Fixes
+
+* Overloaded "loaded" event ([#421](https://github.com/ecoacoustics/web-components/issues/421)) ([99efc9e](https://github.com/ecoacoustics/web-components/commit/99efc9e3fb865a1f86efbd54534a622023f66973)), closes [#420](https://github.com/ecoacoustics/web-components/issues/420)
+
+## [3.5.1](https://github.com/ecoacoustics/web-components/compare/web-components-v3.5.0...web-components-v3.5.1) (2025-07-10)
+
+
+### Bug Fixes
+
+* Do not show tooltips when target expanded ([#410](https://github.com/ecoacoustics/web-components/issues/410)) ([a4e27cf](https://github.com/ecoacoustics/web-components/commit/a4e27cf2a518db96eb6195079ecf7b61a2f6bba7)), closes [#405](https://github.com/ecoacoustics/web-components/issues/405)
+
 ## [3.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v3.4.0...web-components-v3.5.0) (2025-07-08)
 
 

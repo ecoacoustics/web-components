@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, HTMLTemplateResult, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { booleanConverter } from "../../helpers/attributes";
+import { booleanConverter, callbackConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -12,11 +12,9 @@ import { consume } from "@lit/context";
 import { decisionColor } from "../../services/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
+import { SubjectWrapper } from "../../models/subject";
+import { Constructor } from "../../helpers/types/advancedTypes";
 import decisionStyles from "./css/style.css?inline";
-
-interface DecisionContent {
-  value: Decision[];
-}
 
 export interface DecisionModels<T extends Decision> {
   [DecisionOptions.TRUE]: T;
@@ -27,6 +25,12 @@ export interface DecisionModels<T extends Decision> {
 
 export type DecisionEvent = CustomEvent<DecisionContent>;
 export type DecisionComponentUnion = DecisionComponent | VerificationComponent | ClassificationComponent;
+
+interface DecisionContent {
+  value: Decision[];
+}
+
+export type WhenPredicate = (subject: SubjectWrapper | null) => boolean;
 
 /**
  * @description
@@ -54,6 +58,9 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   @property({ attribute: "disabled", type: Boolean, converter: booleanConverter, reflect: true })
   public disabled = false;
 
+  @property({ type: Function, converter: callbackConverter })
+  public when: WhenPredicate = () => true;
+
   // we use a property with no attribute because we expect the value to be
   // updated from outside the component in Lit, the state decorator is used for
   // internal state, while the property decorator is used for state that other
@@ -69,17 +76,13 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   @state()
   public verificationGrid?: VerificationGridComponent;
 
-  public abstract get decisionModels(): Partial<DecisionModels<Decision>>;
+  public abstract get decisionConstructor(): Constructor<Decision>;
 
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
 
   private keyUpHandler = this.handleKeyUp.bind(this);
   private keyDownHandler = this.handleKeyDown.bind(this);
-
-  public connectedCallback(): void {
-    super.connectedCallback();
-  }
 
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {

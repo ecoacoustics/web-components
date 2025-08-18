@@ -1,16 +1,20 @@
 import { customElement, property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
 import { booleanConverter } from "../../helpers/attributes";
-import { ENTER_KEY } from "../../helpers/keyboard";
+import { ALT_KEY, ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision, DecisionOptions } from "../../models/decisions/decision";
 import { SignalWatcher, watch } from "@lit-labs/preact-signals";
-import { VerificationGridInjector, VerificationGridSettings } from "../verification-grid/verification-grid";
+import {
+  SubjectChange,
+  VerificationGridInjector,
+  VerificationGridSettings,
+} from "../verification-grid/verification-grid";
 import { when } from "lit/directives/when.js";
 import { repeat } from "lit/directives/repeat.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
@@ -18,15 +22,19 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { decisionNotRequired } from "../../models/decisions/decisionNotRequired";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
+export const requiredNewTagPlaceholder = Symbol("requiredNewTagPlaceholder");
 
 export type RequiredVerification = typeof requiredVerificationPlaceholder;
+export type RequiredNewTag = typeof requiredNewTagPlaceholder;
 export type RequiredClassification = Tag;
-export type RequiredDecision = RequiredVerification | RequiredClassification;
+export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredNewTag;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
+export type LoadedEvent = CustomEvent;
 
 interface OverflowEventDetail {
   isOverlapping: boolean;
@@ -58,16 +66,16 @@ const shortcutTranslation = {
  *
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
- * @cssproperty [--selected-border-size] - The size of the border when a
- * decision is being shown
  *
- * @event Loaded
+ * @event oe-selected
+ * @event oe-tile-loaded
  */
 @customElement("oe-verification-grid-tile")
 export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
-  public static readonly selectedEventName = "selected";
+  public static readonly selectedEventName = "oe-selected";
+  public static readonly loadedEventName = "oe-tile-loaded";
 
   @provide({ context: gridTileContext })
   @property({ attribute: false })
@@ -135,6 +143,26 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   private shortcuts: string[] = [];
   private intersectionObserver!: IntersectionObserver;
 
+  public get taskCompleted(): boolean {
+    return this.requiredDecisions.every((requiredDecision) => {
+      if (requiredDecision === requiredVerificationPlaceholder) {
+        return this.model.verification !== undefined;
+      } else if (requiredDecision === requiredNewTagPlaceholder) {
+        return this.model.newTag !== undefined;
+      }
+
+      return this.model.classifications.has(requiredDecision.text);
+    });
+  }
+
+  /**
+   * An override of the default HTMLElement focus() method so that
+   * tab index's and location is consistent.
+   */
+  public override focus() {
+    this.contentsWrapper.focus();
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("keydown", this.keyDownHandler);
@@ -144,8 +172,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     document.removeEventListener("keydown", this.keyDownHandler);
 
     if (this.spectrogram) {
-      this.spectrogram.removeEventListener("loading", this.loadingHandler);
-      this.spectrogram.removeEventListener("loaded", this.loadedHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+      this.spectrogram.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
     }
 
     this.intersectionObserver.disconnect();
@@ -154,6 +182,13 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public firstUpdated(): void {
+    if (!this.spectrogram) {
+      throw new Error("Could not find spectrogram component");
+    }
+
+    this.spectrogram.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
+
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
@@ -194,14 +229,19 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     }
   }
 
+  public updateSubject(subject: SubjectWrapper): void {
+    this.model = subject;
+    this.requestUpdate();
+  }
+
   public resetSettings(): void {
     if (this.spectrogram) {
       this.spectrogram.resetSettings();
     }
   }
 
-  public addDecision(decision: Decision) {
-    this.model.addDecision(decision);
+  public addDecision(decision: Decision): SubjectChange {
+    const change = this.model.addDecision(decision);
 
     // because the model is an object (not a primitive), modifying a property
     // does not cause the re-render which is needed to display the new decision
@@ -209,11 +249,15 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     // to fix this, we call requestUpdate which will re-render the component
     // TODO: We can probably replace this with a guard directive
     this.requestUpdate();
+
+    return change;
   }
 
-  public removeDecision(decision: Decision) {
-    this.model.removeDecision(decision);
+  public removeDecision(decision: Decision): SubjectChange {
+    const change = this.model.removeDecision(decision);
     this.requestUpdate();
+
+    return change;
   }
 
   private hasAlternativeShortcut(shortcut: string): shortcut is keyof typeof shortcutTranslation {
@@ -242,7 +286,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
     this.loaded = true;
-    this.dispatchEvent(new CustomEvent("loaded", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent<LoadedEvent>(VerificationGridTileComponent.loadedEventName, { bubbles: true }));
   }
 
   private handleFocusedKeyDown(event: KeyboardEvent): void {
@@ -259,6 +303,11 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   // https://stackoverflow.com/q/11818637
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.altKey && this.shortcuts.includes(event.key.toLowerCase())) {
+      // Because Alt + number is used to switch tabs in browsers, we
+      // preventDefault so that the tab doesn't lose focus during alt + number
+      // selection.
+      event.preventDefault();
+
       this.dispatchEvent(
         new CustomEvent(VerificationGridTileComponent.selectedEventName, {
           bubbles: true,
@@ -309,18 +358,26 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     const decision = this.model.classifications.get(requiredTag.text);
     const decisionText = decision ? decision.confirmed : "no decision";
 
-    let color: string | undefined;
-    if (decision && decision.confirmed !== DecisionOptions.SKIP) {
-      color = this.injector.colorService(decision);
-    }
+    const color: string | undefined = decision ? this.injector.colorService(decision) : undefined;
 
     return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
   }
 
-  private verificationMeterTemplate(): HTMLTemplateResult | typeof nothing {
+  private verificationMeterTemplate(): HTMLTemplateResult {
     const currentVerificationModel = this.model.verification;
-    const decisionText = currentVerificationModel ? currentVerificationModel.confirmed : "no decision";
-    const tooltipText = `verification: ${this.model.tag.text} (${decisionText})`;
+
+    let decisionText = "no decision";
+    if (currentVerificationModel === decisionNotRequired) {
+      decisionText = "not required";
+    } else if (currentVerificationModel) {
+      decisionText = currentVerificationModel.confirmed;
+    }
+
+    // Sometimes there is no tag. On the subject. In this case, we have to
+    // change the tooltip a bit.
+    const tooltipText = this.model.tag?.text
+      ? `verification: ${this.model.tag.text} (${decisionText})`
+      : `verification: ${decisionText}`;
 
     // if there is no verification decision on the tiles subject model, then
     // return the verification meter segment with no color
@@ -332,10 +389,34 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return this.meterSegmentTemplate(tooltipText, meterColor);
   }
 
+  private newTagMeterTemplate(): HTMLTemplateResult {
+    const currentNewTag = this.model.newTag;
+
+    let tooltipText = "";
+    if (currentNewTag === decisionNotRequired) {
+      tooltipText = "new tag: not required";
+    } else if (currentNewTag) {
+      if (currentNewTag.confirmed === DecisionOptions.SKIP) {
+        tooltipText = `new tag: ${currentNewTag.confirmed}`;
+      } else {
+        tooltipText = `new tag: ${currentNewTag.tag.text}`;
+      }
+    } else {
+      tooltipText = "new tag: no decision";
+    }
+
+    if (!currentNewTag) {
+      return this.meterSegmentTemplate(tooltipText);
+    }
+
+    const meterColor = this.injector.colorService(currentNewTag);
+    return this.meterSegmentTemplate(tooltipText, meterColor);
+  }
+
   private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
     return html`
       <sl-tooltip content="${tooltip}">
-        <span class="progress-meter-segment" style="background-color: var(${ifDefined(color)})"></span>
+        <span class="progress-meter-segment" style="background: var(${ifDefined(color)})"></span>
       </sl-tooltip>
     `;
   }
@@ -350,6 +431,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
         if (requiredDecision === requiredVerificationPlaceholder) {
           return this.verificationMeterTemplate();
+        } else if (requiredDecision === requiredNewTagPlaceholder) {
+          return this.newTagMeterTemplate();
         }
 
         return this.classificationMeterTemplate(requiredDecision);
@@ -370,6 +453,19 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       selected: this.selected,
     });
 
+    let tooltipContent = "";
+    if (!this.model?.newTag) {
+      tooltipContent = `This item was tagged as '${tagText}' in your data source`;
+    } else if (this.model?.newTag === decisionNotRequired) {
+      tooltipContent = `The requirements for this task have not been met`;
+    } else if (!this.model.tag) {
+      // If we didn't originally have a tag to correct
+      tooltipContent = `'${this.model?.newTag?.tag?.text}' has been added to this subject`;
+    } else {
+      // We replaced the original tag with a new tag
+      tooltipContent = `This item has been corrected to '${this.model?.newTag?.tag?.text}'`;
+    }
+
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
     return html`
@@ -382,13 +478,18 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         role="button"
         tabindex="${this.isOnlyTile ? -1 : 1}"
         aria-hidden="${this.hidden}"
+        aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container vertically-fill ${figureClasses}">
           <div class="figure-head">
             <figcaption class="tag-label">
-              <sl-tooltip content="This item was tagged as '${tagText}' in your data source" placement="bottom-start">
-                <span>${tagText}</span>
+              <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
+                <span>
+                  ${this.model?.newTag && this.model?.newTag !== decisionNotRequired
+                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag.text}</ins>`
+                    : html`${tagText}`}
+                </span>
               </sl-tooltip>
             </figcaption>
 

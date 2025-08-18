@@ -96,6 +96,13 @@ sl-tooltip {
   --sl-tooltip-color: var(--oe-font-color);
 }
 
+sl-tooltip:is([aria-expanded="true"]) {
+  &::part(base__popup),
+  &::part(base_arrow) {
+    display: none;
+  }
+}
+
 button:disabled,
 input:disabled {
   filter: grayscale(100%);
@@ -110,7 +117,7 @@ kbd {
   position: relative;
   width: max-content;
 
-  padding: 0.3rem;
+  padding: 0.3em;
   padding-left: 0.5em;
   padding-right: 0.5em;
 
@@ -141,6 +148,16 @@ a {
   }
 }
 
+del {
+  text-decoration: line-through;
+  text-decoration-color: var(--oe-danger-color);
+}
+
+ins {
+  text-decoration: none;
+  color: var(--oe-success-color);
+}
+
 hr {
   border: 0;
   height: 1px;
@@ -149,18 +166,6 @@ hr {
 
 dialog {
   position: relative;
-
-  height: max-content;
-  width: max-content;
-
-  /*
-    We have a minimum width and height so that all dialogs are clearly not a
-    part of the main content.
-    By setting a minimum width and height of 50%, we ensure that the dialog will
-    always look raised against the main content.
-  */
-  min-width: 80%;
-  min-height: 80%;
 
   /*
     Similar to the minimum width and height, we set a maximum width and height
@@ -201,6 +206,18 @@ dialog {
 
   animation: fade-in 600ms forwards;
 
+  /* An overlay dialog can be used if the dialog covers the entire screen. */
+  &.overlay {
+    /*
+      We have a minimum width and height so that all dialogs are clearly not a
+      part of the main content.
+      By setting a minimum width and height of 50%, we ensure that the dialog
+      will always look raised against the main content.
+    */
+    min-width: 80%;
+    min-height: 80%;
+  }
+
   dialog[open] {
     animation: fade-in 600ms forwards;
   }
@@ -211,6 +228,27 @@ dialog {
     min-width: 100dvw;
     min-height: 100dvh;
     margin: 0;
+  }
+}
+
+[popover]:not(dialog) {
+  position: relative;
+
+  /* Make the popover use the animation where it grows/shrinks when shown/hidden */
+  animation:
+    scale-in 0.1s forwards,
+    fade-in 0.2s forwards;
+  animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+
+  &:popover-open {
+    /* A css reset ot make popover padding consistent across browsers */
+    padding: 0;
+
+    box-shadow: var(--oe-box-shadow);
+    border: var(--oe-border-width) solid var(--oe-selected-color);
+    border-radius: var(--oe-border-rounding);
+
+    outline: none;
   }
 }
 
@@ -390,6 +428,10 @@ button {
   color: black;
 }
 
+.oe-btn-small {
+  padding-block: var(--oe-spacing-small);
+}
+
 .oe-pill {
   display: inline-block;
   border-radius: var(--oe-border-rounding);
@@ -414,5 +456,15 @@ slot.hide-slot-content {
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* An animation that can be applied to popovers where they grow/shrink when hiding/showing */
+@keyframes scale-in {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
   }
 }

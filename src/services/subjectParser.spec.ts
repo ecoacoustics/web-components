@@ -7,14 +7,14 @@ import { SubjectParser } from "./subjectParser";
 type VerificationParserTest = {
   name: string;
   input: Subject;
-} & ({ expectedUrl: string } | { expectedTag: Tag });
+} & ({ expectedUrl: string } | { expectedTag: Tag | null });
 
 const tests: VerificationParserTest[] = [
   {
     name: "empty subject",
     input: {},
     expectedUrl: "",
-    expectedTag: { text: "" },
+    expectedTag: null,
   },
   {
     name: "subject with a string tag",
@@ -54,20 +54,23 @@ const tests: VerificationParserTest[] = [
     input: {
       tags: null,
     },
-    expectedTag: { text: "" },
+    expectedTag: null,
   },
   {
     name: "subject with an undefined tag",
     input: {
       tags: undefined,
     },
-    expectedTag: { text: "" },
+    expectedTag: null,
   },
   {
     name: "subject with an empty string tag",
     input: {
       tags: "",
     },
+    // Note that unlike the other tests where "null" is used for missing values,
+    // if a tag with explicitly no text is passed in, we pass through the tag
+    // without modification.
     expectedTag: { text: "" },
   },
   {
@@ -132,14 +135,14 @@ const tests: VerificationParserTest[] = [
     input: {
       tags: [],
     },
-    expectedTag: { text: "" },
+    expectedTag: null,
   },
   {
     name: "nested empty array of tags",
     input: {
       tags: [[]],
     },
-    expectedTag: { text: "" },
+    expectedTag: null,
   },
 ];
 

@@ -7,7 +7,8 @@
   against its neighboring oe-verification component.
 */
 :host(:not(:first-of-type)) {
-  .decision-button {
+  .decision-button,
+  .decision-buttons {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-left-width: 0;
@@ -24,7 +25,8 @@
   component sibling.
 */
 :host(:not(:last-of-type)) {
-  .decision-button {
+  .decision-button,
+  .decision-buttons {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }

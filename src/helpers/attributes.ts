@@ -24,9 +24,9 @@ export const tagArrayConverter = (value: string | null): Tag[] => {
   return value.split(",").map((item) => ({ text: item.trim() }));
 };
 
-export const tagConverter = (value: string | null): Tag => {
+export const tagConverter = (value: string | null): Tag | null => {
   if (value === null) {
-    return { text: "" };
+    return null;
   }
 
   return { text: value };
@@ -43,16 +43,34 @@ export const tagConverter = (value: string | null): Tag => {
  * </oe-spectrogram>
  * ```
  */
-export const callbackConverter = (value: string | ((...params: any) => any)) => {
+export const callbackConverter = <T>(value: string | null | ((...params: any[]) => T)) => {
+  if (typeof value === "function") {
+    return value;
+  }
+
   if (typeof value === "string") {
     if (value === "") {
       throw new Error("Empty string is not a valid callback");
     }
 
-    return new Function(value);
+    try {
+      // Create an anonymous iife using the Function constructor.
+      // We do not use eval() because:
+      // 1. It is disabled in strict mode
+      // 2. Using eval disables a lot of JIT optimizations
+      // 3. Eval runs in the global scope
+      return new Function(`return (${value})`)();
+    } catch (e) {
+      console.error("Invalid callback function:", value, e);
+      return null;
+    }
   }
 
-  return value;
+  if (value === null) {
+    return null;
+  }
+
+  throw new Error(`Callback attribute must be a function or string. Found type: ${typeof value}`);
 };
 
 export const enumConverter = <T extends Enum>(

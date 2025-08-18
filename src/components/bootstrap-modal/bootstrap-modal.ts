@@ -19,6 +19,9 @@ import { DecisionOptions } from "../../models/decisions/decision";
 import { advancedShortcutsSlide } from "./slides/advanced-shortcuts/advanced-shortcuts";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { ESCAPE_KEY } from "../../helpers/keyboard";
+import { closeIconTemplate } from "../../templates/closeButton";
+import { ClassificationComponent } from "../decision/classification/classification";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -57,6 +60,9 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     unsafeCSS(advancedShortcutStyles),
   ];
 
+  public static readonly openEventName = "open";
+  public static readonly closeEventName = "close";
+
   @consume({ context: injectionContext, subscribe: true })
   @state()
   private injector!: VerificationGridInjector;
@@ -88,6 +94,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   private tutorialSlideCarouselElement!: SlCarousel;
 
   private isAdvancedDialog = false;
+  private keydownHandler = this.handleKeyDown.bind(this);
 
   public get open(): boolean {
     return this.dialogElement.open;
@@ -165,37 +172,76 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private closeDialog(): void {
+    document.removeEventListener("keydown", this.keydownHandler);
+
     this.autoDismissPreference = "true";
     this.dialogElement.close();
-    this.dispatchEvent(new CustomEvent("close"));
+    this.dispatchEvent(new CustomEvent(VerificationBootstrapComponent.closeEventName));
   }
 
   // this method is private because you should be explicitly opening the modal
   // through the showTutorialDialog() and showAdvancedDialog() methods
   private showDialog(slides: BootstrapSlide[]): void {
+    document.addEventListener("keydown", this.keydownHandler);
+
     this.slides = slides;
     this.dialogElement.showModal();
-    this.dispatchEvent(new CustomEvent("open"));
+    this.dispatchEvent(new CustomEvent(VerificationBootstrapComponent.openEventName));
+  }
+
+  private handleKeyDown(event: KeyboardEvent) {
+    // We have to intercept and preventDefault() on the escape key because
+    // Chrome will cancel the page load if the escape key is pressed.
+    //
+    // Because the bootstrap dialog is shown before the page has completed
+    // loading and the all of the audio has been fetched for the current page,
+    // I have experienced cases where I saw the bootstrap modal, pressed escape
+    // to dismiss the modal (which would also cancel page load), and then the
+    // verification grid would never load.
+    //
+    // This behavior is rare and unexpected, so to create a polished product, I
+    // intercept the escape key and override it's behavior to stop navigation to
+    // only closing the bootstrap modal.
+    //
+    // Note that this event listener is only attached when the bootstrap modal
+    // is open, will be removed when closed.
+    // Additionally, it is never attached if the tutorial is skipped.
+    if (event.key === ESCAPE_KEY) {
+      event.preventDefault();
+      this.closeDialog();
+    }
   }
 
   private positiveDecisionColor(): Readonly<CssVariable> {
-    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
-    if (!decisionModel) {
-      console.warn("Bootstrap could not determine positive decision color. Falling back to --verification-true");
-      return "--verification-true";
+    const defaultPositiveDecision = "--verification-true";
+
+    if (this.demoDecisionButton instanceof ClassificationComponent) {
+      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
+      if (!decisionModel) {
+        console.warn(`Bootstrap could not find positive decision color. Falling back to ${defaultPositiveDecision}`);
+        return defaultPositiveDecision;
+      }
+
+      return this.injector.colorService(decisionModel);
     }
 
-    return this.injector.colorService(decisionModel);
+    return defaultPositiveDecision;
   }
 
   private negativeDecisionColor(): Readonly<CssVariable> {
-    const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
-    if (!decisionModel) {
-      console.warn("Bootstrap could not determine negative decision color. Falling back to --verification-false");
-      return "--verification-false";
+    const defaultNegativeColor = "--verification-false";
+
+    if (this.demoDecisionButton instanceof ClassificationComponent) {
+      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
+      if (!decisionModel) {
+        console.warn(`Bootstrap could not find negative decision color. Falling back to ${defaultNegativeColor}`);
+        return defaultNegativeColor;
+      }
+
+      return this.injector.colorService(decisionModel);
     }
 
-    return this.injector.colorService(decisionModel);
+    return "--verification-false";
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
@@ -260,7 +306,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog id="dialog-element" @pointerdown="${() => this.closeDialog()}">
+      <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
             <button
@@ -268,7 +314,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
               @click="${() => this.closeDialog()}"
               data-testid="dismiss-bootstrap-dialog-btn"
             >
-              x
+              ${closeIconTemplate()}
             </button>
           </header>
 

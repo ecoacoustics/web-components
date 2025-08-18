@@ -2,9 +2,8 @@ import { Annotation } from "../../models/annotation";
 import { expect } from "../../tests/assertions";
 import {
   catchLocatorEvent,
-  getBrowserStyle,
   getBrowserValue,
-  getCssBackgroundColorVariable,
+  getCssVariableStyle,
   removeBrowserAttribute,
   setBrowserAttribute,
 } from "../../tests/helpers";
@@ -399,41 +398,35 @@ test.describe("annotation", () => {
     test("should change the annotations color if inside the bounding box is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationBoundingBoxes())[0];
 
-      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
-      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
+      const expectedAnnotationColor = await getCssVariableStyle(target, "--oe-annotation-color", "borderColor");
+      const expectedFocusedAnnotationColor = await getCssVariableStyle(
         target,
         "--oe-annotation-selected-color",
+        "borderColor",
       );
 
-      const initialAnnotationColor = await getBrowserStyle(target, "border-color");
-      expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
+      await expect(target).toHaveCSS("border-color", expectedAnnotationColor);
 
       await target.click();
 
-      const finalAnnotationColor = await getBrowserStyle(target, "border-color");
-      expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
-
-      expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
+      await expect(target).toHaveCSS("border-color", expectedFocusedAnnotationColor);
     });
 
     test("should change the annotations color if the label is clicked", async ({ fixture }) => {
       const target = (await fixture.annotationLabels())[0];
 
-      const expectedAnnotationColor = await getCssBackgroundColorVariable(target, "--oe-annotation-color");
-      const expectedFocusedAnnotationColor = await getCssBackgroundColorVariable(
+      const expectedAnnotationColor = await getCssVariableStyle(target, "--oe-annotation-color", "background");
+      const expectedFocusedAnnotationColor = await getCssVariableStyle(
         target,
         "--oe-annotation-selected-color",
+        "background",
       );
 
-      const initialAnnotationColor = await getBrowserStyle(target, "background-color");
-      expect(initialAnnotationColor).toEqual(expectedAnnotationColor);
+      await expect(target).toHaveCSS("background", expectedAnnotationColor);
 
       await target.click();
 
-      const finalAnnotationColor = await getBrowserStyle(target, "background-color");
-      expect(finalAnnotationColor).toEqual(expectedFocusedAnnotationColor);
-
-      expect(finalAnnotationColor).not.toBe(initialAnnotationColor);
+      await expect(target).toHaveCSS("background", expectedFocusedAnnotationColor);
     });
   });
 });

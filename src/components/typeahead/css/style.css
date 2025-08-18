@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  contain: content;
+  padding: var(--oe-border-rounding);
+}
+
+#typeahead-input {
+  display: block;
+  width: 100%;
+}
+
+#typeahead-results {
+  list-style-type: none;
+  padding-left: 0;
+
+  margin: 0;
+  margin-top: var(--oe-spacing);
+}
+
+.typeahead-result {
+  display: block;
+  margin-top: var(--oe-spacing-small);
+
+  & > .typeahead-result-action {
+    --background-color: var(--oe-panel-color-dark);
+
+    display: block;
+    width: 100%;
+
+    text-align: start;
+    letter-spacing: var(--oe-font-spacing);
+    font-size: var(--oe-font-size-large);
+
+    /*
+      Disable background animations because they make the typeahead look laggy
+      when switching between the buttons.
+    */
+    transition: none;
+
+    &.selected {
+      --background-color: var(--oe-selected-color) !important;
+    }
+  }
+}

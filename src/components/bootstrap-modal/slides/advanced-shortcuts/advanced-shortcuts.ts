@@ -10,7 +10,7 @@ import { BootstrapSlide } from "../bootstrapSlide";
 export function advancedShortcutsSlide(): BootstrapSlide {
   const title = "Keyboard shortcuts";
 
-  const keyboardShortcuts = [
+  const keyboardShortcuts: KeyboardShortcut[] = [
     { keys: ["Space"], description: "Play selected spectrograms" },
     { keys: ["Alt", "number"], description: "Keyboard selection" },
     { keys: ["f11"], description: "Fullscreen" },
@@ -19,7 +19,15 @@ export function advancedShortcutsSlide(): BootstrapSlide {
     { keys: ["Ctrl", mouseClick], description: "Add or remove a tile from selection" },
     { keys: [shiftSymbol, mouseClick], description: "Select all tiles between two points" },
     { keys: ["Ctrl", shiftSymbol, mouseClick], description: "Add range to selection" },
-  ] satisfies KeyboardShortcut[];
+    { keys: ["Left"], description: "Move selection backwards" },
+    { keys: ["Right"], description: "Move selection forwards" },
+    { keys: ["Down"], description: "Move selection down" },
+    { keys: ["Up"], description: "Move selection up" },
+    { keys: ["PageUp"], description: "Previous Page" },
+    { keys: ["PageNext"], description: "Next Page" },
+    { keys: ["Home"], description: "Select the first tile on page" },
+    { keys: ["End"], description: "Select the last tile on page" },
+  ];
 
   const slideTemplate = html`
     <div class="advanced-shortcuts-slide slide">
