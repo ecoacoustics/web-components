@@ -61,6 +61,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
 
+  private static readonly defaultWindowSize = 512;
+
   public constructor() {
     super();
     this.canvasResizeCallback = newAnimationIdentifier("canvas-resize");
@@ -98,7 +100,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The size of the fft window */
   @property({ type: Number, attribute: "window-size", reflect: true })
-  public windowSize = 512;
+  public windowSize = SpectrogramComponent.defaultWindowSize;
 
   /** The window function to use for the spectrogram */
   @property({ type: String, attribute: "window-function", reflect: true })
@@ -305,9 +307,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       const oldWindowSize = change.get("windowSize") as number;
       const newWindowSize = this.windowSize;
 
-      if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize)) {
-        this.windowSize = oldWindowSize;
-        console.error(`window-size "${newWindowSize}" must be a power of 2`);
+      if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
+        // Note that we use a falsy assertion here so that if the user inputs a
+        // window size of 0, we will trigger the default window size.
+        if (oldWindowSize && oldWindowSize > 0) {
+          this.windowSize = oldWindowSize;
+        } else {
+          this.windowSize = SpectrogramComponent.defaultWindowSize;
+        }
+
+        console.error(
+          `window-size "${newWindowSize}" must be a power of 2 and greater than 1. Falling back to window size value of ${this.windowSize}`,
+        );
       }
     }
   }
