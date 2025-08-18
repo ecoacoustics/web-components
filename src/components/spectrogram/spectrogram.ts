@@ -308,9 +308,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       const newWindowSize = this.windowSize;
 
       if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
-        // Note that we use a falsy assertion here so that if the user inputs a
-        // window size of 0, we will trigger the default window size.
-        if (oldWindowSize && oldWindowSize > 0) {
+        if (typeof oldWindowSize === "number" && oldWindowSize > 0) {
           this.windowSize = oldWindowSize;
         } else {
           this.windowSize = SpectrogramComponent.defaultWindowSize;
