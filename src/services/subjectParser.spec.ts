@@ -1,18 +1,17 @@
-import { Subject } from "../models/subject";
+import { NewTag } from "../models/decisions/newTag";
+import { Verification } from "../models/decisions/verification";
+import { newTagColumnName, Subject } from "../models/subject";
 import { Tag } from "../models/tag";
 import { test } from "../tests/assertions";
 import { SubjectParser } from "./subjectParser";
-
-// TODO: Replace this with the "DecisionOptions" enum from the decision model
-// once we figure out how to import enums in test files.
-type VerifiedState = "true" | "false" | "unsure" | "skip";
 
 interface VerificationParserTest {
   name: string;
   input: Subject;
   expectedUrl?: string;
   expectedTag?: Tag | null;
-  expectedVerified?: VerifiedState;
+  expectedVerified?: Verification;
+  expectedNewTag?: NewTag;
 }
 
 const tests: VerificationParserTest[] = [
@@ -157,8 +156,7 @@ const tests: VerificationParserTest[] = [
       verified: "true",
     },
     expectedUrl: "https://www.testing.com",
-    expectedTag: null,
-    expectedVerified: "true",
+    expectedVerified: new Verification("true" as any, null),
   },
   {
     name: "subject with a verified state",
@@ -169,7 +167,7 @@ const tests: VerificationParserTest[] = [
     },
     expectedUrl: "https://www.testing.com",
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: "true",
+    expectedVerified: new Verification("true" as any, null),
   },
   {
     name: "subject with a negative verified state and no tag",
@@ -178,7 +176,7 @@ const tests: VerificationParserTest[] = [
       tags: [{ text: "abbots babbler" }],
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: "false",
+    expectedVerified: new Verification("false" as any, null),
   },
   {
     name: "subject with an unsure state and no tag",
@@ -187,7 +185,7 @@ const tests: VerificationParserTest[] = [
       tags: [{ text: "abbots babbler" }],
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: "unsure",
+    expectedVerified: new Verification("unsure" as any, null),
   },
   {
     name: "subject with a skip state and no tag",
@@ -196,7 +194,60 @@ const tests: VerificationParserTest[] = [
       tags: [{ text: "abbots babbler" }],
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: "skip",
+    expectedVerified: new Verification("skip" as any, {
+      text: "abbots babbler",
+    }),
+  },
+  {
+    name: "subject with a verified object",
+    input: {
+      verified: {
+        // Note that we use "correct" instead of "true" here to test that we can
+        // handle confirmed states that do not exactly match our DecisionOptions
+        // enum.
+        confirmed: "correct",
+        // Note that our verification objects don't have additionalData, so this
+        // is testing that we can correctly ignore additional properties from
+        // the host application.
+        additionalData: "some data",
+      },
+    },
+    expectedVerified: new Verification("true" as any, null),
+  },
+  {
+    name: "subject with a negative verification object",
+    input: {
+      verified: {
+        // Note that we use "correct" instead of "true" here to test that we can
+        // handle confirmed states that do not exactly match our DecisionOptions
+        // enum.
+        confirmed: "incorrect",
+        additionalData: true,
+      },
+    },
+    expectedVerified: new Verification("false" as any, null),
+  },
+  {
+    name: "subject with a new tag string",
+    input: {
+      newTag: "oscar",
+    },
+  },
+  {
+    name: "subject with new tag string from local data source download",
+    input: {
+      [newTagColumnName]: "big-bird",
+    },
+  },
+  {
+    name: "subject with a new tag object",
+    input: {
+      newTag: { confirmed: "true", tag: { text: "elmo" } },
+    },
+    // Even though we have specified a new tag, we do not expect the new tag to
+    // be emitted in the subjects tag property.
+    expectedTag: null,
+    expectedNewTag: new NewTag("true" as any, { text: "elmo" }),
   },
 ];
 

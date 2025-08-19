@@ -67,6 +67,11 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       subjectWrapper.addDecision(verification);
     }
 
+    const newTag = SubjectParser.newTagParser(partialModel.newTag);
+    if (newTag) {
+      subjectWrapper.addDecision(newTag);
+    }
+
     return subjectWrapper;
   }
 
@@ -149,10 +154,16 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   }
 
   private static newTagParser(subjectNewTag: any): NewTag | null {
+    // Note that we use a "falsy" assertion here so that empty string will be
+    // treated as a missing "newTag".
+    // This can occur when using a partially complete local data source.
     if (!subjectNewTag) {
       return null;
     }
 
-    return subjectNewTag;
+    const tag = SubjectParser.tagParser(subjectNewTag.tag);
+    const newTagModel = new NewTag(subjectNewTag.confirmed ?? DecisionOptions.UNSURE, tag);
+
+    return newTagModel;
   }
 }
