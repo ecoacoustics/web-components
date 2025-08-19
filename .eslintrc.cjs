@@ -1,14 +1,14 @@
 module.exports = {
   root: true,
+  parser: "@typescript-eslint/parser",
   overrides: [
     {
       extends: ["eslint:recommended", "plugin:@typescript-eslint/strict-type-checked", "plugin:lit/recommended"],
       plugins: ["@typescript-eslint", "lit"],
       files: ["src/components/"],
-      parser: "@typescript-eslint/parser",
       parserOptions: {
         project: "./tsconfig.json",
-        projectService: true,
+        tsconfigRootDir: __dirname,
       },
       rules: {
         "@typescript-eslint/no-explicit-any": "off",
@@ -29,9 +29,10 @@ module.exports = {
       extends: "plugin:playwright/recommended",
       files: ["**/*.spec.ts", "**/*.fixture.ts", "src/tests/**/*.ts"],
       excludedFiles: ["node_modules/", "dist/", "@types/"],
-      parser: "@typescript-eslint/parser",
       parserOptions: {
         project: "./tsconfig.spec.json",
+        tsconfigRootDir: __dirname,
+        projectService: true,
       },
       rules: {
         "@typescript-eslint/await-thenable": "warn",

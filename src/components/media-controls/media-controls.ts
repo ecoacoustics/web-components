@@ -363,7 +363,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         const oldOptions = this.spectrogramElement.spectrogramOptions;
         if (key === "windowSize" && this.spectrogramElement) {
           if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
-            oldOptions.windowOverlap = (newValue as number) / 2;
+            oldOptions.windowOverlap = ((newValue as number) / 2) as any;
           }
         }
 
