@@ -1,7 +1,7 @@
 import { DecisionOptions } from "../models/decisions/decision";
 import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
-import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper } from "../models/subject";
+import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper, tagColumnName } from "../models/subject";
 import { Tag } from "../models/tag";
 import { ModelParser } from "./modelParser";
 import { Transformer } from "./modelParser";
@@ -51,6 +51,13 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
         confirmedColumnName,
       ]),
       newTag: SubjectParser.keyTransformer(["newTag", newTagColumnName]),
+      // When parsing a subjects previous verification decisions, we use the
+      // "oe_tag" column's value as the tag that was verified.
+      // This allows the user to modify the tag column in the subject without
+      // breaking the verification history.
+      // Additionally, it means that if we change how we parse the tag column,
+      // it will not be a breaking change for verification history parsing.
+      oeTag: [tagColumnName],
     };
 
     const partialModel = SubjectParser.deriveModel(original, transformer);
@@ -62,7 +69,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const subjectWrapper = new SubjectWrapper(original, transformedUrl, tag);
 
-    const verification = SubjectParser.verificationParser(partialModel.verification);
+    const verification = SubjectParser.verificationParser(partialModel);
     if (verification) {
       subjectWrapper.addDecision(verification);
     }
@@ -124,20 +131,43 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     return tagModel;
   }
 
-  private static verificationParser(subjectVerification: any): Verification | null {
+  private static verificationParser(partialModel: any): Verification | null {
+    const subjectVerification = partialModel.verification;
+    const unparsedOeTag = partialModel.oeTag;
     if (!subjectVerification) {
       return null;
     }
 
-    let verificationState: DecisionOptions | string = subjectVerification?.confirmed;
-
     const verificationType = typeof subjectVerification;
+    if (verificationType !== "object" && verificationType !== "string") {
+      console.warn(`Invalid verification type. Expected 'object' or 'string'. Found '${verificationType}'`);
+      return null;
+    }
+
+    let verificationState: DecisionOptions | string = subjectVerification?.confirmed;
     if (verificationType === "string") {
       // Local data sources will have a string value for the confirmed property.
       verificationState = subjectVerification;
-    } else if (verificationType !== "object") {
-      console.warn(`Invalid verification type. Expected 'object' or 'string'. Found '${verificationType}'`);
+    }
+
+    const confirmedMapping = new Map<string, DecisionOptions>([
+      ["true", DecisionOptions.TRUE],
+      ["false", DecisionOptions.FALSE],
+      ["skip", DecisionOptions.SKIP],
+      ["unsure", DecisionOptions.UNSURE],
+
+      ["correct", DecisionOptions.TRUE],
+      ["incorrect", DecisionOptions.FALSE],
+    ]);
+
+    const mappedConfirmedState = confirmedMapping.get(verificationState);
+    if (mappedConfirmedState === undefined) {
+      console.warn(
+        `Invalid subject confirmed value. Expected one of ${Array.from(confirmedMapping.keys()).join(", ")}. Found '${subjectVerification.confirmed}'`,
+      );
       return null;
+    } else {
+      verificationState = mappedConfirmedState;
     }
 
     const validDecisionOptions = Object.values(DecisionOptions);
@@ -150,7 +180,16 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return null;
     }
 
-    return new Verification(verificationState as DecisionOptions, subjectVerification.tag ?? SubjectParser.defaultTag);
+    // If there is a tag on the verification object, we use that as the source
+    // of truth.
+    // However, if there is no tag on the verification object, we try to use the
+    // oe_tag column as the tag that was verified.
+    // Note that we do never fallback to using the regular "tag" column as we
+    // would prefer to output nothing rather than the wrong tag that was
+    // verified.
+    const emptyTag = { text: "" };
+    const verifiedTag = subjectVerification?.tag ?? SubjectParser.tagParser(unparsedOeTag) ?? emptyTag;
+    return new Verification(verificationState as DecisionOptions, verifiedTag);
   }
 
   private static newTagParser(subjectNewTag: any): NewTag | null {

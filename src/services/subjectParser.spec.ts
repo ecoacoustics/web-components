@@ -1,6 +1,6 @@
 import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
-import { newTagColumnName, Subject } from "../models/subject";
+import { newTagColumnName, Subject, tagColumnName } from "../models/subject";
 import { Tag } from "../models/tag";
 import { test } from "../tests/assertions";
 import { SubjectParser } from "./subjectParser";
@@ -24,10 +24,10 @@ const tests: VerificationParserTest[] = [
   {
     name: "subject with a string tag",
     input: {
-      src: "https://www.testing.com",
+      src: "http://localhost:3000/example.flac",
       tags: "bird",
     },
-    expectedUrl: "https://www.testing.com",
+    expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "bird" },
   },
   {
@@ -150,52 +150,69 @@ const tests: VerificationParserTest[] = [
     expectedTag: null,
   },
   {
-    name: "subject with a verified state and no tag",
+    name: "subject with a positive verification and no tag",
     input: {
-      src: "https://www.testing.com",
+      src: "http://localhost:3000/example.flac",
       verified: "true",
     },
-    expectedUrl: "https://www.testing.com",
-    expectedVerified: new Verification("true" as any, null),
+    expectedUrl: "http://localhost:3000/example.flac",
+    expectedVerified: new Verification("true" as any, { text: "" }),
   },
   {
-    name: "subject with a verified state",
+    name: "subject with a verification",
     input: {
-      src: "https://www.testing.com",
+      src: "http://localhost:3000/example.flac",
       verified: "true",
-      tags: [{ text: "abbots babbler" }],
+      [tagColumnName]: "dugong",
+      tags: [{ text: "abbots babbler" }, { text: "dugong" }],
     },
-    expectedUrl: "https://www.testing.com",
+    expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: new Verification("true" as any, null),
+    expectedVerified: new Verification("true" as any, { text: "dugong" }),
   },
   {
-    name: "subject with a negative verified state and no tag",
+    name: "subject with a negative verification",
     input: {
       verified: "false",
       tags: [{ text: "abbots babbler" }],
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: new Verification("false" as any, null),
+    // Note that because there is no oe_tag column, and there is no tag in the
+    // verification object.
+    // In this case, we use an empty tag as a placeholder.
+    // This is different from a "null" tag which would result in the subject
+    // wrappers tag being used.
+    // I have preferred to use an empty tag here instead of the subjects tag so
+    // that if the user changes the tag on the subject, the tag that the
+    // verification was originally attached to is not incorrect.
+    // I would rather have an empty tag than a tag that is incorrect.
+    expectedVerified: new Verification("false" as any, { text: "" }),
   },
   {
-    name: "subject with an unsure state and no tag",
+    name: "subject with an unsure verification",
     input: {
       verified: "unsure",
       tags: [{ text: "abbots babbler" }],
+      oe_tag: "dugong",
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: new Verification("unsure" as any, null),
+    // Note that this tag doesn't actually exist in the subjects tags.
+    // This is mimicking a situation where the user has deleted the original tag
+    // that was verified, but the verification history still exists.
+    expectedVerified: new Verification("unsure" as any, {
+      text: "dugong",
+    }),
   },
   {
-    name: "subject with a skip state and no tag",
+    name: "subject with a skip verification",
     input: {
       verified: "skip",
       tags: [{ text: "abbots babbler" }],
+      [tagColumnName]: "Big Bird",
     },
     expectedTag: { text: "abbots babbler" },
     expectedVerified: new Verification("skip" as any, {
-      text: "abbots babbler",
+      text: "Big Bird",
     }),
   },
   {
@@ -206,26 +223,27 @@ const tests: VerificationParserTest[] = [
         // handle confirmed states that do not exactly match our DecisionOptions
         // enum.
         confirmed: "correct",
+        tag: { text: "dugong" },
         // Note that our verification objects don't have additionalData, so this
         // is testing that we can correctly ignore additional properties from
         // the host application.
         additionalData: "some data",
       },
     },
-    expectedVerified: new Verification("true" as any, null),
+    expectedVerified: new Verification("true" as any, { text: "dugong" }),
   },
   {
     name: "subject with a negative verification object",
     input: {
       verified: {
-        // Note that we use "correct" instead of "true" here to test that we can
-        // handle confirmed states that do not exactly match our DecisionOptions
-        // enum.
         confirmed: "incorrect",
         additionalData: true,
+        tag: { text: "dolphin" },
       },
     },
-    expectedVerified: new Verification("false" as any, null),
+    expectedVerified: new Verification("false" as any, {
+      text: "dolphin",
+    }),
   },
   {
     name: "subject with a new tag string",
@@ -264,6 +282,18 @@ test.describe("SubjectParser", () => {
     if ("expectedTag" in testItem) {
       test(`should have the correct tag for a ${testItem.name}`, () => {
         test.expect(result.tag).toEqual(testItem.expectedTag);
+      });
+    }
+
+    if ("expectedVerified" in testItem) {
+      test(`should have the correct verified value for a ${testItem.name}`, () => {
+        test.expect(result.verification).toEqual(testItem.expectedVerified);
+      });
+    }
+
+    if ("expectedNewTag" in testItem) {
+      test(`should have the correct new tag for a ${testItem.name}`, () => {
+        test.expect(result.newTag).toEqual(testItem.expectedNewTag);
       });
     }
   }

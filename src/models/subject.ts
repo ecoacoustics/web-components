@@ -208,16 +208,19 @@ export class SubjectWrapper {
       }
 
       return this.verification?.confirmed === queryingDecision.confirmed;
+    } else if (queryingDecision instanceof Classification) {
+      const matchingClassification = this.classifications.get(queryingDecision.tag.text);
+      if (matchingClassification === undefined) {
+        return false;
+      }
+
+      const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
+      const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
+      return hasMatchingTag && hasMatchingDecision;
     }
 
-    const matchingClassification = this.classifications.get(queryingDecision.tag.text);
-    if (matchingClassification === undefined) {
-      return false;
-    }
-
-    const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
-    const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
-    return hasMatchingTag && hasMatchingDecision;
+    // TODO: Handle the newTag decision type
+    return false;
   }
 
   public toDownloadable(): Partial<DownloadableResult> {
@@ -227,7 +230,7 @@ export class SubjectWrapper {
     const verificationColumns =
       this.verification && this.verification !== decisionNotRequired
         ? {
-            [tagColumnName]: this.verification.tag.text,
+            [tagColumnName]: this.verification.tag?.text,
             [confirmedColumnName]: this.verification.confirmed,
           }
         : {};
@@ -235,7 +238,7 @@ export class SubjectWrapper {
     const newTagColumns =
       this.newTag && this.newTag !== decisionNotRequired
         ? {
-            [newTagColumnName]: this.newTag.tag.text,
+            [newTagColumnName]: this.newTag.tag?.text,
           }
         : {};
 
@@ -263,11 +266,13 @@ export class SubjectWrapper {
   }
 
   private addVerification(model: Verification): SubjectChange {
-    // when a verification decision is made, it doesn't have a tag on the model.
+    // When a verification decision is made, it might not have a tag.
     // This is because the tag is usually associated with the subject, which the
     // verification button cannot know about when it makes the verification
-    // model
-    const populatedVerification = model.withTag(this.tag);
+    // model.
+    // Therefore, if there is no tag on the verification model, we populate it
+    // with the subjects tag.
+    const populatedVerification = model.tag ? model : model.withTag(this.tag);
     this.verification = populatedVerification;
 
     return { verification: populatedVerification };

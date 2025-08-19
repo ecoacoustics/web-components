@@ -392,7 +392,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       if (currentNewTag.confirmed === DecisionOptions.SKIP) {
         tooltipText = `new tag: ${currentNewTag.confirmed}`;
       } else {
-        tooltipText = `new tag: ${currentNewTag.tag.text}`;
+        tooltipText = `new tag: ${currentNewTag.tag?.text}`;
       }
     } else {
       tooltipText = "new tag: no decision";
@@ -480,7 +480,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
                 <span>
                   ${this.model?.newTag && this.model?.newTag !== decisionNotRequired
-                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag.text}</ins>`
+                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag?.text}</ins>`
                     : html`${tagText}`}
                 </span>
               </sl-tooltip>
