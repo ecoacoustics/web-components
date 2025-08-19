@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.0...web-components-v5.2.1) (2025-08-19)
+
+
+### Bug Fixes
+
+* Edge case spectrogram attribute parsing ([#413](https://github.com/ecoacoustics/web-components/issues/413)) ([e80c7da](https://github.com/ecoacoustics/web-components/commit/e80c7da7c46c902cee99e907933e85c5846a0200)), closes [#368](https://github.com/ecoacoustics/web-components/issues/368) [#357](https://github.com/ecoacoustics/web-components/issues/357) [#406](https://github.com/ecoacoustics/web-components/issues/406)
+
 ## [5.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.1.0...web-components-v5.2.0) (2025-08-09)
 
 
