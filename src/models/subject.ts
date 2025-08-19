@@ -2,7 +2,7 @@ import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
-import { Constructor, EnumValue } from "../helpers/types/advancedTypes";
+import { Constructor, EnumValue, ObjectRecord } from "../helpers/types/advancedTypes";
 import { NewTag } from "./decisions/newTag";
 import { decisionNotRequired, OptionalDecision } from "./decisions/decisionNotRequired";
 import { SubjectChange } from "verification-grid/verification-grid";
@@ -15,7 +15,7 @@ export enum AudioCachedState {
 }
 
 /** Original unprocessed data from the data source */
-export type Subject = Record<PropertyKey, unknown>;
+export type Subject = ObjectRecord;
 
 const columnNamespace = "oe_";
 
@@ -23,9 +23,9 @@ const columnNamespace = "oe_";
 // it is possible for users to input a csv file that already has a column name
 // to prevent column name collision, we prepend all the fields that we add
 // to the original data input with "oe"
-const tagColumnName = `${columnNamespace}tag`;
-const confirmedColumnName = `${columnNamespace}confirmed`;
-const newTagColumnName = `${columnNamespace}new_tag`;
+export const tagColumnName = `${columnNamespace}tag`;
+export const confirmedColumnName = `${columnNamespace}confirmed`;
+export const newTagColumnName = `${columnNamespace}new_tag`;
 type ClassificationColumn = `${typeof columnNamespace}${string}`;
 
 export interface DownloadableResult extends Subject {
@@ -174,16 +174,14 @@ export class SubjectWrapper {
       // decision.
       // This means that the SubjectChange describes if a decision was
       // overwritten as part of setting the decision to "not required".
-      const change: SubjectChange = this.verification === decisionNotRequired || !this.verification
-        ? {}
-        : { verification: decisionNotRequired };
+      const change: SubjectChange =
+        this.verification === decisionNotRequired || !this.verification ? {} : { verification: decisionNotRequired };
 
       this.verification = decisionNotRequired;
       return change;
     } else if (decision === NewTag) {
-      const change: SubjectChange = this.newTag === decisionNotRequired || !this.newTag
-        ? {}
-        : { newTag: decisionNotRequired };
+      const change: SubjectChange =
+        this.newTag === decisionNotRequired || !this.newTag ? {} : { newTag: decisionNotRequired };
 
       this.newTag = decisionNotRequired;
       return change;

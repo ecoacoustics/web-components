@@ -14,8 +14,9 @@ import {
 } from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
 import typeaheadStyles from "./css/style.css?inline";
+import { ObjectRecord } from "../../helpers/types/advancedTypes";
 
-export type TypeaheadCallback<Value> = <Context extends Record<PropertyKey, unknown>>(
+export type TypeaheadCallback<Value> = <Context extends ObjectRecord>(
   text: string,
   context: Context,
 ) => Promise<Value[]> | Value[];

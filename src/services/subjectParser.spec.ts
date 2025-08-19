@@ -3,11 +3,17 @@ import { Tag } from "../models/tag";
 import { test } from "../tests/assertions";
 import { SubjectParser } from "./subjectParser";
 
-// each test must have an input, and either an expectedUrl and/or an expectedTag
-type VerificationParserTest = {
+// TODO: Replace this with the "DecisionOptions" enum from the decision model
+// once we figure out how to import enums in test files.
+type VerifiedState = "true" | "false" | "unsure" | "skip";
+
+interface VerificationParserTest {
   name: string;
   input: Subject;
-} & ({ expectedUrl: string } | { expectedTag: Tag | null });
+  expectedUrl?: string;
+  expectedTag?: Tag | null;
+  expectedVerified?: VerifiedState;
+}
 
 const tests: VerificationParserTest[] = [
   {
@@ -143,6 +149,54 @@ const tests: VerificationParserTest[] = [
       tags: [[]],
     },
     expectedTag: null,
+  },
+  {
+    name: "subject with a verified state and no tag",
+    input: {
+      src: "https://www.testing.com",
+      verified: "true",
+    },
+    expectedUrl: "https://www.testing.com",
+    expectedTag: null,
+    expectedVerified: "true",
+  },
+  {
+    name: "subject with a verified state",
+    input: {
+      src: "https://www.testing.com",
+      verified: "true",
+      tags: [{ text: "abbots babbler" }],
+    },
+    expectedUrl: "https://www.testing.com",
+    expectedTag: { text: "abbots babbler" },
+    expectedVerified: "true",
+  },
+  {
+    name: "subject with a negative verified state and no tag",
+    input: {
+      verified: "false",
+      tags: [{ text: "abbots babbler" }],
+    },
+    expectedTag: { text: "abbots babbler" },
+    expectedVerified: "false",
+  },
+  {
+    name: "subject with an unsure state and no tag",
+    input: {
+      verified: "unsure",
+      tags: [{ text: "abbots babbler" }],
+    },
+    expectedTag: { text: "abbots babbler" },
+    expectedVerified: "unsure",
+  },
+  {
+    name: "subject with a skip state and no tag",
+    input: {
+      verified: "skip",
+      tags: [{ text: "abbots babbler" }],
+    },
+    expectedTag: { text: "abbots babbler" },
+    expectedVerified: "skip",
   },
 ];
 

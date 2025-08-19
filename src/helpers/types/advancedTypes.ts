@@ -58,10 +58,18 @@ export type FixedLengthSet<T, Length> = Set<T> & { size: Length };
 export type Constructor<T extends object, Args extends unknown[] = any[]> = new (...args: Args) => T;
 
 /**
+ * A JavaScript object of key-value pairs.
+ * This is needed because the TypeScript "object" type represents any truthy
+ * value, and Record<string, unknown> does not handle all record edge cases
+ * (such as when the key is a symbol).
+ */
+export type ObjectRecord = Record<PropertyKey, unknown>;
+
+/**
  * A JavaScript variable that is stored in the heap, and variables store a
  * reference to instead of the value itself.
  * This is useful for conditional typing where you might want to make all
  * reference/pointer variables readonly when exposing them to user space so that
  * the user cannot accidentally modify the internal state of the program.
  */
-export type HeapVariable = Record<PropertyKey, unknown> | unknown[] | Map<PropertyKey, unknown> | Set<unknown>;
+export type HeapVariable = ObjectRecord | unknown[] | Map<PropertyKey, unknown> | Set<unknown>;

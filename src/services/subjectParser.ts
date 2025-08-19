@@ -1,4 +1,6 @@
-import { Subject, SubjectWrapper } from "../models/subject";
+import { DecisionOptions } from "../models/decisions/decision";
+import { Verification } from "../models/decisions/verification";
+import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper } from "../models/subject";
 import { Tag } from "../models/tag";
 import { ModelParser } from "./modelParser";
 import { Transformer } from "./modelParser";
@@ -17,7 +19,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   // the type is compatible with the Tag interface
   // if we typed this as a Tag, it would reduce the type from a constant to a
   // generic type, which would reduce linting and bundling optimizations
-  private static defaultTag = null;
+  private static readonly defaultTag = null;
 
   public static parse(original: Subject, urlTransformer: UrlTransformer): SubjectWrapper {
     const transformer: Transformer = {
@@ -40,6 +42,14 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
         "commonNameTags",
         "speciesNameTags",
       ]),
+      verification: SubjectParser.keyTransformer([
+        "verified",
+        "decision",
+        "confirmed",
+        "confirmation",
+        confirmedColumnName,
+      ]),
+      newTag: SubjectParser.keyTransformer(["newTag", newTagColumnName]),
     };
 
     const partialModel = SubjectParser.deriveModel(original, transformer);
@@ -99,5 +109,33 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     const firstTag = subjectTags[0];
     const tagModel = SubjectParser.tagParser(firstTag);
     return tagModel;
+  }
+
+  private static verificationParser(subjectVerification: any): Verification | null {
+    if (!subjectVerification) {
+      return null;
+    }
+
+    const verificationType = typeof subjectVerification;
+    if (verificationType !== "object") {
+      console.warn(`Received subject model with verification of type ${verificationType}. Expected an object.`);
+      return null;
+    }
+
+    if (subjectVerification instanceof Verification) {
+      return subjectVerification;
+    }
+
+    const validDecisionOptions = Object.values(DecisionOptions);
+    if (!validDecisionOptions.includes(subjectVerification.confirmed)) {
+      const joinedValidOptions = validDecisionOptions.join(", ");
+      console.warn(
+        `Invalid subject confirmed value. Expected '${joinedValidOptions}'. Found '${subjectVerification.confirmed}'`,
+      );
+
+      return null;
+    }
+
+    return new Verification(subjectVerification.confirmed, subjectVerification.tag ?? SubjectParser.defaultTag);
   }
 }
