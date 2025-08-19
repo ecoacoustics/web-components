@@ -43,11 +43,9 @@
       <sl-range></sl-range>
     </div>
 
-    <oe-verification-grid id="verification-grid" progress-bar-position="top" autofocus>
+    <oe-verification-grid id="verification-grid" grid-size="1" progress-bar-position="top" autofocus>
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
-
-      <oe-data-source slot="data-source" for="verification-grid"></oe-data-source>
     </oe-verification-grid>
 
     <script type="module">
@@ -79,7 +77,7 @@
         verificationGrid.getPage = gridPaginator;
       }
 
-      window.addEventListener("load", () => setup());
+      setup();
     </script>
 
     <style>

@@ -12,6 +12,8 @@ import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
+import { isPowerOfTwo } from "../../helpers/powers";
+import { isValidNumber } from "../../helpers/numbers";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -59,6 +61,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
 
+  private static readonly defaultWindowSize = 512;
+
   public constructor() {
     super();
     this.canvasResizeCallback = newAnimationIdentifier("canvas-resize");
@@ -96,7 +100,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The size of the fft window */
   @property({ type: Number, attribute: "window-size", reflect: true })
-  public windowSize = 512;
+  public windowSize = SpectrogramComponent.defaultWindowSize;
 
   /** The window function to use for the spectrogram */
   @property({ type: String, attribute: "window-function", reflect: true })
@@ -112,7 +116,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** A color map to use for the spectrogram */
   @property({ type: String, attribute: "color-map", reflect: true })
-  public colorMap = "";
+  public colorMap = "grayscale";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number, reflect: true })
@@ -296,6 +300,25 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     highAccuracyTimeWorklet.port.postMessage(setupMessage);
 
     source.connect(highAccuracyTimeWorklet);
+  }
+
+  public willUpdate(change: PropertyValues<this>): void {
+    if (change.has("windowSize")) {
+      const oldWindowSize = change.get("windowSize") as number;
+      const newWindowSize = this.windowSize;
+
+      if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
+        if (typeof oldWindowSize === "number" && oldWindowSize > 0) {
+          this.windowSize = oldWindowSize;
+        } else {
+          this.windowSize = SpectrogramComponent.defaultWindowSize;
+        }
+
+        console.error(
+          `window-size "${newWindowSize}" must be a power of 2 and greater than 1. Falling back to window size value of ${this.windowSize}`,
+        );
+      }
+    }
   }
 
   public updated(change: PropertyValues<this>) {

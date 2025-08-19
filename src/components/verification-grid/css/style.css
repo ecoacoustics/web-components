@@ -139,6 +139,8 @@
 }
 
 .decision-controls {
+  max-width: 100%;
+
   h2 {
     display: block;
   }

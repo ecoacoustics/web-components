@@ -41,6 +41,17 @@ export type ThemingVariable = `--oe-${string}`;
 
 export type FixedLengthArray<T, Length> = Array<T> & { length: Length };
 
+/**
+ * A number type that is guaranteed to not be NaN.
+ * In normal TypeScript, a "number" type can also be a NaN or Infinite value
+ * (e.g -Infinity, Infinity, NaN are all number types).
+ *
+ * You will probably need to type narrow a number type before using a function
+ * that accepts this type.
+ * You can use the "isValidNumber" guard.
+ */
+export type ValidNumber = number & object;
+
 export type FixedLengthSet<T, Length> = Set<T> & { size: Length };
 
 /** Extracts the constructor of a class that can be used as a type */
