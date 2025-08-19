@@ -73,3 +73,17 @@ export type ObjectRecord = Record<PropertyKey, unknown>;
  * the user cannot accidentally modify the internal state of the program.
  */
 export type HeapVariable = ObjectRecord | unknown[] | Map<PropertyKey, unknown> | Set<unknown>;
+
+/**
+ * Converts a structural type to a nominal type
+ *
+ * @example
+ * ```typescript
+ * type StructuralType = "a" | "b" | "c";
+ * type NominalType = StructuralToNominal<StructuralType>;
+ * ```
+ *
+ * In the example above, the `NominalType` will be converted to a "string" type
+ * because the `StructuralType` is a discriminated union of string literals.
+ */
+export type StructuralToNominal<T> = T extends infer U ? U : never;

@@ -1,4 +1,5 @@
 import { DecisionOptions } from "../models/decisions/decision";
+import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
 import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper } from "../models/subject";
 import { Tag } from "../models/tag";
@@ -59,7 +60,14 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const tag = SubjectParser.tagParser(partialModel.tag);
 
-    return new SubjectWrapper(original, transformedUrl, tag);
+    const subjectWrapper = new SubjectWrapper(original, transformedUrl, tag);
+
+    const verification = SubjectParser.verificationParser(partialModel.verification);
+    if (verification) {
+      subjectWrapper.addDecision(verification);
+    }
+
+    return subjectWrapper;
   }
 
   private static tagParser(subjectTag: unknown): Tag | null {
@@ -116,18 +124,19 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return null;
     }
 
+    let verificationState: DecisionOptions | string = subjectVerification?.confirmed;
+
     const verificationType = typeof subjectVerification;
-    if (verificationType !== "object") {
-      console.warn(`Received subject model with verification of type ${verificationType}. Expected an object.`);
+    if (verificationType === "string") {
+      // Local data sources will have a string value for the confirmed property.
+      verificationState = subjectVerification;
+    } else if (verificationType !== "object") {
+      console.warn(`Invalid verification type. Expected 'object' or 'string'. Found '${verificationType}'`);
       return null;
     }
 
-    if (subjectVerification instanceof Verification) {
-      return subjectVerification;
-    }
-
     const validDecisionOptions = Object.values(DecisionOptions);
-    if (!validDecisionOptions.includes(subjectVerification.confirmed)) {
+    if (!validDecisionOptions.includes(verificationState)) {
       const joinedValidOptions = validDecisionOptions.join(", ");
       console.warn(
         `Invalid subject confirmed value. Expected '${joinedValidOptions}'. Found '${subjectVerification.confirmed}'`,
@@ -136,6 +145,14 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return null;
     }
 
-    return new Verification(subjectVerification.confirmed, subjectVerification.tag ?? SubjectParser.defaultTag);
+    return new Verification(verificationState as DecisionOptions, subjectVerification.tag ?? SubjectParser.defaultTag);
+  }
+
+  private static newTagParser(subjectNewTag: any): NewTag | null {
+    if (!subjectNewTag) {
+      return null;
+    }
+
+    return subjectNewTag;
   }
 }
