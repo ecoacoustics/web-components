@@ -182,13 +182,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public firstUpdated(): void {
-    if (!this.spectrogram) {
-      throw new Error("Could not find spectrogram component");
-    }
-
-    this.spectrogram.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
-    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
-
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
