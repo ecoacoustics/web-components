@@ -1,26 +1,7 @@
 {
+  "extends": "./tsconfig.base.json",
   "include": ["**/*.spec.ts", "**/*.fixture.ts", "src/tests/"],
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "target": "ES2021",
-    "newLine": "lf",
-    "module": "ESNext",
-    "types": [
-      "vite/client",
-      "@types/node",
-      "user-agent-data-types",
-      // I have to import @types/audioworklet from the TS DOM lib generator
-      // because TS doesn't automatically include AudioWorkletProcessor
-      // see: github.com/microsoft/TypeScript/issues/28308#issuecomment-1030710851
-      "@types/audioworklet",
-      // I have created some manual development type polyfills for the project
-      // to improve quality of life.
-      // These types should not be exported in the final build as we don't want
-      // to modify the typings of user projects.
-      "./src/helpers/types/polyfills.d.ts"
-    ],
-
-    "moduleResolution": "Bundler",
     "declaration": false
   }
 }

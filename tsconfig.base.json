@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "target": "ES2021",
+    "newLine": "lf",
+    "module": "ESNext",
+    "types": [
+      "vite/client",
+      "@types/node",
+      "user-agent-data-types",
+      // I have to import @types/audioworklet from the TS DOM lib generator
+      // because TS doesn't automatically include AudioWorkletProcessor
+      // see: github.com/microsoft/TypeScript/issues/28308#issuecomment-1030710851
+      "@types/audioworklet",
+      // I have created some manual development type polyfills for the project
+      // to improve quality of life.
+      // These types should not be exported in the final build as we don't want
+      // to modify the typings of user projects.
+      "./src/helpers/types/polyfills.d.ts"
+    ],
+
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+
+    "baseUrl": "src/components",
+    "paths": {
+      "": ["node_modules"],
+      "@": ["node_modules"]
+    },
+
+    // Linting
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
+
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+
+    "plugins": [
+      {
+        "name": "ts-lit-plugin",
+        "rules": {
+          // we have decided to disable this rule because it has many false positives
+          // https://github.com/ecoacoustics/web-components/pull/151#discussion_r1722484754
+          "no-complex-attribute-binding": "off"
+        }
+      }
+    ]
+  }
+}

@@ -1,63 +1,16 @@
 {
+  "extends": "./tsconfig.base.json",
   // when generating types for the project, we do not want to include test files
   // or types for the dev environment
   "exclude": ["**/*.spec.ts", "src/tests/", "**/*.fixture.ts", "*.config.*", "@types/", "playwright/", "dev/"],
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "target": "ES2021",
-    "newLine": "lf",
-    "module": "ESNext",
-    "types": [
-      "vite/client",
-      "@types/node",
-      "user-agent-data-types",
-      // I have to import @types/audioworklet from the TS DOM lib generator
-      // because TS doesn't automatically include AudioWorkletProcessor
-      // see: github.com/microsoft/TypeScript/issues/28308#issuecomment-1030710851
-      "@types/audioworklet",
-      // I have created some manual development type polyfills for the project
-      // to improve quality of life.
-      // These types should not be exported in the final build as we don't want
-      // to modify the typings of user projects.
-      "./src/helpers/types/polyfills.d.ts"
-    ],
-
     "declarationDir": "@types",
     "declaration": true,
     "emitDeclarationOnly": true,
 
-    "baseUrl": "src/components",
-    "paths": {
-      "": ["node_modules"],
-      "@": ["node_modules"]
-    },
-
     // Bundler mode
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-
-    // Linting
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "strictNullChecks": true,
-
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
-
-    "plugins": [
-      {
-        "name": "ts-lit-plugin",
-        "rules": {
-          // we have decided to disable this rule because it has many false positives
-          // https://github.com/ecoacoustics/web-components/pull/151#discussion_r1722484754
-          "no-complex-attribute-binding": "off"
-        }
-      }
-    ]
+    "allowSyntheticDefaultImports": true
   }
 }
