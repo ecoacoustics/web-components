@@ -533,7 +533,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHead < this.decisionHead;
+    return this.viewHead + this.populatedTileCount < this.decisionHead;
   }
 
   public resetSpectrogramSettings(): void {
@@ -746,9 +746,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.renderVirtualPage();
   }
 
-  private resetBufferHeads(): void {
+  private async resetBufferHeads() {
     this.viewHead = 0;
-    this.decisionHead = 0;
+
+    while (true) {
+      break;
+    }
   }
 
   private updateRequiredDecisions(): void {
@@ -1514,7 +1517,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.viewHead = this.decisionHead;
   }
 
-  // we ue the effective grid size here so that hidden tiles are not counted
+  // we use the effective grid size here so that hidden tiles are not counted
   // when the user pages
   private nextPage(count: number = this.effectivePageSize) {
     this.clearSelection();
@@ -1764,23 +1767,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // if we are on the last page, we hide the remaining elements
     const pagedDelta = elements.length - pageSubjects.length;
     if (pagedDelta > 0) {
-      this.hideGridItems(pagedDelta);
+      this.hiddenTiles = pagedDelta;
     } else if (this.hiddenTiles > 0) {
       this.showAllGridItems();
       this.hiddenTiles = 0;
     }
 
     this.requestUpdate();
-  }
-
-  private hideGridItems(numberOfTiles: number): void {
-    Array.from(this.gridTiles)
-      .slice(-numberOfTiles)
-      .forEach((element) => {
-        element.hidden = true;
-      });
-
-    this.hiddenTiles = numberOfTiles;
   }
 
   private showAllGridItems(): void {
@@ -1966,6 +1959,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .isOnlyTile="${this.populatedTileCount === 1}"
         .model="${subject as any}"
         .index="${index}"
+        ?hidden="${subject === null}"
       >
         ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
       </oe-verification-grid-tile>
