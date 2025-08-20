@@ -524,7 +524,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHead + this.populatedTileCount < this.decisionHead;
+    return this.viewHead + (this.populatedTileCount - 1) < this.decisionHead;
   }
 
   public resetSpectrogramSettings(): void {
@@ -586,13 +586,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.gridController.setTarget(this.targetGridSize);
     }
 
-    // tile invalidations cause the functionality of the tiles to change
-    // however, they do not cause the spectrograms or the template to render
-    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
-    if (tileInvalidationKeys.some((key) => change.has(key))) {
-      this.handleTileInvalidation();
-    }
-
     // invalidating the verification grids source will cause the grid tiles and
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
@@ -605,8 +598,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items.
     //
-    // However, if the new grid size is less than the current grid sie, we don't
-    // want to invalidate the page because that would produce unnecessary work.
+    // However, if the new grid size is less than the current grid size, we
+    // don't want to invalidate the page because that would produce unnecessary
+    // work.
     const pageInvalidationKeys: (keyof this)[] = ["targetGridSize", "columns", "rows"];
     if (pageInvalidationKeys.some((key) => change.has(key))) {
       const oldColumns = change.get("columns") ?? this.columns;
@@ -615,9 +609,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const oldGridSize = oldColumns * oldRows;
       const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
 
-      if (oldTileCount < this.populatedTileCount) {
-        this.handlePageInvalidation();
-      } else {
+      if (oldTileCount > this.populatedTileCount) {
         if (this.areTilesLoaded()) {
           this._loaded = true;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
@@ -626,6 +618,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       }
 
       this.updateSubSelection();
+    }
+
+    // tile invalidations cause the functionality of the tiles to change
+    // however, they do not cause the spectrograms or the template to render
+    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
+    if (tileInvalidationKeys.some((key) => change.has(key))) {
+      this.handleTileInvalidation();
     }
   }
 
@@ -665,16 +664,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * this will reset the verification task and re-fetch the first page of
    * subjects from the new data source
    */
-  private async handleGridSourceInvalidation(): Promise<void> {
-    this.resetBufferHeads();
-
+  private async handleGridSourceInvalidation() {
     if (this.getPage) {
-      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer, this.subjects);
-
-      const newSubjects = await this.paginationFetcher.populateSubjects(this.decisionHead);
-      this.subjects.push(...newSubjects);
-
-      this.renderVirtualPage();
+      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
+      await this.resetBufferHeads();
     }
 
     // After changing the data source, we want to remove the current
@@ -706,21 +699,26 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  /**
-   * handles the currently rendered page of subjects changing
-   * e.g. the number of tiles being rendered, or the source of a singular tile
-   *      changing
-   * causing the current page to be re-rendered from the viewHead position
-   */
-  private handlePageInvalidation(): void {
-    this.renderVirtualPage();
-  }
-
   private async resetBufferHeads() {
-    this.viewHead = 0;
+    this.subjects = [];
 
+    await this.setViewHead(0);
+    this.decisionHead = 0;
+
+    // While every subject has a decision, we keep paging through the data
+    // until we find the first page that does not have complete decisions.
     while (true) {
-      break;
+      const currentPage = Array.from(this.currentPage());
+      if (currentPage.length === 0) {
+        break;
+      }
+
+      const isPageCompleted = currentPage.every((subject) => subject?.verification);
+      if (!isPageCompleted) {
+        break;
+      }
+
+      await this.pageNext();
     }
   }
 
@@ -974,7 +972,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const eventTarget = event.target;
     if (!(eventTarget instanceof VerificationGridTileComponent)) {
-      console.warn("Received play event request from non-tile element");
+      console.error("Received play event request from non-tile element");
       return;
     }
 
@@ -1295,31 +1293,61 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(0, options);
   }
 
-  private async setViewHead(value: number): Promise<SubjectWrapper[]> {
+  private async setViewHead(value: number): Promise<void> {
+    this.setDecisionDisabled(true);
     let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
 
-    // because the viewHead is an index into the "subjects" array, it cannot
-    // be larger than the length of the subjects array.
-    // if we receive a value that is larger than the subjects buffer, we emit
-    // a warning so that we can catch it in dev, and use the subject arrays
-    // length as a fallback to prevent hard-failing.
-    const availableSubjectsCount = this.subjects.length;
-    if (clampedHead > availableSubjectsCount) {
-      console.warn("Attempted to set the viewHead to a value larger than the subjects array");
-      clampedHead = availableSubjectsCount;
-    }
-
     if (!this.paginationFetcher) {
-      console.warn("Cannot set viewHead because the paginationFetcher is not initialized");
-      return [];
+      console.error("Cannot set viewHead because the paginationFetcher is not initialized");
+      return;
     }
 
-    const newSubjects = await this.paginationFetcher.populateSubjects(this.decisionHead);
-    this.subjects.push(...newSubjects);
+    const needsMoreSubjects = value > this.viewHead || this.viewHead === 0;
+    if (needsMoreSubjects) {
+      let enoughToRenderResolver: () => void;
+      const enoughToRender = new Promise<void>((resolve) => {
+        enoughToRenderResolver = resolve;
+      });
+
+      const subjectReader = await this.paginationFetcher.nextSubjects(this.decisionHead);
+      subjectReader.pipeTo(
+        new WritableStream({
+          write: (subject: SubjectWrapper[]) => {
+            this.subjects.push(...subject);
+
+            if (this.subjects.length >= clampedHead + this.targetGridSize) {
+              // if we have enough subjects to render the page, we resolve the
+              // promise so that the viewHead can be set
+              enoughToRenderResolver();
+            }
+          },
+          close: () => {
+            // because the viewHead is an index into the "subjects" array, it cannot
+            // be larger than the length of the subjects array.
+            // if we receive a value that is larger than the subjects buffer, we emit
+            // a warning so that we can catch it in dev, and use the subject arrays
+            // length as a fallback to prevent hard-failing.
+            const availableSubjectsCount = this.subjects.length;
+            if (availableSubjectsCount < clampedHead) {
+              console.error("Attempted to set the viewHead to a value larger than the subjects array");
+              clampedHead = availableSubjectsCount;
+            }
+
+            this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
+
+            enoughToRenderResolver();
+          },
+        }),
+      );
+
+      await enoughToRender;
+    }
 
     this.viewHead = clampedHead;
 
-    return newSubjects;
+    if (this.viewHead === clampedHead) {
+      this.requestUpdate();
+    }
   }
 
   //#endregion
@@ -1512,18 +1540,19 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // because the viewHead setter might reject the new value if it is less
     // than zero or exceeds the length of the subjects array
     const proposedHead = this.viewHead - this.populatedTileCount;
-    this.viewHead = proposedHead;
+    this.setViewHead(proposedHead);
     this.clearSelection();
   }
 
   /** Changes the viewHead to the current page of undecided results */
   private async resumeVerification(): Promise<void> {
-    this.viewHead = this.decisionHead;
+    this.setViewHead(this.decisionHead);
+    this.clearSelection();
   }
 
   // we use the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private async nextPage(count: number = this.effectivePageSize): Promise<SubjectWrapper[]> {
+  private async pageNext(count: number = this.effectivePageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -1533,8 +1562,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     this.decisionHead += count;
 
-    const newSubjects = await this.setViewHead(this.viewHead + count);
-    return newSubjects;
+    await this.setViewHead(this.viewHead + count);
   }
 
   private canNavigatePrevious(): boolean {
@@ -1632,7 +1660,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      this.nextPage(gridTiles.length);
+      this.pageNext(gridTiles.length);
 
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.
@@ -1734,58 +1762,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#endregion
 
   //#region Rendering
-
-  private renderVirtualPage(): void {
-    const pageSubjects = Array.from(this.currentPage());
-
-    // even though making a decision will cause the spectrograms to load and
-    // emit the "loading" event (causing the decision buttons to be disabled)
-    // there can be some input lag between when we request to change the src
-    // and when the spectrograms begin to start rendering
-    // I also do this first so that if the functionality below fails then the
-    // user can't continue making decisions that won't be saved when downloaded
-    //
-    // because it is possible for the new page to be a subset of the current
-    // page. E.g. when decreasing the grid size, we only want to disable the
-    // decision buttons if there are going to be new spectrograms loading
-    //
-    // These buttons will be re-enabled when the all of the spectrograms
-    // "loaded" events have fired.
-    // Note that if there are no spectrograms on the new page (e.g. we have
-    // reached the final page), the buttons will not be re-enabled.
-    this.setDecisionDisabled(true);
-
-    const elements = this.gridTiles;
-    if (elements === undefined || elements.length === 0) {
-      this.requestUpdate();
-      return;
-    }
-
-    // if this guard condition is true, it means that we have exhausted the
-    // entire data source provided by the getPage callback
-    if (pageSubjects.length === 0) {
-      this.requestUpdate();
-      return;
-    }
-
-    // if we are on the last page, we hide the remaining elements
-    const pagedDelta = elements.length - pageSubjects.length;
-    if (pagedDelta > 0) {
-      this.hiddenTiles = pagedDelta;
-    } else if (this.hiddenTiles > 0) {
-      this.showAllGridItems();
-      this.hiddenTiles = 0;
-    }
-
-    this.requestUpdate();
-  }
-
-  private showAllGridItems(): void {
-    const gridTiles = this.gridTiles ?? [];
-    for (const element of gridTiles) {
-      element.hidden = false;
-    }
-  }
 
   private hasDecisionElements(): boolean {
     return Array.from(this.decisionElements ?? []).length > 0;
@@ -1948,10 +1924,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
+  private emptySubjectTemplate(): HTMLTemplateResult {
+    return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
+  }
+
   private gridTileTemplate(subject: SubjectWrapper | null, customTemplate: any, index: number): HTMLTemplateResult {
-    // If there is no subject, we
     if (subject === null) {
-      return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
+      return this.emptySubjectTemplate();
     }
 
     return html`

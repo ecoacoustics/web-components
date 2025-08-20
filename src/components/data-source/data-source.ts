@@ -8,7 +8,6 @@ import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher";
-import { SubjectParser } from "../../services/subjectParser";
 import { DownloadableResult } from "../../models/subject";
 import { when } from "lit/directives/when.js";
 import dataSourceStyles from "./css/style.css?inline";
@@ -114,12 +113,12 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public resultRows(): Partial<DownloadableResult>[] {
+  public resultRows(isUrlSourced: boolean): Partial<DownloadableResult>[] {
     if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     }
 
-    if (this.isUrlSourced()) {
+    if (isUrlSourced) {
       const subjects = this.verificationGrid.subjects;
       return subjects.map((model) => model.toDownloadable());
     }
@@ -144,7 +143,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   private async downloadCallbackSourcedResults(): Promise<void> {
-    const downloadableResults = this.resultRows();
+    const downloadableResults = this.resultRows(false);
     const stringifiedResults = JSON.stringify(downloadableResults);
 
     const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
@@ -162,7 +161,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const downloadableResults = this.resultRows();
+    const downloadableResults = this.resultRows(true);
 
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
@@ -229,7 +228,6 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    const urlTransformer = this.verificationGrid.urlTransformer;
     this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     if (!this.urlSourcedFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
@@ -238,17 +236,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.fileName = this.urlSourcedFetcher.file.name;
 
     const subjects = await this.urlSourcedFetcher.generateSubjects();
-    const subjectWrapperModels = subjects.map((subject) => SubjectParser.parse(subject, urlTransformer));
 
-    const nullFetcher: PageFetcher = async () => ({
-      subjects: [],
-      context: {},
-      totalItems: subjectWrapperModels.length,
-    });
-    nullFetcher.brand = UrlSourcedFetcher.brand;
+    const localDataFetcher: PageFetcher = async (context: { completed: boolean }) => {
+      const items = context.completed ? [] : subjects;
 
-    this.verificationGrid.getPage = nullFetcher;
-    this.verificationGrid.subjects = subjectWrapperModels;
+      return {
+        subjects: items,
+        totalItems: subjects.length,
+        context: { completed: true },
+      };
+    };
+    localDataFetcher.brand = UrlSourcedFetcher.brand;
+
+    this.verificationGrid.getPage = localDataFetcher;
   }
 
   private fileInputTemplate(): HTMLTemplateResult {
@@ -271,7 +271,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           id="browser-file-input"
           class="hidden"
           type="file"
-          accept=".csv,.json"
+          accept=".csv,.json,.tsv"
           @change="${(event: Event) => this.handleFileChange(event)}"
         />
       </span>

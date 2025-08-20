@@ -98,7 +98,6 @@ export const expect = playwrightExpect.extend({
   toHaveLayoutScreenshot,
   toHaveSlottedText,
 });
-
 export const test = base.extend({
   page: async ({ page }, use) => {
     // sometimes our components throw errors. In these cases, we want to fail
@@ -106,6 +105,20 @@ export const test = base.extend({
     page.on("pageerror", (error) => {
       throw new Error(`Page error occurred: "${error.message}"`);
     });
+
+    // Listening to console messages is a custom Playwright feature that allows
+    // us to catch soft-failures in the browser console.
+    // Note that we usually try to recover from console errors, but it means
+    // that we have ended up in an unexpected state.
+    // see: https://playwright.dev/docs/api/class-consolemessage
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        const loc = msg.location();
+        const where = loc?.url ? ` at ${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : "";
+        throw new Error(`Console error occurred${where}: "${msg.text()}"`);
+      }
+    });
+
     await use(page);
   },
 });

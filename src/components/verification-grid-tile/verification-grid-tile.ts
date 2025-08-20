@@ -182,6 +182,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public firstUpdated(): void {
+    console.debug("oe-verification-grid-tile: firstUpdated");
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
@@ -224,7 +225,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
   public updateSubject(subject: SubjectWrapper): void {
     this.model = subject;
-    this.requestUpdate();
   }
 
   public resetSettings(): void {

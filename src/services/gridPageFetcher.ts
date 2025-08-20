@@ -21,70 +21,83 @@ export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => P
 };
 
 export class GridPageFetcher {
-  public constructor(
-    pagingCallback: PageFetcher,
-    urlTransformer: UrlTransformer,
-    subjectQueue: ReadonlyArray<SubjectWrapper>,
-  ) {
+  public constructor(pagingCallback: PageFetcher, urlTransformer: UrlTransformer) {
     this.pagingCallback = pagingCallback;
     this.urlTransformer = urlTransformer;
-    this.subjectQueue = subjectQueue;
   }
 
   public totalItems?: number;
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
-  private subjectQueue: ReadonlyArray<SubjectWrapper>;
   private pagingContext: PageFetcherContext = {};
 
   // caches the audio for the next n items in the buffer
   private clientCacheLength = 10;
   private serverCacheLength = 50;
 
-  public async populateSubjects(decisionHead: number): Promise<SubjectWrapper[]> {
+  public async nextSubjects(decisionHead: number): Promise<ReadableStream<SubjectWrapper[]>> {
     const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength) + decisionHead;
 
-    const newItems = [];
+    let fetchedItems = 0;
 
-    // continue to fetch items until we have enough items in the queue
-    // or the paging function returns no more items
-    // (we have reached the end of the dataset)
-    while (this.subjectQueue.length < requiredQueueSize) {
-      const fetchedPage = await this.fetchNextPage();
-      if (fetchedPage.length === 0) {
-        break;
-      }
+    // We use a writableStream instead of returning a promise directly so that
+    // consumers like the verification grid don't have to wait for all of the
+    // subjects to be fetched and resolved before they can start consuming.
+    //
+    // For example, the verification grid can start rendering when we have
+    // fetched 8 items, but we don't want to block rendering until we have
+    // enough fetched subjects to fill the client cache and server cache.
+    //
+    // Using a stream also allows the verification grids subjects to be
+    // pre-fetched in the background while the first page of items is being
+    // rendered.
+    const writableStream = new ReadableStream<SubjectWrapper[]>({
+      start: async (controller) => {
+        // continue to fetch items until we have enough items in the queue
+        // or the paging function returns no more items
+        // (we have reached the end of the dataset)
+        while (fetchedItems < requiredQueueSize) {
+          const fetchedPage = await this.fetchNextPage();
+          if (fetchedPage.length === 0) {
+            break;
+          }
 
-      newItems.push(...fetchedPage);
-    }
+          controller.enqueue(fetchedPage);
 
-    // because the queue buffer may have been expanded by the fetchNextPage
-    // callback, we should update the cache
-    // these async functions are purposely not awaited because we do not
-    // want to block the main thread while doing cache operations
-    // TODO: we should make sure that only the latest cache operation is run
-    this.refreshCache(decisionHead);
+          fetchedItems += fetchedPage.length;
+        }
 
-    return newItems;
+        // because the queue buffer may have been expanded by the fetchNextPage
+        // callback, we should update the cache
+        // these async functions are purposely not awaited because we do not
+        // want to block the main thread while doing cache operations
+        // TODO: we should make sure that only the latest cache operation is run
+        // this.refreshCache(decisionHead);
+
+        controller.close();
+      },
+    });
+
+    return writableStream;
   }
 
-  public async refreshCache(decisionHead: number): Promise<void> {
-    this.audioCacheClient(decisionHead);
-    this.audioCacheServer(decisionHead);
+  public async refreshCache(subjects: SubjectWrapper[], decisionHead: number): Promise<void> {
+    this.audioCacheClient(subjects, decisionHead);
+    this.audioCacheServer(subjects, decisionHead);
   }
 
   // during client caching, we do a GET request to the server for the
   // audio file. Therefore, requests that have already been client cached
   // have also already been server cached. We therefore, remove these
   // requests from the calculations
-  private async audioCacheClient(decisionHead: number): Promise<void> {
-    const models = this.subjectQueue
+  private async audioCacheClient(subjects: SubjectWrapper[], decisionHead: number): Promise<void> {
+    const models = subjects
       .slice(decisionHead, decisionHead + this.clientCacheLength)
       .filter((model) => model.clientCached === AudioCachedState.COLD);
 
     for (const model of models) {
       model.clientCached = AudioCachedState.REQUESTED;
-      fetch(model.url)
+      fetch(model.url, { priority: "low" })
         .then((response: Response) => {
           model.clientCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
         })
@@ -96,14 +109,18 @@ export class GridPageFetcher {
   // audio file. We do this because some servers have to split a large
   // audio file using ffmpeg when a file is requested.
   // by doing a HEAD request, we can warm the ffmpeg split file on the server
-  private async audioCacheServer(viewHead: number): Promise<void> {
-    const models = this.subjectQueue
+  private async audioCacheServer(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
+    // We do not need a Math.min(xyz, this.subjectQueue.length) because if the
+    // top range of a slice is larger than the length of the array, the slice
+    // will simply ignore the out-of-bounds indices and return the maximum
+    // amount of items between the start index and the end of the array.
+    const models = subjects
       .slice(viewHead, viewHead + this.serverCacheLength)
       .filter((model) => model.serverCached === AudioCachedState.COLD);
 
     for (const model of models) {
       model.serverCached = AudioCachedState.REQUESTED;
-      fetch(model.url, { method: "HEAD" })
+      fetch(model.url, { method: "HEAD", priority: "low" })
         .then((response: Response) => {
           model.serverCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
         })

@@ -19,9 +19,9 @@ import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
+import { ColorMapName } from "../../helpers/audio/colors";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
-import { ColorMapName } from "../../helpers/audio/colors";
 
 export interface IPlayEvent {
   play: boolean;
@@ -790,10 +790,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       <audio
         id="media-element"
         src="${this.renderedSource}"
-        @play="${() => this.play()}"
-        @ended="${() => this.stop()}"
         preload="metadata"
         crossorigin="anonymous"
+        fetchpriority="low"
+        @play="${() => this.play()}"
+        @ended="${() => this.stop()}"
       >
         <slot></slot>
       </audio>
