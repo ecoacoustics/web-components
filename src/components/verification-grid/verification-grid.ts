@@ -731,7 +731,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           break;
         }
 
-        virtualDecisionHead++;
+        virtualDecisionHead += this.populatedTileCount;
       }
 
       this.decisionHead = virtualDecisionHead;
