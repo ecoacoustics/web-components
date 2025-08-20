@@ -20,34 +20,31 @@ export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => P
   brand?: symbol;
 };
 
-export type SubjectAppender = (value: SubjectWrapper[]) => void;
-
 export class GridPageFetcher {
   public constructor(
     pagingCallback: PageFetcher,
     urlTransformer: UrlTransformer,
     subjectQueue: ReadonlyArray<SubjectWrapper>,
-    appender: SubjectAppender,
   ) {
     this.pagingCallback = pagingCallback;
     this.urlTransformer = urlTransformer;
     this.subjectQueue = subjectQueue;
-    this.appender = appender;
   }
 
   public totalItems?: number;
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
   private subjectQueue: ReadonlyArray<SubjectWrapper>;
-  private appender: SubjectAppender;
   private pagingContext: PageFetcherContext = {};
 
   // caches the audio for the next n items in the buffer
   private clientCacheLength = 10;
   private serverCacheLength = 50;
 
-  public async populateSubjects(decisionHead: number): Promise<void> {
+  public async populateSubjects(decisionHead: number): Promise<SubjectWrapper[]> {
     const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength) + decisionHead;
+
+    const newItems = [];
 
     // continue to fetch items until we have enough items in the queue
     // or the paging function returns no more items
@@ -58,7 +55,7 @@ export class GridPageFetcher {
         break;
       }
 
-      this.appender(fetchedPage);
+      newItems.push(...fetchedPage);
     }
 
     // because the queue buffer may have been expanded by the fetchNextPage
@@ -67,6 +64,8 @@ export class GridPageFetcher {
     // want to block the main thread while doing cache operations
     // TODO: we should make sure that only the latest cache operation is run
     this.refreshCache(decisionHead);
+
+    return newItems;
   }
 
   public async refreshCache(decisionHead: number): Promise<void> {

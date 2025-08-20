@@ -299,34 +299,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @state()
   private currentSubSelection: SubjectWrapper[] = [];
 
+  @state()
+  private viewHead = 0;
+
   public get gridShape(): GridShape {
     return { columns: this.columns, rows: this.rows };
-  }
-
-  /**
-   * The index of the first item from the `subjects` array in the currently
-   * displayed verification grid page
-   */
-  public get viewHead(): number {
-    return this.viewHeadIndex;
-  }
-
-  public set viewHead(value: number) {
-    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
-
-    // because the viewHead is an index into the "subjects" array, it cannot
-    // be larger than the length of the subjects array.
-    // if we receive a value that is larger than the subjects buffer, we emit
-    // a warning so that we can catch it in dev, and use the subject arrays
-    // length as a fallback to prevent hard-failing.
-    const availableSubjectsCount = this.subjects.length;
-    if (clampedHead > availableSubjectsCount) {
-      console.warn("Attempted to set the viewHead to a value larger than the subjects array");
-      clampedHead = availableSubjectsCount;
-    }
-
-    this.viewHeadIndex = clampedHead;
-    this.renderVirtualPage();
   }
 
   /**
@@ -340,7 +317,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private set decisionHead(value: number) {
     this.decisionHeadIndex = value;
-    this.paginationFetcher?.populateSubjects(this.decisionHead);
   }
 
   /** A count of the number of tiles shown in the grid */
@@ -404,7 +380,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private _loaded = false;
   private decisionHeadIndex = 0;
-  private viewHeadIndex = 0;
 
   /**
    * "single decision mode" will automatically advance the selection head if:
@@ -565,25 +540,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
   //#region Updates
 
-  // because subjects are appended into the "subjects" array asynchronously by
-  // the gridPageFetcher, it is possible for the verification grid to be ahead
-  // of where the async page fetcher has populated the subjects up to.
-  // therefore, we use a callback to append to the "subjects" array so that we
-  // can trigger change detection if we receive new subjects when we are
-  // currently displaying none
-  public pushToSubjects(value: SubjectWrapper[]): void {
-    this.subjects.push(...value);
-
-    // tiles will be hidden when the provided dataset does not provide enough
-    // data to create a full verification grid page.
-    // if we were previously lacking the data to fill a verification grid and
-    // we just appended more items, we should re-render the verification grid
-    // so that the new data can be added
-    if (this.hiddenTiles > 0) {
-      this.renderVirtualPage();
-    }
-  }
-
   public firstUpdated(): void {
     this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.addEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
@@ -713,13 +669,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.resetBufferHeads();
 
     if (this.getPage) {
-      this.paginationFetcher = new GridPageFetcher(
-        this.getPage,
-        this.urlTransformer,
-        this.subjects,
-        this.pushToSubjects.bind(this),
-      );
-      await this.paginationFetcher.populateSubjects(this.decisionHead);
+      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer, this.subjects);
+
+      const newSubjects = await this.paginationFetcher.populateSubjects(this.decisionHead);
+      this.subjects.push(...newSubjects);
+
       this.renderVirtualPage();
     }
 
@@ -1341,6 +1295,33 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(0, options);
   }
 
+  private async setViewHead(value: number): Promise<SubjectWrapper[]> {
+    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
+
+    // because the viewHead is an index into the "subjects" array, it cannot
+    // be larger than the length of the subjects array.
+    // if we receive a value that is larger than the subjects buffer, we emit
+    // a warning so that we can catch it in dev, and use the subject arrays
+    // length as a fallback to prevent hard-failing.
+    const availableSubjectsCount = this.subjects.length;
+    if (clampedHead > availableSubjectsCount) {
+      console.warn("Attempted to set the viewHead to a value larger than the subjects array");
+      clampedHead = availableSubjectsCount;
+    }
+
+    if (!this.paginationFetcher) {
+      console.warn("Cannot set viewHead because the paginationFetcher is not initialized");
+      return [];
+    }
+
+    const newSubjects = await this.paginationFetcher.populateSubjects(this.decisionHead);
+    this.subjects.push(...newSubjects);
+
+    this.viewHead = clampedHead;
+
+    return newSubjects;
+  }
+
   //#endregion
 
   //#region SelectionBoundingBox
@@ -1414,7 +1395,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
-      highlightBoxElement.style.display = "block";
+      highlightBoxElement.style.display = "inline-block";
       if (!this.highlight.capturedPointer && this.highlight.pointerId !== null) {
         document.body.setPointerCapture(this.highlight.pointerId);
       }
@@ -1542,7 +1523,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // we use the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private nextPage(count: number = this.effectivePageSize) {
+  private async nextPage(count: number = this.effectivePageSize): Promise<SubjectWrapper[]> {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -1550,10 +1531,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       throw new Error("No paginator found.");
     }
 
-    // the viewHead property has a setter that will cause the verification grid
-    // to render the next page of spectrograms when we increase the viewHead
     this.decisionHead += count;
-    this.viewHead += count;
+
+    const newSubjects = await this.setViewHead(this.viewHead + count);
+    return newSubjects;
   }
 
   private canNavigatePrevious(): boolean {
