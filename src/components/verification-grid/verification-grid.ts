@@ -394,6 +394,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private selectionHandler = this.handleTileSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
 
+  private pointerDownHandler = this.renderHighlightBox.bind(this);
+  private pointerUpHandler = this.hideHighlightBox.bind(this);
+  private pointerMoveHandler = this.handlePointerMove.bind(this);
+
   public subjects: SubjectWrapper[] = [];
 
   private _loaded = false;
@@ -524,6 +528,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
+    document.removeEventListener("pointerdown", this.pointerDownHandler);
+    document.removeEventListener("pointerup", this.pointerUpHandler);
+    document.removeEventListener("pointermove", this.pointerMoveHandler);
+
     this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
@@ -589,6 +597,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.autofocus) {
       this.focus();
     }
+
+    document.addEventListener("pointerdown", this.pointerDownHandler);
+    document.addEventListener("pointerup", this.pointerUpHandler);
+    document.addEventListener("pointermove", this.pointerMoveHandler);
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -1330,7 +1342,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region SelectionBoundingBox
 
   // TODO: Clean this up
-  private renderHighlightBox(event: PointerEvent) {
+  private renderHighlightBox(event: PointerEvent & any): void {
     if (!this.canSubSelect() || this.isMobileDevice()) {
       return;
     } else if (event.button !== 0) {
@@ -1355,6 +1367,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       const { pageX, pageY } = event;
       this.highlight.start = { x: pageX, y: pageY };
+
+      event.setPointerCapture(event.pointerId);
     }
   }
 
@@ -1459,7 +1473,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     });
   }
 
-  private hideHighlightBox(): void {
+  private hideHighlightBox(event?: PointerEvent & any): void {
     // we set the highlighting to false before the function guards so that if
     // the user (somehow) changes from a desktop device to a mobile device
     // while the highlight box is open, the highlight box will be correctly
@@ -1472,13 +1486,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    // TODO: improve this logic
-    const highlightBoxElement = this.highlightBox;
-    highlightBoxElement.style.width = "0px";
-    highlightBoxElement.style.height = "0px";
-    highlightBoxElement.style.top = "0px";
-    highlightBoxElement.style.left = "0px";
-    highlightBoxElement.style.display = "none";
+    this.highlightBox.style.display = "none";
+
+    if (event) {
+      event.releasePointerCapture(event.pointerId);
+    }
   }
 
   //#endregion
@@ -1980,7 +1992,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
-      <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
+      <div id="highlight-box"></div>
 
       <div class="verification-container">
         <div class="controls-container header-controls">
@@ -1991,9 +2003,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           id="grid-container"
           class="verification-grid"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
-          @pointerdown="${this.renderHighlightBox}"
-          @pointerup="${this.hideHighlightBox}"
-          @pointermove="${this.handlePointerMove}"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >
