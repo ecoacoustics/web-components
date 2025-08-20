@@ -302,6 +302,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @state()
   private viewHead = 0;
 
+  @state()
+  private decisionHeadIndex = 0;
+
   public get gridShape(): GridShape {
     return { columns: this.columns, rows: this.rows };
   }
@@ -379,7 +382,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public subjects: SubjectWrapper[] = [];
 
   private _loaded = false;
-  private decisionHeadIndex = 0;
 
   /**
    * "single decision mode" will automatically advance the selection head if:
@@ -707,19 +709,34 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // While every subject has a decision, we keep paging through the data
     // until we find the first page that does not have complete decisions.
-    while (true) {
-      const currentPage = Array.from(this.currentPage());
-      if (currentPage.length === 0) {
-        break;
+    //
+    // When we find a page that does not have complete decisions, we stop and
+    // set the decision head.
+    //
+    // Because we always start the view head at 0, we can start rendering the
+    // first page immediately without having to wait for the decision head
+    // location.
+    // Therefore, we can perform this operation asynchronously and not block
+    // the UI.
+    new Promise<void>(async (res) => {
+      let virtualDecisionHead = 0;
+      while (true) {
+        const virtualPage = await this.viewHeadItems(virtualDecisionHead);
+        if (virtualPage.length === 0) {
+          break;
+        }
+
+        const isPageCompleted = virtualPage.every((subject) => subject?.verification);
+        if (!isPageCompleted) {
+          break;
+        }
+
+        virtualDecisionHead++;
       }
 
-      const isPageCompleted = currentPage.every((subject) => subject?.verification);
-      if (!isPageCompleted) {
-        break;
-      }
-
-      await this.pageNext();
-    }
+      this.decisionHead = virtualDecisionHead;
+      res();
+    });
   }
 
   private updateRequiredDecisions(): void {
@@ -1293,16 +1310,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(0, options);
   }
 
-  private async setViewHead(value: number): Promise<void> {
-    this.setDecisionDisabled(true);
-    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
-
+  private async viewHeadItems(viewHead: number): Promise<SubjectWrapper[]> {
     if (!this.paginationFetcher) {
       console.error("Cannot set viewHead because the paginationFetcher is not initialized");
-      return;
+      return [];
     }
 
-    const needsMoreSubjects = value > this.viewHead || this.viewHead === 0;
+    const needsMoreSubjects = viewHead > this.viewHead || this.viewHead === 0;
     if (needsMoreSubjects) {
       let enoughToRenderResolver: () => void;
       const enoughToRender = new Promise<void>((resolve) => {
@@ -1315,7 +1329,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           write: (subject: SubjectWrapper[]) => {
             this.subjects.push(...subject);
 
-            if (this.subjects.length >= clampedHead + this.targetGridSize) {
+            if (this.subjects.length >= viewHead + this.targetGridSize) {
               // if we have enough subjects to render the page, we resolve the
               // promise so that the viewHead can be set
               enoughToRenderResolver();
@@ -1328,9 +1342,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             // a warning so that we can catch it in dev, and use the subject arrays
             // length as a fallback to prevent hard-failing.
             const availableSubjectsCount = this.subjects.length;
-            if (availableSubjectsCount < clampedHead) {
+            if (availableSubjectsCount < viewHead) {
               console.error("Attempted to set the viewHead to a value larger than the subjects array");
-              clampedHead = availableSubjectsCount;
+              viewHead = availableSubjectsCount;
             }
 
             this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
@@ -1343,9 +1357,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       await enoughToRender;
     }
 
+    return this.subjects.slice(viewHead, viewHead + this.populatedTileCount);
+  }
+
+  private async setViewHead(value: number): Promise<void> {
+    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
+
+    await this.viewHeadItems(clampedHead);
+
     this.viewHead = clampedHead;
 
     if (this.viewHead === clampedHead) {
+      this.setDecisionDisabled(true);
       this.requestUpdate();
     }
   }
