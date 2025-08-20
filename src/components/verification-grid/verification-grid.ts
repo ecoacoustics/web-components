@@ -143,6 +143,7 @@ interface HighlightSelection {
   start: MousePosition;
   current: MousePosition;
   highlighting: boolean;
+  pointerId: number | null;
 
   // we store the observed elements in an array so that we don't re-query the
   // DOM for the grid tiles every time the highlight box is resized
@@ -430,6 +431,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
+    pointerId: null,
     observedElements: [],
   };
 
@@ -521,6 +523,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.addEventListener("keydown", this.keydownHandler);
     this.addEventListener("keyup", this.keyupHandler);
     window.addEventListener("blur", this.blurHandler);
+
+    document.body.addEventListener("pointerdown", this.pointerDownHandler);
+    document.body.addEventListener("pointerup", this.pointerUpHandler);
+    document.body.addEventListener("pointermove", this.pointerMoveHandler);
   }
 
   public disconnectedCallback(): void {
@@ -528,9 +534,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
-    document.removeEventListener("pointerdown", this.pointerDownHandler);
-    document.removeEventListener("pointerup", this.pointerUpHandler);
-    document.removeEventListener("pointermove", this.pointerMoveHandler);
+    document.body.removeEventListener("pointerdown", this.pointerDownHandler);
+    document.body.removeEventListener("pointerup", this.pointerUpHandler);
+    document.body.removeEventListener("pointermove", this.pointerMoveHandler);
 
     this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
@@ -597,10 +603,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.autofocus) {
       this.focus();
     }
-
-    document.addEventListener("pointerdown", this.pointerDownHandler);
-    document.addEventListener("pointerup", this.pointerUpHandler);
-    document.addEventListener("pointermove", this.pointerMoveHandler);
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -1288,6 +1290,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private clearSelection(): void {
     this.removeSubSelection();
     this.resetSelectionHead();
+    this.hideHighlightBox();
   }
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
@@ -1338,11 +1341,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   //#endregion
 
-  // TODO: The selection bounding box isn't currently complete
   //#region SelectionBoundingBox
 
-  // TODO: Clean this up
-  private renderHighlightBox(event: PointerEvent & any): void {
+  private renderHighlightBox(event: PointerEvent): void {
     if (!this.canSubSelect() || this.isMobileDevice()) {
       return;
     } else if (event.button !== 0) {
@@ -1368,7 +1369,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const { pageX, pageY } = event;
       this.highlight.start = { x: pageX, y: pageY };
 
-      event.setPointerCapture(event.pointerId);
+      this.highlight.pointerId = event.pointerId;
+      document.body.setPointerCapture(this.highlight.pointerId);
     }
   }
 
@@ -1473,7 +1475,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     });
   }
 
-  private hideHighlightBox(event?: PointerEvent & any): void {
+  private hideHighlightBox(): void {
+    if (!this.highlight.highlighting) {
+      return;
+    }
+
     // we set the highlighting to false before the function guards so that if
     // the user (somehow) changes from a desktop device to a mobile device
     // while the highlight box is open, the highlight box will be correctly
@@ -1487,9 +1493,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     this.highlightBox.style.display = "none";
-
-    if (event) {
-      event.releasePointerCapture(event.pointerId);
+    if (this.highlight.pointerId !== null) {
+      document.body.releasePointerCapture(this.highlight.pointerId);
+      this.highlight.pointerId = null;
     }
   }
 
