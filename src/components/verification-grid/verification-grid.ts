@@ -144,6 +144,7 @@ interface HighlightSelection {
   current: MousePosition;
   highlighting: boolean;
   pointerId: number | null;
+  capturedPointer: boolean;
 
   // we store the observed elements in an array so that we don't re-query the
   // DOM for the grid tiles every time the highlight box is resized
@@ -263,7 +264,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private tagPromptDecisionElements!: TagPromptComponent[];
 
   /** A selector for all oe-verification and oe-classification elements */
-  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
+  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt, oe-skip" })
   private decisionElements!: DecisionComponentUnion[];
 
   // Because it's possible (although unlikely) for multiple skip buttons to
@@ -432,6 +433,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     current: { x: 0, y: 0 },
     highlighting: false,
     pointerId: null,
+    capturedPointer: false,
     observedElements: [],
   };
 
@@ -1370,7 +1372,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.highlight.start = { x: pageX, y: pageY };
 
       this.highlight.pointerId = event.pointerId;
-      document.body.setPointerCapture(this.highlight.pointerId);
+      this.highlight.capturedPointer = false;
     }
   }
 
@@ -1413,6 +1415,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
       highlightBoxElement.style.display = "block";
+      if (!this.highlight.capturedPointer && this.highlight.pointerId !== null) {
+        document.body.setPointerCapture(this.highlight.pointerId);
+      }
 
       // This mimics the behavior of Windows explorer where de-selecting items
       // during drag-selection only occurs during the initial draw of the
