@@ -51,6 +51,7 @@ import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
 import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
+import { cache } from "lit/directives/cache.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -1998,11 +1999,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private gridTileTemplate(subject: SubjectWrapper | null, customTemplate: any, index: number): HTMLTemplateResult {
-    if (subject === null) {
-      return this.emptySubjectTemplate();
-    }
-
-    return html`
+    const tileTemplate = html`
       <oe-verification-grid-tile
         class="grid-tile"
         @oe-tile-loaded="${this.handleTileLoaded}"
@@ -2011,11 +2008,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .isOnlyTile="${this.populatedTileCount === 1}"
         .model="${subject as any}"
         .index="${index}"
-        ?hidden="${subject === null}"
       >
         ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
       </oe-verification-grid-tile>
     `;
+
+    // By using "cache" here Lit will cache the tile template meaning that it
+    // doesn't need to be re-created when tiles are added or removed from the
+    // grid.
+    return html`${cache(subject === null ? this.emptySubjectTemplate() : tileTemplate)}`;
   }
 
   public render() {
