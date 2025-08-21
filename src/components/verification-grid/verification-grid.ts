@@ -49,6 +49,8 @@ import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
 import { HeapVariable } from "../../helpers/types/advancedTypes";
+import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
+import { choose } from "lit/directives/choose.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -131,6 +133,12 @@ export enum ProgressBarPosition {
   TOP = "top",
   BOTTOM = "bottom",
   HIDDEN = "hidden",
+}
+
+export enum LoadState {
+  LOADING = "loading",
+  LOADED = "loaded",
+  ERROR = "error",
 }
 
 type SelectionEvent = CustomEvent<{
@@ -295,6 +303,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @state()
   public rows = 1;
+
+  @state()
+  public loadState: LoadState = LoadState.LOADING;
 
   @state()
   private currentSubSelection: SubjectWrapper[] = [];
@@ -1371,6 +1382,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.setDecisionDisabled(true);
       this.requestUpdate();
     }
+
+    if (this.loadState === LoadState.LOADING) {
+      this.loadState = LoadState.LOADED;
+    }
   }
 
   //#endregion
@@ -1896,12 +1911,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private noItemsTemplate(): HTMLTemplateResult {
     return html`
-      <div class="no-items-message">
+      <div class="message-overlay">
         <p>
           <strong>No un-validated results found</strong>
         </p>
         <p>All ${this.decisionHead} annotations are validated</p>
       </div>
+    `;
+  }
+
+  private loadingTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <span class="loading-message">Loading</span>
+        <div>${loadingSpinnerTemplate()}</div>
+      </div>
+    `;
+  }
+
+  private datasetFailureTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <p>
+          <strong>Failed to load dataset.</strong>
+        </p>
+      </div>
+    `;
+  }
+
+  private tileGridTemplate(customTemplate: any): HTMLTemplateResult {
+    if (this.currentPageIndices.start === this.currentPageIndices.end) {
+      return this.noItemsTemplate();
+    }
+
+    return html`
+      ${repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
+        this.gridTileTemplate(subject, customTemplate, index),
+      )}
     `;
   }
 
@@ -2000,14 +2046,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >
-          ${when(
-            this.currentPageIndices.start === this.currentPageIndices.end,
-            () => this.noItemsTemplate(),
-            () =>
-              repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
-                this.gridTileTemplate(subject, customTemplate, index),
-              ),
-          )}
+          ${choose(this.loadState, [
+            [LoadState.LOADING, () => this.loadingTemplate()],
+            [LoadState.ERROR, () => this.datasetFailureTemplate()],
+            [LoadState.LOADED, () => this.tileGridTemplate(customTemplate)],
+          ])}
         </div>
 
         <div class="controls-container footer-controls">

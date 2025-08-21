@@ -5,7 +5,7 @@ import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
-import { VerificationGridComponent } from "../verification-grid/verification-grid";
+import { LoadState, VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher";
 import { DownloadableResult } from "../../models/subject";
@@ -228,7 +228,15 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    this.verificationGrid.loadState = LoadState.LOADING;
+    try {
+      this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    } catch (error) {
+      console.error("Failed to update data source:", error);
+      this.verificationGrid.loadState = LoadState.ERROR;
+      return;
+    }
+
     if (!this.urlSourcedFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }
