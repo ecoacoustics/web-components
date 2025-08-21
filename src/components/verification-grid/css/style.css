@@ -127,12 +127,29 @@
   height: min-content;
   align-self: center;
 
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
   gap: var(--oe-spacing);
   color: var(--oe-font-color);
+
+  & > * {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+
+  .decision-controls-left {
+    justify-content: start;
+  }
+
+  .decision-controls {
+    justify-content: center;
+  }
+
+  .decision-controls-right {
+    justify-content: end;
+  }
 }
 
 .verification-controls-title {

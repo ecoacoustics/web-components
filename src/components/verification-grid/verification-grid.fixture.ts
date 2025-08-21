@@ -32,7 +32,7 @@ class TestPage {
     // By having an except statement here, playwright will continue running this
     // assertion until it passes or the test times out (30 seconds).
     // We do this so that we know the entire grid has loaded.
-    await expect(this.component()).toHaveJSProperty("loaded", true);
+    await expect(this.component()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async createWithDecisionElements() {
@@ -62,7 +62,7 @@ class TestPage {
       ".decision-button",
     ]);
 
-    await expect(this.component()).toHaveJSProperty("loaded", true);
+    await expect(this.component()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async setGridSize(value: number) {

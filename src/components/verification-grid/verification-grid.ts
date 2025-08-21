@@ -138,6 +138,7 @@ export enum ProgressBarPosition {
 
 export enum LoadState {
   LOADING = "loading",
+  FETCHED = "fetched",
   LOADED = "loaded",
   ERROR = "error",
 }
@@ -349,10 +350,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.populatedTileCount - this.hiddenTiles;
   }
 
-  public get loaded() {
-    return this._loaded;
-  }
-
   private get currentPageIndices(): CurrentPage {
     const start = this.viewHead;
 
@@ -392,8 +389,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private pointerMoveHandler = this.handlePointerMove.bind(this);
 
   public subjects: SubjectWrapper[] = [];
-
-  private _loaded = false;
 
   /**
    * "single decision mode" will automatically advance the selection head if:
@@ -625,7 +620,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       if (oldTileCount > this.populatedTileCount) {
         if (this.areTilesLoaded()) {
-          this._loaded = true;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
@@ -1385,7 +1379,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     if (this.loadState === LoadState.LOADING) {
-      this.loadState = LoadState.LOADED;
+      this.loadState = LoadState.FETCHED;
     }
   }
 
@@ -1823,9 +1817,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
-      this._loaded = true;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-
       this.updateDecisionWhen();
     }
   }
@@ -2049,8 +2041,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         >
           ${choose(this.loadState, [
             [LoadState.LOADING, () => this.loadingTemplate()],
-            [LoadState.ERROR, () => this.datasetFailureTemplate()],
+            [LoadState.FETCHED, () => this.tileGridTemplate(customTemplate)],
             [LoadState.LOADED, () => this.tileGridTemplate(customTemplate)],
+            [LoadState.ERROR, () => this.datasetFailureTemplate()],
           ])}
         </div>
 

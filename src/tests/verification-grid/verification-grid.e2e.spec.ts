@@ -1718,6 +1718,12 @@ test.describe("decisions", () => {
       expect(await fixture.focusedIndex()).toEqual(1);
     });
   });
+
+  test.describe("resuming datasets", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.changeGridSource(fixture.partialCompleteInput);
+    });
+  });
 });
 
 test.describe("decision meter", () => {

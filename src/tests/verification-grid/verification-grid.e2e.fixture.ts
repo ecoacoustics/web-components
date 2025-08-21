@@ -122,6 +122,7 @@ class TestPage {
   public smallJsonInput = "http://localhost:3000/test-items-small.json";
   public testJsonInput = "http://localhost:3000/test-items.json";
   public secondJsonInput = "http://localhost:3000/test-items-2.json";
+  public partialCompleteInput = "http://localhost:3000/test-partial-complete.csv";
   private defaultTemplate = `
     <oe-verification verified="true" shortcut="Y"></oe-verification>
     <oe-verification verified="false" shortcut="N"></oe-verification>
@@ -156,7 +157,7 @@ class TestPage {
       ...requiredSelectors,
     ]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async createWithBootstrap(
@@ -186,7 +187,7 @@ class TestPage {
       ...requiredSelectors,
     ]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async createWithClassificationTask() {
@@ -308,7 +309,7 @@ class TestPage {
   }
 
   public async getViewHead(): Promise<number> {
-    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHead");
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHead" as any);
   }
 
   public async getVerificationHead(): Promise<number> {

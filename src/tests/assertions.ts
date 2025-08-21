@@ -98,12 +98,13 @@ export const expect = playwrightExpect.extend({
   toHaveLayoutScreenshot,
   toHaveSlottedText,
 });
+
 export const test = base.extend({
   page: async ({ page }, use) => {
     // sometimes our components throw errors. In these cases, we want to fail
     // the test immediately
     page.on("pageerror", (error) => {
-      throw new Error(`Page error occurred: "${error.message}"`);
+      throw new Error(`Page error occurred: "${error}"`);
     });
 
     // Listening to console messages is a custom Playwright feature that allows

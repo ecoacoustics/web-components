@@ -298,7 +298,7 @@ export async function waitForContentReady(page: Page, selectors: string[] = []) 
   // wait for the page to emit the "load"
   await page.waitForLoadState();
 
-  // TODO: we should replcae this with a visibility locator
+  // TODO: we should replace this with a visibility locator
   // see: https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-selector
   await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
 

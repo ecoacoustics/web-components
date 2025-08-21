@@ -46,7 +46,7 @@ class TestPage {
     );
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-settings"]);
 
-    await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
+    await expect(this.verificationGrid()).toHaveJSProperty("loadState", "loaded");
 
     // because the bootstrap dialog is shown over all elements, we have to dismiss
     // it before we can interact with the settings component
