@@ -86,9 +86,9 @@ export class SubjectWrapper {
    * Decisions that are made about the same tag are removed so that it is not
    * possible to have both a positive and negative decision about a tag
    */
-  public addDecision(decision: Decision): SubjectChange {
+  public addDecision(decision: Decision, inferTag: boolean = true): SubjectChange {
     if (decision instanceof Verification) {
-      return this.addVerification(decision);
+      return this.addVerification(decision, inferTag);
     } else if (decision instanceof Classification) {
       return this.addClassification(decision);
     } else if (decision instanceof NewTag) {
@@ -265,14 +265,20 @@ export class SubjectWrapper {
     };
   }
 
-  private addVerification(model: Verification): SubjectChange {
+  private addVerification(model: Verification, inferTag: boolean): SubjectChange {
     // When a verification decision is made, it might not have a tag.
     // This is because the tag is usually associated with the subject, which the
     // verification button cannot know about when it makes the verification
     // model.
     // Therefore, if there is no tag on the verification model, we populate it
     // with the subjects tag.
-    const populatedVerification = model.tag ? model : model.withTag(this.tag);
+    let populatedVerification: Verification;
+    if (inferTag) {
+      populatedVerification = model.tag ? model : model.withTag(this.tag);
+    } else {
+      populatedVerification = model;
+    }
+
     this.verification = populatedVerification;
 
     return { verification: populatedVerification };

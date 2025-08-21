@@ -34,7 +34,7 @@ class TestPage {
       `
       <oe-verification-grid
         id="verification-grid"
-        grid-size="0"
+        grid-size="1"
       ></oe-verification-grid>
 
       <oe-data-source

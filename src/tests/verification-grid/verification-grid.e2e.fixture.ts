@@ -272,7 +272,7 @@ class TestPage {
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   /**

@@ -12,7 +12,7 @@ import {
   testBreakpoints,
 } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
-import { expect } from "../assertions";
+import { expect, expectConsoleError } from "../assertions";
 import { SubjectWrapper } from "../../models/subject";
 import {
   DOWN_ARROW_KEY,
@@ -171,15 +171,18 @@ test.describe("single verification grid", () => {
         expect(gridSize).toEqual(expectedGridSize);
       });
 
-      test("should not allow a grid size that is a string", async ({ fixture }) => {
+      test("should not allow a grid size that is a string", { tag: expectConsoleError }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = "this-is-not-a-number";
 
-        await setBrowserAttribute(
-          fixture.gridComponent(),
-          "grid-size" as keyof VerificationGridComponent,
-          testGridSize,
-        );
+        await expect(async () => {
+          // TypeScript correctly doesn't allow us to pass a string into the
+          // grid-size attribute so we need the "as any" cast to bypass type
+          // checking.
+          // Not all environments use TypeScript, so we need to handle the cases
+          // where a user passes an invalid datatype into the grid-size.
+          await fixture.changeGridSize(testGridSize as any);
+        }).toConsoleError(fixture.page, "Grid size 'NaN' could not be converted to a finite number.");
 
         // because we requested an invalid grid size, we should see that the
         // grid size property does not change
@@ -187,41 +190,49 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size that is a negative number", async ({ fixture }) => {
+      test("should not allow a negative grid size", { tag: expectConsoleError }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = -12;
 
-        await fixture.changeGridSize(testGridSize);
+        await expect(async () => {
+          await fixture.changeGridSize(testGridSize);
+        }).toConsoleError(fixture.page, "Grid size '-12' must be a positive number.");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size that is zero", async ({ fixture }) => {
+      test("should not allow a grid size that is zero", { tag: expectConsoleError }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = 0;
 
-        await fixture.changeGridSize(testGridSize);
+        await expect(async () => {
+          await fixture.changeGridSize(testGridSize);
+        }).toConsoleError(fixture.page, "Grid size '0' must be a positive number.");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size of negative infinity", async ({ fixture }) => {
+      test("should not allow a grid size of negative infinity", { tag: expectConsoleError }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = -Infinity;
 
-        await fixture.changeGridSize(testGridSize);
+        await expect(async () => {
+          await fixture.changeGridSize(testGridSize);
+        }).toConsoleError(fixture.page, "Grid size '-Infinity' could not be converted to a finite number.");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size of Infinity", async ({ fixture }) => {
+      test("should not allow a grid size of Infinity", { tag: expectConsoleError }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = Infinity;
 
-        await fixture.changeGridSize(testGridSize);
+        await expect(async () => {
+          await fixture.changeGridSize(testGridSize);
+        }).toConsoleError(fixture.page, "Grid size 'Infinity' could not be converted to a finite number.");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
@@ -1720,8 +1731,20 @@ test.describe("decisions", () => {
   });
 
   test.describe("resuming datasets", () => {
-    test.beforeEach(async ({ fixture }) => {
-      await fixture.changeGridSource(fixture.partialCompleteInput);
+    test.describe("verification task", () => {
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.changeGridSource(fixture.partialCompleteInput);
+      });
+
+      test("should correctly apply previous decisions", () => {});
+
+      test("should show previous decisions in the tile progress meters", () => {});
+
+      test("should not auto-page when resuming a dataset", async ({ fixture }) => {});
+
+      test("should show Resume button if grid size is decreased to only completed tiles", async ({ fixture }) => {});
+
+      test("should remove decisions if the dataset changes", () => {});
     });
   });
 });

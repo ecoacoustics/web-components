@@ -1,6 +1,15 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
+import {
+  html,
+  HTMLTemplateResult,
+  LitElement,
+  nothing,
+  PropertyValueMap,
+  PropertyValues,
+  render,
+  unsafeCSS,
+} from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -32,7 +41,6 @@ import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors";
@@ -52,6 +60,7 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
+import { templateContent } from "lit/directives/template-content.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -155,6 +164,8 @@ interface HighlightSelection {
   highlighting: boolean;
   pointerId: number | null;
   capturedPointer: boolean;
+
+  highlightHost: HTMLElement;
 
   // we store the observed elements in an array so that we don't re-query the
   // DOM for the grid tiles every time the highlight box is resized
@@ -419,6 +430,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     pointerId: null,
     capturedPointer: false,
     observedElements: [],
+
+    // Poorly created webpages may not have a body element.
+    // In this case, we should use the component host as the highlight host.
+    //
+    // I store the highlight host in the highlight object so if a <body> tag
+    // is dynamically added/removed from the page, we will maintain the same
+    // highlight host and not leak event listeners.
+    highlightHost: document.body ?? this,
   };
 
   private focusHead: number | null = null;
@@ -510,9 +529,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.addEventListener("keyup", this.keyupHandler);
     window.addEventListener("blur", this.blurHandler);
 
-    document.body.addEventListener("pointerdown", this.pointerDownHandler);
-    document.body.addEventListener("pointerup", this.pointerUpHandler);
-    document.body.addEventListener("pointermove", this.pointerMoveHandler);
+    this.highlight.highlightHost.addEventListener("pointerdown", this.pointerDownHandler);
+    this.highlight.highlightHost.addEventListener("pointerup", this.pointerUpHandler);
+    this.highlight.highlightHost.addEventListener("pointermove", this.pointerMoveHandler);
   }
 
   public disconnectedCallback(): void {
@@ -520,9 +539,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
 
-    document.body.removeEventListener("pointerdown", this.pointerDownHandler);
-    document.body.removeEventListener("pointerup", this.pointerUpHandler);
-    document.body.removeEventListener("pointermove", this.pointerMoveHandler);
+    // I don't need an elvis operator here in the case that the host application
+    // removes the <body> element because the highlight object + event listener
+    // will stop the <body> element node reference from being garbage collected.
+    this.highlight.highlightHost.removeEventListener("pointerdown", this.pointerDownHandler);
+    this.highlight.highlightHost.removeEventListener("pointerup", this.pointerUpHandler);
+    this.highlight.highlightHost.removeEventListener("pointermove", this.pointerMoveHandler);
 
     this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
@@ -582,9 +604,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       // we use isFinite here to check that the value is not NaN, and that
       // values such as Infinity are not considered as a valid grid size
-      if (!isFinite(newGridSize) || newGridSize <= 0) {
+      if (!isFinite(newGridSize)) {
         this.targetGridSize = oldGridSize;
-        console.error(`New grid size "${newGridSize}" could not be converted to a finite number`);
+        console.error(`Grid size '${newGridSize}' could not be converted to a finite number.`);
+      } else if (newGridSize <= 0) {
+        this.targetGridSize = oldGridSize;
+        console.error(`Grid size '${newGridSize}' must be a positive number.`);
       }
     }
   }
@@ -620,6 +645,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       if (oldTileCount > this.populatedTileCount) {
         if (this.areTilesLoaded()) {
+          this.loadState = LoadState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
@@ -1817,6 +1843,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
+      this.loadState = LoadState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.updateDecisionWhen();
     }
@@ -1932,14 +1959,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
-  private tileGridTemplate(customTemplate: any): HTMLTemplateResult {
+  private tileGridTemplate(): HTMLTemplateResult {
     if (this.currentPageIndices.start === this.currentPageIndices.end) {
       return this.noItemsTemplate();
     }
 
     return html`
       ${repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
-        this.gridTileTemplate(subject, customTemplate, index),
+        this.gridTileTemplate(subject, index),
       )}
     `;
   }
@@ -1990,7 +2017,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
   }
 
-  private gridTileTemplate(subject: SubjectWrapper | null, customTemplate: any, index: number): HTMLTemplateResult {
+  private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
     const tileTemplate = html`
       <oe-verification-grid-tile
         class="grid-tile"
@@ -2001,7 +2028,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .model="${subject as any}"
         .index="${index}"
       >
-        ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
+        ${this.gridItemTemplate ? templateContent(this.gridItemTemplate) : nothing}
       </oe-verification-grid-tile>
     `;
 
@@ -2012,17 +2039,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public render() {
-    let customTemplate: any | undefined;
-    if (this.gridItemTemplate) {
-      customTemplate = this.gridItemTemplate.cloneNode(true);
-    }
-
     return html`
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"
         @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
+        .decisionElements="${this.decisionElements ?? []}"
         .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
       <div id="highlight-box"></div>
@@ -2041,8 +2064,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         >
           ${choose(this.loadState, [
             [LoadState.LOADING, () => this.loadingTemplate()],
-            [LoadState.FETCHED, () => this.tileGridTemplate(customTemplate)],
-            [LoadState.LOADED, () => this.tileGridTemplate(customTemplate)],
+            [LoadState.FETCHED, () => this.tileGridTemplate()],
+            [LoadState.LOADED, () => this.tileGridTemplate()],
             [LoadState.ERROR, () => this.datasetFailureTemplate()],
           ])}
         </div>

@@ -8,10 +8,10 @@ import { SubjectParser } from "./subjectParser";
 interface VerificationParserTest {
   name: string;
   input: Subject;
+  expectedTag: Tag | null;
+  expectedVerified: Verification | undefined;
+  expectedNewTag: NewTag | undefined;
   expectedUrl?: string;
-  expectedTag?: Tag | null;
-  expectedVerified?: Verification;
-  expectedNewTag?: NewTag;
 }
 
 const tests: VerificationParserTest[] = [
@@ -20,6 +20,8 @@ const tests: VerificationParserTest[] = [
     input: {},
     expectedUrl: "",
     expectedTag: null,
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with a string tag",
@@ -29,6 +31,8 @@ const tests: VerificationParserTest[] = [
     },
     expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "bird" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     // I have chosen to test the number zero here because it is a falsy value
@@ -39,6 +43,8 @@ const tests: VerificationParserTest[] = [
       tags: 0,
     },
     expectedTag: { text: "0" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with a number tag",
@@ -46,6 +52,8 @@ const tests: VerificationParserTest[] = [
       tags: 123,
     },
     expectedTag: { text: "123" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with a boolean tag",
@@ -53,6 +61,8 @@ const tests: VerificationParserTest[] = [
       tags: true,
     },
     expectedTag: { text: "true" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with a null tag",
@@ -60,6 +70,8 @@ const tests: VerificationParserTest[] = [
       tags: null,
     },
     expectedTag: null,
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with an undefined tag",
@@ -67,6 +79,8 @@ const tests: VerificationParserTest[] = [
       tags: undefined,
     },
     expectedTag: null,
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with an empty string tag",
@@ -77,6 +91,8 @@ const tests: VerificationParserTest[] = [
     // if a tag with explicitly no text is passed in, we pass through the tag
     // without modification.
     expectedTag: { text: "" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     // I do not expect that users will pass in a symbol as a tag, but I have
@@ -86,6 +102,8 @@ const tests: VerificationParserTest[] = [
       tags: Symbol("bird"),
     },
     expectedTag: { text: "Symbol(bird)" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "array of string tags",
@@ -93,6 +111,8 @@ const tests: VerificationParserTest[] = [
       tags: ["bird", "sparrow", "finch"],
     },
     expectedTag: { text: "bird" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with an array of object tags",
@@ -100,6 +120,8 @@ const tests: VerificationParserTest[] = [
       tags: [{ text: "bird" }, { text: "sparrow" }, { text: "finch" }],
     },
     expectedTag: { text: "bird" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "array of tag object and strings",
@@ -107,6 +129,8 @@ const tests: VerificationParserTest[] = [
       tags: ["bird", { text: "sparrow" }, "finch"],
     },
     expectedTag: { text: "bird" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "nested array of tag objects",
@@ -121,6 +145,8 @@ const tests: VerificationParserTest[] = [
       ],
     },
     expectedTag: { text: "nest" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "nested array of tag objects and strings",
@@ -134,6 +160,8 @@ const tests: VerificationParserTest[] = [
       ],
     },
     expectedTag: { text: "tree" },
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "empty array of tags",
@@ -141,6 +169,8 @@ const tests: VerificationParserTest[] = [
       tags: [],
     },
     expectedTag: null,
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "nested empty array of tags",
@@ -148,6 +178,8 @@ const tests: VerificationParserTest[] = [
       tags: [[]],
     },
     expectedTag: null,
+    expectedNewTag: undefined,
+    expectedVerified: undefined,
   },
   {
     name: "subject with a positive verification and no tag",
@@ -157,6 +189,8 @@ const tests: VerificationParserTest[] = [
     },
     expectedUrl: "http://localhost:3000/example.flac",
     expectedVerified: new Verification("true" as any, { text: "" }),
+    expectedNewTag: undefined,
+    expectedTag: null,
   },
   {
     name: "subject with a verification",
@@ -169,6 +203,7 @@ const tests: VerificationParserTest[] = [
     expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "abbots babbler" },
     expectedVerified: new Verification("true" as any, { text: "dugong" }),
+    expectedNewTag: undefined,
   },
   {
     name: "subject with a negative verification",
@@ -187,6 +222,7 @@ const tests: VerificationParserTest[] = [
     // verification was originally attached to is not incorrect.
     // I would rather have an empty tag than a tag that is incorrect.
     expectedVerified: new Verification("false" as any, { text: "" }),
+    expectedNewTag: undefined,
   },
   {
     name: "subject with an unsure verification",
@@ -202,6 +238,7 @@ const tests: VerificationParserTest[] = [
     expectedVerified: new Verification("unsure" as any, {
       text: "dugong",
     }),
+    expectedNewTag: undefined,
   },
   {
     name: "subject with a skip verification",
@@ -214,6 +251,7 @@ const tests: VerificationParserTest[] = [
     expectedVerified: new Verification("skip" as any, {
       text: "Big Bird",
     }),
+    expectedNewTag: undefined,
   },
   {
     name: "subject with a verified object",
@@ -231,6 +269,8 @@ const tests: VerificationParserTest[] = [
       },
     },
     expectedVerified: new Verification("true" as any, { text: "dugong" }),
+    expectedTag: null,
+    expectedNewTag: undefined,
   },
   {
     name: "subject with a negative verification object",
@@ -241,21 +281,27 @@ const tests: VerificationParserTest[] = [
         tag: { text: "dolphin" },
       },
     },
-    expectedVerified: new Verification("false" as any, {
-      text: "dolphin",
-    }),
+    expectedTag: null,
+    expectedVerified: new Verification("false" as any, { text: "dolphin" }),
+    expectedNewTag: undefined,
   },
   {
     name: "subject with a new tag string",
     input: {
       newTag: "oscar",
     },
+    expectedTag: null,
+    expectedNewTag: new NewTag("true" as any, { text: "oscar" }),
+    expectedVerified: undefined,
   },
   {
     name: "subject with new tag string from local data source download",
     input: {
       [newTagColumnName]: "big-bird",
     },
+    expectedTag: null,
+    expectedNewTag: new NewTag("true" as any, { text: "big-bird" }),
+    expectedVerified: undefined,
   },
   {
     name: "subject with a new tag object",
@@ -265,6 +311,7 @@ const tests: VerificationParserTest[] = [
     // Even though we have specified a new tag, we do not expect the new tag to
     // be emitted in the subjects tag property.
     expectedTag: null,
+    expectedVerified: undefined,
     expectedNewTag: new NewTag("true" as any, { text: "elmo" }),
   },
 ];
@@ -273,27 +320,21 @@ test.describe("SubjectParser", () => {
   for (const testItem of tests) {
     const result = SubjectParser.parse(testItem.input, (url) => url);
 
+    test(`should have correct tag for a ${testItem.name}`, () => {
+      test.expect(result.tag).toEqual(testItem.expectedTag);
+    });
+
+    test(`should have correct verified value for a ${testItem.name}`, () => {
+      test.expect(result.verification).toEqual(testItem.expectedVerified);
+    });
+
+    test(`should have correct new tag for a ${testItem.name}`, () => {
+      test.expect(result.newTag).toEqual(testItem.expectedNewTag);
+    });
+
     if ("expectedUrl" in testItem) {
-      test(`should have the correct url for a ${testItem.name}`, () => {
+      test(`should have correct url for a ${testItem.name}`, () => {
         test.expect(result.url).toEqual(testItem.expectedUrl);
-      });
-    }
-
-    if ("expectedTag" in testItem) {
-      test(`should have the correct tag for a ${testItem.name}`, () => {
-        test.expect(result.tag).toEqual(testItem.expectedTag);
-      });
-    }
-
-    if ("expectedVerified" in testItem) {
-      test(`should have the correct verified value for a ${testItem.name}`, () => {
-        test.expect(result.verification).toEqual(testItem.expectedVerified);
-      });
-    }
-
-    if ("expectedNewTag" in testItem) {
-      test(`should have the correct new tag for a ${testItem.name}`, () => {
-        test.expect(result.newTag).toEqual(testItem.expectedNewTag);
       });
     }
   }

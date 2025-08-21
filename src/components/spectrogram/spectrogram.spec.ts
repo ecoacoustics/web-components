@@ -10,7 +10,7 @@ import {
   testBreakpoints,
 } from "../../tests/helpers";
 import { SpectrogramComponent } from "./spectrogram";
-import { expect } from "../../tests/assertions";
+import { expect, expectConsoleError } from "../../tests/assertions";
 import { sleep } from "../../helpers/utilities";
 import { singleSpectrogramFixture as test } from "./single-spectrogram.fixture";
 import { Pixel } from "../../models/unitConverters";
@@ -571,10 +571,15 @@ test.describe("attributes", () => {
     await fixture.create();
   });
 
-  test("should not allow a non-power of 2 window size", async ({ fixture }) => {
+  test("should not allow a non-power of 2 window size", { tag: expectConsoleError }, async ({ fixture }) => {
     const originalWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
 
-    await setBrowserAttribute(fixture.spectrogram(), "window-size" as any, "92");
+    await expect(async () => {
+      await setBrowserAttribute(fixture.spectrogram(), "window-size" as any, "92");
+    }).toConsoleError(
+      fixture.page,
+      `window-size '92' must be a power of 2 and greater than 1. Falling back to window size value of '512'`,
+    );
 
     const newWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
     expect(newWindowSize).toEqual(originalWindowSize);

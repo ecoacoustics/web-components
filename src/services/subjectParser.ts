@@ -71,7 +71,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const verification = SubjectParser.verificationParser(partialModel);
     if (verification) {
-      subjectWrapper.addDecision(verification);
+      subjectWrapper.addDecision(verification, false);
     }
 
     const newTag = SubjectParser.newTagParser(partialModel.newTag);
@@ -200,8 +200,8 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       return null;
     }
 
-    const tag = SubjectParser.tagParser(subjectNewTag.tag);
-    const newTagModel = new NewTag(subjectNewTag.confirmed ?? DecisionOptions.UNSURE, tag);
+    const tag = typeof subjectNewTag === "string" ? SubjectParser.tagParser(subjectNewTag) : subjectNewTag.tag;
+    const newTagModel = new NewTag(subjectNewTag.confirmed ?? DecisionOptions.TRUE, tag);
 
     return newTagModel;
   }

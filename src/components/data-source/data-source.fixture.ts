@@ -61,7 +61,7 @@ class TestPage {
     // assertion until it passes or the test times out (30 seconds).
     // We do this so that the test will continue waiting here util the
     // assertion passes, indicating that the verification grid has loaded.
-    await expect(this.verificationGrid()).toHaveJSProperty("loaded", true);
+    await expect(this.verificationGrid()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async setLocalAttribute(value: boolean) {
@@ -110,7 +110,7 @@ class TestPage {
   }
 
   public async getDownloadResults(): Promise<ReadonlyArray<Partial<DownloadableResult>>> {
-    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
+    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"](true));
   }
 
   public async makeSubSelection(subSelectionIndices: number[]) {
