@@ -10,7 +10,7 @@ async function toHaveTrimmedText(received: Locator, expected: string): Promise<M
   if (elementText === null) {
     return {
       pass: false,
-      message: () => `expected ${received} to have trimmed text, but the element was not found`,
+      message: () => `expected element to have trimmed text, but the element was not found`,
     };
   }
 
@@ -88,6 +88,13 @@ export async function toHaveSlottedText(locator: Locator, expectedText: string):
     return slotText;
   });
 
+  if (realizedText === null) {
+    return {
+      pass: false,
+      message: () => "expected element to have slotted text, but the element was not found",
+    };
+  }
+
   const pass = realizedText === expectedText;
 
   return {
@@ -100,7 +107,7 @@ export async function toHaveSlottedText(locator: Locator, expectedText: string):
  * Asserts that a certain action results in a specific console error.
  */
 export async function toConsoleError(
-  callback: () => Promise<unknown> | unknown,
+  callback: () => Promise<unknown>,
   page: Page,
   expectedError: string,
 ): Promise<MatcherReturnType> {
@@ -167,7 +174,7 @@ export const test = base.extend({
       page.on("console", (msg) => {
         if (msg.type() === "error") {
           const loc = msg.location();
-          const where = loc?.url ? ` at ${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : "";
+          const where = loc.url ? ` at ${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : "";
           throw new Error(`Console error occurred${where}: "${msg.text()}"`);
         }
       });

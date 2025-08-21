@@ -51,7 +51,9 @@ class TestPage {
 
   public async removeElement(selector: string) {
     const element = this.page.locator(selector).first();
-    await element.evaluate((element) => element.remove());
+    await element.evaluate((element) => {
+      element.remove();
+    });
   }
 
   public async shortcutPlaySpectrogram() {

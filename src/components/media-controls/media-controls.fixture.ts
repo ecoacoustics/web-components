@@ -26,7 +26,7 @@ class TestPage {
           style="display: relative; width: 100px; height: 100px;"
         ></oe-spectrogram>
         <oe-media-controls for="spectrogram">
-            ${slotTemplate ?? ""}
+            ${slotTemplate}
         </oe-media-controls>
     `);
     await this.waitUntilLoaded();

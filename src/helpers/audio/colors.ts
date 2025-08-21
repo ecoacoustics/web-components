@@ -73,7 +73,12 @@ export const colorScales = {
 export type ColorMapName = keyof typeof colorScales;
 
 export function getColorScale(name: ColorMapName): ColorScaler {
-  const scaler = colorScales[name];
+  let scaler = colorScales[name];
+
+  if (scaler === undefined) {
+    console.warn(`Could not find color scale "${name}". Defaulting to grayscale`);
+    scaler = colorScales.grayscale;
+  }
 
   // if scaler is a string, it's a chroma scale
   if (typeof scaler === "string") {

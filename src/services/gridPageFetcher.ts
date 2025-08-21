@@ -40,22 +40,18 @@ export class GridPageFetcher {
 
     let fetchedItems = 0;
 
-    // We use a writableStream instead of returning a promise directly so that
+    // We use a ReadableStream instead of returning a promise directly so that
     // consumers like the verification grid don't have to wait for all of the
-    // subjects to be fetched and resolved before they can start consuming.
+    // subjects to be fetched and resolved before they can start rendering.
     //
     // For example, the verification grid can start rendering when we have
     // fetched 8 items, but we don't want to block rendering until we have
     // enough fetched subjects to fill the client cache and server cache.
-    //
-    // Using a stream also allows the verification grids subjects to be
-    // pre-fetched in the background while the first page of items is being
-    // rendered.
     const writableStream = new ReadableStream<SubjectWrapper[]>({
       start: async (controller) => {
-        // continue to fetch items until we have enough items in the queue
+        // Continue to fetch items until we have enough items in the queue
         // or the paging function returns no more items
-        // (we have reached the end of the dataset)
+        // (we have reached the end of the dataset).
         while (fetchedItems < requiredQueueSize) {
           const fetchedPage = await this.fetchNextPage();
           if (fetchedPage.length === 0) {

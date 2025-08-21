@@ -8,7 +8,6 @@ import {
   logEvent,
   mockDeviceSize,
   pressKey,
-  setBrowserAttribute,
   testBreakpoints,
 } from "../helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
@@ -1733,19 +1732,103 @@ test.describe("decisions", () => {
   test.describe("resuming datasets", () => {
     test.describe("verification task", () => {
       test.beforeEach(async ({ fixture }) => {
-        await fixture.changeGridSource(fixture.partialCompleteInput);
+        await fixture.changeGridSource(fixture.partialVerifiedInput);
+        await fixture.changeGridSize(4);
       });
 
-      test("should correctly apply previous decisions", () => {});
+      test("should correctly apply previous decisions", async ({ fixture }) => {
+        const expectedDecisions = [
+          { confirmed: DecisionOptions.TRUE, tag: { text: "Noisy Miner" } },
+          { confirmed: DecisionOptions.FALSE, tag: { text: "Insects" } },
+          null,
+          { confirmed: DecisionOptions.FALSE, tag: null },
+        ];
 
-      test("should show previous decisions in the tile progress meters", () => {});
+        const realizedDecisions = await fixture.allAppliedDecisions();
 
-      test("should not auto-page when resuming a dataset", async ({ fixture }) => {});
+        expect(realizedDecisions).toEqual(expectedDecisions);
+      });
 
-      test("should show Resume button if grid size is decreased to only completed tiles", async ({ fixture }) => {});
+      test("should show previous decisions in the tile progress meters", async ({ fixture }) => {
+        const expectedMeterColors = [
+          [await fixture.getVerificationColor(DecisionOptions.TRUE)],
+          [await fixture.getVerificationColor(DecisionOptions.FALSE)],
+          [await fixture.panelColor()],
+          [await fixture.getVerificationColor(DecisionOptions.FALSE)],
+        ];
+        const realizedMeterColors = await fixture.allProgressMeterColors();
+
+        expect(realizedMeterColors).toEqual(expectedMeterColors);
+
+        // Note that although the dataset uses the "koala" "tag" column for all
+        // of the subjects, we have explicitly set the "oe_tag" column to test
+        // that the verified tag is correctly pulled from the "oe_tag" column.
+        //
+        // We use the oe_tag column to determine the verified tag instead of the
+        // "tag" column so if tags are added/removed from the subject, the
+        // verification will still be attached to the correct (although now
+        // missing) tag.
+        // If I instead used the "tag" column and the tag was removed, the
+        // verification information would be incorrect.
+        const expectedMeterTooltips = [
+          ["verification: Noisy Miner (true)"],
+          ["verification: Insects (false)"],
+          ["verification: no decision"],
+
+          // In this example, the we cannot determine the tag that was verified
+          // because there is no "oe_tag" column.
+          ["verification: (false)"],
+        ];
+        const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
+
+        expect(realizedMeterTooltips).toEqual(expectedMeterTooltips);
+      });
+
+      test("should show Resume button if grid size is decreased to only completed tiles", async ({ fixture }) => {
+        // After decreasing the grid size to 2, all of the tiles will be
+        // verified, so the "Continue Verifying" button should be shown and go
+        // to the second page of the dataset after clicking it because the third
+        // item (first item on the second page) is not verified.
+        //
+        // We push this scenario to its limit because the third item has no
+        // decision, but the fourth item has a decision, so the second page will
+        // be almost complete with the first item missing.
+        await fixture.changeGridSize(2);
+      });
 
       test("should remove decisions if the dataset changes", () => {});
     });
+
+    test.describe("compound tasks", () => {
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.changeGridSource(fixture.partialVerifiedInput);
+      });
+
+      test("should evaluate the decision buttons 'when' conditions when loading", () => {});
+
+      test("should show correct decisions correctly", () => {});
+
+      test("should set the decision head to the first incomplete tile", () => {});
+    });
+
+    test.describe("no task", () => {
+      test("should create new colors for verification decisions", () => {});
+
+      test("should create new colors for classification decisions", () => {});
+    });
+
+    // I have purposely decided to not decided to implement resuming
+    // classification tasks because the format we provide uses the
+    // classification_column_name ::= "oe_"<tag_name> format.
+    // This strongly couples classification tasks to the data format, meaning
+    // that any changes to the data format would be a breaking change for the
+    // classification task.
+    //
+    // To prevent this, I want to keep the re-scope the classification download
+    // format so that breaking changes do not leak.
+    // TODO: Add tests once we add support for resuming classification tasks
+    // see:
+    test.describe("classification task", () => {});
   });
 });
 

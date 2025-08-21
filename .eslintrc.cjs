@@ -1,6 +1,20 @@
 module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
+  rules: {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-inferrable-types": "error",
+    // "max-len": ["warn", { "code": 120 }]
+    "no-console": [
+      "error",
+      {
+        allow: ["warn", "error", "time", "timeEnd", "debug"],
+      },
+    ],
+  },
+  settings: {
+    polyfills: ["navigator.userAgentData"],
+  },
   overrides: [
     {
       extends: ["eslint:recommended", "plugin:@typescript-eslint/strict-type-checked", "plugin:lit/recommended"],
@@ -9,24 +23,11 @@ module.exports = {
       parserOptions: {
         project: "./tsconfig.json",
         tsconfigRootDir: __dirname,
-      },
-      rules: {
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-inferrable-types": "error",
-        // "max-len": ["warn", { "code": 120 }]
-        "no-console": [
-          "error",
-          {
-            allow: ["warn", "error", "time", "timeEnd", "debug"],
-          },
-        ],
-      },
-      settings: {
-        polyfills: ["navigator.userAgentData"],
+        projectService: true,
       },
     },
     {
-      extends: "plugin:playwright/recommended",
+      extends: ["eslint:recommended", "plugin:@typescript-eslint/strict-type-checked", "plugin:playwright/recommended"],
       files: ["**/*.spec.ts", "**/*.fixture.ts", "src/tests/**/*.ts"],
       excludedFiles: ["node_modules/", "dist/", "@types/"],
       parserOptions: {
@@ -36,6 +37,16 @@ module.exports = {
       },
       rules: {
         "@typescript-eslint/await-thenable": "warn",
+
+        // We turn off these rules because tests often use "any" types to test
+        // invalid inputs in non-typechecked environments.
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
 
         // We have added the playwright linting rules to protect against common
         // mistakes that can cause leaky tests such as not awaiting assertions.

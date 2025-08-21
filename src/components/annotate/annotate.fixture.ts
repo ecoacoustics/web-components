@@ -46,7 +46,7 @@ class TestPage {
     await setContent(
       this.page,
       `
-      ${tagStyle ? `<oe-annotate tag-style="${tagStyle}">` : "<oe-annotate>"}
+      ${tagStyle ? `<oe-annotate tag-style="${tagStyle as string}">` : "<oe-annotate>"}
         <oe-spectrogram src="http://localhost:3000/example.flac"></oe-spectrogram>
 
         <oe-annotation

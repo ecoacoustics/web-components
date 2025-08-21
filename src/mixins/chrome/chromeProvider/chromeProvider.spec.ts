@@ -7,7 +7,7 @@ test.beforeEach(async ({ fixture }) => {
   await fixture.create();
 });
 
-test("should create", async ({ fixture }) => {
+test("should create", ({ fixture }) => {
   expect(fixture.component()).toBeTruthy();
 });
 

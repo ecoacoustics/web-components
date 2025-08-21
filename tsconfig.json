@@ -6,11 +6,6 @@
   "compilerOptions": {
     "declarationDir": "@types",
     "declaration": true,
-    "emitDeclarationOnly": true,
-
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "emitDeclarationOnly": true
   }
 }

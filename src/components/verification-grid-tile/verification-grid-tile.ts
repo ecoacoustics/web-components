@@ -357,8 +357,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
     // Sometimes there is no tag. On the subject. In this case, we have to
     // change the tooltip a bit.
-    const tooltipText = this.model.tag?.text
-      ? `verification: ${this.model.tag.text} (${decisionText})`
+    const verificationTagText = (this.model.verification as any)?.tag?.text;
+    const tooltipText = verificationTagText
+      ? `verification: ${verificationTagText} (${decisionText})`
       : `verification: ${decisionText}`;
 
     // if there is no verification decision on the tiles subject model, then

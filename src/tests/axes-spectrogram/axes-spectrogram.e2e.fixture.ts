@@ -3,7 +3,6 @@ import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/s
 import { Locator, Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
 import { expect } from "../assertions";
-import { Pixel } from "../../models/unitConverters";
 import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
@@ -46,7 +45,7 @@ class TestPage {
   //
   // TODO: There should be a similar method that tests resizing the spectrogram
   // after initialization
-  public async createWithSize(size: Readonly<Size<Pixel>>) {
+  public async createWithSize(size: Readonly<Size>) {
     await setContent(
       this.page,
       `

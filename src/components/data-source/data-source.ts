@@ -118,6 +118,13 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("could not find verification grid component");
     }
 
+    // If the data source is a URL, we know the entire dataset ahead of time.
+    // Because url data sources are static files that were probably provided by
+    // the user, we download the entire dataset with decisions added instead of
+    // just the subjects that the user has seen so far.
+    //
+    // This obeys our design principle of not changing the original data set and
+    // only adding information.
     if (isUrlSourced) {
       const subjects = this.verificationGrid.subjects;
       return subjects.map((model) => model.toDownloadable());

@@ -368,7 +368,7 @@ test.describe("skipUndecided", () => {
 
     subject.skipUndecided(true, false, []);
 
-    expect((subject.verification as Verification)?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect((subject.verification as any)?.confirmed).toEqual(DecisionOptions.SKIP);
   });
 
   test("should add skip decisions for missing classifications", () => {
@@ -397,9 +397,9 @@ test.describe("skipUndecided", () => {
 
     subject.skipUndecided(true, false, requiredTags);
 
-    expect((subject.verification as Verification)?.confirmed).toEqual(DecisionOptions.SKIP);
-    expect((subject.classifications.get("bar") as Classification)?.confirmed).toEqual(DecisionOptions.SKIP);
-    expect((subject.classifications.get("baz") as Classification)?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect((subject.verification as Verification).confirmed).toEqual(DecisionOptions.SKIP);
+    expect((subject.classifications.get("bar") as Classification).confirmed).toEqual(DecisionOptions.SKIP);
+    expect((subject.classifications.get("baz") as Classification).confirmed).toEqual(DecisionOptions.SKIP);
   });
 });
 
@@ -486,7 +486,7 @@ test.describe("skipUndecided", () => {
   test("should apply a skip decision to a subject that has a missing verification", () => {
     const subject = new SubjectWrapper({}, "https://api.ecosounds.org", { text: "foo" });
     subject.skipUndecided(true, false, []);
-    expect((subject.verification as Verification)?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect((subject.verification as Verification).confirmed).toEqual(DecisionOptions.SKIP);
   });
 
   test("should apply a skip decision to a subject that has a missing classification", () => {
