@@ -274,9 +274,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
-  @state()
-  private customHelpTemplate?: HTMLTemplateElement;
-
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
@@ -591,7 +588,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     // Initialize help bootstrap template
-    this.updateHelpBootstrapTemplate();
+    // this.updateHelpBootstrapTemplate();
 
     if (this.autofocus) {
       this.focus();
@@ -803,16 +800,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateDecisionElements(): void {
     for (const element of this.decisionElements) {
       element.verificationGrid = this;
-    }
-  }
-
-  private updateHelpBootstrapTemplate(): void {
-    // Find the help-bootstrap slot and get its assigned elements
-    const helpBootstrapSlot = this.shadowRoot?.querySelector('slot[name="help-bootstrap"]') as HTMLSlotElement;
-    if (helpBootstrapSlot) {
-      const assignedElements = helpBootstrapSlot.assignedElements() as HTMLTemplateElement[];
-      const templates = assignedElements.filter(el => el.tagName.toLowerCase() === 'template');
-      this.customHelpTemplate = templates[0] || undefined;
     }
   }
 
@@ -1073,7 +1060,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
-    this.updateHelpBootstrapTemplate();
   }
 
   private handleTileOverlap(event: OverflowEvent): void {
@@ -2003,8 +1989,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"
-        .customHelpContent="${this.customHelpTemplate}"
-      ></oe-verification-bootstrap>
+      >
+        <slot name="help-bootstrap"></slot>
+      </oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">
@@ -2066,7 +2053,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
           <span class="decision-controls-right">
             <slot name="data-source"></slot>
-            <slot name="help-bootstrap" style="display: none;" @slotchange="${() => this.handleSlotChange()}"></slot>
           </span>
 
           ${when(this.progressBarPosition === ProgressBarPosition.BOTTOM, () => this.progressBarTemplate())}

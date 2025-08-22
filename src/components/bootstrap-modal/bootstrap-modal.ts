@@ -1,9 +1,9 @@
-import { customElement, query, state } from "lit/decorators.js";
+import { customElement, query, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { when } from "lit/directives/when.js";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { templateContent } from "lit/directives/template-content.js";
 import { loop } from "../../helpers/directives";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { BootstrapSlide } from "./slides/bootstrapSlide";
@@ -85,8 +85,8 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   public isMobile!: boolean;
 
-  @state()
-  public customHelpContent?: HTMLTemplateElement;
+  @queryAssignedElements({ selector: "template" })
+  private helpTemplates!: HTMLTemplateElement[];
 
   @state()
   private slides: BootstrapSlide[] = [];
@@ -142,11 +142,13 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
     const slides: BootstrapSlide[] = [];
 
-    // If custom help content is provided, add it as the first slide
-    if (this.customHelpContent) {
-      slides.push({
-        title: "How to use this verification task",
-        slideTemplate: html`${unsafeHTML(this.customHelpContent.innerHTML)}`,
+    // Add each help template as a separate slide
+    if (this.helpTemplates && this.helpTemplates.length > 0) {
+      this.helpTemplates.forEach((template, index) => {
+        slides.push({
+          title: index === 0 ? "How to use this verification task" : `Instructions ${index + 1}`,
+          slideTemplate: templateContent(template),
+        });
       });
     }
 
@@ -320,6 +322,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
+      <slot style="display: none;"></slot>
       <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">
