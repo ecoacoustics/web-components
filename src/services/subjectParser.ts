@@ -135,7 +135,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   private static verificationParser(partialModel: any): Verification | null {
     const subjectVerification = partialModel.verification;
     const unparsedOeTag = partialModel.oeTag;
-    if (subjectVerification === undefined || subjectVerification === null) {
+    if (subjectVerification === undefined || subjectVerification === null || subjectVerification === "") {
       return null;
     }
 
@@ -170,7 +170,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     const mappedConfirmedState = confirmedMapping.get(verificationState);
     if (mappedConfirmedState === undefined) {
       console.warn(
-        `Invalid subject confirmed value. Expected one of ${Array.from(confirmedMapping.keys()).join(", ")}. Found '${subjectVerification.confirmed}'`,
+        `Invalid subject confirmed value. Expected one of ${Array.from(confirmedMapping.keys()).join(", ")}. Found '${verificationState}'`,
       );
       return null;
     } else {

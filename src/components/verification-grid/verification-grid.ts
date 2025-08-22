@@ -1393,7 +1393,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             const availableSubjectsCount = this.subjects.length;
             if (availableSubjectsCount < viewHead) {
               console.error("Attempted to set the viewHead to a value larger than the subjects array");
-              viewHead = availableSubjectsCount - 1;
+              viewHead = availableSubjectsCount;
             }
 
             this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
@@ -1410,15 +1410,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private async setViewHead(value: number): Promise<void> {
+    // If the viewHead will not change, I do not perform any updates because we
+    // might end up in an unexpected state.
+    // Note that I have never seen this condition trigger, but it is a
+    // defensive programming measure.
+    if (value === this.viewHead && this.viewHead !== 0) {
+      return;
+    }
+
     let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
 
     await this.viewHeadItems(clampedHead);
 
     this.viewHead = clampedHead;
-
-    if (this.viewHead === clampedHead) {
-      this.setDecisionDisabled(true);
-    }
+    this.setDecisionDisabled(true);
 
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
@@ -1976,7 +1981,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private tileGridTemplate(): HTMLTemplateResult {
-    if (this.currentPageIndices.start === this.currentPageIndices.end) {
+    if (this.currentPageIndices.start >= this.currentPageIndices.end) {
       return this.noItemsTemplate();
     }
 
@@ -2086,41 +2091,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           ])}
         </div>
 
-        <div class="controls-container footer-controls">
-          <span id="element-container" class="decision-controls-left">
-            <oe-verification-grid-settings></oe-verification-grid-settings>
+        <div class="footer-container">
+          <div class="controls-container">
+            <span id="element-container" class="decision-controls-left">
+              <oe-verification-grid-settings></oe-verification-grid-settings>
 
-            <button
-              data-testid="help-dialog-button"
-              @click="${() => this.handleHelpRequest()}"
-              class="oe-btn-info"
-              rel="help"
-            >
-              <sl-icon name="question-circle" class="large-icon"></sl-icon>
-            </button>
+              <button
+                data-testid="help-dialog-button"
+                @click="${() => this.handleHelpRequest()}"
+                class="oe-btn-info"
+                rel="help"
+              >
+                <sl-icon name="question-circle" class="large-icon"></sl-icon>
+              </button>
 
-            <button
-              data-testid="continue-verifying-button"
-              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-              ?disabled="${!this.isViewingHistory()}"
-              @click="${this.resumeVerification}"
-            >
-              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-            </button>
-          </span>
+              <button
+                data-testid="continue-verifying-button"
+                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
+                ?disabled="${!this.isViewingHistory()}"
+                @click="${this.resumeVerification}"
+              >
+                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+              </button>
+            </span>
 
-          <span class="decision-controls">
-            <h2 class="verification-controls-title">
-              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-            </h2>
-            <div id="decisions-container" class="decision-control-actions">
-              <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
-            </div>
-          </span>
+            <span class="decision-controls">
+              <h2 class="verification-controls-title">
+                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+              </h2>
+              <div id="decisions-container" class="decision-control-actions">
+                <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
+              </div>
+            </span>
 
-          <span class="decision-controls-right">
-            <slot name="data-source"></slot>
-          </span>
+            <span class="decision-controls-right">
+              <slot name="data-source"></slot>
+            </span>
+          </div>
 
           ${when(this.progressBarPosition === ProgressBarPosition.BOTTOM, () => this.progressBarTemplate())}
         </div>
