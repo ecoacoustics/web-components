@@ -171,7 +171,7 @@ test.describe("single verification grid", () => {
         expect(gridSize).toEqual(expectedGridSize);
       });
 
-      test("should not allow a grid size that is a string", { tag: expectConsoleError }, async ({ fixture }) => {
+      test("should not allow a grid size that is a string", { tag: [expectConsoleError] }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = "this-is-not-a-number";
 
@@ -190,7 +190,7 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a negative grid size", { tag: expectConsoleError }, async ({ fixture }) => {
+      test("should not allow a negative grid size", { tag: [expectConsoleError] }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = -12;
 
@@ -202,7 +202,7 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size that is zero", { tag: expectConsoleError }, async ({ fixture }) => {
+      test("should not allow a grid size that is zero", { tag: [expectConsoleError] }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = 0;
 
@@ -214,7 +214,7 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size of negative infinity", { tag: expectConsoleError }, async ({ fixture }) => {
+      test("should not allow a grid size of negative infinity", { tag: [expectConsoleError] }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = -Infinity;
 
@@ -226,7 +226,7 @@ test.describe("single verification grid", () => {
         expect(realizedGridSize).toBe(initialGridSize);
       });
 
-      test("should not allow a grid size of Infinity", { tag: expectConsoleError }, async ({ fixture }) => {
+      test("should not allow a grid size of Infinity", { tag: [expectConsoleError] }, async ({ fixture }) => {
         const initialGridSize = await fixture.getGridSize();
         const testGridSize = Infinity;
 

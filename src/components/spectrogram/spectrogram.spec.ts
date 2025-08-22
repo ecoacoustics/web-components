@@ -571,7 +571,7 @@ test.describe("attributes", () => {
     await fixture.create();
   });
 
-  test("should not allow a non-power of 2 window size", { tag: expectConsoleError }, async ({ fixture }) => {
+  test("should not allow a non-power of 2 window size", { tag: [expectConsoleError] }, async ({ fixture }) => {
     const originalWindowSize = await getBrowserValue<SpectrogramComponent>(fixture.spectrogram(), "windowSize");
 
     await expect(async () => {
