@@ -5,8 +5,8 @@ components.js
 js/
 **/*custom-elements.json
 
-# test files
-test-*.html
+test-results/
+test-report/
 
 # vite
 vite.config.ts.timestamp-*.mjs
@@ -149,3 +149,5 @@ dist
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+# test files
+test-*.html
