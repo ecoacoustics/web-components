@@ -185,6 +185,7 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
+ * @slot help-bootstrap - A template element containing custom help content for the bootstrap dialog
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
@@ -272,6 +273,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
+
+  @queryAssignedElements({ selector: "template[slot='help-bootstrap']" })
+  private helpBootstrapTemplate!: HTMLTemplateElement[];
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -586,6 +590,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       render(this.skipDecisionTemplate(), this);
     }
 
+    // Initialize help bootstrap template
+    this.updateHelpBootstrapTemplate();
+
     if (this.autofocus) {
       this.focus();
     }
@@ -796,6 +803,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private updateDecisionElements(): void {
     for (const element of this.decisionElements) {
       element.verificationGrid = this;
+    }
+  }
+
+  private updateHelpBootstrapTemplate(): void {
+    // Find the help-bootstrap slot and get its assigned elements
+    const helpBootstrapSlot = this.shadowRoot?.querySelector('slot[name="help-bootstrap"]') as HTMLSlotElement;
+    if (helpBootstrapSlot) {
+      const assignedElements = helpBootstrapSlot.assignedElements() as HTMLTemplateElement[];
+      this.helpBootstrapTemplate = assignedElements.filter(el => el.tagName.toLowerCase() === 'template');
+      console.log('Help bootstrap templates found:', this.helpBootstrapTemplate.length);
+    } else {
+      console.log('Help bootstrap slot not found');
     }
   }
 
@@ -1056,6 +1075,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
+    this.updateHelpBootstrapTemplate();
   }
 
   private handleTileOverlap(event: OverflowEvent): void {
@@ -1985,6 +2005,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"
+        .customHelpContent="${this.helpBootstrapTemplate?.[0]}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
@@ -2047,6 +2068,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
           <span class="decision-controls-right">
             <slot name="data-source"></slot>
+            <slot name="help-bootstrap" style="display: none;" @slotchange="${() => this.handleSlotChange()}"></slot>
           </span>
 
           ${when(this.progressBarPosition === ProgressBarPosition.BOTTOM, () => this.progressBarTemplate())}

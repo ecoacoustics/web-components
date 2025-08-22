@@ -3,6 +3,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { when } from "lit/directives/when.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { loop } from "../../helpers/directives";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { BootstrapSlide } from "./slides/bootstrapSlide";
@@ -85,6 +86,9 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public isMobile!: boolean;
 
   @state()
+  public customHelpContent?: HTMLTemplateElement;
+
+  @state()
   private slides: BootstrapSlide[] = [];
 
   @query("#dialog-element")
@@ -136,11 +140,21 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public showTutorialDialog(): void {
     this.isAdvancedDialog = false;
 
-    const slides: BootstrapSlide[] = [
+    const slides: BootstrapSlide[] = [];
+
+    // If custom help content is provided, add it as the first slide
+    if (this.customHelpContent) {
+      slides.push({
+        title: "How to use this verification task",
+        slideTemplate: html`${unsafeHTML(this.customHelpContent.innerHTML)}`,
+      });
+    }
+
+    slides.push(
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
       pagingSlide(),
-    ];
+    );
 
     // if the user is on a mobile device, we don't need to bother showing
     // the keyboard shortcuts slide
