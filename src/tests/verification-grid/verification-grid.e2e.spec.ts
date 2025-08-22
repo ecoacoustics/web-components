@@ -1731,10 +1731,23 @@ test.describe("decisions", () => {
   });
 
   test.describe("resuming datasets", () => {
+    test.beforeEach(async ({ fixture }) => {
+      // Most of these tests depend on a grid size of 4 because we typically
+      // want to test four potential states.
+      //
+      // 1. That "true" decisions can be correctly parsed.
+      // 2. That "false" decisions can be correctly parsed (this might fail if
+      //    we are using "falsy" assertions to check if the data exists.)
+      // 3. If there is no decision applied to a tile, it should be treated as
+      //    undecided.
+      // 4. Edge cases like having a verification for a tag that doesn't exist
+      //    on the subject anymore.
+      await fixture.changeGridSize(4);
+    });
+
     test.describe("verification task", () => {
       test.beforeEach(async ({ fixture }) => {
         await fixture.changeGridSource(partialVerifiedSubjects);
-        await fixture.changeGridSize(4);
       });
 
       test("should correctly apply previous decisions", async ({ fixture }) => {
@@ -1785,7 +1798,7 @@ test.describe("decisions", () => {
         expect(realizedMeterTooltips).toEqual(expectedMeterTooltips);
       });
 
-      test("should show Resume button if grid size is decreased to only completed tiles", async ({ fixture }) => {
+      test("should show resume button if the grid size is decreased to only completed tiles", async ({ fixture }) => {
         // After decreasing the grid size to 2, all of the tiles will be
         // verified, so the "Continue Verifying" button should be shown and go
         // to the second page of the dataset after clicking it because the third
@@ -1795,27 +1808,103 @@ test.describe("decisions", () => {
         // decision, but the fourth item has a decision, so the second page will
         // be almost complete with the first item missing.
         await fixture.changeGridSize(2);
+
+        await expect(fixture.continueVerifyingButton()).toBeVisible();
       });
 
-      test("should remove decisions if the dataset changes", () => {});
+      test("should remove decisions if the dataset changes", async ({ fixture }) => {
+        await fixture.changeGridSource(fixture.testJsonInput);
+
+        const panelColor = await fixture.panelColor();
+        const expectedMeterColors = [[panelColor], [panelColor], [panelColor], [panelColor]];
+
+        const realizedMeterColors = await fixture.allProgressMeterColors();
+        expect(realizedMeterColors).toEqual(expectedMeterColors);
+
+        const noDecisionTooltip = "verification: no decision";
+        const expectedMeterTooltips = [
+          [noDecisionTooltip],
+          [noDecisionTooltip],
+          [noDecisionTooltip],
+          [noDecisionTooltip],
+        ];
+
+        const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
+        expect(realizedMeterTooltips).toEqual(expectedMeterTooltips);
+      });
     });
 
     test.describe("compound tasks", () => {
-      test.beforeEach(async ({ fixture }) => {
-        await fixture.changeGridSource(partialCompleteCompound);
+      // In these tests, the verification grid is set up for a verification task
+      // with "true" / "false" decision buttons but we load a partially
+      // completed compound task dataset.
+      // In this case, we expect that we still show the newTag decisions on the
+      // verification grid tiles, but the progress meter, auto paging, auto
+      // advancement, decision buttons, etc... should behave as if they are
+      // performing a verification task.
+      test.describe("when set up for a verification task", () => {
+        test.beforeEach(async ({ fixture }) => {
+          await fixture.changeGridSource(partialCompleteCompound);
+        });
+
+        test("should evaluate the decision buttons 'when' conditions", () => {});
+
+        test("should show new tag decisions correctly", async ({ fixture }) => {
+          const expectedTagText: string[] = [
+            // Where "Koala" was corrected to "Brush Turkey"
+            "koala Brush Turkey",
+            "koala",
+
+            // Where "Insects" was corrected to "Panda"
+            "koala Panda",
+
+            // Where there was no initial tag, but the newTag was set to
+            // "Brush Turkey".
+            "Brush Turkey",
+          ];
+
+          await expect(fixture.gridTileTagText()).toHaveTrimmedText(expectedTagText);
+
+          // Because the task that the fixture is set up for is a verification
+          // task, we expect that the progress meter tooltips will be relevant for
+          // the decision buttons, not the loaded task.
+          const expectedMeterTooltips = [
+            ["verification: no decision"],
+            ["verification: Noisy Miner (true)"],
+            ["verification: Insects (true)"],
+            ["verification: no decision"],
+          ];
+          const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
+
+          expect(realizedMeterTooltips).toEqual(expectedMeterTooltips);
+        });
+
+        test("should show resume button if the grid size is decreased to only completed tiles", async ({ fixture }) => {
+          await fixture.changeGridSize(2);
+          await expect(fixture.continueVerifyingButton()).toBeVisible();
+        });
       });
 
-      test("should evaluate the decision buttons 'when' conditions when loading", () => {});
-
-      test("should show correct decisions correctly", () => {});
-
-      test("should set the decision head to the first incomplete tile", () => {});
+      // In these tests we set up the fixture for a compound task and load a
+      // partially completed compound task dataset.
+      // We should see that the "when" conditions are still evaluated correctly
+      // and that auto-paging will check to see that the newTag task is
+      // completed before proceeding.
+      test.describe("when set up for a compound task", () => {
+        test("should evaluate the decision buttons 'when' conditions", () => {});
+      });
     });
 
     test.describe("no task", () => {
-      test("should create new colors for verification decisions", () => {});
-
-      test("should create new colors for new tag decisions", () => {});
+      test.fixme("should create new colors for new tag decisions", async ({ fixture }) => {
+        // Before creating a compound task, we expect that the newTag decision
+        // color will not be defined because there is no "oe-tag-prompt"
+        // component in the fixture.
+        // However, once we add a subject that has a "newTag" decision, we
+        // should see that the color service creates a new color for the newTag
+        // decision type.
+        await fixture.changeGridSource(partialCompleteCompound);
+      });
     });
 
     // I have purposely decided to not decided to implement resuming

@@ -20,7 +20,6 @@ import {
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
-import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
 import {
   DOWN_ARROW_KEY,
@@ -2112,14 +2111,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 <sl-icon name="question-circle" class="large-icon"></sl-icon>
               </button>
 
-              <button
-                data-testid="continue-verifying-button"
-                class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-                ?disabled="${!this.isViewingHistory()}"
-                @click="${this.resumeVerification}"
-              >
-                Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-              </button>
+              ${when(
+                this.isViewingHistory(),
+                () => html`
+                  <button
+                    data-testid="continue-verifying-button"
+                    class="oe-btn-secondary"
+                    @click="${this.resumeVerification}"
+                  >
+                    Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+                  </button>
+                `,
+              )}
             </span>
 
             <span class="decision-controls">

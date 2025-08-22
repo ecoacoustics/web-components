@@ -74,6 +74,7 @@ class TestPage {
   public gridTileProgressMeterSegments = (index = 0) =>
     this.gridTileProgressMeters().nth(index).locator(".progress-meter-segment");
   public gridTileProgressMeterTooltips = (index = 0) => this.gridTileProgressMeters().nth(index).locator("sl-tooltip");
+  public gridTileTagText = () => this.page.getByTestId("tile-tag-text");
 
   public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
 
@@ -103,12 +104,12 @@ class TestPage {
   private skipComponent = () => this.page.locator("oe-skip").first();
   private skipButton = () => this.skipComponent().locator("#decision-button").first();
 
-  private verificationButton(decision: "true" | "false"): Locator {
+  public verificationButton(decision: "true" | "false"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
   }
 
-  private classificationButton(tag: string, decision: boolean): Locator {
+  public classificationButton(tag: string, decision: boolean): Locator {
     const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
     return targetDecision.locator(`#${decision.toString()}-decision-button`);
   }

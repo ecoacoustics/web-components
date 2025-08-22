@@ -213,7 +213,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private positiveDecisionColor(): Readonly<CssVariable> {
-    const defaultPositiveDecision = "--verification-true";
+    const defaultPositiveDecision = "--oe-verification-true";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
       const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
@@ -229,7 +229,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private negativeDecisionColor(): Readonly<CssVariable> {
-    const defaultNegativeColor = "--verification-false";
+    const defaultNegativeColor = "--oe-verification-false";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
       const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
@@ -241,7 +241,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
       return this.injector.colorService(decisionModel);
     }
 
-    return "--verification-false";
+    return "--oe-verification-false";
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {

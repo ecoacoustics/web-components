@@ -466,7 +466,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
           <div class="figure-head">
             <figcaption class="tag-label">
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
-                <span>
+                <span data-testid="tile-tag-text">
                   ${this.model?.newTag && this.model?.newTag !== decisionNotRequired
                     ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag?.text}</ins>`
                     : html`${tagText}`}

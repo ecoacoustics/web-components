@@ -42,7 +42,11 @@ test.describe("keyboard shortcuts", () => {
 
 test.describe("decision colors", () => {
   test("should have the correct decision color", async ({ fixture }) => {
-    const expectedColor = await getCssVariableStyle(fixture.decisionColorPill(), "--unique-color-0-true", "background");
+    const expectedColor = await getCssVariableStyle(
+      fixture.decisionColorPill(),
+      "--oe-unique-color-0-true",
+      "background",
+    );
     await expect(fixture.decisionColorPill()).toHaveCSS("background", expectedColor);
   });
 });

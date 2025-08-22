@@ -88,10 +88,6 @@
   }
 }
 
-.hidden {
-  display: none;
-}
-
 .keyboard-hint {
   position: absolute;
   left: 50%;

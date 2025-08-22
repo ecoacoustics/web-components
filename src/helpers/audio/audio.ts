@@ -191,7 +191,7 @@ export class AudioHelper {
     const tag = `audio (${src}): fetch and decode audio`;
     console.time(tag);
 
-    const response = await fetch(src, { priority: "high" });
+    const response = await fetch(src, { priority: "high", cache: "force-cache" });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio: ${response.statusText}`);
     }

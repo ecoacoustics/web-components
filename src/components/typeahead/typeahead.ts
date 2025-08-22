@@ -13,8 +13,8 @@ import {
   UP_ARROW_KEY,
 } from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
-import typeaheadStyles from "./css/style.css?inline";
 import { ObjectRecord } from "../../helpers/types/advancedTypes";
+import typeaheadStyles from "./css/style.css?inline";
 
 export type TypeaheadCallback<Value> = <Context extends ObjectRecord>(
   text: string,

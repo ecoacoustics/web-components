@@ -4,19 +4,39 @@ import { expect as playwrightExpect, test as base } from "@sand4rt/experimental-
 /** A tag that can be used to expect a console error */
 export const expectConsoleError = "@console-error";
 
-async function toHaveTrimmedText(received: Locator, expected: string): Promise<MatcherReturnType> {
-  const elementText = await received.textContent();
+/**
+ * Similar to the toHaveText() Playwright assertion but trims the elements
+ * leading and trailing whitespace before making an assertion.
+ *
+ * Similar to the Playwright toHaveText() assertion, this assertion will
+ * also accept an array of expected strings for each element that the
+ * locator matches.
+ */
+async function toHaveTrimmedText(received: Locator, expected: string | string[]): Promise<MatcherReturnType> {
+  const arrayExpected = Array.isArray(expected) ? expected : [expected];
+  const elementText = await received.allTextContents();
 
-  if (elementText === null) {
+  if (elementText.length === 0) {
     return {
       pass: false,
       message: () => `expected element to have trimmed text, but the element was not found`,
     };
   }
 
-  const expectedText = expected.trim();
-  const realizedText = elementText.trim();
-  const pass = expectedText === realizedText;
+  const expectedText = arrayExpected.map((text) => text.trim());
+  const realizedText = elementText.map((text) => text.trim());
+
+  if (expectedText.length !== realizedText.length) {
+    return {
+      pass: false,
+      message: () => `expected locator to match ${expectedText.length} items, but found ${realizedText.length} items`,
+    };
+  }
+
+  const pass = expectedText.every((expected, index) => {
+    const realized = realizedText[index];
+    return realized === expected;
+  });
 
   return {
     pass,
