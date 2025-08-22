@@ -86,7 +86,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public isMobile!: boolean;
 
   @queryAssignedElements({ selector: "template" })
-  private helpTemplates!: HTMLTemplateElement[];
+  private readonly helpTemplates!: ReadonlyArray<HTMLTemplateElement>;
 
   @state()
   private slides: BootstrapSlide[] = [];
@@ -147,7 +147,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
       this.helpTemplates.forEach((template, index) => {
         slides.push({
           title: index === 0 ? "How to use this verification task" : `Instructions ${index + 1}`,
-          slideTemplate: templateContent(template),
+          slideTemplate: html`${templateContent(template)}`,
         });
       });
     }
