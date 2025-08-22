@@ -255,10 +255,7 @@ export async function setBrowserAttribute<T extends HTMLElement>(component: Loca
     (element: T, { key, value }: any) => {
       element.setAttribute(key.toString(), value);
     },
-    {
-      key,
-      value,
-    },
+    { key, value },
   );
 }
 

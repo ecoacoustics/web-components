@@ -333,3 +333,9 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
     `;
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-typeahead": TypeaheadComponent;
+  }
+}

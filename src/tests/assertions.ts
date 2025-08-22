@@ -104,7 +104,8 @@ export async function toHaveSlottedText(locator: Locator, expectedText: string):
 }
 
 /**
- * Asserts that a certain action results in a specific console error.
+ * Asserts that invoking a callback of actions results in a specific console
+ * error.
  */
 export async function toConsoleError(
   callback: () => Promise<unknown>,
@@ -151,7 +152,7 @@ export const test = base.extend({
     // Sometimes our components throw errors. In these cases, we want to fail
     // the test immediately.
     //
-    // Note that page errors cannot be expected because they are hard errors
+    // Note that page errors should not be expected because they are hard errors
     // where we purposely crash the program to prevent generating bad results.
     // Throwing hard errors should only ever be used as a last resort where we
     // detected an unexpected state that we cannot recover from.

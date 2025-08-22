@@ -110,7 +110,7 @@ class TestPage {
   }
 
   public async getDownloadResults(): Promise<ReadonlyArray<Partial<DownloadableResult>>> {
-    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"](true));
+    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
   }
 
   public async makeSubSelection(subSelectionIndices: number[]) {

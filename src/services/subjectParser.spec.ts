@@ -1,3 +1,4 @@
+import { DecisionOptions } from "../models/decisions/decision";
 import { NewTag } from "../models/decisions/newTag";
 import { Verification } from "../models/decisions/verification";
 import { newTagColumnName, Subject, tagColumnName } from "../models/subject";
@@ -188,7 +189,7 @@ const tests: VerificationParserTest[] = [
       verified: "true",
     },
     expectedUrl: "http://localhost:3000/example.flac",
-    expectedVerified: new Verification("true" as any, { text: "" }),
+    expectedVerified: new Verification(DecisionOptions.TRUE, null),
     expectedNewTag: undefined,
     expectedTag: null,
   },
@@ -202,11 +203,11 @@ const tests: VerificationParserTest[] = [
     },
     expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: new Verification("true" as any, { text: "dugong" }),
+    expectedVerified: new Verification(DecisionOptions.TRUE, { text: "dugong" }),
     expectedNewTag: undefined,
   },
   {
-    name: "subject with a negative verification",
+    name: "subject with a negative verification and no tag",
     input: {
       verified: "false",
       tags: [{ text: "abbots babbler" }],
@@ -221,7 +222,7 @@ const tests: VerificationParserTest[] = [
     // that if the user changes the tag on the subject, the tag that the
     // verification was originally attached to is not incorrect.
     // I would rather have an empty tag than a tag that is incorrect.
-    expectedVerified: new Verification("false" as any, { text: "" }),
+    expectedVerified: new Verification(DecisionOptions.FALSE, null),
     expectedNewTag: undefined,
   },
   {
@@ -235,7 +236,7 @@ const tests: VerificationParserTest[] = [
     // Note that this tag doesn't actually exist in the subjects tags.
     // This is mimicking a situation where the user has deleted the original tag
     // that was verified, but the verification history still exists.
-    expectedVerified: new Verification("unsure" as any, {
+    expectedVerified: new Verification(DecisionOptions.UNSURE, {
       text: "dugong",
     }),
     expectedNewTag: undefined,
@@ -248,7 +249,7 @@ const tests: VerificationParserTest[] = [
       [tagColumnName]: "Big Bird",
     },
     expectedTag: { text: "abbots babbler" },
-    expectedVerified: new Verification("skip" as any, {
+    expectedVerified: new Verification(DecisionOptions.SKIP, {
       text: "Big Bird",
     }),
     expectedNewTag: undefined,
@@ -268,7 +269,7 @@ const tests: VerificationParserTest[] = [
         additionalData: "some data",
       },
     },
-    expectedVerified: new Verification("true" as any, { text: "dugong" }),
+    expectedVerified: new Verification(DecisionOptions.TRUE, { text: "dugong" }),
     expectedTag: null,
     expectedNewTag: undefined,
   },
@@ -282,7 +283,7 @@ const tests: VerificationParserTest[] = [
       },
     },
     expectedTag: null,
-    expectedVerified: new Verification("false" as any, { text: "dolphin" }),
+    expectedVerified: new Verification(DecisionOptions.FALSE, { text: "dolphin" }),
     expectedNewTag: undefined,
   },
   {
@@ -291,7 +292,7 @@ const tests: VerificationParserTest[] = [
       newTag: "oscar",
     },
     expectedTag: null,
-    expectedNewTag: new NewTag("true" as any, { text: "oscar" }),
+    expectedNewTag: new NewTag(DecisionOptions.TRUE, { text: "oscar" }),
     expectedVerified: undefined,
   },
   {
@@ -300,7 +301,7 @@ const tests: VerificationParserTest[] = [
       [newTagColumnName]: "big-bird",
     },
     expectedTag: null,
-    expectedNewTag: new NewTag("true" as any, { text: "big-bird" }),
+    expectedNewTag: new NewTag(DecisionOptions.TRUE, { text: "big-bird" }),
     expectedVerified: undefined,
   },
   {
@@ -312,7 +313,7 @@ const tests: VerificationParserTest[] = [
     // be emitted in the subjects tag property.
     expectedTag: null,
     expectedVerified: undefined,
-    expectedNewTag: new NewTag("true" as any, { text: "elmo" }),
+    expectedNewTag: new NewTag(DecisionOptions.TRUE, { text: "elmo" }),
   },
 ];
 

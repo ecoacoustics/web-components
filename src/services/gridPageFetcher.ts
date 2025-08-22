@@ -35,8 +35,21 @@ export class GridPageFetcher {
   private clientCacheLength = 10;
   private serverCacheLength = 50;
 
-  public async nextSubjects(decisionHead: number): Promise<ReadableStream<SubjectWrapper[]>> {
-    const requiredQueueSize = Math.max(this.clientCacheLength, this.serverCacheLength) + decisionHead;
+  public async nextSubjects(
+    viewHead: number,
+    pageSize: number,
+    currentSubjectSize: number,
+  ): Promise<ReadableStream<SubjectWrapper[]>> {
+    // It's very unlikely that the number of items required for rendering is
+    // less than the number of items required for caching because we cache 50
+    // items ahead by default.
+    // That being said, I have handled the edge case where the grid size is
+    // larger than the number of items we cache ahead.
+    const requiredForCaching = viewHead + Math.max(this.clientCacheLength, this.serverCacheLength);
+    const requiredForRender = viewHead + pageSize;
+    const requiredQueueSize = Math.max(requiredForCaching, requiredForRender);
+
+    const queueSizeDelta = Math.max(requiredQueueSize - currentSubjectSize, 0);
 
     let fetchedItems = 0;
 
@@ -52,7 +65,7 @@ export class GridPageFetcher {
         // Continue to fetch items until we have enough items in the queue
         // or the paging function returns no more items
         // (we have reached the end of the dataset).
-        while (fetchedItems < requiredQueueSize) {
+        while (fetchedItems < queueSizeDelta) {
           const fetchedPage = await this.fetchNextPage();
           if (fetchedPage.length === 0) {
             break;
@@ -63,13 +76,6 @@ export class GridPageFetcher {
           fetchedItems += fetchedPage.length;
         }
 
-        // because the queue buffer may have been expanded by the fetchNextPage
-        // callback, we should update the cache
-        // these async functions are purposely not awaited because we do not
-        // want to block the main thread while doing cache operations
-        // TODO: we should make sure that only the latest cache operation is run
-        // this.refreshCache(decisionHead);
-
         controller.close();
       },
     });
@@ -77,18 +83,20 @@ export class GridPageFetcher {
     return writableStream;
   }
 
-  public async refreshCache(subjects: SubjectWrapper[], decisionHead: number): Promise<void> {
-    this.audioCacheClient(subjects, decisionHead);
-    this.audioCacheServer(subjects, decisionHead);
+  public async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
+    // Notice that these cache operations are not awaited, meaning that they are
+    // "fire and forget".
+    this.audioCacheClient(subjects, viewHead);
+    this.audioCacheServer(subjects, viewHead);
   }
 
   // during client caching, we do a GET request to the server for the
   // audio file. Therefore, requests that have already been client cached
   // have also already been server cached. We therefore, remove these
   // requests from the calculations
-  private async audioCacheClient(subjects: SubjectWrapper[], decisionHead: number): Promise<void> {
+  private async audioCacheClient(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
     const models = subjects
-      .slice(decisionHead, decisionHead + this.clientCacheLength)
+      .slice(viewHead, viewHead + this.clientCacheLength)
       .filter((model) => model.clientCached === AudioCachedState.COLD);
 
     for (const model of models) {
@@ -131,7 +139,7 @@ export class GridPageFetcher {
   // page
   private async fetchNextPage(): Promise<SubjectWrapper[]> {
     const fetchedPage = await this.pagingCallback(this.pagingContext);
-    if (!Array.isArray(fetchedPage.subjects)) {
+    if (!Array.isArray(fetchedPage?.subjects)) {
       console.error(
         `Verification grid paginator must have the return format: { subjects: Subject[], context?: any, totalItems?: number }`,
       );

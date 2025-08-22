@@ -165,6 +165,18 @@ interface HighlightSelection {
   pointerId: number | null;
   capturedPointer: boolean;
 
+  // We store the highlight host in the HighlightSelection object for two
+  // reasons.
+  //
+  // 1. We cannot always attach to the <body> element because poorly created
+  //    webpages might not have a <body> element.
+  // 2. We store a reference to the element so that we can correctly detach the
+  //    event listener when this component is removed from the DOM.
+  //    If we did not store a reference to the element and instead used a getter
+  //    to find what element the highlight is attached to, if the original
+  //    highlight host is removed from the DOM, the re-queried element would be
+  //    different. Meaning we wouldn't be able to remove the event listeners
+  //    from the original highlight host and there would be a memory leak.
   highlightHost: HTMLElement;
 
   // we store the observed elements in an array so that we don't re-query the
@@ -1355,7 +1367,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         enoughToRenderResolver = resolve;
       });
 
-      const subjectReader = await this.paginationFetcher.nextSubjects(this.decisionHead);
+      const subjectReader = await this.paginationFetcher.nextSubjects(
+        this.decisionHead,
+        this.populatedTileCount,
+        this.subjects.length,
+      );
+
       subjectReader.pipeTo(
         new WritableStream({
           write: (subject: SubjectWrapper[]) => {
@@ -1368,15 +1385,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             }
           },
           close: () => {
-            // because the viewHead is an index into the "subjects" array, it cannot
-            // be larger than the length of the subjects array.
-            // if we receive a value that is larger than the subjects buffer, we emit
-            // a warning so that we can catch it in dev, and use the subject arrays
-            // length as a fallback to prevent hard-failing.
+            // because the viewHead is an index into the "subjects" array, it
+            // cannot be larger than the length of the subjects array.
+            // If we receive a value that is larger than the subjects buffer,
+            // we emit an error so we can catch it in dev, and use the subject
+            // arrays length as a fallback to prevent hard-failing.
             const availableSubjectsCount = this.subjects.length;
             if (availableSubjectsCount < viewHead) {
               console.error("Attempted to set the viewHead to a value larger than the subjects array");
-              viewHead = availableSubjectsCount;
+              viewHead = availableSubjectsCount - 1;
             }
 
             this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
@@ -1401,11 +1418,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     if (this.viewHead === clampedHead) {
       this.setDecisionDisabled(true);
-      this.requestUpdate();
     }
 
+    // Changing the loadState will cause an update because the loadState is a
+    // tracked state meaning that we don't have to manually invoke
+    // requestUpdate which would end up being debounced anyways.
     if (this.loadState === LoadState.LOADING) {
       this.loadState = LoadState.FETCHED;
+    } else {
+      this.requestUpdate();
     }
   }
 
@@ -1590,7 +1611,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private async pageForward(): Promise<void> {
     const proposedViewHead = this.viewHead + this.populatedTileCount;
-    this.viewHead = proposedViewHead;
+    this.setViewHead(proposedViewHead);
     this.clearSelection();
   }
 
@@ -1615,12 +1636,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    if (!this.paginationFetcher) {
-      throw new Error("No paginator found.");
-    }
-
     this.decisionHead += count;
-
     await this.setViewHead(this.viewHead + count);
   }
 

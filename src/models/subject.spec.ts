@@ -398,8 +398,8 @@ test.describe("skipUndecided", () => {
     subject.skipUndecided(true, false, requiredTags);
 
     expect((subject.verification as Verification).confirmed).toEqual(DecisionOptions.SKIP);
-    expect((subject.classifications.get("bar") as Classification).confirmed).toEqual(DecisionOptions.SKIP);
-    expect((subject.classifications.get("baz") as Classification).confirmed).toEqual(DecisionOptions.SKIP);
+    expect(subject.classifications.get("bar")?.confirmed).toEqual(DecisionOptions.SKIP);
+    expect(subject.classifications.get("baz")?.confirmed).toEqual(DecisionOptions.SKIP);
   });
 });
 

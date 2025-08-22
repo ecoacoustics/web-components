@@ -113,7 +113,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public resultRows(isUrlSourced: boolean): Partial<DownloadableResult>[] {
+  private resultRows(): Partial<DownloadableResult>[] {
     if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     }
@@ -125,7 +125,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     //
     // This obeys our design principle of not changing the original data set and
     // only adding information.
-    if (isUrlSourced) {
+    if (this.isUrlSourced()) {
       const subjects = this.verificationGrid.subjects;
       return subjects.map((model) => model.toDownloadable());
     }
@@ -150,7 +150,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   }
 
   private async downloadCallbackSourcedResults(): Promise<void> {
-    const downloadableResults = this.resultRows(false);
+    const downloadableResults = this.resultRows();
     const stringifiedResults = JSON.stringify(downloadableResults);
 
     const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
@@ -168,7 +168,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const downloadableResults = this.resultRows(true);
+    const downloadableResults = this.resultRows();
 
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
