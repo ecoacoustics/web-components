@@ -144,9 +144,9 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
     // Add each help template as a separate slide
     if (this.helpTemplates && this.helpTemplates.length > 0) {
-      this.helpTemplates.forEach((template, index) => {
+      this.helpTemplates.forEach((template) => {
         slides.push({
-          title: index === 0 ? "How to use this verification task" : `Instructions ${index + 1}`,
+          title: "",
           slideTemplate: html`${templateContent(template)}`,
         });
       });
