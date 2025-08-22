@@ -85,11 +85,11 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   public isMobile!: boolean;
 
-  @queryAssignedElements({ selector: "template" })
-  private readonly helpTemplates!: ReadonlyArray<HTMLTemplateElement>;
-
   @state()
   private slides: BootstrapSlide[] = [];
+
+  @queryAssignedElements({ selector: "template" })
+  private readonly helpTemplates!: ReadonlyArray<HTMLTemplateElement>;
 
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
