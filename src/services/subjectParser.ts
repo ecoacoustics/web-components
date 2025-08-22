@@ -45,6 +45,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
       ]),
       verification: SubjectParser.keyTransformer([
         "verified",
+        "verification",
         "decision",
         "confirmed",
         "confirmation",
@@ -134,30 +135,36 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
   private static verificationParser(partialModel: any): Verification | null {
     const subjectVerification = partialModel.verification;
     const unparsedOeTag = partialModel.oeTag;
-    if (!subjectVerification) {
+    if (subjectVerification === undefined || subjectVerification === null) {
       return null;
     }
 
     const verificationType = typeof subjectVerification;
-    if (verificationType !== "object" && verificationType !== "string") {
-      console.warn(`Invalid verification type. Expected 'object' or 'string'. Found '${verificationType}'`);
+    if (verificationType !== "object" && verificationType !== "string" && verificationType !== "boolean") {
+      console.warn(`Invalid verification type. Expected 'object', 'string', or 'boolean'. Found '${verificationType}'`);
       return null;
     }
 
-    let verificationState: DecisionOptions | string = subjectVerification?.confirmed;
-    if (verificationType === "string") {
-      // Local data sources will have a string value for the confirmed property.
-      verificationState = subjectVerification;
-    }
+    // Local data sources will have a string value for the confirmed property.
+    // The verified state can be a boolean when using a callback that returns a
+    // boolean.
+    let verificationState: unknown =
+      verificationType === "string" || verificationType === "boolean"
+        ? subjectVerification
+        : subjectVerification?.confirmed;
 
-    const confirmedMapping = new Map<string, DecisionOptions>([
+    const confirmedMapping = new Map<unknown, DecisionOptions>([
       ["true", DecisionOptions.TRUE],
       ["false", DecisionOptions.FALSE],
       ["skip", DecisionOptions.SKIP],
       ["unsure", DecisionOptions.UNSURE],
 
+      ["confirmed", DecisionOptions.TRUE],
       ["correct", DecisionOptions.TRUE],
       ["incorrect", DecisionOptions.FALSE],
+
+      [true, DecisionOptions.TRUE],
+      [false, DecisionOptions.FALSE],
     ]);
 
     const mappedConfirmedState = confirmedMapping.get(verificationState);
@@ -187,8 +194,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     // Note that we do never fallback to using the regular "tag" column as we
     // would prefer to output nothing rather than the wrong tag that was
     // verified.
-    const emptyTag = { text: "" };
-    const verifiedTag = subjectVerification?.tag ?? SubjectParser.tagParser(unparsedOeTag) ?? emptyTag;
+    const verifiedTag = subjectVerification?.tag ?? SubjectParser.tagParser(unparsedOeTag) ?? null;
     return new Verification(verificationState as DecisionOptions, verifiedTag);
   }
 

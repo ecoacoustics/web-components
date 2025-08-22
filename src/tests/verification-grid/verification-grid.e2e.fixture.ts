@@ -12,6 +12,7 @@ import {
   pressKey,
   removeBrowserAttribute,
   setBrowserAttribute,
+  setBrowserValue,
   testBreakpoints,
   waitForContentReady,
 } from "../helpers";
@@ -118,11 +119,10 @@ class TestPage {
     return targetDecision.locator(`#decision-button`);
   }
 
-  public smallJsonInput = "http://localhost:3000/test-items-small.json";
-  public testJsonInput = "http://localhost:3000/test-items.json";
-  public secondJsonInput = "http://localhost:3000/test-items-2.json";
-  public partialVerifiedInput = "http://localhost:3000/test-partial-verified.csv";
-  private defaultTemplate = `
+  public readonly smallJsonInput = "http://localhost:3000/test-items-small.json";
+  public readonly testJsonInput = "http://localhost:3000/test-items.json";
+  public readonly secondJsonInput = "http://localhost:3000/test-items-2.json";
+  private readonly defaultTemplate = `
     <oe-verification verified="true" shortcut="Y"></oe-verification>
     <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
@@ -820,10 +820,24 @@ class TestPage {
     await setBrowserAttribute<VerificationGridComponent>(this.gridComponent(), "grid-size" as any, value.toString());
   }
 
-  public async changeGridSource(value: string) {
+  public async changeGridSource(value: string | ReadonlyArray<any>) {
     const loadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
-    await setBrowserAttribute<DataSourceComponent>(this.dataSourceComponent(), "src", value);
-    await loadedEvent;
+
+    // If the value is a string, we assume that the it is a remote url data
+    // source.
+    if (typeof value === "string") {
+      await setBrowserAttribute<DataSourceComponent>(this.dataSourceComponent(), "src", value);
+      return await loadedEvent;
+    }
+
+    // If we receive an array, we create a callback that returns the items.
+    if (Array.isArray(value)) {
+      await this.gridComponent().evaluate((element: VerificationGridComponent, dataset: ReadonlyArray<any>) => {
+        element.getPage = (): Promise<any> => Promise.resolve({ subjects: dataset });
+      }, value);
+
+      return await loadedEvent;
+    }
   }
 
   public async changeSourceLocal(local: boolean) {

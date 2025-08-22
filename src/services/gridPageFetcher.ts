@@ -130,7 +130,16 @@ export class GridPageFetcher {
   // to a buffer that we can pull from when requesting results for the same
   // page
   private async fetchNextPage(): Promise<SubjectWrapper[]> {
-    const { subjects, context, totalItems } = await this.pagingCallback(this.pagingContext);
+    const fetchedPage = await this.pagingCallback(this.pagingContext);
+    if (!Array.isArray(fetchedPage.subjects)) {
+      console.error(
+        `Verification grid paginator must have the return format: { subjects: Subject[], context?: any, totalItems?: number }`,
+      );
+
+      return [];
+    }
+
+    const { subjects, context, totalItems } = fetchedPage;
     const models = subjects.map((subject) => SubjectParser.parse(subject, this.urlTransformer));
 
     this.totalItems = totalItems;

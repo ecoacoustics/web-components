@@ -32,6 +32,7 @@ import {
 } from "../../components/verification-grid/verification-grid";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 import { sleep } from "../../helpers/utilities";
+import { partialCompleteCompound, partialVerifiedSubjects } from "./verification-grid.e2e.datasets";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -1732,14 +1733,14 @@ test.describe("decisions", () => {
   test.describe("resuming datasets", () => {
     test.describe("verification task", () => {
       test.beforeEach(async ({ fixture }) => {
-        await fixture.changeGridSource(fixture.partialVerifiedInput);
+        await fixture.changeGridSource(partialVerifiedSubjects);
         await fixture.changeGridSize(4);
       });
 
       test("should correctly apply previous decisions", async ({ fixture }) => {
         const expectedDecisions = [
-          { confirmed: DecisionOptions.TRUE, tag: { text: "Noisy Miner" } },
           { confirmed: DecisionOptions.FALSE, tag: { text: "Insects" } },
+          { confirmed: DecisionOptions.TRUE, tag: { text: "Noisy Miner" } },
           null,
           { confirmed: DecisionOptions.FALSE, tag: null },
         ];
@@ -1751,8 +1752,8 @@ test.describe("decisions", () => {
 
       test("should show previous decisions in the tile progress meters", async ({ fixture }) => {
         const expectedMeterColors = [
-          [await fixture.getVerificationColor(DecisionOptions.TRUE)],
           [await fixture.getVerificationColor(DecisionOptions.FALSE)],
+          [await fixture.getVerificationColor(DecisionOptions.TRUE)],
           [await fixture.panelColor()],
           [await fixture.getVerificationColor(DecisionOptions.FALSE)],
         ];
@@ -1771,13 +1772,13 @@ test.describe("decisions", () => {
         // If I instead used the "tag" column and the tag was removed, the
         // verification information would be incorrect.
         const expectedMeterTooltips = [
-          ["verification: Noisy Miner (true)"],
           ["verification: Insects (false)"],
+          ["verification: Noisy Miner (true)"],
           ["verification: no decision"],
 
           // In this example, the we cannot determine the tag that was verified
           // because there is no "oe_tag" column.
-          ["verification: (false)"],
+          ["verification: false"],
         ];
         const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
 
@@ -1801,7 +1802,7 @@ test.describe("decisions", () => {
 
     test.describe("compound tasks", () => {
       test.beforeEach(async ({ fixture }) => {
-        await fixture.changeGridSource(fixture.partialVerifiedInput);
+        await fixture.changeGridSource(partialCompleteCompound);
       });
 
       test("should evaluate the decision buttons 'when' conditions when loading", () => {});
@@ -1814,7 +1815,7 @@ test.describe("decisions", () => {
     test.describe("no task", () => {
       test("should create new colors for verification decisions", () => {});
 
-      test("should create new colors for classification decisions", () => {});
+      test("should create new colors for new tag decisions", () => {});
     });
 
     // I have purposely decided to not decided to implement resuming
@@ -1826,9 +1827,9 @@ test.describe("decisions", () => {
     //
     // To prevent this, I want to keep the re-scope the classification download
     // format so that breaking changes do not leak.
-    // TODO: Add tests once we add support for resuming classification tasks
-    // see:
-    test.describe("classification task", () => {});
+    // TODO: Add tests once we improve the classification download namespace
+    // see: https://github.com/ecoacoustics/web-components/issues/463
+    test.describe.skip("classification task", () => {});
   });
 });
 
