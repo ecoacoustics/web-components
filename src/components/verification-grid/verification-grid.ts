@@ -770,8 +770,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           break;
         }
 
-        const isPageCompleted = virtualPage.every((subject) => subject?.verification);
-        if (!isPageCompleted) {
+        const isPageIncomplete = virtualPage.some((subject) =>
+          subject.hasOutstandingDecisions(
+            this.hasVerificationTask(),
+            this.hasNewTagTask(),
+            this.requiredClassificationTags,
+          ),
+        );
+
+        if (isPageIncomplete) {
           break;
         }
 

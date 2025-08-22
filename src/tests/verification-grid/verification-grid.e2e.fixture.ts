@@ -12,7 +12,6 @@ import {
   pressKey,
   removeBrowserAttribute,
   setBrowserAttribute,
-  setBrowserValue,
   testBreakpoints,
   waitForContentReady,
 } from "../helpers";

@@ -86,7 +86,7 @@ export class SubjectWrapper {
    * Decisions that are made about the same tag are removed so that it is not
    * possible to have both a positive and negative decision about a tag
    */
-  public addDecision(decision: Decision, inferTag: boolean = true): SubjectChange {
+  public addDecision(decision: Decision, inferTag = true): SubjectChange {
     if (decision instanceof Verification) {
       return this.addVerification(decision, inferTag);
     } else if (decision instanceof Classification) {
@@ -109,6 +109,31 @@ export class SubjectWrapper {
     } else {
       throw new Error("Invalid decision type");
     }
+  }
+
+  public hasOutstandingDecisions(
+    requiresVerification: boolean,
+    requiresNewTag: boolean,
+    requiredClassifications: Tag[] = [],
+  ): boolean {
+    // each subject can only have one verification decision
+    const isMissingVerification = requiresVerification && this.verification === undefined;
+    if (isMissingVerification) {
+      return true;
+    }
+
+    const isMissingNewTag = requiresNewTag && this.newTag === undefined;
+    if (isMissingNewTag) {
+      return true;
+    }
+
+    for (const tag of requiredClassifications) {
+      if (!this.classifications.has(tag.text)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
