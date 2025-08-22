@@ -274,8 +274,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryDeeplyAssignedElement({ selector: "template" })
   private gridItemTemplate?: HTMLTemplateElement;
 
-  @queryAssignedElements({ selector: "template[slot='help-bootstrap']" })
-  private helpBootstrapTemplate!: HTMLTemplateElement[];
+  @state()
+  private customHelpTemplate?: HTMLTemplateElement;
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -811,10 +811,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const helpBootstrapSlot = this.shadowRoot?.querySelector('slot[name="help-bootstrap"]') as HTMLSlotElement;
     if (helpBootstrapSlot) {
       const assignedElements = helpBootstrapSlot.assignedElements() as HTMLTemplateElement[];
-      this.helpBootstrapTemplate = assignedElements.filter(el => el.tagName.toLowerCase() === 'template');
-      console.log('Help bootstrap templates found:', this.helpBootstrapTemplate.length);
-    } else {
-      console.log('Help bootstrap slot not found');
+      const templates = assignedElements.filter(el => el.tagName.toLowerCase() === 'template');
+      this.customHelpTemplate = templates[0] || undefined;
     }
   }
 
@@ -2005,7 +2003,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"
-        .customHelpContent="${this.helpBootstrapTemplate?.[0]}"
+        .customHelpContent="${this.customHelpTemplate}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
