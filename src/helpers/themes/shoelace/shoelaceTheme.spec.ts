@@ -10,7 +10,7 @@ function assertVariableExists(styles: string, variable: string): void {
 }
 
 function createIntensities(variable: string): string[] {
-  const possibleIntensities = [50,100,200,300,400,500,600,700,800,900,950];
+  const possibleIntensities = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   return possibleIntensities.map((intensity) => `${variable}-${intensity}`);
 }
 

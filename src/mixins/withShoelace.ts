@@ -9,9 +9,9 @@ import { mergeStyles } from "../helpers/styles/merge";
 let doneRegister = false;
 
 /**
-  * For every component, we redeclare our shoelace override variables at the
-  * web component's shadow root.
-  */
+ * For every component, we redeclare our shoelace override variables at the
+ * web component's shadow root.
+ */
 export const WithShoelace = <T extends Component>(superClass: T): Component => {
   return class ShoelaceClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup) {
@@ -25,16 +25,16 @@ export const WithShoelace = <T extends Component>(superClass: T): Component => {
       // @ts-ignore
       return super.finalizeStyles(newStyles);
     }
-  }
-}
+  };
+};
 
 /**
-  * By dynamically registering shoelace depending on if it is used, we can
-  * reduce the cherry picked bundle size.
-  *
-  * Because shoelace is registered at the document level, this should only
-  * be performed once.
-  */
+ * By dynamically registering shoelace depending on if it is used, we can
+ * reduce the cherry picked bundle size.
+ *
+ * Because shoelace is registered at the document level, this should only
+ * be performed once.
+ */
 function registerShoelace(): void {
   doneRegister = true;
 

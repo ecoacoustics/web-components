@@ -32,4 +32,26 @@ test.describe("ProgressBar", () => {
     expect(headSegmentSize).toBe(expectedHeadSegmentSize);
     expect(completedSegmentSize).toBe(expectedCompletedHeadSize);
   });
+
+  test("should use panel-color-dark for background to provide contrast", async ({ fixture }) => {
+    const component = fixture.component();
+    
+    const backgroundColor = await component.evaluate((element: ProgressBar) => {
+      const shadowRoot = element.shadowRoot;
+      if (!shadowRoot) return null;
+      
+      const progressBarElement = shadowRoot.querySelector('.progress-bar') as HTMLElement;
+      if (!progressBarElement) return null;
+      
+      return window.getComputedStyle(progressBarElement).backgroundColor;
+    });
+
+    const panelColor = await fixture.page.evaluate(() => {
+      return getComputedStyle(document.documentElement).getPropertyValue('--oe-panel-color').trim();
+    });
+
+    // The background should be different from the panel color to provide contrast
+    expect(backgroundColor).not.toBe(panelColor);
+    expect(backgroundColor).toBeTruthy();
+  });
 });

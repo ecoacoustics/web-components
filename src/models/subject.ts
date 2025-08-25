@@ -174,16 +174,14 @@ export class SubjectWrapper {
       // decision.
       // This means that the SubjectChange describes if a decision was
       // overwritten as part of setting the decision to "not required".
-      const change: SubjectChange = this.verification === decisionNotRequired || !this.verification
-        ? {}
-        : { verification: decisionNotRequired };
+      const change: SubjectChange =
+        this.verification === decisionNotRequired || !this.verification ? {} : { verification: decisionNotRequired };
 
       this.verification = decisionNotRequired;
       return change;
     } else if (decision === NewTag) {
-      const change: SubjectChange = this.newTag === decisionNotRequired || !this.newTag
-        ? {}
-        : { newTag: decisionNotRequired };
+      const change: SubjectChange =
+        this.newTag === decisionNotRequired || !this.newTag ? {} : { newTag: decisionNotRequired };
 
       this.newTag = decisionNotRequired;
       return change;
