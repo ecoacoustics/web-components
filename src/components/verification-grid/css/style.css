@@ -132,6 +132,8 @@
   height: min-content;
   align-self: center;
 
+  container: controls / inline-size;
+
   gap: var(--oe-spacing);
   color: var(--oe-font-color);
 }
@@ -224,7 +226,11 @@ oe-spectrogram {
   }
 }
 
-@media (max-width: 600px) {
+@container controls (width <= 600px) {
+  .controls-container {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+
   .decision-controls {
     order: -1;
   }
@@ -235,5 +241,11 @@ oe-spectrogram {
 
   .next-page-button {
     order: 1;
+  }
+
+  .decision-controls-left,
+  .decision-controls,
+  .decision-controls-right {
+    justify-content: center !important;
   }
 }
