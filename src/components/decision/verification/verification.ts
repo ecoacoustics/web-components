@@ -138,7 +138,7 @@ export class VerificationComponent extends DecisionComponent {
           style="--ripple-color: var(${color})"
           aria-disabled="${this.disabled}"
           aria-keyshortcuts="${this.shortcut}"
-          @click="${() => this.handleDecision()}"
+          @click="${this.handleDecision}"
         >
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 

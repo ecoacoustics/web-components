@@ -5,10 +5,9 @@ import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
-import { VerificationGridComponent } from "../verification-grid/verification-grid";
+import { LoadState, VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher";
-import { SubjectParser } from "../../services/subjectParser";
 import { DownloadableResult } from "../../models/subject";
 import { when } from "lit/directives/when.js";
 import dataSourceStyles from "./css/style.css?inline";
@@ -114,11 +113,18 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public resultRows(): Partial<DownloadableResult>[] {
+  private resultRows(): Partial<DownloadableResult>[] {
     if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     }
 
+    // If the data source is a URL, we know the entire dataset ahead of time.
+    // Because url data sources are static files that were probably provided by
+    // the user, we download the entire dataset with decisions added instead of
+    // just the subjects that the user has seen so far.
+    //
+    // This obeys our design principle of not changing the original data set and
+    // only adding information.
     if (this.isUrlSourced()) {
       const subjects = this.verificationGrid.subjects;
       return subjects.map((model) => model.toDownloadable());
@@ -229,8 +235,15 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    const urlTransformer = this.verificationGrid.urlTransformer;
-    this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    this.verificationGrid.loadState = LoadState.LOADING;
+    try {
+      this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    } catch (error) {
+      console.error("Failed to update data source:", error);
+      this.verificationGrid.loadState = LoadState.ERROR;
+      return;
+    }
+
     if (!this.urlSourcedFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }
@@ -238,17 +251,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.fileName = this.urlSourcedFetcher.file.name;
 
     const subjects = await this.urlSourcedFetcher.generateSubjects();
-    const subjectWrapperModels = subjects.map((subject) => SubjectParser.parse(subject, urlTransformer));
 
-    const nullFetcher: PageFetcher = async () => ({
-      subjects: [],
-      context: {},
-      totalItems: subjectWrapperModels.length,
-    });
-    nullFetcher.brand = UrlSourcedFetcher.brand;
+    const localDataFetcher: PageFetcher = async (context: { completed: boolean }) => {
+      const items = context.completed ? [] : subjects;
 
-    this.verificationGrid.getPage = nullFetcher;
-    this.verificationGrid.subjects = subjectWrapperModels;
+      return {
+        subjects: items,
+        totalItems: subjects.length,
+        context: { completed: true },
+      };
+    };
+    localDataFetcher.brand = UrlSourcedFetcher.brand;
+
+    this.verificationGrid.getPage = localDataFetcher;
   }
 
   private fileInputTemplate(): HTMLTemplateResult {
@@ -271,7 +286,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           id="browser-file-input"
           class="hidden"
           type="file"
-          accept=".csv,.json"
+          accept=".csv,.json,.tsv"
           @change="${(event: Event) => this.handleFileChange(event)}"
         />
       </span>

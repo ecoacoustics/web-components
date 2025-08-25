@@ -59,7 +59,7 @@ test.describe("interactions between axes and spectrogram", () => {
 
     // TODO: add examples for offsets
     testCases.forEach((testCase) => {
-      const humanizedSize = `${testCase.spectrogramSize.width} x ${testCase.spectrogramSize.height}`;
+      const humanizedSize = `${testCase.spectrogramSize.width.toString()} x ${testCase.spectrogramSize.height.toString()}`;
 
       test(`x-axis step for size ${humanizedSize}`, async ({ fixture }) => {
         await fixture.createWithSize(testCase.spectrogramSize);

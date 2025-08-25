@@ -4,7 +4,6 @@ import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { consume, provide } from "@lit/context";
-import { booleanConverter } from "../../helpers/attributes";
 import { ALT_KEY, ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
@@ -89,16 +88,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   @state()
   private injector!: VerificationGridInjector;
 
-  /**
-   * Hides a grid tile. This is useful for virtual paging so if you have a
-   * grid of tiles where not all have a source, you can hide the ones that
-   * do not have a source instead of destroying them completely as they might
-   * be used in the future when paging back in history or the grid size is
-   * increased.
-   */
-  @property({ type: Boolean, converter: booleanConverter, reflect: true })
-  public hidden = false;
-
   @property({ attribute: false, type: Boolean })
   public showKeyboardShortcuts = false;
 
@@ -182,6 +171,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public firstUpdated(): void {
+    console.debug("oe-verification-grid-tile: firstUpdated");
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
@@ -224,7 +214,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
   public updateSubject(subject: SubjectWrapper): void {
     this.model = subject;
-    this.requestUpdate();
   }
 
   public resetSettings(): void {
@@ -368,8 +357,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
     // Sometimes there is no tag. On the subject. In this case, we have to
     // change the tooltip a bit.
-    const tooltipText = this.model.tag?.text
-      ? `verification: ${this.model.tag.text} (${decisionText})`
+    const verificationTagText = (this.model.verification as any)?.tag?.text;
+    const tooltipText = verificationTagText
+      ? `verification: ${verificationTagText} (${decisionText})`
       : `verification: ${decisionText}`;
 
     // if there is no verification decision on the tiles subject model, then
@@ -392,7 +382,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
       if (currentNewTag.confirmed === DecisionOptions.SKIP) {
         tooltipText = `new tag: ${currentNewTag.confirmed}`;
       } else {
-        tooltipText = `new tag: ${currentNewTag.tag.text}`;
+        tooltipText = `new tag: ${currentNewTag.tag?.text}`;
       }
     } else {
       tooltipText = "new tag: no decision";
@@ -439,7 +429,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     const tileClasses = classMap({
       selected: this.selected,
       selectable: !this.isOnlyTile,
-      hidden: this.hidden,
     });
 
     const figureClasses = classMap({
@@ -470,7 +459,6 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         part="tile-container"
         role="button"
         tabindex="${this.isOnlyTile ? -1 : 1}"
-        aria-hidden="${this.hidden}"
         aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}
@@ -478,9 +466,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
           <div class="figure-head">
             <figcaption class="tag-label">
               <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
-                <span>
+                <span data-testid="tile-tag-text">
                   ${this.model?.newTag && this.model?.newTag !== decisionNotRequired
-                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag.text}</ins>`
+                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag?.text}</ins>`
                     : html`${tagText}`}
                 </span>
               </sl-tooltip>

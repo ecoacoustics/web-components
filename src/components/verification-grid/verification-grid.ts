@@ -1,6 +1,15 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
+import {
+  html,
+  HTMLTemplateResult,
+  LitElement,
+  nothing,
+  PropertyValueMap,
+  PropertyValues,
+  render,
+  unsafeCSS,
+} from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -11,7 +20,6 @@ import {
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
-import { classMap } from "lit/directives/class-map.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
 import {
   DOWN_ARROW_KEY,
@@ -32,7 +40,6 @@ import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors";
@@ -49,6 +56,10 @@ import { repeat } from "lit/directives/repeat.js";
 import { newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { TagPromptComponent } from "../decision/tag-prompt/tag-prompt";
 import { HeapVariable } from "../../helpers/types/advancedTypes";
+import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
+import { choose } from "lit/directives/choose.js";
+import { cache } from "lit/directives/cache.js";
+import { templateContent } from "lit/directives/template-content.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -133,6 +144,13 @@ export enum ProgressBarPosition {
   HIDDEN = "hidden",
 }
 
+export enum LoadState {
+  LOADING = "loading",
+  FETCHED = "fetched",
+  LOADED = "loaded",
+  ERROR = "error",
+}
+
 type SelectionEvent = CustomEvent<{
   shiftKey: boolean;
   ctrlKey: boolean;
@@ -143,6 +161,22 @@ interface HighlightSelection {
   start: MousePosition;
   current: MousePosition;
   highlighting: boolean;
+  pointerId: number | null;
+  capturedPointer: boolean;
+
+  // We store the highlight host in the HighlightSelection object for two
+  // reasons.
+  //
+  // 1. We cannot always attach to the <body> element because poorly created
+  //    webpages might not have a <body> element.
+  // 2. We store a reference to the element so that we can correctly detach the
+  //    event listener when this component is removed from the DOM.
+  //    If we did not store a reference to the element and instead used a getter
+  //    to find what element the highlight is attached to, if the original
+  //    highlight host is removed from the DOM, the re-queried element would be
+  //    different. Meaning we wouldn't be able to remove the event listeners
+  //    from the original highlight host and there would be a memory leak.
+  highlightHost: HTMLElement;
 
   // we store the observed elements in an array so that we don't re-query the
   // DOM for the grid tiles every time the highlight box is resized
@@ -181,6 +215,8 @@ interface SelectionOptions {
  * ```
  *
  * @dependency oe-verification-grid-tile
+ *
+ * @csspart highlight-box - A CSS target for the highlight box so that you can change the color/style.
  *
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
@@ -262,7 +298,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private tagPromptDecisionElements!: TagPromptComponent[];
 
   /** A selector for all oe-verification and oe-classification elements */
-  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt" })
+  @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt, oe-skip" })
   private decisionElements!: DecisionComponentUnion[];
 
   // Because it's possible (although unlikely) for multiple skip buttons to
@@ -295,36 +331,19 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public rows = 1;
 
   @state()
+  public loadState: LoadState = LoadState.LOADING;
+
+  @state()
   private currentSubSelection: SubjectWrapper[] = [];
+
+  @state()
+  private viewHead = 0;
+
+  @state()
+  private decisionHeadIndex = 0;
 
   public get gridShape(): GridShape {
     return { columns: this.columns, rows: this.rows };
-  }
-
-  /**
-   * The index of the first item from the `subjects` array in the currently
-   * displayed verification grid page
-   */
-  public get viewHead(): number {
-    return this.viewHeadIndex;
-  }
-
-  public set viewHead(value: number) {
-    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
-
-    // because the viewHead is an index into the "subjects" array, it cannot
-    // be larger than the length of the subjects array.
-    // if we receive a value that is larger than the subjects buffer, we emit
-    // a warning so that we can catch it in dev, and use the subject arrays
-    // length as a fallback to prevent hard-failing.
-    const availableSubjectsCount = this.subjects.length;
-    if (clampedHead > availableSubjectsCount) {
-      console.warn("Attempted to set the viewHead to a value larger than the subjects array");
-      clampedHead = availableSubjectsCount;
-    }
-
-    this.viewHeadIndex = clampedHead;
-    this.renderVirtualPage();
   }
 
   /**
@@ -338,7 +357,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private set decisionHead(value: number) {
     this.decisionHeadIndex = value;
-    this.paginationFetcher?.populateSubjects(this.decisionHead);
   }
 
   /** A count of the number of tiles shown in the grid */
@@ -354,10 +372,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   /** A count of the number of tiles currently visible on the screen */
   public get effectivePageSize(): number {
     return this.populatedTileCount - this.hiddenTiles;
-  }
-
-  public get loaded() {
-    return this._loaded;
   }
 
   private get currentPageIndices(): CurrentPage {
@@ -394,11 +408,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private selectionHandler = this.handleTileSelection.bind(this);
   private decisionHandler = this.handleDecision.bind(this);
 
-  public subjects: SubjectWrapper[] = [];
+  private pointerDownHandler = this.renderHighlightBox.bind(this);
+  private pointerUpHandler = this.hideHighlightBox.bind(this);
+  private pointerMoveHandler = this.handlePointerMove.bind(this);
 
-  private _loaded = false;
-  private decisionHeadIndex = 0;
-  private viewHeadIndex = 0;
+  public subjects: SubjectWrapper[] = [];
 
   /**
    * "single decision mode" will automatically advance the selection head if:
@@ -426,7 +440,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
+    pointerId: null,
+    capturedPointer: false,
     observedElements: [],
+
+    // Poorly created webpages may not have a body element.
+    // In this case, we should use the component host as the highlight host.
+    //
+    // I store the highlight host in the highlight object so if a <body> tag
+    // is dynamically added/removed from the page, we will maintain the same
+    // highlight host and not leak event listeners.
+    highlightHost: document.body ?? this,
   };
 
   private focusHead: number | null = null;
@@ -517,12 +541,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.addEventListener("keydown", this.keydownHandler);
     this.addEventListener("keyup", this.keyupHandler);
     window.addEventListener("blur", this.blurHandler);
+
+    this.highlight.highlightHost.addEventListener("pointerdown", this.pointerDownHandler);
+    this.highlight.highlightHost.addEventListener("pointerup", this.pointerUpHandler);
+    this.highlight.highlightHost.addEventListener("pointermove", this.pointerMoveHandler);
   }
 
   public disconnectedCallback(): void {
     this.removeEventListener("keydown", this.keydownHandler);
     this.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("blur", this.blurHandler);
+
+    // I don't need an elvis operator here in the case that the host application
+    // removes the <body> element because the highlight object + event listener
+    // will stop the <body> element node reference from being garbage collected.
+    this.highlight.highlightHost.removeEventListener("pointerdown", this.pointerDownHandler);
+    this.highlight.highlightHost.removeEventListener("pointerup", this.pointerUpHandler);
+    this.highlight.highlightHost.removeEventListener("pointermove", this.pointerMoveHandler);
 
     this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
@@ -533,7 +568,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHead < this.decisionHead;
+    return this.viewHead + (this.populatedTileCount - 1) < this.decisionHead;
   }
 
   public resetSpectrogramSettings(): void {
@@ -548,25 +583,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
   //#region Updates
-
-  // because subjects are appended into the "subjects" array asynchronously by
-  // the gridPageFetcher, it is possible for the verification grid to be ahead
-  // of where the async page fetcher has populated the subjects up to.
-  // therefore, we use a callback to append to the "subjects" array so that we
-  // can trigger change detection if we receive new subjects when we are
-  // currently displaying none
-  public pushToSubjects(value: SubjectWrapper[]): void {
-    this.subjects.push(...value);
-
-    // tiles will be hidden when the provided dataset does not provide enough
-    // data to create a full verification grid page.
-    // if we were previously lacking the data to fill a verification grid and
-    // we just appended more items, we should re-render the verification grid
-    // so that the new data can be added
-    if (this.hiddenTiles > 0) {
-      this.renderVirtualPage();
-    }
-  }
 
   public firstUpdated(): void {
     this.gridContainer.addEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
@@ -601,9 +617,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       // we use isFinite here to check that the value is not NaN, and that
       // values such as Infinity are not considered as a valid grid size
-      if (!isFinite(newGridSize) || newGridSize <= 0) {
+      if (!isFinite(newGridSize)) {
         this.targetGridSize = oldGridSize;
-        console.error(`New grid size "${newGridSize}" could not be converted to a finite number`);
+        console.error(`Grid size '${newGridSize}' could not be converted to a finite number.`);
+      } else if (newGridSize <= 0) {
+        this.targetGridSize = oldGridSize;
+        console.error(`Grid size '${newGridSize}' must be a positive number.`);
       }
     }
   }
@@ -612,13 +631,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.gridContainer && change.has("targetGridSize")) {
       this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.anyOverlap);
       this.gridController.setTarget(this.targetGridSize);
-    }
-
-    // tile invalidations cause the functionality of the tiles to change
-    // however, they do not cause the spectrograms or the template to render
-    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
-    if (tileInvalidationKeys.some((key) => change.has(key))) {
-      this.handleTileInvalidation();
     }
 
     // invalidating the verification grids source will cause the grid tiles and
@@ -633,8 +645,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // additionally, if the grid size is decreased, we want the "currentPage"
     // of sources to update / remove un-needed items.
     //
-    // However, if the new grid size is less than the current grid sie, we don't
-    // want to invalidate the page because that would produce unnecessary work.
+    // However, if the new grid size is less than the current grid size, we
+    // don't want to invalidate the page because that would produce unnecessary
+    // work.
     const pageInvalidationKeys: (keyof this)[] = ["targetGridSize", "columns", "rows"];
     if (pageInvalidationKeys.some((key) => change.has(key))) {
       const oldColumns = change.get("columns") ?? this.columns;
@@ -643,17 +656,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const oldGridSize = oldColumns * oldRows;
       const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
 
-      if (oldTileCount < this.populatedTileCount) {
-        this.handlePageInvalidation();
-      } else {
+      if (oldTileCount > this.populatedTileCount) {
         if (this.areTilesLoaded()) {
-          this._loaded = true;
+          this.loadState = LoadState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
       }
 
       this.updateSubSelection();
+    }
+
+    // tile invalidations cause the functionality of the tiles to change
+    // however, they do not cause the spectrograms or the template to render
+    const tileInvalidationKeys: (keyof this)[] = ["selectionBehavior"];
+    if (tileInvalidationKeys.some((key) => change.has(key))) {
+      this.handleTileInvalidation();
     }
   }
 
@@ -693,18 +711,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * this will reset the verification task and re-fetch the first page of
    * subjects from the new data source
    */
-  private async handleGridSourceInvalidation(): Promise<void> {
-    this.resetBufferHeads();
-
+  private async handleGridSourceInvalidation() {
     if (this.getPage) {
-      this.paginationFetcher = new GridPageFetcher(
-        this.getPage,
-        this.urlTransformer,
-        this.subjects,
-        this.pushToSubjects.bind(this),
-      );
-      await this.paginationFetcher.populateSubjects(this.decisionHead);
-      this.renderVirtualPage();
+      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
+      await this.resetBufferHeads();
     }
 
     // After changing the data source, we want to remove the current
@@ -736,19 +746,49 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  /**
-   * handles the currently rendered page of subjects changing
-   * e.g. the number of tiles being rendered, or the source of a singular tile
-   *      changing
-   * causing the current page to be re-rendered from the viewHead position
-   */
-  private handlePageInvalidation(): void {
-    this.renderVirtualPage();
-  }
+  private async resetBufferHeads() {
+    this.subjects = [];
 
-  private resetBufferHeads(): void {
-    this.viewHead = 0;
+    await this.setViewHead(0);
     this.decisionHead = 0;
+
+    // While every subject has a decision, we keep paging through the data
+    // until we find the first page that does not have complete decisions.
+    //
+    // When we find a page that does not have complete decisions, we stop and
+    // set the decision head.
+    //
+    // Because we always start the view head at 0, we can start rendering the
+    // first page immediately without having to wait for the decision head
+    // location.
+    // Therefore, we can perform this operation asynchronously and not block
+    // the UI.
+    new Promise<void>(async (res) => {
+      let virtualDecisionHead = 0;
+      while (true) {
+        const virtualPage = await this.viewHeadItems(virtualDecisionHead);
+        if (virtualPage.length === 0) {
+          break;
+        }
+
+        const isPageIncomplete = virtualPage.some((subject) =>
+          subject.hasOutstandingDecisions(
+            this.hasVerificationTask(),
+            this.hasNewTagTask(),
+            this.requiredClassificationTags,
+          ),
+        );
+
+        if (isPageIncomplete) {
+          break;
+        }
+
+        virtualDecisionHead += this.populatedTileCount;
+      }
+
+      this.decisionHead = virtualDecisionHead;
+      res();
+    });
   }
 
   private updateRequiredDecisions(): void {
@@ -1001,7 +1041,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const eventTarget = event.target;
     if (!(eventTarget instanceof VerificationGridTileComponent)) {
-      console.warn("Received play event request from non-tile element");
+      console.error("Received play event request from non-tile element");
       return;
     }
 
@@ -1273,6 +1313,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private clearSelection(): void {
     this.removeSubSelection();
     this.resetSelectionHead();
+    this.hideHighlightBox();
   }
 
   private updateSelectionHead(value: number | null, options?: SelectionOptions): void {
@@ -1321,13 +1362,92 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(0, options);
   }
 
+  private async viewHeadItems(viewHead: number): Promise<SubjectWrapper[]> {
+    if (!this.paginationFetcher) {
+      console.error("Cannot set viewHead because the paginationFetcher is not initialized");
+      return [];
+    }
+
+    const needsMoreSubjects = viewHead > this.viewHead || this.viewHead === 0;
+    if (needsMoreSubjects) {
+      let enoughToRenderResolver: () => void;
+      const enoughToRender = new Promise<void>((resolve) => {
+        enoughToRenderResolver = resolve;
+      });
+
+      const subjectReader = await this.paginationFetcher.nextSubjects(
+        this.decisionHead,
+        this.populatedTileCount,
+        this.subjects.length,
+      );
+
+      subjectReader.pipeTo(
+        new WritableStream({
+          write: (subject: SubjectWrapper[]) => {
+            this.subjects.push(...subject);
+
+            if (this.subjects.length >= viewHead + this.targetGridSize) {
+              // if we have enough subjects to render the page, we resolve the
+              // promise so that the viewHead can be set
+              enoughToRenderResolver();
+            }
+          },
+          close: () => {
+            // because the viewHead is an index into the "subjects" array, it
+            // cannot be larger than the length of the subjects array.
+            // If we receive a value that is larger than the subjects buffer,
+            // we emit an error so we can catch it in dev, and use the subject
+            // arrays length as a fallback to prevent hard-failing.
+            const availableSubjectsCount = this.subjects.length;
+            if (availableSubjectsCount < viewHead) {
+              console.error("Attempted to set the viewHead to a value larger than the subjects array");
+              viewHead = availableSubjectsCount;
+            }
+
+            this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
+
+            enoughToRenderResolver();
+          },
+        }),
+      );
+
+      await enoughToRender;
+    }
+
+    return this.subjects.slice(viewHead, viewHead + this.populatedTileCount);
+  }
+
+  private async setViewHead(value: number): Promise<void> {
+    // If the viewHead will not change, I do not perform any updates because we
+    // might end up in an unexpected state.
+    // Note that I have never seen this condition trigger, but it is a
+    // defensive programming measure.
+    if (value === this.viewHead && this.viewHead !== 0) {
+      return;
+    }
+
+    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
+
+    await this.viewHeadItems(clampedHead);
+
+    this.viewHead = clampedHead;
+    this.setDecisionDisabled(true);
+
+    // Changing the loadState will cause an update because the loadState is a
+    // tracked state meaning that we don't have to manually invoke
+    // requestUpdate which would end up being debounced anyways.
+    if (this.loadState === LoadState.LOADING) {
+      this.loadState = LoadState.FETCHED;
+    } else {
+      this.requestUpdate();
+    }
+  }
+
   //#endregion
 
-  // TODO: The selection bounding box isn't currently complete
   //#region SelectionBoundingBox
 
-  // TODO: Clean this up
-  private renderHighlightBox(event: PointerEvent) {
+  private renderHighlightBox(event: PointerEvent): void {
     if (!this.canSubSelect() || this.isMobileDevice()) {
       return;
     } else if (event.button !== 0) {
@@ -1352,6 +1472,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       const { pageX, pageY } = event;
       this.highlight.start = { x: pageX, y: pageY };
+
+      this.highlight.pointerId = event.pointerId;
+      this.highlight.capturedPointer = false;
     }
   }
 
@@ -1393,7 +1516,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const highlightThreshold = 15;
     const meetsHighlightThreshold = Math.max(highlightXDelta, highlightYDelta) > highlightThreshold;
     if (meetsHighlightThreshold) {
-      highlightBoxElement.style.display = "block";
+      highlightBoxElement.style.display = "inline-block";
+      if (!this.highlight.capturedPointer && this.highlight.pointerId !== null) {
+        document.body.setPointerCapture(this.highlight.pointerId);
+      }
 
       // This mimics the behavior of Windows explorer where de-selecting items
       // during drag-selection only occurs during the initial draw of the
@@ -1457,6 +1583,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private hideHighlightBox(): void {
+    if (!this.highlight.highlighting) {
+      return;
+    }
+
     // we set the highlighting to false before the function guards so that if
     // the user (somehow) changes from a desktop device to a mobile device
     // while the highlight box is open, the highlight box will be correctly
@@ -1469,13 +1599,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    // TODO: improve this logic
-    const highlightBoxElement = this.highlightBox;
-    highlightBoxElement.style.width = "0px";
-    highlightBoxElement.style.height = "0px";
-    highlightBoxElement.style.top = "0px";
-    highlightBoxElement.style.left = "0px";
-    highlightBoxElement.style.display = "none";
+    this.highlightBox.style.display = "none";
+    if (this.highlight.pointerId !== null) {
+      document.body.releasePointerCapture(this.highlight.pointerId);
+      this.highlight.pointerId = null;
+    }
   }
 
   //#endregion
@@ -1496,7 +1624,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private async pageForward(): Promise<void> {
     const proposedViewHead = this.viewHead + this.populatedTileCount;
-    this.viewHead = proposedViewHead;
+    this.setViewHead(proposedViewHead);
     this.clearSelection();
   }
 
@@ -1505,29 +1633,24 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // because the viewHead setter might reject the new value if it is less
     // than zero or exceeds the length of the subjects array
     const proposedHead = this.viewHead - this.populatedTileCount;
-    this.viewHead = proposedHead;
+    this.setViewHead(proposedHead);
     this.clearSelection();
   }
 
   /** Changes the viewHead to the current page of undecided results */
   private async resumeVerification(): Promise<void> {
-    this.viewHead = this.decisionHead;
+    this.setViewHead(this.decisionHead);
+    this.clearSelection();
   }
 
-  // we ue the effective grid size here so that hidden tiles are not counted
+  // we use the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private nextPage(count: number = this.effectivePageSize) {
+  private async pageNext(count: number = this.effectivePageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    if (!this.paginationFetcher) {
-      throw new Error("No paginator found.");
-    }
-
-    // the viewHead property has a setter that will cause the verification grid
-    // to render the next page of spectrograms when we increase the viewHead
     this.decisionHead += count;
-    this.viewHead += count;
+    await this.setViewHead(this.viewHead + count);
   }
 
   private canNavigatePrevious(): boolean {
@@ -1625,7 +1748,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      this.nextPage(gridTiles.length);
+      this.pageNext(gridTiles.length);
 
       // If the last tile that was selected was auto-selected, we should
       // continue auto-selection onto the next page.
@@ -1728,68 +1851,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   //#region Rendering
 
-  private renderVirtualPage(): void {
-    const pageSubjects = Array.from(this.currentPage());
-
-    // even though making a decision will cause the spectrograms to load and
-    // emit the "loading" event (causing the decision buttons to be disabled)
-    // there can be some input lag between when we request to change the src
-    // and when the spectrograms begin to start rendering
-    // I also do this first so that if the functionality below fails then the
-    // user can't continue making decisions that won't be saved when downloaded
-    //
-    // because it is possible for the new page to be a subset of the current
-    // page. E.g. when decreasing the grid size, we only want to disable the
-    // decision buttons if there are going to be new spectrograms loading
-    //
-    // These buttons will be re-enabled when the all of the spectrograms
-    // "loaded" events have fired.
-    // Note that if there are no spectrograms on the new page (e.g. we have
-    // reached the final page), the buttons will not be re-enabled.
-    this.setDecisionDisabled(true);
-
-    const elements = this.gridTiles;
-    if (elements === undefined || elements.length === 0) {
-      this.requestUpdate();
-      return;
-    }
-
-    // if this guard condition is true, it means that we have exhausted the
-    // entire data source provided by the getPage callback
-    if (pageSubjects.length === 0) {
-      this.requestUpdate();
-      return;
-    }
-
-    // if we are on the last page, we hide the remaining elements
-    const pagedDelta = elements.length - pageSubjects.length;
-    if (pagedDelta > 0) {
-      this.hideGridItems(pagedDelta);
-    } else if (this.hiddenTiles > 0) {
-      this.showAllGridItems();
-      this.hiddenTiles = 0;
-    }
-
-    this.requestUpdate();
-  }
-
-  private hideGridItems(numberOfTiles: number): void {
-    Array.from(this.gridTiles)
-      .slice(-numberOfTiles)
-      .forEach((element) => {
-        element.hidden = true;
-      });
-
-    this.hiddenTiles = numberOfTiles;
-  }
-
-  private showAllGridItems(): void {
-    const gridTiles = this.gridTiles ?? [];
-    for (const element of gridTiles) {
-      element.hidden = false;
-    }
-  }
-
   private hasDecisionElements(): boolean {
     return Array.from(this.decisionElements ?? []).length > 0;
   }
@@ -1811,9 +1872,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
-      this._loaded = true;
+      this.loadState = LoadState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-
       this.updateDecisionWhen();
     }
   }
@@ -1900,12 +1960,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private noItemsTemplate(): HTMLTemplateResult {
     return html`
-      <div class="no-items-message">
+      <div class="message-overlay">
         <p>
           <strong>No un-validated results found</strong>
         </p>
         <p>All ${this.decisionHead} annotations are validated</p>
       </div>
+    `;
+  }
+
+  private loadingTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <span class="loading-message">Loading</span>
+        <div>${loadingSpinnerTemplate()}</div>
+      </div>
+    `;
+  }
+
+  private datasetFailureTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <p>
+          <strong>Failed to load dataset.</strong>
+        </p>
+      </div>
+    `;
+  }
+
+  private tileGridTemplate(): HTMLTemplateResult {
+    if (this.currentPageIndices.start >= this.currentPageIndices.end) {
+      return this.noItemsTemplate();
+    }
+
+    return html`
+      ${repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
+        this.gridTileTemplate(subject, index),
+      )}
     `;
   }
 
@@ -1951,13 +2042,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
-  private gridTileTemplate(subject: SubjectWrapper | null, customTemplate: any, index: number): HTMLTemplateResult {
-    // If there is no subject, we
-    if (subject === null) {
-      return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
-    }
+  private emptySubjectTemplate(): HTMLTemplateResult {
+    return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
+  }
 
-    return html`
+  private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
+    const tileTemplate = html`
       <oe-verification-grid-tile
         class="grid-tile"
         @oe-tile-loaded="${this.handleTileLoaded}"
@@ -1967,26 +2057,27 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .model="${subject as any}"
         .index="${index}"
       >
-        ${when(customTemplate, () => unsafeHTML(customTemplate.innerHTML))}
+        ${this.gridItemTemplate ? templateContent(this.gridItemTemplate) : nothing}
       </oe-verification-grid-tile>
     `;
+
+    // By using "cache" here Lit will cache the tile template meaning that it
+    // doesn't need to be re-created when tiles are added or removed from the
+    // grid.
+    return html`${cache(subject === null ? this.emptySubjectTemplate() : tileTemplate)}`;
   }
 
   public render() {
-    let customTemplate: any | undefined;
-    if (this.gridItemTemplate) {
-      customTemplate = this.gridItemTemplate.cloneNode(true);
-    }
-
     return html`
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"
         @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
+        .decisionElements="${this.decisionElements ?? []}"
         .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
-      <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
+      <div id="highlight-box" part="highlight-box"></div>
 
       <div class="verification-container">
         <div class="controls-container header-controls">
@@ -1997,57 +2088,58 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           id="grid-container"
           class="verification-grid"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
-          @pointerdown="${this.renderHighlightBox}"
-          @pointerup="${this.hideHighlightBox}"
-          @pointermove="${this.handlePointerMove}"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >
-          ${when(
-            this.currentPageIndices.start === this.currentPageIndices.end,
-            () => this.noItemsTemplate(),
-            () =>
-              repeat(this.currentPage(), (subject: SubjectWrapper | null, index: number) =>
-                this.gridTileTemplate(subject, customTemplate, index),
-              ),
-          )}
+          ${choose(this.loadState, [
+            [LoadState.LOADING, () => this.loadingTemplate()],
+            [LoadState.FETCHED, () => this.tileGridTemplate()],
+            [LoadState.LOADED, () => this.tileGridTemplate()],
+            [LoadState.ERROR, () => this.datasetFailureTemplate()],
+          ])}
         </div>
 
-        <div class="controls-container footer-controls">
-          <span id="element-container" class="decision-controls-left">
-            <oe-verification-grid-settings></oe-verification-grid-settings>
+        <div class="footer-container">
+          <div class="controls-container">
+            <span id="element-container" class="decision-controls-left">
+              <oe-verification-grid-settings></oe-verification-grid-settings>
 
-            <button
-              data-testid="help-dialog-button"
-              @click="${() => this.handleHelpRequest()}"
-              class="oe-btn-info"
-              rel="help"
-            >
-              <sl-icon name="question-circle" class="large-icon"></sl-icon>
-            </button>
+              <button
+                data-testid="help-dialog-button"
+                @click="${() => this.handleHelpRequest()}"
+                class="oe-btn-info"
+                rel="help"
+              >
+                <sl-icon name="question-circle" class="large-icon"></sl-icon>
+              </button>
 
-            <button
-              data-testid="continue-verifying-button"
-              class="oe-btn-secondary ${classMap({ hidden: !this.isViewingHistory() })}"
-              ?disabled="${!this.isViewingHistory()}"
-              @click="${this.resumeVerification}"
-            >
-              Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
-            </button>
-          </span>
+              ${when(
+                this.isViewingHistory(),
+                () => html`
+                  <button
+                    data-testid="continue-verifying-button"
+                    class="oe-btn-secondary"
+                    @click="${this.resumeVerification}"
+                  >
+                    Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
+                  </button>
+                `,
+              )}
+            </span>
 
-          <span class="decision-controls">
-            <h2 class="verification-controls-title">
-              ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
-            </h2>
-            <div id="decisions-container" class="decision-control-actions">
-              <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
-            </div>
-          </span>
+            <span class="decision-controls">
+              <h2 class="verification-controls-title">
+                ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
+              </h2>
+              <div id="decisions-container" class="decision-control-actions">
+                <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
+              </div>
+            </span>
 
-          <span class="decision-controls-right">
-            <slot name="data-source"></slot>
-          </span>
+            <span class="decision-controls-right">
+              <slot name="data-source"></slot>
+            </span>
+          </div>
 
           ${when(this.progressBarPosition === ProgressBarPosition.BOTTOM, () => this.progressBarTemplate())}
         </div>
