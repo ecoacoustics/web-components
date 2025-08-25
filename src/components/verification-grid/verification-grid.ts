@@ -216,6 +216,8 @@ interface SelectionOptions {
  *
  * @dependency oe-verification-grid-tile
  *
+ * @csspart highlight-box - A CSS target for the highlight box so that you can change the color/style.
+ *
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
@@ -2075,7 +2077,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .decisionElements="${this.decisionElements ?? []}"
         .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
-      <div id="highlight-box"></div>
+      <div id="highlight-box" part="highlight-box"></div>
 
       <div class="verification-container">
         <div class="controls-container header-controls">

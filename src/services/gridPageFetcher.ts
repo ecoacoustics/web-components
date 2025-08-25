@@ -124,7 +124,7 @@ export class GridPageFetcher {
 
     for (const model of models) {
       model.serverCached = AudioCachedState.REQUESTED;
-      fetch(model.url, { method: "HEAD", priority: "low" })
+      fetch(model.url, { method: "HEAD", priority: "low", cache: "no-store" })
         .then((response: Response) => {
           model.serverCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
         })
