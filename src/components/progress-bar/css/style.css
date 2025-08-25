@@ -2,7 +2,7 @@
   display: flex;
   position: relative;
   height: var(--oe-font-size);
-  background-color: var(--oe-panel-color);
+  background-color: var(--oe-panel-color-dark);
   border-radius: var(--oe-border-rounding);
 
   .segment {
