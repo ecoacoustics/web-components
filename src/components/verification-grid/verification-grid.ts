@@ -434,6 +434,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private anyOverlap = signal<boolean>(false);
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
+  private subjectReader?: ReadableStream<SubjectWrapper[]>;
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
   private highlight: HighlightSelection = {
@@ -1368,6 +1369,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return [];
     }
 
+    if (this.subjectReader) {
+      this.subjectReader.cancel();
+    }
+
     const needsMoreSubjects = viewHead > this.viewHead || this.viewHead === 0;
     if (needsMoreSubjects) {
       let enoughToRenderResolver: () => void;
@@ -1375,13 +1380,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         enoughToRenderResolver = resolve;
       });
 
-      const subjectReader = await this.paginationFetcher.nextSubjects(
+      this.subjectReader = await this.paginationFetcher.nextSubjects(
         this.decisionHead,
         this.populatedTileCount,
         this.subjects.length,
       );
 
-      subjectReader.pipeTo(
+      this.subjectReader.pipeTo(
         new WritableStream({
           write: (subject: SubjectWrapper[]) => {
             this.subjects.push(...subject);
