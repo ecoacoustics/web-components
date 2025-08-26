@@ -1,8 +1,9 @@
-import { customElement, query, state } from "lit/decorators.js";
+import { customElement, query, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
 import { when } from "lit/directives/when.js";
+import { templateContent } from "lit/directives/template-content.js";
 import { loop } from "../../helpers/directives";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { BootstrapSlide } from "./slides/bootstrapSlide";
@@ -87,6 +88,9 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   private slides: BootstrapSlide[] = [];
 
+  @queryAssignedElements({ selector: "template" })
+  private readonly helpTemplates!: ReadonlyArray<HTMLTemplateElement>;
+
   @query("#dialog-element")
   private dialogElement!: HTMLDialogElement;
 
@@ -136,11 +140,23 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public showTutorialDialog(): void {
     this.isAdvancedDialog = false;
 
-    const slides: BootstrapSlide[] = [
+    const slides: BootstrapSlide[] = [];
+
+    // Add each help template as a separate slide
+    if (this.helpTemplates && this.helpTemplates.length > 0) {
+      this.helpTemplates.forEach((template) => {
+        slides.push({
+          title: "",
+          slideTemplate: html`${templateContent(template)}`,
+        });
+      });
+    }
+
+    slides.push(
       decisionsSlide(this.hasVerificationTask, this.hasClassificationTask, this.demoDecisionButton),
       selectionSlide(this.hasClassificationTask, this.demoDecisionButton),
       pagingSlide(),
-    ];
+    );
 
     // if the user is on a mobile device, we don't need to bother showing
     // the keyboard shortcuts slide
@@ -306,6 +322,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
+      <slot style="display: none;"></slot>
       <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
         <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
           <header class="dialog-header">

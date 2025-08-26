@@ -185,6 +185,7 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
+ * @slot help-bootstrap - A template element containing custom help content for the bootstrap dialog
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
@@ -585,6 +586,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.skipButtons.length === 0) {
       render(this.skipDecisionTemplate(), this);
     }
+
+    // Initialize help bootstrap template
+    // this.updateHelpBootstrapTemplate();
 
     if (this.autofocus) {
       this.focus();
@@ -1985,7 +1989,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .isMobile="${this.isMobileDevice()}"
-      ></oe-verification-bootstrap>
+      >
+        <slot name="help-bootstrap"></slot>
+      </oe-verification-bootstrap>
       <div id="highlight-box" @pointerup="${this.hideHighlightBox}" @pointermove="${this.resizeHighlightBox}"></div>
 
       <div class="verification-container">

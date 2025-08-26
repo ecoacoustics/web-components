@@ -68,6 +68,44 @@ class TestPage {
   public async setGridSize(value: number) {
     await setBrowserAttribute(this.component(), "grid-size" as keyof VerificationGridComponent, value.toString());
   }
+
+  public async createWithHelpBootstrapSlot() {
+    await setContent(
+      this.page,
+      `
+      <oe-verification-grid id="verification-grid">
+        <template>
+          <div class="template-element"></div>
+        </template>
+
+        <template slot="help-bootstrap">
+          <h1>Custom Help Content</h1>
+          <p>This is a custom help message for this verification task.</p>
+        </template>
+
+        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+
+        <oe-data-source
+          src="http://localhost:3000/test-items.json"
+          for="verification-grid"
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      ".decision-button",
+    ]);
+
+    await expect(this.component()).toHaveJSProperty("loaded", true);
+  }
+
+  public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap");
+  public helpButton = () => this.page.locator("[data-testid='help-dialog-button']");
 }
 
 export const verificationGridFixture = createFixture(TestPage);

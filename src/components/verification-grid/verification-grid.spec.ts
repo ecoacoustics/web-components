@@ -23,4 +23,21 @@ test.describe("verification grid", () => {
     expect(koalaDecision).toBeTruthy();
     expect(notKoalaDecision).toBeTruthy();
   });
+
+  test("should render custom help content in bootstrap dialog when help-bootstrap slot is provided", async ({ fixture }) => {
+    await fixture.createWithHelpBootstrapSlot();
+
+    // Click the help button to open the bootstrap dialog
+    await fixture.helpButton().click();
+
+    // Wait for the dialog to open
+    await fixture.bootstrapDialog().waitFor({ state: "visible" });
+
+    // Check that the custom help content is rendered in the dialog
+    const customTitle = fixture.page.getByText("Custom Help Content");
+    const customDescription = fixture.page.getByText("This is a custom help message for this verification task.");
+    
+    await expect(customTitle).toBeVisible();
+    await expect(customDescription).toBeVisible();
+  });
 });
