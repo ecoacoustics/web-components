@@ -1388,8 +1388,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       this.subjectReader.pipeTo(
         new WritableStream({
-          write: (subject: SubjectWrapper[]) => {
-            this.subjects.push(...subject);
+          write: (subjects: SubjectWrapper[]) => {
+            this.subjects.push(...subjects);
 
             if (this.subjects.length >= viewHead + this.targetGridSize) {
               // if we have enough subjects to render the page, we resolve the
