@@ -53,7 +53,7 @@ export class GridPageFetcher {
 
     const queueSizeDelta = Math.max(requiredQueueSize - currentQueuedSubjectCount, 0);
 
-    let fetchedItems = 0;
+    const queueingStrategy = new CountQueuingStrategy({ highWaterMark: requiredQueueSize });
 
     // We use a ReadableStream instead of returning a promise directly so that
     // consumers like the verification grid don't have to wait for all of the
@@ -80,12 +80,13 @@ export class GridPageFetcher {
 
         controller.close();
       },
+      queueingStrategy,
     });
 
     return readableStream;
   }
 
-  public async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
+  private async refreshCache(viewHead: number): Promise<void> {
     // Notice that these cache operations are not awaited, meaning that they are
     // "fire and forget".
     this.audioCacheClient(subjects, viewHead);

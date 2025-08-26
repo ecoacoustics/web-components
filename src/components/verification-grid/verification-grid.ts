@@ -492,6 +492,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private readonly pointerUpHandler = this.hideHighlightBox.bind(this);
   private readonly pointerMoveHandler = this.handlePointerMove.bind(this);
 
+  private readonly subjectWriter = new WritableStream<SubjectWrapper[]>({
+    write: (subjects: SubjectWrapper[]) => {
+      this.subjects.push(...subjects);
+    },
+  });
+
   public subjects: SubjectWrapper[] = [];
 
   /**
@@ -1504,7 +1510,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         },
       });
 
-      this.subjectReader.pipeTo(subjectWriterStream);
+      await this.subjectReader.pipeTo(this.subjectWriter);
 
       await enoughToRender;
     }
