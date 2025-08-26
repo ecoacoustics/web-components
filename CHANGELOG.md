@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.1...web-components-v5.2.2) (2025-08-26)
+
+
+### Bug Fixes
+
+* contrast for progress bar's undecided color ([d61494e](https://github.com/ecoacoustics/web-components/commit/d61494eed7cec1a168876a86e62d7ae373e0e4f6)), closes [#469](https://github.com/ecoacoustics/web-components/issues/469)
+
 ## [5.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.0...web-components-v5.2.1) (2025-08-19)
 
 
