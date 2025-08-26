@@ -26,6 +26,8 @@ export class GridPageFetcher {
     this.urlTransformer = urlTransformer;
   }
 
+  public readonly subjectStream: ReadableStream<SubjectWrapper[]> = new ReadableStream();
+
   public totalItems?: number;
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
@@ -38,7 +40,7 @@ export class GridPageFetcher {
   public async nextSubjects(
     viewHead: number,
     pageSize: number,
-    currentSubjectSize: number,
+    currentQueuedSubjectCount: number,
   ): Promise<ReadableStream<SubjectWrapper[]>> {
     // It's very unlikely that the number of items required for rendering is
     // less than the number of items required for caching because we cache 50
@@ -49,7 +51,7 @@ export class GridPageFetcher {
     const requiredForRender = viewHead + pageSize;
     const requiredQueueSize = Math.max(requiredForCaching, requiredForRender);
 
-    const queueSizeDelta = Math.max(requiredQueueSize - currentSubjectSize, 0);
+    const queueSizeDelta = Math.max(requiredQueueSize - currentQueuedSubjectCount, 0);
 
     let fetchedItems = 0;
 
@@ -60,7 +62,7 @@ export class GridPageFetcher {
     // For example, the verification grid can start rendering when we have
     // fetched 8 items, but we don't want to block rendering until we have
     // enough fetched subjects to fill the client cache and server cache.
-    const writableStream = new ReadableStream<SubjectWrapper[]>({
+    const readableStream = new ReadableStream<SubjectWrapper[]>({
       start: async (controller) => {
         // Continue to fetch items until we have enough items in the queue
         // or the paging function returns no more items
@@ -80,7 +82,7 @@ export class GridPageFetcher {
       },
     });
 
-    return writableStream;
+    return readableStream;
   }
 
   public async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {

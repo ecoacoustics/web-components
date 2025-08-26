@@ -81,8 +81,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
 
-  private keyUpHandler = this.handleKeyUp.bind(this);
-  private keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly keyUpHandler = this.handleKeyUp.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
 
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {

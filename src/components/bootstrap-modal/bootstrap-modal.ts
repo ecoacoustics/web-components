@@ -94,7 +94,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   private tutorialSlideCarouselElement!: SlCarousel;
 
   private isAdvancedDialog = false;
-  private keydownHandler = this.handleKeyDown.bind(this);
+  private readonly keydownHandler = this.handleKeyDown.bind(this);
 
   public get open(): boolean {
     return this.dialogElement.open;

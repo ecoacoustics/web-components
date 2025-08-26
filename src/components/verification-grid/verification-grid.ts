@@ -145,9 +145,58 @@ export enum ProgressBarPosition {
 }
 
 export enum LoadState {
-  LOADING = "loading",
-  FETCHED = "fetched",
+  /**
+   * The datasets subject models are being fetched and there is not enough
+   * subjects to fill the grid.
+   * Note that the verification grid will ONLY enter this state when rendering
+   * is awaiting on the getPage callback to return a sufficient number of
+   * subjects to render the currently viewed page.
+   *
+   * Because the subject models from audio recording prefetching are cached.
+   * It is unlikely that we will enter the DATASET_FETCHING state after the
+   * initial load. The only time we might enter this state after the initial
+   * load is if the datasource (e.g. API) grinds to a halt without crashing and
+   * the user reaches the end of the pre-fetched subjects.
+   * Note that if the getPage callback throws an error while in this state, we
+   * will enter the ERROR state.
+   *
+   * When in this state, a loading indicator is shown in the grid instead of
+   * verification tiles (so be careful of entering/leaving this state too often
+   * as it might cause DOM thrashing).
+   */
+  DATASET_FETCHING = "dataset-fetching",
+
+  /**
+   * There are enough subjects to fill the grid, but the verification grid is
+   * still waiting for all of the spectrograms to finish rendering.
+   *
+   * This state can be entered after DATASET_FETCHING completes, or when
+   * modifying the viewHead (e.g. changing page).
+   * We can transition out of this state into the LOADED state once all of the
+   * grid tiles spectrograms have rendered.
+   */
+  TILES_LOADING = "tiles-loading",
+
+  /**
+   * All spectrograms and grid tiles have been rendered.
+   *
+   * We can leave the LOADED state by changing the viewHead (e.g. changing page)
+   * causing us to enter the TILES_LOADING state.
+   */
   LOADED = "loaded",
+
+  /**
+   * An unrecoverable error occurred.
+   *
+   * This state can (currently) only be entered if the getPage callback throws
+   * an error while fetching the currently viewed page of subjects (a getPage
+   * error is thrown while in the DATASET_FETCHING state).
+   *
+   * If the getPage callback throws an error while pre-fetching subjects, the
+   * error is swallowed and re-tried at a later time, meaning that this state
+   * will only be entered if the error occurs if there are no items to show due
+   * to a getPage callback error.
+   */
   ERROR = "error",
 }
 
@@ -331,13 +380,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public rows = 1;
 
   @state()
-  public loadState: LoadState = LoadState.LOADING;
+  public loadState: LoadState = LoadState.DATASET_FETCHING;
 
   @state()
   private currentSubSelection: SubjectWrapper[] = [];
 
   @state()
-  private viewHead = 0;
+  private viewHeadIndex = 0;
 
   @state()
   private decisionHeadIndex = 0;
@@ -359,8 +408,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.decisionHeadIndex = value;
   }
 
-  /** A count of the number of tiles shown in the grid */
-  public get populatedTileCount(): number {
+  /**
+   * A count of grid cells available for grid tile components.
+   * Not all grid cells may be currently populated with grid tiles.
+   *
+   * If you want the total number of tiles currently populated/visible on the
+   * screen, use the `pageSize` getter.
+   */
+  public get availableGridCells(): number {
     // we want to respect the users grid size preference if it fits
     // however, if the requested grid size does not fit, we will use the
     // computed grid size which is the maximum number of tiles that we could
@@ -370,23 +425,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   /** A count of the number of tiles currently visible on the screen */
-  public get effectivePageSize(): number {
-    return this.populatedTileCount - this.hiddenTiles;
+  public get pageSize(): number {
+    const gridSize = this.rows * this.columns;
+    return gridSize - this.hiddenTiles;
   }
 
   private get currentPageIndices(): CurrentPage {
-    const start = this.viewHead;
+    const start = this.viewHeadIndex;
 
-    const endCandidate = start + this.effectivePageSize;
+    const endCandidate = start + this.pageSize;
     const end = Math.min(endCandidate, this.subjects.length);
 
     return { start, end };
   }
 
   private get emptyTileCount() {
-    const availableTiles = this.rows * this.columns;
     const visibleSubjectCount = this.currentPageIndices.end - this.currentPageIndices.start;
-    return availableTiles - visibleSubjectCount;
+    return this.availableGridCells - visibleSubjectCount;
   }
 
   /**
@@ -402,15 +457,27 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.selectionBehavior;
   }
 
-  private keydownHandler = this.handleKeyDown.bind(this);
-  private keyupHandler = this.handleKeyUp.bind(this);
-  private blurHandler = this.handleWindowBlur.bind(this);
-  private selectionHandler = this.handleTileSelection.bind(this);
-  private decisionHandler = this.handleDecision.bind(this);
+  /**
+   * When in a single tile view mode, there is some special functionality such
+   * as disabling the sub-selection feature, and not being able to draw a
+   * selection highlight box.
+   */
+  private get isSingleTileViewMode(): boolean {
+    // We use availableGridTiles instead of pageSize so that if there is a
+    // large grid e.g. 5x2 but there is only one item to verify, we still want
+    // to allow sub-selection.
+    return this.availableGridCells === 1;
+  }
 
-  private pointerDownHandler = this.renderHighlightBox.bind(this);
-  private pointerUpHandler = this.hideHighlightBox.bind(this);
-  private pointerMoveHandler = this.handlePointerMove.bind(this);
+  private readonly keydownHandler = this.handleKeyDown.bind(this);
+  private readonly keyupHandler = this.handleKeyUp.bind(this);
+  private readonly blurHandler = this.handleWindowBlur.bind(this);
+  private readonly selectionHandler = this.handleTileSelection.bind(this);
+  private readonly decisionHandler = this.handleDecision.bind(this);
+
+  private readonly pointerDownHandler = this.renderHighlightBox.bind(this);
+  private readonly pointerUpHandler = this.hideHighlightBox.bind(this);
+  private readonly pointerMoveHandler = this.handlePointerMove.bind(this);
 
   public subjects: SubjectWrapper[] = [];
 
@@ -526,7 +593,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private get lastTileIndex(): number {
-    return this.populatedTileCount - 1;
+    return this.pageSize - 1;
   }
 
   // This overrides the element's focus() method so that it focuses the grid
@@ -569,7 +636,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHead + (this.populatedTileCount - 1) < this.decisionHead;
+    return this.viewHeadIndex + (this.pageSize - 1) < this.decisionHead;
   }
 
   public resetSpectrogramSettings(): void {
@@ -657,7 +724,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const oldGridSize = oldColumns * oldRows;
       const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
 
-      if (oldTileCount > this.populatedTileCount) {
+      if (oldTileCount > this.availableGridCells) {
         if (this.areTilesLoaded()) {
           this.loadState = LoadState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
@@ -764,13 +831,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // location.
     // Therefore, we can perform this operation asynchronously and not block
     // the UI.
-    new Promise<void>(async (res) => {
+    new Promise<void>(async (resolve) => {
       let virtualDecisionHead = 0;
       while (true) {
-        const virtualPage = await this.viewHeadItems(virtualDecisionHead);
-        if (virtualPage.length === 0) {
-          break;
-        }
+        const virtualPage = await this.getSubjectPageAtIndex(virtualDecisionHead);
 
         const isPageIncomplete = virtualPage.some((subject) =>
           subject.hasOutstandingDecisions(
@@ -784,11 +848,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           break;
         }
 
-        virtualDecisionHead += this.populatedTileCount;
+        virtualDecisionHead += virtualPage.length;
       }
 
       this.decisionHead = virtualDecisionHead;
-      res();
+      resolve();
     });
   }
 
@@ -1036,7 +1100,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // everything so don't cancel any of the play events.
     // This is handled here and not in the tiles, because the tile's don't know the total
     // selected count.
-    if (this.currentSubSelection.length === this.effectivePageSize) {
+    if (this.currentSubSelection.length === this.pageSize) {
       return;
     }
 
@@ -1227,8 +1291,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private canSubSelect(): boolean {
     // we check that the bootstrap dialog is not open so that the user doesn't
     // accidentally create a sub-selection (e.g. through keyboard shortcuts)
-    // when they can't actually see the grid items
-    return this.populatedTileCount > 1 && !this.isBootstrapDialogOpen();
+    // when they can't actually see the grid items.
+    return !this.isSingleTileViewMode && !this.isBootstrapDialogOpen();
   }
 
   private isMobileDevice(): boolean {
@@ -1363,7 +1427,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateSelectionHead(0, options);
   }
 
-  private async viewHeadItems(viewHead: number): Promise<SubjectWrapper[]> {
+  /**
+   * Fetches (or returns if cached) an array of subjects that could be used to
+   * populate a full page of spectrograms / grid tiles.
+   * Starting from the requested index and ending at the requested index + tile
+   * count.
+   */
+  private async getSubjectPageAtIndex(requestedIndex: number): Promise<SubjectWrapper[]> {
     if (!this.paginationFetcher) {
       console.error("Cannot set viewHead because the paginationFetcher is not initialized");
       return [];
@@ -1373,53 +1443,56 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.subjectReader.cancel();
     }
 
-    const needsMoreSubjects = viewHead > this.viewHead || this.viewHead === 0;
+    const gridSize = this.availableGridCells;
+    const needsMoreSubjects = this.subjects.length < requestedIndex + gridSize;
     if (needsMoreSubjects) {
       let enoughToRenderResolver: () => void;
       const enoughToRender = new Promise<void>((resolve) => {
         enoughToRenderResolver = resolve;
       });
 
-      this.subjectReader = await this.paginationFetcher.nextSubjects(
-        this.decisionHead,
-        this.populatedTileCount,
-        this.subjects.length,
-      );
+      // Fill the subject buffer from the requested index until we have enough
+      // subjects to render an entire page of results.
+      // The subject paginationFetcher may continue to retrieve more subjects
+      // after we have enough to render the page, so we append them to the
+      // subject cache as they come in, but we don't wait for them to finish
+      // loading.
+      this.subjectReader = await this.paginationFetcher.nextSubjects(this.decisionHead, gridSize, this.subjects.length);
 
-      this.subjectReader.pipeTo(
-        new WritableStream({
-          write: (subjects: SubjectWrapper[]) => {
-            this.subjects.push(...subjects);
+      const subjectWriterStream = new WritableStream({
+        write: (subjects: SubjectWrapper[]) => {
+          this.subjects.push(...subjects);
 
-            if (this.subjects.length >= viewHead + this.targetGridSize) {
-              // if we have enough subjects to render the page, we resolve the
-              // promise so that the viewHead can be set
-              enoughToRenderResolver();
-            }
-          },
-          close: () => {
-            // because the viewHead is an index into the "subjects" array, it
-            // cannot be larger than the length of the subjects array.
-            // If we receive a value that is larger than the subjects buffer,
-            // we emit an error so we can catch it in dev, and use the subject
-            // arrays length as a fallback to prevent hard-failing.
-            const availableSubjectsCount = this.subjects.length;
-            if (availableSubjectsCount < viewHead) {
-              console.error("Attempted to set the viewHead to a value larger than the subjects array");
-              viewHead = availableSubjectsCount;
-            }
-
-            this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
-
+          if (this.subjects.length >= requestedIndex + gridSize) {
+            // if we have enough subjects to render the page, we resolve the
+            // promise so that the viewHead can be set
             enoughToRenderResolver();
-          },
-        }),
-      );
+          }
+        },
+        close: () => {
+          // because the viewHead is an index into the "subjects" array, it
+          // cannot be larger than the length of the subjects array.
+          // If we receive a value that is larger than the subjects buffer,
+          // we emit an error so we can catch it in dev, and use the subject
+          // arrays length as a fallback to prevent hard-failing.
+          const availableSubjectsCount = this.subjects.length;
+          if (availableSubjectsCount < requestedIndex) {
+            console.error("Attempted to set the viewHead to a value larger than the subjects array");
+            requestedIndex = availableSubjectsCount;
+          }
+
+          this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
+
+          enoughToRenderResolver();
+        },
+      });
+
+      this.subjectReader.pipeTo(subjectWriterStream);
 
       await enoughToRender;
     }
 
-    return this.subjects.slice(viewHead, viewHead + this.populatedTileCount);
+    return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
   }
 
   private async setViewHead(value: number): Promise<void> {
@@ -1427,25 +1500,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // might end up in an unexpected state.
     // Note that I have never seen this condition trigger, but it is a
     // defensive programming measure.
-    if (value === this.viewHead && this.viewHead !== 0) {
+    if (value === this.viewHeadIndex && this.viewHeadIndex !== 0) {
       return;
     }
 
-    let clampedHead = Math.min(Math.max(0, value), this.decisionHead);
+    let clampedHead = Math.max(0, value);
 
-    await this.viewHeadItems(clampedHead);
+    await this.getSubjectPageAtIndex(clampedHead);
 
-    this.viewHead = clampedHead;
+    this.viewHeadIndex = clampedHead;
     this.setDecisionDisabled(true);
 
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
     // requestUpdate which would end up being debounced anyways.
-    if (this.loadState === LoadState.LOADING) {
-      this.loadState = LoadState.FETCHED;
-    } else {
-      this.requestUpdate();
+    if (this.loadState === LoadState.DATASET_FETCHING) {
+      this.loadState = LoadState.TILES_LOADING;
     }
+
+    this.requestUpdate();
   }
 
   //#endregion
@@ -1628,7 +1701,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private async pageForward(): Promise<void> {
-    const proposedViewHead = this.viewHead + this.populatedTileCount;
+    const proposedViewHead = this.viewHeadIndex + this.availableGridCells;
     this.setViewHead(proposedViewHead);
     this.clearSelection();
   }
@@ -1637,7 +1710,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // the new viewHead value is only a proposal for the viewHead setter
     // because the viewHead setter might reject the new value if it is less
     // than zero or exceeds the length of the subjects array
-    const proposedHead = this.viewHead - this.populatedTileCount;
+    const proposedHead = this.viewHeadIndex - this.availableGridCells;
     this.setViewHead(proposedHead);
     this.clearSelection();
   }
@@ -1650,16 +1723,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   // we use the effective grid size here so that hidden tiles are not counted
   // when the user pages
-  private async pageNext(count: number = this.effectivePageSize) {
+  private async pageNext(count: number = this.pageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
     this.decisionHead += count;
-    await this.setViewHead(this.viewHead + count);
+    await this.setViewHead(this.viewHeadIndex + count);
   }
 
   private canNavigatePrevious(): boolean {
-    return this.viewHead > 0;
+    return this.viewHeadIndex > 0;
   }
 
   private canNavigateNext(): boolean {
@@ -1902,11 +1975,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private mixedTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
-    if (hasSubSelection) {
-      return html`<p>Make a decision about all of the selected audio segments</p>`;
-    }
-
     if (hasMultipleTiles) {
+      if (hasSubSelection) {
+        return "Make a decision about all of the selected audio segments";
+      }
+
       return "Make a decision about all of the audio segments";
     } else {
       return "Make a decision about the shown audio segment";
@@ -1914,11 +1987,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private classificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
-    if (hasSubSelection) {
-      return "Apply labels to selected audio segments";
-    }
-
     if (hasMultipleTiles) {
+      if (hasSubSelection) {
+        return "Apply labels to selected audio segments";
+      }
+
       return "Classify all relevant audio segments";
     } else {
       return "Apply a classification to the audio segment";
@@ -1926,11 +1999,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private verificationTaskPromptTemplate(hasMultipleTiles: boolean, hasSubSelection: boolean) {
-    if (hasSubSelection) {
-      return "Do all of the selected audio segments have the correct applied tag";
-    }
-
     if (hasMultipleTiles) {
+      if (hasSubSelection) {
+        return "Do all of the selected audio segments have the correct applied tag";
+      }
+
       return "Do all of the audio segments have the correct applied tag";
     } else {
       return "Does the shown audio segment have the correct applied tag";
@@ -1940,14 +2013,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private decisionPromptTemplate() {
     const subSelection = this.currentSubSelection;
     const hasSubSelection = subSelection.length > 0;
-    const hasMultipleTiles = this.populatedTileCount > 1;
 
     if (this.hasClassificationTask() && this.hasVerificationTask()) {
-      return this.mixedTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
+      return this.mixedTaskPromptTemplate(!this.isSingleTileViewMode, hasSubSelection);
     } else if (this.hasClassificationTask()) {
-      return this.classificationTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
+      return this.classificationTaskPromptTemplate(!this.isSingleTileViewMode, hasSubSelection);
     } else if (this.hasVerificationTask()) {
-      return this.verificationTaskPromptTemplate(hasMultipleTiles, hasSubSelection);
+      return this.verificationTaskPromptTemplate(!this.isSingleTileViewMode, hasSubSelection);
     }
 
     // default prompt if we can't determine if it is a classification or
@@ -1956,7 +2028,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return "Are all of the selected a";
     }
 
-    return hasMultipleTiles ? "Are all of these a" : "Is the shown spectrogram a";
+    return !this.isSingleTileViewMode ? "Are all of these a" : "Is the shown spectrogram a";
   }
 
   //#endregion
@@ -2039,7 +2111,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         </sl-tooltip>
 
         <oe-progress-bar
-          history-head="${this.viewHead}"
+          history-head="${this.viewHeadIndex}"
           total="${ifDefined(this.paginationFetcher?.totalItems)}"
           completed="${this.decisionHead}"
         ></oe-progress-bar>
@@ -2058,7 +2130,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         @oe-tile-loaded="${this.handleTileLoaded}"
         @play="${this.handleTilePlay}"
         .requiredDecisions="${this.requiredDecisions}"
-        .isOnlyTile="${this.populatedTileCount === 1}"
+        .singleTileViewMode="${this.isSingleTileViewMode}"
         .model="${subject as any}"
         .index="${index}"
       >
@@ -2097,8 +2169,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           tabindex="-1"
         >
           ${choose(this.loadState, [
-            [LoadState.LOADING, () => this.loadingTemplate()],
-            [LoadState.FETCHED, () => this.tileGridTemplate()],
+            [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
+            [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
             [LoadState.LOADED, () => this.tileGridTemplate()],
             [LoadState.ERROR, () => this.datasetFailureTemplate()],
           ])}

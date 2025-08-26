@@ -87,3 +87,5 @@ export type HeapVariable = ObjectRecord | unknown[] | Map<PropertyKey, unknown> 
  * because the `StructuralType` is a discriminated union of string literals.
  */
 export type StructuralToNominal<T> = T extends infer U ? U : never;
+
+export type AutoComplete<T> = T extends number ? `${T}` : never;

@@ -107,7 +107,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
    * This is useful for disabling selection events and styling.
    */
   @property({ attribute: false, type: Boolean })
-  public isOnlyTile = false;
+  public singleTileViewMode = false;
 
   @property({ attribute: false, type: Array })
   public readonly requiredDecisions: RequiredDecision[] = [];
@@ -124,9 +124,9 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   @query("#contents-wrapper")
   private contentsWrapper!: HTMLDivElement;
 
-  private keyDownHandler = this.handleKeyDown.bind(this);
-  private loadingHandler = this.handleLoading.bind(this);
-  private loadedHandler = this.handleLoaded.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly loadingHandler = this.handleLoading.bind(this);
+  private readonly loadedHandler = this.handleLoaded.bind(this);
 
   public loaded = false;
   private shortcuts: string[] = [];
@@ -428,7 +428,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
 
     const tileClasses = classMap({
       selected: this.selected,
-      selectable: !this.isOnlyTile,
+      selectable: !this.singleTileViewMode,
     });
 
     const figureClasses = classMap({
@@ -458,7 +458,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
         class="tile-container vertically-fill ${tileClasses}"
         part="tile-container"
         role="button"
-        tabindex="${this.isOnlyTile ? -1 : 1}"
+        tabindex="${this.singleTileViewMode ? -1 : 1}"
         aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
       >
         ${this.keyboardShortcutTemplate()}

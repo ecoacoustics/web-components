@@ -72,7 +72,7 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
 
     const verification = SubjectParser.verificationParser(partialModel);
     if (verification) {
-      subjectWrapper.addDecision(verification, false);
+      subjectWrapper.addDecision(verification);
     }
 
     const newTag = SubjectParser.newTagParser(partialModel.newTag);
@@ -192,10 +192,14 @@ export abstract class SubjectParser extends ModelParser<SubjectWrapper> {
     // However, if there is no tag on the verification object, we try to use the
     // oe_tag column as the tag that was verified.
     // Note that we do never fallback to using the subjects "tag" column as we
-    // would prefer to output nothing rather than the wrong tag that was
-    // verified (which can occur if the originally verified tag is deleted from
-    // the subject).
+    // would prefer to omit the verification decision rather than associate it
+    // with an incorrect tag.
     const verifiedTag = subjectVerification?.tag ?? SubjectParser.tagParser(unparsedOeTag) ?? null;
+    if (verifiedTag === null) {
+      console.warn("Could not determine tag for verification decision. The verification will be ignored.");
+      return null;
+    }
+
     return new Verification(verificationState as DecisionOptions, verifiedTag);
   }
 

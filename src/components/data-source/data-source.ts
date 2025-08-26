@@ -68,7 +68,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   public urlSourcedFetcher?: UrlSourcedFetcher;
   private verificationGrid?: VerificationGridComponent;
-  private decisionHandler = this.handleDecision.bind(this);
+  private readonly decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
     // TODO: I think these conditions might be faulty for removing attributes
@@ -138,7 +138,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // decision head
     const decisionHead = this.verificationGrid.decisionHead;
     const allSubjects = this.verificationGrid.subjects;
-    const pageSize = this.verificationGrid.effectivePageSize;
+    const pageSize = this.verificationGrid.pageSize;
 
     // when downloading results, we want to download all the subjects that the
     // use has seen, including the current page.
@@ -235,7 +235,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.verificationGrid.loadState = LoadState.LOADING;
+    this.verificationGrid.loadState = LoadState.DATASET_FETCHING;
     try {
       this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     } catch (error) {

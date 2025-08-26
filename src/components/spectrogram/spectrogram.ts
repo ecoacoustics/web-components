@@ -20,6 +20,7 @@ import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFram
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
 import { ColorMapName } from "../../helpers/audio/colors";
+import { AutoComplete } from "../../helpers/types/advancedTypes";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -114,7 +115,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The amount of overlap between fft windows */
   @property({ type: Number, attribute: "window-overlap", reflect: true })
-  public windowOverlap: PowerTwoWindowOverlap = 0;
+  public windowOverlap: AutoComplete<PowerTwoWindowOverlap> | number = 0;
 
   /** A boolean attribute representing if the spectrogram should be shown in mel-scale */
   @property({ type: Boolean, attribute: "mel-scale", converter: booleanConverter })
