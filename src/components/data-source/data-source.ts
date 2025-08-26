@@ -136,7 +136,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // subjects ahead of the decision head (for pre-fetching purposes)
     // we need to create a copy of the "subjects" array up to the
     // decision head
-    const decisionHead = this.verificationGrid.decisionHead;
+    const decisionHead = this.verificationGrid.decisionHeadIndex;
     const allSubjects = this.verificationGrid.subjects;
     const pageSize = this.verificationGrid.pageSize;
 

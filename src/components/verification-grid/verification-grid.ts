@@ -386,10 +386,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private currentSubSelection: SubjectWrapper[] = [];
 
   @state()
-  private viewHeadIndex = 0;
+  private _viewHeadIndex = 0;
 
   @state()
-  private decisionHeadIndex = 0;
+  private _decisionHeadIndex = 0;
 
   public get gridShape(): GridShape {
     return { columns: this.columns, rows: this.rows };
@@ -400,12 +400,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * decisions have been made
    * It is updated as each page is completed
    */
-  public get decisionHead(): number {
-    return this.decisionHeadIndex;
+  public get viewHeadIndex(): number {
+    return this._viewHeadIndex;
   }
 
-  private set decisionHead(value: number) {
-    this.decisionHeadIndex = value;
+  private set viewHeadIndex(value: number) {
+    this._viewHeadIndex = value;
+  }
+
+  /**
+   * The index from the `subjects` array indicating up to which point
+   * decisions have been made
+   * It is updated as each page is completed
+   */
+  public get decisionHeadIndex(): number {
+    return this._decisionHeadIndex;
+  }
+
+  private set decisionHeadIndex(value: number) {
+    this._decisionHeadIndex = value;
   }
 
   /**
@@ -636,7 +649,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHeadIndex + (this.pageSize - 1) < this.decisionHead;
+    return this.viewHeadIndex + (this.pageSize - 1) < this.decisionHeadIndex;
   }
 
   public resetSpectrogramSettings(): void {
@@ -818,7 +831,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.subjects = [];
 
     await this.setViewHead(0);
-    this.decisionHead = 0;
+    this.decisionHeadIndex = 0;
 
     // While every subject has a decision, we keep paging through the data
     // until we find the first page that does not have complete decisions.
@@ -851,7 +864,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         virtualDecisionHead += virtualPage.length;
       }
 
-      this.decisionHead = virtualDecisionHead;
+      this.decisionHeadIndex = virtualDecisionHead;
       resolve();
     });
   }
@@ -1457,7 +1470,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      this.subjectReader = await this.paginationFetcher.nextSubjects(this.decisionHead, gridSize, this.subjects.length);
+      this.subjectReader = await this.paginationFetcher.nextSubjects(
+        this.viewHeadIndex,
+        gridSize,
+        this.subjects.length,
+      );
 
       const subjectWriterStream = new WritableStream({
         write: (subjects: SubjectWrapper[]) => {
@@ -1481,7 +1498,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             requestedIndex = availableSubjectsCount;
           }
 
-          this.paginationFetcher?.refreshCache(this.subjects, this.decisionHead);
+          this.paginationFetcher?.refreshCache(this.subjects, this.decisionHeadIndex);
 
           enoughToRenderResolver();
         },
@@ -1717,7 +1734,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   /** Changes the viewHead to the current page of undecided results */
   private async resumeVerification(): Promise<void> {
-    this.setViewHead(this.decisionHead);
+    this.setViewHead(this.decisionHeadIndex);
     this.clearSelection();
   }
 
@@ -1727,7 +1744,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    this.decisionHead += count;
+    this.decisionHeadIndex += count;
     await this.setViewHead(this.viewHeadIndex + count);
   }
 
@@ -2041,7 +2058,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         <p>
           <strong>No un-validated results found</strong>
         </p>
-        <p>All ${this.decisionHead} annotations are validated</p>
+        <p>All ${this.decisionHeadIndex} annotations are validated</p>
       </div>
     `;
   }
@@ -2113,7 +2130,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         <oe-progress-bar
           history-head="${this.viewHeadIndex}"
           total="${ifDefined(this.paginationFetcher?.totalItems)}"
-          completed="${this.decisionHead}"
+          completed="${this.decisionHeadIndex}"
         ></oe-progress-bar>
       </div>
     `;
