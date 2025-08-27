@@ -404,10 +404,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._viewHeadIndex;
   }
 
-  private set viewHeadIndex(value: number) {
-    this._viewHeadIndex = value;
-  }
-
   /**
    * The index from the `subjects` array indicating up to which point
    * decisions have been made
@@ -441,6 +437,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public get pageSize(): number {
     const gridSize = this.rows * this.columns;
     return gridSize - this.hiddenTiles;
+  }
+
+  /**
+   * Because subject wrappers are highly sensitive to changes (e.g. changing
+   * a subject reference might break downloading), we only expose a readonly
+   * array of subjects.
+   */
+  public get readonlySubjects(): ReadonlyArray<SubjectWrapper> {
+    return this.subjects;
   }
 
   private get currentPageIndices(): CurrentPage {
@@ -492,14 +497,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private readonly pointerUpHandler = this.hideHighlightBox.bind(this);
   private readonly pointerMoveHandler = this.handlePointerMove.bind(this);
 
-  private readonly subjectWriter = new WritableStream<SubjectWrapper[]>({
-    write: (subjects: SubjectWrapper[]) => {
-      this.subjects.push(...subjects);
-    },
-  });
-
-  public subjects: SubjectWrapper[] = [];
-
   /**
    * "single decision mode" will automatically advance the selection head if:
    *    1. There is only one tile selected
@@ -518,9 +515,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private hiddenTiles = 0;
   private showingSelectionShortcuts = false;
   private anyOverlap = signal<boolean>(false);
+  private subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private paginationFetcher?: GridPageFetcher;
-  private subjectReader?: ReadableStream<SubjectWrapper[]>;
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
   private highlight: HighlightSelection = {
@@ -1458,61 +1455,28 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return [];
     }
 
-    if (this.subjectReader) {
-      this.subjectReader.cancel();
-    }
-
     const gridSize = this.availableGridCells;
-    const needsMoreSubjects = this.subjects.length < requestedIndex + gridSize;
-    if (needsMoreSubjects) {
-      let enoughToRenderResolver: () => void;
-      const enoughToRender = new Promise<void>((resolve) => {
-        enoughToRenderResolver = resolve;
-      });
+    const requiredSubjectCount = requestedIndex + gridSize;
+    const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
+    if (needMoreSubjects) {
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      this.subjectReader = await this.paginationFetcher.nextSubjects(
-        this.viewHeadIndex,
-        gridSize,
-        this.subjects.length,
-      );
+      while (this.subjects.length < requiredSubjectCount) {
+        const reader = this.paginationFetcher.subjectStream.getReader();
+        const newSubject = (await reader.read()).value;
+        if (!newSubject) {
+          break;
+        }
 
-      const subjectWriterStream = new WritableStream({
-        write: (subjects: SubjectWrapper[]) => {
-          this.subjects.push(...subjects);
+        this.subjects.push(newSubject);
 
-          if (this.subjects.length >= requestedIndex + gridSize) {
-            // if we have enough subjects to render the page, we resolve the
-            // promise so that the viewHead can be set
-            enoughToRenderResolver();
-          }
-        },
-        close: () => {
-          // because the viewHead is an index into the "subjects" array, it
-          // cannot be larger than the length of the subjects array.
-          // If we receive a value that is larger than the subjects buffer,
-          // we emit an error so we can catch it in dev, and use the subject
-          // arrays length as a fallback to prevent hard-failing.
-          const availableSubjectsCount = this.subjects.length;
-          if (availableSubjectsCount < requestedIndex) {
-            console.error("Attempted to set the viewHead to a value larger than the subjects array");
-            requestedIndex = availableSubjectsCount;
-          }
-
-          this.paginationFetcher?.refreshCache(this.subjects, this.decisionHeadIndex);
-
-          enoughToRenderResolver();
-        },
-      });
-
-      await this.subjectReader.pipeTo(this.subjectWriter);
-
-      await enoughToRender;
+        reader.releaseLock();
+      }
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
@@ -1531,7 +1495,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     await this.getSubjectPageAtIndex(clampedHead);
 
-    this.viewHeadIndex = clampedHead;
+    this._viewHeadIndex = clampedHead;
     this.setDecisionDisabled(true);
 
     // Changing the loadState will cause an update because the loadState is a
@@ -1541,6 +1505,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.loadState = LoadState.TILES_LOADING;
     }
 
+    //! If we start using the shouldUpdate() lifecycle hook, we should remove
+    // this requestUpdate() because it will bypass all shouldUpdate()
+    // optimizations.
+    // see: https://github.com/ecoacoustics/web-components/pull/461#discussion_r2299671840
     this.requestUpdate();
   }
 

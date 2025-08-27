@@ -126,7 +126,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // This obeys our design principle of not changing the original data set and
     // only adding information.
     if (this.isUrlSourced()) {
-      const subjects = this.verificationGrid.subjects;
+      const subjects = this.verificationGrid.readonlySubjects;
       return subjects.map((model) => model.toDownloadable());
     }
 
@@ -137,7 +137,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // we need to create a copy of the "subjects" array up to the
     // decision head
     const decisionHead = this.verificationGrid.decisionHeadIndex;
-    const allSubjects = this.verificationGrid.subjects;
+    const allSubjects = this.verificationGrid.readonlySubjects;
     const pageSize = this.verificationGrid.pageSize;
 
     // when downloading results, we want to download all the subjects that the

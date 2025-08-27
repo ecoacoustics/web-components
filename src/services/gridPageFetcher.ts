@@ -26,67 +26,45 @@ export class GridPageFetcher {
     this.urlTransformer = urlTransformer;
   }
 
-  public readonly subjectStream: ReadableStream<SubjectWrapper[]> = new ReadableStream();
+  public get totalItems(): number | undefined {
+    return this._totalItems;
+  }
 
-  public totalItems?: number;
+  private get queueingStrategy() {
+    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
+    return new CountQueuingStrategy({ highWaterMark });
+  }
+
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
   private pagingContext: PageFetcherContext = {};
+  private _totalItems?: number;
 
   // caches the audio for the next n items in the buffer
-  private clientCacheLength = 10;
-  private serverCacheLength = 50;
+  private clientCacheSize = 10;
+  private serverCacheSize = 50;
 
-  public async nextSubjects(
-    viewHead: number,
-    pageSize: number,
-    currentQueuedSubjectCount: number,
-  ): Promise<ReadableStream<SubjectWrapper[]>> {
-    // It's very unlikely that the number of items required for rendering is
-    // less than the number of items required for caching because we cache 50
-    // items ahead by default.
-    // That being said, I have handled the edge case where the grid size is
-    // larger than the number of items we cache ahead.
-    const requiredForCaching = viewHead + Math.max(this.clientCacheLength, this.serverCacheLength);
-    const requiredForRender = viewHead + pageSize;
-    const requiredQueueSize = Math.max(requiredForCaching, requiredForRender);
-
-    const queueSizeDelta = Math.max(requiredQueueSize - currentQueuedSubjectCount, 0);
-
-    const queueingStrategy = new CountQueuingStrategy({ highWaterMark: requiredQueueSize });
-
-    // We use a ReadableStream instead of returning a promise directly so that
-    // consumers like the verification grid don't have to wait for all of the
-    // subjects to be fetched and resolved before they can start rendering.
-    //
-    // For example, the verification grid can start rendering when we have
-    // fetched 8 items, but we don't want to block rendering until we have
-    // enough fetched subjects to fill the client cache and server cache.
-    const readableStream = new ReadableStream<SubjectWrapper[]>({
-      start: async (controller) => {
-        // Continue to fetch items until we have enough items in the queue
-        // or the paging function returns no more items
-        // (we have reached the end of the dataset).
-        while (fetchedItems < queueSizeDelta) {
-          const fetchedPage = await this.fetchNextPage();
-          if (fetchedPage.length === 0) {
-            break;
-          }
-
-          controller.enqueue(fetchedPage);
-
-          fetchedItems += fetchedPage.length;
+  public readonly subjectStream = new ReadableStream<SubjectWrapper>(
+    {
+      pull: async (controller) => {
+        const fetchedPage = await this.fetchNextPage();
+        if (fetchedPage.length === 0) {
+          controller.close();
+          return;
         }
 
-        controller.close();
+        for (const subject of fetchedPage) {
+          controller.enqueue(subject);
+        }
       },
-      queueingStrategy,
-    });
+      cancel: () => {
+        console.debug("Subject stream cancelled.");
+      },
+    },
+    this.queueingStrategy,
+  );
 
-    return readableStream;
-  }
-
-  private async refreshCache(viewHead: number): Promise<void> {
+  private async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
     // Notice that these cache operations are not awaited, meaning that they are
     // "fire and forget".
     this.audioCacheClient(subjects, viewHead);
@@ -99,7 +77,7 @@ export class GridPageFetcher {
   // requests from the calculations
   private async audioCacheClient(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
     const models = subjects
-      .slice(viewHead, viewHead + this.clientCacheLength)
+      .slice(viewHead, viewHead + this.clientCacheSize)
       .filter((model) => model.clientCached === AudioCachedState.COLD);
 
     for (const model of models) {
@@ -122,7 +100,7 @@ export class GridPageFetcher {
     // will simply ignore the out-of-bounds indices and return the maximum
     // amount of items between the start index and the end of the array.
     const models = subjects
-      .slice(viewHead, viewHead + this.serverCacheLength)
+      .slice(viewHead, viewHead + this.serverCacheSize)
       .filter((model) => model.serverCached === AudioCachedState.COLD);
 
     for (const model of models) {
@@ -153,7 +131,7 @@ export class GridPageFetcher {
     const { subjects, context, totalItems } = fetchedPage;
     const models = subjects.map((subject) => SubjectParser.parse(subject, this.urlTransformer));
 
-    this.totalItems = totalItems;
+    this._totalItems = totalItems;
     this.pagingContext = context;
 
     return models;
