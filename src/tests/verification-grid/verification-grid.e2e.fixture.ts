@@ -84,7 +84,7 @@ class TestPage {
   public gridProgressCompletedSegment = () => this.gridProgressBars().locator(".completed-segment").first();
   public gridProgressHeadSegment = () => this.gridProgressBars().locator(".head-segment").first();
 
-  public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
+  public spectrogramComponents = () => this.page.locator("oe-spectrogram");
   public spectrogramComponent = (index = 0) => this.gridTileComponents().nth(index).locator("oe-spectrogram").first();
   public gridTileComponent = (index = 0) => this.gridTileComponents().nth(index);
   public audioElement = (index = 0) => this.spectrogramComponent(index).locator("audio").first();
@@ -95,7 +95,7 @@ class TestPage {
   public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
   public headerControls = () => this.page.locator(".header-controls").first();
-  public footerControls = () => this.page.locator(".footer-controls").first();
+  public footerControls = () => this.page.locator(".footer-container").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
@@ -312,7 +312,7 @@ class TestPage {
   }
 
   public async getVerificationHead(): Promise<number> {
-    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHead");
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHeadIndex");
   }
 
   public async selectedTileIndexes(): Promise<number[]> {
@@ -427,17 +427,14 @@ class TestPage {
     return highlightedTiles.map((_, i) => i);
   }
 
-  public async playingSpectrograms(): Promise<Locator[]> {
-    return this.asyncFilter(await this.spectrogramComponents(), async (spectrogram) => {
-      const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
-      return !value;
-    });
+  public playingSpectrograms(): Locator {
+    return this.spectrogramComponents().filter({ has: this.page.locator("audio:not([paused])") });
   }
 
   public async gridDecisions(): Promise<Decision[]> {
     const gridSubjects = await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
       this.gridComponent(),
-      "subjects",
+      "readonlySubjects",
     );
 
     return gridSubjects.flatMap((subject) => this.subjectDecisions(subject));
@@ -775,12 +772,8 @@ class TestPage {
     await this.fileInputButton().setInputFiles(fileName);
   }
 
-  public async getPopulatedGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent, number>(
-      this.gridComponent(),
-      "populatedTileCount",
-    );
-
+  public async getTileCount(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "pageSize");
     return gridSize;
   }
 

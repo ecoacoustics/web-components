@@ -14,6 +14,10 @@ export interface IPageFetcherResponse<T> {
  */
 export type PageFetcherContext = Record<string, unknown>;
 
+enum StreamCancelReason {
+  DATASOURCE_CLOSED,
+}
+
 // TODO: remove the brand from the PageFetcher. This was done so that we could
 // see if the callback was created by the UrlSourcedFetcher
 export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & {
@@ -40,6 +44,8 @@ export class GridPageFetcher {
     return new CountQueuingStrategy({ highWaterMark });
   }
 
+  public readonly abortController = new AbortController();
+
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
   private pagingContext: PageFetcherContext = {};
@@ -49,6 +55,15 @@ export class GridPageFetcher {
   // caches the audio for the next n items in the buffer
   private clientCacheSize = 10;
   private serverCacheSize = 50;
+
+  /**
+   * Closes the stream of subjects so that no further data can be pulled.
+   * This is typically done when the datasource changes and the stream is no
+   * longer needed.
+   */
+  public async closeDatasource() {
+    await this._subjectStream?.cancel(StreamCancelReason.DATASOURCE_CLOSED);
+  }
 
   private newSubjectStream() {
     return new ReadableStream<SubjectWrapper>(

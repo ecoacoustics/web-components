@@ -593,12 +593,12 @@ test.describe("single verification grid", () => {
   test.describe("playing and pausing tiles", () => {
     test.describe("no sub-selection", () => {
       test("should play all tiles when the play shortcut is pressed", async ({ fixture }) => {
-        const expectedPlayingCount = await fixture.getPopulatedGridSize();
+        const expectedPlayingCount = await fixture.getTileCount();
 
         await fixture.shortcutGridPlay();
-        const realizedPlayingStates = await fixture.playingSpectrograms();
+        const realizedPlayingStates = fixture.playingSpectrograms();
 
-        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
+        await expect(realizedPlayingStates).toHaveCount(expectedPlayingCount);
       });
 
       test("should play a single tile in a 1x1 grid with keyboard shortcuts", async ({ fixture }) => {
@@ -607,8 +607,8 @@ test.describe("single verification grid", () => {
 
         await fixture.shortcutGridPlay();
 
-        const realizedPlayingStates = await fixture.playingSpectrograms();
-        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
+        const realizedPlayingStates = fixture.playingSpectrograms();
+        await expect(realizedPlayingStates).toHaveCount(expectedPlayingCount);
       });
 
       test("should pause all tiles when the pause shortcut is pressed", () => {});
@@ -622,8 +622,8 @@ test.describe("single verification grid", () => {
 
       test("should only play selected tiles when the play shortcut is pressed", async ({ fixture }) => {
         await fixture.shortcutGridPlay();
-        const realizedPlayingStates = await fixture.playingSpectrograms();
-        expect(realizedPlayingStates).toHaveLength(testedSubSelection.length);
+        const realizedPlayingStates = fixture.playingSpectrograms();
+        await expect(realizedPlayingStates).toHaveCount(testedSubSelection.length);
       });
 
       // in this test, we assert that if two tiles are playing and the user
@@ -635,8 +635,8 @@ test.describe("single verification grid", () => {
         await fixture.subSelect(1);
         await fixture.shortcutGridPause();
 
-        const realizedPlayingStates = await fixture.playingSpectrograms();
-        expect(realizedPlayingStates).toHaveLength(1);
+        const realizedPlayingStates = fixture.playingSpectrograms();
+        await expect(realizedPlayingStates).toHaveCount(1);
       });
     });
   });

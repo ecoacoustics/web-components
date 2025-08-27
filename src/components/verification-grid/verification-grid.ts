@@ -435,8 +435,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   /** A count of the number of tiles currently visible on the screen */
   public get pageSize(): number {
-    const gridSize = this.rows * this.columns;
-    return gridSize - this.hiddenTiles;
+    return this.availableGridCells - this.hiddenTiles;
   }
 
   /**
@@ -746,6 +745,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
+      } else {
+        await this.getSubjectPageAtIndex(this.viewHeadIndex);
       }
 
       this.updateSubSelection();
@@ -797,6 +798,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private async handleGridSourceInvalidation() {
     if (this.getPage) {
+      // If there is an existing data source fetcher, we want to close the data
+      // stream before creating another one.
+      // Otherwise we risk leaking information from the an old slow data source
+      // into a new fast data source.
+      if (this.paginationFetcher) {
+        await this.paginationFetcher.closeDatasource();
+      }
+
       this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
       await this.resetBufferHeads();
     }
@@ -860,7 +869,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           ),
         );
 
-        if (isPageIncomplete) {
+        if (isPageIncomplete || virtualPage.length === 0) {
           break;
         }
 
@@ -1457,26 +1466,32 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const gridSize = this.availableGridCells;
     const requiredSubjectCount = requestedIndex + gridSize;
+    const requiredDelta = requiredSubjectCount - this.subjects.length;
     const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects) {
+      const queueStrategy = new CountQueuingStrategy({ highWaterMark: requiredDelta });
+      const self = this;
+      const writableStream = new WritableStream<SubjectWrapper>(
+        {
+          async write(subject) {
+            self.subjects.push(subject);
+
+            if (self.subjects.length >= requiredSubjectCount || !subject) {
+              return;
+            }
+          },
+        },
+        queueStrategy,
+      );
+
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      while (this.subjects.length < requiredSubjectCount) {
-        const reader = this.paginationFetcher.subjectStream.getReader();
-        const newSubject = (await reader.read()).value;
-        if (!newSubject) {
-          break;
-        }
-
-        this.subjects.push(newSubject);
-
-        reader.releaseLock();
-      }
+      await this.paginationFetcher.subjectStream.pipeTo(writableStream);
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
