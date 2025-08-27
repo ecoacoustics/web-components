@@ -30,6 +30,11 @@ export class GridPageFetcher {
     return this._totalItems;
   }
 
+  public get subjectStream() {
+    this._subjectStream ??= this.newSubjectStream();
+    return this._subjectStream;
+  }
+
   private get queueingStrategy() {
     const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
     return new CountQueuingStrategy({ highWaterMark });
@@ -39,30 +44,33 @@ export class GridPageFetcher {
   private urlTransformer: UrlTransformer;
   private pagingContext: PageFetcherContext = {};
   private _totalItems?: number;
+  private _subjectStream?: ReadableStream<SubjectWrapper>;
 
   // caches the audio for the next n items in the buffer
   private clientCacheSize = 10;
   private serverCacheSize = 50;
 
-  public readonly subjectStream = new ReadableStream<SubjectWrapper>(
-    {
-      pull: async (controller) => {
-        const fetchedPage = await this.fetchNextPage();
-        if (fetchedPage.length === 0) {
-          controller.close();
-          return;
-        }
+  private newSubjectStream() {
+    return new ReadableStream<SubjectWrapper>(
+      {
+        pull: async (controller) => {
+          const fetchedPage = await this.fetchNextPage();
+          if (fetchedPage.length === 0) {
+            controller.close();
+            return;
+          }
 
-        for (const subject of fetchedPage) {
-          controller.enqueue(subject);
-        }
+          for (const subject of fetchedPage) {
+            controller.enqueue(subject);
+          }
+        },
+        cancel: () => {
+          this._subjectStream = undefined;
+        },
       },
-      cancel: () => {
-        console.debug("Subject stream cancelled.");
-      },
-    },
-    this.queueingStrategy,
-  );
+      this.queueingStrategy,
+    );
+  }
 
   private async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
     // Notice that these cache operations are not awaited, meaning that they are

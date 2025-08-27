@@ -2050,7 +2050,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <div class="message-overlay">
         <p>
-          <strong>Failed to load dataset.</strong>
+          <strong class="dataset-failure-message">Failed to load dataset</strong>
         </p>
       </div>
     `;

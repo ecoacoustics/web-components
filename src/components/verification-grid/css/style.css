@@ -119,6 +119,12 @@
     display: inline-block;
     padding: var(--oe-spacing);
   }
+
+  .dataset-failure-message {
+    color: var(--oe-danger-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
 }
 
 .footer-container {
