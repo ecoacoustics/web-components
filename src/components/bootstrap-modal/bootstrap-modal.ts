@@ -306,8 +306,8 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
-        <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+      <dialog id="dialog-element" class="overlay" closedby="any">
+        <div class="dialog-container">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"

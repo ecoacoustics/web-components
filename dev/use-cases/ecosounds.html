@@ -19,6 +19,20 @@
     </header>
 
     <oe-verification-grid id="verification-grid" autofocus>
+      <template>
+        <div class="slotted-content">
+          <a href="#">Listen Page</a>
+          <a href="#">Show More</a>
+        </div>
+
+        <style>
+          .slotted-content {
+            display: flex;
+            justify-content: space-between;
+          }
+        </style>
+      </template>
+
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
       <oe-verification verified="unsure" shortcut="U"></oe-verification>
@@ -55,7 +69,7 @@
       // If the tag is not defined, we expect that the tag prompt task will be
       // required.
       const possibleTags = ["bird", "insect", "mammal", "reptile", undefined];
-      const possibleVerifiedStates = ["correct", "incorrect", "unsure", "skip", undefined];
+      const possibleVerifiedStates = ["correct", "incorrect", "unsure", "skip"];
       const possibleAudioSamples = [
         "/example_1s.wav",
         "/example.flac",
@@ -64,6 +78,13 @@
         "/diagnostic.wav",
         "/merged_diagnostic.wav",
       ];
+
+      function createVerification() {
+        return {
+          tag: randomSample(possibleTags) ?? "dog",
+          confirmed: randomSample(possibleVerifiedStates),
+        };
+      }
 
       function createUrlTransformer() {
         return (url) => `${url}?url_transformer=true`;
@@ -81,7 +102,7 @@
         const subjects = Array.from({ length: 25 }).map(() => {
           const src = randomSample(possibleAudioSamples);
           const tag = randomSample(possibleTags);
-          const verified = randomSample(possibleVerifiedStates);
+          const verification = createVerification();
 
           return {
             injector: {
@@ -96,7 +117,7 @@
             additionalText: "you should see this in the results",
             src,
             tag,
-            verified,
+            verification,
             toJSON: function () {
               // return all properties in this object except for the 'injector'
               // property

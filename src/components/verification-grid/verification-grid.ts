@@ -264,6 +264,8 @@ interface SelectionOptions {
  * ```
  *
  * @dependency oe-verification-grid-tile
+ * @dependency oe-verification-grid-settings
+ * @dependency oe-progress-bar
  *
  * @csspart highlight-box - A CSS target for the highlight box so that you can change the color/style.
  *
@@ -745,7 +747,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
-      } else {
+      } else if (this.paginationFetcher) {
+        // We only trigger a page update if we have a pagination fetcher so that
+        // if the user resizes the verification grid before creating a getPage
+        // callback, we don't try and fetch data when there is no data.
+        //
+        // When the datasource is eventually set, the page will be fetched
+        // automatically.
         await this.getSubjectPageAtIndex(this.viewHeadIndex);
       }
 
@@ -803,7 +811,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // Otherwise we risk leaking information from the an old slow data source
       // into a new fast data source.
       if (this.paginationFetcher) {
-        await this.paginationFetcher.closeDatasource();
+        this.paginationFetcher.abortController.abort();
       }
 
       this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
@@ -1466,32 +1474,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     const gridSize = this.availableGridCells;
     const requiredSubjectCount = requestedIndex + gridSize;
-    const requiredDelta = requiredSubjectCount - this.subjects.length;
     const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects) {
-      const queueStrategy = new CountQueuingStrategy({ highWaterMark: requiredDelta });
-      const self = this;
-      const writableStream = new WritableStream<SubjectWrapper>(
-        {
-          async write(subject) {
-            self.subjects.push(subject);
-
-            if (self.subjects.length >= requiredSubjectCount || !subject) {
-              return;
-            }
-          },
-        },
-        queueStrategy,
-      );
-
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      await this.paginationFetcher.subjectStream.pipeTo(writableStream);
+      // await this.paginationFetcher.subjectStream.pipeTo(writableStream, {
+      //   signal: this.paginationFetcher.abortController.signal,
+      // });
+      for await (const subject of this.paginationFetcher.subjectStream as any) {
+        this.subjects.push(subject);
+
+        if (this.subjects.length >= requiredSubjectCount || !subject) {
+          break;
+        }
+      }
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
@@ -1513,18 +1514,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._viewHeadIndex = clampedHead;
     this.setDecisionDisabled(true);
 
+    this.updateSubSelection();
+
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
     // requestUpdate which would end up being debounced anyways.
     if (this.loadState === LoadState.DATASET_FETCHING) {
       this.loadState = LoadState.TILES_LOADING;
     }
-
-    //! If we start using the shouldUpdate() lifecycle hook, we should remove
-    // this requestUpdate() because it will bypass all shouldUpdate()
-    // optimizations.
-    // see: https://github.com/ecoacoustics/web-components/pull/461#discussion_r2299671840
-    this.requestUpdate();
   }
 
   //#endregion
@@ -1727,14 +1724,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
   }
 
-  // we use the effective grid size here so that hidden tiles are not counted
-  // when the user pages
-  private async pageNext(count: number = this.pageSize) {
+  /**
+   * Moves the view and decision head a full page forwards.
+   * This is typically triggered as part of auto-paging.
+   */
+  private async advanceToNextPage(count: number = this.pageSize) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
     this.decisionHeadIndex += count;
     await this.setViewHead(this.viewHeadIndex + count);
+
+    // If the last tile that was selected was auto-selected, we should
+    // continue auto-selection onto the next page.
+    if (this.singleDecisionMode) {
+      this.selectFirstTile();
+    }
   }
 
   private canNavigatePrevious(): boolean {
@@ -1832,14 +1837,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      this.pageNext(gridTiles.length);
-
-      // If the last tile that was selected was auto-selected, we should
-      // continue auto-selection onto the next page.
-      if (this.singleDecisionMode) {
-        this.selectFirstTile();
-      }
-
+      this.advanceToNextPage();
       return;
     }
 
@@ -1884,7 +1882,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // sub-selection, the button should not be disabled.
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      decisionElement.disabled = !subSelection.some((subject) => decisionElement.when(subject));
+      const isDecisionDisabled = !subSelection.some((subject) => decisionElement.when(subject));
+      decisionElement.disabled = isDecisionDisabled;
     }
 
     // Each tiles required decisions are determined from the decision buttons
@@ -2199,11 +2198,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               ${when(
                 this.isViewingHistory(),
                 () => html`
-                  <button
-                    data-testid="continue-verifying-button"
-                    class="oe-btn-secondary"
-                    @click="${this.resumeVerification}"
-                  >
+                  <button id="continue-verifying-button" class="oe-btn-secondary" @click="${this.resumeVerification}">
                     Continue ${this.hasVerificationTask() ? "Verifying" : "Classifying"}
                   </button>
                 `,

@@ -16,10 +16,10 @@
     </oe-verification-grid>
 
     <section id="dev-tools">
-      <button id="next-data-source-btn" onclick="nextDataSource()">/kaleidoscope.csv</button>
+      <button id="next-data-source-btn">/kaleidoscope.csv</button>
     </section>
 
-    <script>
+    <script type="module">
       const dataSourceComponent = () => document.querySelector("oe-data-source");
       const nextDataSourceBtn = () => document.getElementById("next-data-source-btn");
 
@@ -38,6 +38,8 @@
         dataSourceComponent().setAttribute("src", nextSource);
         nextDataSourceBtn().textContent = nextSource;
       }
+
+      nextDataSourceBtn().addEventListener("click", nextDataSource);
     </script>
   </body>
 </html>

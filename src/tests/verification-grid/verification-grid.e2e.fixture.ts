@@ -65,7 +65,7 @@ class TestPage {
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
-  public continueVerifyingButton = () => this.page.getByTestId("continue-verifying-button").first();
+  public continueVerifyingButton = () => this.page.locator("#continue-verifying-button").first();
   public previousPageButton = () => this.page.getByTestId("previous-page-button").first();
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 

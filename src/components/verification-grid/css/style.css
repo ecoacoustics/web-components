@@ -146,7 +146,9 @@
 
 .controls-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 0.5fr 1fr 0.5fr;
+
+  width: 100%;
 
   gap: var(--oe-spacing);
   color: var(--oe-font-color);
@@ -179,6 +181,10 @@
 }
 
 .decision-controls {
+  flex-direction: column;
+  align-content: center;
+  align-items: center;
+
   max-width: 100%;
 
   h2 {

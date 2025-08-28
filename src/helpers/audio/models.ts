@@ -38,7 +38,7 @@ export interface IAudioInformation {
 export class SpectrogramOptions {
   constructor(
     windowSize: PowerTwoWindowSize,
-    windowOverlap: PowerTwoWindowOverlap,
+    windowOverlap: number,
     windowFunction: WindowFunctionName,
     melScale: boolean,
     brightness: number,
@@ -60,7 +60,7 @@ export class SpectrogramOptions {
    */
   public windowSize: PowerTwoWindowSize;
   /** number of samples to overlap between windows */
-  public windowOverlap: PowerTwoWindowOverlap;
+  public windowOverlap: number;
   public windowFunction: WindowFunctionName;
   public melScale: boolean;
   public brightness: number;

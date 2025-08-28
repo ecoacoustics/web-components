@@ -44,6 +44,11 @@ export class GridPageFetcher {
     return new CountQueuingStrategy({ highWaterMark });
   }
 
+  /**
+   * Closes the stream of subjects so that no further data can be pulled.
+   * This is typically done when the datasource changes and the stream is no
+   * longer needed.
+   */
   public readonly abortController = new AbortController();
 
   private pagingCallback: PageFetcher;
@@ -56,18 +61,14 @@ export class GridPageFetcher {
   private clientCacheSize = 10;
   private serverCacheSize = 50;
 
-  /**
-   * Closes the stream of subjects so that no further data can be pulled.
-   * This is typically done when the datasource changes and the stream is no
-   * longer needed.
-   */
-  public async closeDatasource() {
-    await this._subjectStream?.cancel(StreamCancelReason.DATASOURCE_CLOSED);
-  }
-
   private newSubjectStream() {
-    return new ReadableStream<SubjectWrapper>(
+    const subjectStream = new ReadableStream<SubjectWrapper>(
       {
+        start: () => {
+          this.abortController.signal.addEventListener("abort", () => {
+            this._subjectStream?.cancel(StreamCancelReason.DATASOURCE_CLOSED);
+          });
+        },
         pull: async (controller) => {
           const fetchedPage = await this.fetchNextPage();
           if (fetchedPage.length === 0) {
@@ -81,10 +82,13 @@ export class GridPageFetcher {
         },
         cancel: () => {
           this._subjectStream = undefined;
+          console.debug("subject stream cancelled");
         },
       },
       this.queueingStrategy,
     );
+
+    return subjectStream;
   }
 
   private async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {

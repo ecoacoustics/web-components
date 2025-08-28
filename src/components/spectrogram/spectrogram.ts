@@ -7,12 +7,7 @@ import { Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
-import {
-  IAudioInformation,
-  PowerTwoWindowOverlap,
-  PowerTwoWindowSize,
-  SpectrogramOptions,
-} from "../../helpers/audio/models";
+import { IAudioInformation, PowerTwoWindowSize, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
@@ -20,7 +15,6 @@ import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFram
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
 import { ColorMapName } from "../../helpers/audio/colors";
-import { AutoComplete } from "../../helpers/types/advancedTypes";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -115,7 +109,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The amount of overlap between fft windows */
   @property({ type: Number, attribute: "window-overlap", reflect: true })
-  public windowOverlap: AutoComplete<PowerTwoWindowOverlap> | number = 0;
+  public windowOverlap = 0;
 
   /** A boolean attribute representing if the spectrogram should be shown in mel-scale */
   @property({ type: Boolean, attribute: "mel-scale", converter: booleanConverter })

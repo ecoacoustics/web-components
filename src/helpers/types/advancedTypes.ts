@@ -74,6 +74,8 @@ export type ObjectRecord = Record<PropertyKey, unknown>;
  */
 export type HeapVariable = ObjectRecord | unknown[] | Map<PropertyKey, unknown> | Set<unknown>;
 
+export type StackVariable = string | number | bigint | boolean | null | undefined;
+
 /**
  * Converts a structural type to a nominal type
  *
@@ -87,5 +89,3 @@ export type HeapVariable = ObjectRecord | unknown[] | Map<PropertyKey, unknown> 
  * because the `StructuralType` is a discriminated union of string literals.
  */
 export type StructuralToNominal<T> = T extends infer U ? U : never;
-
-export type AutoComplete<T> = T extends number ? `${T}` : never;
