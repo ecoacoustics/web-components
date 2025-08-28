@@ -40,7 +40,7 @@ export class GridPageFetcher {
   }
 
   private get queueingStrategy() {
-    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
+    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize) * 10;
     return new CountQueuingStrategy({ highWaterMark });
   }
 
@@ -88,56 +88,75 @@ export class GridPageFetcher {
       this.queueingStrategy,
     );
 
-    return subjectStream;
+    // prettier-ignore
+    return subjectStream
+      .pipeThrough(this.serverCachePipe())
+      .pipeThrough(this.clientCachePipe());
   }
 
-  private async refreshCache(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
-    // Notice that these cache operations are not awaited, meaning that they are
-    // "fire and forget".
-    this.audioCacheClient(subjects, viewHead);
-    this.audioCacheServer(subjects, viewHead);
+  private clientCachePipe(): TransformStream<SubjectWrapper> {
+    const queueStrategy = new CountQueuingStrategy({ highWaterMark: this.clientCacheSize });
+
+    return new TransformStream<SubjectWrapper>(
+      {
+        transform: (subject, controller) => {
+          // Fire and forget the client cache operation
+          this.audioCacheClient(subject);
+          controller.enqueue(subject);
+        },
+      },
+      queueStrategy,
+    );
+  }
+
+  private serverCachePipe(): TransformStream<SubjectWrapper> {
+    const queueStrategy = new CountQueuingStrategy({ highWaterMark: this.serverCacheSize });
+
+    return new TransformStream<SubjectWrapper>(
+      {
+        transform: (subject, controller) => {
+          // Fire and forget the server cache operation
+          this.audioCacheServer(subject);
+          controller.enqueue(subject);
+        },
+      },
+      queueStrategy,
+    );
   }
 
   // during client caching, we do a GET request to the server for the
   // audio file. Therefore, requests that have already been client cached
   // have also already been server cached. We therefore, remove these
   // requests from the calculations
-  private async audioCacheClient(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
-    const models = subjects
-      .slice(viewHead, viewHead + this.clientCacheSize)
-      .filter((model) => model.clientCached === AudioCachedState.COLD);
-
-    for (const model of models) {
-      model.clientCached = AudioCachedState.REQUESTED;
-      fetch(model.url, { priority: "low", cache: "reload" })
-        .then((response: Response) => {
-          model.clientCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
-        })
-        .catch(() => (model.clientCached = AudioCachedState.FAILED));
+  private audioCacheClient(subject: SubjectWrapper): void {
+    if (subject.clientCached !== AudioCachedState.COLD) {
+      return;
     }
+
+    subject.clientCached = AudioCachedState.REQUESTED;
+
+    fetch(subject.url, { priority: "low", cache: "reload" })
+      .then((response: Response) => {
+        subject.clientCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
+      })
+      .catch(() => (subject.clientCached = AudioCachedState.FAILED));
   }
 
   // during server caching, we do a HEAD request to the server for the
   // audio file. We do this because some servers have to split a large
   // audio file using ffmpeg when a file is requested.
   // by doing a HEAD request, we can warm the ffmpeg split file on the server
-  private async audioCacheServer(subjects: SubjectWrapper[], viewHead: number): Promise<void> {
-    // We do not need a Math.min(xyz, this.subjectQueue.length) because if the
-    // top range of a slice is larger than the length of the array, the slice
-    // will simply ignore the out-of-bounds indices and return the maximum
-    // amount of items between the start index and the end of the array.
-    const models = subjects
-      .slice(viewHead, viewHead + this.serverCacheSize)
-      .filter((model) => model.serverCached === AudioCachedState.COLD);
-
-    for (const model of models) {
-      model.serverCached = AudioCachedState.REQUESTED;
-      fetch(model.url, { method: "HEAD", priority: "low", cache: "no-store" })
-        .then((response: Response) => {
-          model.serverCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
-        })
-        .catch(() => (model.serverCached = AudioCachedState.FAILED));
+  private audioCacheServer(subject: SubjectWrapper): void {
+    if (subject.serverCached !== AudioCachedState.COLD) {
+      return;
     }
+
+    subject.serverCached = AudioCachedState.REQUESTED;
+    fetch(subject.url, { method: "HEAD", priority: "low", cache: "no-store" })
+      .then((response: Response) => {
+        subject.serverCached = response.ok ? AudioCachedState.SUCCESS : AudioCachedState.FAILED;
+      })
+      .catch(() => (subject.serverCached = AudioCachedState.FAILED));
   }
 
   // because we must support iterable callbacks, we must behave as if the
