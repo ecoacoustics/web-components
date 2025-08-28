@@ -655,7 +655,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public isViewingHistory(): boolean {
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
-    return this.viewHeadIndex + (this.pageSize - 1) < this.decisionHeadIndex;
+    return this.viewHeadIndex < this.decisionHeadIndex;
   }
 
   public resetSpectrogramSettings(): void {
@@ -853,7 +853,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
     this.subjectWriter = new SubjectWriter(this.subjects);
-    this.paginationFetcher.subjectStream.pipeTo(this.subjectWriter!);
+    this.paginationFetcher.subjectStream.pipeTo(this.subjectWriter!).then(() => {
+      this.subjectWriter?.closeStream();
+    });
 
     await this.setViewHead(0);
     this.decisionHeadIndex = 0;
@@ -1475,20 +1477,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (!this.paginationFetcher) {
       console.error("Cannot set viewHead because the paginationFetcher is not initialized");
       return [];
+    } else if (!this.subjectWriter) {
+      console.error("Cannot set viewHead because the subjectWriter is not initialized");
+      return [];
     }
 
     const gridSize = this.availableGridCells;
     const requiredSubjectCount = requestedIndex + gridSize;
     const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
-    if (needMoreSubjects) {
+    if (needMoreSubjects && !this.subjectWriter.closed) {
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      await this.subjectWriter?.setTarget(requiredSubjectCount);
+      await this.subjectWriter.setTarget(requiredSubjectCount);
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);

@@ -1,6 +1,8 @@
 import { SubjectWrapper } from "../../models/subject";
 
 export class SubjectWriter extends WritableStream<SubjectWrapper> {
+  public closed = false;
+
   private readonly subjects: SubjectWrapper[] = [];
   private target = 0;
 
@@ -26,6 +28,13 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
     });
 
     this.subjects = subjects;
+  }
+
+  public closeStream(): void {
+    this.releaseTargetLock?.();
+    super.close();
+
+    this.closed = true;
   }
 
   public async setTarget(value: number): Promise<void> {

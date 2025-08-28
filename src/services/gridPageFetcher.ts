@@ -71,6 +71,11 @@ export class GridPageFetcher {
         },
         pull: async (controller) => {
           const fetchedPage = await this.fetchNextPage();
+          if (fetchedPage.length === 0) {
+            console.debug("subject stream closed");
+            controller.close();
+            return;
+          }
 
           for (const subject of fetchedPage) {
             controller.enqueue(subject);
