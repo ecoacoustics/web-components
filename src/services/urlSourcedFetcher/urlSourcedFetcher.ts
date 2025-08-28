@@ -1,4 +1,4 @@
-import { Subject } from "../models/subject";
+import { Subject } from "../../models/subject";
 import csv from "csvtojson";
 
 // TODO: this class should use the strategy pattern and perform caching

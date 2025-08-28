@@ -1,5 +1,5 @@
-import { AudioCachedState, Subject, SubjectWrapper } from "../models/subject";
-import { SubjectParser, UrlTransformer } from "./subjectParser";
+import { AudioCachedState, Subject, SubjectWrapper } from "../../models/subject";
+import { SubjectParser, UrlTransformer } from "../subjectParser/subjectParser";
 
 export interface IPageFetcherResponse<T> {
   subjects: Subject[];

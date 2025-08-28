@@ -18,6 +18,10 @@ declare global {
     // that the array contains the type of the search element.
     includes<K>(searchElement: K | StructuralToNominal<K>, fromIndex?: number): T is T & K;
   }
+
+  interface Window {
+    showSaveFilePicker?: (options?: SaveFilePickerOptions) => Promise<FileSystemFileHandle>;
+  }
 }
 
 export {};

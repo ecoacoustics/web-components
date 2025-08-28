@@ -1,10 +1,10 @@
-import { DecisionOptions } from "../models/decisions/decision";
-import { NewTag } from "../models/decisions/newTag";
-import { Verification } from "../models/decisions/verification";
-import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper, tagColumnName } from "../models/subject";
-import { Tag } from "../models/tag";
-import { ModelParser } from "./modelParser";
-import { Transformer } from "./modelParser";
+import { DecisionOptions } from "../../models/decisions/decision";
+import { NewTag } from "../../models/decisions/newTag";
+import { Verification } from "../../models/decisions/verification";
+import { confirmedColumnName, newTagColumnName, Subject, SubjectWrapper, tagColumnName } from "../../models/subject";
+import { Tag } from "../../models/tag";
+import { ModelParser } from "../modelParser/modelParser";
+import { Transformer } from "../modelParser/modelParser";
 
 /**
  * A callback that will be applied to every subjects url

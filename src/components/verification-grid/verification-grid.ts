@@ -20,7 +20,6 @@ import {
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
 import { sleep } from "../../helpers/utilities";
-import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher";
 import {
   DOWN_ARROW_KEY,
   END_KEY,
@@ -42,11 +41,11 @@ import { signal, Signal } from "@lit-labs/preact-signals";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
-import { UrlTransformer } from "../../services/subjectParser";
+import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import { IPlayEvent } from "spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
@@ -60,8 +59,9 @@ import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
 import { templateContent } from "lit/directives/template-content.js";
+import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
+import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import verificationGridStyles from "./css/style.css?inline";
-import { SubjectWriter } from "./subjectWriter";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -668,7 +668,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.bootstrapDialog.open;
   }
 
-  // to use regions in VSCode, press Ctrl + Shift + P > "Fold"/"Unfold"
   //#region Updates
 
   public firstUpdated(): void {

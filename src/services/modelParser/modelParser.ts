@@ -1,5 +1,5 @@
 import { camelCase, dotCase, pascalCase, snakeCase, kebabCase, sentenceCase, noCase } from "change-case";
-import { identityCase, uppercaseDotCase } from "./caseConverters";
+import { identityCase, uppercaseDotCase } from "../caseConverter/caseConverters";
 
 export type CandidateKey = string;
 export type Transformer = Record<string, CandidateKey[]>;

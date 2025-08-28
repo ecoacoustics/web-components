@@ -1,6 +1,6 @@
 import { CSSResultGroup } from "lit";
 import { shoelaceTheming } from "../helpers/themes/shoelace/shoelaceTheme";
-import { registerBundledIcons } from "../services/shoelaceLoader";
+import { registerBundledIcons } from "../services/shoelaceLoader/shoelaceLoader";
 import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 

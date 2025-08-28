@@ -9,7 +9,7 @@ import { VerificationGridComponent, VerificationGridInjector } from "../verifica
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { SubjectWrapper } from "../../models/subject";

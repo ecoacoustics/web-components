@@ -1,9 +1,9 @@
-import { DecisionOptions } from "../models/decisions/decision";
-import { NewTag } from "../models/decisions/newTag";
-import { Verification } from "../models/decisions/verification";
-import { newTagColumnName, Subject, tagColumnName } from "../models/subject";
-import { Tag } from "../models/tag";
-import { test } from "../tests/assertions";
+import { DecisionOptions } from "../../models/decisions/decision";
+import { NewTag } from "../../models/decisions/newTag";
+import { Verification } from "../../models/decisions/verification";
+import { newTagColumnName, Subject, tagColumnName } from "../../models/subject";
+import { Tag } from "../../models/tag";
+import { test } from "../../tests/assertions";
 import { SubjectParser } from "./subjectParser";
 
 interface VerificationParserTest {

@@ -1,9 +1,9 @@
-import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
-import { Classification } from "../models/decisions/classification";
-import { Decision, DecisionOptions } from "../models/decisions/decision";
-import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
-import { NewTag } from "../models/decisions/newTag";
-import { Verification } from "../models/decisions/verification";
+import { Constructor, CssVariable } from "../../helpers/types/advancedTypes";
+import { Classification } from "../../models/decisions/classification";
+import { Decision, DecisionOptions } from "../../models/decisions/decision";
+import { decisionNotRequired, OptionalDecision } from "../../models/decisions/decisionNotRequired";
+import { NewTag } from "../../models/decisions/newTag";
+import { Verification } from "../../models/decisions/verification";
 
 const tagColors = new Map<unknown, CssVariable>();
 
