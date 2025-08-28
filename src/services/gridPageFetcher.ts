@@ -40,7 +40,8 @@ export class GridPageFetcher {
   }
 
   private get queueingStrategy() {
-    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize) * 10;
+    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
+    console.debug(highWaterMark);
     return new CountQueuingStrategy({ highWaterMark });
   }
 
@@ -71,10 +72,6 @@ export class GridPageFetcher {
         },
         pull: async (controller) => {
           const fetchedPage = await this.fetchNextPage();
-          if (fetchedPage.length === 0) {
-            controller.close();
-            return;
-          }
 
           for (const subject of fetchedPage) {
             controller.enqueue(subject);

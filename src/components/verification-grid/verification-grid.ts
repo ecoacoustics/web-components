@@ -1477,22 +1477,43 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects) {
+      let enoughToRenderResolver: () => void;
+      const enoughToRender = new Promise<void>((resolve) => {
+        enoughToRenderResolver = resolve;
+      });
+
+      const subjectDelta = requiredSubjectCount - this.subjects.length;
+      // We only need to pull as many items as required to fill the page.
+      // Use that count as the writable's highWaterMark so the readable will
+      // naturally apply backpressure (stop pulling) once we've buffered enough.
+      const requiredHighWaterMark = Math.max(1, subjectDelta);
+      const queueStrategy = new CountQueuingStrategy({ highWaterMark: requiredHighWaterMark });
+
+      const writableStream = new WritableStream<SubjectWrapper>(
+        {
+          write: (subject) => {
+            this.subjects.push(subject);
+            console.debug(this.subjects.length);
+
+            if (this.subjects.length >= requiredSubjectCount) {
+              enoughToRenderResolver();
+            }
+          },
+        },
+        queueStrategy,
+      );
+
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      // await this.paginationFetcher.subjectStream.pipeTo(writableStream, {
-      //   signal: this.paginationFetcher.abortController.signal,
-      // });
-      for await (const subject of this.paginationFetcher.subjectStream as any) {
-        this.subjects.push(subject);
+      this.paginationFetcher.subjectStream.pipeTo(writableStream, {
+        signal: this.paginationFetcher.abortController.signal,
+      });
 
-        if (this.subjects.length >= requiredSubjectCount || !subject) {
-          break;
-        }
-      }
+      await enoughToRender;
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
