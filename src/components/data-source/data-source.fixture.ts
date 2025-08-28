@@ -1,6 +1,7 @@
 import { Page } from "@playwright/test";
 import {
   catchLocatorEvent,
+  getBrowserValue,
   removeBrowserAttribute,
   setBrowserAttribute,
   waitForContentReady,
@@ -110,7 +111,7 @@ class TestPage {
   }
 
   public async getDownloadResults(): Promise<ReadonlyArray<Partial<DownloadableResult>>> {
-    return await this.component().evaluate((element: DataSourceComponent) => element["resultRows"]());
+    return await getBrowserValue<DataSourceComponent, any>(this.component(), "resultRows" as any);
   }
 
   public async makeSubSelection(subSelectionIndices: number[]) {

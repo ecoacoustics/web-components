@@ -32,8 +32,6 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
 
   public closeStream(): void {
     this.releaseTargetLock?.();
-    super.close();
-
     this.closed = true;
   }
 

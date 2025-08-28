@@ -14,10 +14,6 @@ export interface IPageFetcherResponse<T> {
  */
 export type PageFetcherContext = Record<string, unknown>;
 
-enum StreamCancelReason {
-  DATASOURCE_CLOSED,
-}
-
 // TODO: remove the brand from the PageFetcher. This was done so that we could
 // see if the callback was created by the UrlSourcedFetcher
 export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & {
@@ -64,11 +60,6 @@ export class GridPageFetcher {
   private newSubjectStream() {
     const subjectStream = new ReadableStream<SubjectWrapper>(
       {
-        start: () => {
-          this.abortController.signal.addEventListener("abort", () => {
-            this._subjectStream?.cancel(StreamCancelReason.DATASOURCE_CLOSED);
-          });
-        },
         pull: async (controller) => {
           const fetchedPage = await this.fetchNextPage();
           if (fetchedPage.length === 0) {

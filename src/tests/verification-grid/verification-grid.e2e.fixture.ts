@@ -27,7 +27,7 @@ import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
 import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 import { SPACE_KEY } from "../../helpers/keyboard";

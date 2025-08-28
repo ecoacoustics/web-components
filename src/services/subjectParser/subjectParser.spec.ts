@@ -3,7 +3,7 @@ import { NewTag } from "../../models/decisions/newTag";
 import { Verification } from "../../models/decisions/verification";
 import { newTagColumnName, Subject, tagColumnName } from "../../models/subject";
 import { Tag } from "../../models/tag";
-import { test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 import { SubjectParser } from "./subjectParser";
 
 interface VerificationParserTest {
@@ -183,17 +183,6 @@ const tests: VerificationParserTest[] = [
     expectedVerified: undefined,
   },
   {
-    name: "subject with a positive verification and no tag",
-    input: {
-      src: "http://localhost:3000/example.flac",
-      verified: "true",
-    },
-    expectedUrl: "http://localhost:3000/example.flac",
-    expectedVerified: new Verification(DecisionOptions.TRUE, null),
-    expectedNewTag: undefined,
-    expectedTag: null,
-  },
-  {
     name: "subject with a verification",
     input: {
       src: "http://localhost:3000/example.flac",
@@ -204,25 +193,6 @@ const tests: VerificationParserTest[] = [
     expectedUrl: "http://localhost:3000/example.flac",
     expectedTag: { text: "abbots babbler" },
     expectedVerified: new Verification(DecisionOptions.TRUE, { text: "dugong" }),
-    expectedNewTag: undefined,
-  },
-  {
-    name: "subject with a negative verification and no tag",
-    input: {
-      verified: "false",
-      tags: [{ text: "abbots babbler" }],
-    },
-    expectedTag: { text: "abbots babbler" },
-    // Note that because there is no oe_tag column, and there is no tag in the
-    // verification object.
-    // In this case, we use an empty tag as a placeholder.
-    // This is different from a "null" tag which would result in the subject
-    // wrappers tag being used.
-    // I have preferred to use an empty tag here instead of the subjects tag so
-    // that if the user changes the tag on the subject, the tag that the
-    // verification was originally attached to is not incorrect.
-    // I would rather have an empty tag than a tag that is incorrect.
-    expectedVerified: new Verification(DecisionOptions.FALSE, null),
     expectedNewTag: undefined,
   },
   {
@@ -317,26 +287,42 @@ const tests: VerificationParserTest[] = [
   },
 ];
 
-test.describe("SubjectParser", () => {
-  for (const testItem of tests) {
-    const result = SubjectParser.parse(testItem.input, (url) => url);
+for (const testItem of tests) {
+  const result = SubjectParser.parse(testItem.input, (url) => url);
 
-    test(`should have correct tag for a ${testItem.name}`, () => {
-      test.expect(result.tag).toEqual(testItem.expectedTag);
+  test(`should have correct tag for a ${testItem.name}`, () => {
+    expect(result.tag).toEqual(testItem.expectedTag);
+  });
+
+  test(`should have correct verified value for a ${testItem.name}`, () => {
+    expect(result.verification).toEqual(testItem.expectedVerified);
+  });
+
+  test(`should have correct new tag for a ${testItem.name}`, () => {
+    expect(result.newTag).toEqual(testItem.expectedNewTag);
+  });
+
+  if ("expectedUrl" in testItem) {
+    test(`should have correct url for a ${testItem.name}`, () => {
+      expect(result.url).toEqual(testItem.expectedUrl);
     });
-
-    test(`should have correct verified value for a ${testItem.name}`, () => {
-      test.expect(result.verification).toEqual(testItem.expectedVerified);
-    });
-
-    test(`should have correct new tag for a ${testItem.name}`, () => {
-      test.expect(result.newTag).toEqual(testItem.expectedNewTag);
-    });
-
-    if ("expectedUrl" in testItem) {
-      test(`should have correct url for a ${testItem.name}`, () => {
-        test.expect(result.url).toEqual(testItem.expectedUrl);
-      });
-    }
   }
+}
+
+// If we cannot determine the tag that was originally verified, we cannot infer
+// what the tag should be, and the verification should be omitted from the
+// subject model.
+// We should NOT use the subjects tag as the verified tag because the tags
+// applied to a subject may have changed, and the originally verified may even
+// have been removed entirely.
+test("subject with a verification decision but no tag", () => {
+  const testSubject = { verified: "false", tags: [{ text: "abbots babbler" }] };
+
+  const parserResult = SubjectParser.parse(testSubject, (url) => url);
+
+  // We can still parse the tags array from the subject, but we should NOT
+  // assume that this is the verified tag
+  expect(parserResult.tag).toEqual({ text: "abbots babbler" });
+  expect(parserResult.newTag).toBeUndefined();
+  expect(parserResult.verification).toBeUndefined();
 });

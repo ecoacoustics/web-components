@@ -852,9 +852,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
     this.subjectWriter = new SubjectWriter(this.subjects);
-    this.paginationFetcher.subjectStream.pipeTo(this.subjectWriter!).then(() => {
-      this.subjectWriter?.closeStream();
-    });
+    this.paginationFetcher.subjectStream
+      .pipeTo(this.subjectWriter!, { signal: this.paginationFetcher.abortController.signal })
+      .then(() => {
+        this.subjectWriter?.closeStream();
+      });
 
     await this.setViewHead(0);
     this.decisionHeadIndex = 0;
