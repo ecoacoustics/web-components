@@ -5,11 +5,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
   private target = 0;
 
   private unlockWriter?: (...args: any[]) => void;
-
   private releaseTargetLock?: () => void;
-  private targetLock = new Promise<void>((resolve) => {
-    this.releaseTargetLock = resolve;
-  });
 
   public constructor(subjects: SubjectWrapper[]) {
     super({
@@ -19,7 +15,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
 
           if (this.subjects.length >= this.target) {
             this.releaseTargetLock?.();
-            return new Promise((res) => {
+            await new Promise((res) => {
               this.unlockWriter = res;
             });
           }
@@ -44,6 +40,12 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
     this.target = value;
     this.unlockWriter?.();
 
-    await this.targetLock;
+    await this.createTargetLock();
+  }
+
+  private createTargetLock(): Promise<void> {
+    return new Promise((resolve) => {
+      this.releaseTargetLock = resolve;
+    });
   }
 }

@@ -38,9 +38,9 @@ export const WithShoelace = <T extends Component>(superClass: T): Component => {
 function registerShoelace() {
   doneRegister = true;
 
+  registerBundledIcons();
+
   // TODO: cherry pick shoelace components
   // see: https://github.com/ecoacoustics/web-components/issues/83
-  import("@shoelace-style/shoelace").then(() => {
-    registerBundledIcons();
-  });
+  import("@shoelace-style/shoelace");
 }

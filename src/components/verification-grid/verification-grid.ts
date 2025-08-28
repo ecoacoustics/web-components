@@ -438,7 +438,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   /** A count of the number of tiles currently visible on the screen */
   public get pageSize(): number {
-    return this.availableGridCells - this.hiddenTiles;
+    return this.availableGridCells - this.emptyTileCount;
   }
 
   /**
@@ -453,7 +453,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private get currentPageIndices(): CurrentPage {
     const start = this.viewHeadIndex;
 
-    const endCandidate = start + this.pageSize;
+    const endCandidate = start + this.availableGridCells;
     const end = Math.min(endCandidate, this.subjects.length);
 
     return { start, end };
@@ -514,7 +514,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
-  private hiddenTiles = 0;
   private showingSelectionShortcuts = false;
   private anyOverlap = signal<boolean>(false);
   private subjects: SubjectWrapper[] = [];
@@ -1729,12 +1728,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    this.decisionHeadIndex += count;
+    // Setting the view head is more likely to fail due to failures to fetch
+    // more subjects.
+    // Therefore, we set the viewHead first so that if it fails to fetch more
+    // subjects, the decisionHead is not advanced incorrectly.
     await this.setViewHead(this.viewHeadIndex + count);
+    this.decisionHeadIndex += count;
 
     // If the last tile that was selected was auto-selected, we should
     // continue auto-selection onto the next page.
-    if (this.singleDecisionMode) {
+    //
+    // If we have reached the end of the dataset, there is no "first tile".
+    if (this.singleDecisionMode && this.pageSize > 0) {
       this.selectFirstTile();
     }
   }
