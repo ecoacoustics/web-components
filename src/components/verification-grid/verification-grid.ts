@@ -61,6 +61,7 @@ import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
 import { templateContent } from "lit/directives/template-content.js";
 import verificationGridStyles from "./css/style.css?inline";
+import { SubjectWriter } from "./subjectWriter";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -518,7 +519,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private anyOverlap = signal<boolean>(false);
   private subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
+
   private paginationFetcher?: GridPageFetcher;
+  private subjectWriter?: SubjectWriter;
 
   private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
   private highlight: HighlightSelection = {
@@ -814,7 +817,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.paginationFetcher.abortController.abort();
       }
 
-      this.paginationFetcher = new GridPageFetcher(this.getPage, this.urlTransformer);
       await this.resetBufferHeads();
     }
 
@@ -849,6 +851,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private async resetBufferHeads() {
     this.subjects = [];
+
+    this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
+    this.subjectWriter = new SubjectWriter(this.subjects);
+    this.paginationFetcher.subjectStream.pipeTo(this.subjectWriter!);
 
     await this.setViewHead(0);
     this.decisionHeadIndex = 0;
@@ -1477,43 +1483,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this.subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects) {
-      let enoughToRenderResolver: () => void;
-      const enoughToRender = new Promise<void>((resolve) => {
-        enoughToRenderResolver = resolve;
-      });
-
-      const subjectDelta = requiredSubjectCount - this.subjects.length;
-      // We only need to pull as many items as required to fill the page.
-      // Use that count as the writable's highWaterMark so the readable will
-      // naturally apply backpressure (stop pulling) once we've buffered enough.
-      const requiredHighWaterMark = Math.max(1, subjectDelta);
-      const queueStrategy = new CountQueuingStrategy({ highWaterMark: requiredHighWaterMark });
-
-      const writableStream = new WritableStream<SubjectWrapper>(
-        {
-          write: (subject) => {
-            this.subjects.push(subject);
-            console.debug(this.subjects.length);
-
-            if (this.subjects.length >= requiredSubjectCount) {
-              enoughToRenderResolver();
-            }
-          },
-        },
-        queueStrategy,
-      );
-
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
       // after we have enough to render the page, so we append them to the
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
-      this.paginationFetcher.subjectStream.pipeTo(writableStream, {
-        signal: this.paginationFetcher.abortController.signal,
-      });
-
-      await enoughToRender;
+      await this.subjectWriter?.setTarget(requiredSubjectCount);
     }
 
     return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);

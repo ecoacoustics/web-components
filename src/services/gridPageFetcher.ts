@@ -41,7 +41,6 @@ export class GridPageFetcher {
 
   private get queueingStrategy() {
     const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
-    console.debug(highWaterMark);
     return new CountQueuingStrategy({ highWaterMark });
   }
 
