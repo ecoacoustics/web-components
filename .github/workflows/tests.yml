@@ -41,15 +41,17 @@ jobs:
         env:
           PLAYWRIGHT_SHARD: "true"
 
-      - name: Upload Blob Report
+      - name: Upload Test Report
+        # Upload test report even if tests fail so we can merge reports from all shards
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ matrix.os }}-${{ matrix.shard }}
-          path: blob-report/
+          name: test-report-${{ matrix.os }}-${{ matrix.shard }}
+          path: test-report/
           retention-days: 1
 
   Merge-Reports:
+    # Run merge reports even if some tests fail so we can still see results
     if: always()
     needs: [Run-Tests]
     runs-on: ubuntu-latest
@@ -65,14 +67,14 @@ jobs:
             - recursive: true
             - args: [--frozen-lockfile]
 
-      - name: Download All Blob Reports
+      - name: Download All Test Reports
         uses: actions/download-artifact@v4
         with:
-          path: all-blob-reports/
-          pattern: blob-report-*
+          path: all-test-reports/
+          pattern: test-report-*
 
-      - name: Merge Blob Reports
-        run: pnpm exec playwright merge-reports --reporter=html,github all-blob-reports/
+      - name: Merge Test Reports
+        run: pnpm exec playwright merge-reports --reporter=html,github all-test-reports/
         
       - name: Upload Merged Test Report
         if: always()

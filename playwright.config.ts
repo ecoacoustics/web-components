@@ -2,6 +2,30 @@ import { defineConfig, devices } from "@sand4rt/experimental-ct-web";
 
 const isCi = !!process.env.CI;
 
+function getPlaywrightReporters(): any {
+  if (process.env.PLAYWRIGHT_SHARD) {
+    return [
+      ["blob"],
+      ["github"],
+    ];
+  }
+
+  return [
+    // create a HTML report of the test results
+    // this is the best way to debug why tests are failing locally
+    [
+      "html",
+      {
+        outputFolder: "test-report",
+        open: "never",
+      },
+    ],
+    // print the test results out to the console.
+    // this can be useful for seeing why a test has failed in CI
+    isCi ? ["github"] : ["list"],
+  ];
+}
+
 export default defineConfig({
   testDir: "src",
   // we should aim to support fully parallel tests
@@ -34,25 +58,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
     trace: "on-first-retry",
   },
-  reporter: process.env.PLAYWRIGHT_SHARD
-    ? [
-        ["blob"],
-        ["github"],
-      ]
-    : [
-        // create a HTML report of the test results
-        // this is the best way to debug why tests are failing locally
-        [
-          "html",
-          {
-            outputFolder: "test-report",
-            open: "never",
-          },
-        ],
-        // print the test results out to the console.
-        // this can be useful for seeing why a test has failed in CI
-        isCi ? ["github"] : ["list"],
-      ],
+  reporter: getPlaywrightReporters(),
   // be careful when updating this path template. Long path names can cause
   // Git on Windows to fail checkout
   snapshotPathTemplate: "./src/tests/__snapshots__/{arg}{ext}",
