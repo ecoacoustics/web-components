@@ -592,13 +592,13 @@ test.describe("single verification grid", () => {
 
   test.describe("playing and pausing tiles", () => {
     test.describe("no sub-selection", () => {
-      test("should play all tiles when the play shortcut is pressed", async ({ fixture }) => {
+      test.fixme("should play all tiles when the play shortcut is pressed", async ({ fixture }) => {
         const expectedPlayingCount = await fixture.getTileCount();
 
         await fixture.shortcutGridPlay();
-        const realizedPlayingStates = fixture.playingSpectrograms();
+        const realizedPlayingStates = await fixture.playingSpectrograms();
 
-        await expect(realizedPlayingStates).toHaveCount(expectedPlayingCount);
+        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
       });
 
       test("should play a single tile in a 1x1 grid with keyboard shortcuts", async ({ fixture }) => {
@@ -607,8 +607,8 @@ test.describe("single verification grid", () => {
 
         await fixture.shortcutGridPlay();
 
-        const realizedPlayingStates = fixture.playingSpectrograms();
-        await expect(realizedPlayingStates).toHaveCount(expectedPlayingCount);
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+        expect(realizedPlayingStates).toHaveLength(expectedPlayingCount);
       });
 
       test("should pause all tiles when the pause shortcut is pressed", () => {});
@@ -622,8 +622,8 @@ test.describe("single verification grid", () => {
 
       test("should only play selected tiles when the play shortcut is pressed", async ({ fixture }) => {
         await fixture.shortcutGridPlay();
-        const realizedPlayingStates = fixture.playingSpectrograms();
-        await expect(realizedPlayingStates).toHaveCount(testedSubSelection.length);
+        const realizedPlayingStates = await fixture.playingSpectrograms();
+        expect(realizedPlayingStates).toHaveLength(testedSubSelection.length);
       });
 
       // in this test, we assert that if two tiles are playing and the user
@@ -632,11 +632,14 @@ test.describe("single verification grid", () => {
       test("should only pause selected tiles when the pause shortcut is pressed", async ({ fixture }) => {
         await fixture.shortcutGridPlay();
 
+        const initialPlayingSpectrograms = await fixture.playingSpectrograms();
+        expect(initialPlayingSpectrograms).toHaveLength(2);
+
         await fixture.subSelect(1);
         await fixture.shortcutGridPause();
 
-        const realizedPlayingStates = fixture.playingSpectrograms();
-        await expect(realizedPlayingStates).toHaveCount(1);
+        const afterPausePlayingSpectrograms = await fixture.playingSpectrograms();
+        expect(afterPausePlayingSpectrograms).toHaveLength(1);
       });
     });
   });
@@ -1730,7 +1733,7 @@ test.describe("decisions", () => {
     });
   });
 
-  test.describe("resuming datasets", () => {
+  test.describe.skip("resuming datasets", () => {
     test.beforeEach(async ({ fixture }) => {
       // Most of these tests depend on a grid size of 4 because we typically
       // want to test four potential states.

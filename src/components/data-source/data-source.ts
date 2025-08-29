@@ -113,17 +113,32 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  private resultRows(): Partial<DownloadableResult>[] {
+  private async resultRows(): Promise<Partial<DownloadableResult>[]> {
     if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     }
 
-    const subjects = this.verificationGrid.readonlySubjects;
-    return subjects.map((model) => model.toDownloadable());
+    const seenSubjects = this.verificationGrid.subjects;
+
+    // If the data source is url sourced, we know the entire files content ahead
+    // of time, and we assume that the user does too.
+    // Therefore, we download all of the subjects, including subjects that the
+    // user has not seen.
+    if (this.isUrlSourced()) {
+      await this.verificationGrid.flushAllSubjects();
+      return seenSubjects.map((model) => model.toDownloadable());
+    }
+
+    // When downloading callback provided results, we want to download all the
+    // subjects that the user has seen, including the current page.
+    // Because the verification grids subject array only contains items that the
+    // user has seen up to, we simply download the verification grids subject
+    // array.
+    return seenSubjects.map((model) => model.toDownloadable());
   }
 
   private async downloadCallbackSourcedResults(): Promise<void> {
-    const downloadableResults = this.resultRows();
+    const downloadableResults = await this.resultRows();
     const stringifiedResults = JSON.stringify(downloadableResults);
 
     const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
@@ -141,7 +156,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const downloadableResults = this.resultRows();
+    const downloadableResults = await this.resultRows();
 
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 

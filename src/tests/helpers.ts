@@ -286,7 +286,7 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
   ...args: any[]
 ): Promise<ReturnType> {
   return await component.evaluate(
-    (element: T, key: keyof T, args: any[] = []) => (element[key] as (...args: any) => any)(...args),
+    async (element: T, key: keyof T, args: any[] = []) => await (element[key] as (...args: any) => any)(...args),
     key,
     args,
   );

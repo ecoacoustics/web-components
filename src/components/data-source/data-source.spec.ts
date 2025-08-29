@@ -8,25 +8,6 @@ test.describe("data source", () => {
     await fixture.dismissBootstrapDialog();
   });
 
-  // [false, true].forEach((localFile: boolean) => {
-  //   const loadFileText = localFile ? "local file" : "remote file";
-  //
-  //   test.describe(`loading from a ${loadFileText}`, () => {
-  //     test.beforeEach(async ({ fixture }) => {
-  //       if (localFile) {
-  //         await fixture.setLocalFile("../../../public/example/test-items.json");
-  //         return;
-  //       }
-  //
-  //       await fixture.setRemoteFile("http://localhost:3000/test-items.json");
-  //     });
-  //
-  //     test(`should correctly handle removing the data source`, () => {});
-  //
-  //     test(`should show the correct file name`, () => {});
-  //   });
-  // });
-
   ["json", "csv", "tsv"].forEach((fileType) => {
     test.describe(`file type ${fileType}`, () => {
       const mockFileName = `test-items-2.${fileType}`;
@@ -72,7 +53,7 @@ test.describe("data source", () => {
         // in this test, we make a decision about the second item in the grid
         // meaning that the first row should be empty, the second row should
         // have the decision, and the third row should be empty
-        test("should have the correct content for results with a sub-selection", async ({ fixture }) => {
+        test("should have the correct content for results with a sub-selection decision", async ({ fixture }) => {
           const originalFileContent = await fixture.getDownloadResults();
           const subSelectionIndex = 1;
 

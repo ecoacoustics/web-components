@@ -296,11 +296,11 @@ class TestPage {
   }
 
   public async skipColor(): Promise<string> {
-    return await getCssVariableStyle(this.skipButton(), "--decision-skip-color", "background");
+    return await getCssVariableStyle(this.skipButton(), "--oe-decision-skip-color", "background");
   }
 
   public async notRequiredColor(): Promise<string> {
-    return await getCssVariableStyle(this.verificationButton("false"), "--not-required-color", "background");
+    return await getCssVariableStyle(this.verificationButton("false"), "--oe-not-required-color", "background");
   }
 
   public async getGridSize(): Promise<number> {
@@ -308,7 +308,7 @@ class TestPage {
   }
 
   public async getViewHead(): Promise<number> {
-    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHead" as any);
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHeadIndex");
   }
 
   public async getVerificationHead(): Promise<number> {
@@ -427,14 +427,17 @@ class TestPage {
     return highlightedTiles.map((_, i) => i);
   }
 
-  public playingSpectrograms(): Locator {
-    return this.spectrogramComponents().filter({ has: this.page.locator("audio:not([paused])") });
+  public async playingSpectrograms(): Promise<Locator[]> {
+    return this.asyncFilter(await this.spectrogramComponents().all(), async (spectrogram) => {
+      const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
+      return !value;
+    });
   }
 
   public async gridDecisions(): Promise<Decision[]> {
     const gridSubjects = await getBrowserValue<VerificationGridComponent, SubjectWrapper[]>(
       this.gridComponent(),
-      "readonlySubjects",
+      "subjects",
     );
 
     return gridSubjects.flatMap((subject) => this.subjectDecisions(subject));

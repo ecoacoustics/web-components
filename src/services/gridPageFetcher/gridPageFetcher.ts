@@ -35,11 +35,6 @@ export class GridPageFetcher {
     return this._subjectStream;
   }
 
-  private get queueingStrategy() {
-    const highWaterMark = Math.max(this.clientCacheSize, this.serverCacheSize);
-    return new CountQueuingStrategy({ highWaterMark });
-  }
-
   /**
    * Closes the stream of subjects so that no further data can be pulled.
    * This is typically done when the datasource changes and the stream is no
@@ -58,12 +53,13 @@ export class GridPageFetcher {
   private serverCacheSize = 50;
 
   private newSubjectStream() {
+    const queueStrategy = new CountQueuingStrategy({ highWaterMark: 10 });
     const subjectStream = new ReadableStream<SubjectWrapper>(
       {
         pull: async (controller) => {
           const fetchedPage = await this.fetchNextPage();
           if (fetchedPage.length === 0) {
-            console.debug("subject stream closed");
+            console.debug("reached end of dataset");
             controller.close();
             return;
           }
@@ -77,9 +73,15 @@ export class GridPageFetcher {
           console.debug("subject stream cancelled");
         },
       },
-      this.queueingStrategy,
+      queueStrategy,
     );
 
+    // Because each of these stream pipes have their own highWaterMark, the
+    // total queue size the the sum of all of the high water marks.
+    // E.g. 10 items for the reader source, 10 items for the client cache, and
+    //      50 items for the server cache.
+    // The total queue size will be 10 + 10 + 50 = 70
+    //
     // prettier-ignore
     return subjectStream
       .pipeThrough(this.serverCachePipe())

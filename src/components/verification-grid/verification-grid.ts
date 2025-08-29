@@ -446,15 +446,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * a subject reference might break downloading), we only expose a readonly
    * array of subjects.
    */
-  public get readonlySubjects(): ReadonlyArray<SubjectWrapper> {
-    return this.subjects;
+  public get subjects(): ReadonlyArray<SubjectWrapper> {
+    return this._subjects;
   }
 
   private get currentPageIndices(): CurrentPage {
     const start = this.viewHeadIndex;
 
     const endCandidate = start + this.availableGridCells;
-    const end = Math.min(endCandidate, this.subjects.length);
+    const end = Math.min(endCandidate, this._subjects.length);
 
     return { start, end };
   }
@@ -516,7 +516,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredDecisions: RequiredDecision[] = [];
   private showingSelectionShortcuts = false;
   private anyOverlap = signal<boolean>(false);
-  private subjects: SubjectWrapper[] = [];
+  private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
 
   private paginationFetcher?: GridPageFetcher;
@@ -668,6 +668,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.bootstrapDialog.open;
   }
 
+  public async flushAllSubjects() {
+    await this.populatePageSubjectsToIndex(Infinity);
+  }
+
   //#region Updates
 
   public firstUpdated(): void {
@@ -755,7 +759,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         //
         // When the datasource is eventually set, the page will be fetched
         // automatically.
-        await this.getSubjectPageAtIndex(this.viewHeadIndex);
+        await this.populatePageSubjectsToIndex(this.viewHeadIndex);
       }
 
       this.updateSubSelection();
@@ -815,7 +819,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.paginationFetcher.abortController.abort();
       }
 
-      await this.resetBufferHeads();
+      await this.resetForNewDataSource();
     }
 
     // After changing the data source, we want to remove the current
@@ -847,11 +851,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
   }
 
-  private async resetBufferHeads() {
-    this.subjects = [];
+  private async resetForNewDataSource() {
+    this._subjects = [];
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
-    this.subjectWriter = new SubjectWriter(this.subjects);
+    this.subjectWriter = new SubjectWriter(this._subjects);
     this.paginationFetcher.subjectStream
       .pipeTo(this.subjectWriter!, { signal: this.paginationFetcher.abortController.signal })
       .then(() => {
@@ -948,7 +952,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private *currentPage(): Generator<SubjectWrapper | null, void, void> {
     const page = this.currentPageIndices;
     for (let i = page.start; i < page.end; i++) {
-      yield this.subjects[i];
+      yield this._subjects[i];
     }
 
     // If there are any additional empty tiles, we emit a "null" value to
@@ -1474,18 +1478,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * Starting from the requested index and ending at the requested index + tile
    * count.
    */
-  private async getSubjectPageAtIndex(requestedIndex: number): Promise<SubjectWrapper[]> {
+  private async populatePageSubjectsToIndex(requestedIndex: number): Promise<void> {
     if (!this.paginationFetcher) {
       console.error("Cannot set viewHead because the paginationFetcher is not initialized");
-      return [];
+      return;
     } else if (!this.subjectWriter) {
       console.error("Cannot set viewHead because the subjectWriter is not initialized");
-      return [];
+      return;
     }
 
     const gridSize = this.availableGridCells;
     const requiredSubjectCount = requestedIndex + gridSize;
-    const needMoreSubjects = this.subjects.length < requiredSubjectCount;
+    const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
       // Fill the subject buffer from the requested index until we have enough
@@ -1496,8 +1500,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
     }
+  }
 
-    return this.subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
+  /**
+   * Populates the subject buffer up to the requested index + the page size
+   * and returns the subjects that would be rendered for that page.
+   */
+  private async getSubjectPageAtIndex(requestedIndex: number): Promise<SubjectWrapper[]> {
+    await this.populatePageSubjectsToIndex(requestedIndex);
+    return this._subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
   }
 
   private async setViewHead(value: number): Promise<void> {
@@ -1511,7 +1522,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     let clampedHead = Math.max(0, value);
 
-    await this.getSubjectPageAtIndex(clampedHead);
+    await this.populatePageSubjectsToIndex(clampedHead);
 
     this._viewHeadIndex = clampedHead;
     this.setDecisionDisabled(true);
@@ -1948,7 +1959,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private areTilesLoaded(): boolean {
     const gridTilesArray = Array.from(this.gridTiles);
-    return !gridTilesArray.some((tile: VerificationGridTileComponent) => !tile.loaded);
+    if (gridTilesArray.length === 0) {
+      return false;
+    }
+
+    return gridTilesArray.every((tile: VerificationGridTileComponent) => tile.loaded);
   }
 
   private handleTileLoaded(event: CustomEvent): void {

@@ -365,13 +365,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.initializeUnitConverter();
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    // We set "doneFirstRender" before dispatching the "loaded" event so that
+    // any actions triggered as a result of the "loaded" event will be aware
+    // of the fact that the first render has completed.
+    this.doneFirstRender = true;
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
       }),
     );
-
-    this.doneFirstRender = true;
   }
 
   public async regenerateSpectrogram() {

@@ -1,38 +1,44 @@
 import { SubjectWrapper } from "../../models/subject";
 
 export class SubjectWriter extends WritableStream<SubjectWrapper> {
-  public closed = false;
+  public get closed(): boolean {
+    return this._closed;
+  }
 
-  private readonly subjects: SubjectWrapper[] = [];
+  private readonly subjectCount: () => number;
+  private writerShouldResume?: () => void;
+  private writerReachedTarget?: () => void;
   private target = 0;
-
-  private unlockWriter?: (...args: any[]) => void;
-  private releaseTargetLock?: () => void;
+  private _closed = false;
 
   public constructor(subjects: SubjectWrapper[]) {
     super({
       write: async (subject) => {
+        console.debug(`writing subject ${subject}, current buffer size: ${subjects.length}`);
         return new Promise(async (resolve) => {
-          this.subjects.push(subject);
+          subjects.push(subject);
 
-          if (this.subjects.length >= this.target) {
-            this.releaseTargetLock?.();
-            await new Promise((res) => {
-              this.unlockWriter = res;
-            });
+          if (subjects.length >= this.target) {
+            await this.pauseWriter();
           }
 
           resolve();
         });
       },
+      close: () => {
+        // If the stream is closed we have reached the end of the dataset and we
+        // should release any promises that are waiting for the target to be
+        // reached.
+        this.writerReachedTarget?.();
+      },
     });
 
-    this.subjects = subjects;
+    this.subjectCount = () => subjects.length;
   }
 
   public closeStream(): void {
-    this.releaseTargetLock?.();
-    this.closed = true;
+    this.resumeWriter();
+    this._closed = true;
   }
 
   public async setTarget(value: number): Promise<void> {
@@ -40,19 +46,34 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
       throw new Error("Invalid target value");
     }
 
-    if (value <= this.subjects.length) {
+    if (value <= this.subjectCount()) {
       return;
     }
 
     this.target = value;
-    this.unlockWriter?.();
-
-    await this.createTargetLock();
+    await this.resumeWriter();
   }
 
-  private createTargetLock(): Promise<void> {
+  /**
+   * Unlocks the subject buffer WriteableStream and returns a promise that will
+   * resolve when the writeable stream has reached its target or the end of the
+   * data source.
+   */
+  private resumeWriter(): Promise<void> {
+    this.writerShouldResume?.();
     return new Promise((resolve) => {
-      this.releaseTargetLock = resolve;
+      this.writerReachedTarget = resolve;
+    });
+  }
+
+  /**
+   * Pauses the writer and returns a promise that will will resolve when the
+   * writer should resume fetching items.
+   */
+  private pauseWriter(): Promise<void> {
+    this.writerReachedTarget?.();
+    return new Promise((resolve) => {
+      this.writerShouldResume = resolve;
     });
   }
 }
