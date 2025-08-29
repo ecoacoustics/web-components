@@ -4,13 +4,14 @@ on: pull_request
 
 jobs:
   Run-Tests:
-    timeout-minutes: 80
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        shard: [1, 2, 3, 4]
 
     steps:
       # Playwright snapshot tests generate pngs that are uploaded via
@@ -36,15 +37,47 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm test --shard ${{ matrix.shard }}/4
+        env:
+          PLAYWRIGHT_SHARD: "true"
 
-      - name: Upload Test Report
-        # I use if always to ensure that the artifact is uploaded even if the
-        # tests fail
+      - name: Upload Blob Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ matrix.os }}
-          path: ./test-report/
+          name: blob-report-${{ matrix.os }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  Merge-Reports:
+    if: always()
+    needs: [Run-Tests]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: |
+            - recursive: true
+            - args: [--frozen-lockfile]
+
+      - name: Download All Blob Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports/
+          pattern: blob-report-*
+
+      - name: Merge Blob Reports
+        run: pnpm exec playwright merge-reports --reporter=html,github all-blob-reports/
+        
+      - name: Upload Merged Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-test-report
+          path: playwright-report/
           retention-days: 7
-          overwrite: true
