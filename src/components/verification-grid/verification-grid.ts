@@ -334,6 +334,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @property({ attribute: "url-transformer", type: Function, converter: callbackConverter })
   public urlTransformer: UrlTransformer = (url) => url;
 
+  /**
+   * A duration of time that the verification grid can be in a "loading"
+   * state before it times out and shows an error message.
+   */
+  @property({ attribute: "loading-timeout", type: Number })
+  public loadingTimeout: Seconds = 8;
+
   @property({ type: Boolean })
   public autofocus = false;
 
@@ -518,6 +525,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private anyOverlap = signal<boolean>(false);
   private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
+  private loadingTimeoutReference: any | null = null;
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -810,6 +818,28 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
+    this.resetLoadingTimeout();
+
+    // If we update to no data source, we want to wait a bit before
+    // changing to an error state so that if the host application is being
+    // hacky by adding/removing the data source, we don't flash an error on
+    // the screen.
+    //
+    // We also need this for when the getPage callback is a callback set in
+    // JavaScript.
+    // If the getPage callback is set through JavaScript, there might be a
+    // slight delay between the time where the verification grid is
+    // initialized and when the host application finally gets to set the
+    // getPage callback.
+    // While we are waiting for the host application to set the callback, we
+    // don't want to flash an error on the screen and give it a second to
+    // fully initialize.
+    // While we are waiting for the verification grid to initialize, we will
+    // be in the DATASET_FETCHING state.
+    this.loadingTimeoutReference = setTimeout(() => {
+      this.loadState = LoadState.ERROR;
+    }, this.loadingTimeout * 1000);
+
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
       // stream before creating another one.
@@ -1532,8 +1562,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
     // requestUpdate which would end up being debounced anyways.
-    if (this.loadState === LoadState.DATASET_FETCHING) {
+    //
+    // Because slow getPage responses can cause the verification grid to enter
+    // an "ERROR" state (e.g. after 8 seconds of no response), we want to be
+    // able to recover from a slow getPage call by transitioning out of this
+    // ERROR state into the TILES_LOADING state.
+    // This is also the reason why we don't cancel the getPage promise if the
+    // timeout is reached (because we want to give it as much of a chance as
+    // possible to recover from a potentially slow API response).
+    if (this.loadState === LoadState.DATASET_FETCHING || this.loadState === LoadState.ERROR) {
+      this.resetLoadingTimeout();
       this.loadState = LoadState.TILES_LOADING;
+    }
+  }
+
+  private resetLoadingTimeout() {
+    if (this.loadingTimeoutReference !== null) {
+      clearTimeout(this.loadingTimeoutReference);
     }
   }
 
@@ -2087,7 +2132,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <div class="message-overlay">
         <p>
-          <strong class="dataset-failure-message">Failed to load dataset</strong>
+          <strong class="dataset-failure-message">Failed to load data source</strong>
         </p>
       </div>
     `;

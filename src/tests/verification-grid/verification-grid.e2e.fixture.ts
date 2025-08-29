@@ -207,7 +207,8 @@ class TestPage {
   }
 
   public async createWithCompoundTask() {
-    await this.create(`
+    await this.create(
+      `
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
       <oe-verification verified="skip"></oe-verification>
@@ -228,7 +229,13 @@ class TestPage {
           return testedTags.filter((tag) => tag.text.includes(searchTerm));
         }"
       ></oe-tag-prompt>
-    `);
+    `,
+      [".decision-button"],
+    );
+  }
+
+  public async createWithNoTask() {
+    await this.create("");
   }
 
   public async createWithAppChrome() {
