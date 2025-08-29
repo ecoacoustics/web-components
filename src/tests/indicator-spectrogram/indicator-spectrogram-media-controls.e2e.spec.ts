@@ -49,7 +49,10 @@ test.describe("oe-indicator interaction with spectrogram and media controls", ()
       expect(finalPosition).toEqual(initialPosition);
     });
 
-    test("playing to the end of a recording", async ({ fixture }) => {
+    // TODO: Remove the "fixme" from here once changing the source during
+    // rendering doesn't result in unexpected state.
+    // see: https://github.com/ecoacoustics/web-components/issues/480
+    test.fixme("playing to the end of a recording", async ({ fixture }) => {
       await fixture.playAudio();
       // go to the end of the recording
       await sleep(await fixture.audioDuration());

@@ -1,7 +1,6 @@
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { sleep } from "../../helpers/utilities";
 import { Size } from "../../models/rendering";
-import { Pixel } from "../../models/unitConverters";
 import { expect } from "../assertions";
 import { catchLocatorEvent, setElementSize } from "../helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
@@ -109,7 +108,9 @@ test.describe("interactions between all components", () => {
     // the event prototype is not exposed in the NodeJS context.
     // Therefore, I cancel the play event in the browser context and cancel
     await fixture.spectrogramComponent().evaluate((element: SpectrogramComponent) => {
-      element.addEventListener("play", (event) => event.preventDefault());
+      element.addEventListener("play", (event) => {
+        event.preventDefault();
+      });
     });
 
     await fixture.playAudio();
@@ -147,7 +148,7 @@ test.describe("sizing", () => {
   });
 
   test("should include chrome height in spectrogram host sizing", async ({ fixture }) => {
-    const testedSize = { width: 300, height: 300 } as const satisfies Size<Pixel>;
+    const testedSize = { width: 300, height: 300 } as const satisfies Size;
     await setElementSize(fixture.spectrogramComponent(), testedSize);
 
     const realizedSize = await fixture.getSpectrogramHostSize();
@@ -165,7 +166,7 @@ test.describe("sizing", () => {
   // TODO: this is currently broken because if the user resizes the canvas
   // without resizing the spectrogram, the canvas will overflow the host element
   test.fixme("should not include chrome height in spectrogram canvas sizing", async ({ fixture }) => {
-    const testedSize = { width: 300, height: 300 } satisfies Size<Pixel>;
+    const testedSize = { width: 300, height: 300 } satisfies Size;
     await setElementSize(fixture.canvasElement(), testedSize);
 
     const canvasSize = await fixture.getCanvasSize();

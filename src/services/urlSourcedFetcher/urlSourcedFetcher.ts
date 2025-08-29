@@ -1,7 +1,7 @@
-import { Subject } from "../models/subject";
+import { Subject } from "../../models/subject";
 import csv from "csvtojson";
 
-// TODO: this class should use the strategy pattern and perform caching
+// TODO: this class should use the strategy pattern
 /**
  * @description
  * Fetches a remote data source such has a CSV, TSV, JSON file

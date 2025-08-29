@@ -1,4 +1,4 @@
-import { expect, test } from "../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 import { identityCase, uppercaseDotCase } from "./caseConverters";
 
 test.describe("identifyCase", () => {

@@ -7,7 +7,7 @@ test.beforeEach(async ({ fixture }) => {
   await fixture.create();
 });
 
-test.skip("should correctly add a single stylesheet", async ({ fixture }) => {
+test.skip("should correctly add a single stylesheet", ({ fixture }) => {
   const fakeComponent = fixture.generateFakeElement();
 
   const testedStyles = css`

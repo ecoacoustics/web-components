@@ -153,7 +153,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   private unitConverter?: Readonly<UnitConverter>;
   private tagOverflowObserver?: IntersectionObserver;
 
-  private annotationUpdateEventHandler = this.handleAnnotationUpdate.bind(this);
+  private readonly annotationUpdateEventHandler = this.handleAnnotationUpdate.bind(this);
 
   private get labelRefs(): Ref<HTMLLabelElement>[] {
     return this.labelElements.map((element) => element.litTemplateRef);

@@ -73,6 +73,7 @@
       "whipbird",
       "desync",
       "autofocused",
+      "autofocus",
     ],
     "cSpell.flagWords": ["yuo"],
     "cSpell.ignorePaths": ["**/node_modules/**", "**/dist/**", "webcomponents.code-workspace"],

@@ -9,7 +9,7 @@ import { VerificationGridComponent, VerificationGridInjector } from "../verifica
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { SubjectWrapper } from "../../models/subject";
@@ -81,8 +81,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
 
-  private keyUpHandler = this.handleKeyUp.bind(this);
-  private keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly keyUpHandler = this.handleKeyUp.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
 
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {

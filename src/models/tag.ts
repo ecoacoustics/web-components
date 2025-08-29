@@ -1,10 +1,12 @@
+import { ObjectRecord } from "../helpers/types/advancedTypes";
+
 export type TagName = string;
 
 export interface Tag {
   text: TagName;
 
   id?: number;
-  reference?: Record<PropertyKey, unknown> | null;
+  reference?: ObjectRecord | null;
 
   // we use elementReferences to display slotted content as the tag label
   // TODO: we should find a more correct solution

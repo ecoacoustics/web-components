@@ -1,6 +1,6 @@
 import { CSSResultGroup } from "lit";
 import { shoelaceTheming } from "../helpers/themes/shoelace/shoelaceTheme";
-import { registerBundledIcons } from "../services/shoelaceLoader";
+import { registerBundledIcons } from "../services/shoelaceLoader/shoelaceLoader";
 import { Component } from "../helpers/types/mixins";
 import { mergeStyles } from "../helpers/styles/merge";
 
@@ -9,9 +9,9 @@ import { mergeStyles } from "../helpers/styles/merge";
 let doneRegister = false;
 
 /**
-  * For every component, we redeclare our shoelace override variables at the
-  * web component's shadow root.
-  */
+ * For every component, we redeclare our shoelace override variables at the
+ * web component's shadow root.
+ */
 export const WithShoelace = <T extends Component>(superClass: T): Component => {
   return class ShoelaceClass extends superClass {
     public static finalizeStyles(styles?: CSSResultGroup) {
@@ -25,22 +25,22 @@ export const WithShoelace = <T extends Component>(superClass: T): Component => {
       // @ts-ignore
       return super.finalizeStyles(newStyles);
     }
-  }
-}
+  };
+};
 
 /**
-  * By dynamically registering shoelace depending on if it is used, we can
-  * reduce the cherry picked bundle size.
-  *
-  * Because shoelace is registered at the document level, this should only
-  * be performed once.
-  */
-function registerShoelace(): void {
+ * By dynamically registering shoelace depending on if it is used, we can
+ * reduce the cherry picked bundle size.
+ *
+ * Because shoelace is registered at the document level, this should only
+ * be performed once.
+ */
+function registerShoelace() {
   doneRegister = true;
+
+  registerBundledIcons();
 
   // TODO: cherry pick shoelace components
   // see: https://github.com/ecoacoustics/web-components/issues/83
-  import("@shoelace-style/shoelace").then(() => {
-    registerBundledIcons();
-  });
+  import("@shoelace-style/shoelace");
 }

@@ -72,9 +72,10 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   // possible to enable/disable certain axes features from within the media controls
   private axesElement?: AxesComponent | null;
   private spectrogramElement?: SpectrogramComponent | null;
-  private playHandler = this.handleUpdatePlaying.bind(this);
-  private keyDownHandler = this.handleKeyDown.bind(this);
-  private optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
+
+  private readonly playHandler = this.handleUpdatePlaying.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
 
   public disconnectedCallback(): void {
     if (this.spectrogramElement) {
@@ -363,7 +364,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         const oldOptions = this.spectrogramElement.spectrogramOptions;
         if (key === "windowSize" && this.spectrogramElement) {
           if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
-            oldOptions.windowOverlap = (newValue as number) / 2;
+            oldOptions.windowOverlap = ((newValue as number) / 2) as any;
           }
         }
 

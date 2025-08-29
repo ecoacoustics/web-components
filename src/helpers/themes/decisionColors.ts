@@ -54,8 +54,8 @@ const colorBrewerColorSet = colorbrewer.Set1[9].filter(
 const colorBrewerColors = `
     ${colorBrewerColorSet.map(
       (color: string, i: number) => `
-        --unique-color-${i}-true: ${classificationTrueColor(color)};
-        --unique-color-${i}-false: ${classificationFalseColor(color)};
+        --oe-unique-color-${i}-true: ${classificationTrueColor(color)};
+        --oe-unique-color-${i}-false: ${classificationFalseColor(color)};
       `,
     ).join("")}
 `;
@@ -65,14 +65,14 @@ const notRequiredColor = "#ddd";
 const unsureColor = "#d0d";
 
 const verificationColors = `
-  --verification-true: green;
-  --verification-false: red;
-  --verification-unsure: ${hatchedBackground(unsureColor)};
+  --oe-verification-true: green;
+  --oe-verification-false: red;
+  --oe-verification-unsure: ${hatchedBackground(unsureColor)};
 `;
 
 const specialColors = `
-  --decision-skip-color: ${hatchedBackground(skipColor)};
-  --not-required-color: ${hatchedBackground(notRequiredColor)};
+  --oe-decision-skip-color: ${hatchedBackground(skipColor)};
+  --oe-not-required-color: ${hatchedBackground(notRequiredColor)};
 `;
 
 export const decisionColors = unsafeCSS(`

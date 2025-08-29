@@ -8,11 +8,40 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid" autofocus>
+    <oe-verification-grid id="verification-grid" grid-size="4" autofocus>
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
 
-      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
+      <oe-data-source slot="data-source" for="verification-grid" src="/some-complete.csv" local></oe-data-source>
     </oe-verification-grid>
+
+    <section id="dev-tools">
+      <button id="next-data-source-btn">/kaleidoscope.csv</button>
+    </section>
+
+    <script type="module">
+      const dataSourceComponent = () => document.querySelector("oe-data-source");
+      const nextDataSourceBtn = () => document.getElementById("next-data-source-btn");
+
+      // dataSourceComponent().setAttribute("src", "/grid-items.json");
+
+      function nextDataSource() {
+        const nextSources = new Map([
+          ["/kaleidoscope.csv", "/some-complete.csv"],
+          ["/some-complete.csv", "/mostly-complete.csv"],
+          ["/mostly-complete.csv", "/all-complete.csv"],
+          ["/all-complete.csv", "/404-invalid.csv"],
+          ["/404-invalid.csv", "/kaleidoscope.csv"],
+        ]);
+
+        const currentSource = dataSourceComponent().getAttribute("src");
+        const nextSource = nextSources.get(currentSource);
+
+        dataSourceComponent().setAttribute("src", nextSource);
+        nextDataSourceBtn().textContent = nextSource;
+      }
+
+      nextDataSourceBtn().addEventListener("click", nextDataSource);
+    </script>
   </body>
 </html>

@@ -73,7 +73,7 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
 
   private applyNextCandidateShape(): void {
     const nextCandidate = this.nextCandidateShape();
-    console.warn("applying next candidate", nextCandidate);
+    console.debug("applying next candidate", nextCandidate);
     this.setGridShape(nextCandidate);
   }
 

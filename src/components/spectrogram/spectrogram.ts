@@ -7,13 +7,14 @@ import { Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
-import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
+import { IAudioInformation, PowerTwoWindowSize, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
+import { ColorMapName } from "../../helpers/audio/colors";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -100,7 +101,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The size of the fft window */
   @property({ type: Number, attribute: "window-size", reflect: true })
-  public windowSize = SpectrogramComponent.defaultWindowSize;
+  public windowSize: PowerTwoWindowSize = SpectrogramComponent.defaultWindowSize;
 
   /** The window function to use for the spectrogram */
   @property({ type: String, attribute: "window-function", reflect: true })
@@ -116,7 +117,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** A color map to use for the spectrogram */
   @property({ type: String, attribute: "color-map", reflect: true })
-  public colorMap = "grayscale";
+  public colorMap: ColorMapName = "grayscale";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number, reflect: true })
@@ -309,13 +310,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
       if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
         if (typeof oldWindowSize === "number" && oldWindowSize > 0) {
-          this.windowSize = oldWindowSize;
+          // TODO: Add upper bound check
+          this.windowSize = oldWindowSize as PowerTwoWindowSize;
         } else {
           this.windowSize = SpectrogramComponent.defaultWindowSize;
         }
 
         console.error(
-          `window-size "${newWindowSize}" must be a power of 2 and greater than 1. Falling back to window size value of ${this.windowSize}`,
+          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.windowSize}'`,
         );
       }
     }
@@ -363,13 +365,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.initializeUnitConverter();
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    // We set "doneFirstRender" before dispatching the "loaded" event so that
+    // any actions triggered as a result of the "loaded" event will be aware
+    // of the fact that the first render has completed.
+    this.doneFirstRender = true;
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
       }),
     );
-
-    this.doneFirstRender = true;
   }
 
   public async regenerateSpectrogram() {
@@ -783,10 +787,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       <audio
         id="media-element"
         src="${this.renderedSource}"
-        @play="${() => this.play()}"
-        @ended="${() => this.stop()}"
         preload="metadata"
         crossorigin="anonymous"
+        fetchpriority="low"
+        @play="${() => this.play()}"
+        @ended="${() => this.stop()}"
       >
         <slot></slot>
       </audio>

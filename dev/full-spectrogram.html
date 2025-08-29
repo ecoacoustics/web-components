@@ -69,7 +69,7 @@
       <span slot="pause-icon">Pause</span>
     </oe-media-controls>
 
-    <button onclick="changeSource();">Change source</button>
+    <button id="change-source-btn" onclick="changeSource();">/example.flac</button>
     <button onclick="changeColorMap();">Change colour map</button>
     <button onclick="changeSize();">Change Size</button>
     <button onclick="changeWindowSize();">Change Window Size</button>
@@ -123,17 +123,21 @@
       const spectrogram = () => document.getElementById("playing-spectrogram");
       const annotate = () => document.querySelector("oe-annotate");
       const canvas = () => spectrogram().shadowRoot.querySelector("canvas");
+      const changeSrcBtn = () => document.getElementById("change-source-btn");
 
       function changeSource() {
         const element = spectrogram();
 
-        const nextSources = new Map(
+        const nextSources = new Map([
           ["/example.flac", "/example_34s.flac"],
           ["/example_34s.flac", "/404-file.flac"],
-          ["/404-file.flac", "/examples.flac"],
-        );
+          ["/404-file.flac", "/example.flac"],
+        ]);
 
-        element.setAttribute("src", nextSources(element.src));
+        const nextSource = nextSources.get(element.src) || "/example_34s.flac";
+
+        element.setAttribute("src", nextSource);
+        changeSrcBtn().textContent = nextSource;
       }
 
       function changeTagStyle() {
