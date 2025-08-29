@@ -3,9 +3,39 @@ name: Run Tests
 on: pull_request
 
 jobs:
+  Setup:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=deps-${{ hashFiles('pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            deps-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
   Run-Tests:
     timeout-minutes: 30
     runs-on: ${{ matrix.os }}
+    needs: Setup
 
     strategy:
       fail-fast: false
@@ -29,9 +59,27 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: 8
-          run_install: |
-            - recursive: true
-            - args: [--frozen-lockfile]
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ needs.Setup.outputs.cache-key }}
+          restore-keys: |
+            deps-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ matrix.os }}-
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
@@ -53,7 +101,7 @@ jobs:
   Merge-Reports:
     # Run merge reports even if some tests fail so we can still see results
     if: always()
-    needs: [Run-Tests]
+    needs: [Setup, Run-Tests]
     runs-on: ubuntu-latest
     
     steps:
@@ -63,9 +111,19 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: 8
-          run_install: |
-            - recursive: true
-            - args: [--frozen-lockfile]
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ needs.Setup.outputs.cache-key }}
+          restore-keys: |
+            deps-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download All Test Reports
         uses: actions/download-artifact@v4
