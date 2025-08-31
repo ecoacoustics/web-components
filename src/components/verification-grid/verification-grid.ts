@@ -496,6 +496,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.availableGridCells === 1;
   }
 
+  private get hasDatasource(): boolean {
+    return this.getPage !== undefined;
+  }
+
   private readonly keydownHandler = this.handleKeyDown.bind(this);
   private readonly keyupHandler = this.handleKeyUp.bind(this);
   private readonly blurHandler = this.handleWindowBlur.bind(this);
@@ -734,7 +738,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // invalidating the verification grids source will cause the grid tiles and
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
-    if (gridSourceInvalidationKeys.some((key) => change.has(key))) {
+    const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
+    if (hasGridSourceInvalidation) {
       await this.handleGridSourceInvalidation();
     }
 
@@ -771,7 +776,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         // Note that the decision head can not implicitly change by increasing
         // the grid size because the decision head will always be in the newly
         // shown page.
-        this.findDecisionHead(this.decisionHeadIndex);
+        if (this.hasDatasource && !hasGridSourceInvalidation) {
+          this.findDecisionHead(this.decisionHeadIndex);
+        }
       } else if (this.paginationFetcher) {
         // We only trigger a page update if we have a pagination fetcher so that
         // if the user resizes the verification grid before creating a getPage
