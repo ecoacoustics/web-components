@@ -16,8 +16,26 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
       write: async (subject) => {
         console.debug(`writing subject ${subject}, current buffer size: ${subjects.length}`);
         return new Promise(async (resolve) => {
+          // We do a pre-check of the subjects array so if the writer submits
+          // items to the stream, we don't immediately append the item to the
+          // subject array without knowing if it should be added.
+          //
+          // Additionally, we use a "while" loop here because if the pauseWriter
+          // is resolved, the conditions that we might have rejected the subject
+          // on originally might have changed, so we use a while loop to
+          // re-evaluate the append conditions when the subjectWriter resumes.
+          // Note because this while loop is in a promise, it will not block the
+          // main thread.
+          while (subjects.length >= this.target) {
+            await this.pauseWriter();
+          }
+
           subjects.push(subject);
 
+          // We do a post-check of the subjects array for because if we resolve
+          // the write() promise without checking the new subjects length we'll
+          // fetch another item that we won't use, and will be caught by the
+          // guard above.
           if (subjects.length >= this.target) {
             await this.pauseWriter();
           }
@@ -36,14 +54,19 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
     this.subjectCount = () => subjects.length;
   }
 
-  public closeStream(): void {
-    this.resumeWriter();
+  public async closeStream(): Promise<void> {
+    await this.resumeWriter();
     this._closed = true;
   }
 
   public async setTarget(value: number): Promise<void> {
     if (value < 0) {
       throw new Error("Invalid target value");
+    }
+
+    if (this.closed) {
+      console.error("Cannot set target on closed SubjectWriter");
+      return;
     }
 
     if (value <= this.subjectCount()) {
