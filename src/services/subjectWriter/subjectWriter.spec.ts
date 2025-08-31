@@ -1,4 +1,4 @@
-import { expect, expectConsoleError, test } from "../../tests/assertions";
+import { expect, test } from "../../tests/assertions";
 import { SubjectWriter } from "./subjectWriter";
 
 test("should create in the correct state", () => {
