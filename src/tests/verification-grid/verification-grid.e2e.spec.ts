@@ -1734,7 +1734,7 @@ test.describe("decisions", () => {
   });
 });
 
-test.describe.skip("resuming datasets", () => {
+test.describe("resuming datasets", () => {
   test.describe("verification task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithVerificationTask();
@@ -1758,7 +1758,11 @@ test.describe.skip("resuming datasets", () => {
         { confirmed: DecisionOptions.FALSE, tag: { text: "Insects" } },
         { confirmed: DecisionOptions.TRUE, tag: { text: "Noisy Miner" } },
         null,
-        { confirmed: DecisionOptions.FALSE, tag: null },
+
+        // Decision has been omitted because while the datasource item has a
+        // "verified" property, there is no oe_tag field to determine what tag
+        // was verified.
+        null,
       ];
 
       const realizedDecisions = await fixture.allAppliedDecisions();
@@ -1771,7 +1775,12 @@ test.describe.skip("resuming datasets", () => {
         [await fixture.getVerificationColor(DecisionOptions.FALSE)],
         [await fixture.getVerificationColor(DecisionOptions.TRUE)],
         [await fixture.panelColor()],
-        [await fixture.getVerificationColor(DecisionOptions.FALSE)],
+
+        // In the dataset, this subject is verified as "false", but there is no
+        // oe_tag attached to the subject to signify what tag was verified.
+        // To prevent showing bad data, we expect that the verification is
+        // omitted and the panel color should be used.
+        [await fixture.panelColor()],
       ];
       const realizedMeterColors = await fixture.allProgressMeterColors();
 
@@ -1794,7 +1803,9 @@ test.describe.skip("resuming datasets", () => {
 
         // In this example, the we cannot determine the tag that was verified
         // because there is no "oe_tag" column.
-        ["verification: false"],
+        // Therefore, the verification should be omitted and shown as "no
+        // decision".
+        ["verification: no decision"],
       ];
       const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
 

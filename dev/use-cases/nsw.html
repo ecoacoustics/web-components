@@ -23,6 +23,8 @@
       const dataSourceComponent = () => document.querySelector("oe-data-source");
       const nextDataSourceBtn = () => document.getElementById("next-data-source-btn");
 
+      // Uncomment this line to test fast switching data sources (data sources
+      // that switch before the first one has finished loading).
       // dataSourceComponent().setAttribute("src", "/grid-items.json");
 
       function nextDataSource() {

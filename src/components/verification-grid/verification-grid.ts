@@ -752,7 +752,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const oldRows = change.get("rows") ?? this.rows;
 
       const oldGridSize = oldColumns * oldRows;
-      const oldTileCount = Math.min(oldGridSize, this.targetGridSize);
+      const oldTileCount = oldGridSize;
 
       if (oldTileCount > this.availableGridCells) {
         if (this.areTilesLoaded()) {
@@ -760,6 +760,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
+
+        // If we are shrinking the verification grid, we might be changing the
+        // decision head because the currently viewed page might change to
+        // "completed".
+        // Therefore, we have to find the decision head again.
+        // We don't have to search from the start of the dataset because we know
+        // that the decision head can only be ahead of the current location.
+        //
+        // Note that the decision head can not implicitly change by increasing
+        // the grid size because the decision head will always be in the newly
+        // shown page.
+        this.findDecisionHead(this.decisionHeadIndex);
       } else if (this.paginationFetcher) {
         // We only trigger a page update if we have a pagination fetcher so that
         // if the user resizes the verification grid before creating a getPage
@@ -895,6 +907,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     await this.setViewHead(0);
     this.decisionHeadIndex = 0;
 
+    // Fire and forget finding the decision head.
+    this.findDecisionHead();
+  }
+
+  /**
+   * Virtually pages through the verification grids subjects to find the
+   * decision head.
+   * This is useful for when changing to a partially completed datasource.
+   *
+   * @param minimumIndex
+   * A minimum index to start looking from. This is useful for when reducing the
+   * grid size, and you know that the decision head is ahead of your current
+   * view index.
+   */
+  private findDecisionHead(minimumIndex = 0): Promise<void> {
     // While every subject has a decision, we keep paging through the data
     // until we find the first page that does not have complete decisions.
     //
@@ -906,8 +933,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // location.
     // Therefore, we can perform this operation asynchronously and not block
     // the UI.
-    new Promise<void>(async (resolve) => {
-      let virtualDecisionHead = 0;
+    return new Promise<void>(async (resolve) => {
+      let virtualDecisionHead = minimumIndex;
       while (true) {
         const virtualPage = await this.getSubjectPageAtIndex(virtualDecisionHead);
 

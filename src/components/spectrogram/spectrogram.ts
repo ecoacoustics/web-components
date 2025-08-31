@@ -154,8 +154,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     if (!this.audio.value) {
       console.error("Attempted to set current time before audio model initialization");
       return;
-    } else if (value > this.audio.value.duration || value < 0) {
+    } else if (value > this.audio.value.duration) {
       console.error("Attempted to set current time outside of the audio duration");
+      return;
+    } else if (value < 0) {
+      console.error("Attempted to set current time to a negative value");
       return;
     }
 
@@ -685,8 +688,19 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // we only compute the time elapsed once the media element has started
       // playing because we do not need to calculate the time elapsed to short
       // circuit the time update if the audio element is not playing
-      const timeElapsed = bufferTime - startTime;
+      //
+      // We clamp to the audio duration because sometimes the time interpolation
+      // can be slightly ahead of the media element's currentTime.
+      // This caused the currentTime to exceed the audio duration, and a console
+      // error to be thrown.
+      const audioDuration = this.audio.value?.duration ?? Infinity;
+      let timeElapsed = Math.min(bufferTime - startTime, audioDuration);
 
+      // TODO: We should probably throw a console error if the desync exceeds
+      // a large amount (e.g. 1 second) so that tests fail and we can
+      // investigate the issue. This is because a large desync is an indicator
+      // of an underlying issue that is not caused by anti-fingerprinting
+      // measures.
       const desyncLimit = 0.1 satisfies Seconds;
       const desync = Math.abs(mediaElementTime - timeElapsed);
 
