@@ -69,7 +69,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
       return;
     }
 
-    if (value <= this.subjectCount()) {
+    if (value <= this.subjectCount() || value <= this.target) {
       return;
     }
 
