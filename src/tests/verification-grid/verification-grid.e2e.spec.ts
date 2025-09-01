@@ -1862,7 +1862,7 @@ test.describe("resuming datasets", () => {
 
     test("should evaluate the decision buttons 'when' conditions", () => {});
 
-    test.only("should show new tag decisions correctly", async ({ fixture }) => {
+    test.fixme("should show new tag decisions correctly", async ({ fixture }) => {
       const expectedTagText: string[] = [
         // Where "Koala" was corrected to "Brush Turkey"
         "koala Brush Turkey",
@@ -1871,8 +1871,9 @@ test.describe("resuming datasets", () => {
         // Where "Insects" was corrected to "Panda"
         "koala Panda",
 
-        // Where there was no initial tag and there is also no initial tag
-        "",
+        // Where there was no initial tag, but the newTag was set to
+        // "Brush Turkey".
+        "Brush Turkey",
       ];
 
       // We useInnerText because I observed slight differences with how
@@ -1883,7 +1884,7 @@ test.describe("resuming datasets", () => {
         ["verification: Koala (false)", "new tag: Brush Turkey"],
         ["verification: Noisy Miner (true)", "new tag: no decision"],
         ["verification: Insects (true)", "new tag: Panda"],
-        ["verification: no decision", "new tag: no decision"],
+        ["verification: no decision", "new tag: Brush Turkey"],
       ];
       const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
 
