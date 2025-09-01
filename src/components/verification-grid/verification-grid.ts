@@ -231,6 +231,10 @@ interface HighlightSelection {
   // we store the observed elements in an array so that we don't re-query the
   // DOM for the grid tiles every time the highlight box is resized
   //! Warning: be sure to update this array if grid tiles are added/removed
+  //
+  // TODO: We should use a resize observer on these elements to cache their
+  // widths/heights so that we don't have to query offsetWidth/height which can
+  // cause a reflow.
   observedElements: VerificationGridTileComponent[];
 }
 
@@ -517,6 +521,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private readonly pointerDownHandler = this.renderHighlightBox.bind(this);
   private readonly pointerUpHandler = this.hideHighlightBox.bind(this);
   private readonly pointerMoveHandler = this.handlePointerMove.bind(this);
+  private readonly scrollHandler = this.handleScroll.bind(this);
 
   /**
    * "single decision mode" will automatically advance the selection head if:
@@ -647,7 +652,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     super.connectedCallback();
     this.addEventListener("keydown", this.keydownHandler);
     this.addEventListener("keyup", this.keyupHandler);
+
     window.addEventListener("blur", this.blurHandler);
+
+    document.addEventListener("scroll", this.scrollHandler);
 
     this.highlight.highlightHost.addEventListener("pointerdown", this.pointerDownHandler);
     this.highlight.highlightHost.addEventListener("pointerup", this.pointerUpHandler);
@@ -657,7 +665,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public disconnectedCallback(): void {
     this.removeEventListener("keydown", this.keydownHandler);
     this.removeEventListener("keyup", this.keyupHandler);
+
     window.removeEventListener("blur", this.blurHandler);
+
+    document.removeEventListener("scroll", this.scrollHandler);
 
     // I don't need an elvis operator here in the case that the host application
     // removes the <body> element because the highlight object + event listener
@@ -1316,6 +1327,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
   }
 
+  private handleScroll(event: Event): void {
+    const pointerPosition = { pageX: this.highlight.current.x, pageY: this.highlight.current.y };
+    this.resizeHighlightBox(pointerPosition as PointerEvent);
+  }
+
   //#endregion
 
   //#region SelectionHandlers
@@ -1689,11 +1705,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const { pageX, pageY } = event;
     this.highlight.current = { x: pageX, y: pageY };
 
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const viewportStartX = this.highlight.start.x - scrollX;
+    const viewportStartY = this.highlight.start.y - scrollY;
+
     const highlightWidth = this.highlight.current.x - this.highlight.start.x;
     const highlightHeight = this.highlight.current.y - this.highlight.start.y;
 
-    const transformX = this.highlight.start.x + Math.min(highlightWidth, 0);
-    const transformY = this.highlight.start.y + Math.min(highlightHeight, 0);
+    const transformX = viewportStartX + Math.min(highlightWidth, 0);
+    const transformY = viewportStartY + Math.min(highlightHeight, 0);
 
     // If the user selects from the right to the left, we change the position
     // of the highlight box to so that the top left of the highlight box is
@@ -1769,13 +1790,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const targetLeft = target.offsetLeft;
       const targetRight = targetLeft + target.offsetWidth;
 
-      const isOverlapping =
+      const isIntersecting =
         targetLeft <= selectionRightSide &&
         targetRight >= selectionLeftSide &&
         targetTop <= selectionBottomSide &&
         targetBottom >= selectionTopSide;
 
-      return isOverlapping;
+      return isIntersecting;
     });
   }
 
