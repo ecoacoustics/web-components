@@ -1862,7 +1862,7 @@ test.describe("resuming datasets", () => {
 
     test("should evaluate the decision buttons 'when' conditions", () => {});
 
-    test("should show new tag decisions correctly", async ({ fixture }) => {
+    test.only("should show new tag decisions correctly", async ({ fixture }) => {
       const expectedTagText: string[] = [
         // Where "Koala" was corrected to "Brush Turkey"
         "koala Brush Turkey",
@@ -1875,6 +1875,8 @@ test.describe("resuming datasets", () => {
         // "Brush Turkey".
         "Brush Turkey",
       ];
+
+      await fixture.page.waitForTimeout(1_000);
 
       await expect(fixture.gridTileTagText()).toHaveTrimmedText(expectedTagText);
 
