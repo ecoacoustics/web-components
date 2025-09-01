@@ -79,6 +79,7 @@ export const partialCompleteCompound = [
   {
     AudioLink: "http://localhost:3000/example2.flac",
     Distance: 4.84603595733643,
+    oe_new_tag: "Brush Turkey",
   },
   {
     AudioLink: "http://localhost:3000/example2.flac",
