@@ -1876,7 +1876,9 @@ test.describe("resuming datasets", () => {
         "Brush Turkey",
       ];
 
-      await expect(fixture.gridTileTagText()).toHaveText(expectedTagText);
+      // We useInnerText because I observed slight differences with how
+      // whitespace is stripped on Ubuntu (compared to Windows & MacOS)
+      await expect(fixture.gridTileTagText()).toHaveText(expectedTagText, { useInnerText: true });
 
       const expectedMeterTooltips = [
         ["verification: Koala (false)", "new tag: Brush Turkey"],
