@@ -4,6 +4,8 @@ import { expect as playwrightExpect, test as base } from "@sand4rt/experimental-
 /** A tag that can be used to expect a console error */
 export const expectConsoleError = "@console-error";
 
+// TODO: We should make this assertion a "web first" assertion so that it obeys
+// the Playwright retry mechanism and will run Playwright accessibility checks.
 /**
  * Similar to the toHaveText() Playwright assertion but trims the elements
  * leading and trailing whitespace before making an assertion.

@@ -1862,7 +1862,7 @@ test.describe("resuming datasets", () => {
 
     test("should evaluate the decision buttons 'when' conditions", () => {});
 
-    test.only("should show new tag decisions correctly", async ({ fixture }) => {
+    test("should show new tag decisions correctly", async ({ fixture }) => {
       const expectedTagText: string[] = [
         // Where "Koala" was corrected to "Brush Turkey"
         "koala Brush Turkey",
@@ -1876,8 +1876,12 @@ test.describe("resuming datasets", () => {
         "Brush Turkey",
       ];
 
+      // This timeout exists because our custom toHaveTrimmedText assertion is
+      // not "web first" and therefore won't retry like other Playwright browser
+      // assertions.
+      // TODO: Remove this timeout once we implement a "web first" strategy for
+      // toHaveTrimmedText.
       await fixture.page.waitForTimeout(1_000);
-
       await expect(fixture.gridTileTagText()).toHaveTrimmedText(expectedTagText);
 
       const expectedMeterTooltips = [
