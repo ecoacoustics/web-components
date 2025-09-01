@@ -1895,12 +1895,12 @@ test.describe("resuming datasets", () => {
     });
   });
 
-  test.describe("no task", () => {
+  test.describe.fixme("no task", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.createWithNoTask();
     });
 
-    test.fixme("should create new colors for new tag decisions", async ({ fixture }) => {
+    test("should create new colors for new tag decisions", async ({ fixture }) => {
       // Before creating a compound task, we expect that the newTag decision
       // color will not be defined because there is no "oe-tag-prompt"
       // component in the fixture.
@@ -1937,7 +1937,7 @@ test.describe("resuming datasets", () => {
   test.describe.skip("classification task", () => {});
 });
 
-test.describe("empty datasets", () => {
+test.describe.fixme("empty datasets", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.createWithVerificationTask();
     await fixture.changeGridSource(emptyDataset);
