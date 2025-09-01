@@ -52,6 +52,7 @@ class TestPage {
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile");
   public axesComponents = () => this.page.locator("oe-axes");
   public infoCardComponents = () => this.page.locator("oe-info-card");
+  public messageOverlay = () => this.page.locator(".message-overlay");
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitle = () => this.page.locator(".slide-title").first();

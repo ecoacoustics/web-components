@@ -223,12 +223,12 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.verificationGrid.loadState = LoadState.DATASET_FETCHING;
+    this.verificationGrid["_loadState"] = LoadState.DATASET_FETCHING;
     try {
       this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     } catch (error) {
       console.error("Failed to update data source:", error);
-      this.verificationGrid.loadState = LoadState.ERROR;
+      this.verificationGrid.transitionError();
       return;
     }
 

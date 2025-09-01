@@ -390,10 +390,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public rows = 1;
 
   @state()
-  public loadState: LoadState = LoadState.DATASET_FETCHING;
+  private currentSubSelection: SubjectWrapper[] = [];
 
   @state()
-  private currentSubSelection: SubjectWrapper[] = [];
+  private _loadState: LoadState = LoadState.DATASET_FETCHING;
 
   @state()
   private _viewHeadIndex = 0;
@@ -457,6 +457,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._subjects;
   }
 
+  public get loadState(): LoadState {
+    return this._loadState;
+  }
+
   private get currentPageIndices(): CurrentPage {
     const start = this.viewHeadIndex;
 
@@ -498,6 +502,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private get hasDatasource(): boolean {
     return this.getPage !== undefined;
+  }
+
+  private get hasFinishedDatasource(): boolean {
+    return this.currentPageIndices.start >= this.currentPageIndices.end;
   }
 
   private readonly keydownHandler = this.handleKeyDown.bind(this);
@@ -684,6 +692,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     await this.populatePageSubjectsToIndex(Infinity);
   }
 
+  public transitionError() {
+    this._loadState = LoadState.ERROR;
+    this._decisionHeadIndex = 0;
+    this._viewHeadIndex = 0;
+  }
+
   //#region Updates
 
   public firstUpdated(): void {
@@ -757,11 +771,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const oldRows = change.get("rows") ?? this.rows;
 
       const oldGridSize = oldColumns * oldRows;
-      const oldTileCount = oldGridSize;
+      const oldTargetGridSize = change.get("targetGridSize") ?? oldGridSize;
+      const oldAvailableTiles = Math.min(oldGridSize, oldTargetGridSize);
 
-      if (oldTileCount > this.availableGridCells) {
+      const isGridShrinking = oldAvailableTiles > this.availableGridCells;
+      if (isGridShrinking) {
         if (this.areTilesLoaded()) {
-          this.loadState = LoadState.LOADED;
+          this._loadState = LoadState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
@@ -856,7 +872,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // While we are waiting for the verification grid to initialize, we will
     // be in the DATASET_FETCHING state.
     this.loadingTimeoutReference = setTimeout(() => {
-      this.loadState = LoadState.ERROR;
+      console.error("failed to load dataset. Reason: timeout");
+      this._loadState = LoadState.ERROR;
     }, this.loadingTimeout * 1000);
 
     if (this.getPage) {
@@ -958,6 +975,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         }
 
         virtualDecisionHead += virtualPage.length;
+
+        // The break condition for being on the last page is after the decision
+        // head increment so that it will increment past the last page and onto
+        // an empty page.
+        if (virtualPage.length < this.availableGridCells) {
+          break;
+        }
       }
 
       this.decisionHeadIndex = virtualDecisionHead;
@@ -1604,9 +1628,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // This is also the reason why we don't cancel the getPage promise if the
     // timeout is reached (because we want to give it as much of a chance as
     // possible to recover from a potentially slow API response).
-    if (this.loadState === LoadState.DATASET_FETCHING || this.loadState === LoadState.ERROR) {
+    if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
       this.resetLoadingTimeout();
-      this.loadState = LoadState.TILES_LOADING;
+      this._loadState = LoadState.TILES_LOADING;
     }
   }
 
@@ -2057,7 +2081,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
-      this.loadState = LoadState.LOADED;
+      this._loadState = LoadState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.updateDecisionWhen();
     }
@@ -2173,7 +2197,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private tileGridTemplate(): HTMLTemplateResult {
-    if (this.currentPageIndices.start >= this.currentPageIndices.end) {
+    if (this.hasFinishedDatasource) {
       return this.noItemsTemplate();
     }
 
@@ -2275,7 +2299,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >
-          ${choose(this.loadState, [
+          ${choose(this._loadState, [
             [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
             [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
             [LoadState.LOADED, () => this.tileGridTemplate()],

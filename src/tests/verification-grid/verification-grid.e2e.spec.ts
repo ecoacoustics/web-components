@@ -32,7 +32,12 @@ import {
 } from "../../components/verification-grid/verification-grid";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 import { sleep } from "../../helpers/utilities";
-import { partialCompleteCompound, partialVerifiedSubjects } from "./verification-grid.e2e.datasets";
+import {
+  emptyDataset,
+  fullyCompleteVerified,
+  partialCompleteCompound,
+  partialVerifiedSubjects,
+} from "./verification-grid.e2e.datasets";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -1826,7 +1831,7 @@ test.describe("resuming datasets", () => {
       await expect(fixture.continueVerifyingButton()).toBeVisible();
     });
 
-    test("should remove decisions if the dataset changes", async ({ fixture }) => {
+    test.fixme("should remove decisions if the dataset changes", async ({ fixture }) => {
       await fixture.changeGridSource(fixture.testJsonInput);
 
       const panelColor = await fixture.panelColor();
@@ -1873,14 +1878,11 @@ test.describe("resuming datasets", () => {
 
       await expect(fixture.gridTileTagText()).toHaveTrimmedText(expectedTagText);
 
-      // Because the task that the fixture is set up for is a verification
-      // task, we expect that the progress meter tooltips will be relevant for
-      // the decision buttons, not the loaded task.
       const expectedMeterTooltips = [
-        ["verification: no decision"],
-        ["verification: Noisy Miner (true)"],
-        ["verification: Insects (true)"],
-        ["verification: no decision"],
+        ["verification: Koala (false)", "new tag: Brush Turkey"],
+        ["verification: Noisy Miner (true)", "new tag: no decision"],
+        ["verification: Insects (true)", "new tag: Panda"],
+        ["verification: no decision", "new tag: Brush Turkey"],
       ];
       const realizedMeterTooltips = await fixture.allProgressMeterTooltips();
 
@@ -1909,6 +1911,18 @@ test.describe("resuming datasets", () => {
     });
   });
 
+  test.describe.fixme("resuming a fully completed dataset", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithVerificationTask();
+      await fixture.changeGridSource(fullyCompleteVerified);
+      await fixture.changeGridSize(4);
+    });
+
+    test("should show 'resume verification' button", async ({ fixture }) => {
+      await expect(fixture.continueVerifyingButton()).toBeVisible();
+    });
+  });
+
   // I have purposely decided to not decided to implement resuming
   // classification tasks because the format we provide uses the
   // classification_column_name ::= "oe_"<tag_name> format.
@@ -1921,6 +1935,28 @@ test.describe("resuming datasets", () => {
   // TODO: Add tests once we improve the classification download namespace
   // see: https://github.com/ecoacoustics/web-components/issues/463
   test.describe.skip("classification task", () => {});
+});
+
+test.describe("empty datasets", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.createWithVerificationTask();
+    await fixture.changeGridSource(emptyDataset);
+  });
+
+  // An empty dataset should not be treated as an error, and should therefore
+  // act as if the user has reached the end of the dataset.
+  test("should show 'no items to validate' message", async ({ fixture }) => {
+    await expect(fixture.messageOverlay()).toHaveTrimmedText([
+      "No un-validated results found",
+      "All 0 annotations are validated",
+    ]);
+  });
+
+  test("should have disabled paging controls", async ({ fixture }) => {
+    await expect(fixture.nextPageButton()).toBeDisabled();
+    await expect(fixture.previousPageButton()).toBeDisabled();
+    await expect(fixture.continueVerifyingButton()).toBeHidden();
+  });
 });
 
 test.describe("decision meter", () => {

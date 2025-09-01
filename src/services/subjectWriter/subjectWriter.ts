@@ -14,7 +14,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
   public constructor(subjects: SubjectWrapper[]) {
     super({
       write: async (subject) => {
-        console.debug(`writing subject ${subject}, current buffer size: ${subjects.length}`);
+        console.debug(`writing subject`, subject, `current buffer size: ${subjects.length}`);
         return new Promise(async (resolve) => {
           // We do a pre-check of the subjects array so if the writer submits
           // items to the stream, we don't immediately append the item to the
@@ -48,6 +48,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
         // should release any promises that are waiting for the target to be
         // reached.
         this.writerReachedTarget?.();
+        this.closeStream();
       },
     });
 
@@ -55,7 +56,7 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
   }
 
   public async closeStream(): Promise<void> {
-    await this.resumeWriter();
+    this.pauseWriter();
     this._closed = true;
   }
 

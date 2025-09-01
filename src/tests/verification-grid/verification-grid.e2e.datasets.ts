@@ -57,6 +57,8 @@ export const partialCompleteCompound = [
     AudioLink: "http://localhost:3000/example2.flac",
     Distance: 4.84603595733643,
     Tag: "koala",
+    verified: false,
+    oe_tag: "Koala",
     oe_new_tag: "Brush Turkey",
   },
   {
@@ -97,3 +99,47 @@ export const partialCompleteCompound = [
     verified: false,
   },
 ] as const;
+
+export const fullyCompleteVerified = [
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 4.84603595733643,
+    Tag: "koala",
+    verified: true,
+    oe_tag: "Koala",
+  },
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 4.84603595733643,
+    Tag: "koala",
+    oe_tag: "Noisy Miner",
+    verified: true,
+  },
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 4.84603595733643,
+    Tag: "koala",
+    oe_tag: "Insects",
+    verified: true,
+  },
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 4.84603595733643,
+    oe_tag: "Noisy Miner",
+    verified: true,
+  },
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 5.04581928253174,
+    oe_tag: "Noisy Miner",
+    verified: true,
+  },
+  {
+    AudioLink: "http://localhost:3000/example2.flac",
+    Distance: 5.04581928253174,
+    oe_tag: "Insects",
+    verified: false,
+  },
+] as const;
+
+export const emptyDataset = [];

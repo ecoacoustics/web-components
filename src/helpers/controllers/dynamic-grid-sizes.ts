@@ -45,6 +45,8 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   private anyOverlap: Signal<boolean>;
   private target = 0;
 
+  // TODO: Although we don't have any use case for awaiting this method, it
+  // should theoretically return an awaitable promise.
   /**
    * Generates a list of candidates for the target and applies the most optimal
    * candidate.

@@ -12,11 +12,12 @@
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
 
-      <oe-data-source slot="data-source" for="verification-grid" src="/some-complete.csv" local></oe-data-source>
+      <!-- <oe-data-source slot="data-source" for="verification-grid" src="/some-complete.csv" local></oe-data-source> -->
+      <oe-data-source slot="data-source" for="verification-grid" src="/all-complete.csv" local></oe-data-source>
     </oe-verification-grid>
 
     <section id="dev-tools">
-      <button id="next-data-source-btn">/kaleidoscope.csv</button>
+      <button id="next-data-source-btn"></button>
     </section>
 
     <script type="module">
@@ -44,6 +45,8 @@
       }
 
       nextDataSourceBtn().addEventListener("click", nextDataSource);
+
+      nextDataSourceBtn().textContent = dataSourceComponent().getAttribute("src");
     </script>
   </body>
 </html>

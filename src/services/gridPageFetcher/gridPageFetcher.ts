@@ -26,7 +26,7 @@ export class GridPageFetcher {
     this.urlTransformer = urlTransformer;
   }
 
-  public get totalItems(): number | undefined {
+  public get totalItems(): number {
     return this._totalItems;
   }
 
@@ -45,7 +45,7 @@ export class GridPageFetcher {
   private pagingCallback: PageFetcher;
   private urlTransformer: UrlTransformer;
   private pagingContext: PageFetcherContext = {};
-  private _totalItems?: number;
+  private _totalItems = 0;
   private _subjectStream?: ReadableStream<SubjectWrapper>;
 
   // caches the audio for the next n items in the buffer
