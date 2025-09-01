@@ -1327,7 +1327,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
   }
 
-  private handleScroll(event: Event): void {
+  private handleScroll(): void {
     const pointerPosition = { pageX: this.highlight.current.x, pageY: this.highlight.current.y };
     this.resizeHighlightBox(pointerPosition as PointerEvent);
   }
