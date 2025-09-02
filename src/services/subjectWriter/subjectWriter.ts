@@ -11,6 +11,10 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
   private target = 0;
   private _closed = false;
 
+  // Added cached promise fields to avoid creating a new Promise each call
+  private resumePromise?: Promise<void>;
+  private pausePromise?: Promise<void>;
+
   public constructor(subjects: SubjectWrapper[]) {
     super({
       write: async (subject) => {
@@ -47,7 +51,6 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
         // If the stream is closed we have reached the end of the dataset and we
         // should release any promises that are waiting for the target to be
         // reached.
-        this.writerReachedTarget?.();
         this.closeStream();
       },
     });
@@ -56,13 +59,13 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
   }
 
   public async closeStream(): Promise<void> {
-    this.pauseWriter();
     this._closed = true;
+    this.pauseWriter();
   }
 
-  public async setTarget(value: number): Promise<void> {
-    if (value < 0) {
-      throw new Error("Invalid target value");
+  public async setTarget(newTarget: number): Promise<void> {
+    if (newTarget < 0) {
+      throw new Error("Invalid target value. Target must be a non-negative number.");
     }
 
     if (this.closed) {
@@ -70,12 +73,19 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
       return;
     }
 
-    if (value <= this.subjectCount() || value <= this.target) {
+    // If we have enough items to satisfy the new target, we don't have to await
+    // anything, and we can just return.
+    if (newTarget <= this.subjectCount()) {
       return;
     }
 
-    this.target = value;
-    await this.resumeWriter();
+    // If the requested target is already satisfied or not greater than current
+    // target, return the existing resume promise so callers can await it.
+    if (newTarget > this.target) {
+      this.target = newTarget;
+    }
+
+    return this.resumeWriter();
   }
 
   /**
@@ -84,10 +94,23 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
    * data source.
    */
   private resumeWriter(): Promise<void> {
+    // Return existing resume promise if already created.
+    if (this.resumePromise) {
+      return this.resumePromise;
+    }
+
     this.writerShouldResume?.();
-    return new Promise((resolve) => {
-      this.writerReachedTarget = resolve;
+
+    this.resumePromise = new Promise((resolve) => {
+      this.writerReachedTarget = () => {
+        resolve();
+        // clear cached promise and resolver reference
+        this.resumePromise = undefined;
+        this.writerReachedTarget = undefined;
+      };
     });
+
+    return this.resumePromise;
   }
 
   /**
@@ -95,9 +118,22 @@ export class SubjectWriter extends WritableStream<SubjectWrapper> {
    * writer should resume fetching items.
    */
   private pauseWriter(): Promise<void> {
+    // Return existing pause promise if already created.
+    if (this.pausePromise) {
+      return this.pausePromise;
+    }
+
     this.writerReachedTarget?.();
-    return new Promise((resolve) => {
-      this.writerShouldResume = resolve;
+
+    this.pausePromise = new Promise((resolve) => {
+      this.writerShouldResume = () => {
+        resolve();
+        // clear cached promise and resolver reference
+        this.pausePromise = undefined;
+        this.writerShouldResume = undefined;
+      };
     });
+
+    return this.pausePromise;
   }
 }
