@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.2...web-components-v5.3.0) (2025-09-02)
+
+
+### Features
+
+* Add parser for subject verification state ([a8d0554](https://github.com/ecoacoustics/web-components/commit/a8d055420f55120fd79b09e5617728f16141c4d7)), closes [#462](https://github.com/ecoacoustics/web-components/issues/462) [#440](https://github.com/ecoacoustics/web-components/issues/440) [#441](https://github.com/ecoacoustics/web-components/issues/441) [#266](https://github.com/ecoacoustics/web-components/issues/266) [#235](https://github.com/ecoacoustics/web-components/issues/235) [#464](https://github.com/ecoacoustics/web-components/issues/464)
+
 ## [5.2.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.1...web-components-v5.2.2) (2025-08-26)
 
 
