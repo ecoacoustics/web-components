@@ -16,12 +16,12 @@ export enum DecisionOptions {
 export class Decision {
   public constructor(confirmed: DecisionOptions, tag: Tag | null) {
     this.confirmed = confirmed;
-    this.tag = tag ?? { text: "" };
+    this.tag = tag;
   }
 
   /** Stores the decision outcome */
   public readonly confirmed: DecisionOptions;
 
   /** A tag that the decision was made about */
-  public readonly tag: Tag;
+  public readonly tag: Tag | null;
 }

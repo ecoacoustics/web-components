@@ -27,7 +27,7 @@ import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
 import { expect } from "../assertions";
 import { KeyboardModifiers } from "../../helpers/types/playwright";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { SlTooltip } from "@shoelace-style/shoelace";
 import { SPACE_KEY } from "../../helpers/keyboard";
@@ -52,6 +52,7 @@ class TestPage {
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile");
   public axesComponents = () => this.page.locator("oe-axes");
   public infoCardComponents = () => this.page.locator("oe-info-card");
+  public messageOverlay = () => this.page.locator(".message-overlay");
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
   public bootstrapSlideTitle = () => this.page.locator(".slide-title").first();
@@ -65,7 +66,7 @@ class TestPage {
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
-  public continueVerifyingButton = () => this.page.getByTestId("continue-verifying-button").first();
+  public continueVerifyingButton = () => this.page.locator("#continue-verifying-button").first();
   public previousPageButton = () => this.page.getByTestId("previous-page-button").first();
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
@@ -74,6 +75,7 @@ class TestPage {
   public gridTileProgressMeterSegments = (index = 0) =>
     this.gridTileProgressMeters().nth(index).locator(".progress-meter-segment");
   public gridTileProgressMeterTooltips = (index = 0) => this.gridTileProgressMeters().nth(index).locator("sl-tooltip");
+  public gridTileTagText = () => this.page.getByTestId("tile-tag-text");
 
   public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
 
@@ -83,11 +85,10 @@ class TestPage {
   public gridProgressCompletedSegment = () => this.gridProgressBars().locator(".completed-segment").first();
   public gridProgressHeadSegment = () => this.gridProgressBars().locator(".head-segment").first();
 
-  public spectrogramComponents = () => this.page.locator("oe-spectrogram").all();
-  public spectrogramComponent = async (index = 0) =>
-    this.gridTileComponents().nth(index).locator("oe-spectrogram").first();
-  public gridTileComponent = async (index = 0) => this.gridTileComponents().nth(index);
-  public audioElement = async (index = 0) => (await this.spectrogramComponent(index)).locator("audio").first();
+  public spectrogramComponents = () => this.page.locator("oe-spectrogram");
+  public spectrogramComponent = (index = 0) => this.gridTileComponents().nth(index).locator("oe-spectrogram").first();
+  public gridTileComponent = (index = 0) => this.gridTileComponents().nth(index);
+  public audioElement = (index = 0) => this.spectrogramComponent(index).locator("audio").first();
 
   public mediaControlsComponent = (index = 0) =>
     this.gridTileContainers().nth(index).locator("oe-media-controls").first();
@@ -95,7 +96,7 @@ class TestPage {
   public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
   public headerControls = () => this.page.locator(".header-controls").first();
-  public footerControls = () => this.page.locator(".footer-controls").first();
+  public footerControls = () => this.page.locator(".footer-container").first();
 
   public indicatorLines = () => this.page.locator("oe-indicator #indicator-line");
 
@@ -104,14 +105,14 @@ class TestPage {
   private skipComponent = () => this.page.locator("oe-skip").first();
   private skipButton = () => this.skipComponent().locator("#decision-button").first();
 
-  private verificationButton(decision: "true" | "false"): Locator {
+  public verificationButton(decision: "true" | "false"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
     return targetDecision.locator("#decision-button");
   }
 
-  private classificationButton(tag: string, decision: boolean): Locator {
+  public classificationButton(tag: string, decision: boolean): Locator {
     const targetDecision = this.page.locator(`oe-classification[tag='${tag}']`).first();
-    return targetDecision.locator(`#${decision}-decision-button`);
+    return targetDecision.locator(`#${decision.toString()}-decision-button`);
   }
 
   public tagPromptButton(): Locator {
@@ -119,10 +120,10 @@ class TestPage {
     return targetDecision.locator(`#decision-button`);
   }
 
-  public smallJsonInput = "http://localhost:3000/test-items-small.json";
-  public testJsonInput = "http://localhost:3000/test-items.json";
-  public secondJsonInput = "http://localhost:3000/test-items-2.json";
-  private defaultTemplate = `
+  public readonly smallJsonInput = "http://localhost:3000/test-items-small.json";
+  public readonly testJsonInput = "http://localhost:3000/test-items.json";
+  public readonly secondJsonInput = "http://localhost:3000/test-items-2.json";
+  private readonly defaultTemplate = `
     <oe-verification verified="true" shortcut="Y"></oe-verification>
     <oe-verification verified="false" shortcut="N"></oe-verification>
   `;
@@ -156,7 +157,7 @@ class TestPage {
       ...requiredSelectors,
     ]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async createWithBootstrap(
@@ -186,7 +187,7 @@ class TestPage {
       ...requiredSelectors,
     ]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async createWithClassificationTask() {
@@ -207,7 +208,8 @@ class TestPage {
   }
 
   public async createWithCompoundTask() {
-    await this.create(`
+    await this.create(
+      `
       <oe-verification verified="true"></oe-verification>
       <oe-verification verified="false"></oe-verification>
       <oe-verification verified="skip"></oe-verification>
@@ -228,7 +230,13 @@ class TestPage {
           return testedTags.filter((tag) => tag.text.includes(searchTerm));
         }"
       ></oe-tag-prompt>
-    `);
+    `,
+      [".decision-button"],
+    );
+  }
+
+  public async createWithNoTask() {
+    await this.create("");
   }
 
   public async createWithAppChrome() {
@@ -271,7 +279,7 @@ class TestPage {
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
 
-    await expect(this.gridComponent()).toHaveJSProperty("loaded", true);
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   /**
@@ -296,11 +304,11 @@ class TestPage {
   }
 
   public async skipColor(): Promise<string> {
-    return await getCssVariableStyle(this.skipButton(), "--decision-skip-color", "background");
+    return await getCssVariableStyle(this.skipButton(), "--oe-decision-skip-color", "background");
   }
 
   public async notRequiredColor(): Promise<string> {
-    return await getCssVariableStyle(this.verificationButton("false"), "--not-required-color", "background");
+    return await getCssVariableStyle(this.verificationButton("false"), "--oe-not-required-color", "background");
   }
 
   public async getGridSize(): Promise<number> {
@@ -308,11 +316,11 @@ class TestPage {
   }
 
   public async getViewHead(): Promise<number> {
-    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHead");
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "viewHeadIndex");
   }
 
   public async getVerificationHead(): Promise<number> {
-    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHead");
+    return await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "decisionHeadIndex");
   }
 
   public async selectedTileIndexes(): Promise<number[]> {
@@ -368,13 +376,18 @@ class TestPage {
     return values;
   }
 
-  public async allAppliedDecisions(): Promise<Decision[]> {
-    const result: Decision[] = [];
+  public async allAppliedDecisions(): Promise<(Decision | null)[]> {
+    const result: (Decision | null)[] = [];
 
     const gridTiles = await this.gridTileComponents().all();
     for (let i = 0; i < gridTiles.length; i++) {
       const tileDecisions = await this.getAppliedDecisions(i);
-      result.push(...tileDecisions);
+
+      if (tileDecisions.length === 0) {
+        result.push(null);
+      } else {
+        result.push(...tileDecisions);
+      }
     }
 
     return result;
@@ -423,7 +436,7 @@ class TestPage {
   }
 
   public async playingSpectrograms(): Promise<Locator[]> {
-    return this.asyncFilter(await this.spectrogramComponents(), async (spectrogram) => {
+    return this.asyncFilter(await this.spectrogramComponents().all(), async (spectrogram) => {
       const value = await getBrowserValue<SpectrogramComponent>(spectrogram, "paused");
       return !value;
     });
@@ -445,13 +458,14 @@ class TestPage {
     // therefore, to get the values of the classification property, we use
     // the Object.values method
     const subjectClassifications = Array.from(Object.values(subject.classifications));
+    const subjectVerifications = subject.verification ? [subject.verification] : [];
 
     // prettier wants to inline all of these into one line, but I think that
     // separating verifications and classifications into separate lines makes
     // the code easier to read
     // prettier-ignore
     return [
-        ...(subject.verification ? [subject.verification] : []),
+        ...subjectVerifications,
         ...subjectClassifications,
     ];
   }
@@ -463,13 +477,13 @@ class TestPage {
   }
 
   public async isAudioPlaying(index: number): Promise<boolean> {
-    const spectrogram = await this.spectrogramComponent(index);
+    const spectrogram = this.spectrogramComponent(index);
     const value = await getBrowserValue<SpectrogramComponent, number>(spectrogram, "paused");
     return !value;
   }
 
   public async audioPlaybackTime(index: number): Promise<number> {
-    const spectrogram = await this.spectrogramComponent(index);
+    const spectrogram = this.spectrogramComponent(index);
     return await getBrowserSignalValue<SpectrogramComponent, number>(spectrogram, "currentTime");
   }
 
@@ -499,7 +513,7 @@ class TestPage {
     const maxValue = await getBrowserValue<ProgressBar, number>(progressBar, "total");
     const percentage = 100 * (value / maxValue);
 
-    return `${percentage}%`;
+    return `${percentage.toString()}%`;
   }
 
   public async progressBarCompletedTooltip() {
@@ -535,6 +549,13 @@ class TestPage {
     });
   }
 
+  public async allProgressMeterColors(): Promise<string[][]> {
+    const gridTiles = await this.gridTileProgressMeters().all();
+    const allProgresses = gridTiles.map(async (_, index) => await this.progressMeterColors(index));
+
+    return await Promise.all(allProgresses);
+  }
+
   public async progressMeterColors(index = 0): Promise<string[]> {
     const segments = await this.gridTileProgressMeterSegments(index).all();
 
@@ -547,6 +568,12 @@ class TestPage {
     );
 
     return await Promise.all(colors);
+  }
+
+  public async allProgressMeterTooltips(): Promise<(string | null)[][]> {
+    const gridTiles = await this.gridTileComponents().all();
+    const allTooltips = gridTiles.map(async (_, index) => await this.progressMeterTooltips(index));
+    return await Promise.all(allTooltips);
   }
 
   public async progressMeterTooltips(index = 0): Promise<(string | null)[]> {
@@ -606,12 +633,12 @@ class TestPage {
   }
 
   public async playSpectrogram(index: number) {
-    const gridTile = await this.gridTileComponent(index);
+    const gridTile = this.gridTileComponent(index);
     const playButton = gridTile.locator("sl-icon[name='play']").first();
 
     await playButton.scrollIntoViewIfNeeded();
 
-    const targetAudioElement = await this.audioElement(index);
+    const targetAudioElement = this.audioElement(index);
     const playEvent = catchLocatorEvent(targetAudioElement, "play");
     await playButton.click();
     await playEvent;
@@ -756,12 +783,8 @@ class TestPage {
     await this.fileInputButton().setInputFiles(fileName);
   }
 
-  public async getPopulatedGridSize(): Promise<number> {
-    const gridSize = await getBrowserValue<VerificationGridComponent, number>(
-      this.gridComponent(),
-      "populatedTileCount",
-    );
-
+  public async getTileCount(): Promise<number> {
+    const gridSize = await getBrowserValue<VerificationGridComponent, number>(this.gridComponent(), "pageSize");
     return gridSize;
   }
 
@@ -801,10 +824,24 @@ class TestPage {
     await setBrowserAttribute<VerificationGridComponent>(this.gridComponent(), "grid-size" as any, value.toString());
   }
 
-  public async changeGridSource(value: string) {
+  public async changeGridSource(value: string | ReadonlyArray<any>) {
     const loadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
-    await setBrowserAttribute<DataSourceComponent>(this.dataSourceComponent(), "src", value);
-    await loadedEvent;
+
+    // If the value is a string, we assume that the it is a remote url data
+    // source.
+    if (typeof value === "string") {
+      await setBrowserAttribute<DataSourceComponent>(this.dataSourceComponent(), "src", value);
+      return await loadedEvent;
+    }
+
+    // If we receive an array, we create a callback that returns the items.
+    if (Array.isArray(value)) {
+      await this.gridComponent().evaluate((element: VerificationGridComponent, dataset: ReadonlyArray<any>) => {
+        element.getPage = (): Promise<any> => Promise.resolve({ subjects: dataset });
+      }, value);
+
+      return await loadedEvent;
+    }
   }
 
   public async changeSourceLocal(local: boolean) {

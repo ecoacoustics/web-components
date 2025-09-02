@@ -188,10 +188,10 @@ export class AudioHelper {
   private async fetchAudio(src: string): Promise<ArrayBuffer> {
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
-    const tag = `audio (${this.generation}): fetch and decode audio`;
+    const tag = `audio (${src}): fetch and decode audio`;
     console.time(tag);
 
-    const response = await fetch(src);
+    const response = await fetch(src, { priority: "high", cache: "force-cache" });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio: ${response.statusText}`);
     }

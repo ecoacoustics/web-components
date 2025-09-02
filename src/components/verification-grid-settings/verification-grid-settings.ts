@@ -29,7 +29,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
   @queryParentElement({ selector: "oe-verification-grid" })
   private verificationGrid?: VerificationGridComponent;
 
-  private fullscreenChangeHandler = this.updateFullscreenState.bind(this);
+  private readonly fullscreenChangeHandler = this.updateFullscreenState.bind(this);
 
   public connectedCallback(): void {
     super.connectedCallback();

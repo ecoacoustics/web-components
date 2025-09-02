@@ -4,11 +4,10 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher";
-import { VerificationGridComponent } from "../verification-grid/verification-grid";
+import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher/urlSourcedFetcher";
+import { LoadState, VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
-import { PageFetcher } from "../../services/gridPageFetcher";
-import { SubjectParser } from "../../services/subjectParser";
+import { PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { DownloadableResult } from "../../models/subject";
 import { when } from "lit/directives/when.js";
 import dataSourceStyles from "./css/style.css?inline";
@@ -69,7 +68,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
   public urlSourcedFetcher?: UrlSourcedFetcher;
   private verificationGrid?: VerificationGridComponent;
-  private decisionHandler = this.handleDecision.bind(this);
+  private readonly decisionHandler = this.handleDecision.bind(this);
 
   public willUpdate(changedProperties: PropertyValues<this>): void {
     // TODO: I think these conditions might be faulty for removing attributes
@@ -114,37 +113,32 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     }
   }
 
-  public resultRows(): Partial<DownloadableResult>[] {
+  private async resultRows(): Promise<Partial<DownloadableResult>[]> {
     if (!this.verificationGrid) {
       throw new Error("could not find verification grid component");
     }
 
+    const seenSubjects = this.verificationGrid.subjects;
+
+    // If the data source is url sourced, we know the entire files content ahead
+    // of time, and we assume that the user does too.
+    // Therefore, we download all of the subjects, including subjects that the
+    // user has not seen.
     if (this.isUrlSourced()) {
-      const subjects = this.verificationGrid.subjects;
-      return subjects.map((model) => model.toDownloadable());
+      await this.verificationGrid.flushAllSubjects();
+      return seenSubjects.map((model) => model.toDownloadable());
     }
 
-    // when downloading from a callback paginated source, we only want to
-    // download the subjects that the user has seen up to (the decision head).
-    // however, because the verification grids "subjects" array contains
-    // subjects ahead of the decision head (for pre-fetching purposes)
-    // we need to create a copy of the "subjects" array up to the
-    // decision head
-    const decisionHead = this.verificationGrid.decisionHead;
-    const allSubjects = this.verificationGrid.subjects;
-    const pageSize = this.verificationGrid.effectivePageSize;
-
-    // when downloading results, we want to download all the subjects that the
-    // use has seen, including the current page.
-    // because the decisionHead represents the index of the first item on the
-    // current page, we have to add the page size so that the currently visible
-    // page is included in the downloaded output.
-    const subjects = allSubjects.slice(0, decisionHead + pageSize);
-    return subjects.map((model) => model.toDownloadable());
+    // When downloading callback provided results, we want to download all the
+    // subjects that the user has seen, including the current page.
+    // Because the verification grids subject array only contains items that the
+    // user has seen up to, we simply download the verification grids subject
+    // array.
+    return seenSubjects.map((model) => model.toDownloadable());
   }
 
   private async downloadCallbackSourcedResults(): Promise<void> {
-    const downloadableResults = this.resultRows();
+    const downloadableResults = await this.resultRows();
     const stringifiedResults = JSON.stringify(downloadableResults);
 
     const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
@@ -162,7 +156,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       throw new Error("Data fetcher does not have a file.");
     }
 
-    const downloadableResults = this.resultRows();
+    const downloadableResults = await this.resultRows();
 
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
@@ -229,8 +223,15 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    const urlTransformer = this.verificationGrid.urlTransformer;
-    this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    this.verificationGrid["_loadState"] = LoadState.DATASET_FETCHING;
+    try {
+      this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
+    } catch (error) {
+      console.error("Failed to update data source:", error);
+      this.verificationGrid.transitionError();
+      return;
+    }
+
     if (!this.urlSourcedFetcher.file) {
       throw new Error("Data fetcher does not have a file.");
     }
@@ -238,17 +239,19 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     this.fileName = this.urlSourcedFetcher.file.name;
 
     const subjects = await this.urlSourcedFetcher.generateSubjects();
-    const subjectWrapperModels = subjects.map((subject) => SubjectParser.parse(subject, urlTransformer));
 
-    const nullFetcher: PageFetcher = async () => ({
-      subjects: [],
-      context: {},
-      totalItems: subjectWrapperModels.length,
-    });
-    nullFetcher.brand = UrlSourcedFetcher.brand;
+    const localDataFetcher: PageFetcher = async (context: { completed: boolean }) => {
+      const items = context.completed ? [] : subjects;
 
-    this.verificationGrid.getPage = nullFetcher;
-    this.verificationGrid.subjects = subjectWrapperModels;
+      return {
+        subjects: items,
+        totalItems: subjects.length,
+        context: { completed: true },
+      };
+    };
+    localDataFetcher.brand = UrlSourcedFetcher.brand;
+
+    this.verificationGrid.getPage = localDataFetcher;
   }
 
   private fileInputTemplate(): HTMLTemplateResult {
@@ -271,7 +274,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           id="browser-file-input"
           class="hidden"
           type="file"
-          accept=".csv,.json"
+          accept=".csv,.json,.tsv"
           @change="${(event: Event) => this.handleFileChange(event)}"
         />
       </span>

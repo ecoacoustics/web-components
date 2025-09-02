@@ -7,13 +7,14 @@ import { Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
-import { IAudioInformation, SpectrogramOptions } from "../../helpers/audio/models";
+import { IAudioInformation, PowerTwoWindowSize, SpectrogramOptions } from "../../helpers/audio/models";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
 import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFrame } from "../../helpers/frames";
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
+import { ColorMapName } from "../../helpers/audio/colors";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -100,7 +101,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** The size of the fft window */
   @property({ type: Number, attribute: "window-size", reflect: true })
-  public windowSize = SpectrogramComponent.defaultWindowSize;
+  public windowSize: PowerTwoWindowSize = SpectrogramComponent.defaultWindowSize;
 
   /** The window function to use for the spectrogram */
   @property({ type: String, attribute: "window-function", reflect: true })
@@ -116,7 +117,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   /** A color map to use for the spectrogram */
   @property({ type: String, attribute: "color-map", reflect: true })
-  public colorMap = "grayscale";
+  public colorMap: ColorMapName = "grayscale";
 
   /** An offset (seconds) from the start of a larger audio recording */
   @property({ type: Number, reflect: true })
@@ -153,8 +154,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     if (!this.audio.value) {
       console.error("Attempted to set current time before audio model initialization");
       return;
-    } else if (value > this.audio.value.duration || value < 0) {
+    } else if (value > this.audio.value.duration) {
       console.error("Attempted to set current time outside of the audio duration");
+      return;
+    } else if (value < 0) {
+      console.error("Attempted to set current time to a negative value");
       return;
     }
 
@@ -309,13 +313,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
       if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
         if (typeof oldWindowSize === "number" && oldWindowSize > 0) {
-          this.windowSize = oldWindowSize;
+          // TODO: Add upper bound check
+          this.windowSize = oldWindowSize as PowerTwoWindowSize;
         } else {
           this.windowSize = SpectrogramComponent.defaultWindowSize;
         }
 
         console.error(
-          `window-size "${newWindowSize}" must be a power of 2 and greater than 1. Falling back to window size value of ${this.windowSize}`,
+          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.windowSize}'`,
         );
       }
     }
@@ -363,13 +368,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.initializeUnitConverter();
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
+    // We set "doneFirstRender" before dispatching the "loaded" event so that
+    // any actions triggered as a result of the "loaded" event will be aware
+    // of the fact that the first render has completed.
+    this.doneFirstRender = true;
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
         bubbles: true,
       }),
     );
-
-    this.doneFirstRender = true;
   }
 
   public async regenerateSpectrogram() {
@@ -681,8 +688,19 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // we only compute the time elapsed once the media element has started
       // playing because we do not need to calculate the time elapsed to short
       // circuit the time update if the audio element is not playing
-      const timeElapsed = bufferTime - startTime;
+      //
+      // We clamp to the audio duration because sometimes the time interpolation
+      // can be slightly ahead of the media element's currentTime.
+      // This caused the currentTime to exceed the audio duration, and a console
+      // error to be thrown.
+      const audioDuration = this.audio.value?.duration ?? Infinity;
+      let timeElapsed = Math.min(bufferTime - startTime, audioDuration);
 
+      // TODO: We should probably throw a console error if the desync exceeds
+      // a large amount (e.g. 1 second) so that tests fail and we can
+      // investigate the issue. This is because a large desync is an indicator
+      // of an underlying issue that is not caused by anti-fingerprinting
+      // measures.
       const desyncLimit = 0.1 satisfies Seconds;
       const desync = Math.abs(mediaElementTime - timeElapsed);
 
@@ -783,10 +801,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       <audio
         id="media-element"
         src="${this.renderedSource}"
-        @play="${() => this.play()}"
-        @ended="${() => this.stop()}"
         preload="metadata"
         crossorigin="anonymous"
+        fetchpriority="low"
+        @play="${() => this.play()}"
+        @ended="${() => this.stop()}"
       >
         <slot></slot>
       </audio>

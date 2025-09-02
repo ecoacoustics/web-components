@@ -190,7 +190,9 @@ export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, 
 export async function catchEvent<T extends Event>(locator: Page, name: string) {
   return locator.evaluate((name: string) => {
     return new Promise<T>((resolve) => {
-      document.addEventListener(name, (data: any) => resolve(data));
+      document.addEventListener(name, (data: any) => {
+        resolve(data);
+      });
     });
   }, name);
 }
@@ -199,7 +201,9 @@ export async function catchEvent<T extends Event>(locator: Page, name: string) {
 export async function catchLocatorEvent<T extends Event>(locator: Locator, name: string): Promise<T> {
   return locator.evaluate((element: HTMLElement, name: string) => {
     return new Promise((resolve) => {
-      element.addEventListener(name, (data: any) => resolve(data.detail));
+      element.addEventListener(name, (data: any) => {
+        resolve(data.detail);
+      });
     });
   }, name);
 }
@@ -247,14 +251,21 @@ export async function setBrowserValue<T>(component: any, key: keyof T, value: T[
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute#parameters
  */
 export async function setBrowserAttribute<T extends HTMLElement>(component: Locator, key: keyof T, value = "") {
-  await component.evaluate((element: T, { key, value }: any) => element.setAttribute(key.toString(), value), {
-    key,
-    value,
-  });
+  await component.evaluate(
+    (element: T, { key, value }: any) => {
+      element.setAttribute(key.toString(), value);
+    },
+    { key, value },
+  );
 }
 
 export async function removeBrowserAttribute<T extends HTMLElement>(component: any, key: keyof T) {
-  await component.evaluate((element: T, { key }: { key: keyof T }) => element.removeAttribute(key.toString()), { key });
+  await component.evaluate(
+    (element: T, { key }: { key: keyof T }) => {
+      element.removeAttribute(key.toString());
+    },
+    { key },
+  );
 }
 
 export async function getBrowserAttribute<T extends HTMLElement>(component: any, key: string): Promise<string> {
@@ -275,7 +286,7 @@ export async function invokeBrowserMethod<T extends HTMLElement, ReturnType exte
   ...args: any[]
 ): Promise<ReturnType> {
   return await component.evaluate(
-    (element: T, key: keyof T, args: any[] = []) => (element[key] as (...args: any) => any)(...args),
+    async (element: T, key: keyof T, args: any[] = []) => await (element[key] as (...args: any) => any)(...args),
     key,
     args,
   );
@@ -298,7 +309,7 @@ export async function waitForContentReady(page: Page, selectors: string[] = []) 
   // wait for the page to emit the "load"
   await page.waitForLoadState();
 
-  // TODO: we should replcae this with a visibility locator
+  // TODO: we should replace this with a visibility locator
   // see: https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-selector
   await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
 
@@ -306,10 +317,10 @@ export async function waitForContentReady(page: Page, selectors: string[] = []) 
   await page.waitForLoadState("networkidle");
 }
 
-export async function setElementSize(target: Locator, shape: Size<Pixel>) {
-  await target.evaluate((element: HTMLElement, shape: Size<Pixel>) => {
-    element.style.width = `${shape.width}px`;
-    element.style.height = `${shape.height}px`;
+export async function setElementSize(target: Locator, shape: Size) {
+  await target.evaluate((element: HTMLElement, shape: Size) => {
+    element.style.width = `${shape.width.toString()}px`;
+    element.style.height = `${shape.height.toString()}px`;
   }, shape);
 }
 

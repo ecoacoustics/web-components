@@ -2,6 +2,31 @@ import { WindowFunctionName } from "fft-windowing-ts";
 import { Sample, Hertz } from "../../models/unitConverters";
 import { ColorMapName } from "./colors";
 
+/**
+ * Positive powers of two that are commonly used for audio processing.
+ * This is useful for autocomplete and type safety when specifying window sizes.
+ */
+export type PowerTwoWindowSize =
+  | 1
+  | 2
+  | 4
+  | 8
+  | 16
+  | 32
+  | 64
+  | 128
+  | 256
+  | 512
+  | 1024
+  | 2048
+  | 4096
+  | 8192
+  | 16384
+  | 32768;
+
+// Unlike the window size, window overlap can be zero, which means no overlap.
+export type PowerTwoWindowOverlap = PowerTwoWindowSize | 0;
+
 export interface IAudioInformation {
   startSample: Sample;
   endSample: Sample;
@@ -12,7 +37,7 @@ export interface IAudioInformation {
 
 export class SpectrogramOptions {
   constructor(
-    windowSize: number,
+    windowSize: PowerTwoWindowSize,
     windowOverlap: number,
     windowFunction: WindowFunctionName,
     melScale: boolean,
@@ -33,7 +58,7 @@ export class SpectrogramOptions {
    * number of samples in each window for the fft
    * must be a power of 2
    */
-  public windowSize: number;
+  public windowSize: PowerTwoWindowSize;
   /** number of samples to overlap between windows */
   public windowOverlap: number;
   public windowFunction: WindowFunctionName;

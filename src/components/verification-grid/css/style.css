@@ -4,7 +4,7 @@
 }
 
 #highlight-box {
-  position: absolute;
+  position: fixed;
   display: none;
   top: 0px;
   left: 0px;
@@ -105,7 +105,7 @@
   }
 }
 
-.no-items-message {
+.message-overlay {
   display: subgrid / subgrid;
   grid-row: 1 / -1;
   grid-column: 1 / -1;
@@ -114,20 +114,62 @@
   text-align: center;
 
   font-size: var(--oe-font-size-large);
+
+  .loading-message {
+    display: inline-block;
+    padding: var(--oe-spacing);
+  }
+
+  .dataset-failure-message {
+    color: var(--oe-danger-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
 }
 
-.controls-container {
+.footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+
   position: relative;
   width: 80%;
   height: min-content;
   align-self: center;
 
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
+  container: controls / inline-size;
+
   gap: var(--oe-spacing);
   color: var(--oe-font-color);
+}
+
+.controls-container {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 0.5fr;
+
+  width: 100%;
+
+  gap: var(--oe-spacing);
+  color: var(--oe-font-color);
+
+  & > * {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+
+  .decision-controls-left {
+    justify-content: start;
+  }
+
+  .decision-controls {
+    justify-content: center;
+  }
+
+  .decision-controls-right {
+    justify-content: end;
+  }
 }
 
 .verification-controls-title {
@@ -139,6 +181,10 @@
 }
 
 .decision-controls {
+  flex-direction: column;
+  align-content: center;
+  align-items: center;
+
   max-width: 100%;
 
   h2 {
@@ -192,7 +238,11 @@ oe-spectrogram {
   }
 }
 
-@media (max-width: 600px) {
+@container controls (width <= 600px) {
+  .controls-container {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+
   .decision-controls {
     order: -1;
   }
@@ -203,5 +253,11 @@ oe-spectrogram {
 
   .next-page-button {
     order: 1;
+  }
+
+  .decision-controls-left,
+  .decision-controls,
+  .decision-controls-right {
+    justify-content: center !important;
   }
 }

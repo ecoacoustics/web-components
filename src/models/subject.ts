@@ -2,7 +2,7 @@ import { Classification } from "./decisions/classification";
 import { Decision, DecisionOptions } from "./decisions/decision";
 import { Verification } from "./decisions/verification";
 import { Tag, TagName } from "./tag";
-import { Constructor, EnumValue } from "../helpers/types/advancedTypes";
+import { Constructor, EnumValue, ObjectRecord } from "../helpers/types/advancedTypes";
 import { NewTag } from "./decisions/newTag";
 import { decisionNotRequired, OptionalDecision } from "./decisions/decisionNotRequired";
 import { SubjectChange } from "verification-grid/verification-grid";
@@ -15,7 +15,7 @@ export enum AudioCachedState {
 }
 
 /** Original unprocessed data from the data source */
-export type Subject = Record<PropertyKey, unknown>;
+export type Subject = ObjectRecord;
 
 const columnNamespace = "oe_";
 
@@ -23,9 +23,9 @@ const columnNamespace = "oe_";
 // it is possible for users to input a csv file that already has a column name
 // to prevent column name collision, we prepend all the fields that we add
 // to the original data input with "oe"
-const tagColumnName = `${columnNamespace}tag`;
-const confirmedColumnName = `${columnNamespace}confirmed`;
-const newTagColumnName = `${columnNamespace}new_tag`;
+export const tagColumnName = `${columnNamespace}tag`;
+export const confirmedColumnName = `${columnNamespace}confirmed`;
+export const newTagColumnName = `${columnNamespace}new_tag`;
 type ClassificationColumn = `${typeof columnNamespace}${string}`;
 
 export interface DownloadableResult extends Subject {
@@ -111,6 +111,31 @@ export class SubjectWrapper {
     }
   }
 
+  public hasOutstandingDecisions(
+    requiresVerification: boolean,
+    requiresNewTag: boolean,
+    requiredClassifications: Tag[] = [],
+  ): boolean {
+    // each subject can only have one verification decision
+    const isMissingVerification = requiresVerification && this.verification === undefined;
+    if (isMissingVerification) {
+      return true;
+    }
+
+    const isMissingNewTag = requiresNewTag && this.newTag === undefined;
+    if (isMissingNewTag) {
+      return true;
+    }
+
+    for (const tag of requiredClassifications) {
+      if (!this.classifications.has(tag.text)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /**
    * @description
    * Compares the subjects decisions to an array of required tags and
@@ -174,16 +199,14 @@ export class SubjectWrapper {
       // decision.
       // This means that the SubjectChange describes if a decision was
       // overwritten as part of setting the decision to "not required".
-      const change: SubjectChange = this.verification === decisionNotRequired || !this.verification
-        ? {}
-        : { verification: decisionNotRequired };
+      const change: SubjectChange =
+        this.verification === decisionNotRequired || !this.verification ? {} : { verification: decisionNotRequired };
 
       this.verification = decisionNotRequired;
       return change;
     } else if (decision === NewTag) {
-      const change: SubjectChange = this.newTag === decisionNotRequired || !this.newTag
-        ? {}
-        : { newTag: decisionNotRequired };
+      const change: SubjectChange =
+        this.newTag === decisionNotRequired || !this.newTag ? {} : { newTag: decisionNotRequired };
 
       this.newTag = decisionNotRequired;
       return change;
@@ -210,16 +233,19 @@ export class SubjectWrapper {
       }
 
       return this.verification?.confirmed === queryingDecision.confirmed;
+    } else if (queryingDecision instanceof Classification) {
+      const matchingClassification = this.classifications.get(queryingDecision.tag.text);
+      if (matchingClassification === undefined) {
+        return false;
+      }
+
+      const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
+      const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
+      return hasMatchingTag && hasMatchingDecision;
     }
 
-    const matchingClassification = this.classifications.get(queryingDecision.tag.text);
-    if (matchingClassification === undefined) {
-      return false;
-    }
-
-    const hasMatchingTag = queryingDecision.tag.text === matchingClassification.tag.text;
-    const hasMatchingDecision = queryingDecision.confirmed === matchingClassification.confirmed;
-    return hasMatchingTag && hasMatchingDecision;
+    // TODO: Handle the newTag decision type
+    return false;
   }
 
   public toDownloadable(): Partial<DownloadableResult> {
@@ -229,7 +255,7 @@ export class SubjectWrapper {
     const verificationColumns =
       this.verification && this.verification !== decisionNotRequired
         ? {
-            [tagColumnName]: this.verification.tag.text,
+            [tagColumnName]: this.verification.tag?.text,
             [confirmedColumnName]: this.verification.confirmed,
           }
         : {};
@@ -237,7 +263,7 @@ export class SubjectWrapper {
     const newTagColumns =
       this.newTag && this.newTag !== decisionNotRequired
         ? {
-            [newTagColumnName]: this.newTag.tag.text,
+            [newTagColumnName]: this.newTag.tag?.text,
           }
         : {};
 
@@ -265,11 +291,14 @@ export class SubjectWrapper {
   }
 
   private addVerification(model: Verification): SubjectChange {
-    // when a verification decision is made, it doesn't have a tag on the model.
+    // When a verification decision is made, it might not have a tag.
     // This is because the tag is usually associated with the subject, which the
     // verification button cannot know about when it makes the verification
-    // model
-    const populatedVerification = model.withTag(this.tag);
+    // model.
+    // Therefore, if there is no tag on the verification model, we populate it
+    // with the subjects tag.
+    const populatedVerification = model.tag ? model : model.withTag(this.tag);
+
     this.verification = populatedVerification;
 
     return { verification: populatedVerification };

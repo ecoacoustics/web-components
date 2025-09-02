@@ -1,19 +1,44 @@
-import { Locator, MatcherReturnType } from "@playwright/test";
+import { ConsoleMessage, Locator, MatcherReturnType, Page } from "@playwright/test";
 import { expect as playwrightExpect, test as base } from "@sand4rt/experimental-ct-web";
 
-async function toHaveTrimmedText(received: Locator, expected: string): Promise<MatcherReturnType> {
-  const elementText = await received.textContent();
+/** A tag that can be used to expect a console error */
+export const expectConsoleError = "@console-error";
 
-  if (elementText === null) {
+// TODO: We should make this assertion a "web first" assertion so that it obeys
+// the Playwright retry mechanism and will run Playwright accessibility checks.
+/**
+ * Similar to the toHaveText() Playwright assertion but trims the elements
+ * leading and trailing whitespace before making an assertion.
+ *
+ * Similar to the Playwright toHaveText() assertion, this assertion will
+ * also accept an array of expected strings for each element that the
+ * locator matches.
+ */
+async function toHaveTrimmedText(received: Locator, expected: string | string[]): Promise<MatcherReturnType> {
+  const arrayExpected = Array.isArray(expected) ? expected : [expected];
+  const elementText = await received.allTextContents();
+
+  if (elementText.length === 0) {
     return {
       pass: false,
-      message: () => `expected ${received} to have trimmed text, but the element was not found`,
+      message: () => `expected element to have trimmed text, but the element was not found`,
     };
   }
 
-  const expectedText = expected.trim();
-  const realizedText = elementText.trim();
-  const pass = expectedText === realizedText;
+  const expectedText = arrayExpected.map((text) => text.trim());
+  const realizedText = elementText.map((text) => text.trim());
+
+  if (expectedText.length !== realizedText.length) {
+    return {
+      pass: false,
+      message: () => `expected locator to match ${expectedText.length} items, but found ${realizedText.length} items`,
+    };
+  }
+
+  const pass = expectedText.every((expected, index) => {
+    const realized = realizedText[index];
+    return realized === expected;
+  });
 
   return {
     pass,
@@ -85,6 +110,13 @@ export async function toHaveSlottedText(locator: Locator, expectedText: string):
     return slotText;
   });
 
+  if (realizedText === null) {
+    return {
+      pass: false,
+      message: () => "expected element to have slotted text, but the element was not found",
+    };
+  }
+
   const pass = realizedText === expectedText;
 
   return {
@@ -93,19 +125,84 @@ export async function toHaveSlottedText(locator: Locator, expectedText: string):
   };
 }
 
+/**
+ * Asserts that invoking a callback of actions results in a specific console
+ * error.
+ */
+export async function toConsoleError(
+  callback: () => Promise<unknown>,
+  page: Page,
+  expectedError: string,
+): Promise<MatcherReturnType> {
+  let errorResolver: (value: unknown) => void;
+  const errorPromise = new Promise<unknown>((resolve) => {
+    errorResolver = resolve;
+  });
+
+  const pageErrorHandler = (msg: ConsoleMessage) => {
+    if (msg.type() === "error") {
+      // If the expected error is found, we remove the listener to prevent
+      // further errors from being caught.
+      page.off("console", pageErrorHandler);
+      errorResolver(msg.text());
+    }
+  };
+
+  page.on("console", pageErrorHandler);
+
+  // We do not wrap the callback in a try-catch block so that thrown errors
+  // still cause the test to fail.
+  await callback();
+
+  const consoleErrorMessage = await errorPromise;
+
+  return {
+    pass: consoleErrorMessage === expectedError,
+    message: () => `Expected console error '${expectedError}'. Found '${consoleErrorMessage}'`,
+  };
+}
+
 export const expect = playwrightExpect.extend({
   toHaveTrimmedText,
   toHaveLayoutScreenshot,
   toHaveSlottedText,
+  toConsoleError,
 });
 
 export const test = base.extend({
-  page: async ({ page }, use) => {
-    // sometimes our components throw errors. In these cases, we want to fail
-    // the test immediately
+  page: async ({ page }, use, testInfo) => {
+    // Sometimes our components throw errors. In these cases, we want to fail
+    // the test immediately.
+    //
+    // Note that page errors should not be expected because they are hard errors
+    // where we purposely crash the program to prevent generating bad results.
+    // Throwing hard errors should only ever be used as a last resort where we
+    // detected an unexpected state that we cannot recover from.
+    // If we know that the program can enter into an error state, we should
+    // throw a descriptive console error instead and attempt to recover if
+    // possible.
+    //
+    // If you really need to expect a page error, you can use test.fail() and
+    // expect().toThrow()
     page.on("pageerror", (error) => {
-      throw new Error(`Page error occurred: "${error.message}"`);
+      throw new Error(`Page error occurred: "${error} ${error.stack}"`);
     });
+
+    // Listening to console messages is a custom Playwright feature that allows
+    // us to catch soft-failures in the browser console.
+    // Note that we usually try to recover from console errors, but it means
+    // that we have ended up in an unexpected state.
+    // see: https://playwright.dev/docs/api/class-consolemessage
+    if (!testInfo.tags.includes(expectConsoleError)) {
+      page.on("console", (msg) => {
+        if (msg.type() === "error") {
+          const loc = msg.location();
+          const where = loc.url ? ` at ${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : "";
+          throw new Error(`Console error occurred${where}: "${msg.text()}"`);
+        }
+      });
+    }
+
     await use(page);
   },
 });
