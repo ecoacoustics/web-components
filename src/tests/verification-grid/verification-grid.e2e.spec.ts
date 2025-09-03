@@ -2110,6 +2110,20 @@ test.describe("decision meter", () => {
       const realizedTooltips = await fixture.progressMeterTooltips();
       expect(realizedTooltips).toEqual(expectedTooltips);
     });
+
+    // Because skip decisions are handled slightly differently and there is a
+    // bit of tech debt from the days when they weren't an actual decision
+    // component, we have seen bugs where only skip decisions fail to show
+    // correctly in the progress meter.
+    test("should show skip decisions correctly", async ({ fixture }) => {
+      await fixture.makeSkipDecision();
+
+      const realizedColors = await fixture.progressMeterColors();
+      expect(realizedColors).toEqual([await fixture.skipColor()]);
+
+      const progressMeterTooltips = await fixture.progressMeterTooltips();
+      expect(progressMeterTooltips).toEqual(["verification: koala (skip)"]);
+    });
   });
 
   test.describe("mixed classification and verification tasks", () => {

@@ -242,6 +242,23 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     return change;
   }
 
+  // TODO: The hasVerificationTask, hasNewTagTask and requiredClassificationTags
+  // parameters should be derived from this verification grid tiles model
+  // instead of requiring the verification grid tile to provide them.
+  // By moving these parameters to be derived from the model, we would isolate
+  // the decision meter to this component, meaning that the verification grid
+  // would not need to know about the required decisions for each tile.
+  public skipUndecided(
+    hasVerificationTask: boolean,
+    hasNewTagTask: boolean,
+    requiredClassificationTags: Tag[],
+  ): SubjectChange {
+    const skipChanges = this.model.skipUndecided(hasVerificationTask, hasNewTagTask, requiredClassificationTags);
+    this.requestUpdate();
+
+    return skipChanges;
+  }
+
   private hasAlternativeShortcut(shortcut: string): shortcut is keyof typeof shortcutTranslation {
     return shortcut in shortcutTranslation;
   }
