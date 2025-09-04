@@ -1936,7 +1936,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         // If the user does have a subsection, we only apply the skip decision to
         // the selected tiles.
         if (decision.confirmed === DecisionOptions.SKIP) {
-          const skipChanges = tile.model.skipUndecided(
+          const skipChanges = tile.skipUndecided(
             this.hasVerificationTask(),
             this.hasNewTagTask(),
             this.requiredClassificationTags,
