@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.1](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.0...web-components-v5.3.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* Skip decisions not showing in progress meter ([#495](https://github.com/ecoacoustics/web-components/issues/495)) ([58cc2e7](https://github.com/ecoacoustics/web-components/commit/58cc2e7e19f3a8bcde54ce565a35f7c1a77c1012)), closes [#494](https://github.com/ecoacoustics/web-components/issues/494)
+
 ## [5.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.2...web-components-v5.3.0) (2025-09-02)
 
 
