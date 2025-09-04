@@ -243,7 +243,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   // TODO: The hasVerificationTask, hasNewTagTask and requiredClassificationTags
-  // parameters should be derived from this verification grid tiles model
+  // parameters should be derived from this verification grid tile's model
   // instead of requiring the verification grid tile to provide them.
   // By moving these parameters to be derived from the model, we would isolate
   // the decision meter to this component, meaning that the verification grid
