@@ -87,10 +87,10 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   private slides: BootstrapSlide[] = [];
 
-  @query("#dialog-element")
+  @query("#dialog-element", true)
   private dialogElement!: HTMLDialogElement;
 
-  @query("#tutorial-slide-carousel")
+  @query("#tutorial-slide-carousel", true)
   private tutorialSlideCarouselElement!: SlCarousel;
 
   private isAdvancedDialog = false;

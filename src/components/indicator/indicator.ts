@@ -27,7 +27,7 @@ export class IndicatorComponent extends ChromeProvider(LitElement) {
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
-  @query("#indicator-svg")
+  @query("#indicator-svg", true)
   private indicatorSvg!: Readonly<SVGElement>;
 
   // TODO: investigate why I am de-referencing the signal here. Wouldn't it be

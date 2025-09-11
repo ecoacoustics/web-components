@@ -10,7 +10,21 @@
   <body>
     <oe-verification-grid id="verification-grid" autofocus>
       <template>
-        <oe-info-card></oe-info-card>
+        <div slot="header">
+          <oe-tag-template></oe-tag-template>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <div slot="footer">
+          <oe-task-meter></oe-task-meter>
+          <oe-info-card></oe-info-card>
+        </div>
       </template>
 
       <oe-verification verified="true" shortcut="Y"></oe-verification>

@@ -42,7 +42,7 @@ export class VerificationComponent extends DecisionComponent {
   @property({ type: String })
   public shortcut = "";
 
-  @query("#decision-button")
+  @query("#decision-button", true)
   private decisionButton!: HTMLButtonElement;
 
   public get decisionConstructor(): Constructor<Decision> {

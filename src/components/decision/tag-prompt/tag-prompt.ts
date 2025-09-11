@@ -23,10 +23,10 @@ export class TagPromptComponent extends DecisionComponent {
   @property({ type: Function, converter: callbackConverter })
   public search: TypeaheadCallback<Tag> = () => [];
 
-  @query("#tag-popover")
+  @query("#tag-popover", true)
   private readonly tagPopover!: HTMLDialogElement;
 
-  @query("#tag-typeahead")
+  @query("#tag-typeahead", true)
   private readonly tagTypeahead!: TypeaheadComponent;
 
   public get decisionConstructor(): Constructor<Decision> {

@@ -1,13 +1,13 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
-import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
+import { customElement, property, query, queryAssignedElements, state } from "lit/decorators.js";
 import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
-import { AudioModel } from "../../models/recordings";
+import { AudioModel, OriginalAudioRecording } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
 import { OeResizeObserver } from "../../helpers/resizeObserver";
 import { AudioHelper } from "../../helpers/audio/audio";
 import { WindowFunctionName } from "fft-windowing-ts";
-import { IAudioInformation, PowerTwoWindowSize, SpectrogramOptions } from "../../helpers/audio/models";
+import { PowerTwoWindowSize } from "../../helpers/audio/models";
 import { booleanConverter, enumConverter } from "../../helpers/attributes";
 import { HIGH_ACCURACY_TIME_PROCESSOR_NAME } from "../../helpers/audio/messages";
 import { ChromeHost } from "../../mixins/chrome/chromeHost/chromeHost";
@@ -15,18 +15,17 @@ import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFram
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
 import { ColorMapName } from "../../helpers/audio/colors";
+import { SpectrogramCanvasScale, SpectrogramOptions } from "./spectrogramOptions";
+import { AudioInformation } from "../../helpers/audio/audioInformation";
+import { consume } from "@lit/context";
+import { verificationGridContext } from "../../helpers/constants/contextTokens";
+import { VerificationGridSettings } from "verification-grid/verification-grid";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
 export interface IPlayEvent {
   play: boolean;
   keyboardShortcut: boolean;
-}
-
-export enum SpectrogramCanvasScale {
-  STRETCH = "stretch",
-  NATURAL = "natural",
-  ORIGINAL = "original",
 }
 
 // TODO: move this to a different place
@@ -62,12 +61,29 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
 
-  private static readonly defaultWindowSize = 512;
+  // TODO: We might want to make this mutable from userspace, but that would
+  // require a lot of schema validation, reactivity hooks and testing what
+  // happens if the options object is re-created currently worth the time
+  // investment.
+  public static readonly defaultOptions: Readonly<SpectrogramOptions> = new SpectrogramOptions(
+    512,
+    0,
+    "hann",
+    false,
+    0,
+    1,
+    "grayscale",
+    SpectrogramCanvasScale.STRETCH,
+  );
 
   public constructor() {
     super();
     this.canvasResizeCallback = newAnimationIdentifier("canvas-resize");
   }
+
+  @consume({ context: verificationGridContext, subscribe: true })
+  @state()
+  private gridSettings?: VerificationGridSettings;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -99,49 +115,82 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   })
   public scaling: SpectrogramCanvasScale = SpectrogramCanvasScale.STRETCH;
 
-  /** The size of the fft window */
+  /**
+   * The size of the fft window
+   *
+   * @default 512
+   */
   @property({ type: Number, attribute: "window-size", reflect: true })
-  public windowSize: PowerTwoWindowSize = SpectrogramComponent.defaultWindowSize;
+  public windowSize?: PowerTwoWindowSize;
 
-  /** The window function to use for the spectrogram */
+  /**
+   * The window function to use for the spectrogram
+   *
+   * @default "hann"
+   */
   @property({ type: String, attribute: "window-function", reflect: true })
-  public windowFunction: WindowFunctionName = "hann";
+  public windowFunction?: WindowFunctionName;
 
-  /** The amount of overlap between fft windows */
+  /**
+   * The amount of overlap between fft windows
+   *
+   * @default 0
+   */
   @property({ type: Number, attribute: "window-overlap", reflect: true })
-  public windowOverlap = 0;
+  public windowOverlap?: number;
 
-  /** A boolean attribute representing if the spectrogram should be shown in mel-scale */
+  /**
+   * A boolean attribute representing if the spectrogram should be shown in
+   * mel-scale.
+   *
+   * @default false
+   */
   @property({ type: Boolean, attribute: "mel-scale", converter: booleanConverter })
-  public melScale = false;
+  public melScale?: boolean;
 
-  /** A color map to use for the spectrogram */
+  /**
+   * A color map to use for the spectrogram
+   *
+   * @default "grayscale"
+   */
   @property({ type: String, attribute: "color-map", reflect: true })
-  public colorMap: ColorMapName = "grayscale";
+  public colorMap?: ColorMapName;
 
-  /** An offset (seconds) from the start of a larger audio recording */
+  /**
+   * An increase in brightness
+   *
+   * @default 0
+   */
   @property({ type: Number, reflect: true })
-  public offset = 0;
+  public brightness?: number;
 
-  /** An increase in brightness */
+  /**
+   * A scalar multiplier that should be applied to fft values
+   *
+   * @default 1
+   */
   @property({ type: Number, reflect: true })
-  public brightness = 0;
+  public contrast?: number;
 
-  /** A scalar multiplier that should be applied to fft values */
+  /**
+   * An offset (seconds) from the start of a larger audio recording
+   *
+   * @default 0
+   */
   @property({ type: Number, reflect: true })
-  public contrast = 1;
+  public offset: Seconds = 0;
 
   @queryAssignedElements({ selector: "source" })
-  public slottedSourceElements!: ReadonlyArray<HTMLElement>;
+  private slottedSourceElements!: ReadonlyArray<HTMLElement>;
 
-  @query("#media-element")
+  @query("#spectrogram-container", true)
+  private spectrogramContainer!: Readonly<HTMLDivElement>;
+
+  @query("#media-element", true)
   private mediaElement!: HTMLMediaElement;
 
-  @query("canvas")
+  @query("canvas", true)
   private canvas!: HTMLCanvasElement;
-
-  @query("#spectrogram-container")
-  private spectrogramContainer!: Readonly<HTMLDivElement>;
 
   // TODO: we might want to make this signal writable when we add support for
   // indicator handle seeking
@@ -165,8 +214,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this._currentTime.value = value;
   }
 
-  private readonly _currentTime = signal<Seconds>(this.offset);
-
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
   // you should use the signals exported by the unitConverter
   //
@@ -180,6 +227,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private readonly audio = signal<AudioModel | undefined>(undefined);
   private readonly renderCanvasSize = signal<RenderCanvasSize>({ width: 0, height: 0 });
   private readonly _unitConverters = signal<UnitConverter | undefined>(undefined);
+  private readonly _currentTime = signal<Seconds>(this.offset);
 
   // we have a getter for the unit converters property so that the internal
   // typing of the signal can be mutable while the exported signal is readonly
@@ -202,17 +250,43 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private doneFirstRender = false;
 
   public get spectrogramOptions(): SpectrogramOptions {
+    const verificationGridSettings = this.gridSettings?.spectrogramOptions?.value;
+
+    const windowSize =
+      this.windowSize ?? verificationGridSettings?.windowSize ?? SpectrogramComponent.defaultOptions.windowSize;
+    const windowOverlap =
+      this.windowOverlap ??
+      verificationGridSettings?.windowOverlap ??
+      SpectrogramComponent.defaultOptions.windowOverlap;
+    const windowFunction =
+      this.windowFunction ??
+      verificationGridSettings?.windowFunction ??
+      SpectrogramComponent.defaultOptions.windowFunction;
+    const melScale =
+      this.melScale ?? verificationGridSettings?.melScale ?? SpectrogramComponent.defaultOptions.melScale;
+    const brightness =
+      this.brightness ?? verificationGridSettings?.brightness ?? SpectrogramComponent.defaultOptions.brightness;
+    const contrast =
+      this.contrast ?? verificationGridSettings?.contrast ?? SpectrogramComponent.defaultOptions.contrast;
+    const colorMap =
+      this.colorMap ?? verificationGridSettings?.colorMap ?? SpectrogramComponent.defaultOptions.colorMap;
+    const scaling = this.scaling ?? verificationGridSettings?.scaling ?? SpectrogramComponent.defaultOptions.scaling;
+
     return new SpectrogramOptions(
-      this.windowSize,
-      this.windowOverlap,
-      this.windowFunction,
-      this.melScale,
-      this.brightness,
-      this.contrast,
-      this.colorMap,
+      windowSize,
+      windowOverlap,
+      windowFunction,
+      melScale,
+      brightness,
+      contrast,
+      colorMap,
+      scaling,
     );
   }
 
+  // TODO: This is technically public facing, so we should validate using some
+  // sort of schema validation.
+  // see: https://github.com/ecoacoustics/web-components/issues/499
   public set spectrogramOptions(options: SpectrogramOptions) {
     this.windowSize = options.windowSize;
     this.windowOverlap = options.windowOverlap;
@@ -223,8 +297,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.colorMap = options.colorMap;
   }
 
-  public get possibleWindowSizes(): ReadonlyArray<number> {
-    return [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
+  public get possibleWindowSizes() {
+    return [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as const satisfies PowerTwoWindowSize[];
   }
 
   public get possibleWindowOverlaps(): ReadonlyArray<number> {
@@ -312,11 +386,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       const newWindowSize = this.windowSize;
 
       if (!isValidNumber(newWindowSize) || !isPowerOfTwo(newWindowSize) || newWindowSize < 1) {
-        if (typeof oldWindowSize === "number" && oldWindowSize > 0) {
+        if (isValidNumber(oldWindowSize) && isPowerOfTwo(oldWindowSize) && oldWindowSize > 0) {
           // TODO: Add upper bound check
           this.windowSize = oldWindowSize as PowerTwoWindowSize;
         } else {
-          this.windowSize = SpectrogramComponent.defaultWindowSize;
+          this.windowSize = undefined;
         }
 
         console.error(
@@ -342,7 +416,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }
 
       if (this.unitConverters.value && change.has("melScale")) {
-        this.unitConverters.value.melScale.value = this.melScale;
+        const newMelScale =
+          this.melScale ??
+          this.gridSettings?.spectrogramOptions?.value?.melScale ??
+          SpectrogramComponent.defaultOptions.melScale;
+
+        this.unitConverters.value.melScale.value = newMelScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
       this.renderSpectrogram();
@@ -361,7 +440,10 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     );
 
     const info = await this.audioHelper.connect(this.renderedSource, this.canvas, this.spectrogramOptions);
-    const originalRecording = { duration: info.duration, startOffset: this.offset };
+    const originalRecording: OriginalAudioRecording = {
+      duration: info.duration,
+      startOffset: this.offset,
+    };
 
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
@@ -390,7 +472,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }),
     );
 
-    const info: IAudioInformation = await this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions);
+    const info: AudioInformation = await this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions);
     const originalRecording = { duration: info.duration, startOffset: this.offset };
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
@@ -467,6 +549,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       throw new Error("Attempted to initialize unit converter before creating audio model");
     }
 
+    const melScale =
+      this.melScale ??
+      this.gridSettings?.spectrogramOptions?.value?.melScale ??
+      SpectrogramComponent.defaultOptions.melScale;
+
     this._unitConverters.value = new UnitConverter(
       this.renderWindow,
       this.renderCanvasSize,
@@ -480,7 +567,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // the "as any" cast and gracefully handle errors where the audio model
       // suddenly destructs itself
       this.audio as any,
-      signal(this.melScale),
+      signal(melScale),
     );
   }
 
@@ -635,7 +722,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
-    const invalidationKeys = ["src", "slottedSourceElements"] as const satisfies (keyof SpectrogramComponent)[];
+    const invalidationKeys = ["src", "slottedSourceElements" as any] as const satisfies (keyof SpectrogramComponent)[];
     return invalidationKeys.some((key) => change.has(key));
   }
 

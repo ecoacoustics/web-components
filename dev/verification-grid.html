@@ -18,6 +18,17 @@
 
     <oe-verification-grid id="verification-grid" autofocus>
       <template>
+        <div slot="header">
+          <oe-tag-template></oe-tag-template>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
         <div>
           <h1>Large text test</h1>
 
@@ -25,6 +36,11 @@
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
             voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
           </p>
+        </div>
+
+        <div slot="footer">
+          <oe-task-meter></oe-task-meter>
+          <oe-info-card></oe-info-card>
         </div>
       </template>
 

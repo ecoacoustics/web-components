@@ -138,7 +138,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @property({ type: Boolean, converter: booleanConverter })
   public readonly = true;
 
-  @query("#annotations-surface")
+  @query("#annotations-surface", true)
   private annotationsSurface!: HTMLDivElement;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })

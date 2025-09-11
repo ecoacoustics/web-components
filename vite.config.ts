@@ -62,29 +62,36 @@ export default defineConfig({
         // in a single barrel file. This is typically the entrypoint for CDN's
         components: "./src/index.ts",
 
-        // each entry point represents a component, helper, or service that can
-        // be imported individually without importing all components
+        // Each entry point represents a component, helper, or service that can
+        // be imported individually without importing all components.
+        "components/verification-grid": "./src/components/verification-grid/verification-grid.ts",
         "components/media-controls": "./src/components/media-controls/media-controls.ts",
         "components/spectrogram": "./src/components/spectrogram/spectrogram.ts",
         "components/indicator": "./src/components/indicator/indicator.ts",
-        "components/logger": "./src/components/logger/logger.ts",
         "components/axes": "./src/components/axes/axes.ts",
-        "components/verification-grid": "./src/components/verification-grid/verification-grid.ts",
-        "components/verification-grid-tile": "./src/components/verification-grid-tile/verification-grid-tile.ts",
-        "components/typeahead": "./src/components/typeahead/typeahead.ts",
-        "components/info-card": "./src/components/info-card/info-card.ts",
+
+        "components/tag-template": "./src/components/tag-template/tag-template.ts",
         "components/data-source": "./src/components/data-source/data-source.ts",
-        "components/bootstrap-modal": "./src/components/bootstrap-modal/bootstrap-modal.ts",
-        "components/decision": "./src/components/decision/decision.ts",
+        "components/task-meter": "./src/components/task-meter/task-meter.ts",
+
         "components/classification": "./src/components/decision/classification/classification.ts",
         "components/verification": "./src/components/decision/verification/verification.ts",
-        "components/skip": "./src/components/decision/skip/skip.ts",
         "components/tag-prompt": "./src/components/decision/tag-prompt/tag-prompt.ts",
-        "components/verification-grid-settings": "./src/components/verification-grid-settings/verification-grid-settings.ts",
-        "components/progress-bar": "./src/components/progress-bar/progress-bar.ts",
+        "components/skip": "./src/components/decision/skip/skip.ts",
+
+        "components/info-card": "./src/components/info-card/info-card.ts",
+
         "components/annotate": "./src/components/annotate/annotate.ts",
         "components/annotation": "./src/components/annotation/annotation.ts",
         "components/tag": "./src/components/tag/tag.ts",
+
+        "components/logger": "./src/components/logger/logger.ts",
+        "components/verification-grid-tile": "./src/components/verification-grid-tile/verification-grid-tile.ts",
+        "components/typeahead": "./src/components/typeahead/typeahead.ts",
+        "components/bootstrap-modal": "./src/components/bootstrap-modal/bootstrap-modal.ts",
+        "components/decision": "./src/components/decision/decision.ts",
+        "components/verification-grid-settings": "./src/components/verification-grid-settings/verification-grid-settings.ts",
+        "components/progress-bar": "./src/components/progress-bar/progress-bar.ts",
 
         "components/helpers/constants/contextTokens": "./src/helpers/constants/contextTokens.ts",
         "models/decisions/decisionNotRequired": "./src/models/decisions/decisionNotRequired.ts",

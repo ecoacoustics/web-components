@@ -1,27 +1,19 @@
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
-import { consume, provide } from "@lit/context";
+import { provide } from "@lit/context";
 import { ALT_KEY, ENTER_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
 import { SubjectWrapper } from "../../models/subject";
-import { Decision, DecisionOptions } from "../../models/decisions/decision";
-import { SignalWatcher, watch } from "@lit-labs/preact-signals";
-import {
-  SubjectChange,
-  VerificationGridInjector,
-  VerificationGridSettings,
-} from "../verification-grid/verification-grid";
-import { when } from "lit/directives/when.js";
-import { repeat } from "lit/directives/repeat.js";
+import { Decision } from "../../models/decisions/decision";
+import { SubjectChange } from "../verification-grid/verification-grid";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
-import { ifDefined } from "lit/directives/if-defined.js";
-import { gridTileContext, injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import { gridTileContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
-import { WithShoelace } from "../../mixins/withShoelace";
-import { decisionNotRequired } from "../../models/decisions/decisionNotRequired";
+import { templateContent } from "lit/directives/template-content.js";
+import { handledEvents } from "../../patches/addEventListener";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
@@ -34,6 +26,11 @@ export type RequiredDecision = RequiredVerification | RequiredClassification | R
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
 export type LoadedEvent = CustomEvent;
+
+export interface VerificationGridTileContext {
+  model: SubjectWrapper;
+  requiredDecisions: RequiredDecision[];
+}
 
 interface OverflowEventDetail {
   isOverlapping: boolean;
@@ -61,32 +58,30 @@ const shortcutTranslation = {
  * probably not be used by users
  * It can also manage the selection state
  *
- * @slot - The template to be rendered inside the grid tile
+ * @slot tile-header - The template to be rendered inside the grid tile
+ * @slot - The default slot used to render the main content of the grid tile
  *
  * @cssproperty [--decision-color] - The border color that is applied when a
  * decision is being shown
  *
  * @event oe-selected
+ * @event oe-tile-loading
  * @event oe-tile-loaded
  */
 @customElement("oe-verification-grid-tile")
-export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(AbstractComponent(LitElement))) {
+export class VerificationGridTileComponent extends AbstractComponent(LitElement) {
   public static styles = [unsafeCSS(verificationGridTileStyles), decisionColors];
 
   public static readonly selectedEventName = "oe-selected";
+  public static readonly loadingEventName = "oe-tile-loading";
   public static readonly loadedEventName = "oe-tile-loaded";
 
+  // Because this is not a user-facing component, I do not expect that this
+  // component will be used outside of a verification grid, and we can therefore
+  // ensure that the tile context is always provided.
   @provide({ context: gridTileContext })
   @property({ attribute: false })
-  public model!: SubjectWrapper;
-
-  @consume({ context: verificationGridContext, subscribe: true })
-  @state()
-  private settings!: VerificationGridSettings;
-
-  @consume({ context: injectionContext, subscribe: true })
-  @state()
-  private injector!: VerificationGridInjector;
+  public tile!: VerificationGridTileContext;
 
   @property({ attribute: false, type: Boolean })
   public showKeyboardShortcuts = false;
@@ -115,11 +110,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   @property({ attribute: false, type: Boolean })
   public isOverlapping = false;
 
+  @property({ attribute: false, type: Object })
+  public tileTemplate!: HTMLTemplateElement;
+
   @query("oe-spectrogram")
   private spectrogram!: SpectrogramComponent;
 
-  @query("#slot-wrapper")
-  private slotWrapper!: HTMLDivElement;
+  @query("#template-content", true)
+  private templateContent!: HTMLDivElement;
 
   @query("#contents-wrapper")
   private contentsWrapper!: HTMLDivElement;
@@ -135,12 +133,12 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   public get taskCompleted(): boolean {
     return this.requiredDecisions.every((requiredDecision) => {
       if (requiredDecision === requiredVerificationPlaceholder) {
-        return this.model.verification !== undefined;
+        return this.tile.model.verification !== undefined;
       } else if (requiredDecision === requiredNewTagPlaceholder) {
-        return this.model.newTag !== undefined;
+        return this.tile.model.newTag !== undefined;
       }
 
-      return this.model.classifications.has(requiredDecision.text);
+      return this.tile.model.classifications.has(requiredDecision.text);
     });
   }
 
@@ -186,14 +184,14 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     //
     // we observe the content wrapper because it can overflow when the
     // spectrograms minimum height/width is reached
-    this.intersectionObserver.observe(this.slotWrapper);
+    this.intersectionObserver.observe(this.templateContent);
     this.intersectionObserver.observe(this.contentsWrapper);
   }
 
   // TODO: check if the model has updated, and conditionally change the spectrograms src
   public willUpdate(): void {
-    if (this.spectrogram && this.model?.url) {
-      this.spectrogram.src = this.model.url;
+    if (this.spectrogram && this.tile.model.url) {
+      this.spectrogram.src = this.tile.model.url;
     }
 
     if (this.index > shortcutOrder.length) {
@@ -213,7 +211,8 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public updateSubject(subject: SubjectWrapper): void {
-    this.model = subject;
+    this.tile.model = subject;
+    this.tile.requiredDecisions = this.requiredDecisions;
   }
 
   public resetSettings(): void {
@@ -223,7 +222,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public addDecision(decision: Decision): SubjectChange {
-    const change = this.model.addDecision(decision);
+    const change = this.tile.model.addDecision(decision);
 
     // because the model is an object (not a primitive), modifying a property
     // does not cause the re-render which is needed to display the new decision
@@ -236,7 +235,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   public removeDecision(decision: Decision): SubjectChange {
-    const change = this.model.removeDecision(decision);
+    const change = this.tile.model.removeDecision(decision);
     this.requestUpdate();
 
     return change;
@@ -253,7 +252,7 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     hasNewTagTask: boolean,
     requiredClassificationTags: Tag[],
   ): SubjectChange {
-    const skipChanges = this.model.skipUndecided(hasVerificationTask, hasNewTagTask, requiredClassificationTags);
+    const skipChanges = this.tile.model.skipUndecided(hasVerificationTask, hasNewTagTask, requiredClassificationTags);
     this.requestUpdate();
 
     return skipChanges;
@@ -321,16 +320,20 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
   }
 
   private dispatchSelectedEvent(event: PointerEvent | KeyboardEvent): void {
-    const ignoreTargets = ["button", "oe-info-card", "a"];
-    const eventTarget = event.target;
-    if (!(eventTarget instanceof HTMLElement)) {
-      return;
-    }
+    handledEvents.delete(this.contentsWrapper);
 
-    const targetTag = eventTarget.tagName;
-
-    if (ignoreTargets.includes(targetTag.toLocaleLowerCase())) {
-      return;
+    /*
+      interactionRecorder.hasAnyParent(event.target)
+      Iterate over the collection of elements we have, we delete it from the
+      set and return true.
+    */
+    for (const [emitterElement, composedPaths] of handledEvents) {
+      for (const pathElement of composedPaths) {
+        if (pathElement === this.contentsWrapper) {
+          handledEvents.delete(emitterElement);
+          return;
+        }
+      }
     }
 
     this.dispatchEvent(
@@ -353,174 +356,35 @@ export class VerificationGridTileComponent extends SignalWatcher(WithShoelace(Ab
     `;
   }
 
-  private classificationMeterTemplate(requiredTag: Tag): HTMLTemplateResult {
-    const decision = this.model.classifications.get(requiredTag.text);
-    const decisionText = decision ? decision.confirmed : "no decision";
-
-    const color: string | undefined = decision ? this.injector.colorService(decision) : undefined;
-
-    return this.meterSegmentTemplate(`${requiredTag.text} (${decisionText})`, color);
-  }
-
-  private verificationMeterTemplate(): HTMLTemplateResult {
-    const currentVerificationModel = this.model.verification;
-
-    let decisionText = "no decision";
-    if (currentVerificationModel === decisionNotRequired) {
-      decisionText = "not required";
-    } else if (currentVerificationModel) {
-      decisionText = currentVerificationModel.confirmed;
-    }
-
-    // Sometimes there is no tag. On the subject. In this case, we have to
-    // change the tooltip a bit.
-    const verificationTagText = (this.model.verification as any)?.tag?.text;
-    const tooltipText = verificationTagText
-      ? `verification: ${verificationTagText} (${decisionText})`
-      : `verification: ${decisionText}`;
-
-    // if there is no verification decision on the tiles subject model, then
-    // return the verification meter segment with no color
-    if (!currentVerificationModel) {
-      return this.meterSegmentTemplate(tooltipText);
-    }
-
-    const meterColor = this.injector.colorService(currentVerificationModel);
-    return this.meterSegmentTemplate(tooltipText, meterColor);
-  }
-
-  private newTagMeterTemplate(): HTMLTemplateResult {
-    const currentNewTag = this.model.newTag;
-
-    let tooltipText = "";
-    if (currentNewTag === decisionNotRequired) {
-      tooltipText = "new tag: not required";
-    } else if (currentNewTag) {
-      if (currentNewTag.confirmed === DecisionOptions.SKIP) {
-        tooltipText = `new tag: ${currentNewTag.confirmed}`;
-      } else {
-        tooltipText = `new tag: ${currentNewTag.tag?.text}`;
-      }
-    } else {
-      tooltipText = "new tag: no decision";
-    }
-
-    if (!currentNewTag) {
-      return this.meterSegmentTemplate(tooltipText);
-    }
-
-    const meterColor = this.injector.colorService(currentNewTag);
-    return this.meterSegmentTemplate(tooltipText, meterColor);
-  }
-
-  private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
-    return html`
-      <sl-tooltip content="${tooltip}">
-        <span class="progress-meter-segment" style="background: var(${ifDefined(color)})"></span>
-      </sl-tooltip>
-    `;
-  }
-
-  private progressMeterTemplate(): HTMLTemplateResult {
-    // prettier wants to format this as a single line because it thinks it is
-    // string interpolation
-    // to improve readability, I have disabled prettier for this line so that we
-    // can put each of the templates on a separate line
-    // prettier-ignore
-    return html`
-      ${repeat(this.requiredDecisions, (requiredDecision: RequiredDecision) => {
-        if (requiredDecision === requiredVerificationPlaceholder) {
-          return this.verificationMeterTemplate();
-        } else if (requiredDecision === requiredNewTagPlaceholder) {
-          return this.newTagMeterTemplate();
-        }
-
-        return this.classificationMeterTemplate(requiredDecision);
-      })}
-    `;
-  }
-
   public render() {
-    const tagText = this.model?.tag?.text ?? this.model?.tag;
-
     const tileClasses = classMap({
       selected: this.selected,
       selectable: !this.singleTileViewMode,
     });
-
-    const figureClasses = classMap({
-      selected: this.selected,
-    });
-
-    let tooltipContent = "";
-    if (!this.model?.newTag) {
-      tooltipContent = `This item was tagged as '${tagText}' in your data source`;
-    } else if (this.model?.newTag === decisionNotRequired) {
-      tooltipContent = `The requirements for this task have not been met`;
-    } else if (!this.model.tag) {
-      // If we didn't originally have a tag to correct
-      tooltipContent = `'${this.model?.newTag?.tag?.text}' has been added to this subject`;
-    } else {
-      // We replaced the original tag with a new tag
-      tooltipContent = `This item has been corrected to '${this.model?.newTag?.tag?.text}'`;
-    }
 
     // use a pointerdown event instead of a click event because MacOS doesn't
     // trigger a click event if someone shift clicks on a tile
     return html`
       <div
         id="contents-wrapper"
-        @pointerdown="${this.dispatchSelectedEvent}"
-        @keydown="${this.handleFocusedKeyDown}"
         class="tile-container vertically-fill ${tileClasses}"
         part="tile-container"
         role="button"
         tabindex="${this.singleTileViewMode ? -1 : 1}"
         aria-keyshortcuts="${ALT_KEY}+${this.shortcuts.join(",")}"
+        @keydown="${this.handleFocusedKeyDown}"
+        @pointerdown="${this.dispatchSelectedEvent}"
       >
         ${this.keyboardShortcutTemplate()}
-        <figure class="spectrogram-container vertically-fill ${figureClasses}">
-          <div class="figure-head">
-            <figcaption class="tag-label">
-              <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
-                <span data-testid="tile-tag-text">
-                  ${this.model?.newTag && this.model?.newTag !== decisionNotRequired
-                    ? html`<del>${tagText}</del> <ins>${this.model?.newTag?.tag?.text}</ins>`
-                    : html`${tagText}`}
-                </span>
-              </sl-tooltip>
-            </figcaption>
-
-            ${when(
-              this.settings.showMediaControls.value,
-              () => html`<oe-media-controls for="spectrogram"></oe-media-controls>`,
-            )}
+        <figure class="spectrogram-container vertically-fill">
+          <div class="tile-header">
+            <slot name="tile-header"></slot>
           </div>
 
-          <oe-axes
-            class="vertically-fill"
-            ?x-title-visible="${watch(this.settings.showAxes)}"
-            ?y-title-visible="${watch(this.settings.showAxes)}"
-            ?x-axis="${watch(this.settings.showAxes)}"
-            ?y-axis="${watch(this.settings.showAxes)}"
-            ?x-grid="${watch(this.settings.showAxes)}"
-            ?y-grid="${watch(this.settings.showAxes)}"
-          >
-            <oe-indicator class="vertically-fill">
-              <oe-spectrogram
-                id="spectrogram"
-                class="vertically-fill"
-                color-map="audacity"
-                @loading="${this.loadingHandler}"
-                @loaded="${this.loadedHandler}"
-              ></oe-spectrogram>
-            </oe-indicator>
-          </oe-axes>
+          <div id="template-content" class="vertically-fill">${templateContent(this.tileTemplate)}</div>
 
-          <div class="progress-meter">${this.progressMeterTemplate()}</div>
-
-          <div id="slot-wrapper">
-            <slot></slot>
+          <div class="tile-footer">
+            <slot name="tile-footer"></slot>
           </div>
         </figure>
       </div>

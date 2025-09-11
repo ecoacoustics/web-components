@@ -3,13 +3,13 @@ import { customElement, property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
-import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -91,6 +91,13 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     super.disconnectedCallback();
   }
 
+  public connectedCallback(): void {
+    super.connectedCallback();
+
+    // use add a keydown event listener so that we can bind space bar to play
+    document.addEventListener("keydown", this.keyDownHandler);
+  }
+
   public toggleAudio(keyboardShortcut = false): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
     if (!this.spectrogramElement) {
@@ -125,9 +132,6 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         this.spectrogramElement = null;
         return;
       }
-
-      // use add a keydown event listener so that we can bind space bar to play
-      document.addEventListener("keydown", this.keyDownHandler);
 
       if (this.for instanceof SpectrogramComponent) {
         this.spectrogramElement = this.for;

@@ -9,6 +9,23 @@
 
   <body>
     <oe-verification-grid id="verification-grid" grid-size="4" autofocus>
+      <template>
+        <div slot="header">
+          <oe-tag-template></oe-tag-template>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <div slot="footer">
+          <oe-task-meter></oe-task-meter>
+        </div>
+      </template>
+
       <oe-verification verified="true" shortcut="Y"></oe-verification>
       <oe-verification verified="false" shortcut="N"></oe-verification>
 
@@ -21,12 +38,12 @@
     </section>
 
     <script type="module">
-      const dataSourceComponent = () => document.querySelector("oe-data-source");
-      const nextDataSourceBtn = () => document.getElementById("next-data-source-btn");
+      const dataSourceComponent = document.querySelector("oe-data-source");
+      const nextDataSourceBtn = document.getElementById("next-data-source-btn");
 
       // Uncomment this line to test fast switching data sources (data sources
       // that switch before the first one has finished loading).
-      // dataSourceComponent().setAttribute("src", "/grid-items.json");
+      // dataSourceComponent.setAttribute("src", "/grid-items.json");
 
       function nextDataSource() {
         const nextSources = new Map([
@@ -37,16 +54,16 @@
           ["/404-invalid.csv", "/kaleidoscope.csv"],
         ]);
 
-        const currentSource = dataSourceComponent().getAttribute("src");
+        const currentSource = dataSourceComponent.getAttribute("src");
         const nextSource = nextSources.get(currentSource);
 
-        dataSourceComponent().setAttribute("src", nextSource);
-        nextDataSourceBtn().textContent = nextSource;
+        dataSourceComponent.setAttribute("src", nextSource);
+        nextDataSourceBtn.textContent = nextSource;
       }
 
-      nextDataSourceBtn().addEventListener("click", nextDataSource);
+      nextDataSourceBtn.addEventListener("click", nextDataSource);
 
-      nextDataSourceBtn().textContent = dataSourceComponent().getAttribute("src");
+      nextDataSourceBtn.textContent = dataSourceComponent.getAttribute("src");
     </script>
   </body>
 </html>

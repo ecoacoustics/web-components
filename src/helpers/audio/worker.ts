@@ -1,8 +1,9 @@
 import { SpectrogramGenerator } from "./spectrogram";
 import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
-import { SpectrogramOptions, IAudioInformation } from "./models";
 import { WorkerState } from "./state";
 import { Size } from "../../models/rendering";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
+import { AudioInformation } from "./audioInformation";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -29,7 +30,7 @@ let state: WorkerState;
 /** contains samples accumulated by the processor */
 let sampleBuffer: Float32Array;
 
-let audioInformation: IAudioInformation;
+let audioInformation: AudioInformation;
 
 function paintBuffer(generation: number): void {
   //console.log(`worker (${generation}):work:`, state.bufferWriteHead);
@@ -93,7 +94,7 @@ function work(generation: number): void {
 }
 
 function renderImageBuffer(buffer: Uint8ClampedArray, generation: number): void {
-  const imageData = new ImageData(buffer, spectrogram.width, spectrogram.height);
+  const imageData = new ImageData(buffer as any, spectrogram.width, spectrogram.height);
 
   // paint buffer to the spectrogram canvas at  a 1:1 scale
   spectrogramSurface.putImageData(imageData, 0, 0);

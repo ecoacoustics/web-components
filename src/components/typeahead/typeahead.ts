@@ -53,7 +53,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   @state()
   private focusedIndex = 0;
 
-  @query("#typeahead-input")
+  @query("#typeahead-input", true)
   private readonly tagInput!: HTMLInputElement;
 
   private readonly recentlyUsed: T[] = [];

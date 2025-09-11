@@ -27,6 +27,19 @@
 */
 #grid-container {
   outline: none;
+
+  /*
+    In really small vertical screens, we want to maintain a minimum height by
+    conceding some vertical space and pushing the footer controls down (and
+    potentially off the screen).
+
+    I have deemed this a better case than hiding the spectrogram.
+  */
+  min-height: 300px;
+}
+
+#tile-template-slot {
+  display: none;
 }
 
 /* The container that contains both decision buttons and grid tiles */

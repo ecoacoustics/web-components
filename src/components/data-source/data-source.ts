@@ -63,7 +63,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
   @state()
   private fileName?: string;
 
-  @query("input[type=file]")
+  @query("input[type=file]", true)
   private fileInput!: HTMLInputElement;
 
   public urlSourcedFetcher?: UrlSourcedFetcher;

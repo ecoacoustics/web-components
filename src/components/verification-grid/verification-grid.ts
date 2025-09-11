@@ -1,21 +1,13 @@
 import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  render,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
 import {
   OverflowEvent,
   RequiredDecision,
   requiredNewTagPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
+  VerificationGridTileContext,
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
@@ -47,7 +39,7 @@ import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/
 import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import { IPlayEvent } from "spectrogram/spectrogram";
+import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
@@ -58,9 +50,10 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
-import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
+import { patchEventListener } from "../../patches/addEventListener";
+import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -114,9 +107,8 @@ export interface DecisionMadeEventValue {
 }
 
 export interface VerificationGridSettings {
-  showAxes: Signal<boolean>;
-  showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
+  spectrogramOptions: Signal<SpectrogramOptions>;
 }
 
 export interface VerificationGridInjector {
@@ -292,9 +284,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @provide({ context: verificationGridContext })
   @state()
   public settings: VerificationGridSettings = {
-    showAxes: signal(true),
-    showMediaControls: signal(true),
     isFullscreen: signal(false),
+    spectrogramOptions: signal(this.defaultSpectrogramOptions),
   };
 
   @provide({ context: injectionContext })
@@ -375,16 +366,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
-  @query("oe-verification-bootstrap")
+  @query("oe-verification-bootstrap", true)
   private bootstrapDialog!: VerificationBootstrapComponent;
 
-  @query("#grid-container")
+  @query("#grid-container", true)
   private gridContainer!: HTMLDivElement;
 
-  @query("#decisions-container")
+  @query("#decisions-container", true)
   private decisionsContainer!: HTMLDivElement;
 
-  @query("#highlight-box")
+  @query("#highlight-box", true)
   private highlightBox!: HTMLDivElement;
 
   @state()
@@ -490,6 +481,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     return this.selectionBehavior;
+  }
+
+  private get defaultSpectrogramOptions(): SpectrogramOptions {
+    const gridOptions = { ...SpectrogramComponent.defaultOptions };
+    gridOptions.colorMap = "audacity";
+    return gridOptions;
   }
 
   /**
@@ -732,6 +729,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.autofocus) {
       this.focus();
     }
+
+    patchEventListener();
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -1461,9 +1460,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const selectedTiles = gridTiles.filter((tile) => tile.selected);
 
     if (selectedTiles.length === 0) {
-      this.currentSubSelection = gridTiles.map((tile) => tile.model);
+      this.currentSubSelection = gridTiles.map((tile) => tile.tile.model);
     } else {
-      this.currentSubSelection = selectedTiles.map((tile) => tile.model);
+      this.currentSubSelection = selectedTiles.map((tile) => tile.tile.model);
     }
 
     this.updateDecisionWhen();
@@ -1927,7 +1926,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // TODO: Remove this subject copy once we have an finalized spec to
       // represent the old value of properties that were unset.
       // see: https://github.com/ecoacoustics/web-components/issues/448
-      const oldSubject = Object.assign({}, tile.model);
+      const oldSubject = Object.assign({}, tile.tile.model);
       let tileChanges = {};
 
       for (const decision of userDecisions) {
@@ -1950,15 +1949,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
-        if (tile.model.hasDecision(decision)) {
+        if (tile.tile.model.hasDecision(decision)) {
           tileChanges = { ...tileChanges, ...tile.removeDecision(decision) };
         } else {
           tileChanges = { ...tileChanges, ...tile.addDecision(decision) };
-          emittedSubjects.push(tile.model);
+          emittedSubjects.push(tile.tile.model);
         }
       }
 
-      decisionMap.set(tile.model, { change: tileChanges, oldSubject });
+      decisionMap.set(tile.tile.model, { change: tileChanges, oldSubject });
     }
 
     // We only dispatch the "decisionMade" event after the decision has been
@@ -2040,7 +2039,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
-    const subject = tile.model;
+    const subject = tile.tile.model;
     const decisionElements = this.decisionElements ?? [];
 
     const oldSubject = Object.assign({}, subject);
@@ -2275,7 +2274,40 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
   }
 
+  private defaultGridTileTemplate(): HTMLTemplateElement {
+    const defaultTemplate = document.createElement("template");
+    defaultTemplate.innerHTML = `
+      <div slot="header">
+        <oe-tag-template></oe-tag-template>
+        <oe-media-controls for="spectrogram"></oe-media-controls>
+      </div>
+
+      <oe-axes>
+        <oe-indicator>
+          <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        </oe-indicator>
+      </oe-axes>
+
+      <div slot="footer">
+        <oe-task-meter></oe-task-meter>
+      </div>
+    `;
+
+    this.appendChild(defaultTemplate);
+
+    return defaultTemplate;
+  }
+
   private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
+    if (subject === null) {
+      return this.emptySubjectTemplate();
+    }
+
+    const tileContext: VerificationGridTileContext = {
+      requiredDecisions: this.requiredDecisions,
+      model: subject,
+    };
+
     const tileTemplate = html`
       <oe-verification-grid-tile
         class="grid-tile"
@@ -2283,28 +2315,29 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         @play="${this.handleTilePlay}"
         .requiredDecisions="${this.requiredDecisions}"
         .singleTileViewMode="${this.isSingleTileViewMode}"
-        .model="${subject as any}"
+        .tile="${tileContext as any}"
         .index="${index}"
-      >
-        ${this.gridItemTemplate ? templateContent(this.gridItemTemplate) : nothing}
-      </oe-verification-grid-tile>
+        .tileTemplate="${this.gridItemTemplate || (this.defaultGridTileTemplate() as any)}"
+      ></oe-verification-grid-tile>
     `;
 
     // By using "cache" here Lit will cache the tile template meaning that it
     // doesn't need to be re-created when tiles are added or removed from the
     // grid.
-    return html`${cache(subject === null ? this.emptySubjectTemplate() : tileTemplate)}`;
+    return html`${cache(tileTemplate)}`;
   }
 
   public render() {
     return html`
+      <slot id="tile-template-slot" name="tile-content"></slot>
+
       <oe-verification-bootstrap
-        @open="${this.handleBootstrapDialogOpen}"
-        @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .decisionElements="${this.decisionElements ?? []}"
         .isMobile="${this.isMobileDevice()}"
+        @open="${this.handleBootstrapDialogOpen}"
+        @close="${this.handleBootstrapDialogClose}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" part="highlight-box"></div>
 
@@ -2317,8 +2350,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           id="grid-container"
           class="verification-grid"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
-          @overlap="${this.handleTileOverlap}"
           tabindex="-1"
+          @overlap="${this.handleTileOverlap}"
         >
           ${choose(this._loadState, [
             [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
@@ -2334,10 +2367,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               <oe-verification-grid-settings></oe-verification-grid-settings>
 
               <button
-                data-testid="help-dialog-button"
-                @click="${() => this.handleHelpRequest()}"
                 class="oe-btn-info"
                 rel="help"
+                aria-label="Help and keyboard shortcuts"
+                data-testid="help-dialog-button"
+                @click="${() => this.handleHelpRequest()}"
               >
                 <sl-icon name="question-circle" class="large-icon"></sl-icon>
               </button>
