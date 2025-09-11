@@ -13,8 +13,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { templateContent } from "lit/directives/template-content.js";
-import { handledEvents } from "../../patches/addEventListener";
 import verificationGridTileStyles from "./css/style.css?inline";
+import { hasClickLikeEventListener } from "../../patches/addEventListener/addEventListener";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
 export const requiredNewTagPlaceholder = Symbol("requiredNewTagPlaceholder");
@@ -320,19 +320,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   private dispatchSelectedEvent(event: PointerEvent | KeyboardEvent): void {
-    handledEvents.delete(this.contentsWrapper);
+    if (this.singleTileViewMode) {
+      return;
+    }
 
-    /*
-      interactionRecorder.hasAnyParent(event.target)
-      Iterate over the collection of elements we have, we delete it from the
-      set and return true.
-    */
-    for (const [emitterElement, composedPaths] of handledEvents) {
-      for (const pathElement of composedPaths) {
-        if (pathElement === this.contentsWrapper) {
-          handledEvents.delete(emitterElement);
-          return;
-        }
+    for (const element of event.composedPath()) {
+      if (element === this.contentsWrapper) {
+        break;
+      }
+
+      if (hasClickLikeEventListener(element)) {
+        return;
       }
     }
 

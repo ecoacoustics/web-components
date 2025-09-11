@@ -73,16 +73,14 @@
   flex: 1 1 0;
 }
 
-.tile-header,
-[slot="header"] {
+.tile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--oe-spacing);
 }
 
-.tile-footer,
-[slot="footer"] {
+.tile-footer {
   margin-top: var(--oe-spacing);
 }
 

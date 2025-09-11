@@ -52,8 +52,8 @@ import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
-import { patchEventListener } from "../../patches/addEventListener";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { patchAddEventListener } from "../../patches/addEventListener/addEventListener";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -730,7 +730,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
-    patchEventListener();
+    patchAddEventListener();
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -1723,10 +1723,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // shift or layout recalculation when moving the highlight box.
     highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
 
-    // the highlights width / height can be negative if the user drags to the
-    // top or left of the screen
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
+    // The highlights width / height can be negative if the user drags to the
+    // top or left of the screen.
+    //
+    // We round decimal places to 1 so that we don't set the width / height
+    // for very small decimal place changes.
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth).toFixed(1)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight).toFixed(1)}px`;
 
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
@@ -2277,7 +2280,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private defaultGridTileTemplate(): HTMLTemplateElement {
     const defaultTemplate = document.createElement("template");
     defaultTemplate.innerHTML = `
-      <div slot="header">
+      <div class="tile-header">
         <oe-tag-template></oe-tag-template>
         <oe-media-controls for="spectrogram"></oe-media-controls>
       </div>
@@ -2288,7 +2291,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         </oe-indicator>
       </oe-axes>
 
-      <div slot="footer">
+      <div class="tile-footer">
         <oe-task-meter></oe-task-meter>
       </div>
     `;
