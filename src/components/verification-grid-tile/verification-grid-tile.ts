@@ -322,6 +322,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
       return;
     }
 
+    // If the click was performed on a link with a href, we should not select
+    // the tile because the user is probably trying to follow the link.
+    // Note that not all links result in a page navigation, for example,
+    // if a link has target="_blank", it will open a new tab in which case we do
+    // not want to select the tile.
+    // Links that have action as the result of an event listener should be
+    // handled below.
+    if (event.target instanceof HTMLAnchorElement && event.target.href) {
+      return;
+    }
+
     for (const element of event.composedPath()) {
       if (element === this.contentsWrapper) {
         break;

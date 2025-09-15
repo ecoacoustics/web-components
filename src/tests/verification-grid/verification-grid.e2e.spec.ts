@@ -2279,7 +2279,7 @@ test.describe("compound tasks", () => {
   });
 });
 
-test.describe("verification grid with custom template", () => {
+test.describe("verification grid with slotted templates", () => {
   test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(
@@ -2397,8 +2397,8 @@ test.describe("verification grid with custom template", () => {
     });
   });
 
-  test.describe("custom templates", () => {
-    test.describe("tile templates", () => {
+  test.describe("custom tile templates", () => {
+    test.describe("slotted tile templates", () => {
       test.beforeEach(async ({ fixture }) => {
         await fixture.createWithValidTemplate();
       });
@@ -2449,6 +2449,98 @@ test.describe("verification grid with custom template", () => {
 
         await expect(fixture.unscopedButton()).not.toHaveCSS("background-color", customBackgroundColor);
         await expect(fixture.unscopedButton()).not.toHaveCSS("color", customTextColor);
+      });
+    });
+
+    test.describe("interactive elements", () => {
+      test.describe("anchor elements", () => {
+        test.beforeEach(async ({ fixture }) => {
+          // We use a document fragment here because we don't want the page to
+          // navigate away when the link is clicked.
+          await fixture.create(`
+            <template>
+              <oe-tag-template></oe-tag-template>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+              <oe-task-meter></oe-task-meter>
+
+              <a href="#clicked" data-testid="link-with-href">link with href</a>
+              <a data-testid="link-without-href">link without href</a>
+            </template>
+
+            <oe-classification tag="kookaburra"></oe-classification>
+          `);
+        });
+
+        test("should not select if clicking a link with a href", async ({ fixture }) => {
+          const target = fixture.page.getByTestId("link-with-href").first();
+          await target.click();
+
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toHaveLength(0);
+        });
+
+        test("should select if clicking a link without a href", async ({ fixture }) => {
+          const target = fixture.page.getByTestId("link-without-href").first();
+          await target.click();
+
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toHaveLength(1);
+        });
+      });
+
+      test.describe("button elements", () => {
+        test.beforeEach(async ({ fixture }) => {
+          await fixture.create();
+
+          // I have not figured out how to assign event listeners inside of
+          // <template> elements yet, so for these tests, I create the template
+          // with/without event listeners and assign the template using
+          // "appendChild".
+          //
+          // Because we append the template after the verification grid is
+          // created, this test is also asserting that we can change from a
+          // default template to a custom template after creation.
+          await fixture.page.evaluate(() => {
+            const customTemplate = document.createElement("template");
+            customTemplate.innerHTML = `
+              <oe-tag-template></oe-tag-template>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+              <oe-task-meter></oe-task-meter>
+            `;
+
+            const buttonWithListener = document.createElement("button");
+            buttonWithListener.textContent = "button with listener";
+            buttonWithListener.dataset.testid = "button-with-listener";
+            buttonWithListener.addEventListener("click", () => {});
+
+            customTemplate.content.appendChild(buttonWithListener);
+
+            const buttonWithoutListener = document.createElement("button");
+            buttonWithoutListener.textContent = "button without listener";
+            buttonWithoutListener.dataset.testid = "button-without-listener";
+
+            customTemplate.content.appendChild(buttonWithoutListener);
+
+            const verificationGrid = document.querySelector("oe-verification-grid") as VerificationGridComponent;
+            verificationGrid.appendChild(customTemplate);
+          });
+        });
+
+        test("should not select if clicking a button with a click event listener", async ({ fixture }) => {
+          const target = fixture.page.getByTestId("button-with-listener").first();
+          await target.click();
+
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toHaveLength(0);
+        });
+
+        test("should select if clicking a button without a click event listener", async ({ fixture }) => {
+          const target = fixture.page.getByTestId("button-without-listener").first();
+          await target.click();
+
+          const selectedTiles = await fixture.selectedTileIndexes();
+          expect(selectedTiles).toHaveLength(1);
+        });
       });
     });
   });
