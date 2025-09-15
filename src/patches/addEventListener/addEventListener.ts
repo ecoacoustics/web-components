@@ -12,10 +12,6 @@ const originalAddEventListener = EventTarget.prototype.addEventListener;
  * e.g. "click", "mousedown", "pointerdown"
  */
 export function hasClickLikeEventListener(target: EventTarget): boolean {
-  if (target instanceof HTMLElement && target.dataset.hasPointerEventListener === "true") {
-    return true;
-  }
-
   const targetListeners = target[eventListenersPatchKey];
   if (!targetListeners) {
     return false;
@@ -40,10 +36,6 @@ export function patchAddEventListener(): void {
     if (type === "pointerdown" || type === "mousedown" || type === "click") {
       this[eventListenersPatchKey] ??= new Set<EventType>();
       this[eventListenersPatchKey].add(type);
-
-      if (this instanceof HTMLElement) {
-        this.dataset.hasPointerEventListener = "true";
-      }
     }
 
     originalAddEventListener.call(this, type, listener, options);

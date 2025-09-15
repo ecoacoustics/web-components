@@ -35,7 +35,6 @@ import { SPACE_KEY } from "../../helpers/keyboard";
 import { VerificationGridTileComponent } from "../../components/verification-grid-tile/verification-grid-tile";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { ProgressBar } from "../../components/progress-bar/progress-bar";
-import { AxesComponent } from "../../components/axes/axes";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
 import { createFixture, setContent } from "../fixtures";
@@ -319,66 +318,58 @@ class TestPage {
   }
 
   public async createWithValidTemplate() {
-    await setContent(
-      this.page,
+    await this.create(
       `
-      <oe-verification-grid id="verification-grid">
-        <template>
-          <div class="tile-header">
-            <oe-tag-template></oe-tag-template>
-            <oe-media-controls for="spectrogram"></oe-media-controls>
-          </div>
+      <template>
+        <div class="tile-header">
+          <oe-tag-template></oe-tag-template>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
 
-          <oe-axes>
-            <oe-indicator>
-              <oe-spectrogram id="spectrogram"></oe-spectrogram>
-            </oe-indicator>
-          </oe-axes>
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
 
-          <div class="tile-footer">
-            <oe-task-meter></oe-task-meter>
-          </div>
+        <div class="tile-footer">
+          <oe-task-meter></oe-task-meter>
+        </div>
 
-          <button id="more-information-button" class="styled-button">
-            more information
-          </button>
+        <a href="#clicked" data-testid="link-with-href">link with href</a>
+        <a data-testid="link-without-href">link without href</a>
 
-          <style>
-            /*
-              We have to use a class here instead of just having a <button> css
-              selector, because element selectors do not work inside of
-              <template> styles.
-            */
-            .styled-button {
-              background-color: blue;
-              color: red;
-            }
-          </style>
-        </template>
+        <button id="more-information-button" class="styled-button">
+          more information
+        </button>
 
-        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
-        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+        <style>
+          /*
+            We have to use a class here instead of just having a <button> css
+            selector, because element selectors do not work inside of
+            <template> styles.
+          */
+          .styled-button {
+            background-color: blue;
+            color: red;
+          }
+        </style>
+      </template>
 
-        <oe-data-source
-          src="http://localhost:3000/test-items.json"
-          for="verification-grid"
-        ></oe-data-source>
-      </oe-verification-grid>
+      <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+      <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+
+      <oe-data-source
+        src="http://localhost:3000/test-items.json"
+        for="verification-grid"
+      ></oe-data-source>
 
       <button id="unscoped-button" class="styled-button">
         unscoped button
       </button>
     `,
+      ["#unscoped-button"],
     );
-
-    await waitForContentReady(this.page, [
-      "oe-verification-grid",
-      "oe-verification-grid-tile",
-      "oe-data-source",
-      ".decision-button",
-    ]);
-
-    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   /**
@@ -679,32 +670,6 @@ class TestPage {
     return await this.gridTileProgressMeterTooltips(index).evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("content")),
     );
-  }
-
-  public async areAxesVisible(): Promise<boolean> {
-    // we don't want to check each axes component individually because it is
-    // slow and does not provide much benefit
-    // therefore, we check if the first axes component is visible
-    const axesComponentToTest = this.axesComponents().first();
-
-    // when the axes component is hidden, all of its elements are hidden
-    return await axesComponentToTest.evaluate((element: AxesComponent) => {
-      return (
-        element.showXTitle &&
-        element.showYTitle &&
-        element.showXAxis &&
-        element.showYAxis &&
-        element.showXGrid &&
-        element.showYGrid
-      );
-    });
-  }
-
-  public async areMediaControlsVisible(): Promise<boolean> {
-    // we don't use the mediaControls locator defined at the top of the fixture
-    // because playwright will wait 30 seconds for it to appear and throw an
-    // error if it can't find an element to match the selector
-    return (await this.page.locator("oe-media-controls").count()) > 0;
   }
 
   public async isFullscreen(): Promise<boolean> {

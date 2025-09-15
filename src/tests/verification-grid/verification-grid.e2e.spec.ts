@@ -478,19 +478,21 @@ test.describe("single verification grid", () => {
 
   test.describe.fixme("changing settings", () => {
     test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
-      await expect(fixture.areAxesVisible()).resolves.toBe(true);
+      const gridSize = await fixture.getGridSize();
+      await expect(fixture.axesComponents()).toHaveCount(gridSize);
+
       await fixture.showAxes(false);
-      await expect(fixture.areAxesVisible()).resolves.toBe(false);
+
+      await expect(fixture.axesComponents()).toHaveCount(0);
     });
 
     test("disabling the media controls in the settings should hide the media controls", async ({ fixture }) => {
-      const initialState = await fixture.areMediaControlsVisible();
-      expect(initialState).toBe(true);
+      const gridSize = await fixture.getGridSize();
+      await expect(fixture.mediaControlsComponents()).toHaveCount(gridSize);
 
       await fixture.showMediaControls(false);
 
-      const realizedState = await fixture.areMediaControlsVisible();
-      expect(realizedState).toBe(false);
+      await expect(fixture.mediaControlsComponents()).toHaveCount(0);
     });
   });
 
@@ -2398,149 +2400,94 @@ test.describe("verification grid with slotted templates", () => {
   });
 
   test.describe("custom tile templates", () => {
-    test.describe("slotted tile templates", () => {
-      test.beforeEach(async ({ fixture }) => {
-        await fixture.createWithValidTemplate();
-      });
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithValidTemplate();
+    });
 
-      test("should use the template for each grid item", async ({ fixture }) => {
-        const expectedElementCount = 3;
-        await fixture.changeGridSize(expectedElementCount);
+    test("should use the template for each grid item", async ({ fixture }) => {
+      const expectedElementCount = 3;
+      await fixture.changeGridSize(expectedElementCount);
 
-        await expect(fixture.moreInformationButtons().first()).toBeVisible();
-        await expect(fixture.moreInformationButtons()).toHaveCount(expectedElementCount);
+      await expect(fixture.moreInformationButtons().first()).toBeVisible();
+      await expect(fixture.moreInformationButtons()).toHaveCount(expectedElementCount);
 
-        await expect(fixture.spectrogramComponents().first()).toBeVisible();
-        await expect(fixture.spectrogramComponents()).toHaveCount(expectedElementCount);
-      });
+      await expect(fixture.spectrogramComponents().first()).toBeVisible();
+      await expect(fixture.spectrogramComponents()).toHaveCount(expectedElementCount);
+    });
 
-      test("should set the spectrograms source correctly", async ({ fixture }) => {
-        const spectrograms = fixture.spectrogramComponents();
-        await expect(spectrograms).toHaveCount(4);
+    test("should set the spectrograms source correctly", async ({ fixture }) => {
+      const spectrograms = fixture.spectrogramComponents();
+      await expect(spectrograms).toHaveCount(4);
 
-        await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
-        await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
-        await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
-        await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
-      });
+      await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+      await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
+      await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
+      await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+    });
 
-      test("should fall back to the default template if the custom template is removed", () => {});
+    test("should fall back to the default template if the custom template is removed", () => {});
 
-      // This test tests fully replacing the "<template>" element with a new
-      // one.
-      // This is different from just updating the contents of the existing
-      // template which is tested in the next test.
-      test("should correctly update the tile template if it is replaced", () => {});
+    // This test tests fully replacing the "<template>" element with a new
+    // one.
+    // This is different from just updating the contents of the existing
+    // template which is tested in the next test.
+    test("should correctly update the tile template if it is replaced", () => {});
 
-      // In this test, we update an attribute on an existing template to stress
-      // test the template updating logic.
-      test("should update the tile template if the template content changes", () => {});
+    // In this test, we update an attribute on an existing template to stress
+    // test the template updating logic.
+    test("should update the tile template if the template content changes", () => {});
 
-      // We should not be able to leak styling outside of the <template> element
-      // and into the main document or other elements inside of the grid tile
-      // component.
-      test("should scope css styles to the template", async ({ fixture }) => {
-        const customBackgroundColor = "rgb(0, 0, 255)";
-        const customTextColor = "rgb(255, 0, 0)";
+    // We should not be able to leak styling outside of the <template> element
+    // and into the main document or other elements inside of the grid tile
+    // component.
+    test("should scope css styles to the template", async ({ fixture }) => {
+      const customBackgroundColor = "rgb(0, 0, 255)";
+      const customTextColor = "rgb(255, 0, 0)";
 
-        const targetMoreInfoButton = fixture.moreInformationButtons().first();
-        await expect(targetMoreInfoButton).toHaveCSS("background-color", customBackgroundColor);
-        await expect(targetMoreInfoButton).toHaveCSS("color", customTextColor);
+      const targetMoreInfoButton = fixture.moreInformationButtons().first();
+      await expect(targetMoreInfoButton).toHaveCSS("background-color", customBackgroundColor);
+      await expect(targetMoreInfoButton).toHaveCSS("color", customTextColor);
 
-        await expect(fixture.unscopedButton()).not.toHaveCSS("background-color", customBackgroundColor);
-        await expect(fixture.unscopedButton()).not.toHaveCSS("color", customTextColor);
-      });
+      await expect(fixture.unscopedButton()).not.toHaveCSS("background-color", customBackgroundColor);
+      await expect(fixture.unscopedButton()).not.toHaveCSS("color", customTextColor);
     });
 
     test.describe("interactive elements", () => {
-      test.describe("anchor elements", () => {
-        test.beforeEach(async ({ fixture }) => {
-          // We use a document fragment here because we don't want the page to
-          // navigate away when the link is clicked.
-          await fixture.create(`
-            <template>
-              <oe-tag-template></oe-tag-template>
-              <oe-spectrogram id="spectrogram"></oe-spectrogram>
-              <oe-task-meter></oe-task-meter>
+      test("should not select if clicking a link with a href", async ({ fixture }) => {
+        const target = fixture.page.getByTestId("link-with-href").first();
+        await target.click();
 
-              <a href="#clicked" data-testid="link-with-href">link with href</a>
-              <a data-testid="link-without-href">link without href</a>
-            </template>
-
-            <oe-classification tag="kookaburra"></oe-classification>
-          `);
-        });
-
-        test("should not select if clicking a link with a href", async ({ fixture }) => {
-          const target = fixture.page.getByTestId("link-with-href").first();
-          await target.click();
-
-          const selectedTiles = await fixture.selectedTileIndexes();
-          expect(selectedTiles).toHaveLength(0);
-        });
-
-        test("should select if clicking a link without a href", async ({ fixture }) => {
-          const target = fixture.page.getByTestId("link-without-href").first();
-          await target.click();
-
-          const selectedTiles = await fixture.selectedTileIndexes();
-          expect(selectedTiles).toHaveLength(1);
-        });
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(0);
       });
 
-      test.describe("button elements", () => {
-        test.beforeEach(async ({ fixture }) => {
-          await fixture.create();
+      test("should select if clicking a link without a href", async ({ fixture }) => {
+        const target = fixture.page.getByTestId("link-without-href").first();
+        await target.click();
 
-          // I have not figured out how to assign event listeners inside of
-          // <template> elements yet, so for these tests, I create the template
-          // with/without event listeners and assign the template using
-          // "appendChild".
-          //
-          // Because we append the template after the verification grid is
-          // created, this test is also asserting that we can change from a
-          // default template to a custom template after creation.
-          await fixture.page.evaluate(() => {
-            const customTemplate = document.createElement("template");
-            customTemplate.innerHTML = `
-              <oe-tag-template></oe-tag-template>
-              <oe-spectrogram id="spectrogram"></oe-spectrogram>
-              <oe-task-meter></oe-task-meter>
-            `;
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(1);
+      });
 
-            const buttonWithListener = document.createElement("button");
-            buttonWithListener.textContent = "button with listener";
-            buttonWithListener.dataset.testid = "button-with-listener";
-            buttonWithListener.addEventListener("click", () => {});
+      test("should not select if clicking a button with a click event listener", async ({ fixture }) => {
+        // The play button on the media controls would usually select the
+        // verification grid tile if clicked, however, because of our
+        // addEventListener patch, we can detect that the play button handled
+        // the click event and therefore not select the tile.
+        await fixture.playSpectrogram(0);
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(0);
+      });
 
-            customTemplate.content.appendChild(buttonWithListener);
+      test("should select if clicking a button without a click event listener", async ({ fixture }) => {
+        const target = fixture.moreInformationButtons().first();
+        await target.click();
 
-            const buttonWithoutListener = document.createElement("button");
-            buttonWithoutListener.textContent = "button without listener";
-            buttonWithoutListener.dataset.testid = "button-without-listener";
-
-            customTemplate.content.appendChild(buttonWithoutListener);
-
-            const verificationGrid = document.querySelector("oe-verification-grid") as VerificationGridComponent;
-            verificationGrid.appendChild(customTemplate);
-          });
-        });
-
-        test("should not select if clicking a button with a click event listener", async ({ fixture }) => {
-          const target = fixture.page.getByTestId("button-with-listener").first();
-          await target.click();
-
-          const selectedTiles = await fixture.selectedTileIndexes();
-          expect(selectedTiles).toHaveLength(0);
-        });
-
-        test("should select if clicking a button without a click event listener", async ({ fixture }) => {
-          const target = fixture.page.getByTestId("button-without-listener").first();
-          await target.click();
-
-          const selectedTiles = await fixture.selectedTileIndexes();
-          expect(selectedTiles).toHaveLength(1);
-        });
+        // Because the button does not have a click event listener, the click
+        // event should be passed through to the verification grid tile and
+        // cause the tile to be selected.
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(1);
       });
     });
   });
