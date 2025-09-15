@@ -1,6 +1,6 @@
 import { customElement, property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { classMap } from "lit/directives/class-map.js";
 import { provide } from "@lit/context";
@@ -13,8 +13,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { templateContent } from "lit/directives/template-content.js";
-import verificationGridTileStyles from "./css/style.css?inline";
 import { hasClickLikeEventListener } from "../../patches/addEventListener/addEventListener";
+import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
 export const requiredNewTagPlaceholder = Symbol("requiredNewTagPlaceholder");
@@ -113,8 +113,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   @property({ attribute: false, type: Object })
   public tileTemplate!: HTMLTemplateElement;
 
+  // The spectrogram might not be present if the user provides a custom template
+  // without a spectrogram (e.g. for an image verification task).
   @query("oe-spectrogram")
-  private spectrogram!: SpectrogramComponent;
+  private spectrogram?: SpectrogramComponent;
 
   @query("#template-content", true)
   private templateContent!: HTMLDivElement;
@@ -133,13 +135,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public get taskCompleted(): boolean {
     return this.requiredDecisions.every((requiredDecision) => {
       if (requiredDecision === requiredVerificationPlaceholder) {
-        return this.tile.model.verification !== undefined;
+        return this.model.verification !== undefined;
       } else if (requiredDecision === requiredNewTagPlaceholder) {
-        return this.tile.model.newTag !== undefined;
+        return this.model.newTag !== undefined;
       }
 
-      return this.tile.model.classifications.has(requiredDecision.text);
+      return this.model.classifications.has(requiredDecision.text);
     });
+  }
+
+  public get model(): SubjectWrapper {
+    return this.tile.model;
   }
 
   /**
@@ -159,8 +165,8 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     document.removeEventListener("keydown", this.keyDownHandler);
 
     if (this.spectrogram) {
-      this.spectrogram.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
-      this.spectrogram.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
+      this.templateContent.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+      this.templateContent.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
     }
 
     this.intersectionObserver.disconnect();
@@ -169,6 +175,13 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   public firstUpdated(): void {
+    // We add event listeners to the templateContent wrapper instead of the
+    // spectrogram directly because it's hard to guarantee that we can attach
+    // the event listeners to the templated spectrograms before the spectrogram
+    // finishes loading.
+    this.templateContent.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
+    this.templateContent.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
+
     console.debug("oe-verification-grid-tile: firstUpdated");
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,
@@ -188,10 +201,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.intersectionObserver.observe(this.contentsWrapper);
   }
 
-  // TODO: check if the model has updated, and conditionally change the spectrograms src
-  public willUpdate(): void {
-    if (this.spectrogram && this.tile.model.url) {
-      this.spectrogram.src = this.tile.model.url;
+  public willUpdate(change: PropertyValues<this>): void {
+    const spectrogramInvalidationKeys: (keyof VerificationGridTileComponent)[] = ["tile", "tileTemplate"];
+    if (spectrogramInvalidationKeys.some((key) => change.has(key)) && this.spectrogram && this.model.url) {
+      this.spectrogram.src = this.model.url;
     }
 
     if (this.index > shortcutOrder.length) {
@@ -222,23 +235,11 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   public addDecision(decision: Decision): SubjectChange {
-    const change = this.tile.model.addDecision(decision);
-
-    // because the model is an object (not a primitive), modifying a property
-    // does not cause the re-render which is needed to display the new decision
-    // as a border color
-    // to fix this, we call requestUpdate which will re-render the component
-    // TODO: We can probably replace this with a guard directive
-    this.requestUpdate();
-
-    return change;
+    return this.model.addDecision(decision);
   }
 
   public removeDecision(decision: Decision): SubjectChange {
-    const change = this.tile.model.removeDecision(decision);
-    this.requestUpdate();
-
-    return change;
+    return this.model.removeDecision(decision);
   }
 
   // TODO: The hasVerificationTask, hasNewTagTask and requiredClassificationTags
@@ -252,10 +253,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     hasNewTagTask: boolean,
     requiredClassificationTags: Tag[],
   ): SubjectChange {
-    const skipChanges = this.tile.model.skipUndecided(hasVerificationTask, hasNewTagTask, requiredClassificationTags);
-    this.requestUpdate();
-
-    return skipChanges;
+    return this.model.skipUndecided(hasVerificationTask, hasNewTagTask, requiredClassificationTags);
   }
 
   private hasAlternativeShortcut(shortcut: string): shortcut is keyof typeof shortcutTranslation {
@@ -375,15 +373,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
       >
         ${this.keyboardShortcutTemplate()}
         <figure class="spectrogram-container vertically-fill">
-          <div class="tile-header">
-            <slot name="tile-header"></slot>
-          </div>
-
           <div id="template-content" class="vertically-fill">${templateContent(this.tileTemplate)}</div>
-
-          <div class="tile-footer">
-            <slot name="tile-footer"></slot>
-          </div>
         </figure>
       </div>
     `;

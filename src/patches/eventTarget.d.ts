@@ -1,4 +1,5 @@
-import { PatchedEventListener, PatchedWindow } from "./addEventListener";
+import { PatchedEventListener } from "./eventTarget";
+import { PatchedWindow } from "./patches";
 
 declare global {
   interface EventTarget extends PatchedEventListener {}

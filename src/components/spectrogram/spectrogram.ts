@@ -394,7 +394,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         }
 
         console.error(
-          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.windowSize}'`,
+          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.spectrogramOptions.windowSize}'`,
         );
       }
     }

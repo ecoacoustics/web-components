@@ -16,6 +16,7 @@ import {
   waitForContentReady,
 } from "../helpers";
 import {
+  DefaultTemplateOptions,
   MousePosition,
   SelectionObserverType,
   VerificationGridComponent,
@@ -47,11 +48,17 @@ class TestPage {
   public hostAppInput = () => this.page.getByTestId("host-app-input").first();
 
   public gridComponent = () => this.page.locator("oe-verification-grid").first();
-  public gridContainer = () => this.page.locator("#grid-container").first();
   public dataSourceComponent = () => this.page.locator("oe-data-source").first();
   public gridTileComponents = () => this.page.locator("oe-verification-grid-tile");
+  public indicatorComponents = () => this.page.locator("oe-indicator");
   public axesComponents = () => this.page.locator("oe-axes");
+  public annotateComponents = () => this.page.locator("oe-annotate");
+  public taskMeterComponents = () => this.page.locator("oe-task-meter");
+  public tagTemplateComponents = () => this.page.locator("oe-tag-template");
+  public mediaControlsComponents = () => this.page.locator("oe-media-controls");
   public infoCardComponents = () => this.page.locator("oe-info-card");
+
+  public gridContainer = () => this.page.locator("#grid-container").first();
   public messageOverlay = () => this.page.locator(".message-overlay");
 
   public bootstrapDialog = () => this.page.locator("oe-verification-bootstrap").first();
@@ -90,8 +97,6 @@ class TestPage {
   public gridTileComponent = (index = 0) => this.gridTileComponents().nth(index);
   public audioElement = (index = 0) => this.spectrogramComponent(index).locator("audio").first();
 
-  public mediaControlsComponent = (index = 0) =>
-    this.gridTileContainers().nth(index).locator("oe-media-controls").first();
   public brightnessControlsMenu = (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
   public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
@@ -104,6 +109,9 @@ class TestPage {
 
   private skipComponent = () => this.page.locator("oe-skip").first();
   private skipButton = () => this.skipComponent().locator("#decision-button").first();
+
+  public moreInformationButtons = () => this.page.locator("#more-information-button");
+  public unscopedButton = () => this.page.locator("#unscoped-button").first();
 
   public verificationButton(decision: "true" | "false"): Locator {
     const targetDecision = this.page.locator(`oe-verification[verified='${decision}']`).first();
@@ -278,6 +286,97 @@ class TestPage {
     );
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
+  }
+
+  public async createWithInvalidTemplate() {
+    // The <template> passed into the verification grid is missing both the
+    // <oe-tag-template> and <oe-task-meter> elements that are required.
+    await setContent(
+      this.page,
+      `
+      <oe-verification-grid id="verification-grid">
+        <template>
+          <oe-spectrogram></oe-spectrogram>
+          <oe-media-controls></oe-media-controls>
+        </template>
+
+        <oe-data-source
+          src="http://localhost:3000/test-items.json"
+          for="verification-grid"
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source"]);
+
+    // By having an except statement here, playwright will continue running this
+    // assertion until it passes or the test times out (30 seconds).
+    // We do this so that we know the entire grid has loaded.
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "configuration-error");
+  }
+
+  public async createWithValidTemplate() {
+    await setContent(
+      this.page,
+      `
+      <oe-verification-grid id="verification-grid">
+        <template>
+          <div class="tile-header">
+            <oe-tag-template></oe-tag-template>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+          </div>
+
+          <oe-axes>
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
+          <div class="tile-footer">
+            <oe-task-meter></oe-task-meter>
+          </div>
+
+          <button id="more-information-button" class="styled-button">
+            more information
+          </button>
+
+          <style>
+            /*
+              We have to use a class here instead of just having a <button> css
+              selector, because element selectors do not work inside of
+              <template> styles.
+            */
+            .styled-button {
+              background-color: blue;
+              color: red;
+            }
+          </style>
+        </template>
+
+        <oe-verification verified="true" shortcut="Y">Koala</oe-verification>
+        <oe-verification verified="false" shortcut="N">Not Koala</oe-verification>
+
+        <oe-data-source
+          src="http://localhost:3000/test-items.json"
+          for="verification-grid"
+        ></oe-data-source>
+      </oe-verification-grid>
+
+      <button id="unscoped-button" class="styled-button">
+        unscoped button
+      </button>
+    `,
+    );
+
+    await waitForContentReady(this.page, [
+      "oe-verification-grid",
+      "oe-verification-grid-tile",
+      "oe-data-source",
+      ".decision-button",
+    ]);
 
     await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
@@ -651,7 +750,7 @@ class TestPage {
   }
 
   public async openSettingsMenu(index: number) {
-    const settingsTarget = this.mediaControlsComponent(index);
+    const settingsTarget = this.mediaControlsComponents().nth(index);
     await settingsTarget.locator(".settings-menu-item").click();
   }
 
@@ -764,7 +863,13 @@ class TestPage {
   }
 
   public async viewPreviousHistoryPage() {
+    // When navigating into history, the verification grid will have to load its
+    // grid tiles again.
+    // Therefore, we wait for the grid-loaded event to ensure that the grid has
+    // finished loading before allowing the test to continue.
+    const historyLoadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
     await this.previousPageButton().click();
+    await historyLoadedEvent;
   }
 
   public async viewNextHistoryPage() {
@@ -851,11 +956,11 @@ class TestPage {
   }
 
   public async showMediaControls(visible: boolean) {
-    await this.changeGridSetting("showMediaControls", visible);
+    await this.changeDefaultTemplate("showMediaControls", visible);
   }
 
   public async showAxes(visible: boolean) {
-    await this.changeGridSetting("showAxes", visible);
+    await this.changeDefaultTemplate("showAxes", visible);
   }
 
   public async toggleFullscreen(state: boolean) {
@@ -919,6 +1024,18 @@ class TestPage {
     await this.gridComponent().evaluate(
       (element: VerificationGridComponent, { key, value }) => {
         element.settings[key].value = value;
+      },
+      { key, value },
+    );
+  }
+
+  private async changeDefaultTemplate(key: keyof DefaultTemplateOptions, value: boolean) {
+    await this.gridComponent().evaluate(
+      (element: VerificationGridComponent, { key, value }) => {
+        const currentValue = element.settings.defaultTemplate.value;
+        const newValue = { ...currentValue, [key]: value };
+
+        element.settings.defaultTemplate.value = newValue;
       },
       { key, value },
     );

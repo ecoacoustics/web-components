@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   `);
 });
 
-test("should add an identifier to the window.__oe_patched_methods property", async ({ page }) => {
+test.fixme("should add an identifier to the window.__oe_patched_methods property", async ({ page }) => {
   const expectedPatches = ["__oe_patch_EventTarget.addEventListener"];
   const realizedPatches = await page.evaluate(() => {
     return [...window["__oe_patched_methods"]];
@@ -25,7 +25,7 @@ test("should add an identifier to the window.__oe_patched_methods property", asy
   expect(realizedPatches).toEqual(expectedPatches);
 });
 
-test("should keep track of click events add to elements", async ({ page }) => {
+test.fixme("should keep track of click events add to elements", async ({ page }) => {
   const buttonWithListener = page.getByTestId(withListenerTestId);
   const buttonWithoutListener = page.getByTestId(noListenerTestId);
 

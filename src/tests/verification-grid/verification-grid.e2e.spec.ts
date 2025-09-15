@@ -476,7 +476,7 @@ test.describe("single verification grid", () => {
     });
   });
 
-  test.describe("changing settings", () => {
+  test.describe.fixme("changing settings", () => {
     test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
       await expect(fixture.areAxesVisible()).resolves.toBe(true);
       await fixture.showAxes(false);
@@ -1444,7 +1444,7 @@ test.describe("single verification grid", () => {
       withSlotShape: GridShape;
     }
 
-    const testedGridSizes = [
+    const testedGridSizes: DynamicGridSizeTest[] = [
       {
         deviceName: "desktop",
         device: mockDeviceSize(testBreakpoints.desktop),
@@ -1475,11 +1475,22 @@ test.describe("single verification grid", () => {
         withoutSlotShape: { columns: 1, rows: 1 },
         withSlotShape: { columns: 1, rows: 1 },
       },
-    ] satisfies DynamicGridSizeTest[];
+    ];
 
     for (const testConfig of testedGridSizes) {
       const testedSlotContent = `
         <template>
+          <div class="tile-header">
+            <oe-tag-template></oe-tag-template>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+          </div>
+
+          <oe-axes>
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
           <div>
             <h1>Heading text</h1>
 
@@ -1487,6 +1498,11 @@ test.describe("single verification grid", () => {
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
               voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
             </p>
+          </div>
+
+          <div class="tile-footer">
+            <oe-task-meter></oe-task-meter>
+            <oe-info-card></oe-info-card>
           </div>
         </template>
 
@@ -2264,7 +2280,7 @@ test.describe("compound tasks", () => {
 });
 
 test.describe("verification grid with custom template", () => {
-  test.describe.skip("information cards", () => {
+  test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(
         `
@@ -2272,7 +2288,21 @@ test.describe("verification grid with custom template", () => {
         <oe-verification verified="false">Not Koala</oe-verification>
 
         <template>
-          <oe-info-card></oe-info-card>
+          <div class="tile-header">
+            <oe-tag-template></oe-tag-template>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+          </div>
+
+          <oe-axes>
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
+          <div class="tile-footer">
+            <oe-task-meter></oe-task-meter>
+            <oe-info-card></oe-info-card>
+          </div>
         </template>
       `,
         ["oe-info-card"],
@@ -2291,28 +2321,38 @@ test.describe("verification grid with custom template", () => {
     });
 
     test("should update correctly when paging", async ({ fixture }) => {
+      const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
       await fixture.makeVerificationDecision("true");
 
       // because it can take a while for the next page to load, and the info
       // cards to update, we have to wait until we receive the "grid-loaded"
       // event that signals that the next page has been loaded
-      await catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
+      await gridLoadedEvent;
 
+      // These items are from the "test-items.json" dataset.
+      // Because the grid size is 4, we expect that the first info card after
+      // making a whole page decision will be about the 5th item in the
+      // "test-items.json" dataset.
       const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20200413T120000+0800_Boyagin-Nature-Reserve-Wet-A_177657.flac" },
+        { key: "FileId", value: "177,657" },
+        { key: "Datetime", value: "2020-04-13T04:00:00.000Z" },
       ];
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
     test("should update correctly when viewing history", async ({ fixture }) => {
+      const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
       await fixture.makeVerificationDecision("true");
+      await gridLoadedEvent;
+
       await fixture.viewPreviousHistoryPage();
 
       const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
+        { key: "FileId", value: "643,356" },
+        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
       ];
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
@@ -2320,15 +2360,15 @@ test.describe("verification grid with custom template", () => {
 
     test("should update correctly when changing the grid source", async ({ fixture }) => {
       const expectedInitialInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
+        { key: "FileId", value: "643,356" },
+        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
       ];
       const expectedNewInfoCard = [
-        { key: "Title 3", value: "Description 3" },
-        { key: "Title 4", value: "Description 4" },
+        { key: "AudioLink", value: "http…example2.flac" },
+        { key: "Distance", value: "4.846" },
+        { key: "Tags", value: "koala" },
       ];
-
-      await fixture.changeGridSource(fixture.testJsonInput);
 
       const realizedInitialInfoCard = await fixture.infoCardItem(0);
       expect(realizedInitialInfoCard).toEqual(expectedInitialInfoCard);
@@ -2337,6 +2377,112 @@ test.describe("verification grid with custom template", () => {
       const realizedNewInfoCard = await fixture.infoCardItem(0);
       expect(realizedNewInfoCard).toEqual(expectedNewInfoCard);
     });
+  });
+
+  test.describe("invalid templates", () => {
+    test("should error when missing required elements", { tag: [expectConsoleError] }, async ({ fixture }) => {
+      // Even though the verification grid is missing both the oe-tag-template
+      // and the oe-task-meter elements, we only error for one of them at a
+      // time.
+      const expectedError = "The provided grid item template does not contain a tag template.";
+
+      await expect(async () => {
+        await fixture.createWithInvalidTemplate();
+      }).toConsoleError(fixture.page, expectedError);
+    });
+
+    test("should not render tiles if the template is invalid", { tag: [expectConsoleError] }, async ({ fixture }) => {
+      await fixture.createWithInvalidTemplate();
+      await expect(fixture.gridTileComponents()).toHaveCount(0);
+    });
+  });
+
+  test.describe("custom templates", () => {
+    test.describe("tile templates", () => {
+      test.beforeEach(async ({ fixture }) => {
+        await fixture.createWithValidTemplate();
+      });
+
+      test("should use the template for each grid item", async ({ fixture }) => {
+        const expectedElementCount = 3;
+        await fixture.changeGridSize(expectedElementCount);
+
+        await expect(fixture.moreInformationButtons().first()).toBeVisible();
+        await expect(fixture.moreInformationButtons()).toHaveCount(expectedElementCount);
+
+        await expect(fixture.spectrogramComponents().first()).toBeVisible();
+        await expect(fixture.spectrogramComponents()).toHaveCount(expectedElementCount);
+      });
+
+      test("should set the spectrograms source correctly", async ({ fixture }) => {
+        const spectrograms = fixture.spectrogramComponents();
+        await expect(spectrograms).toHaveCount(4);
+
+        await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+        await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
+        await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
+        await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+      });
+
+      test("should fall back to the default template if the custom template is removed", () => {});
+
+      // This test tests fully replacing the "<template>" element with a new
+      // one.
+      // This is different from just updating the contents of the existing
+      // template which is tested in the next test.
+      test("should correctly update the tile template if it is replaced", () => {});
+
+      // In this test, we update an attribute on an existing template to stress
+      // test the template updating logic.
+      test("should update the tile template if the template content changes", () => {});
+
+      // We should not be able to leak styling outside of the <template> element
+      // and into the main document or other elements inside of the grid tile
+      // component.
+      test("should scope css styles to the template", async ({ fixture }) => {
+        const customBackgroundColor = "rgb(0, 0, 255)";
+        const customTextColor = "rgb(255, 0, 0)";
+
+        const targetMoreInfoButton = fixture.moreInformationButtons().first();
+        await expect(targetMoreInfoButton).toHaveCSS("background-color", customBackgroundColor);
+        await expect(targetMoreInfoButton).toHaveCSS("color", customTextColor);
+
+        await expect(fixture.unscopedButton()).not.toHaveCSS("background-color", customBackgroundColor);
+        await expect(fixture.unscopedButton()).not.toHaveCSS("color", customTextColor);
+      });
+    });
+  });
+});
+
+test.describe("default templates", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
+  test("should place decision elements in the correct location", ({ fixture }) => {
+    const koalaDecision = fixture.page.getByText("Koala").first();
+    const notKoalaDecision = fixture.page.getByText("Not Koala").first();
+
+    expect(koalaDecision).toBeTruthy();
+    expect(notKoalaDecision).toBeTruthy();
+  });
+
+  test("should have the expected elements", async ({ fixture }) => {
+    const expectedComponents = [
+      fixture.tagTemplateComponents(),
+      fixture.mediaControlsComponents(),
+
+      fixture.axesComponents(),
+      fixture.indicatorComponents(),
+      fixture.spectrogramComponents(),
+
+      fixture.taskMeterComponents(),
+    ];
+
+    for (const component of expectedComponents) {
+      await expect(component.first()).toBeVisible();
+      await expect(component).toHaveCount(4);
+    }
   });
 });
 

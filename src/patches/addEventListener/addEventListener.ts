@@ -1,18 +1,9 @@
-/// <reference types="./addEventListener.d.ts" />
+/// <reference types="../eventTarget.d.ts" />
 
-type EventType = string;
+import { eventListenersPatchKey, EventType } from "../eventTarget";
+import { deregisterPatch, hasRegisteredPatch, registerPatch } from "../patches";
 
-export interface PatchedEventListener {
-  [eventListenersPatchKey]?: Set<EventType>;
-}
-
-export interface PatchedWindow {
-  readonly [patchedMethodsKey]: Set<EventType>;
-}
-
-const eventListenersPatchKey = "__oe_event_listeners";
-const patchedMethodsKey = "__oe_patched_methods";
-const patchIdentifier = "__oe_patch_EventTarget.addEventListener";
+const patchIdentifier = Symbol("__oe_patch_EventTarget.addEventListener");
 
 const originalAddEventListener = EventTarget.prototype.addEventListener;
 
@@ -33,11 +24,11 @@ export function hasClickLikeEventListener(target: EventTarget): boolean {
 }
 
 export function patchAddEventListener(): void {
-  if (hasPatchedAddEventListener()) {
+  if (hasRegisteredPatch(patchIdentifier)) {
     return;
   }
 
-  window[patchedMethodsKey].add(patchIdentifier);
+  registerPatch(patchIdentifier);
 
   EventTarget.prototype.addEventListener = function (
     type: string,
@@ -53,11 +44,11 @@ export function patchAddEventListener(): void {
   };
 }
 
-function hasPatchedAddEventListener(): boolean {
-  // We expect that there will be an error here because the __oe_patched_methods
-  // property is readonly in the PatchedWindow interface.
-  // However, we still need to correctly initialize it on the window object.
-  // @ts-ignore
-  window[patchedMethodsKey] ??= new Set<EventType>();
-  return window[patchedMethodsKey].has(patchIdentifier);
+export function unpatchAddEventListener(): void {
+  if (!hasRegisteredPatch(patchIdentifier)) {
+    return;
+  }
+
+  deregisterPatch(patchIdentifier);
+  EventTarget.prototype.addEventListener = originalAddEventListener;
 }

@@ -54,6 +54,7 @@ import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gri
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
 import { patchAddEventListener } from "../../patches/addEventListener/addEventListener";
+import { patchRemoveEventListener } from "../../patches/removeEventListener/removeEventListener";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -109,6 +110,12 @@ export interface DecisionMadeEventValue {
 export interface VerificationGridSettings {
   isFullscreen: Signal<boolean>;
   spectrogramOptions: Signal<SpectrogramOptions>;
+  defaultTemplate: Signal<DefaultTemplateOptions>;
+}
+
+export interface DefaultTemplateOptions {
+  showMediaControls: boolean;
+  showAxes: boolean;
 }
 
 export interface VerificationGridInjector {
@@ -179,7 +186,9 @@ export enum LoadState {
   LOADED = "loaded",
 
   /**
-   * An unrecoverable error occurred.
+   * An error occurred.
+   * An error state can be recovered from if we have enough information to
+   * render either full page or partial page of subjects.
    *
    * This state can (currently) only be entered if the getPage callback throws
    * an error while fetching the currently viewed page of subjects (a getPage
@@ -191,6 +200,16 @@ export enum LoadState {
    * to a getPage callback error.
    */
   ERROR = "error",
+
+  /**
+   * The verification grid has been configured incorrectly and cannot recover.
+   *
+   * This is different from an ERROR state because we cannot recover from an
+   * INVALID_CONFIGURATION without a code, template, or configuration change.
+   * Even if we can render some subjects, if the configuration is invalid,
+   * we will hard fail to this state.
+   */
+  CONFIGURATION_ERROR = "configuration-error",
 }
 
 type SelectionEvent = CustomEvent<{
@@ -286,6 +305,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public settings: VerificationGridSettings = {
     isFullscreen: signal(false),
     spectrogramOptions: signal(this.defaultSpectrogramOptions),
+    defaultTemplate: signal({
+      showMediaControls: true,
+      showAxes: true,
+    }),
   };
 
   @provide({ context: injectionContext })
@@ -730,6 +753,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
+    patchRemoveEventListener();
     patchAddEventListener();
   }
 
@@ -882,8 +906,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // While we are waiting for the verification grid to initialize, we will
     // be in the DATASET_FETCHING state.
     this.loadingTimeoutReference = setTimeout(() => {
-      console.error("failed to load dataset. Reason: timeout");
-      this._loadState = LoadState.ERROR;
+      if (this._loadState === LoadState.DATASET_FETCHING) {
+        console.error("failed to load dataset. Reason: timeout");
+        this._loadState = LoadState.ERROR;
+      }
     }, this.loadingTimeout * 1000);
 
     if (this.getPage) {
@@ -1300,6 +1326,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private handleSlotChange(): void {
+    if (!this.isTileTemplateValid()) {
+      this._loadState = LoadState.CONFIGURATION_ERROR;
+      console.error(
+        "The provided grid item template is invalid. A valid template must contain both a tag template and a task meter.",
+      );
+      return;
+    }
+
     this.updateRequiredClassificationTags();
     this.updateRequiredDecisions();
     this.updateInjector();
@@ -1320,6 +1354,40 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     this.anyOverlap.value = false;
+  }
+
+  /**
+   * Every template must both a tag template and task meter to be considered
+   * a valid template otherwise an error will be thrown because the template
+   * does not emit enough information to the user.
+   *
+   * Note that both spectrogram and media controls are optional because the user
+   * might want to replace the spectrogram without something else to verify such
+   * as an image or video.
+   */
+  private isTileTemplateValid(): boolean {
+    const template = this.gridItemTemplate;
+    // If there is no gridItemTemplate, then we are using the default template,
+    // and we can guarantee that the default template is valid.
+    if (!template || template.id === "default-tile-template") {
+      return true;
+    }
+
+    // Immediately return false if we know that the tagTemplate doesn't exist
+    // so that we don't have to do an unnecessary DOM query for the task meter.
+    const tagTemplate = template?.content?.querySelector("oe-tag-template");
+    if (!tagTemplate) {
+      console.error("The provided grid item template does not contain a tag template.");
+      return false;
+    }
+
+    const taskMeter = template?.content?.querySelector("oe-task-meter");
+    if (!taskMeter) {
+      console.error("The provided grid item template does not contain a task meter.");
+      return false;
+    }
+
+    return true;
   }
 
   private handlePointerMove(event: PointerEvent): void {
@@ -1460,9 +1528,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const selectedTiles = gridTiles.filter((tile) => tile.selected);
 
     if (selectedTiles.length === 0) {
-      this.currentSubSelection = gridTiles.map((tile) => tile.tile.model);
+      this.currentSubSelection = gridTiles.map((tile) => tile.model);
     } else {
-      this.currentSubSelection = selectedTiles.map((tile) => tile.tile.model);
+      this.currentSubSelection = selectedTiles.map((tile) => tile.model);
     }
 
     this.updateDecisionWhen();
@@ -1929,7 +1997,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // TODO: Remove this subject copy once we have an finalized spec to
       // represent the old value of properties that were unset.
       // see: https://github.com/ecoacoustics/web-components/issues/448
-      const oldSubject = Object.assign({}, tile.tile.model);
+      const oldSubject = Object.assign({}, tile.model);
       let tileChanges = {};
 
       for (const decision of userDecisions) {
@@ -1952,16 +2020,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         // for each decision [button] we have a toggling behavior where if the
         // decision is not present on a tile, then we want to add it and if the
         // decision is already present on a tile, we want to remove it
-        if (tile.tile.model.hasDecision(decision)) {
+        if (tile.model.hasDecision(decision)) {
           tileChanges = { ...tileChanges, ...tile.removeDecision(decision) };
         } else {
           tileChanges = { ...tileChanges, ...tile.addDecision(decision) };
-          emittedSubjects.push(tile.tile.model);
+          emittedSubjects.push(tile.model);
         }
       }
 
-      decisionMap.set(tile.tile.model, { change: tileChanges, oldSubject });
+      decisionMap.set(tile.model, { change: tileChanges, oldSubject });
     }
+
+    this.requestUpdate();
 
     // We only dispatch the "decisionMade" event after the decision has been
     // applied to the dataset.
@@ -2042,7 +2112,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
-    const subject = tile.tile.model;
+    const subject = tile.model;
     const decisionElements = this.decisionElements ?? [];
 
     const oldSubject = Object.assign({}, subject);
@@ -2219,6 +2289,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
+  private configurationFailureTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <p>
+          <strong class="dataset-failure-message">The verification grid is configured incorrectly</strong>
+        </p>
+
+        <p>
+          <small>If you are the author, please check the development console</small>
+        </p>
+      </div>
+    `;
+  }
+
+  private unexpectedStateTemplate() {
+    console.error("The verification grid entered an unexpected state");
+    return this.configurationFailureTemplate();
+  }
+
   private tileGridTemplate(): HTMLTemplateResult {
     if (this.hasFinishedDatasource) {
       return this.noItemsTemplate();
@@ -2278,24 +2367,42 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private defaultGridTileTemplate(): HTMLTemplateElement {
-    const defaultTemplate = document.createElement("template");
-    defaultTemplate.innerHTML = `
-      <div class="tile-header">
-        <oe-tag-template></oe-tag-template>
-        <oe-media-controls for="spectrogram"></oe-media-controls>
-      </div>
+    const settings = this.settings.defaultTemplate.value;
 
-      <oe-axes>
+    const defaultTemplate = document.createElement("template");
+    defaultTemplate.id = "default-tile-template";
+
+    let subjectTemplate = "";
+    if (!settings.showAxes) {
+      subjectTemplate = `
         <oe-indicator>
           <oe-spectrogram id="spectrogram"></oe-spectrogram>
         </oe-indicator>
-      </oe-axes>
+      `;
+    } else {
+      subjectTemplate = `
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+      `;
+    }
+
+    const template = `
+      <div class="tile-header">
+        <oe-tag-template></oe-tag-template>
+        ${settings.showMediaControls ? `<oe-media-controls for="spectrogram"></oe-media-controls>` : ""}
+      </div>
+
+      ${subjectTemplate}
 
       <div class="tile-footer">
         <oe-task-meter></oe-task-meter>
       </div>
     `;
 
+    defaultTemplate.innerHTML = template;
     this.appendChild(defaultTemplate);
 
     return defaultTemplate;
@@ -2356,12 +2463,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           tabindex="-1"
           @overlap="${this.handleTileOverlap}"
         >
-          ${choose(this._loadState, [
-            [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
-            [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
-            [LoadState.LOADED, () => this.tileGridTemplate()],
-            [LoadState.ERROR, () => this.datasetFailureTemplate()],
-          ])}
+          ${choose(
+            this._loadState,
+            [
+              [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
+              [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
+              [LoadState.LOADED, () => this.tileGridTemplate()],
+              [LoadState.ERROR, () => this.datasetFailureTemplate()],
+              [LoadState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
+            ],
+            this.unexpectedStateTemplate,
+          )}
         </div>
 
         <div class="footer-container">
@@ -2394,7 +2506,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
               </h2>
               <div id="decisions-container" class="decision-control-actions">
-                <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
+                <slot id="default-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
               </div>
             </span>
 
