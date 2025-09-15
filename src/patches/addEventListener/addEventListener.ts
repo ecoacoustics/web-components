@@ -33,7 +33,7 @@ export function patchAddEventListener(): void {
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void {
-    if (type !== "pointerdown" && type !== "mousedown" && type !== "click") {
+    if (type === "pointerdown" || type === "mousedown" || type === "click") {
       this[eventListenersPatchKey] ??= new Set<EventType>();
       this[eventListenersPatchKey].add(type);
     }

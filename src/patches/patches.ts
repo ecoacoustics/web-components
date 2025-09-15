@@ -9,7 +9,7 @@ export function registerPatch(identifier: symbol): void {
   // property is readonly in the PatchedWindow interface.
   // However, we still need to correctly initialize it on the window object.
   // @ts-ignore
-  window[patchedMethodsKey] ??= new Set<EventType>();
+  window[patchedMethodsKey] ??= new Set<symbol>();
   window[patchedMethodsKey].add(identifier);
 }
 

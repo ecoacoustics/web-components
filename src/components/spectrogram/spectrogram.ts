@@ -181,7 +181,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public offset: Seconds = 0;
 
   @queryAssignedElements({ selector: "source" })
-  private slottedSourceElements!: ReadonlyArray<HTMLElement>;
+  public slottedSourceElements!: ReadonlyArray<HTMLElement>;
 
   @query("#spectrogram-container", true)
   private spectrogramContainer!: Readonly<HTMLDivElement>;
@@ -718,11 +718,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return invalidationKeys.some((key) => change.has(key));
   }
 
-  private invalidateSpectrogramSource(change: PropertyValues<this>): boolean {
+  private invalidateSpectrogramSource(change: PropertyValues): boolean {
     // our AbstractComponent mixin triggers a change event when the slot content
     // changes, meaning that we can use the slotElements property to check if
     // the source has been invalidated through the slot
-    const invalidationKeys = ["src", "slottedSourceElements" as any] as const satisfies (keyof SpectrogramComponent)[];
+    const invalidationKeys = ["src", "slottedSourceElements"] as const satisfies (keyof SpectrogramComponent)[];
     return invalidationKeys.some((key) => change.has(key));
   }
 
