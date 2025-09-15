@@ -1,5 +1,3 @@
-/// <reference types="../eventTarget.d.ts" />
-
 import { eventListenersPatchKey } from "../eventTarget";
 import { deregisterPatch, hasRegisteredPatch, registerPatch } from "../patches";
 
