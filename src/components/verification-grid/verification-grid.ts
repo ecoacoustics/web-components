@@ -7,7 +7,6 @@ import {
   requiredNewTagPlaceholder,
   requiredVerificationPlaceholder,
   VerificationGridTileComponent,
-  VerificationGridTileContext,
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
@@ -30,7 +29,6 @@ import { VerificationComponent } from "../decision/verification/verification";
 import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
-import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors/colors";
@@ -383,8 +381,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-verification[verified='skip'], oe-skip" })
   private skipButtons!: DecisionComponent[];
 
-  @queryDeeplyAssignedElement({ selector: "template" })
-  private gridItemTemplate?: HTMLTemplateElement;
+  @queryAssignedElements({ selector: "template" })
+  private gridItemTemplate!: HTMLTemplateElement[];
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -563,6 +561,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private loadingTimeoutReference: any | null = null;
+  private defaultTemplateCache: HTMLTemplateElement | null = null;
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -1369,19 +1368,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const template = this.gridItemTemplate;
     // If there is no gridItemTemplate, then we are using the default template,
     // and we can guarantee that the default template is valid.
-    if (!template || template.id === "default-tile-template") {
+    if (template.length < 1) {
       return true;
     }
 
+    const targetTemplate = template[0];
+
     // Immediately return false if we know that the tagTemplate doesn't exist
     // so that we don't have to do an unnecessary DOM query for the task meter.
-    const tagTemplate = template?.content?.querySelector("oe-tag-template");
+    const tagTemplate = targetTemplate.content.querySelector("oe-tag-template");
     if (!tagTemplate) {
       console.error("The provided grid item template does not contain a tag template.");
       return false;
     }
 
-    const taskMeter = template?.content?.querySelector("oe-task-meter");
+    const taskMeter = targetTemplate.content.querySelector("oe-task-meter");
     if (!taskMeter) {
       console.error("The provided grid item template does not contain a task meter.");
       return false;
@@ -2367,10 +2368,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private defaultGridTileTemplate(): HTMLTemplateElement {
+    if (this.defaultTemplateCache) {
+      return this.defaultTemplateCache;
+    }
+
     const settings = this.settings.defaultTemplate.value;
 
+    const templateContainer = document.createElement("div");
+
     const defaultTemplate = document.createElement("template");
-    defaultTemplate.id = "default-tile-template";
 
     let subjectTemplate = "";
     if (!settings.showAxes) {
@@ -2403,7 +2409,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
 
     defaultTemplate.innerHTML = template;
-    this.appendChild(defaultTemplate);
+
+    templateContainer.appendChild(defaultTemplate);
+    this.appendChild(templateContainer);
+
+    this.defaultTemplateCache = defaultTemplate;
 
     return defaultTemplate;
   }
@@ -2413,10 +2423,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return this.emptySubjectTemplate();
     }
 
-    const tileContext: VerificationGridTileContext = {
-      requiredDecisions: this.requiredDecisions,
-      model: subject,
-    };
+    const customTemplate = this.gridItemTemplate[0];
 
     const tileTemplate = html`
       <oe-verification-grid-tile
@@ -2425,9 +2432,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         @play="${this.handleTilePlay}"
         .requiredDecisions="${this.requiredDecisions}"
         .singleTileViewMode="${this.isSingleTileViewMode}"
-        .tile="${tileContext as any}"
         .index="${index}"
-        .tileTemplate="${this.gridItemTemplate || (this.defaultGridTileTemplate() as any)}"
+        .model="${subject as any}"
+        .tileTemplate="${(customTemplate as any) || (this.defaultGridTileTemplate() as any)}"
       ></oe-verification-grid-tile>
     `;
 

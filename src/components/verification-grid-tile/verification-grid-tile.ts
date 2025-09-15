@@ -105,7 +105,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public singleTileViewMode = false;
 
   @property({ attribute: false, type: Array })
-  public readonly requiredDecisions: RequiredDecision[] = [];
+  public requiredDecisions: RequiredDecision[] = [];
+
+  @property({ attribute: false })
+  public model!: SubjectWrapper;
 
   @property({ attribute: false, type: Boolean })
   public isOverlapping = false;
@@ -142,10 +145,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
       return this.model.classifications.has(requiredDecision.text);
     });
-  }
-
-  public get model(): SubjectWrapper {
-    return this.tile.model;
   }
 
   /**
@@ -227,9 +226,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     }
   }
 
+  public updated(change: PropertyValues<this>): void {
+    if (change.has("model") || change.has("requiredDecisions")) {
+      this.updateSubject(this.model);
+    }
+  }
+
   public updateSubject(subject: SubjectWrapper): void {
-    this.tile.model = subject;
-    this.tile.requiredDecisions = this.requiredDecisions;
+    this.tile = {
+      model: subject,
+      requiredDecisions: this.requiredDecisions,
+    };
   }
 
   public resetSettings(): void {
