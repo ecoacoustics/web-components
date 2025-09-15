@@ -8,51 +8,12 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid" grid-size="1" autofocus>
+    <oe-verification-grid id="verification-grid" autofocus>
       <oe-verification verified="true" shortcut="1"></oe-verification>
       <oe-verification verified="false" shortcut="2"></oe-verification>
-      <oe-verification verified="skip" shortcut="s"></oe-verification>
-
-      <oe-tag-prompt
-        shortcut="3"
-        when="(subject) => subject?.verification?.confirmed === 'false'"
-        search="(fragment) => {
-          const options = [{ text: 'Abbots Babbler' }, { text: 'Brush Turkey' }, { text: 'Noisy Miner' }];
-          if (fragment === '') {
-            return options;
-          }
-
-          return options.filter((option) => option.text.toLowerCase().includes(fragment));
-        }"
-      ></oe-tag-prompt>
 
       <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
     </oe-verification-grid>
-
-    <section id="dev-tools">
-      <button id="next-data-source-btn">/kaleidoscope.csv</button>
-    </section>
-
-    <script type="module">
-      const dataSourceComponent = document.querySelector("oe-data-source");
-      const nextDataSourceBtn = document.getElementById("next-data-source-btn");
-
-      function nextDataSource() {
-        const nextSources = new Map([
-          ["/kaleidoscope.csv", "/some-complete-compound.csv"],
-          ["/some-complete-compound.csv", "/404-invalid.csv"],
-          ["/404-invalid.csv", "/kaleidoscope.csv"],
-        ]);
-
-        const currentSource = dataSourceComponent.getAttribute("src");
-        const nextSource = nextSources.get(currentSource);
-
-        dataSourceComponent.setAttribute("src", nextSource);
-        nextDataSourceBtn.textContent = nextSource;
-      }
-
-      nextDataSourceBtn.addEventListener("click", nextDataSource);
-    </script>
 
     <script type="module">
       const customTemplate = document.createElement("template");

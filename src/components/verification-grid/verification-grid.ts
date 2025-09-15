@@ -2424,24 +2424,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     const customTemplate = this.gridItemTemplate[0];
+    const tileTemplate = customTemplate ?? this.defaultGridTileTemplate();
 
-    const tileTemplate = html`
+    const gridTile = html`
       <oe-verification-grid-tile
         class="grid-tile"
         @oe-tile-loaded="${this.handleTileLoaded}"
         @play="${this.handleTilePlay}"
-        .requiredDecisions="${this.requiredDecisions}"
+        .requiredDecisions="${this.requiredDecisions as any}"
         .singleTileViewMode="${this.isSingleTileViewMode}"
         .index="${index}"
         .model="${subject as any}"
-        .tileTemplate="${(customTemplate as any) || (this.defaultGridTileTemplate() as any)}"
+        .tileTemplate="${tileTemplate as any}"
       ></oe-verification-grid-tile>
     `;
 
     // By using "cache" here Lit will cache the tile template meaning that it
     // doesn't need to be re-created when tiles are added or removed from the
     // grid.
-    return html`${cache(tileTemplate)}`;
+    return html`${cache(gridTile)}`;
   }
 
   public render() {
