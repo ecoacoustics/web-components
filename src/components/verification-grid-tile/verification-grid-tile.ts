@@ -182,6 +182,10 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.templateContent.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
     this.templateContent.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
 
+    if (this.spectrogram) {
+      this.spectrogram.src = this.model.url;
+    }
+
     console.debug("oe-verification-grid-tile: firstUpdated");
     this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
       root: this,

@@ -2308,7 +2308,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.configurationFailureTemplate();
   }
 
-  private tileGridTemplate(): HTMLTemplateResult {
+  private gridLoadedTemplate(): HTMLTemplateResult {
     if (this.hasFinishedDatasource) {
       return this.noItemsTemplate();
     }
@@ -2467,8 +2467,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
             this._loadState,
             [
               [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
-              [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
-              [LoadState.LOADED, () => this.tileGridTemplate()],
+              [LoadState.TILES_LOADING, () => this.gridLoadedTemplate()],
+              [LoadState.LOADED, () => this.gridLoadedTemplate()],
               [LoadState.ERROR, () => this.datasetFailureTemplate()],
               [LoadState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
             ],
