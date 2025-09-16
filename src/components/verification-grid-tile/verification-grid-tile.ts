@@ -344,7 +344,9 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
       return;
     }
 
-    // Shoelace tooltip component have a click event handler on their host
+    // Shoelace tooltip component have a click event handler on their host that
+    // we want to ignore so that clicking on an element with a tooltip can still
+    // select the tile.
     const excludedTargets = ["sl-tooltip"];
 
     for (const target of event.composedPath()) {

@@ -1358,11 +1358,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   /**
    * Every template must both a tag template and task meter to be considered
    * a valid template otherwise an error will be thrown because the template
-   * does not emit enough information to the user.
+   * does not have enough information for the user to complete any tasks.
    *
-   * Note that both spectrogram and media controls are optional because the user
-   * might want to replace the spectrogram without something else to verify such
-   * as an image or video.
+   * Note that both spectrogram and media controls are optional because the host
+   * application might want to replace the spectrogram without something else to
+   * verify such as an image or video.
    */
   private isTileTemplateValid(): boolean {
     const template = this.gridItemTemplate;
@@ -1372,6 +1372,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return true;
     }
 
+    // TODO: If there are multiple templates, we should iterate through them all
+    // until we find the first valid template instead of always using the first.
     const targetTemplate = template[0];
 
     // Immediately return false if we know that the tagTemplate doesn't exist
@@ -2298,7 +2300,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         </p>
 
         <p>
-          <small>If you are the author, please check the development console</small>
+          <small>Please check the development console for more information</small>
         </p>
       </div>
     `;
@@ -2367,54 +2369,55 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
   }
 
+  private defaultSpectrogramTemplate(): string {
+    if (!this.settings.defaultTemplate.value.showAxes) {
+      return `
+        <oe-indicator>
+          <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        </oe-indicator>
+      `;
+    }
+
+    return `
+      <oe-axes>
+        <oe-indicator>
+          <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        </oe-indicator>
+      </oe-axes>
+    `;
+  }
+
   private defaultGridTileTemplate(): HTMLTemplateElement {
     if (this.defaultTemplateCache) {
       return this.defaultTemplateCache;
     }
 
     const settings = this.settings.defaultTemplate.value;
-
-    const templateContainer = document.createElement("div");
-
-    const defaultTemplate = document.createElement("template");
-
-    let subjectTemplate = "";
-    if (!settings.showAxes) {
-      subjectTemplate = `
-        <oe-indicator>
-          <oe-spectrogram id="spectrogram"></oe-spectrogram>
-        </oe-indicator>
-      `;
-    } else {
-      subjectTemplate = `
-        <oe-axes>
-          <oe-indicator>
-            <oe-spectrogram id="spectrogram"></oe-spectrogram>
-          </oe-indicator>
-        </oe-axes>
-      `;
-    }
-
     const template = `
       <div class="tile-header">
         <oe-tag-template></oe-tag-template>
         ${settings.showMediaControls ? `<oe-media-controls for="spectrogram"></oe-media-controls>` : ""}
       </div>
 
-      ${subjectTemplate}
+      ${this.defaultSpectrogramTemplate()}
 
       <div class="tile-footer">
         <oe-task-meter></oe-task-meter>
       </div>
     `;
 
+    // We wrap the default template in a div element so that when querying for
+    // custom user templates (which is a shallow query), we don't match against
+    // the default template.
+    const templateContainer = document.createElement("div");
+
+    const defaultTemplate = document.createElement("template");
     defaultTemplate.innerHTML = template;
 
     templateContainer.appendChild(defaultTemplate);
     this.appendChild(templateContainer);
 
     this.defaultTemplateCache = defaultTemplate;
-
     return defaultTemplate;
   }
 
@@ -2450,12 +2453,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       <slot id="tile-template-slot" name="tile-content"></slot>
 
       <oe-verification-bootstrap
+        @open="${this.handleBootstrapDialogOpen}"
+        @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
         .decisionElements="${this.decisionElements ?? []}"
         .isMobile="${this.isMobileDevice()}"
-        @open="${this.handleBootstrapDialogOpen}"
-        @close="${this.handleBootstrapDialogClose}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" part="highlight-box"></div>
 
@@ -2465,11 +2468,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         </div>
 
         <div
+          @overlap="${this.handleTileOverlap}"
           id="grid-container"
           class="verification-grid"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           tabindex="-1"
-          @overlap="${this.handleTileOverlap}"
         >
           ${choose(
             this._loadState,
@@ -2490,11 +2493,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               <oe-verification-grid-settings></oe-verification-grid-settings>
 
               <button
+                @click="${() => this.handleHelpRequest()}"
                 class="oe-btn-info"
                 rel="help"
                 aria-label="Help and keyboard shortcuts"
                 data-testid="help-dialog-button"
-                @click="${() => this.handleHelpRequest()}"
               >
                 <sl-icon name="question-circle" class="large-icon"></sl-icon>
               </button>

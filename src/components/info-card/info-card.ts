@@ -36,7 +36,10 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     html`<a href="${value}" target="_blank">${this.formatUrl(value)}</a>`;
 
   private subjectRowCount(): number {
-    if (!this.tile) {
+    // The tile model might be undefined if the component is not slotted inside
+    // of a grid tile component. Or if the grid tile component does not have a
+    // model assigned to it.
+    if (!this.tile?.model) {
       return 0;
     }
 

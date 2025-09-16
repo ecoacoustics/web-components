@@ -68,31 +68,6 @@ and [code-workspace](/webcomponents.code-workspace).
 7. All methods on a web component that returns a HTML, or SVG template must be
    prepended with "Template" (e.g. `private decisionPromptTemplate(): HTMLTemplateResult`)
 
-## HTML Attributes
-
-1. Should follow the order
-   1. Normal attributes
-   2. Aria attributes
-   3. Test ids
-   4. Attributes without a value
-   5. Boolean attributes
-   6. Properties
-   7. Event listeners
-
-```html
-<button
-  class="oe-btn"
-  aria-label="help information"
-  data-testid="help-dialog-button"
-  readonly
-  ?disabled="${false}"
-  .property="${false}"
-  @click="openHelpDialog()"
->
-  Help
-</button>
-```
-
 ## CSS Parts
 
 Default styles that can be overwritten by css parts should be set in the

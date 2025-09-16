@@ -17,13 +17,22 @@ import { DecisionOptions } from "../../models/decisions/decision";
 import { ifDefined } from "lit/directives/if-defined.js";
 import taskMeterStyles from "./css/style.css?inline";
 
+/**
+ * @description
+ * A component to display what decisions have been applied to a subject and if
+ * there are any outstanding decisions.
+ */
 @customElement("oe-task-meter")
 export class TaskMeterComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(taskMeterStyles);
 
   // The subject can be undefined if this component is not slotted inside of a
   // grid tile component.
+  //
+  // TODO: This is technically a public facing API/property, so we should ensure
+  // that the type passed into the "tile" property is a gridTileContext.
   @consume({ context: gridTileContext, subscribe: true })
+  @state()
   public tile?: VerificationGridTileContext;
 
   @consume({ context: injectionContext, subscribe: true })
@@ -74,7 +83,7 @@ export class TaskMeterComponent extends AbstractComponent(LitElement) {
       tooltipText = "new tag: not required";
     } else if (currentNewTag) {
       if (currentNewTag.confirmed === DecisionOptions.SKIP) {
-        tooltipText = `new tag: ${currentNewTag.confirmed}`;
+        tooltipText = `new tag: ${DecisionOptions.SKIP}`;
       } else {
         tooltipText = `new tag: ${currentNewTag.tag?.text}`;
       }
@@ -93,14 +102,14 @@ export class TaskMeterComponent extends AbstractComponent(LitElement) {
   private meterSegmentTemplate(tooltip: string, color?: string): HTMLTemplateResult {
     return html`
       <sl-tooltip content="${tooltip}">
-        <span class="progress-meter-segment" style="background: var(${ifDefined(color)})"></span>
+        <span class="task-meter-segment" style="background: var(${ifDefined(color)})"></span>
       </sl-tooltip>
     `;
   }
 
   public render(): HTMLTemplateResult {
     return html`
-      <div class="progress-meter">
+      <div class="task-meter">
         ${repeat(this.tile?.requiredDecisions ?? [], (requiredDecision: RequiredDecision) => {
           if (requiredDecision === requiredVerificationPlaceholder) {
             return this.verificationMeterTemplate();
@@ -112,5 +121,11 @@ export class TaskMeterComponent extends AbstractComponent(LitElement) {
         })}
       </div>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-task-meter": TaskMeterComponent;
   }
 }

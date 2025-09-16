@@ -1,20 +1,17 @@
 :host {
   display: block;
   position: relative;
-
-  width: 100%;
 }
 
-.progress-meter {
-  --progress-meter-rounding: var(--oe-border-rounding);
+.task-meter {
+  --task-meter-rounding: var(--oe-border-rounding);
 
   display: flex;
-  width: 100%;
-  min-height: var(--oe-spacing);
+  height: 0.8rem;
 
   /* We use outline to minimize background-bleed seen with borders */
   outline: var(--oe-border-width) solid var(--oe-border-color);
-  border-radius: var(--progress-meter-rounding);
+  border-radius: var(--task-meter-rounding);
   background-clip: padding-box;
 
   /*
@@ -22,15 +19,18 @@
     want the progress meter to be vertically aligned to all the other elements
     in the verification grid tile.
   */
-  margin-top: var(--oe-spacing);
-  margin-bottom: var(--oe-spacing);
+  margin-block: var(--oe-spacing);
 }
 
-.progress-meter-segment {
+.task-meter-segment {
   flex: 1 0;
 
-  /* This default background will be overwritten if a decision is applied */
-  background-color: var(--oe-undecided-color);
+  /*
+    This default background will be overwritten if a decision is applied.
+    We use "background" instead of "background-color" here so that host
+    applications can use gradients, images, etc... for the undecided state.
+  */
+  background: var(--oe-undecided-color);
 }
 
 /*
@@ -39,7 +39,7 @@
   border on the last item. One from the progress-meter-item and one from the
   progress-meter itself.
 */
-:not(:last-child) > .progress-meter-segment {
+:not(:last-child) > .task-meter-segment {
   border-right: var(--oe-border-width) solid var(--oe-border-color);
 }
 
@@ -53,12 +53,12 @@
   We don't round every edge because we want the individual items to be separated
   with a straight edge.
 */
-:first-child > .progress-meter-segment {
-  border-top-left-radius: var(--progress-meter-rounding);
-  border-bottom-left-radius: var(--progress-meter-rounding);
+:first-child > .task-meter-segment {
+  border-top-left-radius: var(--task-meter-rounding);
+  border-bottom-left-radius: var(--task-meter-rounding);
 }
 
-:last-child > .progress-meter-segment {
-  border-top-right-radius: var(--progress-meter-rounding);
-  border-bottom-right-radius: var(--progress-meter-rounding);
+:last-child > .task-meter-segment {
+  border-top-right-radius: var(--task-meter-rounding);
+  border-bottom-right-radius: var(--task-meter-rounding);
 }

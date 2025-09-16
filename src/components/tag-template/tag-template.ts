@@ -1,4 +1,4 @@
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
@@ -8,41 +8,62 @@ import { decisionNotRequired } from "../../models/decisions/decisionNotRequired"
 import { VerificationGridTileContext } from "verification-grid-tile/verification-grid-tile";
 import tagTemplateStyles from "./css/style.css?inline";
 
+/**
+ * @description
+ * A component to display the currently applied tag to a subject.
+ */
 @customElement("oe-tag-template")
 export class TagTemplateComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(tagTemplateStyles);
 
   // The subject can be undefined if this component is not slotted inside of a
   // grid tile component.
+  //
+  // TODO: This is technically a public facing API/property, so we should ensure
+  // that the type passed into the "tile" property is a gridTileContext.
   @consume({ context: gridTileContext, subscribe: true })
+  @state()
   public tile?: VerificationGridTileContext;
 
-  public render(): HTMLTemplateResult {
-    const tagText = this.tile?.model?.tag?.text;
+  private get tagText(): string {
+    return this.tile?.model?.tag?.text ?? "";
+  }
 
-    let tooltipContent = "";
+  private tooltipContent(): string {
     if (!this.tile?.model?.newTag) {
-      tooltipContent = `This item was tagged as '${tagText}' in your data source`;
-    } else if (this.tile?.model?.newTag === decisionNotRequired) {
-      tooltipContent = `The requirements for this task have not been met`;
-    } else if (!this.tile?.model.tag) {
-      // If we didn't originally have a tag to correct
-      tooltipContent = `'${this.tile?.model?.newTag?.tag?.text}' has been added to this subject`;
-    } else {
-      // We replaced the original tag with a new tag
-      tooltipContent = `This item has been corrected to '${this.tile?.model?.newTag?.tag?.text}'`;
+      return `This item was tagged as '${this.tagText}' in your data source`;
     }
 
+    if (this.tile?.model?.newTag === decisionNotRequired) {
+      return `The requirements for this task have not been met`;
+    }
+
+    if (!this.tile?.model.tag) {
+      // If we didn't originally have a tag to correct
+      return `'${this.tile?.model?.newTag?.tag?.text}' has been added to this subject`;
+    }
+
+    // We replaced the original tag with a new tag
+    return `This item has been corrected to '${this.tile?.model?.newTag?.tag?.text}'`;
+  }
+
+  public render(): HTMLTemplateResult {
     return html`
       <figcaption class="tag-label">
-        <sl-tooltip content="${tooltipContent}" placement="bottom-start" hoist>
+        <sl-tooltip content="${this.tooltipContent()}" placement="bottom-start" hoist>
           <span data-testid="tile-tag-text">
             ${this.tile?.model?.newTag && this.tile.model.newTag !== decisionNotRequired
-              ? html`<del>${tagText}</del> <ins>${this.tile?.model?.newTag?.tag?.text}</ins>`
-              : html`${tagText}`}
+              ? html`<del>${this.tagText}</del> <ins>${this.tile?.model?.newTag?.tag?.text}</ins>`
+              : html`${this.tagText}`}
           </span>
         </sl-tooltip>
       </figcaption>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "oe-tag-template": TagTemplateComponent;
   }
 }

@@ -1,4 +1,4 @@
-import { eventListenersPatchKey } from "../eventTarget";
+import { eventListeners } from "../eventTarget";
 import { deregisterPatch, hasRegisteredPatch, registerPatch } from "../patches";
 
 const patchIdentifier = Symbol("__oe_patch_EventTarget.removeEventListener");
@@ -17,8 +17,8 @@ export function patchRemoveEventListener(): void {
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ): void {
-    if (this[eventListenersPatchKey]?.has(type)) {
-      this[eventListenersPatchKey].delete(type);
+    if (this[eventListeners]?.has(type)) {
+      this[eventListeners].delete(type);
     }
 
     originalRemoveEventListener.call(this, type, listener, options);

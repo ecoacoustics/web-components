@@ -245,6 +245,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           <label>
             <input
               @change="${changeHandler}"
+              @click="${(event: PointerEvent) => event.stopPropagation()}"
               type="range"
               min="${min}"
               max="${max}"

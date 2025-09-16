@@ -1,30 +1,29 @@
 export interface PatchedWindow {
-  readonly [patchedMethodsKey]: Set<symbol>;
+  [patchedMethods]: Set<symbol>;
 }
 
-const patchedMethodsKey = Symbol("__oe_patched_methods");
+const patchedMethods = Symbol("__oe_patched_methods");
 
+/**
+ * Maintains a global
+ */
 export function registerPatch(identifier: symbol): void {
-  // We expect that there will be an error here because the __oe_patched_methods
-  // property is readonly in the PatchedWindow interface.
-  // However, we still need to correctly initialize it on the window object.
-  // @ts-ignore
-  window[patchedMethodsKey] ??= new Set<symbol>();
-  window[patchedMethodsKey].add(identifier);
+  window[patchedMethods] ??= new Set<symbol>();
+  window[patchedMethods].add(identifier);
 }
 
 export function deregisterPatch(identifier: symbol): void {
-  if (!Object.prototype.hasOwnProperty.call(window, patchedMethodsKey)) {
+  if (!Object.prototype.hasOwnProperty.call(window, patchedMethods)) {
     return;
   }
 
-  window[patchedMethodsKey].delete(identifier);
+  window[patchedMethods].delete(identifier);
 }
 
 export function hasRegisteredPatch(identifier: symbol): boolean {
-  if (!Object.prototype.hasOwnProperty.call(window, patchedMethodsKey)) {
+  if (!Object.prototype.hasOwnProperty.call(window, patchedMethods)) {
     return false;
   }
 
-  return window[patchedMethodsKey].has(identifier);
+  return window[patchedMethods].has(identifier);
 }
