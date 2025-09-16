@@ -344,12 +344,17 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
       return;
     }
 
-    for (const element of event.composedPath()) {
-      if (element === this.contentsWrapper) {
+    // Shoelace tooltip component have a click event handler on their host
+    const excludedTargets = ["sl-tooltip"];
+
+    for (const target of event.composedPath()) {
+      if (target === this.contentsWrapper) {
+        break;
+      } else if (target instanceof HTMLElement && excludedTargets.includes(target.tagName.toLowerCase())) {
         break;
       }
 
-      if (hasClickLikeEventListener(element)) {
+      if (hasClickLikeEventListener(target)) {
         return;
       }
     }

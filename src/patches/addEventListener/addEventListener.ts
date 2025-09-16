@@ -17,7 +17,7 @@ export function hasClickLikeEventListener(target: EventTarget): boolean {
     return false;
   }
 
-  const clickLikeEvents = ["click", "mousedown", "pointerdown"];
+  const clickLikeEvents = ["click", "pointerdown"];
   return clickLikeEvents.some((event) => targetListeners.has(event));
 }
 

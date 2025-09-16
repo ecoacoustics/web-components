@@ -53,30 +53,5 @@
 
       nextDataSourceBtn.addEventListener("click", nextDataSource);
     </script>
-
-    <script type="module">
-      const customTemplate = document.createElement("template");
-      customTemplate.innerHTML = `
-        <oe-tag-template></oe-tag-template>
-        <oe-spectrogram id="spectrogram"></oe-spectrogram>
-        <oe-task-meter></oe-task-meter>
-      `;
-
-      const buttonWithListener = document.createElement("button");
-      buttonWithListener.textContent = "button with listener";
-      buttonWithListener.dataset.testid = "button-with-listener";
-      buttonWithListener.addEventListener("click", () => {});
-
-      customTemplate.content.appendChild(buttonWithListener);
-
-      const buttonWithoutListener = document.createElement("button");
-      buttonWithoutListener.textContent = "button without listener";
-      buttonWithoutListener.dataset.testid = "button-without-listener";
-
-      customTemplate.content.appendChild(buttonWithoutListener);
-
-      const verificationGrid = document.querySelector("oe-verification-grid");
-      verificationGrid.appendChild(customTemplate);
-    </script>
   </body>
 </html>

@@ -142,7 +142,7 @@ test.describe("single verification grid", () => {
 
     test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture }) => {
       await fixture.changeToDesktop();
-      await fixture.openBootstrapDialog();
+      await fixture.bootstrapDialogButton().click();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
@@ -157,7 +157,7 @@ test.describe("single verification grid", () => {
     // expect that the user is taken straight to the tutorial modal
     test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture }) => {
       await fixture.changeToMobile();
-      await fixture.openBootstrapDialog();
+      await fixture.bootstrapDialogButton().click();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
@@ -2071,7 +2071,7 @@ test.describe("decision meter", () => {
     // when navigating in history
     test("should have the correct colors when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we
@@ -2089,7 +2089,7 @@ test.describe("decision meter", () => {
 
     test("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we
@@ -2134,7 +2134,7 @@ test.describe("decision meter", () => {
     // component, we have seen bugs where only skip decisions fail to show
     // correctly in the progress meter.
     test("should show skip decisions correctly", async ({ fixture }) => {
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual([await fixture.skipColor()]);

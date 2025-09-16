@@ -106,8 +106,8 @@ class TestPage {
 
   private newTagSearchResults = () => this.page.locator(".typeahead-result-action");
 
+  public skipButton = () => this.skipComponent().locator("#decision-button").first();
   private skipComponent = () => this.page.locator("oe-skip").first();
-  private skipButton = () => this.skipComponent().locator("#decision-button").first();
 
   public moreInformationButtons = () => this.page.locator("#more-information-button");
   public unscopedButton = () => this.page.locator("#unscoped-button").first();
@@ -733,10 +733,6 @@ class TestPage {
     await dragSlider(this.page, input, value);
   }
 
-  public async openBootstrapDialog() {
-    await this.bootstrapDialogButton().click();
-  }
-
   public async subSelect(items: number | number[], modifiers?: KeyboardModifiers) {
     const gridTiles = this.gridTileContainers();
 
@@ -821,10 +817,6 @@ class TestPage {
     await resultButton.click();
 
     await decisionEvent;
-  }
-
-  public async makeSkipDecision() {
-    await this.skipButton().click();
   }
 
   public async viewPreviousHistoryPage() {

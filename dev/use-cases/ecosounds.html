@@ -20,18 +20,23 @@
 
     <oe-verification-grid id="verification-grid" grid-size="12" loading-timeout="20" autofocus>
       <template>
-        <oe-media-controls for="spectrogram"></oe-media-controls>
+        <div class="tile-header">
+          <oe-tag-template></oe-tag-template>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
         <oe-axes>
           <oe-indicator>
             <oe-spectrogram id="spectrogram"></oe-spectrogram>
           </oe-indicator>
         </oe-axes>
 
-        <oe-task-meter></oe-task-meter>
-
-        <div class="slotted-content">
-          <a href="#">Listen Page</a>
-          <a href="#">Show More</a>
+        <div class="tile-footer">
+          <oe-task-meter></oe-task-meter>
+          <div class="slotted-content">
+            <a href="#">Listen Page</a>
+            <a href="#">Show More</a>
+          </div>
         </div>
 
         <style>
