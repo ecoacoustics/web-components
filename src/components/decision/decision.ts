@@ -49,7 +49,6 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   protected abstract isShortcutKey(event: KeyboardEvent): boolean;
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   protected injector: VerificationGridInjector = {
     colorService: decisionColor,
   };

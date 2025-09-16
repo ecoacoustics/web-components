@@ -1,4 +1,4 @@
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
@@ -12,18 +12,14 @@ import tagTemplateStyles from "./css/style.css?inline";
  * @description
  * A component to display the currently applied tag to a subject.
  */
-@customElement("oe-tag-template")
+@customElement("oe-subject-tag")
 export class TagTemplateComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(tagTemplateStyles);
 
   // The subject can be undefined if this component is not slotted inside of a
   // grid tile component.
-  //
-  // TODO: This is technically a public facing API/property, so we should ensure
-  // that the type passed into the "tile" property is a gridTileContext.
   @consume({ context: gridTileContext, subscribe: true })
-  @state()
-  public tile?: VerificationGridTileContext;
+  private tile?: VerificationGridTileContext;
 
   private get tagText(): string {
     return this.tile?.model?.tag?.text ?? "";
@@ -64,6 +60,6 @@ export class TagTemplateComponent extends WithShoelace(AbstractComponent(LitElem
 
 declare global {
   interface HTMLElementTagNameMap {
-    "oe-tag-template": TagTemplateComponent;
+    "oe-subject-tag": TagTemplateComponent;
   }
 }

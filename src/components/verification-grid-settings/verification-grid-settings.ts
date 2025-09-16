@@ -16,8 +16,7 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
   public static styles = unsafeCSS(settingComponentStyles);
 
   @consume({ context: verificationGridContext, subscribe: true })
-  @state()
-  public settings!: VerificationGridSettings;
+  private settings!: VerificationGridSettings;
 
   @property({ attribute: "max-grid-size", type: Number })
   public maxGridSize = 36;

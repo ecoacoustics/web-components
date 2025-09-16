@@ -1,4 +1,4 @@
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { repeat } from "lit/directives/repeat.js";
@@ -32,11 +32,9 @@ export class TaskMeterComponent extends AbstractComponent(LitElement) {
   // TODO: This is technically a public facing API/property, so we should ensure
   // that the type passed into the "tile" property is a gridTileContext.
   @consume({ context: gridTileContext, subscribe: true })
-  @state()
-  public tile?: VerificationGridTileContext;
+  private tile?: VerificationGridTileContext;
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   private injector!: VerificationGridInjector;
 
   private classificationMeterTemplate(requiredTag: Tag): HTMLTemplateResult {

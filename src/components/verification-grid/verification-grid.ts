@@ -299,7 +299,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private static readonly autoPageTimeout = 0.3 satisfies Seconds;
 
   @provide({ context: verificationGridContext })
-  @state()
+  @property({ attribute: false })
   public settings: VerificationGridSettings = {
     isFullscreen: signal(false),
     spectrogramOptions: signal(this.defaultSpectrogramOptions),
@@ -1370,6 +1370,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // and we can guarantee that the default template is valid.
     if (template.length < 1) {
       return true;
+    } else if (this.gridItemTemplate.length > 1) {
+      console.warn("Multiple custom grid tile templates found, only the first template will be used.");
     }
 
     // TODO: If there are multiple templates, we should iterate through them all
@@ -1378,15 +1380,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // Immediately return false if we know that the tagTemplate doesn't exist
     // so that we don't have to do an unnecessary DOM query for the task meter.
-    const tagTemplate = targetTemplate.content.querySelector("oe-tag-template");
+    const tagTemplate = targetTemplate.content.querySelector("oe-subject-tag");
     if (!tagTemplate) {
-      console.error("The provided grid item template does not contain a tag template.");
+      console.error("The provided grid item template does not contain a subject tag component.");
       return false;
     }
 
     const taskMeter = targetTemplate.content.querySelector("oe-task-meter");
     if (!taskMeter) {
-      console.error("The provided grid item template does not contain a task meter.");
+      console.error("The provided grid item template does not contain a task meter component.");
       return false;
     }
 
@@ -2395,7 +2397,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const settings = this.settings.defaultTemplate.value;
     const template = `
       <div class="tile-header">
-        <oe-tag-template></oe-tag-template>
+        <oe-subject-tag></oe-subject-tag>
         ${settings.showMediaControls ? `<oe-media-controls for="spectrogram"></oe-media-controls>` : ""}
       </div>
 

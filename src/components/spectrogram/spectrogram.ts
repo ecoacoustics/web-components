@@ -1,5 +1,5 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
-import { customElement, property, query, queryAssignedElements, state } from "lit/decorators.js";
+import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
 import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel, OriginalAudioRecording } from "../../models/recordings";
@@ -20,9 +20,9 @@ import { AudioInformation } from "../../helpers/audio/audioInformation";
 import { consume } from "@lit/context";
 import { verificationGridContext } from "../../helpers/constants/contextTokens";
 import { VerificationGridSettings } from "verification-grid/verification-grid";
+import { ValidNumber } from "../../helpers/types/advancedTypes";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
-import { ValidNumber } from "../../helpers/types/advancedTypes";
 
 export interface IPlayEvent {
   play: boolean;
@@ -84,7 +84,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   @consume({ context: verificationGridContext, subscribe: true })
-  @state()
   private gridSettings?: VerificationGridSettings;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"

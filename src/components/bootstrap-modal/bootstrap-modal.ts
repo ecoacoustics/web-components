@@ -64,7 +64,6 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public static readonly closeEventName = "close";
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   private injector!: VerificationGridInjector;
 
   // because this is an internal web component, we can use the state decorator

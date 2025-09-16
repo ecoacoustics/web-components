@@ -1483,7 +1483,7 @@ test.describe("single verification grid", () => {
       const testedSlotContent = `
         <template>
           <div class="tile-header">
-            <oe-tag-template></oe-tag-template>
+            <oe-subject-tag></oe-subject-tag>
             <oe-media-controls for="spectrogram"></oe-media-controls>
           </div>
 
@@ -2291,7 +2291,7 @@ test.describe("verification grid with slotted templates", () => {
 
         <template>
           <div class="tile-header">
-            <oe-tag-template></oe-tag-template>
+            <oe-subject-tag></oe-subject-tag>
             <oe-media-controls for="spectrogram"></oe-media-controls>
           </div>
 
@@ -2383,7 +2383,7 @@ test.describe("verification grid with slotted templates", () => {
 
   test.describe("invalid templates", () => {
     test("should error when missing required elements", { tag: [expectConsoleError] }, async ({ fixture }) => {
-      // Even though the verification grid is missing both the oe-tag-template
+      // Even though the verification grid is missing both the oe-subject-tag
       // and the oe-task-meter elements, we only error for one of them at a
       // time.
       const expectedError = "The provided grid item template does not contain a tag template.";
@@ -2425,17 +2425,83 @@ test.describe("verification grid with slotted templates", () => {
       await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
     });
 
-    test("should fall back to the default template if the custom template is removed", () => {});
+    test("should fall back to the default template if the custom template is removed", async ({ fixture }) => {
+      await fixture.removeCustomTemplate();
+
+      // We make assertions over the displayed spectrograms because changing the
+      // template will cause the verification grid to update.
+      // If we are incorrectly advancing, skipping tiles, or not updating the
+      // grid tiles with the new template, we want this test to fail.
+      const spectrograms = fixture.spectrogramComponents();
+      await expect(spectrograms).toHaveCount(4);
+
+      await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+      await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
+      await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
+      await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+
+      // The "more information" button is a part of the custom template, and
+      // should not be present after reverting to the default template.
+      // If the button is still present, we are probably not updating the
+      // verification grid tiles "" property correctly.
+      await expect(fixture.moreInformationButtons()).toHaveCount(0);
+    });
+
+    test("should be able to change from a default template to a custom template", () => {});
 
     // This test tests fully replacing the "<template>" element with a new
     // one.
     // This is different from just updating the contents of the existing
-    // template which is tested in the next test.
-    test("should correctly update the tile template if it is replaced", () => {});
+    // template.
+    //
+    // When replacing the verification grid tile, we append the new template
+    // before removing the old one to give the verification grid the hardest
+    // chance of correctly updating.
+    // If we instead removed the old template first, we would be updating from
+    // a no-template state to a new template which is an easier change.
+    test("should correctly update the tile template if it is replaced", async ({ fixture }) => {
+      const gridSize = await fixture.getGridSize();
 
+      const customTemplate = `
+        <oe-subject-tag></oe-subject-tag>
+        <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        <oe-task-meter></oe-task-meter>
+
+        <a href="/about" data-testid="new-template-link">New Link</a>
+      `;
+
+      await fixture.addCustomTemplate(customTemplate);
+
+      // We expect that the new template is not being used because the original
+      // template will be the first one found.
+      // Therefore, the "more information" button should still be present.
+      await expect(fixture.moreInformationButtons()).toHaveCount(gridSize);
+
+      await fixture.removeCustomTemplate();
+
+      await expect(fixture.moreInformationButtons()).toHaveCount(0);
+
+      const newTemplateLink = fixture.page.getByTestId("new-template-link");
+      await expect(newTemplateLink.first()).toBeVisible();
+      await expect(newTemplateLink).toHaveCount(gridSize);
+    });
+
+    // TODO: https://github.com/ecoacoustics/web-components/issues/521
     // In this test, we update an attribute on an existing template to stress
     // test the template updating logic.
-    test("should update the tile template if the template content changes", () => {});
+    test.skip("should update the tile template if the template content changes", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((element) => {
+        const template = element.querySelector("template") as HTMLTemplateElement;
+        const moreInformationButton = template.content.getElementById("more-information-button") as HTMLAnchorElement;
+
+        // Notice that we are updating the textContent of the button in-place.
+        moreInformationButton.textContent = "Updated Button Text";
+      });
+
+      // I use text in this assertion so that we can visually see that the
+      // template was updated in the test screenshot.
+      await expect(fixture.moreInformationButtons().first()).toHaveText("Updated Button Text");
+    });
 
     // We should not be able to leak styling outside of the <template> element
     // and into the main document or other elements inside of the grid tile
@@ -2522,6 +2588,27 @@ test.describe("default templates", () => {
       await expect(component.first()).toBeVisible();
       await expect(component).toHaveCount(4);
     }
+  });
+
+  // After the verification grid has been fully initialized, we add a custom
+  // template.
+  test("should be able to change to a custom template", async ({ fixture }) => {
+    const gridSize = await fixture.getGridSize();
+
+    const customTemplate = `
+        <oe-subject-tag></oe-subject-tag>
+        <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        <oe-task-meter></oe-task-meter>
+
+        <a href="/about" data-testid="new-template-link">New Link</a>
+      `;
+
+    await fixture.addCustomTemplate(customTemplate);
+
+    const newTemplateLink = fixture.page.getByTestId("new-template-link");
+
+    await expect(newTemplateLink.first()).toBeVisible();
+    await expect(newTemplateLink).toHaveCount(gridSize);
   });
 });
 

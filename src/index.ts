@@ -9,7 +9,7 @@ export * from "./components/spectrogram/spectrogram";
 export * from "./components/indicator/indicator";
 export * from "./components/axes/axes";
 
-export * from "./components/tag-template/tag-template";
+export * from "./components/subject-tag/subject-tag";
 export * from "./components/data-source/data-source";
 export * from "./components/task-meter/task-meter";
 

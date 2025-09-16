@@ -36,7 +36,7 @@ export class SpectrogramOptions {
   public windowSize: PowerTwoWindowSize;
   /** number of samples to overlap between windows */
   public windowOverlap: number;
-  public readonly windowFunction: WindowFunctionName;
+  public windowFunction: WindowFunctionName;
   public melScale: boolean;
   public brightness: number;
   public contrast: number;

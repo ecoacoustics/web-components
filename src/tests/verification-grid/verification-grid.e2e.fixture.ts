@@ -53,7 +53,7 @@ class TestPage {
   public axesComponents = () => this.page.locator("oe-axes");
   public annotateComponents = () => this.page.locator("oe-annotate");
   public taskMeterComponents = () => this.page.locator("oe-task-meter");
-  public tagTemplateComponents = () => this.page.locator("oe-tag-template");
+  public tagTemplateComponents = () => this.page.locator("oe-subject-tag");
   public mediaControlsComponents = () => this.page.locator("oe-media-controls");
   public infoCardComponents = () => this.page.locator("oe-info-card");
 
@@ -291,7 +291,7 @@ class TestPage {
 
   public async createWithInvalidTemplate() {
     // The <template> passed into the verification grid is missing both the
-    // <oe-tag-template> and <oe-task-meter> elements that are required.
+    // <oe-subject-tag> and <oe-task-meter> elements that are required.
     await setContent(
       this.page,
       `
@@ -322,7 +322,7 @@ class TestPage {
       `
       <template>
         <div class="tile-header">
-          <oe-tag-template></oe-tag-template>
+          <oe-subject-tag></oe-subject-tag>
           <oe-media-controls for="spectrogram"></oe-media-controls>
         </div>
 
@@ -370,6 +370,29 @@ class TestPage {
     `,
       ["#unscoped-button"],
     );
+  }
+
+  /**
+   * Removes the **first** `<template>` content assigned to the verification
+   * grids default slot.
+   */
+  public async removeCustomTemplate() {
+    await this.gridComponent().evaluate((element: VerificationGridComponent) => {
+      const templateToRemove = element.querySelector("template");
+      if (!templateToRemove) {
+        throw new Error("No <template> found to remove");
+      }
+
+      element.removeChild(templateToRemove);
+    });
+  }
+
+  public async addCustomTemplate(content: string) {
+    await this.gridComponent().evaluate((element: VerificationGridComponent, templateContent: string) => {
+      const template = document.createElement("template");
+      template.innerHTML = templateContent;
+      element.appendChild(template);
+    }, content);
   }
 
   /**

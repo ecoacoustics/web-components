@@ -53,9 +53,9 @@ import axesStyles from "./css/style.css?inline";
  * @csspart x-label - Apply styles to only the x axis label
  * @csspart y-label - Apply styles to only the x axis label
  *
- * @csspart title - Apply styles to both the x and y legends
- * @csspart x-title - Apply styles to only the x axis legend
- * @csspart y-title - Apply styles to only the x axis legend
+ * @csspart title - Apply styles to both the x and y titles
+ * @csspart x-title - Apply styles to only the x axis title
+ * @csspart y-title - Apply styles to only the y axis title
  *
  * @slot - A spectrogram element to add axes to
  */
