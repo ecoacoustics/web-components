@@ -259,14 +259,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return svg`
         <g>
           <line
-            part="x-tick"
+            part="tick x-tick"
             x1="${xPosition}"
             x2="${xPosition}"
             y1="0"
             y2="${this.tickSize.height}"
           ></line>
           <text
-            part="x-label"
+            part="label x-label"
             text-anchor="middle"
             dominant-baseline="end"
             x="${xPosition}"
@@ -288,14 +288,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
       return svg`<g>
         <line
-          part="y-tick"
+          part="tick y-tick"
           x1="${xPosition}"
           x2="${xPosition + this.tickSize.width}"
           y1="${yPosition}"
           y2="${yPosition}"
         ></line>
         <text
-          part="y-label"
+          part="label y-label"
           text-anchor="end"
           dominant-baseline="middle"
           x="${xPosition}"
@@ -344,20 +344,20 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
     this.xAxisTemplate = html`
       <svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}" height="${xAxisChromeHeight}">
-        <g part="x-ticks">${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
+        <g>${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
       </svg>
     `;
 
     this.yAxisTemplate = html`
       <svg class="axes-label-chrome y-axis-chrome" width="${yAxisChromeWidth}" height="${canvasSize.height}">
-        <g part="y-ticks">${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
+        <g>${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
       </svg>
     `;
 
     return svg`
       <g part="tick">
-        <g part="x-ticks">${this.xAxisTemplate}</g>
-        <g part="y-ticks">${this.yAxisTemplate}</g>
+        <g>${this.xAxisTemplate}</g>
+        <g>${this.yAxisTemplate}</g>
       </g>
     `;
   }
