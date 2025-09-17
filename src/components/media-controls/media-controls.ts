@@ -335,7 +335,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
     const possibleWindowSizes = this.spectrogramElement.possibleWindowSizes;
     const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
-    const currentOptions = this.spectrogramElement.spectrogramOptions;
+    const currentOptions = this.spectrogramElement.spectrogramSettings;
 
     const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
@@ -352,14 +352,14 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           newValue = newValue === "mel";
         }
 
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
+        const oldOptions = this.spectrogramElement.spectrogramSettings;
         if (key === "windowSize" && this.spectrogramElement) {
-          if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
+          if (this.spectrogramElement.spectrogramSettings.windowOverlap >= (newValue as number)) {
             oldOptions.windowOverlap = ((newValue as number) / 2) as any;
           }
         }
 
-        this.spectrogramElement.spectrogramOptions = {
+        this.spectrogramElement.spectrogramSettings = {
           ...oldOptions,
           [key]: newValue,
         } as any;
@@ -375,9 +375,9 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         }
 
         const newValue = (event.target as HTMLInputElement).value;
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
+        const oldOptions = this.spectrogramElement.spectrogramSettings;
 
-        this.spectrogramElement.spectrogramOptions = {
+        this.spectrogramElement.spectrogramSettings = {
           ...oldOptions,
           [key]: Number(newValue),
         } as any;

@@ -15,7 +15,7 @@ import { AnimationIdentifier, newAnimationIdentifier, runOnceOnNextAnimationFram
 import { isPowerOfTwo } from "../../helpers/powers";
 import { isValidNumber } from "../../helpers/numbers";
 import { ColorMapName } from "../../helpers/audio/colors";
-import { SpectrogramCanvasScale, SpectrogramOptions } from "./spectrogramOptions";
+import { ISpectrogramOptions, SpectrogramCanvasScale, SpectrogramOptions } from "./spectrogramOptions";
 import { AudioInformation } from "../../helpers/audio/audioInformation";
 import { consume } from "@lit/context";
 import { spectrogramOptionsContext } from "../../helpers/constants/contextTokens";
@@ -67,16 +67,16 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   // happens if the options object is re-created.
   // This is not currently implemented because I have deemed it to be a low
   // priority task.
-  public static readonly defaultOptions: Readonly<SpectrogramOptions> = new SpectrogramOptions(
-    512,
-    0,
-    "hann",
-    false,
-    0,
-    1,
-    "grayscale",
-    SpectrogramCanvasScale.STRETCH,
-  );
+  public static readonly defaultOptions = {
+    windowSize: 512,
+    windowOverlap: 0,
+    windowFunction: "hann",
+    melScale: false,
+    brightness: 0,
+    contrast: 1,
+    colorMap: "grayscale",
+    scaling: SpectrogramCanvasScale.STRETCH,
+  } as const satisfies Required<ISpectrogramOptions>;
 
   public constructor() {
     super();
@@ -84,7 +84,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   @consume({ context: spectrogramOptionsContext, subscribe: true })
-  private parentOptions?: Signal<SpectrogramOptions>;
+  private parentOptions?: Signal<ISpectrogramOptions>;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -225,7 +225,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // we assign windowSizes to a variable so that we don't have to re-create
     // the possible window sizes array every iteration in the filter callback
     const windowSizes = this.possibleWindowSizes;
-    const currentWindowSize = this.spectrogramOptions.windowSize;
+    const currentWindowSize = this.spectrogramSettings.windowSize;
     return windowSizes.filter((value: number) => value < currentWindowSize);
   }
 
@@ -248,40 +248,34 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return !!this.src || this.slottedSourceElements.length > 0;
   }
 
-  private get spectrogramOptions(): SpectrogramOptions {
-    const globalSettings = this.parentOptions?.value;
-
-    const windowSize = this.windowSize ?? globalSettings?.windowSize ?? SpectrogramComponent.defaultOptions.windowSize;
-    const windowOverlap =
-      this.windowOverlap ?? globalSettings?.windowOverlap ?? SpectrogramComponent.defaultOptions.windowOverlap;
-    const windowFunction =
-      this.windowFunction ?? globalSettings?.windowFunction ?? SpectrogramComponent.defaultOptions.windowFunction;
-    const melScale = this.melScale ?? globalSettings?.melScale ?? SpectrogramComponent.defaultOptions.melScale;
-    const brightness = this.brightness ?? globalSettings?.brightness ?? SpectrogramComponent.defaultOptions.brightness;
-    const contrast = this.contrast ?? globalSettings?.contrast ?? SpectrogramComponent.defaultOptions.contrast;
-    const colorMap = this.colorMap ?? globalSettings?.colorMap ?? SpectrogramComponent.defaultOptions.colorMap;
-    const scaling = this.scaling ?? globalSettings?.scaling ?? SpectrogramComponent.defaultOptions.scaling;
-
-    return new SpectrogramOptions(
-      windowSize,
-      windowOverlap,
-      windowFunction,
-      melScale,
-      brightness,
-      contrast,
-      colorMap,
-      scaling,
-    );
+  private get componentSettings(): ISpectrogramOptions {
+    return {
+      windowSize: this.windowSize,
+      windowOverlap: this.windowOverlap,
+      windowFunction: this.windowFunction,
+      melScale: this.melScale,
+      brightness: this.brightness,
+      contrast: this.contrast,
+      colorMap: this.colorMap,
+      scaling: this.scaling,
+    };
   }
 
-  private set spectrogramOptions(options: SpectrogramOptions) {
-    this.windowSize = options.windowSize;
-    this.windowOverlap = options.windowOverlap;
-    this.windowFunction = options.windowFunction;
-    this.melScale = options.melScale;
-    this.brightness = options.brightness;
-    this.contrast = options.contrast;
-    this.colorMap = options.colorMap;
+  /**
+   * @description
+   * Creates a SpectrogramOptions object from the current component attributes.
+   * Because spectrogram option attributes are optional, this SpectrogramOptions
+   * model may be partially complete.
+   */
+  private get spectrogramSettings(): SpectrogramOptions {
+    const mergedSettings = Object.assign(
+      {},
+      this.parentOptions?.value,
+      this.componentSettings,
+      SpectrogramComponent.defaultOptions,
+    );
+
+    return new SpectrogramOptions(mergedSettings);
   }
 
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
@@ -384,7 +378,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         }
 
         console.error(
-          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.spectrogramOptions.windowSize}'`,
+          `window-size '${newWindowSize}' must be a power of 2 and greater than 1. Falling back to window size value of '${this.spectrogramSettings.windowSize}'`,
         );
       }
     }
@@ -406,7 +400,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }
 
       if (this.unitConverters.value && change.has("melScale")) {
-        this.unitConverters.value.melScale.value = this.spectrogramOptions.melScale;
+        this.unitConverters.value.melScale.value = this.spectrogramSettings.melScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
       this.renderSpectrogram();
@@ -458,7 +452,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }),
     );
 
-    const info = await this.audioHelper.connect(this.renderedSource, this.canvas, this.spectrogramOptions);
+    const info = await this.audioHelper.connect(this.renderedSource, this.canvas, this.spectrogramSettings);
     const originalRecording: OriginalAudioRecording = {
       duration: info.duration,
       startOffset: this.offset,
@@ -491,7 +485,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }),
     );
 
-    const info: AudioInformation = await this.audioHelper.changeSource(this.renderedSource, this.spectrogramOptions);
+    const info: AudioInformation = await this.audioHelper.changeSource(this.renderedSource, this.spectrogramSettings);
     const originalRecording = { duration: info.duration, startOffset: this.offset };
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
@@ -513,12 +507,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     this.dispatchEvent(
       new CustomEvent<SpectrogramOptions>(SpectrogramComponent.optionsChangeEventName, {
-        detail: this.spectrogramOptions,
+        detail: this.spectrogramSettings,
         bubbles: true,
       }),
     );
 
-    await this.audioHelper.regenerateSpectrogram(this.spectrogramOptions);
+    await this.audioHelper.regenerateSpectrogram(this.spectrogramSettings);
 
     this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
 
@@ -547,7 +541,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // the "as any" cast and gracefully handle errors where the audio model
       // suddenly destructs itself
       this.audio as any,
-      signal(this.spectrogramOptions.melScale),
+      signal(this.spectrogramSettings.melScale),
     );
   }
 
@@ -560,7 +554,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       throw new Error("Attempted to calculate original fft size before audio model initialization");
     }
 
-    const options = this.spectrogramOptions;
+    const options = this.spectrogramSettings;
     const step = options.windowSize - options.windowOverlap;
     const duration = this.audio.value.duration;
     const sampleRate = this.audio.value.sampleRate;

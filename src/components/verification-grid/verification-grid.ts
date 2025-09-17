@@ -1794,8 +1794,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     //
     // We round decimal places to 1 so that we don't set the width / height
     // for very small decimal place changes.
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth).toFixed(1)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight).toFixed(1)}px`;
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth).toFixed(0)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight).toFixed(0)}px`;
 
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);

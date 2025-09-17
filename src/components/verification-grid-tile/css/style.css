@@ -37,6 +37,10 @@
     display: block;
     margin-top: var(--oe-spacing);
   }
+
+  oe-task-meter {
+    margin-top: var(--oe-spacing);
+  }
 }
 
 .spectrogram-container {

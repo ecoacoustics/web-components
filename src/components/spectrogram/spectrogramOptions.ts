@@ -8,42 +8,52 @@ export enum SpectrogramCanvasScale {
   ORIGINAL = "original",
 }
 
-export class SpectrogramOptions {
-  constructor(
-    windowSize: PowerTwoWindowSize,
-    windowOverlap: number,
-    windowFunction: WindowFunctionName,
-    melScale: boolean,
-    brightness: number,
-    contrast: number,
-    colorMap: ColorMapName,
-    scaling: SpectrogramCanvasScale,
-  ) {
-    this.windowSize = windowSize;
-    this.windowOverlap = windowOverlap;
-    this.windowFunction = windowFunction;
-    this.melScale = melScale;
-    this.brightness = brightness;
-    this.contrast = contrast;
-    this.colorMap = colorMap;
-    this.scaling = scaling;
+export interface ISpectrogramOptions {
+  /** Number of samples in each window for the fft must be a power of 2 */
+  windowSize?: PowerTwoWindowSize;
+
+  /** number of samples to overlap between windows */
+  windowOverlap?: number;
+
+  windowFunction?: WindowFunctionName;
+
+  melScale?: boolean;
+
+  brightness?: number;
+
+  contrast?: number;
+
+  colorMap?: ColorMapName;
+
+  scaling?: SpectrogramCanvasScale;
+}
+
+export class SpectrogramOptions implements ISpectrogramOptions {
+  constructor(options: Required<ISpectrogramOptions>) {
+    this.windowSize = options.windowSize;
+    this.windowOverlap = options.windowOverlap;
+    this.windowFunction = options.windowFunction;
+    this.melScale = options.melScale;
+    this.brightness = options.brightness;
+    this.contrast = options.contrast;
+    this.colorMap = options.colorMap;
+    this.scaling = options.scaling;
   }
 
-  /**
-   * number of samples in each window for the fft
-   * must be a power of 2
-   */
-  public windowSize: PowerTwoWindowSize;
-  /** number of samples to overlap between windows */
-  public windowOverlap: number;
-  public windowFunction: WindowFunctionName;
-  public melScale: boolean;
-  public brightness: number;
-  public contrast: number;
-  public colorMap: ColorMapName;
-  public scaling: SpectrogramCanvasScale;
+  public readonly windowSize: PowerTwoWindowSize;
+  public readonly windowOverlap: number;
+  public readonly windowFunction: WindowFunctionName;
+  public readonly melScale: boolean;
+  public readonly brightness: number;
+  public readonly contrast: number;
+  public readonly colorMap: ColorMapName;
+  public readonly scaling: SpectrogramCanvasScale;
 
   public get windowStep(): number {
+    if (this.windowSize === undefined || this.windowOverlap === undefined) {
+      throw new Error("windowSize and windowOverlap must be defined to calculate windowStep");
+    }
+
     return this.windowSize - this.windowOverlap;
   }
 }
