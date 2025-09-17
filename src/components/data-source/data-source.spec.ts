@@ -1,5 +1,5 @@
 import { dataSourceFixture as test } from "./data-source.fixture";
-import { catchLocatorEvent, insertContent, setBrowserAttribute } from "../../tests/helpers";
+import { catchLocatorEvent, insertContent, setBrowserAttribute } from "../../tests/helpers/helpers";
 import { expect } from "../../tests/assertions";
 
 test.describe("data source", () => {

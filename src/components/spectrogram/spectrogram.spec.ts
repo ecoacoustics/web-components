@@ -8,7 +8,7 @@ import {
   removeBrowserAttribute,
   setBrowserAttribute,
   testBreakpoints,
-} from "../../tests/helpers";
+} from "../../tests/helpers/helpers";
 import { SpectrogramComponent } from "./spectrogram";
 import { expect, expectConsoleError } from "../../tests/assertions";
 import { sleep } from "../../helpers/utilities";

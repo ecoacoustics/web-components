@@ -14,7 +14,7 @@ import {
   setBrowserAttribute,
   testBreakpoints,
   waitForContentReady,
-} from "../helpers";
+} from "../helpers/helpers";
 import {
   MousePosition,
   SelectionObserverType,
@@ -76,10 +76,9 @@ class TestPage {
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
   public gridTileContainers = () => this.page.locator(".tile-container");
-  public gridTileProgressMeters = () => this.page.locator(".progress-meter");
-  public gridTileProgressMeterSegments = (index = 0) =>
-    this.gridTileProgressMeters().nth(index).locator(".progress-meter-segment");
-  public gridTileProgressMeterTooltips = (index = 0) => this.gridTileProgressMeters().nth(index).locator("sl-tooltip");
+  public gridTileTaskMeters = () => this.page.locator(".task-meter");
+  public gridTileTaskMeterSegments = (index = 0) => this.gridTileTaskMeters().nth(index).locator(".task-meter-segment");
+  public gridTileTaskMeterTooltips = (index = 0) => this.gridTileTaskMeters().nth(index).locator("sl-tooltip");
   public gridTileTagText = () => this.page.getByTestId("tile-tag-text");
 
   public gridTilePlaceholders = () => this.page.locator(".tile-placeholder");
@@ -662,14 +661,14 @@ class TestPage {
   }
 
   public async allProgressMeterColors(): Promise<string[][]> {
-    const gridTiles = await this.gridTileProgressMeters().all();
+    const gridTiles = await this.gridTileTaskMeters().all();
     const allProgresses = gridTiles.map(async (_, index) => await this.progressMeterColors(index));
 
     return await Promise.all(allProgresses);
   }
 
   public async progressMeterColors(index = 0): Promise<string[]> {
-    const segments = await this.gridTileProgressMeterSegments(index).all();
+    const segments = await this.gridTileTaskMeterSegments(index).all();
 
     const colors = segments.map(
       async (item: Locator) =>
@@ -689,7 +688,7 @@ class TestPage {
   }
 
   public async progressMeterTooltips(index = 0): Promise<(string | null)[]> {
-    return await this.gridTileProgressMeterTooltips(index).evaluateAll((elements) =>
+    return await this.gridTileTaskMeterTooltips(index).evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("content")),
     );
   }

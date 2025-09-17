@@ -1,6 +1,6 @@
 import { multipleSpectrogramFixture as test } from "./spectrogram-media-controls.e2e.fixture";
 import { MediaControlsComponent } from "../../components/media-controls/media-controls";
-import { removeBrowserAttribute, setBrowserAttribute } from "../helpers";
+import { removeBrowserAttribute, setBrowserAttribute } from "../helpers/helpers";
 import { expect } from "../assertions";
 
 test.describe("two spectrograms with different ids", () => {

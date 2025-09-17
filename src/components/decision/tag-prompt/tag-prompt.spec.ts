@@ -6,7 +6,7 @@ import {
   pressKey,
   setBrowserAttribute,
   setBrowserValue,
-} from "../../../tests/helpers";
+} from "../../../tests/helpers/helpers";
 import { TagPromptComponent } from "./tag-prompt";
 import { tagPromptFixture as test } from "./tag-prompt.fixture";
 

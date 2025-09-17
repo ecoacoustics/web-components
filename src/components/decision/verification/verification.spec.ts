@@ -1,6 +1,6 @@
 import { expect } from "../../../tests/assertions";
 import { verificationFixture as test } from "./verification.fixture";
-import { getCssVariableStyle, getEventLogs, logEvent } from "../../../tests/helpers";
+import { getCssVariableStyle, getEventLogs, logEvent } from "../../../tests/helpers/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { sleep } from "../../../helpers/utilities";
 import { CssVariable } from "../../../helpers/types/advancedTypes";

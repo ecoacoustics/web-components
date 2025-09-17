@@ -5,7 +5,7 @@ import {
   removeBrowserAttribute,
   setBrowserAttribute,
   waitForContentReady,
-} from "../../tests/helpers";
+} from "../../tests/helpers/helpers";
 import { DataSourceComponent } from "./data-source";
 import { DownloadableResult, Subject } from "../../models/subject";
 import { expect } from "../../tests/assertions";

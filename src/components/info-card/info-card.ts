@@ -21,7 +21,7 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
   // The tile context can be undefined if this component is not slotted inside
   // of a grid tile component.
   @consume({ context: gridTileContext, subscribe: true })
-  private tile?: VerificationGridTileContext;
+  public tile?: VerificationGridTileContext;
 
   /** Number of subject key/values pairs to show before the "Show More" button is clicked */
   @property({ attribute: "default-lines", type: Number, reflect: true })

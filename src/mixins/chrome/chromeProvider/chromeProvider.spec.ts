@@ -1,5 +1,5 @@
 import { expect } from "../../../tests/assertions";
-import { invokeBrowserMethod } from "../../../tests/helpers";
+import { invokeBrowserMethod } from "../../../tests/helpers/helpers";
 import { chromeProviderFixture as test } from "./chromeProvider.fixture";
 
 // most ChromeProvider functionality is tested inside the ChromeHost tests

@@ -5,7 +5,7 @@ import {
   setBrowserAttribute,
   setBrowserValue,
   waitForContentReady,
-} from "../../../tests/helpers";
+} from "../../../tests/helpers/helpers";
 import { VerificationComponent } from "./verification";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { DecisionEvent } from "../decision";

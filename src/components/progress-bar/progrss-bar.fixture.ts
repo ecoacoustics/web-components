@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers/helpers";
 import { ProgressBar } from "./progress-bar";
 import { createFixture, setContent } from "../../tests/fixtures";
 

@@ -6,7 +6,7 @@ import {
   setBrowserAttribute,
   setBrowserValue,
   waitForContentReady,
-} from "../../tests/helpers";
+} from "../../tests/helpers/helpers";
 import { VerificationGridSettingsComponent } from "../verification-grid-settings/verification-grid-settings";
 import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { expect } from "../../tests/assertions";

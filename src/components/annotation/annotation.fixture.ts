@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { expect } from "../../tests/assertions";
-import { getBrowserValue, invokeBrowserMethod, waitForContentReady } from "../../tests/helpers";
+import { getBrowserValue, invokeBrowserMethod, waitForContentReady } from "../../tests/helpers/helpers";
 import { Tag } from "../../models/tag";
 import { AnnotationComponent } from "./annotation";
 import { Annotation } from "../../models/annotation";

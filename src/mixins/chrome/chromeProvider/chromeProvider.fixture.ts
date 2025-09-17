@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { waitForContentReady } from "../../../tests/helpers";
+import { waitForContentReady } from "../../../tests/helpers/helpers";
 import { createFixture, setContent } from "../../../tests/fixtures";
 
 class TestPage {

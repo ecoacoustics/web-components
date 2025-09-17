@@ -1,21 +1,22 @@
-import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../helpers";
-import { SpectrogramComponent, SpectrogramCanvasScale } from "../../components/spectrogram/spectrogram";
-import { Locator, Page } from "@playwright/test";
+import { catchLocatorEvent, setBrowserAttribute, waitForContentReady } from "../helpers/helpers";
+import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
+import { Page } from "@playwright/test";
 import { Size } from "../../models/rendering";
 import { expect } from "../assertions";
 import { createFixture, setContent } from "../fixtures";
+import { SpectrogramCanvasScale } from "../../components/spectrogram/spectrogramOptions";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
 
   public axesComponent = () => this.page.locator("oe-axes").first();
   public spectrogramComponent = () => this.page.locator("oe-spectrogram").first();
-  public xAxisTicks = () => this.page.locator("[part='x-tick']").all();
-  public yAxisTicks = () => this.page.locator("[part='y-tick']").all();
-  public xAxisLabels = () => this.page.locator("[part='x-label']").all();
-  public yAxisLabels = () => this.page.locator("[part='y-label']").all();
-  public xGridLines = () => this.page.locator("[part='x-grid'] line").all();
-  public yGridLines = () => this.page.locator("[part='y-grid'] line").all();
+  public xAxisTicks = () => this.page.locator("[part='tick x-tick']");
+  public yAxisTicks = () => this.page.locator("[part='tick y-tick']");
+  public xAxisLabels = () => this.page.locator("[part='label x-label']");
+  public yAxisLabels = () => this.page.locator("[part='label y-label']");
+  public xGridLines = () => this.page.locator("[part='x-grid'] line");
+  public yGridLines = () => this.page.locator("[part='y-grid'] line");
   private audioSource = "http://localhost:3000/example.flac";
 
   // render window should be in the format x0, y0, x1, y1
@@ -81,32 +82,32 @@ class TestPage {
   }
 
   public async xAxisStep(): Promise<number> {
-    const firstValue = await (await this.xAxisLabels()).at(0)?.textContent();
-    const secondValue = await (await this.xAxisLabels()).at(1)?.textContent();
+    const firstValue = await this.xAxisLabels().nth(0).textContent();
+    const secondValue = await this.xAxisLabels().nth(1).textContent();
+
     const step = Number(firstValue) - Number(secondValue);
     return Math.abs(step);
   }
 
   public async yAxisStep(): Promise<number> {
-    const firstValue = await (await this.yAxisLabels()).at(0)?.textContent();
-    const secondValue = await (await this.yAxisLabels()).at(1)?.textContent();
+    const firstValue = await this.yAxisLabels().nth(0).textContent();
+    const secondValue = await this.yAxisLabels().nth(1).textContent();
     const step = Number(firstValue) - Number(secondValue);
     return Math.abs(step);
   }
 
   public async xTicksCount(): Promise<number> {
-    const ticks = await this.xAxisTicks();
-    return ticks.length;
+    return await this.xAxisTicks().count();
   }
 
   public async assertAxisRange(xLow: string, xHigh: string, yLow: string, yHigh: string) {
-    const xAxisLabels = await this.xAxisLabels();
-    const yAxisLabels = await this.yAxisLabels();
+    const xAxisLabels = this.xAxisLabels();
+    const yAxisLabels = this.yAxisLabels();
 
-    const firstXAxisLabel = xAxisLabels.at(0) as Locator;
-    const lastXAxisLabel = xAxisLabels.at(-1) as Locator;
-    const firstYAxisLabel = yAxisLabels.at(0) as Locator;
-    const lastYAxisLabel = yAxisLabels.at(-1) as Locator;
+    const firstXAxisLabel = xAxisLabels.nth(0);
+    const lastXAxisLabel = xAxisLabels.nth(-1);
+    const firstYAxisLabel = yAxisLabels.nth(0);
+    const lastYAxisLabel = yAxisLabels.nth(-1);
 
     await expect(firstXAxisLabel).toHaveTrimmedText(xLow);
     await expect(lastXAxisLabel).toHaveTrimmedText(xHigh);

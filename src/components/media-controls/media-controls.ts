@@ -169,6 +169,10 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     this.requestUpdate();
   }
 
+  private handlePointerDown(event: PointerEvent) {
+    event.stopPropagation();
+  }
+
   private handleKeyDown(event: KeyboardEvent): void {
     const ignoreTargets = ["input"];
     const eventTarget = event.target;
@@ -239,6 +243,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     currentValue: number,
     changeHandler: any,
   ): HTMLTemplateResult {
+    // Stop click propagation on the input range so that the menu does not close.
     return html`
       <sl-menu-item>
         ${text}
@@ -438,7 +443,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   public render() {
     return html`
-      <div class="container">
+      <div class="container" @pointerdown="${this.handlePointerDown}">
         <a id="action-button" @click="${() => this.toggleAudio(false)}">
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>

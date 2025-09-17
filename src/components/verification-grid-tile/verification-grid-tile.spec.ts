@@ -1,5 +1,5 @@
 import { verificationGridTileFixture as test } from "./verification-grid-tile.fixture";
-import { setBrowserValue } from "../../tests/helpers";
+import { setBrowserValue } from "../../tests/helpers/helpers";
 import { expect } from "../../tests/assertions";
 import { VerificationGridTileComponent } from "./verification-grid-tile";
 

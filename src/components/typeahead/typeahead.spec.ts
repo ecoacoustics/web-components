@@ -8,7 +8,7 @@ import {
   UP_ARROW_KEY,
 } from "../../helpers/keyboard";
 import { expect } from "../../tests/assertions";
-import { catchLocatorEvent, getBrowserValue, pressKey, setBrowserAttribute } from "../../tests/helpers";
+import { catchLocatorEvent, getBrowserValue, pressKey, setBrowserAttribute } from "../../tests/helpers/helpers";
 import { TypeaheadComponent } from "./typeahead";
 import { typeaheadFixture as test } from "./typeahead.fixture";
 

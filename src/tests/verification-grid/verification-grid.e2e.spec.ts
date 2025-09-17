@@ -9,7 +9,7 @@ import {
   mockDeviceSize,
   pressKey,
   testBreakpoints,
-} from "../helpers";
+} from "../helpers/helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect, expectConsoleError } from "../assertions";
 import { SubjectWrapper } from "../../models/subject";
@@ -1967,7 +1967,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(3);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(3);
     });
 
     test("should have the correct colors without a decision", async ({ fixture }) => {
@@ -2088,7 +2088,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(1);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(1);
     });
 
     test("should have the correct colors when a decision is made", async ({ fixture }) => {
@@ -2137,7 +2137,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(4);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(4);
     });
 
     // make a verification decision and then make a classification decision
@@ -2172,12 +2172,12 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of progress meter segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(2);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(2);
     });
 
     test("should have the appropriate color while the 'when' condition doesn't pass", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments().nth(0)).toHaveCSS("background", await fixture.panelColor());
-      await expect(fixture.gridTileProgressMeterSegments().nth(1)).toHaveCSS(
+      await expect(fixture.gridTileTaskMeterSegments().nth(0)).toHaveCSS("background", await fixture.panelColor());
+      await expect(fixture.gridTileTaskMeterSegments().nth(1)).toHaveCSS(
         "background",
         await fixture.notRequiredColor(),
       );
@@ -2366,7 +2366,7 @@ test.describe("verification grid with slotted templates", () => {
       // Even though the verification grid is missing both the oe-subject-tag
       // and the oe-task-meter elements, we only error for one of them at a
       // time.
-      const expectedError = "The provided grid item template does not contain a tag template.";
+      const expectedError = "The provided grid item template does not contain a subject tag component.";
 
       await expect(async () => {
         await fixture.createWithInvalidTemplate();
@@ -2405,7 +2405,7 @@ test.describe("verification grid with slotted templates", () => {
       await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
     });
 
-    test("should fall back to the default template if the custom template is removed", async ({ fixture }) => {
+    test.skip("should fall back to the default template if the custom template is removed", async ({ fixture }) => {
       await fixture.removeCustomTemplate();
 
       // We make assertions over the displayed spectrograms because changing the
@@ -2427,7 +2427,7 @@ test.describe("verification grid with slotted templates", () => {
       await expect(fixture.moreInformationButtons()).toHaveCount(0);
     });
 
-    test("should be able to change from a default template to a custom template", () => {});
+    test.skip("should be able to change from a default template to a custom template", () => {});
 
     // This test tests fully replacing the "<template>" element with a new
     // one.

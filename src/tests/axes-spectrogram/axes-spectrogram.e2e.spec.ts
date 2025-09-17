@@ -1,5 +1,5 @@
 import { axesSpectrogramFixture as test } from "./axes-spectrogram.e2e.fixture";
-import { setBrowserAttribute } from "../helpers";
+import { setBrowserAttribute } from "../helpers/helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 
@@ -82,20 +82,14 @@ test.describe("interactions between axes and spectrogram", () => {
 
       test(`x-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
         await fixture.createWithSize(testCase.spectrogramSize);
-
         const expectedXTickCount = testCase.expectedXTickCount;
-        const xAxisTicks = await fixture.xAxisTicks();
-        const realizedXTickCount = xAxisTicks.length;
-        expect(realizedXTickCount).toBeCloseTo(expectedXTickCount);
+        await expect(fixture.xAxisTicks()).toHaveCount(expectedXTickCount);
       });
 
       test(`y-axis tick count for size ${humanizedSize}`, async ({ fixture }) => {
         await fixture.createWithSize(testCase.spectrogramSize);
-
         const expectedYTickCount = testCase.expectedYTickCount;
-        const yAxisTicks = await fixture.yAxisTicks();
-        const realizedYTickCount = yAxisTicks.length;
-        expect(realizedYTickCount).toBeCloseTo(expectedYTickCount);
+        await expect(fixture.yAxisTicks()).toHaveCount(expectedYTickCount);
       });
     });
   });
@@ -108,23 +102,17 @@ test.describe("interactions between axes and spectrogram", () => {
       });
 
       test("should resize the x-axis correctly", async ({ fixture }) => {
-        const expectedNumberOfGridLines = 34;
-        const expectedNumberOfTicks = 35;
-
-        const xAxisTicks = await fixture.xAxisTicks();
-        const xAxisGridLines = await fixture.xGridLines();
-
-        expect(xAxisTicks).toHaveLength(expectedNumberOfTicks);
-        expect(xAxisGridLines).toHaveLength(expectedNumberOfGridLines);
+        await expect(fixture.xAxisTicks()).toHaveCount(34);
+        await expect(fixture.xGridLines()).toHaveCount(35);
       });
 
       test("with an offset should resize the axes correctly", async ({ fixture }) => {
         await setBrowserAttribute<SpectrogramComponent>(fixture.spectrogramComponent(), "offset", "2");
-        const xAxisLabels = await fixture.xAxisLabels();
+        const xAxisLabels = fixture.xAxisLabels();
 
-        expect(xAxisLabels).toHaveLength(35);
-        expect(xAxisLabels.at(0)).toBe(2);
-        expect(xAxisLabels.at(-1)).toBe(36);
+        await expect(xAxisLabels).toHaveCount(35);
+        await expect(xAxisLabels.nth(0)).toHaveText("2");
+        await expect(xAxisLabels.nth(-1)).toHaveText("36");
       });
     });
   });

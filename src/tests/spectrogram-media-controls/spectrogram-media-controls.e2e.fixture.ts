@@ -1,6 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
-import { getBrowserValue, hasBrowserAttribute, waitForContentReady } from "../helpers";
+import { getBrowserValue, hasBrowserAttribute, waitForContentReady } from "../helpers/helpers";
 import { createFixture, setContent } from "../fixtures";
 
 class TestPage {
