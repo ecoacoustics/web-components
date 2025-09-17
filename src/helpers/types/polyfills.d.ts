@@ -22,6 +22,11 @@ declare global {
   interface Window {
     showSaveFilePicker?: (options?: SaveFilePickerOptions) => Promise<FileSystemFileHandle>;
   }
+
+  interface ObjectConstructor {
+    // A patch for the Object.entries method that type narrows the output types.
+    entries<T extends Record<PropertyKey, unknown> | ArrayLike<T>>(value: T): [key: keyof T, value: T[keyof T]][];
+  }
 }
 
 export {};

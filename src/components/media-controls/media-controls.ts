@@ -9,7 +9,7 @@ import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import { WithShoelace } from "../../mixins/withShoelace";
-import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { ISpectrogramOptions, SpectrogramOptions } from "../spectrogram/spectrogramOptions";
 import { customElement } from "../../helpers/customElement";
 import mediaControlsStyles from "./css/style.css?inline";
 
@@ -337,7 +337,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
     const currentOptions = this.spectrogramElement.spectrogramOptions;
 
-    const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
+    const discreteDropdownHandler = (key: keyof ISpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
@@ -359,10 +359,10 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           }
         }
 
-        this.spectrogramElement.spectrogramOptions = {
+        this.spectrogramElement.componentOptions = {
           ...oldOptions,
           [key]: newValue,
-        } as any;
+        };
 
         this.requestUpdate();
       };
@@ -377,7 +377,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         const newValue = (event.target as HTMLInputElement).value;
         const oldOptions = this.spectrogramElement.spectrogramOptions;
 
-        this.spectrogramElement.spectrogramOptions = {
+        this.spectrogramElement.componentOptions = {
           ...oldOptions,
           [key]: Number(newValue),
         } as any;

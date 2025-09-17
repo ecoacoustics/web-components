@@ -21,6 +21,7 @@ import { consume } from "@lit/context";
 import { spectrogramOptionsContext } from "../../helpers/constants/contextTokens";
 import { ValidNumber } from "../../helpers/types/advancedTypes";
 import { customElement } from "../../helpers/customElement";
+import { mergeOptions } from "../../helpers/options";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
 import spectrogramStyles from "./css/style.css?inline";
 
@@ -229,6 +230,43 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return windowSizes.filter((value: number) => value < currentWindowSize);
   }
 
+  /**
+   * @description
+   * Creates a SpectrogramOptions object from the current component attributes.
+   * Because spectrogram option attributes are optional, this SpectrogramOptions
+   * model may be partially complete.
+   */
+  public get componentOptions(): ISpectrogramOptions {
+    return {
+      windowSize: this.windowSize,
+      windowOverlap: this.windowOverlap,
+      windowFunction: this.windowFunction,
+      melScale: this.melScale,
+      brightness: this.brightness,
+      contrast: this.contrast,
+      colorMap: this.colorMap,
+      scaling: this.scaling,
+    };
+  }
+
+  public set componentOptions(options: ISpectrogramOptions) {
+    this.windowSize = options.windowSize;
+    this.windowOverlap = options.windowOverlap;
+    this.windowFunction = options.windowFunction;
+    this.melScale = options.melScale;
+    this.brightness = options.brightness;
+    this.contrast = options.contrast;
+    this.colorMap = options.colorMap;
+  }
+
+  public get spectrogramOptions(): SpectrogramOptions {
+    return mergeOptions(
+      new SpectrogramOptions(SpectrogramComponent.defaultOptions),
+      this.parentOptions?.value ?? {},
+      this.componentOptions,
+    );
+  }
+
   private get renderedSource(): string {
     if (this.src) {
       return this.src;
@@ -248,35 +286,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return !!this.src || this.slottedSourceElements.length > 0;
   }
 
-  private get componentOptions(): ISpectrogramOptions {
-    return {
-      windowSize: this.windowSize,
-      windowOverlap: this.windowOverlap,
-      windowFunction: this.windowFunction,
-      melScale: this.melScale,
-      brightness: this.brightness,
-      contrast: this.contrast,
-      colorMap: this.colorMap,
-      scaling: this.scaling,
-    };
-  }
-
-  /**
-   * @description
-   * Creates a SpectrogramOptions object from the current component attributes.
-   * Because spectrogram option attributes are optional, this SpectrogramOptions
-   * model may be partially complete.
-   */
-  private get spectrogramOptions(): SpectrogramOptions {
-    const mergedSettings = Object.assign(
-      {},
-      this.parentOptions?.value,
-      this.componentOptions,
-      SpectrogramComponent.defaultOptions,
-    );
-
-    return new SpectrogramOptions(mergedSettings);
-  }
+  public readonly possibleWindowSizes = [
+    128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+  ] as const satisfies PowerTwoWindowSize[];
 
   // if you need to access to "renderWindow", "audio", or "renderCanvasSize"
   // you should use the signals exported by the unitConverter
@@ -306,10 +318,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
   // TODO: remove this
   private doneFirstRender = false;
-
-  private readonly possibleWindowSizes = [
-    128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
-  ] as const satisfies PowerTwoWindowSize[];
 
   // todo: this should be part of a mixin
   public disconnectedCallback(): void {
@@ -682,14 +690,15 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private invalidateSpectrogramOptions(change: PropertyValues<this>): boolean {
     // TODO: Improve typing
     const invalidationKeys = [
-      "domRenderWindow",
+      "windowSize",
+      "windowOverlap",
+      "windowFunction",
+      "melScale",
       "brightness",
       "contrast",
-      "windowSize",
-      "windowFunction",
-      "windowOverlap",
-      "melScale",
       "colorMap",
+
+      "domRenderWindow",
       "offset",
     ] as const satisfies (keyof SpectrogramComponent)[];
 

@@ -29,7 +29,7 @@ export interface ISpectrogramOptions {
 }
 
 export class SpectrogramOptions implements ISpectrogramOptions {
-  constructor(options: Required<ISpectrogramOptions>) {
+  public constructor(options: Required<ISpectrogramOptions>) {
     this.windowSize = options.windowSize;
     this.windowOverlap = options.windowOverlap;
     this.windowFunction = options.windowFunction;
@@ -40,14 +40,14 @@ export class SpectrogramOptions implements ISpectrogramOptions {
     this.scaling = options.scaling;
   }
 
-  public readonly windowSize: PowerTwoWindowSize;
-  public readonly windowOverlap: number;
-  public readonly windowFunction: WindowFunctionName;
-  public readonly melScale: boolean;
-  public readonly brightness: number;
-  public readonly contrast: number;
-  public readonly colorMap: ColorMapName;
-  public readonly scaling: SpectrogramCanvasScale;
+  public windowSize: PowerTwoWindowSize;
+  public windowOverlap: number;
+  public windowFunction: WindowFunctionName;
+  public melScale: boolean;
+  public brightness: number;
+  public contrast: number;
+  public colorMap: ColorMapName;
+  public scaling: SpectrogramCanvasScale;
 
   public get windowStep(): number {
     if (this.windowSize === undefined || this.windowOverlap === undefined) {

@@ -1775,8 +1775,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const viewportStartX = this.highlight.start.x - scrollX;
     const viewportStartY = this.highlight.start.y - scrollY;
 
-    const highlightWidth = this.highlight.current.x - this.highlight.start.x;
-    const highlightHeight = this.highlight.current.y - this.highlight.start.y;
+    // We floor sizes so that we don't change the width / height for very small
+    // decimal place changes.
+    // Additionally, we floor instead of rounding so that we get stable rounding
+    // behavior when the user is dragging in a negative direction.
+    const highlightWidth = Math.floor(this.highlight.current.x - this.highlight.start.x);
+    const highlightHeight = Math.floor(this.highlight.current.y - this.highlight.start.y);
 
     const transformX = viewportStartX + Math.min(highlightWidth, 0);
     const transformY = viewportStartY + Math.min(highlightHeight, 0);
@@ -1791,11 +1795,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // The highlights width / height can be negative if the user drags to the
     // top or left of the screen.
-    //
-    // We round decimal places to 1 so that we don't set the width / height
-    // for very small decimal place changes.
-    highlightBoxElement.style.width = `${Math.abs(highlightWidth).toFixed(0)}px`;
-    highlightBoxElement.style.height = `${Math.abs(highlightHeight).toFixed(0)}px`;
+    highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
+    highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
 
     const highlightXDelta = Math.abs(highlightWidth);
     const highlightYDelta = Math.abs(highlightHeight);
