@@ -23,6 +23,8 @@ export interface IRootContext {
 export const gridTileContext = createContext<VerificationGridTileContext>("oe-grid-tile-context");
 export const rootContext = createContext<IRootContext>("oe-root-context");
 
-export const spectrogramOptionsContext = createContext<Signal<SpectrogramOptions>>("oe-spectrogram-options-context");
 export const verificationGridContext = createContext<VerificationGridSettings>("oe-verification-grid-context");
 export const injectionContext = createContext<VerificationGridInjector>("oe-injection-context");
+export const spectrogramOptionsContext = createContext<Signal<Partial<SpectrogramOptions>>>(
+  "oe-spectrogram-options-context",
+);

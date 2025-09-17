@@ -59,12 +59,6 @@ const shortcutTranslation = {
  * probably not be used by users
  * It can also manage the selection state
  *
- * @slot tile-header - The template to be rendered inside the grid tile
- * @slot - The default slot used to render the main content of the grid tile
- *
- * @cssproperty [--decision-color] - The border color that is applied when a
- * decision is being shown
- *
  * @event oe-selected
  * @event oe-tile-loading
  * @event oe-tile-loaded

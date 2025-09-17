@@ -1,6 +1,4 @@
 :host {
-  --decision-color: var(--oe-panel-color);
-
   /*
     It is okay to change the display property here because we do not expect
     users to be using the oe-verification-grid-tile component because it is
@@ -19,13 +17,25 @@
     The reason why we want to hide overflow content is so that border rounding
     on the :host element (which is a subtractive property) clips content.
   */
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 #template-content {
   oe-spectrogram {
     height: 100%;
     width: 100%;
+  }
+
+  .tile-spacing {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--oe-spacing);
+  }
+
+  .tile-block {
+    display: block;
+    margin-top: var(--oe-spacing);
   }
 }
 
@@ -71,17 +81,6 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 0;
-}
-
-.tile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--oe-spacing);
-}
-
-.tile-footer {
-  margin-top: var(--oe-spacing);
 }
 
 /* TODO: maybe add a border here */

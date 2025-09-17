@@ -1462,7 +1462,7 @@ test.describe("single verification grid", () => {
     for (const testConfig of testedGridSizes) {
       const testedSlotContent = `
         <template>
-          <div class="tile-header">
+          <div class="tile-spacing">
             <oe-subject-tag></oe-subject-tag>
             <oe-media-controls for="spectrogram"></oe-media-controls>
           </div>
@@ -1482,7 +1482,7 @@ test.describe("single verification grid", () => {
             </p>
           </div>
 
-          <div class="tile-footer">
+          <div class="tile-block">
             <oe-task-meter></oe-task-meter>
             <oe-info-card></oe-info-card>
           </div>
@@ -2270,7 +2270,7 @@ test.describe("verification grid with slotted templates", () => {
         <oe-verification verified="false">Not Koala</oe-verification>
 
         <template>
-          <div class="tile-header">
+          <div class="tile-spacing">
             <oe-subject-tag></oe-subject-tag>
             <oe-media-controls for="spectrogram"></oe-media-controls>
           </div>
@@ -2281,7 +2281,7 @@ test.describe("verification grid with slotted templates", () => {
             </oe-indicator>
           </oe-axes>
 
-          <div class="tile-footer">
+          <div class="tile-block">
             <oe-task-meter></oe-task-meter>
             <oe-info-card></oe-info-card>
           </div>

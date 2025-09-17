@@ -16,7 +16,6 @@ import {
   waitForContentReady,
 } from "../helpers";
 import {
-  DefaultTemplateOptions,
   MousePosition,
   SelectionObserverType,
   VerificationGridComponent,
@@ -321,7 +320,7 @@ class TestPage {
     await this.create(
       `
       <template>
-        <div class="tile-header">
+        <div class="tile-spacing">
           <oe-subject-tag></oe-subject-tag>
           <oe-media-controls for="spectrogram"></oe-media-controls>
         </div>
@@ -332,7 +331,7 @@ class TestPage {
           </oe-indicator>
         </oe-axes>
 
-        <div class="tile-footer">
+        <div class="tile-block">
           <oe-task-meter></oe-task-meter>
         </div>
 
@@ -935,14 +934,6 @@ class TestPage {
     await strategy<DataSourceComponent>(this.dataSourceComponent(), targetedBrowserAttribute);
   }
 
-  public async showMediaControls(visible: boolean) {
-    await this.changeDefaultTemplate("showMediaControls", visible);
-  }
-
-  public async showAxes(visible: boolean) {
-    await this.changeDefaultTemplate("showAxes", visible);
-  }
-
   public async toggleFullscreen(state: boolean) {
     await this.changeGridSetting("isFullscreen", state);
   }
@@ -1004,18 +995,6 @@ class TestPage {
     await this.gridComponent().evaluate(
       (element: VerificationGridComponent, { key, value }) => {
         element.settings[key].value = value;
-      },
-      { key, value },
-    );
-  }
-
-  private async changeDefaultTemplate(key: keyof DefaultTemplateOptions, value: boolean) {
-    await this.gridComponent().evaluate(
-      (element: VerificationGridComponent, { key, value }) => {
-        const currentValue = element.settings.defaultTemplate.value;
-        const newValue = { ...currentValue, [key]: value };
-
-        element.settings.defaultTemplate.value = newValue;
       },
       { key, value },
     );

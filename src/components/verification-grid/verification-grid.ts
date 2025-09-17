@@ -41,7 +41,7 @@ import {
 } from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
+import { IPlayEvent } from "../spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
@@ -113,11 +113,6 @@ export interface DecisionMadeEventValue {
 
 export interface VerificationGridSettings {
   isFullscreen: Signal<boolean>;
-}
-
-export interface DefaultTemplateOptions {
-  showMediaControls: boolean;
-  showAxes: boolean;
 }
 
 export interface VerificationGridInjector {
@@ -310,7 +305,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   };
 
   @provide({ context: spectrogramOptionsContext })
-  public spectrogramOptions = signal<SpectrogramOptions>(this.defaultSpectrogramOptions);
+  public spectrogramOptions = signal<Partial<SpectrogramOptions>>({});
 
   @provide({ context: injectionContext })
   @state()
@@ -508,12 +503,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     return this.selectionBehavior;
-  }
-
-  private get defaultSpectrogramOptions(): SpectrogramOptions {
-    const gridOptions = { ...SpectrogramComponent.defaultOptions };
-    gridOptions.colorMap = "audacity";
-    return gridOptions;
   }
 
   /**
@@ -2378,7 +2367,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private defaultGridTileTemplate(): HTMLTemplateResult {
     return html`
       <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
-        <div class="tile-header">
+        <div class="tile-spacing">
           <oe-subject-tag></oe-subject-tag>
           <oe-media-controls for="spectrogram"></oe-media-controls>
         </div>
@@ -2389,7 +2378,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           </oe-indicator>
         </oe-axes>
 
-        <div class="tile-footer">
+        <div class="tile-block">
           <oe-task-meter></oe-task-meter>
         </div>
       </template>
