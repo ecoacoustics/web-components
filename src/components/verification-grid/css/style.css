@@ -74,7 +74,17 @@
   */
   & > .grid-tile {
     border-radius: var(--oe-border-rounding);
-    box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color-dark);
+  }
+
+  /*
+    The multi-grid styling for grid tiles is in this grid component instead of
+    the verification grid tile component so that everything displayed in the
+    verification grid (including placeholders) has the same styles.
+  */
+  &:not(.singleTileView) {
+    & > .grid-tile {
+      box-shadow: var(--oe-backdrop-shadow) var(--oe-panel-color-dark);
+    }
   }
 
   /*
