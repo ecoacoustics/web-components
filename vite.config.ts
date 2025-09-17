@@ -70,7 +70,7 @@ export default defineConfig({
         "components/indicator": "./src/components/indicator/indicator.ts",
         "components/axes": "./src/components/axes/axes.ts",
 
-        "components/tag-template": "./src/components/tag-template/tag-template.ts",
+        "components/subject-tag": "./src/components/subject-tag/subject-tag.ts",
         "components/data-source": "./src/components/data-source/data-source.ts",
         "components/task-meter": "./src/components/task-meter/task-meter.ts",
 
