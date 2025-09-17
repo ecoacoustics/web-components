@@ -1,4 +1,4 @@
-import { PatchedEventListener } from "./eventTarget";
+import { PatchedEventListener } from "./eventListener";
 import { PatchedWindow } from "./patches";
 
 declare global {

@@ -9,6 +9,8 @@
 import { createContext } from "@lit/context";
 import { VerificationGridInjector, VerificationGridSettings } from "verification-grid/verification-grid";
 import { VerificationGridTileContext } from "verification-grid-tile/verification-grid-tile";
+import { SpectrogramOptions } from "spectrogram/spectrogramOptions";
+import { Signal } from "@lit-labs/preact-signals";
 
 export interface IRootContext {
   log: (message: string) => void;
@@ -21,5 +23,6 @@ export interface IRootContext {
 export const gridTileContext = createContext<VerificationGridTileContext>("oe-grid-tile-context");
 export const rootContext = createContext<IRootContext>("oe-root-context");
 
+export const spectrogramOptionsContext = createContext<Signal<SpectrogramOptions>>("oe-spectrogram-options-context");
 export const verificationGridContext = createContext<VerificationGridSettings>("oe-verification-grid-context");
 export const injectionContext = createContext<VerificationGridInjector>("oe-injection-context");

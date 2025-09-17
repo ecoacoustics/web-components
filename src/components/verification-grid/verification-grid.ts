@@ -1,4 +1,4 @@
-import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
+import { property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
 import {
@@ -34,7 +34,11 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
-import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import {
+  injectionContext,
+  spectrogramOptionsContext,
+  verificationGridContext,
+} from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import { IPlayEvent, SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -51,8 +55,10 @@ import { cache } from "lit/directives/cache.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
-import { patchAddEventListener } from "../../patches/addEventListener/addEventListener";
-import { patchRemoveEventListener } from "../../patches/removeEventListener/removeEventListener";
+import { customElement } from "../../helpers/customElement";
+import { SubjectTagComponent } from "../subject-tag/subject-tag";
+import { TaskMeterComponent } from "../task-meter/task-meter";
+import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -107,8 +113,6 @@ export interface DecisionMadeEventValue {
 
 export interface VerificationGridSettings {
   isFullscreen: Signal<boolean>;
-  spectrogramOptions: Signal<SpectrogramOptions>;
-  defaultTemplate: Signal<DefaultTemplateOptions>;
 }
 
 export interface DefaultTemplateOptions {
@@ -297,17 +301,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public static readonly decisionMadeEventName = "decision-made";
   private static readonly loadedEventName = "grid-loaded";
   private static readonly autoPageTimeout = 0.3 satisfies Seconds;
+  private static readonly defaultGridTileTemplateId = "default-tile-template";
 
   @provide({ context: verificationGridContext })
   @property({ attribute: false })
   public settings: VerificationGridSettings = {
     isFullscreen: signal(false),
-    spectrogramOptions: signal(this.defaultSpectrogramOptions),
-    defaultTemplate: signal({
-      showMediaControls: true,
-      showAxes: true,
-    }),
   };
+
+  @provide({ context: spectrogramOptionsContext })
+  public spectrogramOptions = signal<SpectrogramOptions>(this.defaultSpectrogramOptions);
 
   @provide({ context: injectionContext })
   @state()
@@ -382,10 +385,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private skipButtons!: DecisionComponent[];
 
   @queryAssignedElements({ selector: "template" })
-  private gridItemTemplate!: HTMLTemplateElement[];
+  private customTileTemplates!: HTMLTemplateElement[];
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
+
+  @query(`#${VerificationGridComponent.defaultGridTileTemplateId}`, true)
+  private defaultTemplateElement!: HTMLTemplateElement;
 
   @query("oe-verification-bootstrap", true)
   private bootstrapDialog!: VerificationBootstrapComponent;
@@ -561,7 +567,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private loadingTimeoutReference: any | null = null;
-  private defaultTemplateCache: HTMLTemplateElement | null = null;
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -752,8 +757,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
-    patchRemoveEventListener();
-    patchAddEventListener();
+    patchTrackClickLikeEvents();
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -1365,12 +1369,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * verify such as an image or video.
    */
   private isTileTemplateValid(): boolean {
-    const template = this.gridItemTemplate;
+    const template = this.customTileTemplates;
     // If there is no gridItemTemplate, then we are using the default template,
     // and we can guarantee that the default template is valid.
     if (template.length < 1) {
       return true;
-    } else if (this.gridItemTemplate.length > 1) {
+    } else if (this.customTileTemplates.length > 1) {
       console.warn("Multiple custom grid tile templates found, only the first template will be used.");
     }
 
@@ -1380,13 +1384,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // Immediately return false if we know that the tagTemplate doesn't exist
     // so that we don't have to do an unnecessary DOM query for the task meter.
-    const tagTemplate = targetTemplate.content.querySelector("oe-subject-tag");
+    const tagTemplate = targetTemplate.content.querySelector(SubjectTagComponent.tagName);
     if (!tagTemplate) {
       console.error("The provided grid item template does not contain a subject tag component.");
       return false;
     }
 
-    const taskMeter = targetTemplate.content.querySelector("oe-task-meter");
+    const taskMeter = targetTemplate.content.querySelector(TaskMeterComponent.tagName);
     if (!taskMeter) {
       console.error("The provided grid item template does not contain a task meter component.");
       return false;
@@ -2371,56 +2375,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
   }
 
-  private defaultSpectrogramTemplate(): string {
-    if (!this.settings.defaultTemplate.value.showAxes) {
-      return `
-        <oe-indicator>
-          <oe-spectrogram id="spectrogram"></oe-spectrogram>
-        </oe-indicator>
-      `;
-    }
+  private defaultGridTileTemplate(): HTMLTemplateResult {
+    return html`
+      <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
+        <div class="tile-header">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
 
-    return `
-      <oe-axes>
-        <oe-indicator>
-          <oe-spectrogram id="spectrogram"></oe-spectrogram>
-        </oe-indicator>
-      </oe-axes>
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <div class="tile-footer">
+          <oe-task-meter></oe-task-meter>
+        </div>
+      </template>
     `;
-  }
-
-  private defaultGridTileTemplate(): HTMLTemplateElement {
-    if (this.defaultTemplateCache) {
-      return this.defaultTemplateCache;
-    }
-
-    const settings = this.settings.defaultTemplate.value;
-    const template = `
-      <div class="tile-header">
-        <oe-subject-tag></oe-subject-tag>
-        ${settings.showMediaControls ? `<oe-media-controls for="spectrogram"></oe-media-controls>` : ""}
-      </div>
-
-      ${this.defaultSpectrogramTemplate()}
-
-      <div class="tile-footer">
-        <oe-task-meter></oe-task-meter>
-      </div>
-    `;
-
-    // We wrap the default template in a div element so that when querying for
-    // custom user templates (which is a shallow query), we don't match against
-    // the default template.
-    const templateContainer = document.createElement("div");
-
-    const defaultTemplate = document.createElement("template");
-    defaultTemplate.innerHTML = template;
-
-    templateContainer.appendChild(defaultTemplate);
-    this.appendChild(templateContainer);
-
-    this.defaultTemplateCache = defaultTemplate;
-    return defaultTemplate;
   }
 
   private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
@@ -2428,8 +2401,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return this.emptySubjectTemplate();
     }
 
-    const customTemplate = this.gridItemTemplate[0];
-    const tileTemplate = customTemplate ?? this.defaultGridTileTemplate();
+    const customTemplate = this.customTileTemplates[0];
+    const tileTemplate = customTemplate ?? this.defaultTemplateElement;
 
     const gridTile = html`
       <oe-verification-grid-tile
@@ -2453,6 +2426,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public render() {
     return html`
       <slot id="tile-template-slot" name="tile-content"></slot>
+
+      ${this.defaultGridTileTemplate()}
 
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"

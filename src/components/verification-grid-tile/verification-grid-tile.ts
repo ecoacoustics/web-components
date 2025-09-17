@@ -1,4 +1,4 @@
-import { customElement, property, query } from "lit/decorators.js";
+import { property, query } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
@@ -13,7 +13,8 @@ import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
 import { Tag } from "../../models/tag";
 import { templateContent } from "lit/directives/template-content.js";
-import { hasClickLikeEventListener } from "../../patches/addEventListener/addEventListener";
+import { customElement } from "../../helpers/customElement";
+import { hasClickLikeEventListener } from "../../patches/eventListener";
 import verificationGridTileStyles from "./css/style.css?inline";
 
 export const requiredVerificationPlaceholder = Symbol("requiredVerificationPlaceholder");
@@ -80,7 +81,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   // component will be used outside of a verification grid, and we can therefore
   // ensure that the tile context is always provided.
   @provide({ context: gridTileContext })
-  @property({ attribute: false })
   public tile!: VerificationGridTileContext;
 
   @property({ attribute: false, type: Boolean })
@@ -205,7 +205,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   public willUpdate(change: PropertyValues<this>): void {
-    const spectrogramInvalidationKeys: (keyof VerificationGridTileComponent)[] = ["tile", "tileTemplate"];
+    const spectrogramInvalidationKeys: (keyof VerificationGridTileComponent)[] = ["tileTemplate", "model"];
     if (spectrogramInvalidationKeys.some((key) => change.has(key)) && this.spectrogram && this.model.url) {
       this.spectrogram.src = this.model.url;
     }

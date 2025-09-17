@@ -476,26 +476,6 @@ test.describe("single verification grid", () => {
     });
   });
 
-  test.describe.fixme("changing settings", () => {
-    test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
-      const gridSize = await fixture.getGridSize();
-      await expect(fixture.axesComponents()).toHaveCount(gridSize);
-
-      await fixture.showAxes(false);
-
-      await expect(fixture.axesComponents()).toHaveCount(0);
-    });
-
-    test("disabling the media controls in the settings should hide the media controls", async ({ fixture }) => {
-      const gridSize = await fixture.getGridSize();
-      await expect(fixture.mediaControlsComponents()).toHaveCount(gridSize);
-
-      await fixture.showMediaControls(false);
-
-      await expect(fixture.mediaControlsComponents()).toHaveCount(0);
-    });
-  });
-
   test.describe("data sources", () => {
     // TODO: this test is broken/disabled because spectrograms can cover the
     // file input button, causing visibility checks to fail

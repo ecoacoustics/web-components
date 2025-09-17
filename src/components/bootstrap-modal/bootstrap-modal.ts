@@ -1,4 +1,4 @@
-import { customElement, query, state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -22,6 +22,7 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { closeIconTemplate } from "../../templates/closeButton";
 import { ClassificationComponent } from "../decision/classification/classification";
+import { customElement } from "../../helpers/customElement";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides

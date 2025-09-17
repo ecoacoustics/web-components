@@ -1,10 +1,11 @@
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { consume } from "@lit/context";
 import { Subject } from "../../models/subject";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
 import { VerificationGridTileContext } from "verification-grid-tile/verification-grid-tile";
+import { customElement } from "../../helpers/customElement";
 import infoCardStyle from "./css/style.css?inline";
 
 type InfoCardTemplate = (value: any) => any;

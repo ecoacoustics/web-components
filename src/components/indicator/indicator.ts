@@ -1,12 +1,13 @@
 import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
 import { html, LitElement, unsafeCSS } from "lit";
-import { customElement, query } from "lit/decorators.js";
+import { query } from "lit/decorators.js";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
+import { customElement } from "../../helpers/customElement";
 import indicatorStyles from "./css/style.css?inline";
 
 /**

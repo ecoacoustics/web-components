@@ -1,5 +1,5 @@
 import { HTMLTemplateResult, LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
@@ -10,6 +10,7 @@ import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { customElement } from "../../helpers/customElement";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**

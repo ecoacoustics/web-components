@@ -1,5 +1,5 @@
 import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, svg, unsafeCSS } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import {
@@ -19,6 +19,7 @@ import { hertzToMHertz } from "../../helpers/converters";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { map } from "lit/directives/map.js";
 import { ChromeTemplate } from "../../mixins/chrome/types";
+import { customElement } from "../../helpers/customElement";
 import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't

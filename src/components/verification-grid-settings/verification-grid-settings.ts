@@ -1,4 +1,4 @@
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, unsafeCSS } from "lit";
 import { VerificationGridComponent, VerificationGridSettings } from "../verification-grid/verification-grid";
@@ -9,6 +9,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { verificationGridContext } from "../../helpers/constants/contextTokens";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { customElement } from "../../helpers/customElement";
 import settingComponentStyles from "./css/style.css?inline";
 
 @customElement("oe-verification-grid-settings")

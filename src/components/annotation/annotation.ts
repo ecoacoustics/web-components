@@ -1,5 +1,5 @@
 import { html, LitElement, PropertyValues } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, required } from "../../helpers/decorators";
 import { Annotation } from "../../models/annotation";
@@ -8,6 +8,7 @@ import { booleanConverter, tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "../tag/tag";
 import { Hertz, Seconds } from "../../models/unitConverters";
 import { DataComponent } from "../../helpers/dataComponent";
+import { customElement } from "../../helpers/customElement";
 
 /**
  * @description

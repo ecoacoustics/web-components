@@ -1,4 +1,4 @@
-import { customElement } from "lit/decorators.js";
+import { customElement } from "../../helpers/customElement";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { repeat } from "lit/directives/repeat.js";
@@ -25,6 +25,7 @@ import taskMeterStyles from "./css/style.css?inline";
 @customElement("oe-task-meter")
 export class TaskMeterComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(taskMeterStyles);
+  public static tagName = "oe-task-meter";
 
   // The subject can be undefined if this component is not slotted inside of a
   // grid tile component.

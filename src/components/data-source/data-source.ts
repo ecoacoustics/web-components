@@ -1,6 +1,6 @@
 import { Parser } from "@json2csv/plainjs";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
@@ -10,6 +10,7 @@ import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { DownloadableResult } from "../../models/subject";
 import { when } from "lit/directives/when.js";
+import { customElement } from "../../helpers/customElement";
 import dataSourceStyles from "./css/style.css?inline";
 
 /**
