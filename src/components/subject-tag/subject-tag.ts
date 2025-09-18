@@ -13,9 +13,8 @@ import tagTemplateStyles from "./css/style.css?inline";
  * A component to display the currently applied tag to a subject.
  */
 @customElement("oe-subject-tag")
-export class SubjectTagComponent extends WithShoelace(AbstractComponent(LitElement)) {
+export class SubjectTagComponent extends AbstractComponent(WithShoelace(LitElement)) {
   public static styles = unsafeCSS(tagTemplateStyles);
-  public static tagName = "oe-subject-tag";
 
   // The subject can be undefined if this component is not slotted inside of a
   // grid tile component.

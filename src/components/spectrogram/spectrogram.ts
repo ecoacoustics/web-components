@@ -1,6 +1,6 @@
 import { LitElement, PropertyValues, html, unsafeCSS } from "lit";
 import { property, query, queryAssignedElements } from "lit/decorators.js";
-import { computed, ReadonlySignal, Signal, signal, SignalWatcher } from "@lit-labs/preact-signals";
+import { computed, ReadonlySignal, signal, SignalWatcher } from "@lit-labs/preact-signals";
 import { RenderCanvasSize, RenderWindow, Size } from "../../models/rendering";
 import { AudioModel, OriginalAudioRecording } from "../../models/recordings";
 import { Seconds, UnitConverter } from "../../models/unitConverters";
@@ -63,12 +63,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public static readonly loadedEventName = "loaded";
   public static readonly optionsChangeEventName = "options-change";
 
-  // TODO: We might want to make this mutable from userspace, but that would
-  // require a lot of schema validation, reactivity hooks and testing what
-  // happens if the options object is re-created.
-  // This is not currently implemented because I have deemed it to be a low
-  // priority task.
-  public static readonly defaultOptions = {
+  private static readonly defaultOptions = {
     windowSize: 512,
     windowOverlap: 0,
     windowFunction: "hann",
@@ -85,7 +80,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   @consume({ context: spectrogramOptionsContext, subscribe: true })
-  private parentOptions?: Signal<ISpectrogramOptions>;
+  private ancestorOptions?: ISpectrogramOptions;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -236,7 +231,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
    * Because spectrogram option attributes are optional, this SpectrogramOptions
    * model may be partially complete.
    */
-  public get componentOptions(): ISpectrogramOptions {
+  private get componentOptions(): ISpectrogramOptions {
     return {
       windowSize: this.windowSize,
       windowOverlap: this.windowOverlap,
@@ -249,7 +244,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     };
   }
 
-  public set componentOptions(options: ISpectrogramOptions) {
+  private set componentOptions(options: ISpectrogramOptions) {
     this.windowSize = options.windowSize;
     this.windowOverlap = options.windowOverlap;
     this.windowFunction = options.windowFunction;
@@ -262,7 +257,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public get spectrogramOptions(): SpectrogramOptions {
     return mergeOptions(
       new SpectrogramOptions(SpectrogramComponent.defaultOptions),
-      this.parentOptions?.value ?? {},
+      this.ancestorOptions ?? {},
       this.componentOptions,
     );
   }
@@ -392,7 +387,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
   }
 
-  public updated(change: PropertyValues<this>) {
+  public async updated(change: PropertyValues<this>) {
     super.updated(change);
 
     if (this.doneFirstRender) {
@@ -415,12 +410,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
   }
 
-  public resetSettings(): void {
-    this.colorMap = "audacity";
-    this.contrast = 1;
-    this.brightness = 0;
-    this.melScale = false;
+  public setComponentOption<const T extends keyof ISpectrogramOptions & keyof this>(option: T, value: this[T]): void {
+    this.componentOptions[option] = value;
+  }
 
+  public resetSettings(): void {
+    this.componentOptions = SpectrogramComponent.defaultOptions;
     this.stop();
   }
 

@@ -1,6 +1,7 @@
 import { property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
+import { html as staticHtml } from "lit/static-html.js";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -298,14 +299,33 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private static readonly autoPageTimeout = 0.3 satisfies Seconds;
   private static readonly defaultGridTileTemplateId = "default-tile-template";
 
+  private static readonly defaultGridTileTemplate = staticHtml`
+      <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
+        <div class="tile-spacing">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <div class="tile-block">
+          <oe-task-meter></oe-task-meter>
+        </div>
+      </template>
+    `;
+
   @provide({ context: verificationGridContext })
   @property({ attribute: false })
-  public settings: VerificationGridSettings = {
+  protected settings: VerificationGridSettings = {
     isFullscreen: signal(false),
   };
 
   @provide({ context: spectrogramOptionsContext })
-  public spectrogramOptions = signal<Partial<SpectrogramOptions>>({});
+  public spectrogramOptions: Partial<SpectrogramOptions> = {};
 
   @provide({ context: injectionContext })
   @state()
@@ -2378,27 +2398,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`<div class="grid-tile tile-placeholder">${this.emptySubjectText}</div>`;
   }
 
-  private defaultGridTileTemplate(): HTMLTemplateResult {
-    return html`
-      <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
-        <div class="tile-spacing">
-          <oe-subject-tag></oe-subject-tag>
-          <oe-media-controls for="spectrogram"></oe-media-controls>
-        </div>
-
-        <oe-axes>
-          <oe-indicator>
-            <oe-spectrogram id="spectrogram"></oe-spectrogram>
-          </oe-indicator>
-        </oe-axes>
-
-        <div class="tile-block">
-          <oe-task-meter></oe-task-meter>
-        </div>
-      </template>
-    `;
-  }
-
   private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
     if (subject === null) {
       return this.emptySubjectTemplate();
@@ -2430,7 +2429,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return html`
       <slot id="tile-template-slot" name="tile-content"></slot>
 
-      ${this.defaultGridTileTemplate()}
+      ${VerificationGridComponent.defaultGridTileTemplate}
 
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"

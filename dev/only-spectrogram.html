@@ -10,7 +10,7 @@
   <body>
     <section>
       <h3>Stretch</h3>
-      <oe-spectrogram src="/example.flac"></oe-spectrogram>
+      <oe-spectrogram id="stretch" src="/example.flac"></oe-spectrogram>
     </section>
 
     <section>
@@ -34,9 +34,9 @@
       </ul>
     </section>
 
-    <button onclick="changeSource();">Change source</button>
+    <button id="source-button">Change source</button>
 
-    <script>
+    <script type="module">
       let currentSourceIndex = 0;
       const sources = [
         "/example.flac",
@@ -50,6 +50,9 @@
       ];
 
       const spectrograms = () => document.querySelectorAll("oe-spectrogram");
+
+      const sourceButton = document.getElementById("source-button");
+      sourceButton.addEventListener("click", changeSource);
 
       function changeSource() {
         currentSourceIndex += 1;
