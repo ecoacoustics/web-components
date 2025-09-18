@@ -792,7 +792,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
     const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
-    console.log({ hasGridSourceInvalidation });
     if (hasGridSourceInvalidation && this._loadState) {
       await this.handleGridSourceInvalidation();
     }
@@ -894,10 +893,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private async handleGridSourceInvalidation() {
     this.resetLoadingTimeout();
-
-    if (this._loadState === LoadState.CONFIGURATION_ERROR) {
-      return;
-    }
 
     // If we update to no data source, we want to wait a bit before
     // changing to an error state so that if the host application is being
