@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.1...web-components-v5.3.2) (2025-09-18)
+
+
+### Bug Fixes
+
+* Single tile view shadows ([#522](https://github.com/ecoacoustics/web-components/issues/522)) ([5cadba1](https://github.com/ecoacoustics/web-components/commit/5cadba138643367b31a2ebe93fe38a6bddeadf24)), closes [#517](https://github.com/ecoacoustics/web-components/issues/517)
+
 ## [5.3.1](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.0...web-components-v5.3.1) (2025-09-04)
 
 
