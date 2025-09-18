@@ -71,7 +71,7 @@ class TestPage {
 
   public fileInputButton = () => this.page.locator(".file-input").first();
   public nextPageButton = () => this.page.getByTestId("next-page-button").first();
-  public continueVerifyingButton = () => this.page.locator("#continue-verifying-button").first();
+  public continueVerifyingButton = () => this.page.locator("#continue-verifying-button");
   public previousPageButton = () => this.page.getByTestId("previous-page-button").first();
   public downloadResultsButton = () => this.page.getByTestId("download-results-button").first();
 
@@ -288,6 +288,8 @@ class TestPage {
   }
 
   public async createWithInvalidTemplate() {
+    await this.setNoBootstrap();
+
     // The <template> passed into the verification grid is missing both the
     // <oe-subject-tag> and <oe-task-meter> elements that are required.
     await setContent(
@@ -300,7 +302,8 @@ class TestPage {
         </template>
 
         <oe-data-source
-          src="http://localhost:3000/test-items.json"
+          slot="data-source"
+          src="${this.testJsonInput}"
           for="verification-grid"
         ></oe-data-source>
       </oe-verification-grid>

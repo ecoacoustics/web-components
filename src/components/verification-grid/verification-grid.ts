@@ -697,6 +697,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public isViewingHistory(): boolean {
+    if (this.loadState === LoadState.CONFIGURATION_ERROR) {
+      return false;
+    }
+
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
     return this.viewHeadIndex < this.decisionHeadIndex;
@@ -720,6 +724,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._loadState = LoadState.ERROR;
     this._decisionHeadIndex = 0;
     this._viewHeadIndex = 0;
+  }
+
+  public transitionConfigurationError() {
+    console.error(
+      "The provided grid item template is invalid. A valid template must " +
+        "contain both a subject tag and task meter component.",
+    );
+
+    this._loadState = LoadState.CONFIGURATION_ERROR;
   }
 
   //#region Updates
@@ -1319,10 +1332,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private handleSlotChange(): void {
     if (!this.isTileTemplateValid()) {
-      this._loadState = LoadState.CONFIGURATION_ERROR;
-      console.error(
-        "The provided grid item template is invalid. A valid template must contain both a tag template and a task meter.",
-      );
+      this.transitionConfigurationError();
       return;
     }
 
@@ -1361,7 +1371,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const template = this.customTileTemplates;
     // If there is no gridItemTemplate, then we are using the default template,
     // and we can guarantee that the default template is valid.
-    if (template.length < 1) {
+    if (template.length === 0) {
       return true;
     } else if (this.customTileTemplates.length > 1) {
       console.warn("Multiple custom grid tile templates found, only the first template will be used.");

@@ -2377,6 +2377,10 @@ test.describe("verification grid with slotted templates", () => {
       await fixture.createWithInvalidTemplate();
       await expect(fixture.gridTileComponents()).toHaveCount(0);
     });
+
+    test("should have no no progress or 'continue verifying' button", async ({ fixture }) => {
+      await expect(fixture.continueVerifyingButton()).toHaveCount(0);
+    });
   });
 
   test.describe("custom tile templates", () => {
