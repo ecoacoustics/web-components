@@ -792,7 +792,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
     const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
-    if (hasGridSourceInvalidation) {
+    console.log({ hasGridSourceInvalidation });
+    if (hasGridSourceInvalidation && this._loadState) {
       await this.handleGridSourceInvalidation();
     }
 
@@ -893,6 +894,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private async handleGridSourceInvalidation() {
     this.resetLoadingTimeout();
+
+    if (this._loadState === LoadState.CONFIGURATION_ERROR) {
+      return;
+    }
 
     // If we update to no data source, we want to wait a bit before
     // changing to an error state so that if the host application is being
@@ -1372,7 +1377,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private isTileTemplateValid(): boolean {
     const templates = this.customTileTemplates;
-    console.log("number of templates found:", templates.length);
     // If there is no gridItemTemplate, then we are using the default template,
     // and we can guarantee that the default template is valid.
     if (templates.length === 0) {
@@ -1384,19 +1388,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // TODO: If there are multiple templates, we should iterate through them all
     // until we find the first valid template instead of always using the first.
     const targetTemplate = templates[0];
-    console.log("found custom template:", targetTemplate);
 
     // Immediately return false if we know that the tagTemplate doesn't exist
     // so that we don't have to do an unnecessary DOM query for the task meter.
     const tagTemplate = targetTemplate.content.querySelector(SubjectTagComponent.tagName);
-    console.log("found tag template:", tagTemplate);
     if (!tagTemplate) {
       console.error("The provided grid item template does not contain a subject tag component.");
       return false;
     }
 
     const taskMeter = targetTemplate.content.querySelector(TaskMeterComponent.tagName);
-    console.log("found task meter template:", taskMeter);
     if (!taskMeter) {
       console.error("The provided grid item template does not contain a task meter component.");
       return false;
