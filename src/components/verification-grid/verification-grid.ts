@@ -61,6 +61,7 @@ import { cache } from "lit/directives/cache.js";
 import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
+import { classMap } from "lit/directives/class-map.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -2297,6 +2298,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public render() {
+    const gridContainerClasses = classMap({ singleTileView: this.isSingleTileViewMode });
+
     return html`
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"
@@ -2315,7 +2318,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
         <div
           id="grid-container"
-          class="verification-grid"
+          class="verification-grid ${gridContainerClasses}"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           @overlap="${this.handleTileOverlap}"
           tabindex="-1"
