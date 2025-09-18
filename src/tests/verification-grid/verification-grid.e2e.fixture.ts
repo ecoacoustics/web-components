@@ -297,7 +297,6 @@ class TestPage {
       `
       <oe-verification-grid id="verification-grid">
         <template>
-          <oe-spectrogram></oe-spectrogram>
           <oe-media-controls></oe-media-controls>
         </template>
 

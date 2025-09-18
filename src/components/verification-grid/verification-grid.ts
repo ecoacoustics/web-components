@@ -1331,15 +1331,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private handleSlotChange(): void {
-    if (!this.isTileTemplateValid()) {
-      this.transitionConfigurationError();
-      return;
-    }
-
     this.updateRequiredClassificationTags();
     this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
+
+    if (!this.isTileTemplateValid()) {
+      this.transitionConfigurationError();
+      return;
+    }
   }
 
   private handleTileOverlap(event: OverflowEvent): void {
@@ -1368,10 +1368,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * verify such as an image or video.
    */
   private isTileTemplateValid(): boolean {
-    const template = this.customTileTemplates;
+    const templates = this.customTileTemplates;
     // If there is no gridItemTemplate, then we are using the default template,
     // and we can guarantee that the default template is valid.
-    if (template.length === 0) {
+    if (templates.length === 0) {
       return true;
     } else if (this.customTileTemplates.length > 1) {
       console.warn("Multiple custom grid tile templates found, only the first template will be used.");
@@ -1379,7 +1379,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // TODO: If there are multiple templates, we should iterate through them all
     // until we find the first valid template instead of always using the first.
-    const targetTemplate = template[0];
+    const targetTemplate = templates[0];
 
     // Immediately return false if we know that the tagTemplate doesn't exist
     // so that we don't have to do an unnecessary DOM query for the task meter.
@@ -2494,7 +2494,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
               </h2>
               <div id="decisions-container" class="decision-control-actions">
-                <slot id="default-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
+                <slot id="default-slot" @slotchange="${this.handleSlotChange}"></slot>
               </div>
             </span>
 

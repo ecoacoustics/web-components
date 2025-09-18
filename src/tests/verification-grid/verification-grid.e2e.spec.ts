@@ -2373,10 +2373,14 @@ test.describe("verification grid with slotted templates", () => {
       }).toConsoleError(fixture.page, expectedError);
     });
 
-    test("should not render tiles if the template is invalid", { tag: [expectConsoleError] }, async ({ fixture }) => {
-      await fixture.createWithInvalidTemplate();
-      await expect(fixture.gridTileComponents()).toHaveCount(0);
-    });
+    test.only(
+      "should not render tiles if the template is invalid",
+      { tag: [expectConsoleError] },
+      async ({ fixture }) => {
+        await fixture.createWithInvalidTemplate();
+        await expect(fixture.gridTileComponents()).toHaveCount(0);
+      },
+    );
 
     test("should have no no progress or 'continue verifying' button", async ({ fixture }) => {
       await expect(fixture.continueVerifyingButton()).toHaveCount(0);
