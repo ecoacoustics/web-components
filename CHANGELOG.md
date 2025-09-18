@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.3](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.2...web-components-v5.3.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* Width of top positioned progress bar ([#523](https://github.com/ecoacoustics/web-components/issues/523)) ([1faed44](https://github.com/ecoacoustics/web-components/commit/1faed447e56d71576cfed7f6858fb8166bdb4d4f)), closes [#508](https://github.com/ecoacoustics/web-components/issues/508)
+
 ## [5.3.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.1...web-components-v5.3.2) (2025-09-18)
 
 
