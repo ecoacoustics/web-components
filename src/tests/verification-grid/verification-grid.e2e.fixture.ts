@@ -311,6 +311,8 @@ class TestPage {
 
     await waitForContentReady(this.page, ["oe-verification-grid", "oe-data-source"]);
 
+    await this.page.waitForTimeout(3_000);
+
     // By having an except statement here, playwright will continue running this
     // assertion until it passes or the test times out (30 seconds).
     // We do this so that we know the entire grid has loaded.
