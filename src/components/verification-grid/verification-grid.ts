@@ -1373,10 +1373,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // and we can guarantee that the default template is valid.
     if (templates.length === 0) {
       return true;
-    } else if (this.customTileTemplates.length > 1) {
+    } else if (templates.length > 1) {
       console.warn("Multiple custom grid tile templates found, only the first template will be used.");
     }
 
+    return false;
     // TODO: If there are multiple templates, we should iterate through them all
     // until we find the first valid template instead of always using the first.
     const targetTemplate = templates[0];
