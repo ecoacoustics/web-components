@@ -232,7 +232,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
    * model may be partially complete.
    */
   private get componentOptions(): ISpectrogramOptions {
-    console.log(this.colorMap);
     return {
       windowSize: this.windowSize,
       windowOverlap: this.windowOverlap,
