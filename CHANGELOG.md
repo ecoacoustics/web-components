@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.4](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.3...web-components-v5.3.4) (2025-09-18)
+
+
+### Bug Fixes
+
+* Don't render indicator without unit converter ([#527](https://github.com/ecoacoustics/web-components/issues/527)) ([5cab610](https://github.com/ecoacoustics/web-components/commit/5cab610fff2345aabde4b3cd7e7c6bf13eb3331b)), closes [#526](https://github.com/ecoacoustics/web-components/issues/526)
+
 ## [5.3.3](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.2...web-components-v5.3.3) (2025-09-18)
 
 
