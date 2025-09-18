@@ -1,5 +1,5 @@
 import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
-import { html, LitElement, unsafeCSS } from "lit";
+import { html, LitElement, nothing, unsafeCSS } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { UnitConverter } from "../../models/unitConverters";
@@ -75,6 +75,10 @@ export class IndicatorComponent extends ChromeProvider(LitElement) {
   }
 
   public chromeOverlay(): ChromeTemplate {
+    if (!this.unitConverter) {
+      return nothing;
+    }
+
     return html`
       <svg id="indicator-svg">
         <g id="indicator-group" style="transform: translateX(${watch(this.computedTimePx)}px);">
