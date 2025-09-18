@@ -2312,7 +2312,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       <div id="highlight-box" part="highlight-box"></div>
 
       <div class="verification-container">
-        <div class="controls-container header-controls">
+        <div class="header-controls">
           ${when(this.progressBarPosition === ProgressBarPosition.TOP, () => this.progressBarTemplate())}
         </div>
 
