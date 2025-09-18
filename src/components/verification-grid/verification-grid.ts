@@ -759,6 +759,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
+    // If I only listened to the "slotchange" event, it would not fire on
+    // creation for Safari.
+    this.validateTemplateValidity();
+
     patchTrackClickLikeEvents();
   }
 
@@ -1336,9 +1340,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateInjector();
     this.updateDecisionElements();
 
+    this.validateTemplateValidity();
+  }
+
+  private validateTemplateValidity(): void {
     if (!this.isTileTemplateValid()) {
       this.transitionConfigurationError();
-      return;
     }
   }
 
@@ -1377,7 +1384,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       console.warn("Multiple custom grid tile templates found, only the first template will be used.");
     }
 
-    return false;
     // TODO: If there are multiple templates, we should iterate through them all
     // until we find the first valid template instead of always using the first.
     const targetTemplate = templates[0];
