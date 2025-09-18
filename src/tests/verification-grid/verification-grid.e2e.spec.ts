@@ -450,7 +450,7 @@ test.describe("single verification grid", () => {
       expect(viewHeadTooltips).toBe(0);
     });
 
-    test.only("should re-grow the view head segment if the user exits history", async ({ fixture }) => {
+    test("should re-grow the view head segment if the user exits history", async ({ fixture }) => {
       await fixture.makeVerificationDecision("true");
       await fixture.viewPreviousHistoryPage();
       await fixture.continueVerifying();
