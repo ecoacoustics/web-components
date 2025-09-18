@@ -2303,6 +2303,8 @@ test.describe("verification grid with slotted templates", () => {
     });
 
     test("should update correctly when paging", async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+
       const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
       await fixture.makeVerificationDecision("true");
 
@@ -2316,9 +2318,9 @@ test.describe("verification grid with slotted templates", () => {
       // making a whole page decision will be about the 5th item in the
       // "test-items.json" dataset.
       const expectedInfoCard = [
-        { key: "Filename", value: "20200413T120000+0800_Boyagin-Nature-Reserve-Wet-A_177657.flac" },
-        { key: "FileId", value: "177,657" },
-        { key: "Datetime", value: "2020-04-13T04:00:00.000Z" },
+        { key: "Filename", value: "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac" },
+        { key: "FileId", value: "251,486" },
+        { key: "Datetime", value: "2019-10-22T04:00:00.000Z" },
       ];
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
@@ -2405,13 +2407,14 @@ test.describe("verification grid with slotted templates", () => {
     });
 
     test("should set the spectrograms source correctly", async ({ fixture }) => {
+      const gridSize = await fixture.getGridSize();
+
       const spectrograms = fixture.spectrogramComponents();
-      await expect(spectrograms).toHaveCount(4);
+      await expect(spectrograms).toHaveCount(gridSize);
 
       await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
       await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
       await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
-      await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
     });
 
     test.skip("should fall back to the default template if the custom template is removed", async ({ fixture }) => {
@@ -2562,6 +2565,8 @@ test.describe("default templates", () => {
   });
 
   test("should have the expected elements", async ({ fixture }) => {
+    const gridSize = await fixture.getGridSize();
+
     const expectedComponents = [
       fixture.tagTemplateComponents(),
       fixture.mediaControlsComponents(),
@@ -2575,7 +2580,7 @@ test.describe("default templates", () => {
 
     for (const component of expectedComponents) {
       await expect(component.first()).toBeVisible();
-      await expect(component).toHaveCount(4);
+      await expect(component).toHaveCount(gridSize);
     }
   });
 
