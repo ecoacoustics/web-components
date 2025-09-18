@@ -60,6 +60,7 @@ import { customElement } from "../../helpers/customElement";
 import { SubjectTagComponent } from "../subject-tag/subject-tag";
 import { TaskMeterComponent } from "../task-meter/task-meter";
 import { patchTrackClickLikeEvents } from "../../patches/eventListener";
+import { classMap } from "lit/directives/class-map.js";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -2426,6 +2427,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public render() {
+    const gridContainerClasses = classMap({ singleTileView: this.isSingleTileViewMode });
+
     return html`
       <slot id="tile-template-slot" name="tile-content"></slot>
 
@@ -2442,14 +2445,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       <div id="highlight-box" part="highlight-box"></div>
 
       <div class="verification-container">
-        <div class="controls-container header-controls">
+        <div class="header-controls">
           ${when(this.progressBarPosition === ProgressBarPosition.TOP, () => this.progressBarTemplate())}
         </div>
 
         <div
           @overlap="${this.handleTileOverlap}"
           id="grid-container"
-          class="verification-grid"
+          class="verification-grid ${gridContainerClasses}"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
           tabindex="-1"
         >
