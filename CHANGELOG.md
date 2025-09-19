@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.0...web-components-v6.0.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* Use "audacity" as default color map ([#530](https://github.com/ecoacoustics/web-components/issues/530)) ([a0ecf26](https://github.com/ecoacoustics/web-components/commit/a0ecf26edb7af5e345b43d6993a9539814534163))
+
 ## [6.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.4...web-components-v6.0.0) (2025-09-19)
 
 
