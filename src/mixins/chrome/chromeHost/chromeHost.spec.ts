@@ -1,6 +1,6 @@
 import { expect } from "../../../tests/assertions";
 import { chromeHostFixture as test } from "./chromeHost.fixture";
-import { catchEvent } from "../../../tests/helpers";
+import { catchEvent } from "../../../tests/helpers/helpers";
 
 test("should create", async ({ fixture }) => {
   await fixture.create();

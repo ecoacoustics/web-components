@@ -18,6 +18,17 @@
 
     <oe-verification-grid id="verification-grid" autofocus>
       <template>
+        <div class="tile-spacing">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
         <div>
           <h1>Large text test</h1>
 
@@ -26,6 +37,9 @@
             voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
           </p>
         </div>
+
+        <oe-task-meter></oe-task-meter>
+        <oe-info-card></oe-info-card>
       </template>
 
       <oe-classification true-shortcut="a" tag="Turtle"></oe-classification>

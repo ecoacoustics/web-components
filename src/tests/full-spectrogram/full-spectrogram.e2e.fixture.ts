@@ -7,7 +7,7 @@ import {
   getBrowserValue,
   setBrowserAttribute,
   waitForContentReady,
-} from "../helpers";
+} from "../helpers/helpers";
 import { AudioModel } from "../../models/recordings";
 import { Size } from "../../models/rendering";
 import { createFixture, setContent } from "../fixtures";

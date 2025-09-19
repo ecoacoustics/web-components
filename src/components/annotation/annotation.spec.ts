@@ -1,6 +1,6 @@
 import { Tag } from "../../models/tag";
 import { expect } from "../../tests/assertions";
-import { catchLocatorEvent, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import { catchLocatorEvent, setBrowserAttribute, setBrowserValue } from "../../tests/helpers/helpers";
 import { AnnotationComponent } from "./annotation";
 import { annotationFixture as test } from "./annotation.fixture";
 

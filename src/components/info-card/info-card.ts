@@ -1,9 +1,11 @@
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, nothing, unsafeCSS } from "lit";
 import { consume } from "@lit/context";
-import { Subject, SubjectWrapper } from "../../models/subject";
+import { Subject } from "../../models/subject";
 import { gridTileContext } from "../../helpers/constants/contextTokens";
+import { VerificationGridTileContext } from "verification-grid-tile/verification-grid-tile";
+import { customElement } from "../../helpers/customElement";
 import infoCardStyle from "./css/style.css?inline";
 
 type InfoCardTemplate = (value: any) => any;
@@ -16,9 +18,10 @@ type InfoCardTemplate = (value: any) => any;
 export class InfoCardComponent extends AbstractComponent(LitElement) {
   public static styles = unsafeCSS(infoCardStyle);
 
+  // The tile context can be undefined if this component is not slotted inside
+  // of a grid tile component.
   @consume({ context: gridTileContext, subscribe: true })
-  @property({ attribute: false })
-  public model?: SubjectWrapper;
+  public tile?: VerificationGridTileContext;
 
   /** Number of subject key/values pairs to show before the "Show More" button is clicked */
   @property({ attribute: "default-lines", type: Number, reflect: true })
@@ -33,11 +36,14 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     html`<a href="${value}" target="_blank">${this.formatUrl(value)}</a>`;
 
   private subjectRowCount(): number {
-    if (!this.model) {
+    // The tile model might be undefined if the component is not slotted inside
+    // of a grid tile component. Or if the grid tile component does not have a
+    // model assigned to it.
+    if (!this.tile?.model) {
       return 0;
     }
 
-    return Object.keys(this.model.subject).length;
+    return Object.keys(this.tile.model.subject).length;
   }
 
   /**
@@ -106,12 +112,14 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div class="card-container">
-        <div class="subject-content">${this.subjectTemplate(this.model?.subject)}</div>
+        <div class="subject-content">${this.subjectTemplate(this.tile?.model?.subject)}</div>
 
         <hr />
 
         <div class="static-actions">
-          <a id="download-recording" href="${this.model?.url ?? ""}" target="_blank" download>Download Recording</a>
+          <a id="download-recording" href="${this.tile?.model?.url ?? ""}" target="_blank" download>
+            Download Recording
+          </a>
           ${this.showMoreButtonTemplate()}
         </div>
       </div>

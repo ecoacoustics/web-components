@@ -8,7 +8,7 @@
   </head>
 
   <body>
-    <oe-verification-grid id="verification-grid" grid-size="3" autofocus>
+    <oe-verification-grid id="verification-grid" grid-size="1" autofocus>
       <oe-verification verified="true" shortcut="1"></oe-verification>
       <oe-verification verified="false" shortcut="2"></oe-verification>
       <oe-verification verified="skip" shortcut="s"></oe-verification>
@@ -30,12 +30,12 @@
     </oe-verification-grid>
 
     <section id="dev-tools">
-      <button id="next-data-source-btn" onclick="nextDataSource()">/kaleidoscope.csv</button>
+      <button id="next-data-source-btn">/kaleidoscope.csv</button>
     </section>
 
-    <script>
-      const dataSourceComponent = () => document.querySelector("oe-data-source");
-      const nextDataSourceBtn = () => document.getElementById("next-data-source-btn");
+    <script type="module">
+      const dataSourceComponent = document.querySelector("oe-data-source");
+      const nextDataSourceBtn = document.getElementById("next-data-source-btn");
 
       function nextDataSource() {
         const nextSources = new Map([
@@ -44,12 +44,14 @@
           ["/404-invalid.csv", "/kaleidoscope.csv"],
         ]);
 
-        const currentSource = dataSourceComponent().getAttribute("src");
+        const currentSource = dataSourceComponent.getAttribute("src");
         const nextSource = nextSources.get(currentSource);
 
-        dataSourceComponent().setAttribute("src", nextSource);
-        nextDataSourceBtn().textContent = nextSource;
+        dataSourceComponent.setAttribute("src", nextSource);
+        nextDataSourceBtn.textContent = nextSource;
       }
+
+      nextDataSourceBtn.addEventListener("click", nextDataSource);
     </script>
   </body>
 </html>

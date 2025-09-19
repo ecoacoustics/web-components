@@ -1,9 +1,10 @@
-import { customElement, property } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, LitElement, HTMLTemplateResult, unsafeCSS } from "lit";
 import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { customElement } from "../../helpers/customElement";
 import progressBarStyles from "./css/style.css?inline";
 
 /**

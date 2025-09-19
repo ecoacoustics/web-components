@@ -1,4 +1,4 @@
-import { customElement, query, state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -22,6 +22,7 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { closeIconTemplate } from "../../templates/closeButton";
 import { ClassificationComponent } from "../decision/classification/classification";
+import { customElement } from "../../helpers/customElement";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -64,7 +65,6 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public static readonly closeEventName = "close";
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   private injector!: VerificationGridInjector;
 
   // because this is an internal web component, we can use the state decorator
@@ -87,10 +87,10 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   private slides: BootstrapSlide[] = [];
 
-  @query("#dialog-element")
+  @query("#dialog-element", true)
   private dialogElement!: HTMLDialogElement;
 
-  @query("#tutorial-slide-carousel")
+  @query("#tutorial-slide-carousel", true)
   private tutorialSlideCarouselElement!: SlCarousel;
 
   private isAdvancedDialog = false;

@@ -1,4 +1,4 @@
-import { customElement, property, query, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { callbackConverter } from "../../helpers/attributes";
@@ -14,6 +14,7 @@ import {
 } from "../../helpers/keyboard";
 import { classMap } from "lit/directives/class-map.js";
 import { ObjectRecord } from "../../helpers/types/advancedTypes";
+import { customElement } from "../../helpers/customElement";
 import typeaheadStyles from "./css/style.css?inline";
 
 export type TypeaheadCallback<Value> = <Context extends ObjectRecord>(
@@ -53,7 +54,7 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
   @state()
   private focusedIndex = 0;
 
-  @query("#typeahead-input")
+  @query("#typeahead-input", true)
   private readonly tagInput!: HTMLInputElement;
 
   private readonly recentlyUsed: T[] = [];

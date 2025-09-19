@@ -1,15 +1,17 @@
 import { HTMLTemplateResult, LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
-import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { ISpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { customElement } from "../../helpers/customElement";
+import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -91,6 +93,13 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     super.disconnectedCallback();
   }
 
+  public connectedCallback(): void {
+    super.connectedCallback();
+
+    // use add a keydown event listener so that we can bind space bar to play
+    document.addEventListener("keydown", this.keyDownHandler);
+  }
+
   public toggleAudio(keyboardShortcut = false): void {
     // if the media controls element is not bound to a spectrogram element, do nothing
     if (!this.spectrogramElement) {
@@ -125,9 +134,6 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         this.spectrogramElement = null;
         return;
       }
-
-      // use add a keydown event listener so that we can bind space bar to play
-      document.addEventListener("keydown", this.keyDownHandler);
 
       if (this.for instanceof SpectrogramComponent) {
         this.spectrogramElement = this.for;
@@ -164,17 +170,6 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     this.requestUpdate();
   }
 
-  // the handlePointerDown method is attached to the top-most container of this
-  // component. Meaning that all pointer events that occur within the media
-  // controls component can be handled by this component, but will not propagate
-  // outside to parent elements.
-  // we do this because if the user clicks on a media control e.g. the play
-  // button, we do not want other parent elements such as the verification grid
-  // tile to receive the pointer event and think that we clicked on that element
-  // and want to perform selection.
-  // if you want to explicitly listen for a pointer event on this media controls
-  // you can assign an event listener to the root element.
-  // e.g. <oe-media-controls @pointerdown="${this.handlePointerDown}">
   private handlePointerDown(event: PointerEvent) {
     event.stopPropagation();
   }
@@ -249,6 +244,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     currentValue: number,
     changeHandler: any,
   ): HTMLTemplateResult {
+    // Stop click propagation on the input range so that the menu does not close.
     return html`
       <sl-menu-item>
         ${text}
@@ -256,6 +252,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           <label>
             <input
               @change="${changeHandler}"
+              @click="${(event: PointerEvent) => event.stopPropagation()}"
               type="range"
               min="${min}"
               max="${max}"
@@ -346,7 +343,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
     const currentOptions = this.spectrogramElement.spectrogramOptions;
 
-    const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
+    const discreteDropdownHandler = (key: keyof ISpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
@@ -368,28 +365,19 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           }
         }
 
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: newValue,
-        } as any;
-
+        this.spectrogramElement.setComponentOption(key, newValue as any);
         this.requestUpdate();
       };
     };
 
-    const rangeInputHandler = (key: keyof SpectrogramOptions) => {
-      return (event: Event) => {
+    const rangeInputHandler = (key: keyof ISpectrogramOptions) => {
+      return (event: ChangeEvent<HTMLInputElement>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
         }
 
-        const newValue = (event.target as HTMLInputElement).value;
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
-
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: Number(newValue),
-        } as any;
+        const newValue = Number(event.target.value) as any;
+        this.spectrogramElement.setComponentOption(key, newValue);
       };
     };
 

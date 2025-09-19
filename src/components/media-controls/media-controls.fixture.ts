@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { expect, test } from "../../tests/assertions";
-import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

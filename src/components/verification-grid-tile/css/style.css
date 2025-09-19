@@ -1,6 +1,4 @@
 :host {
-  --decision-color: var(--oe-panel-color);
-
   /*
     It is okay to change the display property here because we do not expect
     users to be using the oe-verification-grid-tile component because it is
@@ -13,11 +11,36 @@
   display: flex;
   flex-direction: column;
 
+  position: relative;
+
   /*
     The reason why we want to hide overflow content is so that border rounding
     on the :host element (which is a subtractive property) clips content.
   */
-  overflow: hidden;
+  /* overflow: hidden; */
+}
+
+#template-content {
+  oe-spectrogram {
+    height: 100%;
+    width: 100%;
+  }
+
+  .tile-spacing {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--oe-spacing);
+  }
+
+  .tile-block {
+    display: block;
+    margin-top: var(--oe-spacing);
+  }
+
+  oe-task-meter {
+    margin-top: var(--oe-spacing);
+  }
 }
 
 .spectrogram-container {
@@ -64,17 +87,6 @@
   flex: 1 1 0;
 }
 
-.figure-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--oe-spacing);
-
-  & > .tag-label {
-    color: var(--oe-font-color);
-  }
-}
-
 /* TODO: maybe add a border here */
 .selected {
   background-color: var(--oe-selected-color);
@@ -95,62 +107,4 @@
   transform: translate(0%, calc(-50% - 1rem));
   z-index: 2;
   font-size: 2rem;
-}
-
-.progress-meter {
-  --progress-meter-rounding: var(--oe-border-rounding);
-
-  display: flex;
-  width: 100%;
-  min-height: var(--oe-spacing);
-
-  /* We use outline to minimize background-bleed seen with borders */
-  outline: var(--oe-border-width) solid var(--oe-border-color);
-  border-radius: var(--progress-meter-rounding);
-  background-clip: padding-box;
-
-  /*
-    Only apply spacing to the top and bottom of the progress meter because we
-    want the progress meter to be vertically aligned to all the other elements
-    in the verification grid tile.
-  */
-  margin-top: var(--oe-spacing);
-  margin-bottom: var(--oe-spacing);
-}
-
-.progress-meter-segment {
-  flex: 1 0;
-
-  /* This default background will be overwritten if a decision is applied */
-  background-color: var(--oe-undecided-color);
-}
-
-/*
-  We use a border-right to separate each progress-meter-item. But we do not want
-  to use a border-right on the last item because it would result in a double
-  border on the last item. One from the progress-meter-item and one from the
-  progress-meter itself.
-*/
-:not(:last-child) > .progress-meter-segment {
-  border-right: var(--oe-border-width) solid var(--oe-border-color);
-}
-
-/*
-  We apply the same amount of rounding to each progress meter item that was
-  applied to the progress meter so that the first and last items are flush with
-  the progress meter.
-  If we did not round the first and last items, they would have a sharp edge
-  and cause the inner edge of the border to not be the same radius as the outer
-  borders edge.
-  We don't round every edge because we want the individual items to be separated
-  with a straight edge.
-*/
-:first-child > .progress-meter-segment {
-  border-top-left-radius: var(--progress-meter-rounding);
-  border-bottom-left-radius: var(--progress-meter-rounding);
-}
-
-:last-child > .progress-meter-segment {
-  border-top-right-radius: var(--progress-meter-rounding);
-  border-bottom-right-radius: var(--progress-meter-rounding);
 }

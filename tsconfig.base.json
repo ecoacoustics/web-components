@@ -16,7 +16,8 @@
       // to improve quality of life.
       // These types should not be exported in the final build as we don't want
       // to modify the typings of user projects.
-      "./src/helpers/types/polyfills.d.ts"
+      "./src/helpers/types/polyfills.d.ts",
+      "./src/patches/eventListener.d.ts"
     ],
 
     "moduleResolution": "Bundler",

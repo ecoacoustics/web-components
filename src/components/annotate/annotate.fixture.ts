@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { mockDeviceSize, testBreakpoints, waitForContentReady } from "../../tests/helpers";
+import { mockDeviceSize, testBreakpoints, waitForContentReady } from "../../tests/helpers/helpers";
 import { AnnotationTagStyle } from "./annotate";
 import { PartialAnnotation } from "./annotate.spec";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";

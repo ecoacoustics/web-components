@@ -1,7 +1,7 @@
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { sleep } from "../../helpers/utilities";
 import { expect } from "../assertions";
-import { getBrowserValue } from "../helpers";
+import { getBrowserValue } from "../helpers/helpers";
 import { indicatorSpectrogramMediaControlsFixture as test } from "./indicator-spectrogram-media-controls.e2e.fixture";
 
 test.describe("oe-indicator interaction with spectrogram and media controls", () => {

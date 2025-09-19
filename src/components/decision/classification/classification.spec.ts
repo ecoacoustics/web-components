@@ -1,6 +1,6 @@
 import { sleep } from "../../../helpers/utilities";
 import { expect } from "../../../tests/assertions";
-import { getEventLogs, logEvent } from "../../../tests/helpers";
+import { getEventLogs, logEvent } from "../../../tests/helpers/helpers";
 import { classificationFixture as test } from "./classification.fixture";
 
 test.describe("Classification Component", () => {

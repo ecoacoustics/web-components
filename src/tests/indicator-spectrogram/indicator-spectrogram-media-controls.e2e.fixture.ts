@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute, waitForContentReady } from "../helpers";
+import { setBrowserAttribute, waitForContentReady } from "../helpers/helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 import { Seconds } from "../../models/unitConverters";

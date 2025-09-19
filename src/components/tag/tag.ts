@@ -1,8 +1,9 @@
 import { html, LitElement } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { Tag } from "../../models/tag";
 import { DataComponent } from "../../helpers/dataComponent";
+import { customElement } from "../../helpers/customElement";
 
 /**
  * @description

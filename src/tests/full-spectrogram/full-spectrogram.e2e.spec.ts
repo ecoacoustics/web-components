@@ -2,7 +2,7 @@ import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { sleep } from "../../helpers/utilities";
 import { Size } from "../../models/rendering";
 import { expect } from "../assertions";
-import { catchLocatorEvent, setElementSize } from "../helpers";
+import { catchLocatorEvent, setElementSize } from "../helpers/helpers";
 import { fullFixture as test } from "./full-spectrogram.e2e.fixture";
 
 test.describe("interactions between all components", () => {

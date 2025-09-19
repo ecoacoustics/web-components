@@ -1,5 +1,5 @@
 import { expect } from "../../tests/assertions";
-import { getElementSize } from "../../tests/helpers";
+import { getElementSize } from "../../tests/helpers/helpers";
 import { IndicatorComponent } from "./indicator";
 import { indicatorFixture as test } from "./indicator.fixture";
 

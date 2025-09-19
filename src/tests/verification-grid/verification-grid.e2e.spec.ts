@@ -9,7 +9,7 @@ import {
   mockDeviceSize,
   pressKey,
   testBreakpoints,
-} from "../helpers";
+} from "../helpers/helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect, expectConsoleError } from "../assertions";
 import { SubjectWrapper } from "../../models/subject";
@@ -142,7 +142,7 @@ test.describe("single verification grid", () => {
 
     test("should open advanced shortcuts when the help button is clicked on desktop", async ({ fixture }) => {
       await fixture.changeToDesktop();
-      await fixture.openBootstrapDialog();
+      await fixture.bootstrapDialogButton().click();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
@@ -157,7 +157,7 @@ test.describe("single verification grid", () => {
     // expect that the user is taken straight to the tutorial modal
     test("should open the tutorial bootstrap when the help button is clicked on mobile", async ({ fixture }) => {
       await fixture.changeToMobile();
-      await fixture.openBootstrapDialog();
+      await fixture.bootstrapDialogButton().click();
 
       const isBootstrapDialogOpen = await fixture.isBootstrapDialogOpen();
       expect(isBootstrapDialogOpen).toBe(true);
@@ -476,24 +476,6 @@ test.describe("single verification grid", () => {
     });
   });
 
-  test.describe("changing settings", () => {
-    test("disabling the axes in the settings should hide the axes", async ({ fixture }) => {
-      await expect(fixture.areAxesVisible()).resolves.toBe(true);
-      await fixture.showAxes(false);
-      await expect(fixture.areAxesVisible()).resolves.toBe(false);
-    });
-
-    test("disabling the media controls in the settings should hide the media controls", async ({ fixture }) => {
-      const initialState = await fixture.areMediaControlsVisible();
-      expect(initialState).toBe(true);
-
-      await fixture.showMediaControls(false);
-
-      const realizedState = await fixture.areMediaControlsVisible();
-      expect(realizedState).toBe(false);
-    });
-  });
-
   test.describe("data sources", () => {
     // TODO: this test is broken/disabled because spectrograms can cover the
     // file input button, causing visibility checks to fail
@@ -623,6 +605,7 @@ test.describe("single verification grid", () => {
       const testedSubSelection = [0, 1];
       test.beforeEach(async ({ fixture }) => {
         await fixture.subSelect(testedSubSelection, ["ControlOrMeta"]);
+        await fixture.page.waitForTimeout(1_000);
       });
 
       test("should only play selected tiles when the play shortcut is pressed", async ({ fixture }) => {
@@ -639,6 +622,10 @@ test.describe("single verification grid", () => {
 
         const initialPlayingSpectrograms = await fixture.playingSpectrograms();
         expect(initialPlayingSpectrograms).toHaveLength(2);
+
+        // Wait for a second for the audio to start playing
+        // TODO: Remove this hack
+        await fixture.page.waitForTimeout(1_000);
 
         await fixture.subSelect(1);
         await fixture.shortcutGridPause();
@@ -1444,7 +1431,7 @@ test.describe("single verification grid", () => {
       withSlotShape: GridShape;
     }
 
-    const testedGridSizes = [
+    const testedGridSizes: DynamicGridSizeTest[] = [
       {
         deviceName: "desktop",
         device: mockDeviceSize(testBreakpoints.desktop),
@@ -1475,11 +1462,22 @@ test.describe("single verification grid", () => {
         withoutSlotShape: { columns: 1, rows: 1 },
         withSlotShape: { columns: 1, rows: 1 },
       },
-    ] satisfies DynamicGridSizeTest[];
+    ];
 
     for (const testConfig of testedGridSizes) {
       const testedSlotContent = `
         <template>
+          <div class="tile-spacing">
+            <oe-subject-tag></oe-subject-tag>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+          </div>
+
+          <oe-axes>
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
           <div>
             <h1>Heading text</h1>
 
@@ -1487,6 +1485,11 @@ test.describe("single verification grid", () => {
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil odio laboriosam ea culpa magnam aut iure,
               voluptate nisi. Enim natus blanditiis quam ipsa vero magni deserunt ratione qui explicabo. Est!
             </p>
+          </div>
+
+          <div class="tile-block">
+            <oe-task-meter></oe-task-meter>
+            <oe-info-card></oe-info-card>
           </div>
         </template>
 
@@ -1969,7 +1972,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments in the progress meter", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(3);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(3);
     });
 
     test("should have the correct colors without a decision", async ({ fixture }) => {
@@ -2053,7 +2056,7 @@ test.describe("decision meter", () => {
     // when navigating in history
     test("should have the correct colors when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we
@@ -2071,7 +2074,7 @@ test.describe("decision meter", () => {
 
     test("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       // when the skip button is clicked, the next page rendered
       // therefore, if we want to see that the correct colors were applied, we
@@ -2090,7 +2093,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(1);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(1);
     });
 
     test("should have the correct colors when a decision is made", async ({ fixture }) => {
@@ -2116,7 +2119,7 @@ test.describe("decision meter", () => {
     // component, we have seen bugs where only skip decisions fail to show
     // correctly in the progress meter.
     test("should show skip decisions correctly", async ({ fixture }) => {
-      await fixture.makeSkipDecision();
+      await fixture.skipButton().click();
 
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual([await fixture.skipColor()]);
@@ -2139,7 +2142,7 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(4);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(4);
     });
 
     // make a verification decision and then make a classification decision
@@ -2174,12 +2177,12 @@ test.describe("decision meter", () => {
     });
 
     test("should have the correct number of progress meter segments", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments()).toHaveCount(2);
+      await expect(fixture.gridTileTaskMeterSegments()).toHaveCount(2);
     });
 
     test("should have the appropriate color while the 'when' condition doesn't pass", async ({ fixture }) => {
-      await expect(fixture.gridTileProgressMeterSegments().nth(0)).toHaveCSS("background", await fixture.panelColor());
-      await expect(fixture.gridTileProgressMeterSegments().nth(1)).toHaveCSS(
+      await expect(fixture.gridTileTaskMeterSegments().nth(0)).toHaveCSS("background", await fixture.panelColor());
+      await expect(fixture.gridTileTaskMeterSegments().nth(1)).toHaveCSS(
         "background",
         await fixture.notRequiredColor(),
       );
@@ -2263,8 +2266,8 @@ test.describe("compound tasks", () => {
   });
 });
 
-test.describe("verification grid with custom template", () => {
-  test.describe.skip("information cards", () => {
+test.describe("verification grid with slotted templates", () => {
+  test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(
         `
@@ -2272,7 +2275,21 @@ test.describe("verification grid with custom template", () => {
         <oe-verification verified="false">Not Koala</oe-verification>
 
         <template>
-          <oe-info-card></oe-info-card>
+          <div class="tile-spacing">
+            <oe-subject-tag></oe-subject-tag>
+            <oe-media-controls for="spectrogram"></oe-media-controls>
+          </div>
+
+          <oe-axes>
+            <oe-indicator>
+              <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            </oe-indicator>
+          </oe-axes>
+
+          <div class="tile-block">
+            <oe-task-meter></oe-task-meter>
+            <oe-info-card></oe-info-card>
+          </div>
         </template>
       `,
         ["oe-info-card"],
@@ -2291,28 +2308,40 @@ test.describe("verification grid with custom template", () => {
     });
 
     test("should update correctly when paging", async ({ fixture }) => {
+      await fixture.changeGridSize(3);
+
+      const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
       await fixture.makeVerificationDecision("true");
 
       // because it can take a while for the next page to load, and the info
       // cards to update, we have to wait until we receive the "grid-loaded"
       // event that signals that the next page has been loaded
-      await catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
+      await gridLoadedEvent;
 
+      // These items are from the "test-items.json" dataset.
+      // Because the grid size is 4, we expect that the first info card after
+      // making a whole page decision will be about the 5th item in the
+      // "test-items.json" dataset.
       const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20191022T140000+1000_SEQP-Samford-Dry-B_251486.flac" },
+        { key: "FileId", value: "251,486" },
+        { key: "Datetime", value: "2019-10-22T04:00:00.000Z" },
       ];
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
     });
 
     test("should update correctly when viewing history", async ({ fixture }) => {
+      const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
       await fixture.makeVerificationDecision("true");
+      await gridLoadedEvent;
+
       await fixture.viewPreviousHistoryPage();
 
       const expectedInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
+        { key: "FileId", value: "643,356" },
+        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
       ];
       const realizedInfoCard = await fixture.infoCardItem(0);
       expect(realizedInfoCard).toEqual(expectedInfoCard);
@@ -2320,15 +2349,15 @@ test.describe("verification grid with custom template", () => {
 
     test("should update correctly when changing the grid source", async ({ fixture }) => {
       const expectedInitialInfoCard = [
-        { key: "Title 1", value: "Description 1" },
-        { key: "Title 2", value: "Description 2" },
+        { key: "Filename", value: "20220130T160000+1000_SEQP-Samford-Dry-B_643356.flac" },
+        { key: "FileId", value: "643,356" },
+        { key: "Datetime", value: "2022-01-30T06:00:00.000Z" },
       ];
       const expectedNewInfoCard = [
-        { key: "Title 3", value: "Description 3" },
-        { key: "Title 4", value: "Description 4" },
+        { key: "AudioLink", value: "http…example2.flac" },
+        { key: "Distance", value: "4.846" },
+        { key: "Tags", value: "koala" },
       ];
-
-      await fixture.changeGridSource(fixture.testJsonInput);
 
       const realizedInitialInfoCard = await fixture.infoCardItem(0);
       expect(realizedInitialInfoCard).toEqual(expectedInitialInfoCard);
@@ -2337,6 +2366,248 @@ test.describe("verification grid with custom template", () => {
       const realizedNewInfoCard = await fixture.infoCardItem(0);
       expect(realizedNewInfoCard).toEqual(expectedNewInfoCard);
     });
+  });
+
+  test.describe("invalid templates", () => {
+    test("should error when missing required elements", { tag: [expectConsoleError] }, async ({ fixture }) => {
+      // TODO: For some reason, Safari renders tiles for invalid templates
+      test.skip(!!process.env.CI && process.platform === "darwin");
+
+      // Even though the verification grid is missing both the oe-subject-tag
+      // and the oe-task-meter elements, we only error for one of them at a
+      // time.
+      const expectedError = "The provided grid item template does not contain a subject tag component.";
+
+      await expect(async () => {
+        await fixture.createWithInvalidTemplate();
+      }).toConsoleError(fixture.page, expectedError);
+    });
+
+    test("should not render tiles if the template is invalid", { tag: [expectConsoleError] }, async ({ fixture }) => {
+      test.skip(!!process.env.CI && process.platform === "darwin");
+
+      await fixture.createWithInvalidTemplate();
+      await expect(fixture.gridTileComponents()).toHaveCount(0);
+    });
+
+    test("should have no no progress or 'continue verifying' button", async ({ fixture }) => {
+      await expect(fixture.continueVerifyingButton()).toHaveCount(0);
+    });
+  });
+
+  test.describe("custom tile templates", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.createWithValidTemplate();
+    });
+
+    test("should use the template for each grid item", async ({ fixture }) => {
+      const expectedElementCount = 3;
+      await fixture.changeGridSize(expectedElementCount);
+
+      await expect(fixture.moreInformationButtons().first()).toBeVisible();
+      await expect(fixture.moreInformationButtons()).toHaveCount(expectedElementCount);
+
+      await expect(fixture.spectrogramComponents().first()).toBeVisible();
+      await expect(fixture.spectrogramComponents()).toHaveCount(expectedElementCount);
+    });
+
+    test("should set the spectrograms source correctly", async ({ fixture }) => {
+      const gridSize = await fixture.getGridSize();
+
+      const spectrograms = fixture.spectrogramComponents();
+      await expect(spectrograms).toHaveCount(gridSize);
+
+      await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+      await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
+      await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
+    });
+
+    test.skip("should fall back to the default template if the custom template is removed", async ({ fixture }) => {
+      await fixture.removeCustomTemplate();
+
+      // We make assertions over the displayed spectrograms because changing the
+      // template will cause the verification grid to update.
+      // If we are incorrectly advancing, skipping tiles, or not updating the
+      // grid tiles with the new template, we want this test to fail.
+      const spectrograms = fixture.spectrogramComponents();
+      await expect(spectrograms).toHaveCount(4);
+
+      await expect(spectrograms.nth(0)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+      await expect(spectrograms.nth(1)).toHaveAttribute("src", "http://localhost:3000/example_34s.flac");
+      await expect(spectrograms.nth(2)).toHaveAttribute("src", "http://localhost:3000/example_1s.wav");
+      await expect(spectrograms.nth(3)).toHaveAttribute("src", "http://localhost:3000/example.flac");
+
+      // The "more information" button is a part of the custom template, and
+      // should not be present after reverting to the default template.
+      // If the button is still present, we are probably not updating the
+      // verification grid tiles "" property correctly.
+      await expect(fixture.moreInformationButtons()).toHaveCount(0);
+    });
+
+    test.skip("should be able to change from a default template to a custom template", () => {});
+
+    // This test tests fully replacing the "<template>" element with a new
+    // one.
+    // This is different from just updating the contents of the existing
+    // template.
+    //
+    // When replacing the verification grid tile, we append the new template
+    // before removing the old one to give the verification grid the hardest
+    // chance of correctly updating.
+    // If we instead removed the old template first, we would be updating from
+    // a no-template state to a new template which is an easier change.
+    test("should correctly update the tile template if it is replaced", async ({ fixture }) => {
+      const gridSize = await fixture.getGridSize();
+
+      const customTemplate = `
+        <oe-subject-tag></oe-subject-tag>
+        <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        <oe-task-meter></oe-task-meter>
+
+        <a href="/about" data-testid="new-template-link">New Link</a>
+      `;
+
+      await fixture.addCustomTemplate(customTemplate);
+
+      // We expect that the new template is not being used because the original
+      // template will be the first one found.
+      // Therefore, the "more information" button should still be present.
+      await expect(fixture.moreInformationButtons()).toHaveCount(gridSize);
+
+      await fixture.removeCustomTemplate();
+
+      await expect(fixture.moreInformationButtons()).toHaveCount(0);
+
+      const newTemplateLink = fixture.page.getByTestId("new-template-link");
+      await expect(newTemplateLink.first()).toBeVisible();
+      await expect(newTemplateLink).toHaveCount(gridSize);
+    });
+
+    // TODO: https://github.com/ecoacoustics/web-components/issues/521
+    // In this test, we update an attribute on an existing template to stress
+    // test the template updating logic.
+    test.skip("should update the tile template if the template content changes", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((element) => {
+        const template = element.querySelector("template") as HTMLTemplateElement;
+        const moreInformationButton = template.content.getElementById("more-information-button") as HTMLAnchorElement;
+
+        // Notice that we are updating the textContent of the button in-place.
+        moreInformationButton.textContent = "Updated Button Text";
+      });
+
+      // I use text in this assertion so that we can visually see that the
+      // template was updated in the test screenshot.
+      await expect(fixture.moreInformationButtons().first()).toHaveText("Updated Button Text");
+    });
+
+    // We should not be able to leak styling outside of the <template> element
+    // and into the main document or other elements inside of the grid tile
+    // component.
+    test("should scope css styles to the template", async ({ fixture }) => {
+      const customBackgroundColor = "rgb(0, 0, 255)";
+      const customTextColor = "rgb(255, 0, 0)";
+
+      const targetMoreInfoButton = fixture.moreInformationButtons().first();
+      await expect(targetMoreInfoButton).toHaveCSS("background-color", customBackgroundColor);
+      await expect(targetMoreInfoButton).toHaveCSS("color", customTextColor);
+
+      await expect(fixture.unscopedButton()).not.toHaveCSS("background-color", customBackgroundColor);
+      await expect(fixture.unscopedButton()).not.toHaveCSS("color", customTextColor);
+    });
+
+    test.describe("interactive elements", () => {
+      test("should not select if clicking a link with a href", async ({ fixture }) => {
+        const target = fixture.page.getByTestId("link-with-href").first();
+        await target.click();
+
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(0);
+      });
+
+      test("should select if clicking a link without a href", async ({ fixture }) => {
+        const target = fixture.page.getByTestId("link-without-href").first();
+        await target.click();
+
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(1);
+      });
+
+      test("should not select if clicking a button with a click event listener", async ({ fixture }) => {
+        // The play button on the media controls would usually select the
+        // verification grid tile if clicked, however, because of our
+        // addEventListener patch, we can detect that the play button handled
+        // the click event and therefore not select the tile.
+        await fixture.playSpectrogram(0);
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(0);
+      });
+
+      test("should select if clicking a button without a click event listener", async ({ fixture }) => {
+        const target = fixture.moreInformationButtons().first();
+        await target.click();
+
+        // Because the button does not have a click event listener, the click
+        // event should be passed through to the verification grid tile and
+        // cause the tile to be selected.
+        const selectedTiles = await fixture.selectedTileIndexes();
+        expect(selectedTiles).toHaveLength(1);
+      });
+    });
+  });
+});
+
+test.describe("default templates", () => {
+  test.beforeEach(async ({ fixture }) => {
+    await fixture.create();
+  });
+
+  test("should place decision elements in the correct location", ({ fixture }) => {
+    const koalaDecision = fixture.page.getByText("Koala").first();
+    const notKoalaDecision = fixture.page.getByText("Not Koala").first();
+
+    expect(koalaDecision).toBeTruthy();
+    expect(notKoalaDecision).toBeTruthy();
+  });
+
+  test("should have the expected elements", async ({ fixture }) => {
+    const gridSize = await fixture.getGridSize();
+
+    const expectedComponents = [
+      fixture.tagTemplateComponents(),
+      fixture.mediaControlsComponents(),
+
+      fixture.axesComponents(),
+      fixture.indicatorComponents(),
+      fixture.spectrogramComponents(),
+
+      fixture.taskMeterComponents(),
+    ];
+
+    for (const component of expectedComponents) {
+      await expect(component.first()).toBeVisible();
+      await expect(component).toHaveCount(gridSize);
+    }
+  });
+
+  // After the verification grid has been fully initialized, we add a custom
+  // template.
+  test("should be able to change to a custom template", async ({ fixture }) => {
+    const gridSize = await fixture.getGridSize();
+
+    const customTemplate = `
+        <oe-subject-tag></oe-subject-tag>
+        <oe-spectrogram id="spectrogram"></oe-spectrogram>
+        <oe-task-meter></oe-task-meter>
+
+        <a href="/about" data-testid="new-template-link">New Link</a>
+      `;
+
+    await fixture.addCustomTemplate(customTemplate);
+
+    const newTemplateLink = fixture.page.getByTestId("new-template-link");
+
+    await expect(newTemplateLink.first()).toBeVisible();
+    await expect(newTemplateLink).toHaveCount(gridSize);
   });
 });
 

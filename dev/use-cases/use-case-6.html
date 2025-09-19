@@ -10,6 +10,18 @@
   <body>
     <oe-verification-grid id="verification-grid" autofocus>
       <template>
+        <div class="tile-spacing">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <oe-task-meter></oe-task-meter>
         <oe-info-card></oe-info-card>
       </template>
 

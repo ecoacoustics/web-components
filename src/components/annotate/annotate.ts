@@ -1,5 +1,5 @@
 import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, unsafeCSS } from "lit";
-import { customElement, property, query, queryAssignedElements } from "lit/decorators.js";
+import { property, query, queryAssignedElements } from "lit/decorators.js";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { Pixel, UnitConverter } from "../../models/unitConverters";
@@ -17,6 +17,7 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { Rect, RenderCanvasSize } from "../../models/rendering";
 import { styleMap } from "lit/directives/style-map.js";
 import { Styles } from "../../helpers/types/lit";
+import { customElement } from "../../helpers/customElement";
 import annotateStyles from "./css/style.css?inline";
 
 export enum AnnotationTagStyle {
@@ -138,7 +139,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
   @property({ type: Boolean, converter: booleanConverter })
   public readonly = true;
 
-  @query("#annotations-surface")
+  @query("#annotations-surface", true)
   private annotationsSurface!: HTMLDivElement;
 
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })

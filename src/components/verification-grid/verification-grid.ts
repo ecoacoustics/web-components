@@ -1,15 +1,7 @@
-import { customElement, property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
+import { property, query, queryAll, queryAssignedElements, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
-import {
-  html,
-  HTMLTemplateResult,
-  LitElement,
-  nothing,
-  PropertyValueMap,
-  PropertyValues,
-  render,
-  unsafeCSS,
-} from "lit";
+import { html, HTMLTemplateResult, LitElement, PropertyValueMap, PropertyValues, render, unsafeCSS } from "lit";
+import { html as staticHtml } from "lit/static-html.js";
 import {
   OverflowEvent,
   RequiredDecision,
@@ -38,16 +30,19 @@ import { VerificationComponent } from "../decision/verification/verification";
 import { Tag } from "../../models/tag";
 import { provide } from "@lit/context";
 import { signal, Signal } from "@lit-labs/preact-signals";
-import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
-import { injectionContext, verificationGridContext } from "../../helpers/constants/contextTokens";
+import {
+  injectionContext,
+  spectrogramOptionsContext,
+  verificationGridContext,
+} from "../../helpers/constants/contextTokens";
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
-import { IPlayEvent } from "spectrogram/spectrogram";
+import { IPlayEvent } from "../spectrogram/spectrogram";
 import { Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
@@ -58,9 +53,13 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
-import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
+import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { customElement } from "../../helpers/customElement";
+import { SubjectTagComponent } from "../subject-tag/subject-tag";
+import { TaskMeterComponent } from "../task-meter/task-meter";
+import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import { classMap } from "lit/directives/class-map.js";
 import verificationGridStyles from "./css/style.css?inline";
 
@@ -115,8 +114,6 @@ export interface DecisionMadeEventValue {
 }
 
 export interface VerificationGridSettings {
-  showAxes: Signal<boolean>;
-  showMediaControls: Signal<boolean>;
   isFullscreen: Signal<boolean>;
 }
 
@@ -188,7 +185,9 @@ export enum LoadState {
   LOADED = "loaded",
 
   /**
-   * An unrecoverable error occurred.
+   * An error occurred.
+   * An error state can be recovered from if we have enough information to
+   * render either full page or partial page of subjects.
    *
    * This state can (currently) only be entered if the getPage callback throws
    * an error while fetching the currently viewed page of subjects (a getPage
@@ -200,6 +199,16 @@ export enum LoadState {
    * to a getPage callback error.
    */
   ERROR = "error",
+
+  /**
+   * The verification grid has been configured incorrectly and cannot recover.
+   *
+   * This is different from an ERROR state because we cannot recover from an
+   * INVALID_CONFIGURATION without a code, template, or configuration change.
+   * Even if we can render some subjects, if the configuration is invalid,
+   * we will hard fail to this state.
+   */
+  CONFIGURATION_ERROR = "configuration-error",
 }
 
 type SelectionEvent = CustomEvent<{
@@ -289,14 +298,35 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public static readonly decisionMadeEventName = "decision-made";
   private static readonly loadedEventName = "grid-loaded";
   private static readonly autoPageTimeout = 0.3 satisfies Seconds;
+  private static readonly defaultGridTileTemplateId = "default-tile-template";
+
+  private static readonly defaultGridTileTemplate = staticHtml`
+      <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
+        <div class="tile-spacing">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <div class="tile-block">
+          <oe-task-meter></oe-task-meter>
+        </div>
+      </template>
+    `;
 
   @provide({ context: verificationGridContext })
-  @state()
-  public settings: VerificationGridSettings = {
-    showAxes: signal(true),
-    showMediaControls: signal(true),
+  @property({ attribute: false })
+  protected settings: VerificationGridSettings = {
     isFullscreen: signal(false),
   };
+
+  @provide({ context: spectrogramOptionsContext })
+  public spectrogramOptions: Partial<SpectrogramOptions> = {};
 
   @provide({ context: injectionContext })
   @state()
@@ -370,22 +400,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "oe-verification[verified='skip'], oe-skip" })
   private skipButtons!: DecisionComponent[];
 
-  @queryDeeplyAssignedElement({ selector: "template" })
-  private gridItemTemplate?: HTMLTemplateElement;
+  @queryAssignedElements({ selector: "template" })
+  private customTileTemplates!: HTMLTemplateElement[];
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
-  @query("oe-verification-bootstrap")
+  @query(`#${VerificationGridComponent.defaultGridTileTemplateId}`, true)
+  private defaultTemplateElement!: HTMLTemplateElement;
+
+  @query("oe-verification-bootstrap", true)
   private bootstrapDialog!: VerificationBootstrapComponent;
 
-  @query("#grid-container")
+  @query("#grid-container", true)
   private gridContainer!: HTMLDivElement;
 
-  @query("#decisions-container")
+  @query("#decisions-container", true)
   private decisionsContainer!: HTMLDivElement;
 
-  @query("#highlight-box")
+  @query("#highlight-box", true)
   private highlightBox!: HTMLDivElement;
 
   @state()
@@ -685,6 +718,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public isViewingHistory(): boolean {
+    if (this.loadState === LoadState.CONFIGURATION_ERROR) {
+      return false;
+    }
+
     // we know that the user is viewing history if the subjectBuffer index
     // currently being displayed is less than where the user has verified up to
     return this.viewHeadIndex < this.decisionHeadIndex;
@@ -710,6 +747,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._viewHeadIndex = 0;
   }
 
+  public transitionConfigurationError() {
+    console.error(
+      "The provided grid item template is invalid. A valid template must " +
+        "contain both a subject tag and task meter component.",
+    );
+
+    this._loadState = LoadState.CONFIGURATION_ERROR;
+  }
+
   //#region Updates
 
   public firstUpdated(): void {
@@ -733,6 +779,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.autofocus) {
       this.focus();
     }
+
+    patchTrackClickLikeEvents();
   }
 
   protected willUpdate(change: PropertyValues<this>): void {
@@ -765,7 +813,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
     const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
-    if (hasGridSourceInvalidation) {
+    if (hasGridSourceInvalidation && this._loadState) {
       await this.handleGridSourceInvalidation();
     }
 
@@ -884,8 +932,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // While we are waiting for the verification grid to initialize, we will
     // be in the DATASET_FETCHING state.
     this.loadingTimeoutReference = setTimeout(() => {
-      console.error("failed to load dataset. Reason: timeout");
-      this._loadState = LoadState.ERROR;
+      if (this._loadState === LoadState.DATASET_FETCHING) {
+        console.error("failed to load dataset. Reason: timeout");
+        this._loadState = LoadState.ERROR;
+      }
     }, this.loadingTimeout * 1000);
 
     if (this.getPage) {
@@ -1306,6 +1356,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateRequiredDecisions();
     this.updateInjector();
     this.updateDecisionElements();
+
+    this.validateTemplateValidity();
+  }
+
+  private validateTemplateValidity(): void {
+    if (!this.isTileTemplateValid()) {
+      this.transitionConfigurationError();
+    }
   }
 
   private handleTileOverlap(event: OverflowEvent): void {
@@ -1322,6 +1380,46 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }
 
     this.anyOverlap.value = false;
+  }
+
+  /**
+   * Every template must both a tag template and task meter to be considered
+   * a valid template otherwise an error will be thrown because the template
+   * does not have enough information for the user to complete any tasks.
+   *
+   * Note that both spectrogram and media controls are optional because the host
+   * application might want to replace the spectrogram without something else to
+   * verify such as an image or video.
+   */
+  private isTileTemplateValid(): boolean {
+    const templates = this.customTileTemplates;
+    // If there is no gridItemTemplate, then we are using the default template,
+    // and we can guarantee that the default template is valid.
+    if (templates.length === 0) {
+      return true;
+    } else if (templates.length > 1) {
+      console.warn("Multiple custom grid tile templates found, only the first template will be used.");
+    }
+
+    // TODO: If there are multiple templates, we should iterate through them all
+    // until we find the first valid template instead of always using the first.
+    const targetTemplate = templates[0];
+
+    // Immediately return false if we know that the tagTemplate doesn't exist
+    // so that we don't have to do an unnecessary DOM query for the task meter.
+    const tagTemplate = targetTemplate.content.querySelector(SubjectTagComponent.tagName);
+    if (!tagTemplate) {
+      console.error("The provided grid item template does not contain a subject tag component.");
+      return false;
+    }
+
+    const taskMeter = targetTemplate.content.querySelector(TaskMeterComponent.tagName);
+    if (!taskMeter) {
+      console.error("The provided grid item template does not contain a task meter component.");
+      return false;
+    }
+
+    return true;
   }
 
   private handlePointerMove(event: PointerEvent): void {
@@ -1711,8 +1809,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const viewportStartX = this.highlight.start.x - scrollX;
     const viewportStartY = this.highlight.start.y - scrollY;
 
-    const highlightWidth = this.highlight.current.x - this.highlight.start.x;
-    const highlightHeight = this.highlight.current.y - this.highlight.start.y;
+    // We floor sizes so that we don't change the width / height for very small
+    // decimal place changes.
+    // Additionally, we floor instead of rounding so that we get stable rounding
+    // behavior when the user is dragging in a negative direction.
+    const highlightWidth = Math.floor(this.highlight.current.x - this.highlight.start.x);
+    const highlightHeight = Math.floor(this.highlight.current.y - this.highlight.start.y);
 
     const transformX = viewportStartX + Math.min(highlightWidth, 0);
     const transformY = viewportStartY + Math.min(highlightHeight, 0);
@@ -1725,8 +1827,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // shift or layout recalculation when moving the highlight box.
     highlightBoxElement.style.transform = `translate(${transformX}px, ${transformY}px)`;
 
-    // the highlights width / height can be negative if the user drags to the
-    // top or left of the screen
+    // The highlights width / height can be negative if the user drags to the
+    // top or left of the screen.
     highlightBoxElement.style.width = `${Math.abs(highlightWidth)}px`;
     highlightBoxElement.style.height = `${Math.abs(highlightHeight)}px`;
 
@@ -1961,6 +2063,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
       decisionMap.set(tile.model, { change: tileChanges, oldSubject });
     }
+
+    this.requestUpdate();
 
     // We only dispatch the "decisionMade" event after the decision has been
     // applied to the dataset.
@@ -2218,7 +2322,26 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     `;
   }
 
-  private tileGridTemplate(): HTMLTemplateResult {
+  private configurationFailureTemplate(): HTMLTemplateResult {
+    return html`
+      <div class="message-overlay">
+        <p>
+          <strong class="dataset-failure-message">The verification grid is configured incorrectly</strong>
+        </p>
+
+        <p>
+          <small>Please check the development console for more information</small>
+        </p>
+      </div>
+    `;
+  }
+
+  private unexpectedStateTemplate() {
+    console.error("The verification grid entered an unexpected state");
+    return this.configurationFailureTemplate();
+  }
+
+  private gridLoadedTemplate(): HTMLTemplateResult {
     if (this.hasFinishedDatasource) {
       return this.noItemsTemplate();
     }
@@ -2277,30 +2400,40 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private gridTileTemplate(subject: SubjectWrapper | null, index: number): HTMLTemplateResult {
-    const tileTemplate = html`
+    if (subject === null) {
+      return this.emptySubjectTemplate();
+    }
+
+    const customTemplate = this.customTileTemplates[0];
+    const tileTemplate = customTemplate ?? this.defaultTemplateElement;
+
+    const gridTile = html`
       <oe-verification-grid-tile
         class="grid-tile"
         @oe-tile-loaded="${this.handleTileLoaded}"
         @play="${this.handleTilePlay}"
-        .requiredDecisions="${this.requiredDecisions}"
+        .requiredDecisions="${this.requiredDecisions as any}"
         .singleTileViewMode="${this.isSingleTileViewMode}"
-        .model="${subject as any}"
         .index="${index}"
-      >
-        ${this.gridItemTemplate ? templateContent(this.gridItemTemplate) : nothing}
-      </oe-verification-grid-tile>
+        .model="${subject as any}"
+        .tileTemplate="${tileTemplate as any}"
+      ></oe-verification-grid-tile>
     `;
 
     // By using "cache" here Lit will cache the tile template meaning that it
     // doesn't need to be re-created when tiles are added or removed from the
     // grid.
-    return html`${cache(subject === null ? this.emptySubjectTemplate() : tileTemplate)}`;
+    return html`${cache(gridTile)}`;
   }
 
   public render() {
     const gridContainerClasses = classMap({ singleTileView: this.isSingleTileViewMode });
 
     return html`
+      <slot id="tile-template-slot" name="tile-content"></slot>
+
+      ${VerificationGridComponent.defaultGridTileTemplate}
+
       <oe-verification-bootstrap
         @open="${this.handleBootstrapDialogOpen}"
         @close="${this.handleBootstrapDialogClose}"
@@ -2317,18 +2450,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         </div>
 
         <div
+          @overlap="${this.handleTileOverlap}"
           id="grid-container"
           class="verification-grid ${gridContainerClasses}"
           style="--columns: ${this.columns}; --rows: ${this.rows};"
-          @overlap="${this.handleTileOverlap}"
           tabindex="-1"
         >
-          ${choose(this._loadState, [
-            [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
-            [LoadState.TILES_LOADING, () => this.tileGridTemplate()],
-            [LoadState.LOADED, () => this.tileGridTemplate()],
-            [LoadState.ERROR, () => this.datasetFailureTemplate()],
-          ])}
+          ${choose(
+            this._loadState,
+            [
+              [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
+              [LoadState.TILES_LOADING, () => this.gridLoadedTemplate()],
+              [LoadState.LOADED, () => this.gridLoadedTemplate()],
+              [LoadState.ERROR, () => this.datasetFailureTemplate()],
+              [LoadState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
+            ],
+            this.unexpectedStateTemplate,
+          )}
         </div>
 
         <div class="footer-container">
@@ -2337,10 +2475,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               <oe-verification-grid-settings></oe-verification-grid-settings>
 
               <button
-                data-testid="help-dialog-button"
                 @click="${() => this.handleHelpRequest()}"
                 class="oe-btn-info"
                 rel="help"
+                aria-label="Help and keyboard shortcuts"
+                data-testid="help-dialog-button"
               >
                 <sl-icon name="question-circle" class="large-icon"></sl-icon>
               </button>
@@ -2360,7 +2499,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
                 ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
               </h2>
               <div id="decisions-container" class="decision-control-actions">
-                <slot id="decision-slot" @slotchange="${() => this.handleSlotChange()}"></slot>
+                <slot id="default-slot" @slotchange="${this.handleSlotChange}"></slot>
               </div>
             </span>
 

@@ -5,7 +5,6 @@ import BufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
 // import workerPath from "./worker.ts?worker&url";
 import WorkerConstructor from "./worker.ts?worker&inline";
 import { Size } from "../../models/rendering";
-import { IAudioInformation, SpectrogramOptions } from "./models";
 import {
   BUFFER_PROCESSOR_NAME,
   ProcessorSetupMessage,
@@ -13,6 +12,8 @@ import {
   WorkerResizeCanvasMessage,
   WorkerSetupMessage,
 } from "./messages";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
+import { AudioInformation } from "./audioInformation";
 
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
@@ -20,7 +21,7 @@ export class AudioHelper {
   private readonly sampleBuffer: SharedArrayBuffer;
 
   private cachedResponse: Response | null = null;
-  private cachedAudioInformation: IAudioInformation | null = null;
+  private cachedAudioInformation: AudioInformation | null = null;
   private offscreenCanvas: OffscreenCanvas | null = null;
 
   // This data changes every time we render.
@@ -54,7 +55,7 @@ export class AudioHelper {
     src: string,
     canvas: HTMLCanvasElement,
     options: SpectrogramOptions,
-  ): Promise<Readonly<IAudioInformation>> {
+  ): Promise<Readonly<AudioInformation>> {
     if (this.offscreenCanvas) {
       throw new Error("Connect can only be called once. Use regenerateSpectrogram to update the spectrogram.");
     }
@@ -70,7 +71,7 @@ export class AudioHelper {
     return info;
   }
 
-  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
+  public async changeSource(src: string, options: SpectrogramOptions): Promise<AudioInformation> {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
@@ -156,9 +157,9 @@ export class AudioHelper {
     options: SpectrogramOptions,
     generation: number,
     src: string | null = null,
-  ): Promise<IAudioInformation> {
+  ): Promise<AudioInformation> {
     const downloadedBuffer = src ? await this.fetchAudio(src) : await this.cachedBuffer();
-    const info = this.cachedAudioInformation as IAudioInformation;
+    const info = this.cachedAudioInformation as AudioInformation;
 
     // recreate the processor every time!
     await this.createAudioContext(info, downloadedBuffer, generation);
@@ -171,7 +172,7 @@ export class AudioHelper {
     return info;
   }
 
-  private createAudioInformation(metadata: IAudioMetadata): IAudioInformation {
+  private createAudioInformation(metadata: IAudioMetadata): AudioInformation {
     if (!metadata.format.duration || !metadata.format.sampleRate || !metadata.format.numberOfChannels) {
       throw new Error("Could not determine all audio metadata");
     }
@@ -221,7 +222,7 @@ export class AudioHelper {
     return buffer;
   }
 
-  private async createAudioContext(info: IAudioInformation, buffer: ArrayBuffer, generation: number) {
+  private async createAudioContext(info: AudioInformation, buffer: ArrayBuffer, generation: number) {
     const length = info.duration * info.sampleRate * info.channels;
 
     //! creates a buffer the size of the entire audio file
@@ -303,7 +304,7 @@ export class AudioHelper {
     this.spectrogramWorker?.postMessage(["clear-canvas"]);
   }
 
-  private regenerateWorker(options: SpectrogramOptions, audioInformation: IAudioInformation, generation: number) {
+  private regenerateWorker(options: SpectrogramOptions, audioInformation: AudioInformation, generation: number) {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized");
     }

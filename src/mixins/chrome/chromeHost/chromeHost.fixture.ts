@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { waitForContentReady } from "../../../tests/helpers";
+import { waitForContentReady } from "../../../tests/helpers/helpers";
 import { html } from "lit";
 import { IChromeProvider } from "../chromeProvider/chromeProvider";
 import { createFixture, setContent } from "../../../tests/fixtures";

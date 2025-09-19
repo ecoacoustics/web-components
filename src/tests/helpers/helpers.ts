@@ -1,11 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
-import { Size } from "../models/rendering";
-import { KeyboardModifiers } from "../helpers/types/playwright";
-import { expect } from "./assertions";
-import { Pixel } from "../models/unitConverters";
-import { CssVariable } from "../helpers/types/advancedTypes";
-import { MousePosition } from "../components/verification-grid/verification-grid";
-import { sleep } from "../helpers/utilities";
+import { Size } from "../../models/rendering";
+import { KeyboardModifiers } from "../../helpers/types/playwright";
+import { expect } from "../assertions";
+import { Pixel } from "../../models/unitConverters";
+import { CssVariable } from "../../helpers/types/advancedTypes";
+import { MousePosition } from "../../components/verification-grid/verification-grid";
+import { sleep } from "../../helpers/utilities";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -177,7 +177,7 @@ export async function dragSlider(page: Page, locator: Locator, value: number) {
   await dragSelection(page, start, end);
 
   // assert that the sliders value was updated correctly
-  await expect(locator).toHaveJSProperty("value", value.toString());
+  await expect(locator).toHaveValue(value.toString());
 }
 
 export async function emitBrowserEvent<T extends HTMLElement>(locator: Locator, eventName: string) {

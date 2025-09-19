@@ -54,10 +54,10 @@ export class ClassificationComponent extends DecisionComponent {
   @property({ attribute: "false-shortcut", type: String })
   public falseShortcut?: string;
 
-  @query("#true-decision-button")
+  @query("#true-decision-button", true)
   private trueDecisionButton!: HTMLButtonElement;
 
-  @query("#false-decision-button")
+  @query("#false-decision-button", true)
   private falseDecisionButton!: HTMLButtonElement;
 
   public get decisionModels(): Partial<DecisionModels<Classification>> {

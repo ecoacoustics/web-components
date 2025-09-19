@@ -1,12 +1,13 @@
 import { computed, ReadonlySignal, watch } from "@lit-labs/preact-signals";
 import { html, LitElement, nothing, unsafeCSS } from "lit";
-import { customElement, query, state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
-import { UnitConverter } from "../../models/unitConverters";
+import { Pixel, UnitConverter } from "../../models/unitConverters";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
 import { Size } from "../../models/rendering";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { ChromeTemplate } from "../../mixins/chrome/types";
+import { customElement } from "../../helpers/customElement";
 import indicatorStyles from "./css/style.css?inline";
 
 /**
@@ -27,14 +28,14 @@ export class IndicatorComponent extends ChromeProvider(LitElement) {
   @queryDeeplyAssignedElement({ selector: "oe-spectrogram" })
   private spectrogram?: SpectrogramComponent;
 
-  @query("#indicator-svg")
+  @query("#indicator-svg", true)
   private indicatorSvg!: Readonly<SVGElement>;
 
   // TODO: investigate why I am de-referencing the signal here. Wouldn't it be
   // easier to work with and more performant with a reactive signal
   @state()
   private unitConverter?: UnitConverter;
-  private computedTimePx: ReadonlySignal<number> = computed(() => 0);
+  private computedTimePx: ReadonlySignal<Pixel> = computed(() => 0);
 
   protected handleSlotChange(): void {
     if (!this.spectrogram) {
