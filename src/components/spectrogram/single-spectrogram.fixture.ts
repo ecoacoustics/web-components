@@ -25,6 +25,7 @@ class TestPage {
         id="spectrogram"
         src="${src}"
         style="position: relative; height: 632px;"
+        color-map="grayscale"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `;

@@ -70,7 +70,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     melScale: false,
     brightness: 0,
     contrast: 1,
-    colorMap: "grayscale",
+    colorMap: "audacity",
     scaling: SpectrogramCanvasScale.STRETCH,
   } as const satisfies Required<ISpectrogramOptions>;
 
