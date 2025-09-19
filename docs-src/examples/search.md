@@ -14,6 +14,7 @@ This example tries to mimic A2O search [search.acousticobservatory.org/search/](
         id="main-spectrogram"
         class="main-spectrogram"
         src="https://api.search.acousticobservatory.org/api/v1/a2o/audio_recordings/download/flac/256800?start_offset=4035&end_offset=4040"
+        color-map="grayscale"
         window-size="128"
       ></oe-spectrogram>
     </oe-indicator>
