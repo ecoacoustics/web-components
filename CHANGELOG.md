@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.4...web-components-v6.0.0) (2025-09-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Slotted `<template>`s now replace the default template, meaning that any host applications that previously had partial <template>s that did not have an <oe-spectrogram>, <oe-task-meter>, etc... components will break.
+
+### Features
+
+* Add templatable verification grid tiles ([#513](https://github.com/ecoacoustics/web-components/issues/513)) ([1bc3bf5](https://github.com/ecoacoustics/web-components/commit/1bc3bf5fdb909460db010399f57851a99e9c8098)), closes [#371](https://github.com/ecoacoustics/web-components/issues/371) [#179](https://github.com/ecoacoustics/web-components/issues/179)
+
 ## [5.3.4](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.3...web-components-v5.3.4) (2025-09-18)
 
 
