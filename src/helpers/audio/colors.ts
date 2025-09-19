@@ -76,8 +76,9 @@ export function getColorScale(name: ColorMapName): ColorScaler {
   let scaler = colorScales[name];
 
   if (scaler === undefined) {
-    console.warn(`Could not find color scale "${name}". Defaulting to grayscale`);
-    scaler = colorScales.grayscale;
+    const defaultColorMap = "audacity" satisfies ColorMapName;
+    console.warn(`Could not find color scale "${name}". Defaulting to '${defaultColorMap}'.`);
+    scaler = colorScales[defaultColorMap];
   }
 
   // if scaler is a string, it's a chroma scale
