@@ -61,6 +61,7 @@ import { SubjectTagComponent } from "../subject-tag/subject-tag";
 import { TaskMeterComponent } from "../task-meter/task-meter";
 import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import { classMap } from "lit/directives/class-map.js";
+import { SkipComponent } from "../decision/skip/skip";
 import verificationGridStyles from "./css/style.css?inline";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
@@ -404,6 +405,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @queryAssignedElements({ selector: "template" })
   private customTileTemplates!: HTMLTemplateElement[];
 
+  @queryAssignedElements({ selector: `#${VerificationGridComponent.defaultSkipButtonId}` })
+  private defaultSkipButton?: SkipComponent[];
+
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
 
@@ -464,6 +468,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private set decisionHeadIndex(value: number) {
     this._decisionHeadIndex = value;
+  }
+
+  /**
+   * All decisions provided by the user, excluding the default skip button.
+   */
+  private get slottedDecisionComponents(): DecisionComponentUnion[] {
+    return this.decisionElements.filter((decision) => decision.id !== VerificationGridComponent.defaultSkipButtonId);
   }
 
   /**
@@ -1060,7 +1071,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // components) so that the button placement order is preserved.
     // If were to use the "hasVerificationTask" getter, the verification task
     // segment would be appended to either the start or the end.
-    for (const decisionElement of this.decisionElements) {
+    for (const decisionElement of this.slottedDecisionComponents) {
       if (decisionElement instanceof VerificationComponent && decisionElement.isTask && !foundVerification) {
         foundVerification = true;
         result.push(requiredVerificationPlaceholder);
@@ -2131,22 +2142,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // If any of the decision buttons predicate's pass with the current
     // sub-selection, the button should not be disabled.
-    const decisionElements = this.decisionElements ?? [];
+    const decisionElements = this.slottedDecisionComponents ?? [];
     for (const decisionElement of decisionElements) {
-      // The default skip button is always the last button, so we can therefore
-      // ensure that all of the other buttons have their "disabled" state set
-      // before we set the skip button state.
-      if (decisionElement.id === VerificationGridComponent.defaultSkipButtonId) {
-        decisionElement.disabled = allDecisionsDisabled;
-        continue;
-      }
-
       const isDecisionDisabled = !subSelection.some((subject) => decisionElement.when(subject));
       decisionElement.disabled = isDecisionDisabled;
 
       if (!isDecisionDisabled) {
         allDecisionsDisabled = false;
       }
+    }
+
+    const defaultSkipButtons = this.defaultSkipButton;
+    if (defaultSkipButtons && defaultSkipButtons.length > 0) {
+      const skipButton = defaultSkipButtons[0];
+      // The skip button is only disabled if all other buttons are disabled.
+      skipButton.disabled = allDecisionsDisabled;
     }
 
     // Each tiles required decisions are determined from the decision buttons
@@ -2160,8 +2170,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private updateDecisionWhenForSubject(tile: VerificationGridTileComponent): void {
+    // Because the default skip button is not user-defined, we do not want it
+    // to contribute to check if a decision is required.
+    // Otherwise there would be no way to fully disable a decision without
+    // also providing a custom skip button.
+    const decisionElements = this.slottedDecisionComponents ?? [];
     const subject = tile.model;
-    const decisionElements = this.decisionElements ?? [];
 
     const oldSubject = Object.assign({}, subject);
     let change: SubjectChange = {};
@@ -2172,14 +2186,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // If the predicate doesn't pass for the current decision button, we mark
     // the task as "not required" in the subject.
     for (const decisionElement of decisionElements) {
-      // Because the default skip button is not user-defined, we do not want it
-      // to contribute to check if a decision is required.
-      // Otherwise there would be no way to fully disable a decision without
-      // also providing a custom skip button.
-      if (decisionElement.id === VerificationGridComponent.defaultSkipButtonId) {
-        continue;
-      }
-
       const passes = decisionElement.when(subject);
       if (passes) {
         subject.setDecisionRequired(decisionElement.decisionConstructor);
@@ -2462,7 +2468,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         @close="${this.handleBootstrapDialogClose}"
         .hasVerificationTask="${this.hasVerificationTask()}"
         .hasClassificationTask="${this.hasClassificationTask()}"
-        .decisionElements="${this.decisionElements ?? []}"
+        .decisionElements="${this.slottedDecisionComponents ?? []}"
         .isMobile="${this.isMobileDevice()}"
       ></oe-verification-bootstrap>
       <div id="highlight-box" part="highlight-box"></div>
