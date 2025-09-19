@@ -1618,6 +1618,10 @@ test.describe("decisions", () => {
     // see that all the tiles get the decision applied to them
     await fixture.makeVerificationDecision("false");
 
+    // We will have to go back a page in history because making a decision about
+    // an entire page will cause the verification grid to auto-page.
+    await fixture.viewPreviousHistoryPage();
+
     const appliedDecisions = await fixture.allAppliedDecisions();
     expect(appliedDecisions).toEqual([
       { confirmed: DecisionOptions.FALSE, tag: { text: "koala" } },
