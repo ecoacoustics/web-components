@@ -605,6 +605,7 @@ test.describe("single verification grid", () => {
       const testedSubSelection = [0, 1];
       test.beforeEach(async ({ fixture }) => {
         await fixture.subSelect(testedSubSelection, ["ControlOrMeta"]);
+        await fixture.page.waitForTimeout(1_000);
       });
 
       test("should only play selected tiles when the play shortcut is pressed", async ({ fixture }) => {
@@ -621,6 +622,10 @@ test.describe("single verification grid", () => {
 
         const initialPlayingSpectrograms = await fixture.playingSpectrograms();
         expect(initialPlayingSpectrograms).toHaveLength(2);
+
+        // Wait for a second for the audio to start playing
+        // TODO: Remove this hack
+        await fixture.page.waitForTimeout(1_000);
 
         await fixture.subSelect(1);
         await fixture.shortcutGridPause();
