@@ -2076,7 +2076,7 @@ test.describe("decision meter", () => {
       expect(realizedColors).toEqual(expectedColors);
     });
 
-    test.only("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
+    test("should have the correct tooltips when a decision is skipped", async ({ fixture }) => {
       await fixture.makeClassificationDecision("car", true);
       await fixture.skipButton().click();
 
