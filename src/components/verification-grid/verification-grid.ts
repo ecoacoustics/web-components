@@ -2172,7 +2172,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // If the predicate doesn't pass for the current decision button, we mark
     // the task as "not required" in the subject.
     for (const decisionElement of decisionElements) {
-      // Because the default skip button will always be enabled, we do not want
+      // Because the default skip button is not user-defined, we do not want it
+      // to contribute to check if a decision is required.
+      // Otherwise there would be no way to fully disable a decision without
+      // also providing a custom skip button.
       if (decisionElement.id === VerificationGridComponent.defaultSkipButtonId) {
         continue;
       }
