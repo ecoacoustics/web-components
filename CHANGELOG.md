@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.1...web-components-v6.0.2) (2025-09-21)
+
+
+### Bug Fixes
+
+* "when" condition on default skip button ([#534](https://github.com/ecoacoustics/web-components/issues/534)) ([96fe17e](https://github.com/ecoacoustics/web-components/commit/96fe17ec5d0eb5e30c8f70f515fbf15a4e3f0740)), closes [#533](https://github.com/ecoacoustics/web-components/issues/533)
+
 ## [6.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.0...web-components-v6.0.1) (2025-09-19)
 
 
