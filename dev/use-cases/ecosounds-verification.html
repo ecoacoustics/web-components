@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Ecosounds Test</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>EcoSounds</h1>
+      <p>This is a header. Please test scrolling and downloading results.</p>
+    </header>
+
+    <oe-verification-grid id="verification-grid" grid-size="12" loading-timeout="20" autofocus>
+      <template>
+        <div class="tile-spacing">
+          <oe-subject-tag></oe-subject-tag>
+          <oe-media-controls for="spectrogram"></oe-media-controls>
+        </div>
+
+        <oe-axes>
+          <oe-indicator>
+            <oe-spectrogram id="spectrogram" color-map="grayscale"></oe-spectrogram>
+          </oe-indicator>
+        </oe-axes>
+
+        <oe-task-meter></oe-task-meter>
+        <div class="tile-spacing">
+          <a href="#">Listen Page</a>
+          <a href="#">Show More</a>
+        </div>
+      </template>
+
+      <oe-verification verified="true" shortcut="Y" when="(subject) => subject.tag !== null"></oe-verification>
+      <oe-verification verified="false" shortcut="N" when="(subject) => subject.tag !== null"></oe-verification>
+      <oe-verification verified="unsure" shortcut="U" when="(subject) => subject.tag !== null"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid" allow-downloads="false"></oe-data-source>
+    </oe-verification-grid>
+
+    <footer>
+      <p>This is a footer. Please test scrolling past the verification grid.</p>
+    </footer>
+
+    <script type="module">
+      function randomSample(dataset) {
+        return dataset[Math.floor(Math.random() * dataset.length)];
+      }
+
+      // Some events in Ecosounds do not have a tag.
+      // For this dev page, I represent this by setting the value as undefined.
+      // If the tag is not defined, we expect that the tag prompt task will be
+      // required.
+      const possibleTags = ["mammal", "reptile", undefined];
+      const possibleAudioSamples = ["/example_1s.wav", "/example.flac", "/example2.flac"];
+
+      function createUrlTransformer() {
+        return (url) => `${url}?url_transformer=true`;
+      }
+
+      async function gridPaginator() {
+        console.debug("gridPaginator called");
+        // Simulate a delay to mimic a slow API call
+        // We should also see that as soon as the first page of results are
+        // loaded, we can start rendering the grid while we are fetching the
+        // next page of items that need to be pre-fetch cached.
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        console.debug("gridPaginator finished");
+
+        const subjects = Array.from({ length: 25 }).map(() => {
+          const src = randomSample(possibleAudioSamples);
+          const tag = randomSample(possibleTags);
+
+          return {
+            injector: {
+              type: "audio",
+              provider: { src },
+              warning: "you should not see this value in the downloaded result",
+            },
+            additionalData: {
+              data: "This is some additional data that should be included in results",
+              dateTime: new Date().toISOString(),
+            },
+            additionalText: "you should see this in the results",
+            src,
+            tag,
+            toJSON: function () {
+              // return all properties in this object except for the 'injector'
+              // property
+              const { injector, ...subjectData } = this;
+              return subjectData;
+            },
+          };
+        });
+
+        return { subjects };
+      }
+
+      const verificationGrid = document.querySelector("oe-verification-grid");
+      verificationGrid.urlTransformer = createUrlTransformer();
+      verificationGrid.getPage = gridPaginator;
+
+      // this is some debug info so that I can see the decision model that is
+      // produced by the verification grid
+      verificationGrid.addEventListener("decision-made", (event) => {
+        console.log("new decision", event);
+      });
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+      }
+
+      header,
+      footer {
+        background-color: #333;
+        color: white;
+        padding: 1em;
+      }
+    </style>
+  </body>
+</html>
