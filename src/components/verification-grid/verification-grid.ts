@@ -59,7 +59,7 @@ import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
 import { customElement } from "../../helpers/customElement";
 import { SubjectTagComponent } from "../subject-tag/subject-tag";
 import { TaskMeterComponent } from "../task-meter/task-meter";
-import { patchTrackClickLikeEvents, unpatchTrackClickLikeEvents } from "../../patches/eventListener";
+import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import { classMap } from "lit/directives/class-map.js";
 import { SkipComponent } from "../decision/skip/skip";
 import verificationGridStyles from "./css/style.css?inline";
@@ -727,7 +727,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
     // Clean up any tasks
-    unpatchTrackClickLikeEvents();
     this.paginationFetcher?.abortController.abort();
     if (this.highlight.pointerId !== null) {
       document.body.releasePointerCapture(this.highlight.pointerId);
