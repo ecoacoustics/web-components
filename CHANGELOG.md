@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.3](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.2...web-components-v6.0.3) (2025-09-23)
+
+
+### Bug Fixes
+
+* Workers not being cleaned up ([#541](https://github.com/ecoacoustics/web-components/issues/541)) ([fb31a3d](https://github.com/ecoacoustics/web-components/commit/fb31a3d5d7481295e2839381552d79c0e63a8732)), closes [#540](https://github.com/ecoacoustics/web-components/issues/540)
+
 ## [6.0.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.1...web-components-v6.0.2) (2025-09-21)
 
 
