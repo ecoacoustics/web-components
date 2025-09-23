@@ -122,7 +122,6 @@ export class AudioHelper {
    * Gracefully stop any in-flight processing and free underlying resources.
    * - Aborts the current render generation and waits for the worker to become idle
    * - Terminates the spectrogram worker
-   * - Clears cached references to allow GC
    */
   public async destroy(): Promise<void> {
     // If we never created the worker (connect was never called), skip abort
