@@ -118,6 +118,42 @@ export class AudioHelper {
     this.spectrogramWorker.postMessage(message);
   }
 
+  /**
+   * Gracefully stop any in-flight processing and free underlying resources.
+   * - Aborts the current render generation and waits for the worker to become idle
+   * - Terminates the spectrogram worker
+   * - Clears cached references to allow GC
+   */
+  public async destroy(): Promise<void> {
+    // Drop references so GC can reclaim memory
+    this.offscreenCanvas = null;
+    this.cachedResponse = null;
+    this.cachedAudioInformation = null;
+    this.generationData.clear();
+
+    if (!this.spectrogramWorker) {
+      return;
+    }
+
+    // If we never created the worker (connect was never called), skip abort/waits
+    if (this.spectrogramWorker) {
+      try {
+        await this.abort();
+      } catch (err) {
+        // best-effort: if abort fails, still proceed with teardown
+        // eslint-disable-next-line no-console
+        console.error("audio: destroy abort error (ignored)", err);
+      }
+    }
+
+    try {
+      this.spectrogramWorker.postMessage(["destroy"]);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("audio: worker terminate error (ignored)", err);
+    }
+  }
+
   private async abort() {
     const abortedGeneration = this.generation;
 

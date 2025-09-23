@@ -332,6 +332,8 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.unitConverters.value.canvasSize.value = { width: 0, height: 0 };
     }
 
+    this.audioHelper.destroy();
+
     super.disconnectedCallback();
   }
 
