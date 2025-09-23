@@ -62,7 +62,7 @@
     "postcss-nested": "7.0.2",
     "prettier": "3.5.2",
     "rimraf": "6.0.1",
-    "rollup": "4.34.8",
+    "rollup": "4.52.0",
     "rollup-plugin-summary": "3.0.0",
     "terser": "5.39.0",
     "ts-lit-plugin": "2.0.2",
