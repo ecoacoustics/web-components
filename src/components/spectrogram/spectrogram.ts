@@ -315,7 +315,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   private doneFirstRender = false;
 
   // todo: this should be part of a mixin
-  public disconnectedCallback(): void {
+  public async disconnectedCallback() {
     // if the spectrogram component is rapidly added and removed from the DOM
     // the canvas will not be initialized, and the canvas can be undefined
     // this can sometimes occur during tests if the test runner doesn't
@@ -332,7 +332,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.unitConverters.value.canvasSize.value = { width: 0, height: 0 };
     }
 
-    this.audioHelper.destroy();
+    await this.audioHelper.destroy();
 
     super.disconnectedCallback();
   }
