@@ -25,9 +25,14 @@ export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanv
 export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
 export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
+export type WorkerDestroyMessage = NamedMessageData<"destroy", never>;
 
 export type WorkerMessage = MessageEvent<
-  WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
+  | WorkerSetupMessage
+  | WorkerResizeCanvasMessage
+  | WorkerRegenerateSpectrogramMessage
+  | WorkerClearCanvasMessage
+  | WorkerDestroyMessage
 >;
 
 // high accuracy time processor

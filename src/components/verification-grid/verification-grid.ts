@@ -726,6 +726,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.gridContainer.removeEventListener<any>(VerificationGridTileComponent.selectedEventName, this.selectionHandler);
     this.decisionsContainer.removeEventListener<any>(DecisionComponent.decisionEventName, this.decisionHandler);
 
+    // Clean up any tasks
+    this.paginationFetcher?.abortController.abort();
+    if (this.highlight.pointerId !== null) {
+      document.body.releasePointerCapture(this.highlight.pointerId);
+    }
+
     super.disconnectedCallback();
   }
 
@@ -1000,6 +1006,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       .pipeTo(this.subjectWriter!, { signal: this.paginationFetcher.abortController.signal })
       .then(() => {
         this.subjectWriter?.closeStream();
+        this.paginationFetcher?.abortController.abort();
       });
 
     await this.setViewHead(0);

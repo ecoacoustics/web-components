@@ -118,6 +118,19 @@ export class AudioHelper {
     this.spectrogramWorker.postMessage(message);
   }
 
+  /**
+   * Gracefully stop any in-flight processing and free underlying resources.
+   * - Aborts the current render generation and waits for the worker to become idle
+   * - Terminates the spectrogram worker
+   */
+  public async destroy(): Promise<void> {
+    // If we never created the worker (connect was never called), skip abort
+    if (this.spectrogramWorker) {
+      await this.abort();
+      this.spectrogramWorker.postMessage(["destroy"]);
+    }
+  }
+
   private async abort() {
     const abortedGeneration = this.generation;
 

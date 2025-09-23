@@ -177,6 +177,20 @@ function resizeCanvas(data: Size): void {
   //console.log("resized canvas", data);
 }
 
+function destroy(): void {
+  console.debug("worker: destroy");
+
+  // Drop references to canvas elements so that they do not end up as detached
+  // nodes.
+  // I also reset the shared state so that if all spectrograms are destroyed,
+  // hopefully the SharedArrayBuffers can be GC'd.
+  destinationCanvas = undefined as any;
+  spectrogramCanvas = undefined as any;
+  state = undefined as any;
+
+  self.close();
+}
+
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
 function handleMessage(event: WorkerMessage) {
@@ -194,6 +208,9 @@ function handleMessage(event: WorkerMessage) {
       break;
     case "clear-canvas":
       clearCanvas();
+      break;
+    case "destroy":
+      destroy();
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

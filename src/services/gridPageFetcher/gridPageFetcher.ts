@@ -84,8 +84,8 @@ export class GridPageFetcher {
     //
     // prettier-ignore
     return subjectStream
-      .pipeThrough(this.serverCachePipe())
-      .pipeThrough(this.clientCachePipe());
+      .pipeThrough(this.serverCachePipe(), { signal: this.abortController.signal })
+      .pipeThrough(this.clientCachePipe(), { signal: this.abortController.signal });
   }
 
   private clientCachePipe(): TransformStream<SubjectWrapper> {
