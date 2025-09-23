@@ -125,32 +125,10 @@ export class AudioHelper {
    * - Clears cached references to allow GC
    */
   public async destroy(): Promise<void> {
-    // Drop references so GC can reclaim memory
-    this.offscreenCanvas = null;
-    this.cachedResponse = null;
-    this.cachedAudioInformation = null;
-    this.generationData.clear();
-
-    if (!this.spectrogramWorker) {
-      return;
-    }
-
-    // If we never created the worker (connect was never called), skip abort/waits
+    // If we never created the worker (connect was never called), skip abort
     if (this.spectrogramWorker) {
-      try {
-        await this.abort();
-      } catch (err) {
-        // best-effort: if abort fails, still proceed with teardown
-        // eslint-disable-next-line no-console
-        console.error("audio: destroy abort error (ignored)", err);
-      }
-    }
-
-    try {
+      await this.abort();
       this.spectrogramWorker.postMessage(["destroy"]);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("audio: worker terminate error (ignored)", err);
     }
   }
 

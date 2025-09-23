@@ -178,6 +178,12 @@ function resizeCanvas(data: Size): void {
 }
 
 function destroy(): void {
+  console.debug("worker: destroy");
+
+  // Drop references to canvas elements so that they do not end up as detached
+  // nodes.
+  // I also reset the shared state so that if all spectrograms are destroyed,
+  // hopefully the SharedArrayBuffers can be GC'd.
   destinationCanvas = undefined as any;
   spectrogramCanvas = undefined as any;
   state = undefined as any;

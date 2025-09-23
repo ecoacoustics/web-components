@@ -186,7 +186,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @query("#media-element", true)
   private mediaElement!: HTMLMediaElement;
 
-  @query("canvas", true)
+  @query("#spectrogram-canvas", true)
   private canvas!: HTMLCanvasElement;
 
   // TODO: we might want to make this signal writable when we add support for
@@ -648,8 +648,6 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       size = this.stretchSize(targetEntry);
     }
 
-    this.renderCanvasSize.value = size;
-
     if (this.audioHelper.canvasTransferred) {
       this.audioHelper.resizeCanvas(size);
     } else {
@@ -678,6 +676,11 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       this.canvas.style.width = "100%";
       this.canvas.style.maxWidth = "100%";
     }
+
+    // defensive programming: We set the renderCanvasSize signal last so that if
+    // resizing the canvas throws an error, the signal is not updated with an
+    // incorrect value.
+    this.renderCanvasSize.value = size;
   }
 
   /**
@@ -867,7 +870,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public renderSurface() {
     return html`
       <div id="spectrogram-container" part="canvas">
-        <canvas></canvas>
+        <canvas id="spectrogram-canvas"></canvas>
       </div>
       <audio
         id="media-element"
