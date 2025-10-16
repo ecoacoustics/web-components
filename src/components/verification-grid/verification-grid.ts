@@ -2480,7 +2480,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       ></oe-verification-bootstrap>
       <div id="highlight-box" part="highlight-box"></div>
 
-      <div class="verification-container">
+      <!--
+        The container has a tab index so that it is focusable, meaning that if
+        you click anywhere inside of the verification grid, including empty
+        space between buttons and ties, the verification grid will gain the
+        focus needed for keyboard shortcuts.
+       -->
+      <div class="verification-container" tabindex="-1">
         <div class="header-controls">
           ${when(this.progressBarPosition === ProgressBarPosition.TOP, () => this.progressBarTemplate())}
         </div>
