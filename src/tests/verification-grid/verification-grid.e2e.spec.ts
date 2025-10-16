@@ -1187,7 +1187,7 @@ test.describe("single verification grid", () => {
         // Clicking between the tiles or the whitespace around decision buttons
         // should keep the verification grid focused, allowing shortcut keys to
         // work.
-        test.only("should be able to use keyboard shortcuts if an empty space is clicked", async ({ fixture }) => {
+        test("should be able to use keyboard shortcuts if an empty space is clicked", async ({ fixture }) => {
           await fixture.page.locator(".verification-container").click();
 
           await fixture.page.keyboard.press("Alt+1");
