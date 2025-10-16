@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.4](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.3...web-components-v6.0.4) (2025-10-16)
+
+
+### Bug Fixes
+
+* Focus when clicking around decision buttons ([#555](https://github.com/ecoacoustics/web-components/issues/555)) ([417aa41](https://github.com/ecoacoustics/web-components/commit/417aa41db2291c76fb85207d8c554da40f7c53e6)), closes [#554](https://github.com/ecoacoustics/web-components/issues/554)
+
 ## [6.0.3](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.2...web-components-v6.0.3) (2025-09-23)
 
 
