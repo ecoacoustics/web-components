@@ -1183,6 +1183,17 @@ test.describe("single verification grid", () => {
           expect(await fixture.focusedIndex()).toEqual(0);
           expect(await fixture.selectedTileIndexes()).toEqual([0]);
         });
+
+        // Clicking between the tiles or the whitespace around decision buttons
+        // should keep the verification grid focused, allowing shortcut keys to
+        // work.
+        test("should be able to use keyboard shortcuts if an empty space is clicked", async ({ fixture }) => {
+          await fixture.page.locator(".verification-container").click();
+
+          await fixture.page.keyboard.press("Alt+1");
+          expect(await fixture.selectedTileIndexes()).toEqual([0]);
+          expect(await fixture.focusedIndex()).toEqual(0);
+        });
       });
     };
 
