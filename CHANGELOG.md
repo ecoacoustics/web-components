@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.5](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.4...web-components-v6.0.5) (2025-10-17)
+
+
+### Bug Fixes
+
+* Resetting options after auto-paging ([#557](https://github.com/ecoacoustics/web-components/issues/557)) ([199938a](https://github.com/ecoacoustics/web-components/commit/199938a8fe923c5de80982962e6a17154ba71f2f)), closes [#551](https://github.com/ecoacoustics/web-components/issues/551)
+
 ## [6.0.4](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.3...web-components-v6.0.4) (2025-10-16)
 
 
