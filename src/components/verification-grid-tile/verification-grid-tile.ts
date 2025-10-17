@@ -112,13 +112,19 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
   // The spectrogram might not be present if the user provides a custom template
   // without a spectrogram (e.g. for an image verification task).
+  // Additionally, we cannot cache the query selector result because the users
+  // custom template might change the spectrogram element instance.
+  //
+  // TODO: We should find a way to cache this selector and provide some sort of
+  // invalidation callback that can invalidate the cached selector when the
+  // custom template changes.
   @query("oe-spectrogram")
   private spectrogram?: SpectrogramComponent;
 
   @query("#template-content", true)
   private templateContent!: HTMLDivElement;
 
-  @query("#contents-wrapper")
+  @query("#contents-wrapper", true)
   private contentsWrapper!: HTMLDivElement;
 
   private readonly keyDownHandler = this.handleKeyDown.bind(this);
@@ -235,7 +241,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
   public resetSettings(): void {
     if (this.spectrogram) {
-      this.spectrogram.resetSettings();
+      this.spectrogram.resetMediaControlSettings();
     }
   }
 
