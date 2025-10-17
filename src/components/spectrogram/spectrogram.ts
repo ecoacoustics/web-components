@@ -411,7 +411,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         this.regenerateSpectrogramOptions();
       }
 
-      if (this.unitConverters.value && change.has("melScale")) {
+      if (this.unitConverters.value) {
+        // We rely on the signal value de-bouncing to not update the melScale
+        // value if the value has not changed.
         this.unitConverters.value.melScale.value = this.spectrogramOptions.melScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
