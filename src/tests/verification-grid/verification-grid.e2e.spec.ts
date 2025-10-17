@@ -574,7 +574,75 @@ test.describe("single verification grid", () => {
 
     test.describe("shortcut keys", () => {});
 
-    test.describe("auto paging", () => {});
+    test.describe("auto paging", () => {
+      test("should only reset media control options when paging", async ({ fixture }) => {
+        const testedSpectrogramIndex = 0;
+
+        // We use a custom template in this test to ensure that if the custom
+        // template includes some spectrogram options in the template attributes
+        // they are preserved after paging.
+        await fixture.createWithValidTemplate();
+
+        // I first want to assert that the custom templates options are being
+        // correctly applied and have not been initially overwritten.
+        //
+        // The custom template should set the spectrograms color map to
+        // "grayscale" which is different from the default "audacity" color map.
+        const firstSpectrogram = fixture.spectrogramComponent(testedSpectrogramIndex);
+        await expect(firstSpectrogram).toHaveAttribute("color-map", "grayscale");
+
+        // Change the spectrograms media control color map option to a
+        // non-default and non-template value ("green").
+        await fixture.openSettingsMenu(testedSpectrogramIndex);
+        const initialOptions = await fixture.spectrogramOptions(testedSpectrogramIndex);
+        expect(initialOptions.colorMap).toEqual("grayscale");
+
+        const colorMapMenu = fixture.colorMapMenu(testedSpectrogramIndex);
+        await colorMapMenu.click();
+
+        await colorMapMenu.getByText("Green").click();
+
+        // We re-use the same spectrogram locator reference because we expect
+        // that the spectrogram element is not destroyed / re-created when the
+        // color map changes.
+        // If this assertion is failing to find the locator, it is likely that
+        // the spectrogram element is being incorrectly re-created.
+        const updatedOptions = await fixture.spectrogramOptions(testedSpectrogramIndex);
+        expect(updatedOptions.colorMap).toEqual("green");
+
+        // Because the attributes are a part of the "custom template options",
+        // they should not be modified when the settings are updated through the
+        // media controls.
+        await expect(firstSpectrogram).toHaveAttribute("color-map", "grayscale");
+
+        // We can trigger an auto-page by making a decision without any
+        // sub-selection, causing every tile to have the decision applied to it.
+        //
+        // Because we want to wait for the auto-page to complete, we wait for
+        // the next page of subjects to have their spectrograms fully load and
+        // emit the "loaded" event.
+        const gridLoadedEvent = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
+        await fixture.makeVerificationDecision("true");
+        await gridLoadedEvent;
+
+        // After paging, we should see that the media control changes have been
+        // reverted and that the spectrogram custom template options are still
+        // unchanged.
+        const afterPagingOptions = await fixture.spectrogramOptions(testedSpectrogramIndex);
+        expect(afterPagingOptions.colorMap).toEqual("grayscale");
+        await expect(firstSpectrogram).toHaveAttribute("color-map", "grayscale");
+
+        // Because the spectrograms options have changed, we expect that the
+        // media controls "selected" color map is correctly reset back to the
+        // template value.
+        await fixture.openSettingsMenu(testedSpectrogramIndex);
+
+        const updatedColorMapMenu = fixture.colorMapMenu(testedSpectrogramIndex);
+        await updatedColorMapMenu.click();
+
+        await expect(updatedColorMapMenu.getByText("Grayscale")).toHaveAttribute("aria-checked", "true");
+      });
+    });
   });
 
   test.describe("playing and pausing tiles", () => {

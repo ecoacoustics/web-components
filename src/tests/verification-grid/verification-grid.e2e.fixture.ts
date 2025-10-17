@@ -37,6 +37,7 @@ import { ProgressBar } from "../../components/progress-bar/progress-bar";
 import { VerificationBootstrapComponent } from "../../components/bootstrap-modal/bootstrap-modal";
 import { DataSourceComponent } from "../../components/data-source/data-source";
 import { createFixture, setContent } from "../fixtures";
+import { ISpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
 
 type MockNewTagOptions = "Abbots Babbler" | "Brush Turkey" | "Noisy Miner" | "tag1" | "tag2" | "tag3" | "tag4";
 
@@ -94,6 +95,7 @@ class TestPage {
   public gridTileComponent = (index = 0) => this.gridTileComponents().nth(index);
   public audioElement = (index = 0) => this.spectrogramComponent(index).locator("audio").first();
 
+  public colorMapMenu = (index = 0) => this.gridTileContainers().nth(index).getByText("Colour");
   public brightnessControlsMenu = (index = 0) => this.gridTileContainers().nth(index).getByText("Brightness");
   public brightnessControlsInput = (index = 0) => this.gridTileContainers().nth(index).locator("input").first();
 
@@ -329,7 +331,10 @@ class TestPage {
 
         <oe-axes>
           <oe-indicator>
-            <oe-spectrogram id="spectrogram"></oe-spectrogram>
+            <oe-spectrogram
+              id="spectrogram"
+              color-map="grayscale"
+            ></oe-spectrogram>
           </oe-indicator>
         </oe-axes>
 
@@ -698,7 +703,7 @@ class TestPage {
 
   public async isFullscreen(): Promise<boolean> {
     return await this.gridComponent().evaluate((element: VerificationGridComponent) => {
-      return element.settings.isFullscreen.value;
+      return element["settings"].isFullscreen.value;
     });
   }
 
@@ -741,6 +746,11 @@ class TestPage {
   public async openSettingsMenu(index: number) {
     const settingsTarget = this.mediaControlsComponents().nth(index);
     await settingsTarget.locator(".settings-menu-item").click();
+  }
+
+  public async spectrogramOptions(index: number): Promise<ISpectrogramOptions> {
+    const spectrogram = this.spectrogramComponent(index);
+    return await getBrowserValue<SpectrogramComponent, ISpectrogramOptions>(spectrogram, "spectrogramOptions");
   }
 
   /**
@@ -996,7 +1006,7 @@ class TestPage {
   private async changeGridSetting(key: keyof VerificationGridSettings, value: boolean) {
     await this.gridComponent().evaluate(
       (element: VerificationGridComponent, { key, value }) => {
-        element.settings[key].value = value;
+        element["settings"][key].value = value;
       },
       { key, value },
     );

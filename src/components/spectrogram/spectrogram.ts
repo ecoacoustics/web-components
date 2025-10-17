@@ -80,7 +80,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   @consume({ context: spectrogramOptionsContext, subscribe: true })
-  private ancestorOptions?: ISpectrogramOptions;
+  public ancestorOptions?: ISpectrogramOptions;
 
   // must be in the format window="startOffset, lowFrequency, endOffset, highFrequency"
   @property({ attribute: "window", converter: domRenderWindowConverter, reflect: true })
@@ -177,6 +177,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   @property({ type: Number, reflect: true })
   public offset: Seconds = 0;
 
+  @property({ type: Object })
+  public mediaControlOptions: ISpectrogramOptions = {};
+
   @queryAssignedElements({ selector: "source" })
   public slottedSourceElements!: ReadonlyArray<HTMLElement>;
 
@@ -255,10 +258,14 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   }
 
   public get spectrogramOptions(): SpectrogramOptions {
+    // Media control options should always have precedence over any other option
+    // because the media control options are explicitly set by the user in the
+    // interface.
     return mergeOptions(
       new SpectrogramOptions(SpectrogramComponent.defaultOptions),
       this.ancestorOptions ?? {},
       this.componentOptions,
+      this.mediaControlOptions,
     );
   }
 
@@ -404,7 +411,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         this.regenerateSpectrogramOptions();
       }
 
-      if (this.unitConverters.value && change.has("melScale")) {
+      if (this.unitConverters.value) {
+        // We rely on the signal value de-bouncing to not update the melScale
+        // value if the value has not changed.
         this.unitConverters.value.melScale.value = this.spectrogramOptions.melScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
@@ -416,8 +425,37 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this[option] = value;
   }
 
-  public resetSettings(): void {
-    this.componentOptions = SpectrogramComponent.defaultOptions;
+  public setMediaControlsOption<const T extends keyof ISpectrogramOptions>(
+    option: T,
+    value: ISpectrogramOptions[T],
+  ): void {
+    this.mediaControlOptions[option] = value;
+
+    // Because we do a property assignment on an object above, Lit does not
+    // automatically detect that the object has changed and trigger an update.
+    // We therefore manually trigger a targeted update for the
+    // mediaControlOptions property.
+    this.requestUpdate("mediaControlOptions");
+  }
+
+  /**
+   * @description
+   * Removes all settings applied to the spectrogram through the media controls
+   * component.
+   * This does NOT reset the any attribute or ancestor spectrogram options.
+   */
+  public resetMediaControlSettings(): void {
+    // We retain the spectrograms attribute options (componentOptions) and the
+    // ancestorOptions so that this only undoes changes made through the media
+    // controls component.
+    // This is useful for the verification grid where we only want to reset
+    // changes made through the media controls component when paging.
+    //
+    // If we instead reset all of the options, you would not be able to set
+    // default options through a custom verification grid template or "global"
+    // (ancestor) options.
+    // see: https://github.com/ecoacoustics/web-components/issues/551
+    this.mediaControlOptions = {};
     this.stop();
   }
 
@@ -700,6 +738,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
       "domRenderWindow",
       "offset",
+
+      "ancestorOptions",
+      "mediaControlOptions",
     ] as const satisfies (keyof SpectrogramComponent)[];
 
     return invalidationKeys.some((key) => change.has(key));

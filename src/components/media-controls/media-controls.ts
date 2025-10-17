@@ -365,7 +365,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           }
         }
 
-        this.spectrogramElement.setComponentOption(key, newValue as any);
+        this.spectrogramElement.setMediaControlsOption(key, newValue as any);
         this.requestUpdate();
       };
     };
@@ -377,7 +377,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         }
 
         const newValue = Number(event.target.value) as any;
-        this.spectrogramElement.setComponentOption(key, newValue);
+        this.spectrogramElement.setMediaControlsOption(key, newValue);
       };
     };
 
