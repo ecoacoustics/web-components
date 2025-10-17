@@ -631,6 +631,16 @@ test.describe("single verification grid", () => {
         const afterPagingOptions = await fixture.spectrogramOptions(testedSpectrogramIndex);
         expect(afterPagingOptions.colorMap).toEqual("grayscale");
         await expect(firstSpectrogram).toHaveAttribute("color-map", "grayscale");
+
+        // Because the spectrograms options have changed, we expect that the
+        // media controls "selected" color map is correctly reset back to the
+        // template value.
+        await fixture.openSettingsMenu(testedSpectrogramIndex);
+
+        const updatedColorMapMenu = fixture.colorMapMenu(testedSpectrogramIndex);
+        await updatedColorMapMenu.click();
+
+        await expect(updatedColorMapMenu.getByText("Grayscale")).toHaveAttribute("aria-checked", "true");
       });
     });
   });
