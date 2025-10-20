@@ -67,7 +67,7 @@
     "terser": "5.39.0",
     "ts-lit-plugin": "2.0.2",
     "typescript": "5.4.5",
-    "typescript-eslint": "7.15.0",
+    "typescript-eslint": "8.46.1",
     "user-agent-data-types": "0.4.2",
     "vite": "6.2.0",
     "vite-plugin-cem": "0.8.2",
