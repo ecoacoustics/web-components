@@ -26,8 +26,7 @@ This example tries to mimic A2O search [search.acousticobservatory.org/search/](
   <div id="search-grid-container" class="grid-container"></div>
 </section>
 
-<script>
-(() => {
+<script type="module">
 class GridItem {
   constructor(data) {
     Object.assign(this, data);
@@ -187,8 +186,7 @@ function GridCard(id, item) {
   return cardElement;
 }
 
-window.addEventListener("load", () => initGridItems());
-})();
+initGridItems();
 </script>
 
 <style>
@@ -231,6 +229,8 @@ oe-spectrogram {
 .search-card-spectrogram {
   position: relative;
   width: 300px;
+
+  z-index: -1;
 }
 
 .search-card-details {
@@ -259,11 +259,7 @@ oe-spectrogram {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  border-radius: 9999em;
   border-color: var(--primary-color);
   padding: 0px;
-  zoom: 0.75;
-
-  z-index: 999;
 }
 </style>
