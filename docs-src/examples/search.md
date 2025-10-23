@@ -115,6 +115,7 @@ function Spectrogram(id, item) {
   const element = document.createElement("oe-spectrogram");
   element.setAttribute("id", id);
   element.setAttribute("src", item.AudioLink);
+  element.setAttribute("color-map", "grayscale")
   element.className = "search-card-spectrogram";
 
   return element;
