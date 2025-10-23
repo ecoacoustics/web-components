@@ -13,7 +13,7 @@ This example tries to mimic A2O search [search.acousticobservatory.org/search/](
       <oe-spectrogram
         id="main-spectrogram"
         class="main-spectrogram"
-        src="https://api.search.acousticobservatory.org/api/v1/a2o/audio_recordings/download/flac/256800?start_offset=4035&end_offset=4040"
+        src="https://api.acousticobservatory.org/audio_recordings/256800/media.flac?start_offset=4035&end_offset=4040"
         color-map="grayscale"
         window-size="128"
       ></oe-spectrogram>
@@ -263,5 +263,7 @@ oe-spectrogram {
   border-color: var(--primary-color);
   padding: 0px;
   zoom: 0.75;
+
+  z-index: 999;
 }
 </style>
