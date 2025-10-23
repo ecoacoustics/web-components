@@ -13,7 +13,7 @@ This example tries to mimic A2O search [search.acousticobservatory.org/search/](
       <oe-spectrogram
         id="main-spectrogram"
         class="main-spectrogram"
-        src="https://api.search.acousticobservatory.org/api/v1/a2o/audio_recordings/download/flac/256800?start_offset=4035&end_offset=4040"
+        src="https://api.acousticobservatory.org/audio_recordings/256800/media.flac?start_offset=4035&end_offset=4040"
         color-map="grayscale"
         window-size="128"
       ></oe-spectrogram>
@@ -26,8 +26,7 @@ This example tries to mimic A2O search [search.acousticobservatory.org/search/](
   <div id="search-grid-container" class="grid-container"></div>
 </section>
 
-<script>
-(() => {
+<script type="module">
 class GridItem {
   constructor(data) {
     Object.assign(this, data);
@@ -116,6 +115,7 @@ function Spectrogram(id, item) {
   const element = document.createElement("oe-spectrogram");
   element.setAttribute("id", id);
   element.setAttribute("src", item.AudioLink);
+  element.setAttribute("color-map", "grayscale")
   element.className = "search-card-spectrogram";
 
   return element;
@@ -187,8 +187,7 @@ function GridCard(id, item) {
   return cardElement;
 }
 
-window.addEventListener("load", () => initGridItems());
-})();
+initGridItems();
 </script>
 
 <style>
@@ -231,6 +230,8 @@ oe-spectrogram {
 .search-card-spectrogram {
   position: relative;
   width: 300px;
+
+  z-index: -1;
 }
 
 .search-card-details {
@@ -259,9 +260,7 @@ oe-spectrogram {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  border-radius: 9999em;
   border-color: var(--primary-color);
   padding: 0px;
-  zoom: 0.75;
 }
 </style>
