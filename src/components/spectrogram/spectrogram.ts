@@ -288,6 +288,20 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     return !!this.src || this.slottedSourceElements.length > 0;
   }
 
+  /**
+   * A cached spectrogramContainer size that can be efficiently updated through
+   * the resize observer.
+   */
+  private cachedContainerSize!: DOMRectReadOnly;
+
+  private get spectrogramContainerSize(): DOMRectReadOnly {
+    if (!this.cachedContainerSize) {
+      this.cachedContainerSize = this.spectrogramContainer.getBoundingClientRect();
+    }
+
+    return this.cachedContainerSize;
+  }
+
   public readonly possibleWindowSizes = [
     128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
   ] as const satisfies PowerTwoWindowSize[];
@@ -504,7 +518,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
     this.initializeUnitConverter();
-    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
+    this.resizeCanvas(this.spectrogramContainerSize);
 
     // We set "doneFirstRender" before dispatching the "loaded" event so that
     // any actions triggered as a result of the "loaded" event will be aware
@@ -532,7 +546,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     const originalRecording = { duration: info.duration, startOffset: this.offset };
     this.audio.value = new AudioModel(info.duration, info.sampleRate, originalRecording);
 
-    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
+    this.resizeCanvas(this.spectrogramContainerSize);
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
@@ -557,7 +571,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
     await this.audioHelper.regenerateSpectrogram(this.spectrogramOptions);
 
-    this.resizeCanvas(this.spectrogramContainer.getBoundingClientRect());
+    this.resizeCanvas(this.spectrogramContainerSize);
 
     this.dispatchEvent(
       new CustomEvent(SpectrogramComponent.loadedEventName, {
@@ -670,6 +684,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // We do not use a truthy assertion here because if the bufferedFrameRef
     // value is zero, we still want to cancel the animation frame.
     const targetEntry = entries[0];
+    this.cachedContainerSize = targetEntry.contentRect;
     runOnceOnNextAnimationFrame(this.canvasResizeCallback, () => this.resizeCanvas(targetEntry.contentRect));
   }
 

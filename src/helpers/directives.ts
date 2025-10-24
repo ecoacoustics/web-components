@@ -46,7 +46,7 @@ export function* loop<T>(
     for (const value of items) {
       const first = i == 0;
       const last = i == items.length - 1;
-      const even = i % 2 == 0;
+      const even = (i & 1) == 0;
       const odd = !even;
 
       yield f(value, { index: i++, first, last, even, odd });

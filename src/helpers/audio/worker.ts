@@ -131,11 +131,21 @@ function setup(data: SharedBuffersWithCanvas): void {
 
   // just use a default size - regenerate will resize it in a second
   spectrogramCanvas = new OffscreenCanvas(512, 512);
-  spectrogramSurface = spectrogramCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+  spectrogramSurface = spectrogramCanvas.getContext("2d", {
+    // We set "alpha" to "false" as a performance optimization, to tell the
+    // browser that it does not need to compute alpha blending for this canvas.
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext#alpha
+    alpha: false,
+  }) as OffscreenCanvasRenderingContext2D;
 
-  destinationSurface = destinationCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
-  destinationSurface.imageSmoothingEnabled = true;
-  destinationSurface.imageSmoothingQuality = "high";
+  // Because each pixel in the spectrogram is meaningful, we disable image
+  // smoothing so that the data is visible without any subtle modification.
+  spectrogramSurface.imageSmoothingEnabled = false;
+
+  destinationSurface = destinationCanvas.getContext("2d", {
+    alpha: false,
+  }) as OffscreenCanvasRenderingContext2D;
+  destinationSurface.imageSmoothingEnabled = false;
 
   state.workerReady();
 }
@@ -184,6 +194,8 @@ function destroy(): void {
   // nodes.
   // I also reset the shared state so that if all spectrograms are destroyed,
   // hopefully the SharedArrayBuffers can be GC'd.
+  destinationSurface = undefined as any;
+  spectrogramSurface = undefined as any;
   destinationCanvas = undefined as any;
   spectrogramCanvas = undefined as any;
   state = undefined as any;

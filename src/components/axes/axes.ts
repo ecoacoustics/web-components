@@ -125,6 +125,13 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
+
+  /** A font size determined by getting the font size of the "0.0" string */
+  private numberFontSize!: Size;
+
+  private cachedXTitleSize: Size | null = null;
+  private cachedYTitleSize: Size | null = null;
+
   private xAxisTemplate!: HTMLTemplateResult;
   private yAxisTemplate!: HTMLTemplateResult;
 
@@ -157,6 +164,17 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   public firstUpdated(change: PropertyValues<this>): void {
     super.firstUpdated(change);
     this.emUnitFontSize = this.calculateFontSize("M");
+    this.numberFontSize = this.calculateFontSize("0.0");
+  }
+
+  public willUpdate(change: PropertyValues): void {
+    if (change.has("xTitle")) {
+      this.cachedXTitleSize = null;
+    }
+
+    if (change.has("yTitle")) {
+      this.cachedYTitleSize = null;
+    }
   }
 
   protected handleSlotChange(): void {
@@ -245,8 +263,12 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     yValues: ReadonlyArray<Hertz>,
     canvasSize: Readonly<Size>,
   ) {
-    const xTitleFontSize = this.calculateFontSize(this.xTitle);
-    const yTitleFontSize = this.calculateFontSize(this.yTitle);
+    this.cachedXTitleSize ??= this.calculateFontSize(this.xTitle);
+    this.cachedYTitleSize ??= this.calculateFontSize(this.yTitle);
+
+    const xTitleFontSize = this.cachedXTitleSize;
+    const yTitleFontSize = this.cachedYTitleSize;
+
     const largestYValue = Math.max(...yValues.map(hertzToMHertz)).toFixed(1);
     const fontSize = this.calculateFontSize(largestYValue);
 
@@ -477,8 +499,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     }
 
     const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02] as const;
-    const fontSize = this.calculateFontSize("0.0");
-    const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
+    const totalLabelSize = this.numberFontSize[sizeKey] + this.labelPadding[sizeKey];
 
     // the domain is the lowest and highest values that we want to show on the axis
     // meanwhile the range is the first and last position that we can position elements
