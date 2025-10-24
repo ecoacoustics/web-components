@@ -108,20 +108,22 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       return [{ columns: 1, rows: 1 }];
     }
 
-    const candidateTargets: GridShape[] = [];
+    const candidateTargets: GridShape[][] = [];
 
     candidateTargets.push(
-      ...this.candidateShapesForTarget(target),
-      ...this.candidateShapesForTarget(target + 1),
-      ...this.candidateShapesForTarget(target + 2),
+      this.candidateShapesForTarget(target),
+      this.candidateShapesForTarget(target + 1),
+      this.candidateShapesForTarget(target + 2),
     );
 
     // find all candidates all down to one
     for (let lowScanTarget = target - 1; lowScanTarget > 0; lowScanTarget--) {
-      candidateTargets.push(...this.candidateShapesForTarget(lowScanTarget));
+      candidateTargets.push(this.candidateShapesForTarget(lowScanTarget));
     }
 
-    return this.sortByEligibility(candidateTargets);
+    // We do one flat at the end instead of spreading each candidate as they are
+    // created to save on processing time.
+    return this.sortByEligibility(candidateTargets.flat());
   }
 
   /**
@@ -133,22 +135,36 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
     const candidateShapes: GridShape[] = [];
 
     // find all the factors of the target grid size
-    for (let i = 1; i <= target; i++) {
+    const limit = Math.ceil(Math.sqrt(target));
+    for (let i = 1; i <= limit; i++) {
       const isFactor = target % i === 0;
-      if (isFactor) {
-        const columns = i;
-        const rows = target / i;
+      if (!isFactor) continue;
 
-        // we have a minimum cell size that a candidate needs to meet
-        // because users can provide a custom template of a variable size
-        // this function cannot guarantee that the grid will fit in the
-        // container.
-        // however, we keep this condition in so that we can filter out
-        // candidates that will definitely not fit
-        const meetsMinimumSize = this.validateShapeCellSize({ columns, rows });
-        if (meetsMinimumSize) {
-          candidateShapes.push({ columns, rows });
-        }
+      const columns = i;
+      const rows = target / i;
+
+      // we have a minimum cell size that a candidate needs to meet
+      // because users can provide a custom template of a variable size
+      // this function cannot guarantee that the grid will fit in the
+      // container.
+      // however, we keep this condition in so that we can filter out
+      // candidates that will definitely not fit
+      const firstMeetsMinimumSize = this.validateShapeCellSize({ columns, rows });
+      if (firstMeetsMinimumSize) {
+        candidateShapes.push({ columns, rows });
+      }
+
+      // We can flip the rows and columns for all factors except perfect
+      // squares.
+      // By doing this, we can save some processing time by only searching up to
+      // the square root of the target.
+      if (columns === rows) {
+        continue;
+      }
+
+      const secondMeetsMinimumSize = this.validateShapeCellSize({ columns: rows, rows: columns });
+      if (secondMeetsMinimumSize) {
+        candidateShapes.push({ columns: rows, rows: columns });
       }
     }
 

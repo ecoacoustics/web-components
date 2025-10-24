@@ -18,6 +18,6 @@
   overflow: visible;
 }
 
-#indicator-line {
+#indicator-group {
   will-change: transform;
 }
