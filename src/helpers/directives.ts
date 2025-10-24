@@ -44,9 +44,9 @@ export function* loop<T>(
     let i = 0;
 
     for (const value of items) {
-      const first = i == 0;
-      const last = i == items.length - 1;
-      const even = (i & 1) == 0;
+      const first = i === 0;
+      const last = i === items.length - 1;
+      const even = (i & 1) === 0;
       const odd = !even;
 
       yield f(value, { index: i++, first, last, even, odd });
