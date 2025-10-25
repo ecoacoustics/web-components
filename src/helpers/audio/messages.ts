@@ -19,9 +19,9 @@ export type ProcessorMessage = MessageEvent<ProcessorSetupMessage>;
 // worker
 
 export type GenerationMetadata = Generation & { audioInformation: AudioInformation; options: SpectrogramOptions };
-export type SharedBuffersWithCanvas = SharedBuffers & { canvas: OffscreenCanvas };
 
-export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanvas>;
+export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffers>;
+export type WorkerTransferCanvasMessage = NamedMessageData<"transfer-canvas", OffscreenCanvas>;
 export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
 export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
@@ -29,6 +29,7 @@ export type WorkerDestroyMessage = NamedMessageData<"destroy", never>;
 
 export type WorkerMessage = MessageEvent<
   | WorkerSetupMessage
+  | WorkerTransferCanvasMessage
   | WorkerResizeCanvasMessage
   | WorkerRegenerateSpectrogramMessage
   | WorkerClearCanvasMessage

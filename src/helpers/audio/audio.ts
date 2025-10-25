@@ -11,6 +11,7 @@ import {
   WorkerRegenerateSpectrogramMessage,
   WorkerResizeCanvasMessage,
   WorkerSetupMessage,
+  WorkerTransferCanvasMessage,
 } from "./messages";
 import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
 import { AudioInformation } from "./audioInformation";
@@ -62,8 +63,9 @@ export class AudioHelper {
 
     const now = performance.now();
 
-    this.offscreenCanvas = canvas.transferControlToOffscreen();
-    this.setupWorker();
+    this.setupWorker().then(() => {
+      this.transferCanvas(canvas);
+    });
 
     const info = await this.render(options, this.generation, src);
 
@@ -278,10 +280,6 @@ export class AudioHelper {
   // messages
 
   private async setupWorker() {
-    if (!this.offscreenCanvas) {
-      throw new Error("Canvas is not initialized");
-    }
-
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized");
     }
@@ -291,11 +289,10 @@ export class AudioHelper {
       {
         state: this.state.stateBuffer,
         sampleBuffer: this.sampleBuffer,
-        canvas: this.offscreenCanvas,
       },
     ];
 
-    this.spectrogramWorker.postMessage(message, [this.offscreenCanvas]);
+    this.spectrogramWorker.postMessage(message);
 
     await this.state.waitForWorkerReady();
   }
@@ -332,5 +329,22 @@ export class AudioHelper {
     ];
 
     this.spectrogramWorker.postMessage(message);
+  }
+
+  private transferCanvas(canvas: HTMLCanvasElement) {
+    if (!this.spectrogramWorker) {
+      throw new Error("Worker is not initialized");
+    }
+
+    requestAnimationFrame(() => {
+      // Because transferControlToOffscreen causes a reflow, we do it inside a
+      // requestAnimationFrame to avoid layout thrashing.
+      this.offscreenCanvas = canvas.transferControlToOffscreen();
+
+      if (this.spectrogramWorker) {
+        const message: WorkerTransferCanvasMessage = ["transfer-canvas", this.offscreenCanvas];
+        this.spectrogramWorker.postMessage(message, [this.offscreenCanvas!]);
+      }
+    });
   }
 }

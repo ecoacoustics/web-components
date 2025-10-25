@@ -1,5 +1,5 @@
 import { SpectrogramGenerator } from "./spectrogram";
-import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
+import { SharedBuffers, WorkerMessage, GenerationMetadata } from "./messages";
 import { WorkerState } from "./state";
 import { Size } from "../../models/rendering";
 import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
@@ -26,6 +26,7 @@ let spectrogram: SpectrogramGenerator;
 let options: SpectrogramOptions;
 
 let state: WorkerState;
+let hasBufferedImage = false;
 
 /** contains samples accumulated by the processor */
 let sampleBuffer: Float32Array;
@@ -104,6 +105,18 @@ function renderImageBuffer(buffer: Uint8ClampedArray, generation: number): void 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
+  // If we attempt to draw to the canvas before it has been transferred, we set
+  // a hasBufferedImage flag which indicates that when we receive the
+  // "transfer-canvas" message, we should immediately draw to the canvas.
+  //
+  // Because we only transfer the canvas on frame updates, this means that if
+  // worker the worker finishes generating the spectrogram before the next
+  // frame, we will not have a canvas to draw to yet.
+  if (!destinationCanvas || !destinationSurface) {
+    hasBufferedImage = true;
+    return;
+  }
+
   // paint the spectrogram canvas to the destination canvas and stretch to fill
 
   //? AT: I actually don't like the look of this solution. During high frequency
@@ -121,23 +134,38 @@ function drawSpectrogramOntoDestinationCanvas(_generation: number): void {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   destinationSurface.commit && destinationSurface.commit();
+
+  // We only set hasBufferedImage to false after successfully drawing to the
+  // canvas so if we fail to draw (for any reason), it will automatically retry
+  // on the next update.
+  // Note that I have never seen this happen in practice, but I have included
+  // this logic as a defensive programming measure.
+  hasBufferedImage = false;
 }
 
-function setup(data: SharedBuffersWithCanvas): void {
+function setup(data: SharedBuffers): void {
   //console.log("worker:setup:", data);
   state = new WorkerState(data.state);
   sampleBuffer = new Float32Array(data.sampleBuffer);
-  destinationCanvas = data.canvas;
 
   // just use a default size - regenerate will resize it in a second
   spectrogramCanvas = new OffscreenCanvas(512, 512);
   spectrogramSurface = spectrogramCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
 
-  destinationSurface = destinationCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
-  destinationSurface.imageSmoothingEnabled = true;
-  destinationSurface.imageSmoothingQuality = "high";
+  // Because each pixel in the spectrogram is meaningful, we disable image
+  // smoothing so that the data is visible without any subtle modification.
+  spectrogramSurface.imageSmoothingEnabled = false;
 
   state.workerReady();
+}
+
+function setupDestinationCanvas(canvas: OffscreenCanvas): void {
+  destinationCanvas = canvas;
+
+  destinationSurface = destinationCanvas.getContext("2d", {
+    alpha: false,
+  }) as OffscreenCanvasRenderingContext2D;
+  destinationSurface.imageSmoothingEnabled = false;
 }
 
 function regenerate(data: GenerationMetadata): void {
@@ -199,6 +227,9 @@ function handleMessage(event: WorkerMessage) {
   switch (eventMessage) {
     case "setup":
       setup(event.data[1]);
+      break;
+    case "transfer-canvas":
+      setupDestinationCanvas(event.data[1]);
       break;
     case "resize-canvas":
       resizeCanvas(event.data[1]);
