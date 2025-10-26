@@ -166,6 +166,14 @@ function setupDestinationCanvas(canvas: OffscreenCanvas): void {
     alpha: false,
   }) as OffscreenCanvasRenderingContext2D;
   destinationSurface.imageSmoothingEnabled = false;
+
+  // Because the worker can finish generating the spectrogram before the main
+  // thread can transfer the canvas, we may have a buffered image to draw before
+  // the canvas was available.
+  // In this case, we immediately draw the spectrogram to the canvas.
+  if (hasBufferedImage) {
+    drawSpectrogramOntoDestinationCanvas(state.generation);
+  }
 }
 
 function regenerate(data: GenerationMetadata): void {
