@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Perch model</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="./model.ts" type="module"></script>
+  </head>
+
+  <body>
+    <h1 id="file-name">Loading...</h1>
+
+    <button id="record-button">Record</button>
+    <input id="file-input" type="file" />
+
+    <div style="margin-top: 2rem; font-size: 1.2rem">
+      <output>
+        <b>Detected Species:</b>
+        <span id="species-output">Loading...</span>
+      </output>
+    </div>
+  </body>
+</html>

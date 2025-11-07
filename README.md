@@ -1,5 +1,15 @@
 # Ecoacoustics Web Components
 
+**This is an unstable development branch**
+
+To download the perch model, run the `download-assets.sh` script from the root
+directory.
+
+```sh
+$ ./download-assets.sh
+>
+```
+
 ## Component Deployments
 
 - Documentation: [oe-web-components.netlify.app](https://oe-web-components.netlify.app)
