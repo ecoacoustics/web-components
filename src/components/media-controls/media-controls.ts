@@ -357,7 +357,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     `;
   }
 
-  // Shoelace sub-menu's use getComputedStyle to determine whether they are in
+  // Shoelace sub-menus use getComputedStyle to determine whether they are in
   // ltr or rtl mode.
   // However, this causes some performance issues because each submenu causes a
   // reflow whenever they are created.
