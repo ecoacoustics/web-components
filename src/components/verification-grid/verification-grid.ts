@@ -2262,6 +2262,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
+      console.debug("All verification grid tiles have loaded");
       this._loadState = LoadState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.updateDecisionWhen();

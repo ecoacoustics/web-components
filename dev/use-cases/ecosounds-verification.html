@@ -66,7 +66,7 @@
         // We should also see that as soon as the first page of results are
         // loaded, we can start rendering the grid while we are fetching the
         // next page of items that need to be pre-fetch cached.
-        await new Promise((resolve) => setTimeout(resolve, 7_000));
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
         console.debug("gridPaginator finished");
 
         const subjects = Array.from({ length: 25 }).map(() => {
