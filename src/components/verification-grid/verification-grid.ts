@@ -386,30 +386,30 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   /** selector for oe-verification elements */
   @queryAssignedElements({ selector: "oe-verification" })
-  private verificationDecisionElements!: VerificationComponent[];
+  private verificationDecisionElements!: ReadonlyArray<VerificationComponent>;
 
   /** selector for oe-classification elements */
   @queryAssignedElements({ selector: "oe-classification" })
-  private classificationDecisionElements!: ClassificationComponent[];
+  private classificationDecisionElements!: ReadonlyArray<ClassificationComponent>;
 
   /** selector for oe-classification elements */
   @queryAssignedElements({ selector: "oe-tag-prompt" })
-  private tagPromptDecisionElements!: TagPromptComponent[];
+  private tagPromptDecisionElements!: ReadonlyArray<TagPromptComponent>;
 
   /** A selector for all oe-verification and oe-classification elements */
   @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt, oe-skip" })
-  private decisionElements!: DecisionComponentUnion[];
+  private decisionElements!: ReadonlyArray<DecisionComponentUnion>;
 
   // Because it's possible (although unlikely) for multiple skip buttons to
   // exist on a page, this query selector returns an array of elements.
   @queryAssignedElements({ selector: "oe-verification[verified='skip'], oe-skip" })
-  private skipButtons!: DecisionComponent[];
+  private skipButtons!: ReadonlyArray<DecisionComponent>;
 
   @queryAssignedElements({ selector: "template" })
-  private customTileTemplates!: HTMLTemplateElement[];
+  private customTileTemplates!: ReadonlyArray<HTMLTemplateElement>;
 
   @queryAssignedElements({ selector: `#${VerificationGridComponent.defaultSkipButtonId}` })
-  private defaultSkipButton?: SkipComponent[];
+  private defaultSkipButton?: ReadonlyArray<SkipComponent>;
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -795,6 +795,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.loadingTimeoutReference !== null) {
       clearTimeout(this.loadingTimeoutReference);
       this.loadingTimeoutReference = null;
+
+      this._loadState = LoadState.TILES_LOADING;
     }
   }
 
@@ -1774,7 +1776,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._viewHeadIndex = clampedHead;
     this.setDecisionDisabled(true);
 
-    this.updateSubSelection();
+    // TODO: Investigate why this was initially here
+    // I've disabled it because updating the sub selection here would cause the
+    // decision "when" conditions to update, meaning that it'd overwrite the
+    // setDecisionDisabled call above.
+    // this.updateSubSelection();
 
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
@@ -1789,7 +1795,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
       this.resetLoadingTimeout();
-      this._loadState = LoadState.TILES_LOADING;
     }
   }
 

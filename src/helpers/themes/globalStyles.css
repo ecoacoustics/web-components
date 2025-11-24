@@ -9,12 +9,16 @@
   background-color: var(--oe-background-color);
 }
 
-* {
+*,
+*::before,
+*::after {
   font-family: var(--oe-font-family);
   font-weight: var(--oe-font-weight);
 
   font-optical-sizing: auto;
   font-style: normal;
+
+  box-sizing: border-box;
 }
 
 svg {
