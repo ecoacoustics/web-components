@@ -378,6 +378,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   @property({ attribute: "loading-timeout", type: Number })
   public loadingTimeout: Seconds = 8;
 
+  /**
+   * A duration of time that the verification grid will wait for the next page
+   * of results before showing a loading indicator.
+   * If the next page is not ready within this time, the grid will transition
+   * to a "loading" state.
+   */
+  @property({ attribute: "slow-loading-timeout", type: Number })
+  public slowLoadingTimeout: Seconds = 1;
+
   @property({ type: Boolean })
   public autofocus = false;
 
@@ -589,6 +598,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private loadingTimeoutReference: any | null = null;
+  private slowLoadingTimeoutReference: any | null = null;
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -731,6 +741,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.highlight.pointerId !== null) {
       document.body.releasePointerCapture(this.highlight.pointerId);
     }
+
+    // Clear all timeouts
+    this.resetLoadingTimeout();
+    this.resetSlowLoadingTimeout();
 
     super.disconnectedCallback();
   }
@@ -932,6 +946,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private async handleGridSourceInvalidation() {
     this.resetLoadingTimeout();
+    this.resetSlowLoadingTimeout();
 
     // If we update to no data source, we want to wait a bit before
     // changing to an error state so that if the host application is being
@@ -1714,6 +1729,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
+      // Set up a slow loading timeout to show loading indicator if fetching takes too long
+      this.resetSlowLoadingTimeout();
+      this.slowLoadingTimeoutReference = setTimeout(() => {
+        // Only transition to loading state if we haven't reached the end of the dataset
+        // and we're not already in an error or configuration error state
+        if (
+          !this.hasFinishedDatasource &&
+          this._loadState !== LoadState.ERROR &&
+          this._loadState !== LoadState.CONFIGURATION_ERROR
+        ) {
+          this._loadState = LoadState.DATASET_FETCHING;
+        }
+      }, this.slowLoadingTimeout * 1000);
+
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
@@ -1721,6 +1750,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
+
+      // Clear the slow loading timeout once data has arrived
+      this.resetSlowLoadingTimeout();
     }
   }
 
@@ -1764,6 +1796,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
       this.resetLoadingTimeout();
+      this.resetSlowLoadingTimeout();
       this._loadState = LoadState.TILES_LOADING;
     }
   }
@@ -1771,6 +1804,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private resetLoadingTimeout() {
     if (this.loadingTimeoutReference !== null) {
       clearTimeout(this.loadingTimeoutReference);
+    }
+  }
+
+  private resetSlowLoadingTimeout() {
+    if (this.slowLoadingTimeoutReference !== null) {
+      clearTimeout(this.slowLoadingTimeoutReference);
+      this.slowLoadingTimeoutReference = null;
     }
   }
 
