@@ -784,6 +784,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * before entering the loading state.
    */
   private handleLoading(): void {
+    // If there is an existing loading timeout, we want to reset it so that we
+    // don't incorrectly have two loading timeouts running at the same time.
+    this.resetLoadingTimeout();
+
     this.loadingTimeoutReference = setTimeout(() => {
       this._loadState = LoadState.DATASET_FETCHING;
 
@@ -797,12 +801,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }, secondsToMilliseconds(this.slowLoadThreshold));
   }
 
+  private handleLoaded(): void {
+    this.resetLoadingTimeout();
+    this._loadState = LoadState.TILES_LOADING;
+  }
+
   private resetLoadingTimeout(): void {
     if (this.loadingTimeoutReference !== null) {
       clearTimeout(this.loadingTimeoutReference);
       this.loadingTimeoutReference = null;
-
-      this._loadState = LoadState.TILES_LOADING;
     }
   }
 
@@ -967,6 +974,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
+    this.handleLoading();
+
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
       // stream before creating another one.
@@ -974,10 +983,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // into a new fast data source.
       if (this.paginationFetcher) {
         this.paginationFetcher.abortController.abort();
-
-        // If there is already a loading timeout, we want to reset it so that the
-        // new data source change gets a full loading timeout duration.
-        this.resetLoadingTimeout();
       }
 
       await this.resetForNewDataSource();
@@ -1739,7 +1744,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
 
-      this.resetLoadingTimeout();
+      this.handleLoaded();
     }
   }
 
@@ -1788,7 +1793,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // timeout is reached (because we want to give it as much of a chance as
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
-      this.resetLoadingTimeout();
+      this.handleLoaded();
     }
   }
 
