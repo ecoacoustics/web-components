@@ -4,9 +4,12 @@ import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
 import { Annotation } from "./annotation";
 
+export type Milliseconds = number;
 export type Seconds = number;
+
 export type Hertz = number;
 export type MHertz = number;
+
 export type Sample = number;
 export type Pixel = number;
 export type EmUnit = number;

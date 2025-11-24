@@ -11,7 +11,7 @@ import {
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
-import { sleep } from "../../helpers/utilities";
+import { secondsToMilliseconds, sleep } from "../../helpers/utilities";
 import {
   DOWN_ARROW_KEY,
   END_KEY,
@@ -377,6 +377,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   @property({ attribute: "loading-timeout", type: Number })
   public loadingTimeout: Seconds = 8;
+
+  @property({ attribute: "slow-load-threshold", type: Number })
+  public slowLoadThreshold: Seconds = 0.2;
 
   @property({ type: Boolean })
   public autofocus = false;
@@ -774,6 +777,27 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._loadState = LoadState.CONFIGURATION_ERROR;
   }
 
+  private transitionToLoading(): void {
+    this.loadingTimeoutReference = setTimeout(() => {
+      this._loadState = LoadState.DATASET_FETCHING;
+
+      const timeoutDelta = this.loadingTimeout - this.slowLoadThreshold;
+      this.loadingTimeoutReference = setTimeout(() => {
+        if (this._loadState === LoadState.DATASET_FETCHING) {
+          console.error("failed to load dataset. Reason: timeout");
+          this._loadState = LoadState.ERROR;
+        }
+      }, secondsToMilliseconds(timeoutDelta));
+    }, secondsToMilliseconds(this.slowLoadThreshold));
+  }
+
+  private resetLoadingTimeout(): void {
+    if (this.loadingTimeoutReference !== null) {
+      clearTimeout(this.loadingTimeoutReference);
+      this.loadingTimeoutReference = null;
+    }
+  }
+
   //#region Updates
 
   public firstUpdated(): void {
@@ -931,6 +955,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
+    // If there is already a loading timeout, we want to reset it so that the
+    // new data source change gets a full loading timeout duration.
     this.resetLoadingTimeout();
 
     // If we update to no data source, we want to wait a bit before
@@ -949,12 +975,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // fully initialize.
     // While we are waiting for the verification grid to initialize, we will
     // be in the DATASET_FETCHING state.
-    this.loadingTimeoutReference = setTimeout(() => {
-      if (this._loadState === LoadState.DATASET_FETCHING) {
-        console.error("failed to load dataset. Reason: timeout");
-        this._loadState = LoadState.ERROR;
-      }
-    }, this.loadingTimeout * 1000);
+    this.transitionToLoading();
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1714,6 +1735,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
+      this.transitionToLoading();
+
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
@@ -1721,6 +1744,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
+
+      this.resetLoadingTimeout();
     }
   }
 
@@ -1765,12 +1790,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
       this.resetLoadingTimeout();
       this._loadState = LoadState.TILES_LOADING;
-    }
-  }
-
-  private resetLoadingTimeout() {
-    if (this.loadingTimeoutReference !== null) {
-      clearTimeout(this.loadingTimeoutReference);
     }
   }
 
