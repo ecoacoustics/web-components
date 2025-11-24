@@ -11,7 +11,7 @@ import {
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
-import { sleep } from "../../helpers/utilities";
+import { sleep, secondsToMilliseconds } from "../../helpers/utilities";
 import {
   DOWN_ARROW_KEY,
   END_KEY,
@@ -598,7 +598,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private loadingTimeoutReference: any | null = null;
-  private slowLoadingTimeoutReference: any | null = null;
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -744,7 +743,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // Clear all timeouts
     this.resetLoadingTimeout();
-    this.resetSlowLoadingTimeout();
 
     super.disconnectedCallback();
   }
@@ -946,7 +944,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   private async handleGridSourceInvalidation() {
     this.resetLoadingTimeout();
-    this.resetSlowLoadingTimeout();
 
     // If we update to no data source, we want to wait a bit before
     // changing to an error state so that if the host application is being
@@ -969,7 +966,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         console.error("failed to load dataset. Reason: timeout");
         this._loadState = LoadState.ERROR;
       }
-    }, this.loadingTimeout * 1000);
+    }, secondsToMilliseconds(this.loadingTimeout));
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1730,8 +1727,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
       // Set up a slow loading timeout to show loading indicator if fetching takes too long
-      this.resetSlowLoadingTimeout();
-      this.slowLoadingTimeoutReference = setTimeout(() => {
+      this.resetLoadingTimeout();
+      this.loadingTimeoutReference = setTimeout(() => {
         // Only transition to loading state if we haven't reached the end of the dataset
         // and we're not already in an error or configuration error state
         if (
@@ -1741,7 +1738,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         ) {
           this._loadState = LoadState.DATASET_FETCHING;
         }
-      }, this.slowLoadingTimeout * 1000);
+      }, secondsToMilliseconds(this.slowLoadingTimeout));
 
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
@@ -1752,7 +1749,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       await this.subjectWriter.setTarget(requiredSubjectCount);
 
       // Clear the slow loading timeout once data has arrived
-      this.resetSlowLoadingTimeout();
+      this.resetLoadingTimeout();
     }
   }
 
@@ -1796,7 +1793,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
       this.resetLoadingTimeout();
-      this.resetSlowLoadingTimeout();
       this._loadState = LoadState.TILES_LOADING;
     }
   }
@@ -1805,13 +1801,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     if (this.loadingTimeoutReference !== null) {
       clearTimeout(this.loadingTimeoutReference);
       this.loadingTimeoutReference = null;
-    }
-  }
-
-  private resetSlowLoadingTimeout() {
-    if (this.slowLoadingTimeoutReference !== null) {
-      clearTimeout(this.slowLoadingTimeoutReference);
-      this.slowLoadingTimeoutReference = null;
     }
   }
 

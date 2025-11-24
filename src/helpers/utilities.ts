@@ -5,6 +5,6 @@ export function sleep(seconds: Seconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-function secondsToMilliseconds(seconds: number) {
+export function secondsToMilliseconds(seconds: number) {
   return seconds * 1000;
 }
