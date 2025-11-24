@@ -957,10 +957,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    // If there is already a loading timeout, we want to reset it so that the
-    // new data source change gets a full loading timeout duration.
-    this.resetLoadingTimeout();
-
     // If we update to no data source, we want to wait a bit before
     // changing to an error state so that if the host application is being
     // hacky by adding/removing the data source, we don't flash an error on
@@ -986,6 +982,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // into a new fast data source.
       if (this.paginationFetcher) {
         this.paginationFetcher.abortController.abort();
+
+        // If there is already a loading timeout, we want to reset it so that the
+        // new data source change gets a full loading timeout duration.
+        this.resetLoadingTimeout();
       }
 
       await this.resetForNewDataSource();
@@ -1477,7 +1477,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   //#region SelectionHandlers
 
-  private tileSelectionShortcutsShown(value: boolean) {
+  private tileSelectionShortcutsShown(value: boolean): void {
     const elements = this.gridTiles;
     for (const element of elements) {
       element.showKeyboardShortcuts = value;
