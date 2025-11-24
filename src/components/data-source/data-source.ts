@@ -5,7 +5,7 @@ import { booleanConverter } from "../../helpers/attributes";
 import { downloadFile } from "../../helpers/files";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { UrlSourcedFetcher } from "../../services/urlSourcedFetcher/urlSourcedFetcher";
-import { LoadState, VerificationGridComponent } from "../verification-grid/verification-grid";
+import { VerificationGridComponent } from "../verification-grid/verification-grid";
 import { required } from "../../helpers/decorators";
 import { PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { DownloadableResult } from "../../models/subject";
@@ -224,7 +224,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.verificationGrid["_loadState"] = LoadState.DATASET_FETCHING;
+    this.verificationGrid.transitionLoading();
     try {
       this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     } catch (error) {

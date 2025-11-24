@@ -43,7 +43,7 @@ import {
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import { IPlayEvent } from "../spectrogram/spectrogram";
-import { Seconds } from "../../models/unitConverters";
+import { Pixel, Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
@@ -123,8 +123,8 @@ export interface VerificationGridInjector {
 }
 
 export interface MousePosition {
-  x: number;
-  y: number;
+  x: Pixel;
+  y: Pixel;
 }
 
 /**
@@ -144,7 +144,7 @@ export enum ProgressBarPosition {
   HIDDEN = "hidden",
 }
 
-export enum LoadState {
+export const enum LoadState {
   /**
    * The datasets subject models are being fetched and there is not enough
    * subjects to fill the grid.
@@ -764,8 +764,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   public transitionError() {
     this._loadState = LoadState.ERROR;
-    this._decisionHeadIndex = 0;
-    this._viewHeadIndex = 0;
   }
 
   public transitionConfigurationError() {
@@ -783,7 +781,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * timer for a short period of time (defined by the `slowLoadThreshold`)
    * before entering the loading state.
    */
-  private handleLoading(): void {
+  public transitionLoading(): void {
     // If there is an existing loading timeout, we want to reset it so that we
     // don't incorrectly have two loading timeouts running at the same time.
     this.resetLoadingTimeout();
@@ -801,7 +799,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     }, secondsToMilliseconds(this.slowLoadThreshold));
   }
 
-  private handleLoaded(): void {
+  private transitionLoaded(): void {
     this.resetLoadingTimeout();
     this._loadState = LoadState.TILES_LOADING;
   }
@@ -974,7 +972,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    this.handleLoading();
+    this.transitionLoading();
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1734,7 +1732,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
-      this.handleLoading();
+      this.transitionLoading();
 
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
@@ -1744,7 +1742,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
 
-      this.handleLoaded();
+      this.transitionLoaded();
     }
   }
 
@@ -1793,7 +1791,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // timeout is reached (because we want to give it as much of a chance as
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
-      this.handleLoaded();
+      this.transitionLoaded();
     }
   }
 
@@ -2010,7 +2008,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * Moves the view and decision head a full page forwards.
    * This is typically triggered as part of auto-paging.
    */
-  private async advanceToNextPage(count: number = this.pageSize) {
+  private async advanceToNextPage(position: number) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -2018,8 +2016,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // more subjects.
     // Therefore, we set the viewHead first so that if it fails to fetch more
     // subjects, the decisionHead is not advanced incorrectly.
-    await this.setViewHead(this.viewHeadIndex + count);
-    this.decisionHeadIndex += count;
+    await this.setViewHead(position);
+    this.decisionHeadIndex = position;
 
     // If the last tile that was selected was auto-selected, we should
     // continue auto-selection onto the next page.
@@ -2123,11 +2121,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateDecisionWhen();
 
     if (this.shouldAutoPage()) {
+      // We capture the completed page size here so that if the page size
+      // changes in between the await sleep and the advanceToNextPage call
+      // (the user changes the page size during the auto page timeout), we
+      // can correctly advance by the completed page size.
+      // If we instead used the pageSize property directly in advanceToNextPage,
+      // we might accidentally advance too short or too far, meaning that we'd
+      // end up viewing history or unknowingly skipping some undecided tiles.
+      const newPosition = this.viewHeadIndex + this.pageSize;
+
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      this.advanceToNextPage();
+      this.advanceToNextPage(newPosition);
       return;
     }
 

@@ -642,6 +642,23 @@ test.describe("single verification grid", () => {
 
         await expect(updatedColorMapMenu.getByText("Grayscale")).toHaveAttribute("aria-checked", "true");
       });
+
+      test("should not enter history if resized before auto paging completes", async ({ fixture }) => {
+        await fixture.changeGridSize(4);
+
+        const autoPageLoaded = catchLocatorEvent(fixture.gridComponent(), "grid-loaded");
+        await fixture.makeVerificationDecision("true");
+
+        // Shrink the grid while the auto-page delay is waiting to simulate the user resizing mid-page.
+        await fixture.changeGridSize(2);
+
+        await autoPageLoaded;
+
+        expect(await fixture.isViewingHistory()).toBe(false);
+        const viewHead = await fixture.getViewHead();
+        const decisionHead = await fixture.getVerificationHead();
+        expect(viewHead).toBe(decisionHead);
+      });
     });
   });
 
