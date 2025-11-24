@@ -864,7 +864,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.gridController.setTarget(this.targetGridSize);
     }
 
-    if (change.has("_loadState" as any) && this._loadState !== LoadState.LOADED) {
+    // This type cast is needed because the PropertyValueMap type cannot see
+    // private properties (like _loadState).
+    // Therefore, I need to cast to "any" so that I can check for private
+    // property changes.
+    if (change.has("_loadState" as keyof typeof this) && this._loadState !== LoadState.LOADED) {
       this.setDecisionsDisabled();
     }
 
@@ -1776,7 +1780,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // By updating the sub selection, we also update the "decision when"
     // predicates for the new page of subjects.
     // We call updateSubSelection instead of updateDecisionWhen so that the
-    // selectedTiles property is also updated.
+    // selectedTiles property is also updated to reflect that all (or one in
+    // single decision mode) tile is selected.
     this.updateSubSelection();
 
     // Changing the loadState will cause an update because the loadState is a
@@ -2121,13 +2126,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.updateDecisionWhen();
 
     if (this.shouldAutoPage()) {
-      // We capture the completed page size here so that if the page size
-      // changes in between the await sleep and the advanceToNextPage call
-      // (the user changes the page size during the auto page timeout), we
-      // can correctly advance by the completed page size.
-      // If we instead used the pageSize property directly in advanceToNextPage,
-      // we might accidentally advance too short or too far, meaning that we'd
-      // end up viewing history or unknowingly skipping some undecided tiles.
+      // We capture the completed page size and the new page position here so
+      // that if the page size changes in between the await sleep and the
+      // advanceToNextPage call (the user changes the page size during the auto
+      // page timeout), we can correctly advance by the correct amount instead
+      // of using the new potentially larger/smaller page size.
+      //
+      // If we instead used the pageSize property directly in advanceToNextPage
+      // and after the sleep we might accidentally advance too short or too far,
+      // meaning that we'd end up viewing history or unknowingly skipping some
+      // undecided tiles.
       const newPosition = this.viewHeadIndex + this.pageSize;
 
       // we wait for 300ms so that the user has time to see the decision that
