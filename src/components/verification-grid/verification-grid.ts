@@ -1804,6 +1804,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private resetLoadingTimeout() {
     if (this.loadingTimeoutReference !== null) {
       clearTimeout(this.loadingTimeoutReference);
+      this.loadingTimeoutReference = null;
     }
   }
 

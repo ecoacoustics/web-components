@@ -2824,7 +2824,8 @@ test.describe("slow loading timeout", () => {
     await fixture.page.keyboard.press("y");
     await fixture.page.keyboard.press("y");
 
-    // Wait a small amount of time for auto-page timeout (300ms)
+    // Wait for auto-page timeout (300ms) plus extra time for the slow loading
+    // timeout (100ms) to trigger
     await sleep(0.4);
 
     // The grid should now be waiting for the next page, and since the fetching
