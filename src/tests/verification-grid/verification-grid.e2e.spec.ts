@@ -9,6 +9,8 @@ import {
   mockDeviceSize,
   pressKey,
   testBreakpoints,
+  waitForContentReady,
+  setContent,
 } from "../helpers/helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect, expectConsoleError } from "../assertions";
@@ -2762,5 +2764,207 @@ test.describe("verification grid interaction with the host application", () => {
 
     const isPlaying = await fixture.isAudioPlaying(0);
     expect(isPlaying).toEqual(true);
+  });
+});
+
+test.describe("slow loading timeout", () => {
+  test("should enter loading state when waiting for next page exceeds slow-loading-timeout", async ({ fixture }) => {
+    // Create a verification grid with a very short slow loading timeout (0.1 seconds)
+    // and a page fetcher that delays for longer than the timeout
+    await fixture.setNoBootstrap();
+
+    await setContent(
+      fixture.page,
+      `
+      <oe-verification-grid 
+        id="verification-grid" 
+        autofocus 
+        slow-loading-timeout="0.1"
+        grid-size="2"
+      >
+        <oe-verification verified="true" shortcut="Y"></oe-verification>
+        <oe-verification verified="false" shortcut="N"></oe-verification>
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          get-page="
+            async (context) => {
+              const pageSize = 2;
+              const currentPage = context.page || 0;
+              
+              // Simulate slow loading for pages after the first
+              if (currentPage > 0) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+              
+              const startIndex = currentPage * pageSize;
+              const subjects = Array.from({ length: pageSize }, (_, i) => ({
+                id: startIndex + i + 1,
+                audioUrls: [\`http://localhost:3000/test-audio-\${startIndex + i + 1}.flac\`],
+                verification: null,
+              }));
+              
+              return {
+                subjects,
+                context: { page: currentPage + 1 },
+                totalItems: 100
+              };
+            }
+          "
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(fixture.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+    await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
+
+    // Make decisions on the first page to trigger auto-paging
+    await fixture.page.keyboard.press("y");
+    await fixture.page.keyboard.press("y");
+
+    // Wait a small amount of time for auto-page timeout (300ms)
+    await sleep(0.4);
+
+    // The grid should now be waiting for the next page, and since the fetching
+    // takes 500ms but the slow-loading-timeout is only 100ms, the grid should
+    // enter the DATASET_FETCHING (loading) state
+    await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "dataset-fetching");
+
+    // Wait for the data to actually arrive
+    await sleep(0.5);
+
+    // After data arrives, it should transition to tiles-loading or loaded
+    const finalLoadState = await getBrowserValue(fixture.gridComponent(), "loadState");
+    expect(["tiles-loading", "loaded"]).toContain(finalLoadState);
+  });
+
+  test("should not enter loading state if data arrives quickly", async ({ fixture }) => {
+    // Create a verification grid with a slow loading timeout (1 second)
+    // and a page fetcher that responds quickly
+    await fixture.setNoBootstrap();
+
+    await setContent(
+      fixture.page,
+      `
+      <oe-verification-grid 
+        id="verification-grid" 
+        autofocus 
+        slow-loading-timeout="1"
+        grid-size="2"
+      >
+        <oe-verification verified="true" shortcut="Y"></oe-verification>
+        <oe-verification verified="false" shortcut="N"></oe-verification>
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          get-page="
+            async (context) => {
+              const pageSize = 2;
+              const currentPage = context.page || 0;
+              
+              // Fast loading - no delay
+              const startIndex = currentPage * pageSize;
+              const subjects = Array.from({ length: pageSize }, (_, i) => ({
+                id: startIndex + i + 1,
+                audioUrls: [\`http://localhost:3000/test-audio-\${startIndex + i + 1}.flac\`],
+                verification: null,
+              }));
+              
+              return {
+                subjects,
+                context: { page: currentPage + 1 },
+                totalItems: 100
+              };
+            }
+          "
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(fixture.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+    await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
+
+    // Make decisions on the first page to trigger auto-paging
+    await fixture.page.keyboard.press("y");
+    await fixture.page.keyboard.press("y");
+
+    // Wait for auto-page timeout (300ms) plus a bit more
+    await sleep(0.5);
+
+    // Since data arrives quickly (< 1 second), it should transition directly
+    // to tiles-loading/loaded without entering dataset-fetching
+    const loadState = await getBrowserValue(fixture.gridComponent(), "loadState");
+    expect(["tiles-loading", "loaded"]).toContain(loadState);
+  });
+
+  test("should not show loading indicator at end of dataset", async ({ fixture }) => {
+    // Create a verification grid where we reach the end of the dataset
+    await fixture.setNoBootstrap();
+
+    await setContent(
+      fixture.page,
+      `
+      <oe-verification-grid 
+        id="verification-grid" 
+        autofocus 
+        slow-loading-timeout="0.1"
+        grid-size="2"
+      >
+        <oe-verification verified="true" shortcut="Y"></oe-verification>
+        <oe-verification verified="false" shortcut="N"></oe-verification>
+
+        <oe-data-source
+          slot="data-source"
+          for="verification-grid"
+          get-page="
+            async (context) => {
+              const pageSize = 2;
+              const currentPage = context.page || 0;
+              
+              // Only return subjects for the first page
+              if (currentPage > 0) {
+                return {
+                  subjects: [],
+                  context: { page: currentPage + 1 },
+                  totalItems: 2
+                };
+              }
+              
+              const subjects = Array.from({ length: pageSize }, (_, i) => ({
+                id: i + 1,
+                audioUrls: [\`http://localhost:3000/test-audio-\${i + 1}.flac\`],
+                verification: null,
+              }));
+              
+              return {
+                subjects,
+                context: { page: currentPage + 1 },
+                totalItems: 2
+              };
+            }
+          "
+        ></oe-data-source>
+      </oe-verification-grid>
+    `,
+    );
+
+    await waitForContentReady(fixture.page, ["oe-verification-grid", "oe-verification-grid-tile", "oe-data-source"]);
+    await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
+
+    // Make decisions on all items to complete the dataset
+    await fixture.page.keyboard.press("y");
+    await fixture.page.keyboard.press("y");
+
+    // Wait for auto-page timeout
+    await sleep(0.5);
+
+    // Since we've reached the end of the dataset, we should see the "no items" message
+    // and not enter a loading state
+    const messageOverlay = fixture.messageOverlay();
+    await expect(messageOverlay).toBeVisible();
   });
 });
