@@ -10,7 +10,6 @@ import {
   pressKey,
   testBreakpoints,
   waitForContentReady,
-  setContent,
 } from "../helpers/helpers";
 import { verificationGridFixture as test } from "./verification-grid.e2e.fixture";
 import { expect, expectConsoleError } from "../assertions";
@@ -40,6 +39,7 @@ import {
   partialCompleteCompound,
   partialVerifiedSubjects,
 } from "./verification-grid.e2e.datasets";
+import { setContent } from "../fixtures";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
