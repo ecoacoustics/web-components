@@ -385,7 +385,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * to a "loading" state.
    */
   @property({ attribute: "slow-loading-timeout", type: Number })
-  public slowLoadingTimeout: Seconds = 1;
+  public slowLoadingTimeout: Seconds = 0.2;
 
   @property({ type: Boolean })
   public autofocus = false;
