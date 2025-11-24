@@ -853,6 +853,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.gridController.setTarget(this.targetGridSize);
     }
 
+    if (change.has("_loadState" as any) && this._loadState !== LoadState.LOADED) {
+      this.setDecisionsDisabled();
+    }
+
     // invalidating the verification grids source will cause the grid tiles and
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
@@ -1769,11 +1773,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    // We set the decisionsDisabled state before populating the page subjects so
-    // if the page subjects take a long time to load, the decision buttons will
-    // be disabled.
-    this.setDecisionDisabled(true);
-
     let clampedHead = Math.max(0, value);
     await this.populatePageSubjectsToIndex(clampedHead);
 
@@ -2168,10 +2167,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !this.isViewingHistory() && allTileTaskCompleted;
   }
 
-  private setDecisionDisabled(disabled: boolean): void {
+  private setDecisionsDisabled(): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      decisionElement.disabled = disabled;
+      decisionElement.disabled = true;
     }
   }
 
