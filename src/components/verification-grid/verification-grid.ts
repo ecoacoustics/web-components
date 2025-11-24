@@ -777,7 +777,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._loadState = LoadState.CONFIGURATION_ERROR;
   }
 
-  private transitionToLoading(): void {
+  /**
+   * @description
+   * This method will not immediately enter a "loading" state, but will start a
+   * timer for a short period of time (defined by the `slowLoadThreshold`)
+   * before entering the loading state.
+   */
+  private handleLoading(): void {
     this.loadingTimeoutReference = setTimeout(() => {
       this._loadState = LoadState.DATASET_FETCHING;
 
@@ -861,7 +867,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
     const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
-    if (hasGridSourceInvalidation && this._loadState) {
+    if (hasGridSourceInvalidation) {
       await this.handleGridSourceInvalidation();
     }
 
@@ -961,24 +967,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    // If we update to no data source, we want to wait a bit before
-    // changing to an error state so that if the host application is being
-    // hacky by adding/removing the data source, we don't flash an error on
-    // the screen.
-    //
-    // We also need this for when the getPage callback is a callback set in
-    // JavaScript.
-    // If the getPage callback is set through JavaScript, there might be a
-    // slight delay between the time where the verification grid is
-    // initialized and when the host application finally gets to set the
-    // getPage callback.
-    // While we are waiting for the host application to set the callback, we
-    // don't want to flash an error on the screen and give it a second to
-    // fully initialize.
-    // While we are waiting for the verification grid to initialize, we will
-    // be in the DATASET_FETCHING state.
-    this.transitionToLoading();
-
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
       // stream before creating another one.
@@ -1741,7 +1729,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
-      this.transitionToLoading();
+      this.handleLoading();
 
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
