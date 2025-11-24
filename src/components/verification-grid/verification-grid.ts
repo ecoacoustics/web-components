@@ -1769,18 +1769,25 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return;
     }
 
-    let clampedHead = Math.max(0, value);
-
-    await this.populatePageSubjectsToIndex(clampedHead);
-
-    this._viewHeadIndex = clampedHead;
+    // We set the decisionsDisabled state before populating the page subjects so
+    // if the page subjects take a long time to load, the decision buttons will
+    // be disabled.
     this.setDecisionDisabled(true);
 
-    // TODO: Investigate why this was initially here
-    // I've disabled it because updating the sub selection here would cause the
-    // decision "when" conditions to update, meaning that it'd overwrite the
-    // setDecisionDisabled call above.
-    // this.updateSubSelection();
+    let clampedHead = Math.max(0, value);
+    await this.populatePageSubjectsToIndex(clampedHead);
+
+    // Updating _viewHeadIndex will cause the public viewHeadIndex getter to
+    // return the new value.
+    // Therefore, we only update the viewHeadIndex after we have successfully
+    // populated the subject buffer to the requested index.
+    this._viewHeadIndex = clampedHead;
+
+    // By updating the sub selection, we also update the "decision when"
+    // predicates for the new page of subjects.
+    // We call updateSubSelection instead of updateDecisionWhen so that the
+    // selectedTiles property is also updated.
+    this.updateSubSelection();
 
     // Changing the loadState will cause an update because the loadState is a
     // tracked state meaning that we don't have to manually invoke
