@@ -11,7 +11,7 @@ import {
 } from "../verification-grid-tile/verification-grid-tile";
 import { DecisionComponent, DecisionComponentUnion, DecisionEvent } from "../decision/decision";
 import { callbackConverter, enumConverter } from "../../helpers/attributes";
-import { secondsToMilliseconds, sleep } from "../../helpers/utilities";
+import { sleep } from "../../helpers/utilities";
 import {
   DOWN_ARROW_KEY,
   END_KEY,
@@ -34,7 +34,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes.controller";
 import {
   injectionContext,
   spectrogramOptionsContext,
@@ -63,6 +63,7 @@ import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import { classMap } from "lit/directives/class-map.js";
 import { SkipComponent } from "../decision/skip/skip";
 import verificationGridStyles from "./css/style.css?inline";
+import { LoadingController, LoadingState } from "../../helpers/controllers/loading.controller";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -603,7 +604,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private _loadingTimeout: Seconds = 8;
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
-  private loadingTimeoutReference: any | null = null;
+  private datasetLoadingController = new LoadingController(this, {
+    slowLoadThreshold: VerificationGridComponent.slowLoadThreshold,
+    timeoutThreshold: this.loadingTimeout,
+  });
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
@@ -701,6 +705,24 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.pageSize - 1;
   }
 
+  public constructor() {
+    super();
+
+    this.datasetLoadingController.loadState.subscribe((newState: LoadingState) => {
+      switch (newState) {
+        case LoadingState.Timeout: {
+          this.handleTimeout();
+          break;
+        }
+
+        case LoadingState.SlowLoading: {
+          this.handleSlowLoad();
+          break;
+        }
+      }
+    });
+  }
+
   // This overrides the element's focus() method so that it focuses the grid
   // tiles instead of the component host.
   // This allows host applications to focus the grid container at the level
@@ -787,40 +809,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._loadState = LoadState.CONFIGURATION_ERROR;
   }
 
-  /**
-   * @description
-   * This method will not immediately enter a "loading" state, but will start a
-   * timer for a short period of time (defined by the `slowLoadThreshold`)
-   * before entering the loading state.
-   */
-  public transitionLoading(): void {
-    // If there is an existing loading timeout, we want to reset it so that we
-    // don't incorrectly have two loading timeouts running at the same time.
-    this.resetLoadingTimeout();
-
-    this.loadingTimeoutReference = setTimeout(() => {
-      this._loadState = LoadState.DATASET_FETCHING;
-
-      const timeoutDelta = this.loadingTimeout - VerificationGridComponent.slowLoadThreshold;
-      this.loadingTimeoutReference = setTimeout(() => {
-        if (this._loadState === LoadState.DATASET_FETCHING) {
-          console.error("failed to load dataset. Reason: timeout");
-          this._loadState = LoadState.ERROR;
-        }
-      }, secondsToMilliseconds(timeoutDelta));
-    }, secondsToMilliseconds(VerificationGridComponent.slowLoadThreshold));
-  }
-
-  private transitionLoaded(): void {
-    this.resetLoadingTimeout();
-    this._loadState = LoadState.TILES_LOADING;
-  }
-
-  private resetLoadingTimeout(): void {
-    if (this.loadingTimeoutReference !== null) {
-      clearTimeout(this.loadingTimeoutReference);
-      this.loadingTimeoutReference = null;
+  public handleTimeout(): void {
+    if (this._loadState === LoadState.DATASET_FETCHING) {
+      console.error("failed to load dataset. Reason: timeout");
+      this._loadState = LoadState.ERROR;
     }
+  }
+
+  public handleSlowLoad(): void {
+    this._loadState = LoadState.DATASET_FETCHING;
   }
 
   //#region Updates
@@ -872,7 +869,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     if (this.gridContainer && change.has("targetGridSize")) {
-      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.anyOverlap);
+      this.gridController ??= new DynamicGridSizeController(this, this.gridContainer, this.anyOverlap);
       this.gridController.setTarget(this.targetGridSize);
     }
 
@@ -882,6 +879,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // property changes.
     if (change.has("_loadState" as keyof typeof this) && this._loadState !== LoadState.LOADED) {
       this.setDecisionsDisabled();
+    }
+
+    if (change.has("loadingTimeout")) {
+      this.datasetLoadingController.updateOptions({ timeoutThreshold: this.loadingTimeout });
     }
 
     // invalidating the verification grids source will cause the grid tiles and
@@ -988,7 +989,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    this.transitionLoading();
+    this.datasetLoadingController.startLoading();
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1748,7 +1749,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
-      this.transitionLoading();
+      this.datasetLoadingController.startLoading();
 
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
@@ -1758,7 +1759,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
 
-      this.transitionLoaded();
+      this.datasetLoadingController.finishLoading();
     }
   }
 
@@ -1808,7 +1809,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // timeout is reached (because we want to give it as much of a chance as
     // possible to recover from a potentially slow API response).
     if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
-      this.transitionLoaded();
+      this.datasetLoadingController.finishLoading();
     }
   }
 

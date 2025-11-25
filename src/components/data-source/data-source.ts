@@ -224,7 +224,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
       return;
     }
 
-    this.verificationGrid.transitionLoading();
+    this.verificationGrid.transitionDatasetFetching();
     try {
       this.urlSourcedFetcher = await new UrlSourcedFetcher().updateSrc(this.src);
     } catch (error) {

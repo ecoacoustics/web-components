@@ -89,3 +89,5 @@ export type StackVariable = string | number | bigint | boolean | null | undefine
  * because the `StructuralType` is a discriminated union of string literals.
  */
 export type StructuralToNominal<T> = T extends infer U ? U : never;
+
+export type SetTimeoutRef = ReturnType<typeof setTimeout>;
