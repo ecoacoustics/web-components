@@ -1800,7 +1800,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // defensive programming measure.
     if (value === this.viewHeadIndex && this.viewHeadIndex !== 0) {
       return;
+    } else if (this.loadState === GridState.CONFIGURATION_ERROR) {
+      // We don't need to change the view head if we are in a configuration
+      // error state because the grid won't be rendering any tiles.
+      return;
     }
+
+    this._loadState = GridState.TILES_LOADING;
 
     let clampedHead = Math.max(0, value);
     await this.populatePageSubjectsToIndex(clampedHead);
@@ -2307,7 +2313,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // have a fully loaded verification grid, we want to perform some actions
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
-    if (this.areTilesLoaded()) {
+    //
+    // We have to check that the loadState is not already in a "LOADED" state
+    // because sometimes there can be two (or more) grid tiles that emit their
+    // "loaded" events before the first event handler completes, meaning that
+    // this methods will see that all of the tiles are loaded twice and re-run
+    // the logic below multiple times.
+    if (this.areTilesLoaded() && this._loadState !== GridState.LOADED) {
       console.debug("All verification grid tiles have loaded");
       this._loadState = GridState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
