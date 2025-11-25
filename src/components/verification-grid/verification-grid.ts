@@ -603,9 +603,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private _subjects: SubjectWrapper[] = [];
   private _loadingTimeout: Seconds = 8;
 
-  private anyOverlap = signal<boolean>(false);
-  private gridController = new DynamicGridSizeController(this, this.anyOverlap);
-  private datasetLoadingController = new LoadingController(this, {
+  private readonly anyOverlap = signal<boolean>(false);
+  private readonly gridController = new DynamicGridSizeController(this, this.anyOverlap);
+  private readonly datasetLoadingController = new LoadingController(this, {
     slowLoadThreshold: VerificationGridComponent.slowLoadThreshold,
     timeoutThreshold: this.loadingTimeout,
   });
@@ -613,8 +613,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
 
-  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
-  private highlight: HighlightSelection = {
+  private readonly highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
+  private readonly highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
