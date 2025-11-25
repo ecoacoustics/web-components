@@ -377,7 +377,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * state before it times out and shows an error message.
    */
   @property({ attribute: "loading-timeout", type: Number })
-  public loadingTimeout: Seconds = 8;
+  public set loadingTimeout(value: Seconds) {
+    const minimumTimeout = 0;
+    if (value < 0) {
+      console.error(`loadingTimeout must be greater than 0 seconds. Clamping to '${minimumTimeout}'.`);
+      this._loadingTimeout = minimumTimeout;
+      return;
+    }
+
+    this._loadingTimeout = value;
+  }
+
+  public get loadingTimeout(): Seconds {
+    return this._loadingTimeout;
+  }
 
   @property({ type: Boolean })
   public autofocus = false;
@@ -588,6 +601,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private showingSelectionShortcuts = false;
   private anyOverlap = signal<boolean>(false);
   private _subjects: SubjectWrapper[] = [];
+  private _loadingTimeout: Seconds = 8;
   private gridController?: DynamicGridSizeController<HTMLDivElement>;
   private loadingTimeoutReference: any | null = null;
 
@@ -852,40 +866,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       } else if (newGridSize <= 0) {
         this.targetGridSize = oldGridSize;
         console.error(`Grid size '${newGridSize}' must be a positive number.`);
-      }
-    }
-
-    // Validate that loadingTimeout and slowLoadThreshold are both greater than 0.
-    // We perform this minimum value check first so that if loadingTimeout is
-    // less than or equal to 0, slowLoadThreshold will be correctly clamped to 0
-    // in the subsequent comparison check (since it must be less than loadingTimeout).
-    if (change.has("slowLoadThreshold") || change.has("loadingTimeout")) {
-      if (this.loadingTimeout <= 0) {
-        this.loadingTimeout = 0;
-        console.error(
-          `loadingTimeout must be greater than 0. ` +
-            `loadingTimeout has been clamped to ${this.loadingTimeout} seconds.`,
-        );
-      }
-
-      if (this.slowLoadThreshold < 0) {
-        this.slowLoadThreshold = 0;
-        console.error(
-          `slowLoadThreshold must be greater than or equal to 0. ` +
-            `slowLoadThreshold has been clamped to ${this.slowLoadThreshold} seconds.`,
-        );
-      }
-
-      // Validate that slowLoadThreshold is always less than or equal to loadingTimeout.
-      // If slowLoadThreshold > loadingTimeout, the timeoutDelta calculation in
-      // transitionLoading() would result in a negative value, causing
-      // the error timeout to use an invalid timeout value.
-      if (this.slowLoadThreshold > this.loadingTimeout) {
-        this.slowLoadThreshold = this.loadingTimeout;
-        console.error(
-          `slowLoadThreshold must be less than or equal to loadingTimeout. ` +
-            `slowLoadThreshold has been clamped to ${this.slowLoadThreshold} seconds.`,
-        );
       }
     }
   }
