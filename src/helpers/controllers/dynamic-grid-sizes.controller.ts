@@ -29,11 +29,14 @@ export class DynamicGridSizeController<Container extends HTMLElement> implements
   private containerSize: Size = { width: 0, height: 0 };
   private target = 0;
 
-  public constructor(host: VerificationGridHost, container: Container, isOverlapping: Signal<boolean>) {
+  public constructor(host: VerificationGridHost, isOverlapping: Signal<boolean>) {
     (this.host = host).addController(this);
-
     this.anyOverlap = isOverlapping;
+  }
 
+  public hostConnected(): void {}
+
+  public connect(container: Container): void {
     const resizeObserver = new ResizeObserver((size: ResizeObserverEntry[]) => {
       // Because we use a "falsy" check here, we will early exist if the target
       // is zero.
@@ -53,10 +56,6 @@ export class DynamicGridSizeController<Container extends HTMLElement> implements
       }
     });
   }
-
-  public hostConnected(): void {}
-
-  public hostDisconnected(): void {}
 
   // TODO: Although we don't have any use case for awaiting this method, it
   // should theoretically return an awaitable promise.

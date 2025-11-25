@@ -600,10 +600,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private showingSelectionShortcuts = false;
-  private anyOverlap = signal<boolean>(false);
   private _subjects: SubjectWrapper[] = [];
   private _loadingTimeout: Seconds = 8;
-  private gridController?: DynamicGridSizeController<HTMLDivElement>;
+
+  private anyOverlap = signal<boolean>(false);
+  private gridController = new DynamicGridSizeController(this, this.anyOverlap);
   private datasetLoadingController = new LoadingController(this, {
     slowLoadThreshold: VerificationGridComponent.slowLoadThreshold,
     timeoutThreshold: this.loadingTimeout,
@@ -849,6 +850,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
+    this.gridController.connect(this.gridContainer);
+
     patchTrackClickLikeEvents();
   }
 
@@ -874,7 +877,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     if (this.gridContainer && change.has("targetGridSize")) {
-      this.gridController ??= new DynamicGridSizeController(this, this.gridContainer, this.anyOverlap);
       this.gridController.setTarget(this.targetGridSize);
     }
 

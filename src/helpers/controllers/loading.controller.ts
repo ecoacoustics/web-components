@@ -65,7 +65,6 @@ export class LoadingController implements ReactiveController {
   }
 
   public hostConnected(): void {}
-  public hostDisconnected(): void {}
 
   public updateOptions(newOptions: Partial<LoadingControllerOptions>): void {
     this.options = { ...this.options, ...newOptions };
