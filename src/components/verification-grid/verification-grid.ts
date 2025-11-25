@@ -856,6 +856,20 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         console.error(`Grid size '${newGridSize}' must be a positive number.`);
       }
     }
+
+    // Validate that slowLoadThreshold is always less than loadingTimeout.
+    // If slowLoadThreshold >= loadingTimeout, the timeoutDelta calculation in
+    // transitionLoading() would result in a zero or negative value, causing
+    // the error timeout to fire immediately or use an invalid timeout value.
+    if (change.has("slowLoadThreshold") || change.has("loadingTimeout")) {
+      if (this.slowLoadThreshold >= this.loadingTimeout) {
+        this.slowLoadThreshold = this.loadingTimeout;
+        console.error(
+          `slowLoadThreshold must be less than loadingTimeout. ` +
+            `slowLoadThreshold has been clamped to ${this.slowLoadThreshold} seconds.`,
+        );
+      }
+    }
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
