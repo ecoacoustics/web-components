@@ -297,9 +297,9 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   // this method is called when the spectrogram starts rendering
-  private handleLoading(): void {
-    this.loaded = false;
-  }
+  // private handleLoading(): void {
+  //   this.loaded = false;
+  // }
 
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
