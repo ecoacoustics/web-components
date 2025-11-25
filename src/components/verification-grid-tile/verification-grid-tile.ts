@@ -242,7 +242,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // some spectrograms would load in a verification grid before some even
     // emitted a "loading" event, meaning that the verification grid would
     // incorrectly think that all of the tiles had loaded.
-    this.handleLoading();
+    // this.handleLoading();
 
     this.tile = {
       model: subject,
@@ -296,9 +296,9 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.dispatchEvent(overlapEvent);
   }
 
-  private handleLoading(): void {
-    this.loaded = false;
-  }
+  // private handleLoading(): void {
+  //   this.loaded = false;
+  // }
 
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
