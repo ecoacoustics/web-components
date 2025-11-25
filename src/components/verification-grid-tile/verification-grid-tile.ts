@@ -247,7 +247,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // not want to enter a "loading" state again otherwise we cannot exit out of
     // it because exiting the loading state is dependent on the spectrogram
     // emitting a "loaded" event.
-    if (this.spectrogram?.src !== subject.url) {
+    if (this.spectrogram?.src !== subject?.url) {
       this.handleLoading();
     }
 
