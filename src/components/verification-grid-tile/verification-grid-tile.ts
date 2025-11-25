@@ -26,7 +26,7 @@ export type RequiredClassification = Tag;
 export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredNewTag;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
-export type LoadedEvent = CustomEvent;
+export type LoadedEvent = CustomEvent<void>;
 
 export interface VerificationGridTileContext {
   model: SubjectWrapper;
@@ -70,6 +70,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public static readonly selectedEventName = "oe-selected";
   public static readonly loadingEventName = "oe-tile-loading";
   public static readonly loadedEventName = "oe-tile-loaded";
+  public static readonly overlapEventName = "overlap";
 
   // Because this is not a user-facing component, I do not expect that this
   // component will be used outside of a verification grid, and we can therefore
@@ -241,7 +242,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // some spectrograms would load in a verification grid before some even
     // emitted a "loading" event, meaning that the verification grid would
     // incorrectly think that all of the tiles had loaded.
-    this.handleLoading();
+    // this.handleLoading();
 
     this.tile = {
       model: subject,
@@ -286,7 +287,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
     this.isOverlapping = hasOverlapContent;
 
-    const overlapEvent = new CustomEvent<OverflowEventDetail>("overlap", {
+    const overlapEvent = new CustomEvent<OverflowEventDetail>(VerificationGridTileComponent.overlapEventName, {
       detail: {
         isOverlapping: hasOverlapContent,
       },
@@ -302,6 +303,9 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
+    // We set this.loaded to true before dispatching the loaded event so that
+    // any listeners that check the loaded property on this event will get the
+    // correct value.
     this.loaded = true;
     this.dispatchEvent(new CustomEvent<LoadedEvent>(VerificationGridTileComponent.loadedEventName, { bubbles: true }));
   }

@@ -1,4 +1,6 @@
 :host {
+  flex: 1 1 0;
+
   &::part(grid) {
     color: lightblue;
     stroke-width: 1;

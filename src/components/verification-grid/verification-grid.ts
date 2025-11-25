@@ -874,10 +874,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // values such as Infinity are not considered as a valid grid size
       if (!isFinite(newGridSize)) {
         this.targetGridSize = oldGridSize;
-        console.error(`Grid size '${newGridSize}' could not be converted to a finite number.`);
+        console.error(`Grid size must be a finite number. Received: '${newGridSize}'`);
       } else if (newGridSize <= 0) {
         this.targetGridSize = oldGridSize;
-        console.error(`Grid size '${newGridSize}' must be a positive number.`);
+        console.error(`Grid size must be a positive number. Received: '${newGridSize}'`);
       }
     }
   }
@@ -2141,7 +2141,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     );
 
     // Because auto-paging and automatic tile selection are dependent upon the
-    // "no decision required" states, it must be performed first.
+    // decision buttons "no decision required" state, updating the decision
+    // "when" conditions must be performed first.
     this.updateDecisionWhen();
 
     if (this.shouldAutoPage()) {
@@ -2260,6 +2261,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     tile.updateSubject(subject);
 
+    // Because changing the "decision required" state can unset a decision if it
+    // is no longer required, we emit a "decisionWhenUpdated" event if the
+    // "decision when" update caused any decisions to be implicitly removed due
+    // to no longer being required.
+    //
+    // TODO: We should ideally combine this with the `decisionMade` event
+    // handler so that there is only one event emitted per decision action.
     if (Object.keys(change).length > 0) {
       // We only dispatch the "decisionWhenUpdated" event after updateSubject so
       // the risk reading of a race condition is minimized.

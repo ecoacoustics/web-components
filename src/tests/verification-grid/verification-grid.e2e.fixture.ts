@@ -917,7 +917,9 @@ class TestPage {
   }
 
   public async changeGridSize(value: number) {
+    const loadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
     await setBrowserAttribute<VerificationGridComponent>(this.gridComponent(), "grid-size" as any, value.toString());
+    await loadedEvent;
   }
 
   public async changeGridSource(value: string | ReadonlyArray<any>) {
