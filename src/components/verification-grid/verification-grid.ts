@@ -298,9 +298,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   public static readonly decisionMadeEventName = "decision-made";
   private static readonly loadedEventName = "grid-loaded";
-  private static readonly autoPageTimeout = 0.3 satisfies Seconds;
   private static readonly defaultGridTileTemplateId = "oe-default-tile-template";
   private static readonly defaultSkipButtonId = "oe-default-skip-button";
+  private static readonly autoPageTimeout = 0.3 satisfies Seconds;
+  private static readonly slowLoadThreshold = 0.2 satisfies Seconds;
 
   private static readonly defaultGridTileTemplate = staticHtml`
       <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
@@ -377,9 +378,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    */
   @property({ attribute: "loading-timeout", type: Number })
   public loadingTimeout: Seconds = 8;
-
-  @property({ attribute: "slow-load-threshold", type: Number })
-  public slowLoadThreshold: Seconds = 0.2;
 
   @property({ type: Boolean })
   public autofocus = false;
@@ -789,14 +787,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.loadingTimeoutReference = setTimeout(() => {
       this._loadState = LoadState.DATASET_FETCHING;
 
-      const timeoutDelta = this.loadingTimeout - this.slowLoadThreshold;
+      const timeoutDelta = this.loadingTimeout - VerificationGridComponent.slowLoadThreshold;
       this.loadingTimeoutReference = setTimeout(() => {
         if (this._loadState === LoadState.DATASET_FETCHING) {
           console.error("failed to load dataset. Reason: timeout");
           this._loadState = LoadState.ERROR;
         }
       }, secondsToMilliseconds(timeoutDelta));
-    }, secondsToMilliseconds(this.slowLoadThreshold));
+    }, secondsToMilliseconds(VerificationGridComponent.slowLoadThreshold));
   }
 
   private transitionLoaded(): void {
