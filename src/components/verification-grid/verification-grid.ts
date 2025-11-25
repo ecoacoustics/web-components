@@ -878,14 +878,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         );
       }
 
-      // Validate that slowLoadThreshold is always less than loadingTimeout.
-      // If slowLoadThreshold >= loadingTimeout, the timeoutDelta calculation in
-      // transitionLoading() would result in a zero or negative value, causing
-      // the error timeout to fire immediately or use an invalid timeout value.
-      if (this.slowLoadThreshold >= this.loadingTimeout) {
+      // Validate that slowLoadThreshold is always less than or equal to loadingTimeout.
+      // If slowLoadThreshold > loadingTimeout, the timeoutDelta calculation in
+      // transitionLoading() would result in a negative value, causing
+      // the error timeout to use an invalid timeout value.
+      if (this.slowLoadThreshold > this.loadingTimeout) {
         this.slowLoadThreshold = this.loadingTimeout;
         console.error(
-          `slowLoadThreshold must be less than loadingTimeout. ` +
+          `slowLoadThreshold must be less than or equal to loadingTimeout. ` +
             `slowLoadThreshold has been clamped to ${this.slowLoadThreshold} seconds.`,
         );
       }
