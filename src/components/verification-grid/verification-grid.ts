@@ -145,7 +145,7 @@ export enum ProgressBarPosition {
   HIDDEN = "hidden",
 }
 
-export const enum LoadState {
+export const enum GridState {
   /**
    * The datasets subject models are being fetched and there is not enough
    * subjects to fill the grid.
@@ -451,7 +451,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private currentSubSelection: SubjectWrapper[] = [];
 
   @state()
-  private _loadState: LoadState = LoadState.DATASET_FETCHING;
+  private _loadState: GridState = GridState.DATASET_FETCHING;
 
   @state()
   private _viewHeadIndex = 0;
@@ -522,7 +522,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._subjects;
   }
 
-  public get loadState(): LoadState {
+  public get loadState(): GridState {
     return this._loadState;
   }
 
@@ -709,15 +709,22 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   public constructor() {
     super();
 
+    this.datasetLoadingController.start();
     this.datasetLoadingController.loadState.subscribe((newState: LoadingState) => {
+      // The only unrecoverable state is the configuration error state where we
+      // do not want to allow any further state transitions.
+      if (this.loadState === GridState.CONFIGURATION_ERROR) {
+        return;
+      }
+
       switch (newState) {
         case LoadingState.Idle: {
-          this._loadState = LoadState.TILES_LOADING;
+          this._loadState = GridState.TILES_LOADING;
           break;
         }
 
         case LoadingState.SlowLoading: {
-          this._loadState = LoadState.DATASET_FETCHING;
+          this._loadState = GridState.DATASET_FETCHING;
           break;
         }
 
@@ -779,7 +786,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public isViewingHistory(): boolean {
-    if (this.loadState === LoadState.CONFIGURATION_ERROR) {
+    if (this.loadState === GridState.CONFIGURATION_ERROR) {
       return false;
     }
 
@@ -803,7 +810,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public transitionError() {
-    this._loadState = LoadState.ERROR;
+    this._loadState = GridState.ERROR;
   }
 
   public transitionConfigurationError() {
@@ -812,17 +819,17 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         "contain both a subject tag and task meter component.",
     );
 
-    this._loadState = LoadState.CONFIGURATION_ERROR;
+    this._loadState = GridState.CONFIGURATION_ERROR;
   }
 
   public transitionDatasetFetching() {
-    this.datasetLoadingController.startLoading();
+    this.datasetLoadingController.start();
   }
 
   private handleTimeout(): void {
-    if (this._loadState === LoadState.DATASET_FETCHING) {
+    if (this._loadState === GridState.DATASET_FETCHING) {
       console.error("failed to load dataset. Reason: timeout");
-      this._loadState = LoadState.ERROR;
+      this._loadState = GridState.ERROR;
     }
   }
 
@@ -884,7 +891,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // private properties (like _loadState).
     // Therefore, I need to cast to "any" so that I can check for private
     // property changes.
-    if (change.has("_loadState" as keyof typeof this) && this._loadState !== LoadState.LOADED) {
+    if (change.has("_loadState" as keyof typeof this) && this._loadState !== GridState.LOADED) {
       this.setDecisionsDisabled();
     }
 
@@ -920,7 +927,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const isGridShrinking = oldAvailableTiles > this.availableGridCells;
       if (isGridShrinking) {
         if (this.areTilesLoaded()) {
-          this._loadState = LoadState.LOADED;
+          this._loadState = GridState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
@@ -996,7 +1003,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    this.datasetLoadingController.startLoading();
+    this.datasetLoadingController.start();
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1756,7 +1763,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
-      this.datasetLoadingController.startLoading();
+      this.datasetLoadingController.start();
 
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
@@ -1766,7 +1773,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
 
-      this.datasetLoadingController.finishLoading();
+      // Because slow getPage responses can cause the verification grid to enter
+      // an "ERROR" state (e.g. after 8 seconds of no response), we want to be
+      // able to recover from a slow getPage call by transitioning out of this
+      // ERROR state into the TILES_LOADING state.
+      // This is also the reason why we don't cancel the getPage promise if the
+      // timeout is reached (because we want to give it as much of a chance as
+      // possible to recover from a potentially slow API response).
+      this.datasetLoadingController.stop();
     }
   }
 
@@ -1803,21 +1817,6 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // selectedTiles property is also updated to reflect that all (or one in
     // single decision mode) tile is selected.
     this.updateSubSelection();
-
-    // Changing the loadState will cause an update because the loadState is a
-    // tracked state meaning that we don't have to manually invoke
-    // requestUpdate which would end up being debounced anyways.
-    //
-    // Because slow getPage responses can cause the verification grid to enter
-    // an "ERROR" state (e.g. after 8 seconds of no response), we want to be
-    // able to recover from a slow getPage call by transitioning out of this
-    // ERROR state into the TILES_LOADING state.
-    // This is also the reason why we don't cancel the getPage promise if the
-    // timeout is reached (because we want to give it as much of a chance as
-    // possible to recover from a potentially slow API response).
-    if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
-      this.datasetLoadingController.finishLoading();
-    }
   }
 
   //#endregion
@@ -2302,7 +2301,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // grid's "grid-loaded" event.
     if (this.areTilesLoaded()) {
       console.debug("All verification grid tiles have loaded");
-      this._loadState = LoadState.LOADED;
+      this._loadState = GridState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.updateDecisionWhen();
     }
@@ -2560,11 +2559,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           ${choose(
             this._loadState,
             [
-              [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
-              [LoadState.TILES_LOADING, () => this.gridLoadedTemplate()],
-              [LoadState.LOADED, () => this.gridLoadedTemplate()],
-              [LoadState.ERROR, () => this.datasetFailureTemplate()],
-              [LoadState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
+              [GridState.DATASET_FETCHING, () => this.loadingTemplate()],
+              [GridState.TILES_LOADING, () => this.gridLoadedTemplate()],
+              [GridState.LOADED, () => this.gridLoadedTemplate()],
+              [GridState.ERROR, () => this.datasetFailureTemplate()],
+              [GridState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
             ],
             this.unexpectedStateTemplate,
           )}

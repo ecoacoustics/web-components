@@ -76,27 +76,34 @@ export class LoadingController implements ReactiveController {
    * timer for a short period of time (defined by the `slowLoadThreshold`)
    * before entering the loading state.
    */
-  public startLoading(): void {
+  public start(): void {
+    // If there is an existing loading timeout, we want to reset it so that we
+    // don't incorrectly have two loading timeouts running at the same time.
+    this.clearTimeouts();
     this.enterFastLoad();
   }
 
-  public finishLoading(): void {
+  /**
+   * Stop loading and enter the {@linkcode LoadingState.Idle} state.
+   */
+  public stop(): void {
     this.enterIdle();
   }
 
   private enterIdle(): void {
+    this.clearTimeouts();
+    this.state.value = LoadingState.Idle;
+  }
+
+  private clearTimeouts(): void {
     if (this.timeout) {
       clearTimeout(this.timeout);
       this.timeout = null;
-      this.state.value = LoadingState.Idle;
     }
   }
 
   private enterFastLoad(): void {
-    // If there is an existing loading timeout, we want to reset it so that we
-    // don't incorrectly have two loading timeouts running at the same time.
-    this.finishLoading();
-
+    this.state.value = LoadingState.FastLoading;
     this.timeout = setTimeout(() => this.enterSlowLoad(), secondsToMilliseconds(this.options.slowLoadThreshold));
   }
 
