@@ -78,7 +78,7 @@ test.describe("annotation", () => {
     createAnnotationTests(tests);
   });
 
-  test.describe.fixme("annotation overflow", () => {
+  test.describe("annotation overflow", () => {
     test.describe("fully overflowing", () => {
       const tests = [
         {
