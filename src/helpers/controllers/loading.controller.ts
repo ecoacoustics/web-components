@@ -41,15 +41,23 @@ export interface LoadingControllerOptions {
 interface LoadingControllerHost extends ReactiveControllerHost {}
 
 export class LoadingController implements ReactiveController {
+  private static readonly defaultOptions: LoadingControllerOptions = {
+    slowLoadThreshold: 0.5,
+    timeoutThreshold: 8,
+  };
+
   private readonly state: Signal<LoadingState>;
   private options: LoadingControllerOptions;
   private timeout: SetTimeoutRef | null = null;
 
-  public constructor(host: LoadingControllerHost, options: LoadingControllerOptions) {
+  public constructor(
+    host: LoadingControllerHost,
+    options: LoadingControllerOptions = LoadingController.defaultOptions,
+  ) {
     host.addController(this);
 
-    this.options = options;
     this.state = signal(LoadingState.Idle);
+    this.options = options;
   }
 
   public get loadState(): ReadonlySignal<LoadingState> {
@@ -81,6 +89,7 @@ export class LoadingController implements ReactiveController {
     if (this.timeout) {
       clearTimeout(this.timeout);
       this.timeout = null;
+      this.state.value = LoadingState.Idle;
     }
   }
 

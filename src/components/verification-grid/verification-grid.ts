@@ -710,13 +710,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     this.datasetLoadingController.loadState.subscribe((newState: LoadingState) => {
       switch (newState) {
-        case LoadingState.Timeout: {
-          this.handleTimeout();
+        case LoadingState.Idle: {
+          this._loadState = LoadState.TILES_LOADING;
           break;
         }
 
         case LoadingState.SlowLoading: {
-          this.handleSlowLoad();
+          this._loadState = LoadState.DATASET_FETCHING;
+          break;
+        }
+
+        case LoadingState.Timeout: {
+          this.handleTimeout();
           break;
         }
       }
@@ -809,15 +814,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this._loadState = LoadState.CONFIGURATION_ERROR;
   }
 
-  public handleTimeout(): void {
+  public transitionDatasetFetching() {
+    this.datasetLoadingController.startLoading();
+  }
+
+  private handleTimeout(): void {
     if (this._loadState === LoadState.DATASET_FETCHING) {
       console.error("failed to load dataset. Reason: timeout");
       this._loadState = LoadState.ERROR;
     }
-  }
-
-  public handleSlowLoad(): void {
-    this._loadState = LoadState.DATASET_FETCHING;
   }
 
   //#region Updates
