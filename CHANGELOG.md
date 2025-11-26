@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.5...web-components-v6.1.0) (2025-11-26)
+
+
+### Features
+
+* Enter DATASET_LOADING state when fetching items ([#572](https://github.com/ecoacoustics/web-components/issues/572)) ([c2627cf](https://github.com/ecoacoustics/web-components/commit/c2627cf518d6f632a2b9d5a7c3a9023b0439ba1f)), closes [#550](https://github.com/ecoacoustics/web-components/issues/550)
+
 ## [6.0.5](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.4...web-components-v6.0.5) (2025-10-17)
 
 
