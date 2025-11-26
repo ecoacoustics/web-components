@@ -8,7 +8,7 @@ test.describe("verification grid tile", () => {
     await fixture.create();
   });
 
-  test("should use a cursor pointer if in multiple tile view mode", async ({ fixture }) => {
+  test("should use a pointer cursor if in multiple tile view mode", async ({ fixture }) => {
     await setBrowserValue<VerificationGridTileComponent>(fixture.component(), "singleTileViewMode", false);
     await expect(fixture.tileContainer()).toHaveCSS("cursor", "pointer");
   });

@@ -26,7 +26,7 @@ export type RequiredClassification = Tag;
 export type RequiredDecision = RequiredVerification | RequiredClassification | RequiredNewTag;
 
 export type OverflowEvent = CustomEvent<OverflowEventDetail>;
-export type LoadedEvent = CustomEvent;
+export type LoadedEvent = CustomEvent<void>;
 
 export interface VerificationGridTileContext {
   model: SubjectWrapper;
@@ -70,6 +70,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public static readonly selectedEventName = "oe-selected";
   public static readonly loadingEventName = "oe-tile-loading";
   public static readonly loadedEventName = "oe-tile-loaded";
+  public static readonly overlapEventName = "overlap";
 
   // Because this is not a user-facing component, I do not expect that this
   // component will be used outside of a verification grid, and we can therefore
@@ -128,7 +129,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   private contentsWrapper!: HTMLDivElement;
 
   private readonly keyDownHandler = this.handleKeyDown.bind(this);
-  private readonly loadingHandler = this.handleLoading.bind(this);
   private readonly loadedHandler = this.handleLoaded.bind(this);
 
   public loaded = false;
@@ -163,8 +163,11 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   public disconnectedCallback(): void {
     document.removeEventListener("keydown", this.keyDownHandler);
 
+    // we conditionally remove the event listener so that if the verification
+    // grid tile is disconnected before the spectrogram ever got the chance to
+    // attach, we don't want to throw an error trying to remove the event
+    // listener.
     if (this.spectrogram) {
-      this.templateContent.removeEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
       this.templateContent.removeEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
     }
 
@@ -178,7 +181,6 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // spectrogram directly because it's hard to guarantee that we can attach
     // the event listeners to the templated spectrograms before the spectrogram
     // finishes loading.
-    this.templateContent.addEventListener(SpectrogramComponent.loadingEventName, this.loadingHandler);
     this.templateContent.addEventListener(SpectrogramComponent.loadedEventName, this.loadedHandler);
 
     if (this.spectrogram) {
@@ -233,6 +235,22 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
   }
 
   public updateSubject(subject: SubjectWrapper): void {
+    // We know that if we update the subject, we will need to enter a "loading"
+    // state again.
+    // We optimistically enter a loading state here instead of waiting for the
+    // spectrogram to emit a "loading" because we observed race conditions where
+    // some spectrograms would load in a verification grid before some even
+    // emitted a "loading" event, meaning that the verification grid would
+    // incorrectly think that all of the tiles had loaded.
+    //
+    // Sometimes the spectrograms source does not change, in which case, we do
+    // not want to enter a "loading" state again otherwise we cannot exit out of
+    // it because exiting the loading state is dependent on the spectrogram
+    // emitting a "loaded" event.
+    if (this.spectrogram?.src !== subject?.url) {
+      this.handleLoading();
+    }
+
     this.tile = {
       model: subject,
       requiredDecisions: this.requiredDecisions,
@@ -276,7 +294,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
 
     this.isOverlapping = hasOverlapContent;
 
-    const overlapEvent = new CustomEvent<OverflowEventDetail>("overlap", {
+    const overlapEvent = new CustomEvent<OverflowEventDetail>(VerificationGridTileComponent.overlapEventName, {
       detail: {
         isOverlapping: hasOverlapContent,
       },
@@ -285,13 +303,15 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     this.dispatchEvent(overlapEvent);
   }
 
-  // this method is called when the spectrogram starts rendering
   private handleLoading(): void {
     this.loaded = false;
   }
 
   // this method is called when the spectrogram finishes rendering
   private handleLoaded(): void {
+    // We set this.loaded to true before dispatching the loaded event so that
+    // any listeners that check the loaded property on this event will get the
+    // correct value.
     this.loaded = true;
     this.dispatchEvent(new CustomEvent<LoadedEvent>(VerificationGridTileComponent.loadedEventName, { bubbles: true }));
   }

@@ -1,5 +1,5 @@
 import { Size } from "../../models/rendering";
-import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes.controller";
 import {
   catchLocatorEvent,
   DeviceMock,
@@ -187,7 +187,7 @@ test.describe("single verification grid", () => {
           // Not all environments use TypeScript, so we need to handle the cases
           // where a user passes an invalid datatype into the grid-size.
           await fixture.changeGridSize(testGridSize as any);
-        }).toConsoleError(fixture.page, "Grid size 'NaN' could not be converted to a finite number.");
+        }).toConsoleError(fixture.page, "Grid size must be a finite number. Received: 'NaN'");
 
         // because we requested an invalid grid size, we should see that the
         // grid size property does not change
@@ -201,7 +201,7 @@ test.describe("single verification grid", () => {
 
         await expect(async () => {
           await fixture.changeGridSize(testGridSize);
-        }).toConsoleError(fixture.page, "Grid size '-12' must be a positive number.");
+        }).toConsoleError(fixture.page, "Grid size must be a positive number. Received: '-12'");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
@@ -213,7 +213,7 @@ test.describe("single verification grid", () => {
 
         await expect(async () => {
           await fixture.changeGridSize(testGridSize);
-        }).toConsoleError(fixture.page, "Grid size '0' must be a positive number.");
+        }).toConsoleError(fixture.page, "Grid size must be a positive number. Received: '0'");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
@@ -225,7 +225,7 @@ test.describe("single verification grid", () => {
 
         await expect(async () => {
           await fixture.changeGridSize(testGridSize);
-        }).toConsoleError(fixture.page, "Grid size '-Infinity' could not be converted to a finite number.");
+        }).toConsoleError(fixture.page, "Grid size must be a finite number. Received: '-Infinity'");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
@@ -237,7 +237,7 @@ test.describe("single verification grid", () => {
 
         await expect(async () => {
           await fixture.changeGridSize(testGridSize);
-        }).toConsoleError(fixture.page, "Grid size 'Infinity' could not be converted to a finite number.");
+        }).toConsoleError(fixture.page, "Grid size must be a finite number. Received: 'Infinity'");
 
         const realizedGridSize = await fixture.getGridSize();
         expect(realizedGridSize).toBe(initialGridSize);
@@ -641,6 +641,23 @@ test.describe("single verification grid", () => {
         await updatedColorMapMenu.click();
 
         await expect(updatedColorMapMenu.getByText("Grayscale")).toHaveAttribute("aria-checked", "true");
+      });
+
+      test.fixme("should not enter history if resized before auto paging completes", async ({ fixture }) => {
+        await fixture.changeGridSize(4);
+
+        // This is flaky because it depends on the makeVerificationDecision and
+        // changeGridSize completing before the autoPageTimeout (300ms).
+        //
+        // TODO: We should mock the autoPageTimeout to make this test more
+        // reliable.
+        await fixture.makeVerificationDecision("true");
+        await fixture.changeGridSize(2);
+
+        expect(await fixture.isViewingHistory()).toBe(false);
+        const viewHead = await fixture.getViewHead();
+        const decisionHead = await fixture.getVerificationHead();
+        expect(viewHead).toBe(decisionHead);
       });
     });
   });
@@ -1391,6 +1408,7 @@ test.describe("single verification grid", () => {
       const initialGridSize = await fixture.getGridSize();
       const newGridSize = initialGridSize + 1;
       await fixture.changeGridSize(newGridSize);
+      expect(await fixture.getGridSize()).toBe(newGridSize);
 
       const gridTileOfInterest = fixture.gridTileComponents().last();
 
@@ -2349,7 +2367,7 @@ test.describe("compound tasks", () => {
   });
 });
 
-test.describe("verification grid with slotted templates", () => {
+test.describe("slotted templates", () => {
   test.describe("information cards", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(
@@ -2694,7 +2712,7 @@ test.describe("default templates", () => {
   });
 });
 
-test.describe("verification grid interaction with the host application", () => {
+test.describe("interaction with the host application", () => {
   test.beforeEach(async ({ fixture }) => {
     await fixture.createWithAppChrome();
   });

@@ -73,7 +73,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   // property name is important to people using the web component
   // however, in this case we are not exposing the properties to the client host
   @state()
-  public decisionElements!: DecisionComponent[];
+  public decisionElements!: ReadonlyArray<DecisionComponent>;
 
   @state()
   public hasVerificationTask!: boolean;

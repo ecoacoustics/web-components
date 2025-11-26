@@ -34,7 +34,7 @@ import { when } from "lit/directives/when.js";
 import { hasCtrlLikeModifier } from "../../helpers/userAgentData/userAgent";
 import { decisionColor } from "../../services/colors/colors";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import { DynamicGridSizeController, GridShape } from "../../helpers/controllers/dynamic-grid-sizes.controller";
 import {
   injectionContext,
   spectrogramOptionsContext,
@@ -43,7 +43,7 @@ import {
 import { UrlTransformer } from "../../services/subjectParser/subjectParser";
 import { VerificationBootstrapComponent } from "bootstrap-modal/bootstrap-modal";
 import { IPlayEvent } from "../spectrogram/spectrogram";
-import { Seconds } from "../../models/unitConverters";
+import { Pixel, Seconds } from "../../models/unitConverters";
 import { WithShoelace } from "../../mixins/withShoelace";
 import { DecisionOptions } from "../../models/decisions/decision";
 import { repeat } from "lit/directives/repeat.js";
@@ -63,6 +63,7 @@ import { patchTrackClickLikeEvents } from "../../patches/eventListener";
 import { classMap } from "lit/directives/class-map.js";
 import { SkipComponent } from "../decision/skip/skip";
 import verificationGridStyles from "./css/style.css?inline";
+import { LoadingController, LoadingState } from "../../helpers/controllers/loading.controller";
 
 export type SelectionObserverType = "desktop" | "tablet" | "default";
 
@@ -123,8 +124,8 @@ export interface VerificationGridInjector {
 }
 
 export interface MousePosition {
-  x: number;
-  y: number;
+  x: Pixel;
+  y: Pixel;
 }
 
 /**
@@ -144,7 +145,7 @@ export enum ProgressBarPosition {
   HIDDEN = "hidden",
 }
 
-export enum LoadState {
+export const enum GridState {
   /**
    * The datasets subject models are being fetched and there is not enough
    * subjects to fill the grid.
@@ -298,9 +299,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   public static readonly decisionMadeEventName = "decision-made";
   private static readonly loadedEventName = "grid-loaded";
-  private static readonly autoPageTimeout = 0.3 satisfies Seconds;
   private static readonly defaultGridTileTemplateId = "oe-default-tile-template";
   private static readonly defaultSkipButtonId = "oe-default-skip-button";
+  private static readonly autoPageTimeout = 0.3 satisfies Seconds;
+  private static readonly slowLoadThreshold = 0.2 satisfies Seconds;
 
   private static readonly defaultGridTileTemplate = staticHtml`
       <template id="${VerificationGridComponent.defaultGridTileTemplateId}">
@@ -376,37 +378,50 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * state before it times out and shows an error message.
    */
   @property({ attribute: "loading-timeout", type: Number })
-  public loadingTimeout: Seconds = 8;
+  public set loadingTimeout(value: Seconds) {
+    const minimumTimeout = 0;
+    if (value < 0) {
+      console.error(`loadingTimeout must be greater than 0 seconds. Clamping to '${minimumTimeout}'.`);
+      this._loadingTimeout = minimumTimeout;
+      return;
+    }
+
+    this._loadingTimeout = value;
+  }
+
+  public get loadingTimeout(): Seconds {
+    return this._loadingTimeout;
+  }
 
   @property({ type: Boolean })
   public autofocus = false;
 
   /** selector for oe-verification elements */
   @queryAssignedElements({ selector: "oe-verification" })
-  private verificationDecisionElements!: VerificationComponent[];
+  private verificationDecisionElements!: ReadonlyArray<VerificationComponent>;
 
   /** selector for oe-classification elements */
   @queryAssignedElements({ selector: "oe-classification" })
-  private classificationDecisionElements!: ClassificationComponent[];
+  private classificationDecisionElements!: ReadonlyArray<ClassificationComponent>;
 
   /** selector for oe-classification elements */
   @queryAssignedElements({ selector: "oe-tag-prompt" })
-  private tagPromptDecisionElements!: TagPromptComponent[];
+  private tagPromptDecisionElements!: ReadonlyArray<TagPromptComponent>;
 
   /** A selector for all oe-verification and oe-classification elements */
   @queryAssignedElements({ selector: "oe-verification, oe-classification, oe-tag-prompt, oe-skip" })
-  private decisionElements!: DecisionComponentUnion[];
+  private decisionElements!: ReadonlyArray<DecisionComponentUnion>;
 
   // Because it's possible (although unlikely) for multiple skip buttons to
   // exist on a page, this query selector returns an array of elements.
   @queryAssignedElements({ selector: "oe-verification[verified='skip'], oe-skip" })
-  private skipButtons!: DecisionComponent[];
+  private skipButtons!: ReadonlyArray<DecisionComponent>;
 
   @queryAssignedElements({ selector: "template" })
-  private customTileTemplates!: HTMLTemplateElement[];
+  private customTileTemplates!: ReadonlyArray<HTMLTemplateElement>;
 
   @queryAssignedElements({ selector: `#${VerificationGridComponent.defaultSkipButtonId}` })
-  private defaultSkipButton?: SkipComponent[];
+  private defaultSkipButton?: ReadonlyArray<SkipComponent>;
 
   @queryAll("oe-verification-grid-tile")
   private gridTiles!: NodeListOf<VerificationGridTileComponent>;
@@ -436,7 +451,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private currentSubSelection: SubjectWrapper[] = [];
 
   @state()
-  private _loadState: LoadState = LoadState.DATASET_FETCHING;
+  private _loadState: GridState = GridState.DATASET_FETCHING;
 
   @state()
   private _viewHeadIndex = 0;
@@ -507,7 +522,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._subjects;
   }
 
-  public get loadState(): LoadState {
+  public get loadState(): GridState {
     return this._loadState;
   }
 
@@ -585,16 +600,21 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private requiredClassificationTags: Tag[] = [];
   private requiredDecisions: RequiredDecision[] = [];
   private showingSelectionShortcuts = false;
-  private anyOverlap = signal<boolean>(false);
   private _subjects: SubjectWrapper[] = [];
-  private gridController?: DynamicGridSizeController<HTMLDivElement>;
-  private loadingTimeoutReference: any | null = null;
+  private _loadingTimeout: Seconds = 8;
+
+  private readonly anyOverlap = signal<boolean>(false);
+  private readonly gridController = new DynamicGridSizeController(this, this.anyOverlap);
+  private readonly datasetLoadingController = new LoadingController(this, {
+    slowLoadThreshold: VerificationGridComponent.slowLoadThreshold,
+    timeoutThreshold: this.loadingTimeout,
+  });
 
   private paginationFetcher?: GridPageFetcher;
   private subjectWriter?: SubjectWriter;
 
-  private highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
-  private highlight: HighlightSelection = {
+  private readonly highlightSelectionAnimation = newAnimationIdentifier("highlight-selection");
+  private readonly highlight: HighlightSelection = {
     start: { x: 0, y: 0 },
     current: { x: 0, y: 0 },
     highlighting: false,
@@ -686,6 +706,36 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.pageSize - 1;
   }
 
+  public constructor() {
+    super();
+
+    this.datasetLoadingController.start();
+    this.datasetLoadingController.loadState.subscribe((newState: LoadingState) => {
+      // The only unrecoverable state is the configuration error state where we
+      // do not want to allow any further state transitions.
+      if (this.loadState === GridState.CONFIGURATION_ERROR) {
+        return;
+      }
+
+      switch (newState) {
+        case LoadingState.Idle: {
+          this._loadState = GridState.TILES_LOADING;
+          break;
+        }
+
+        case LoadingState.SlowLoading: {
+          this._loadState = GridState.DATASET_FETCHING;
+          break;
+        }
+
+        case LoadingState.Timeout: {
+          this.handleTimeout();
+          break;
+        }
+      }
+    });
+  }
+
   // This overrides the element's focus() method so that it focuses the grid
   // tiles instead of the component host.
   // This allows host applications to focus the grid container at the level
@@ -736,7 +786,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public isViewingHistory(): boolean {
-    if (this.loadState === LoadState.CONFIGURATION_ERROR) {
+    if (this.loadState === GridState.CONFIGURATION_ERROR) {
       return false;
     }
 
@@ -760,9 +810,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   public transitionError() {
-    this._loadState = LoadState.ERROR;
-    this._decisionHeadIndex = 0;
-    this._viewHeadIndex = 0;
+    this._loadState = GridState.ERROR;
   }
 
   public transitionConfigurationError() {
@@ -771,7 +819,18 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         "contain both a subject tag and task meter component.",
     );
 
-    this._loadState = LoadState.CONFIGURATION_ERROR;
+    this._loadState = GridState.CONFIGURATION_ERROR;
+  }
+
+  public transitionDatasetFetching() {
+    this.datasetLoadingController.start();
+  }
+
+  private handleTimeout(): void {
+    if (this._loadState === GridState.DATASET_FETCHING) {
+      console.error("failed to load dataset. Reason: timeout");
+      this._loadState = GridState.ERROR;
+    }
   }
 
   //#region Updates
@@ -798,6 +857,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       this.focus();
     }
 
+    this.gridController.connect(this.gridContainer);
+
     patchTrackClickLikeEvents();
   }
 
@@ -813,25 +874,36 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // values such as Infinity are not considered as a valid grid size
       if (!isFinite(newGridSize)) {
         this.targetGridSize = oldGridSize;
-        console.error(`Grid size '${newGridSize}' could not be converted to a finite number.`);
+        console.error(`Grid size must be a finite number. Received: '${newGridSize}'`);
       } else if (newGridSize <= 0) {
         this.targetGridSize = oldGridSize;
-        console.error(`Grid size '${newGridSize}' must be a positive number.`);
+        console.error(`Grid size must be a positive number. Received: '${newGridSize}'`);
       }
     }
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
     if (this.gridContainer && change.has("targetGridSize")) {
-      this.gridController ??= new DynamicGridSizeController(this.gridContainer, this, this.anyOverlap);
       this.gridController.setTarget(this.targetGridSize);
+    }
+
+    // This type cast is needed because the PropertyValueMap type cannot see
+    // private properties (like _loadState).
+    // Therefore, I need to cast to "any" so that I can check for private
+    // property changes.
+    if (change.has("_loadState" as keyof typeof this) && this._loadState !== GridState.LOADED) {
+      this.setDecisionsDisabled();
+    }
+
+    if (change.has("loadingTimeout")) {
+      this.datasetLoadingController.updateOptions({ timeoutThreshold: this.loadingTimeout });
     }
 
     // invalidating the verification grids source will cause the grid tiles and
     // spectrograms to re-render, from the start of the new data source
     const gridSourceInvalidationKeys: (keyof this)[] = ["getPage", "urlTransformer"];
     const hasGridSourceInvalidation = gridSourceInvalidationKeys.some((key) => change.has(key));
-    if (hasGridSourceInvalidation && this._loadState) {
+    if (hasGridSourceInvalidation) {
       await this.handleGridSourceInvalidation();
     }
 
@@ -855,7 +927,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       const isGridShrinking = oldAvailableTiles > this.availableGridCells;
       if (isGridShrinking) {
         if (this.areTilesLoaded()) {
-          this._loadState = LoadState.LOADED;
+          this._loadState = GridState.LOADED;
           this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
           this.updateDecisionWhen();
         }
@@ -931,30 +1003,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * subjects from the new data source
    */
   private async handleGridSourceInvalidation() {
-    this.resetLoadingTimeout();
-
-    // If we update to no data source, we want to wait a bit before
-    // changing to an error state so that if the host application is being
-    // hacky by adding/removing the data source, we don't flash an error on
-    // the screen.
-    //
-    // We also need this for when the getPage callback is a callback set in
-    // JavaScript.
-    // If the getPage callback is set through JavaScript, there might be a
-    // slight delay between the time where the verification grid is
-    // initialized and when the host application finally gets to set the
-    // getPage callback.
-    // While we are waiting for the host application to set the callback, we
-    // don't want to flash an error on the screen and give it a second to
-    // fully initialize.
-    // While we are waiting for the verification grid to initialize, we will
-    // be in the DATASET_FETCHING state.
-    this.loadingTimeoutReference = setTimeout(() => {
-      if (this._loadState === LoadState.DATASET_FETCHING) {
-        console.error("failed to load dataset. Reason: timeout");
-        this._loadState = LoadState.ERROR;
-      }
-    }, this.loadingTimeout * 1000);
+    this.datasetLoadingController.start();
 
     if (this.getPage) {
       // If there is an existing data source fetcher, we want to close the data
@@ -1454,7 +1503,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   //#region SelectionHandlers
 
-  private tileSelectionShortcutsShown(value: boolean) {
+  private tileSelectionShortcutsShown(value: boolean): void {
     const elements = this.gridTiles;
     for (const element of elements) {
       element.showKeyboardShortcuts = value;
@@ -1714,6 +1763,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     const needMoreSubjects = this._subjects.length < requiredSubjectCount;
 
     if (needMoreSubjects && !this.subjectWriter.closed) {
+      this.datasetLoadingController.start();
+
       // Fill the subject buffer from the requested index until we have enough
       // subjects to render an entire page of results.
       // The subject paginationFetcher may continue to retrieve more subjects
@@ -1721,6 +1772,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // subject cache as they come in, but we don't wait for them to finish
       // loading.
       await this.subjectWriter.setTarget(requiredSubjectCount);
+
+      // Because slow getPage responses can cause the verification grid to enter
+      // an "ERROR" state (e.g. after 8 seconds of no response), we want to be
+      // able to recover from a slow getPage call by transitioning out of this
+      // ERROR state into the TILES_LOADING state.
+      // This is also the reason why we don't cancel the getPage promise if the
+      // timeout is reached (because we want to give it as much of a chance as
+      // possible to recover from a potentially slow API response).
+      this.datasetLoadingController.stop();
     }
   }
 
@@ -1740,38 +1800,29 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // defensive programming measure.
     if (value === this.viewHeadIndex && this.viewHeadIndex !== 0) {
       return;
+    } else if (this.loadState === GridState.CONFIGURATION_ERROR) {
+      // We don't need to change the view head if we are in a configuration
+      // error state because the grid won't be rendering any tiles.
+      return;
     }
+
+    this._loadState = GridState.TILES_LOADING;
 
     let clampedHead = Math.max(0, value);
-
     await this.populatePageSubjectsToIndex(clampedHead);
 
+    // Updating _viewHeadIndex will cause the public viewHeadIndex getter to
+    // return the new value.
+    // Therefore, we only update the viewHeadIndex after we have successfully
+    // populated the subject buffer to the requested index.
     this._viewHeadIndex = clampedHead;
-    this.setDecisionDisabled(true);
 
+    // By updating the sub selection, we also update the "decision when"
+    // predicates for the new page of subjects.
+    // We call updateSubSelection instead of updateDecisionWhen so that the
+    // selectedTiles property is also updated to reflect that all (or one in
+    // single decision mode) tile is selected.
     this.updateSubSelection();
-
-    // Changing the loadState will cause an update because the loadState is a
-    // tracked state meaning that we don't have to manually invoke
-    // requestUpdate which would end up being debounced anyways.
-    //
-    // Because slow getPage responses can cause the verification grid to enter
-    // an "ERROR" state (e.g. after 8 seconds of no response), we want to be
-    // able to recover from a slow getPage call by transitioning out of this
-    // ERROR state into the TILES_LOADING state.
-    // This is also the reason why we don't cancel the getPage promise if the
-    // timeout is reached (because we want to give it as much of a chance as
-    // possible to recover from a potentially slow API response).
-    if (this._loadState === LoadState.DATASET_FETCHING || this._loadState === LoadState.ERROR) {
-      this.resetLoadingTimeout();
-      this._loadState = LoadState.TILES_LOADING;
-    }
-  }
-
-  private resetLoadingTimeout() {
-    if (this.loadingTimeoutReference !== null) {
-      clearTimeout(this.loadingTimeoutReference);
-    }
   }
 
   //#endregion
@@ -1987,7 +2038,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
    * Moves the view and decision head a full page forwards.
    * This is typically triggered as part of auto-paging.
    */
-  private async advanceToNextPage(count: number = this.pageSize) {
+  private async advanceToNextPage(position: number) {
     this.clearSelection();
     this.resetSpectrogramSettings();
 
@@ -1995,8 +2046,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // more subjects.
     // Therefore, we set the viewHead first so that if it fails to fetch more
     // subjects, the decisionHead is not advanced incorrectly.
-    await this.setViewHead(this.viewHeadIndex + count);
-    this.decisionHeadIndex += count;
+    await this.setViewHead(position);
+    this.decisionHeadIndex = position;
 
     // If the last tile that was selected was auto-selected, we should
     // continue auto-selection onto the next page.
@@ -2096,15 +2147,28 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     );
 
     // Because auto-paging and automatic tile selection are dependent upon the
-    // "no decision required" states, it must be performed first.
+    // decision buttons "no decision required" state, updating the decision
+    // "when" conditions must be performed first.
     this.updateDecisionWhen();
 
     if (this.shouldAutoPage()) {
+      // We capture the completed page size and the new page position here so
+      // that if the page size changes in between the await sleep and the
+      // advanceToNextPage call (the user changes the page size during the auto
+      // page timeout), we can correctly advance by the correct amount instead
+      // of using the new potentially larger/smaller page size.
+      //
+      // If we instead used the pageSize property directly in advanceToNextPage
+      // and after the sleep we might accidentally advance too short or too far,
+      // meaning that we'd end up viewing history or unknowingly skipping some
+      // undecided tiles.
+      const newPosition = this.viewHeadIndex + this.pageSize;
+
       // we wait for 300ms so that the user has time to see the decision that
       // they have made in the form of a decision highlight around the selected
       // grid tiles and the chosen decision button
       await sleep(VerificationGridComponent.autoPageTimeout);
-      this.advanceToNextPage();
+      this.advanceToNextPage(newPosition);
       return;
     }
 
@@ -2137,10 +2201,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return !this.isViewingHistory() && allTileTaskCompleted;
   }
 
-  private setDecisionDisabled(disabled: boolean): void {
+  private setDecisionsDisabled(): void {
     const decisionElements = this.decisionElements ?? [];
     for (const decisionElement of decisionElements) {
-      decisionElement.disabled = disabled;
+      decisionElement.disabled = true;
     }
   }
 
@@ -2203,6 +2267,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     tile.updateSubject(subject);
 
+    // Because changing the "decision required" state can unset a decision if it
+    // is no longer required, we emit a "decisionWhenUpdated" event if the
+    // "decision when" update caused any decisions to be implicitly removed due
+    // to no longer being required.
+    //
+    // TODO: We should ideally combine this with the `decisionMade` event
+    // handler so that there is only one event emitted per decision action.
     if (Object.keys(change).length > 0) {
       // We only dispatch the "decisionWhenUpdated" event after updateSubject so
       // the risk reading of a race condition is minimized.
@@ -2242,8 +2313,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // have a fully loaded verification grid, we want to perform some actions
     // such as enabling the decision buttons and emitting the verification
     // grid's "grid-loaded" event.
-    if (this.areTilesLoaded()) {
-      this._loadState = LoadState.LOADED;
+    //
+    // We have to check that the loadState is not already in a "LOADED" state
+    // because sometimes there can be two (or more) grid tiles that emit their
+    // "loaded" events before the first event handler completes, meaning that
+    // this methods will see that all of the tiles are loaded twice and re-run
+    // the logic below multiple times.
+    if (this.areTilesLoaded() && this._loadState !== GridState.LOADED) {
+      console.debug("All verification grid tiles have loaded");
+      this._loadState = GridState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
       this.updateDecisionWhen();
     }
@@ -2501,11 +2579,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
           ${choose(
             this._loadState,
             [
-              [LoadState.DATASET_FETCHING, () => this.loadingTemplate()],
-              [LoadState.TILES_LOADING, () => this.gridLoadedTemplate()],
-              [LoadState.LOADED, () => this.gridLoadedTemplate()],
-              [LoadState.ERROR, () => this.datasetFailureTemplate()],
-              [LoadState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
+              [GridState.DATASET_FETCHING, () => this.loadingTemplate()],
+              [GridState.TILES_LOADING, () => this.gridLoadedTemplate()],
+              [GridState.LOADED, () => this.gridLoadedTemplate()],
+              [GridState.ERROR, () => this.datasetFailureTemplate()],
+              [GridState.CONFIGURATION_ERROR, () => this.configurationFailureTemplate()],
             ],
             this.unexpectedStateTemplate,
           )}

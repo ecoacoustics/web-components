@@ -22,7 +22,7 @@ import {
   VerificationGridSettings,
 } from "../../components/verification-grid/verification-grid";
 import { Rect, Size } from "../../models/rendering";
-import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes";
+import { GridShape } from "../../helpers/controllers/dynamic-grid-sizes.controller";
 import { SubjectWrapper } from "../../models/subject";
 import { Decision } from "../../models/decisions/decision";
 import { expect } from "../assertions";

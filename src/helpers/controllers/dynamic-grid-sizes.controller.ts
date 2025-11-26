@@ -1,7 +1,7 @@
 import { Signal } from "@lit-labs/preact-signals";
-import { VerificationGridComponent } from "../../components/verification-grid/verification-grid";
 import { Size } from "../../models/rendering";
 import { Pixel } from "../../models/unitConverters";
+import { ReactiveController, ReactiveControllerHost } from "lit";
 
 export interface GridShape {
   rows: number;
@@ -12,12 +12,34 @@ interface GridShapeWithDistance extends GridShape {
   distance: number;
 }
 
-export class DynamicGridSizeController<Container extends HTMLElement> {
-  public constructor(container: Container, targetElement: VerificationGridComponent, isOverlapping: Signal<boolean>) {
-    this.targetElement = targetElement;
-    this.anyOverlap = isOverlapping;
+interface VerificationGridHost extends ReactiveControllerHost {
+  rows: number;
+  columns: number;
+}
 
+export class DynamicGridSizeController<Container extends HTMLElement> implements ReactiveController {
+  private readonly host: VerificationGridHost;
+
+  // this minimum grid cell size is enforced by the grid tiles css
+  // see: src/components/verification-grid-tile/verification-grid-tile/style.css#L30
+  private readonly minimumGridCellSize: Size = { width: 300, height: 300 };
+  private readonly anyOverlap: Signal<boolean>;
+
+  private candidateShapes: GridShape[] = [];
+  private containerSize: Size = { width: 0, height: 0 };
+  private target = 0;
+
+  public constructor(host: VerificationGridHost, isOverlapping: Signal<boolean>) {
+    (this.host = host).addController(this);
+    this.anyOverlap = isOverlapping;
+  }
+
+  public hostConnected(): void {}
+
+  public connect(container: Container): void {
     const resizeObserver = new ResizeObserver((size: ResizeObserverEntry[]) => {
+      // Because we use a "falsy" check here, we will early exist if the target
+      // is zero.
       if (!this.target) return;
 
       // because we know that this resize observer will only ever be used with
@@ -34,16 +56,6 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
       }
     });
   }
-
-  private targetElement: VerificationGridComponent;
-  private candidateShapes: GridShape[] = [];
-  private containerSize: Size = { width: 0, height: 0 };
-
-  // this minimum grid cell size is enforced by the grid tiles css
-  // see: src/components/verification-grid-tile/verification-grid-tile/style.css#L30
-  private minimumGridCellSize: Size = { width: 300, height: 300 };
-  private anyOverlap: Signal<boolean>;
-  private target = 0;
 
   // TODO: Although we don't have any use case for awaiting this method, it
   // should theoretically return an awaitable promise.
@@ -232,8 +244,8 @@ export class DynamicGridSizeController<Container extends HTMLElement> {
   }
 
   private setGridShape(shape: GridShape): void {
-    this.targetElement.columns = shape.columns;
-    this.targetElement.rows = shape.rows;
+    this.host.columns = shape.columns;
+    this.host.rows = shape.rows;
   }
 
   /**
