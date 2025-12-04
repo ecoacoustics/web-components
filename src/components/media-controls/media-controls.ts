@@ -1,5 +1,5 @@
 import { HTMLTemplateResult, LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
-import { property } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
@@ -69,6 +69,22 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   @property({ type: String })
   public playIconPosition: PreferenceLocation = "default";
+
+  /**
+   * We use a state variable to track whether the settings menu is open or not
+   * because Shoelace sub-menus use getComputedStyle to determine whether they
+   * are in ltr or rtl mode.
+   * This causes some performance issues when there are a lot of sub-menus or
+   * media controls on the page because each submenu causes a reflow whenever
+   * they are created.
+   * By maintaining our own open/close state we can defer the creation of the
+   * sub-menu contents until the menu is open, meaning that we only hit this
+   * reflow cost when the user actually wants to see the menu.
+   *
+   * see: https://github.com/shoelace-style/shoelace/discussions/2527
+   */
+  @state()
+  private areSettingsOpen = false;
 
   // the media controls component has access to the axes element because it is
   // possible to enable/disable certain axes features from within the media controls
@@ -193,6 +209,14 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   private handleUpdatePlaying(): void {
     this.requestUpdate();
+  }
+
+  private showSettings(): void {
+    this.areSettingsOpen = true;
+  }
+
+  private hideSettings(): void {
+    this.areSettingsOpen = false;
   }
 
   private playIcon() {
@@ -335,6 +359,24 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   }
 
   private settingsTemplate() {
+    return html`
+      <sl-dropdown hoist @sl-show="${() => this.showSettings()}" @sl-hide="${() => this.hideSettings()}">
+        <a class="settings-menu-item" slot="trigger">
+          <sl-icon name="gear"></sl-icon>
+        </a>
+
+        ${when(this.areSettingsOpen, () => this.subMenuTemplate())}
+      </sl-dropdown>
+    `;
+  }
+
+  // Shoelace sub-menus use getComputedStyle to determine whether they are in
+  // ltr or rtl mode.
+  // However, this causes some performance issues because each submenu causes a
+  // reflow whenever they are created.
+  // Therefore, we maintain our own open/close state and only create the
+  // sub-menu contents when the menu is open.
+  private subMenuTemplate() {
     if (!this.spectrogramElement) {
       return nothing;
     }
@@ -382,54 +424,48 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     };
 
     return html`
-      <sl-dropdown hoist>
-        <a class="settings-menu-item" slot="trigger">
-          <sl-icon name="gear"></sl-icon>
-        </a>
-
-        <sl-menu>
-          ${this.discreteSettingsTemplate(
-            "Colour",
-            Object.keys(colorScales),
-            currentOptions.colorMap,
-            discreteDropdownHandler("colorMap"),
-          )}
-          ${this.rangeSettingsTemplate(
-            "Brightness",
-            -0.5,
-            0.5,
-            0.01,
-            currentOptions.brightness,
-            rangeInputHandler("brightness"),
-          )}
-          ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
-          ${this.discreteSettingsTemplate(
-            "Window Function",
-            Array.from(windowFunctions.keys()),
-            currentOptions.windowFunction,
-            discreteDropdownHandler("windowFunction"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Size",
-            possibleWindowSizes,
-            currentOptions.windowSize,
-            discreteDropdownHandler("windowSize"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Overlap",
-            [0, ...possibleWindowOverlaps],
-            currentOptions.windowOverlap,
-            discreteDropdownHandler("windowOverlap"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Scale",
-            ["linear", "mel"],
-            currentOptions.melScale ? "mel" : "linear",
-            discreteDropdownHandler("melScale"),
-          )}
-          ${when(this.axesElement, () => this.axesSettingsTemplate())}
-        </sl-menu>
-      </sl-dropdown>
+      <sl-menu>
+        ${this.discreteSettingsTemplate(
+          "Colour",
+          Object.keys(colorScales),
+          currentOptions.colorMap,
+          discreteDropdownHandler("colorMap"),
+        )}
+        ${this.rangeSettingsTemplate(
+          "Brightness",
+          -0.5,
+          0.5,
+          0.01,
+          currentOptions.brightness,
+          rangeInputHandler("brightness"),
+        )}
+        ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
+        ${this.discreteSettingsTemplate(
+          "Window Function",
+          Array.from(windowFunctions.keys()),
+          currentOptions.windowFunction,
+          discreteDropdownHandler("windowFunction"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Window Size",
+          possibleWindowSizes,
+          currentOptions.windowSize,
+          discreteDropdownHandler("windowSize"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Window Overlap",
+          [0, ...possibleWindowOverlaps],
+          currentOptions.windowOverlap,
+          discreteDropdownHandler("windowOverlap"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Scale",
+          ["linear", "mel"],
+          currentOptions.melScale ? "mel" : "linear",
+          discreteDropdownHandler("melScale"),
+        )}
+        ${when(this.axesElement, () => this.axesSettingsTemplate())}
+      </sl-menu>
     `;
   }
 
