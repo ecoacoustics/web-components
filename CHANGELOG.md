@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.0...web-components-v6.1.1) (2025-12-04)
+
+
+### Bug Fixes
+
+* Media controls reflow on creation ([#568](https://github.com/ecoacoustics/web-components/issues/568)) ([97bdc40](https://github.com/ecoacoustics/web-components/commit/97bdc40ccf1cc6fe1db88a3d2463ed3d3fc6545a)), closes [#563](https://github.com/ecoacoustics/web-components/issues/563)
+
 ## [6.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.5...web-components-v6.1.0) (2025-11-26)
 
 
