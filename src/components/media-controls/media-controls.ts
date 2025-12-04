@@ -70,6 +70,19 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   @property({ type: String })
   public playIconPosition: PreferenceLocation = "default";
 
+  /**
+   * We use a state variable to track whether the settings menu is open or not
+   * because Shoelace sub-menus use getComputedStyle to determine whether they
+   * are in ltr or rtl mode.
+   * This causes some performance issues when there are a lot of sub-menus or
+   * media controls on the page because each submenu causes a reflow whenever
+   * they are created.
+   * By maintaining our own open/close state we can defer the creation of the
+   * sub-menu contents until the menu is open, meaning that we only hit this
+   * reflow cost when the user actually wants to see the menu.
+   *
+   * see: https://github.com/shoelace-style/shoelace/discussions/2527
+   */
   @state()
   private areSettingsOpen = false;
 
