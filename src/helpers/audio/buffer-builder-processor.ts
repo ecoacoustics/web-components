@@ -35,7 +35,7 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
     //
     // TypeScript doesn't correctly recognize that indexing into this array
     // might produce undefined, so we need to cast it ourselves.
-    const input = inputs[0][0] as Float32Array<ArrayBufferLike> | undefined;
+    const input = inputs[0][0] as Float32Array | undefined;
 
     // Sometimes the input can receive a zero-length 2d array [[]] on the first
     // call.
