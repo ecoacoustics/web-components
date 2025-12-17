@@ -26,16 +26,16 @@
   ],
   "exports": {
     ".": {
-      "default": "./dist/components.js",
-      "types": "./@types/index.d.ts"
+      "types": "./@types/index.d.ts",
+      "default": "./dist/components.js"
     },
     "./dist/components/*": {
-      "default": "./dist/components/*.js",
-      "types": "./@types/components/*.d.ts"
+      "types": "./@types/components/*.d.ts",
+      "default": "./dist/components/*.js"
     },
     "./dist/models/*": {
-      "default": "./dist/models/*.js",
-      "types": "./@types/models/*.d.ts"
+      "types": "./@types/models/*.d.ts",
+      "default": "./dist/models/*.js"
     }
   },
   "customElements": "dist/custom-elements.json",
