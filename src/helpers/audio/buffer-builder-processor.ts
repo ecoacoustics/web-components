@@ -32,7 +32,20 @@ export default class BufferBuilderProcessor extends AudioWorkletProcessor {
 
     // we should always have single input with one single channel of data by this point
     // any mixing or channel selection should be done before this processor
-    const input = inputs[0][0];
+    //
+    // TypeScript doesn't correctly recognize that indexing into this array
+    // might produce undefined, so we need to cast it ourselves.
+    const input = inputs[0][0] as Float32Array | undefined;
+
+    // Sometimes the input can receive a zero-length 2d array [[]] on the first
+    // call.
+    // Therefore, if we cannot index into the first channel because [0][0]
+    // returned undefined, we perform a no-op by returning true.
+    // We return true here to keep the processor alive.
+    if (input === undefined) {
+      return true;
+    }
+
     let writeHead = this.state.bufferWriteHead;
     const bufferLength = this.buffer.length;
 
