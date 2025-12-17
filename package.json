@@ -25,9 +25,18 @@
     "./@types"
   ],
   "exports": {
-    ".": "./dist/components.js",
-    "./dist/components/*": "./dist/components/*.js",
-    "./dist/models/*": "./dist/models/*.js"
+    ".": {
+      "default": "./dist/components.js",
+      "types": "./@types/index.d.ts"
+    },
+    "./dist/components/*": {
+      "default": "./dist/components/*.js",
+      "types": "./@types/components/*.d.ts"
+    },
+    "./dist/models/*": {
+      "default": "./dist/models/*.js",
+      "types": "./@types/models/*.d.ts"
+    }
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {
