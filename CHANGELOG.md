@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.1...web-components-v6.1.2) (2025-12-17)
+
+
+### Bug Fixes
+
+* empty buffer-builder-processor input ([#580](https://github.com/ecoacoustics/web-components/issues/580)) ([eaf2a83](https://github.com/ecoacoustics/web-components/commit/eaf2a830b94f5967cbdc0702ec8d65d3efc7bd4a)), closes [#579](https://github.com/ecoacoustics/web-components/issues/579)
+
 ## [6.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.0...web-components-v6.1.1) (2025-12-04)
 
 
