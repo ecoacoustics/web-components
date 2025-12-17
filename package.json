@@ -29,13 +29,9 @@
       "types": "./@types/index.d.ts",
       "default": "./dist/components.js"
     },
-    "./dist/components/*": {
-      "types": "./@types/components/*.d.ts",
-      "default": "./dist/components/*.js"
-    },
-    "./dist/models/*": {
-      "types": "./@types/models/*.d.ts",
-      "default": "./dist/models/*.js"
+    "./*": {
+      "types": "./@types/*.d.ts",
+      "default": "./dist/*.js"
     }
   },
   "customElements": "dist/custom-elements.json",
