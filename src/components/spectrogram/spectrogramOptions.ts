@@ -50,10 +50,6 @@ export class SpectrogramOptions implements ISpectrogramOptions {
   public scaling: SpectrogramCanvasScale;
 
   public get windowStep(): number {
-    if (this.windowSize === undefined || this.windowOverlap === undefined) {
-      throw new Error("windowSize and windowOverlap must be defined to calculate windowStep");
-    }
-
     return this.windowSize - this.windowOverlap;
   }
 }

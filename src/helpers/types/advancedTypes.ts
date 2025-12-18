@@ -50,7 +50,7 @@ export type FixedLengthArray<T, Length> = Array<T> & { length: Length };
  * that accepts this type.
  * You can use the "isValidNumber" guard.
  */
-export type ValidNumber = number & object;
+export type ValidNumber = number;
 
 export type FixedLengthSet<T, Length> = Set<T> & { size: Length };
 
@@ -64,6 +64,12 @@ export type Constructor<T extends object, Args extends unknown[] = any[]> = new 
  * (such as when the key is a symbol).
  */
 export type ObjectRecord = Record<PropertyKey, unknown>;
+
+/**
+ * @description
+ * Extracts the values of an object type as a union type.
+ */
+export type ObjectValues<T extends ObjectRecord> = T[keyof T];
 
 /**
  * A JavaScript variable that is stored in the heap, and variables store a

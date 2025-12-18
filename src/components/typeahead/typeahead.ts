@@ -103,40 +103,44 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
     // Note that we use "then" instead of await here because if the async
     // callback is taking a long time to complete (e.g. server lag), we do not
     // wait to lock up the main thread awaiting a response.
-    Promise.resolve(searchResults).then((value) => {
-      // If there is no search term, we want to append the recently used items
-      // to the top of the results.
-      // If there is a search term, we do not want to inject results, so we
-      // return the search results as is.
-      if (!searchTerm) {
-        // To avoid duplicates in the recently used items, and the initial
-        // results returned from the search callback with no search term,
-        // we match the recently used items against the search results using the
-        // text converter.
-        // Note that we use the text converter instead of the model because
-        // new references might be re-created for each search.
-        // Matching by the text converter allows us to de-duplicate the results
-        // without the host application needing to worry about stable object
-        // references.
-        const recentlyUsedSet = new Set(this.recentlyUsed.map((model) => this.textConverter(model)));
-        const filteredSearchResults = value.filter((model) => !recentlyUsedSet.has(this.textConverter(model)));
+    Promise.resolve(searchResults)
+      .then((value) => {
+        // If there is no search term, we want to append the recently used items
+        // to the top of the results.
+        // If there is a search term, we do not want to inject results, so we
+        // return the search results as is.
+        if (!searchTerm) {
+          // To avoid duplicates in the recently used items, and the initial
+          // results returned from the search callback with no search term,
+          // we match the recently used items against the search results using the
+          // text converter.
+          // Note that we use the text converter instead of the model because
+          // new references might be re-created for each search.
+          // Matching by the text converter allows us to de-duplicate the results
+          // without the host application needing to worry about stable object
+          // references.
+          const recentlyUsedSet = new Set(this.recentlyUsed.map((model) => this.textConverter(model)));
+          const filteredSearchResults = value.filter((model) => !recentlyUsedSet.has(this.textConverter(model)));
 
-        this.typeaheadResults = [...this.recentlyUsed, ...filteredSearchResults];
-      } else {
-        this.typeaheadResults = value;
-      }
+          this.typeaheadResults = [...this.recentlyUsed, ...filteredSearchResults];
+        } else {
+          this.typeaheadResults = value;
+        }
 
-      // Similar to Google search, I reset the index of the focus index if the
-      // user performs input.
-      // Note that unlike Google search, we do not allow the focus head to have
-      // nothing selected.
-      //
-      // I only move the focus index after the new results have been populated
-      // so if the async function is taking a long time to complete
-      // (e.g. server lag), the focus head cannot move to a position that would
-      // not exist in the new search results.
-      this.focusedIndex = 0;
-    });
+        // Similar to Google search, I reset the index of the focus index if the
+        // user performs input.
+        // Note that unlike Google search, we do not allow the focus head to have
+        // nothing selected.
+        //
+        // I only move the focus index after the new results have been populated
+        // so if the async function is taking a long time to complete
+        // (e.g. server lag), the focus head cannot move to a position that would
+        // not exist in the new search results.
+        this.focusedIndex = 0;
+      })
+      .catch((error: unknown) => {
+        console.error("Typeahead search callback failed:", error);
+      });
   }
 
   private handleInput(event: KeyboardEvent): void {
@@ -242,8 +246,23 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
 
   private handleFocusSelection(): void {
     const model = this.typeaheadResults[this.focusedIndex];
+
+    // Because we do not know the length of the array, the focused index might
+    // be out of bounds, returning undefined.
+    // TypeScript does not handle this case in the type system, so I need to
+    // turn off the no-unnecessary-condition rule here.
+    //
+    // I have never seen this happen in practice, but I have included this check
+    // as a defensive programming measure to avoid potential runtime errors.
+    //
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (model) {
       this.handleDecision(model);
+    } else {
+      console.warn(
+        `Typeahead focused index ${this.focusedIndex} is out of bounds for ` +
+          `results of length ${this.typeaheadResults.length}`,
+      );
     }
   }
 
@@ -290,7 +309,9 @@ export class TypeaheadComponent<T extends object = any> extends AbstractComponen
         <button
           class="typeahead-result-action oe-btn ${classes}"
           aria-selected="${selected}"
-          @click="${() => this.handleDecision(model)}"
+          @click="${() => {
+            this.handleDecision(model);
+          }}"
           @pointerover="${() => (this.focusedIndex = index)}"
         >
           ${this.textConverter(model)}

@@ -411,7 +411,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   private willFitStep(
     proposedStep: number,
     canvasSize: number,
-    domain: ScaleDomain<Seconds | Hertz>,
+    domain: ScaleDomain<Seconds  >,
     fontSize: number,
     scale: FrequencyScale | TemporalScale,
     melScale: boolean,
@@ -466,8 +466,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   // the calculate step function will use a binary search to find the largest
   // "nice" factor that will fit the axis
   private calculateStep(
-    domain: ScaleDomain<Seconds | Hertz>,
-    range: ScaleRange<Seconds | Hertz>,
+    domain: ScaleDomain<Seconds  >,
+    range: ScaleRange<Seconds  >,
     scale: FrequencyScale | TemporalScale,
     sizeKey: keyof Size,
   ): number {
@@ -518,9 +518,9 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   }
 
   private generateAxisValues(
-    start: Seconds | Hertz,
-    end: Seconds | Hertz,
-    step: Seconds | Hertz,
+    start: Seconds  ,
+    end: Seconds  ,
+    step: Seconds  ,
     scale: FrequencyScale | TemporalScale,
     includeEnd = true,
   ): number[] {

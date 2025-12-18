@@ -97,8 +97,8 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   public disconnectedCallback(): void {
     if (this.spectrogramElement) {
-      this.spectrogramElement?.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
-      this.spectrogramElement?.removeEventListener(
+      this.spectrogramElement.removeEventListener(SpectrogramComponent.playEventName, this.playHandler);
+      this.spectrogramElement.removeEventListener(
         SpectrogramComponent.optionsChangeEventName,
         this.optionsChangeHandler,
       );
@@ -134,7 +134,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
       return false;
     }
 
-    return !this.spectrogramElement?.paused;
+    return !this.spectrogramElement.paused;
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
@@ -276,7 +276,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           <label>
             <input
               @change="${changeHandler}"
-              @click="${(event: PointerEvent) => event.stopPropagation()}"
+              @click="${(event: PointerEvent) => { event.stopPropagation(); }}"
               type="range"
               min="${min}"
               max="${max}"
@@ -360,7 +360,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   private settingsTemplate() {
     return html`
-      <sl-dropdown hoist @sl-show="${() => this.showSettings()}" @sl-hide="${() => this.hideSettings()}">
+      <sl-dropdown hoist @sl-show="${() => { this.showSettings(); }}" @sl-hide="${() => { this.hideSettings(); }}">
         <a class="settings-menu-item" slot="trigger">
           <sl-icon name="gear"></sl-icon>
         </a>
@@ -472,7 +472,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   public render() {
     return html`
       <div class="container" @pointerdown="${this.handlePointerDown}">
-        <a id="action-button" @click="${() => this.toggleAudio(false)}">
+        <a id="action-button" @click="${() => { this.toggleAudio(false); }}">
           ${this.isSpectrogramPlaying() ? this.pauseIcon() : this.playIcon()}
         </a>
 

@@ -112,12 +112,12 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
   public render() {
     return html`
       <div class="card-container">
-        <div class="subject-content">${this.subjectTemplate(this.tile?.model?.subject)}</div>
+        <div class="subject-content">${this.subjectTemplate(this.tile?.model.subject)}</div>
 
         <hr />
 
         <div class="static-actions">
-          <a id="download-recording" href="${this.tile?.model?.url ?? ""}" target="_blank" download>
+          <a id="download-recording" href="${this.tile?.model.url ?? ""}" target="_blank" download>
             Download Recording
           </a>
           ${this.showMoreButtonTemplate()}

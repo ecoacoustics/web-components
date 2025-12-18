@@ -16,7 +16,9 @@ export type PageFetcherContext = Record<string, unknown>;
 
 // TODO: remove the brand from the PageFetcher. This was done so that we could
 // see if the callback was created by the UrlSourcedFetcher
-export type PageFetcher<T extends PageFetcherContext = any> = ((context: T) => Promise<IPageFetcherResponse<T>>) & {
+export type PageFetcher<T extends PageFetcherContext = any> = ((
+  context: T,
+) => Promise<IPageFetcherResponse<T>> | IPageFetcherResponse<T>) & {
   brand?: symbol;
 };
 

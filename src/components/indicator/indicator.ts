@@ -53,7 +53,9 @@ export class IndicatorComponent extends ChromeProvider(LitElement) {
       this.unitConverter = newUnitConverter;
 
       if (this.unitConverter) {
-        this.unitConverter.canvasSize.subscribe((value) => this.handleCanvasResize(value));
+        this.unitConverter.canvasSize.subscribe((value) => {
+          this.handleCanvasResize(value);
+        });
       }
 
       this.computedTimePx = computed(() => {
@@ -69,11 +71,9 @@ export class IndicatorComponent extends ChromeProvider(LitElement) {
   }
 
   private handleCanvasResize(canvasSize: Size): void {
-    if (this?.indicatorSvg) {
-      const { width, height } = canvasSize;
-      this.indicatorSvg.style.width = `${width}px`;
-      this.indicatorSvg.style.height = `${height}px`;
-    }
+    const { width, height } = canvasSize;
+    this.indicatorSvg.style.width = `${width}px`;
+    this.indicatorSvg.style.height = `${height}px`;
   }
 
   public chromeOverlay(): ChromeTemplate {

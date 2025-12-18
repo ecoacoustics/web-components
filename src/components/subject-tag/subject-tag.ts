@@ -22,7 +22,7 @@ export class SubjectTagComponent extends AbstractComponent(WithShoelace(LitEleme
   private tile?: VerificationGridTileContext;
 
   private get originalTag() {
-    return this.tile?.model?.tag;
+    return this.tile?.model.tag;
   }
 
   private get originalTagText(): string {
@@ -30,7 +30,7 @@ export class SubjectTagComponent extends AbstractComponent(WithShoelace(LitEleme
   }
 
   private get newTag() {
-    return this.tile?.model?.newTag;
+    return this.tile?.model.newTag;
   }
 
   private get newTagText(): string {

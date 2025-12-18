@@ -161,7 +161,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     // the tutorial will start from the beginning again.
     // If we did not reset the tutorial carousel back to the start, the tutorial
     // would start from the slide they close it on.
-    this.tutorialSlideCarouselElement?.goToSlide(0);
+    this.tutorialSlideCarouselElement.goToSlide(0);
   }
 
   public showAdvancedDialog(): void {
@@ -216,7 +216,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     const defaultPositiveDecision = "--oe-verification-true";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
-      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
+      const decisionModel = this.demoDecisionButton.decisionModels[DecisionOptions.TRUE];
       if (!decisionModel) {
         console.warn(`Bootstrap could not find positive decision color. Falling back to ${defaultPositiveDecision}`);
         return defaultPositiveDecision;
@@ -232,7 +232,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
     const defaultNegativeColor = "--oe-verification-false";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
-      const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
+      const decisionModel = this.demoDecisionButton.decisionModels[DecisionOptions.FALSE];
       if (!decisionModel) {
         console.warn(`Bootstrap could not find negative decision color. Falling back to ${defaultNegativeColor}`);
         return defaultNegativeColor;
@@ -271,7 +271,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private slidesTemplate(): HTMLTemplateResult {
-    if (!this.slides?.length) {
+    if (!this.slides.length) {
       return html`<strong>No slides to display</strong>`;
     }
 
@@ -311,7 +311,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"
-              @click="${() => this.closeDialog()}"
+              @click="${() => { this.closeDialog(); }}"
               data-testid="dismiss-bootstrap-dialog-btn"
             >
               ${closeIconTemplate()}

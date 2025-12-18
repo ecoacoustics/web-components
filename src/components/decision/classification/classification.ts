@@ -207,7 +207,7 @@ export class ClassificationComponent extends DecisionComponent {
         aria-label="${decision} decision for ${this.tag.text}"
         aria-disabled="${this.disabled}"
         aria-keyshortcuts="${ifDefined(shortcut)}"
-        @click="${() => this.emitDecision([decisionModel])}"
+        @click="${() => { this.emitDecision([decisionModel]); }}"
       >
         <span class="oe-pill decision-color-pill" style="background-color: var(${color})"></span>
 

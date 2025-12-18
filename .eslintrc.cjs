@@ -2,9 +2,7 @@ module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
   rules: {
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-inferrable-types": "error",
-    // "max-len": ["warn", { "code": 120 }]
+    // "max-len": ["warn", { code: 120 }],
     "no-console": [
       "error",
       {
@@ -19,11 +17,24 @@ module.exports = {
     {
       extends: ["eslint:recommended", "plugin:@typescript-eslint/strict-type-checked", "plugin:lit/recommended"],
       plugins: ["@typescript-eslint", "lit"],
-      files: ["src/components/"],
+      files: ["src/components/**/*.ts"],
       parserOptions: {
         project: "./tsconfig.json",
         tsconfigRootDir: __dirname,
         projectService: true,
+      },
+      rules: {
+        // I disable both of these rules because it is common to pass a method
+        // as a value to an event listener in Lit html templates.
+        // e.g. @click="${this.handleClick}"
+        // In this case, the method above would be flagged by the unbound-method
+        // rule because it is not explicitly bound to "this"
+        // (even though in practice).
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-base-to-string": "off",
+        "@typescript-eslint/no-inferrable-types": "error",
       },
     },
     {

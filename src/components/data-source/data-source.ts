@@ -89,7 +89,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
         this.verificationGrid = verificationElement;
         this.verificationGrid.addEventListener(VerificationGridComponent.decisionMadeEventName, this.decisionHandler);
-        this.updateVerificationGrid();
+        this.updateVerificationGrid().catch((error: unknown) => {
+          console.error("Failed to update verification grid data source:", error);
+        });
       }
     }
   }
@@ -143,7 +145,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     const stringifiedResults = JSON.stringify(downloadableResults);
 
     const file = new File([stringifiedResults], "verification-results.json", { type: "application/json" });
-    downloadFile(file);
+    downloadFile(file).catch((error: unknown) => {
+      console.error("Failed to download results file:", error);
+    });
   }
 
   private async downloadUrlSourcedResults(): Promise<void> {
@@ -159,6 +163,8 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     const downloadableResults = await this.resultRows();
 
+    // TODO: Figure out why I originally added the "?? ''" here
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     const fileFormat = this.urlSourcedFetcher.mediaType ?? "";
 
     const originalFilePath = this.urlSourcedFetcher.file.name;
@@ -190,9 +196,15 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
     // is not stable in FireFox
     // TODO: Inline the functionality once Firefox ESR supports the
     // showSaveFilePicker API https://caniuse.com/?search=showSaveFilePicker
-    const fileType = this.urlSourcedFetcher.file?.type ?? "json";
+    //
+    // TODO: figure out why I originally added the "?? 'json'" here
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const fileType = this.urlSourcedFetcher.file.type ?? "json";
     const file = new File([formattedResults], downloadedFileName, { type: fileType });
-    downloadFile(file);
+    downloadFile(file).catch((error: unknown) => {
+      // TODO: We probably want to somehow raise this through the UI
+      console.error("Failed to download results file:", error);
+    });
   }
 
   // TODO: remove this hack that was added to fix an issue where if the
@@ -241,7 +253,7 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
 
     const subjects = await this.urlSourcedFetcher.generateSubjects();
 
-    const localDataFetcher: PageFetcher = async (context: { completed: boolean }) => {
+    const localDataFetcher: PageFetcher = (context: { completed: boolean }) => {
       const items = context.completed ? [] : subjects;
 
       return {
@@ -276,7 +288,9 @@ export class DataSourceComponent extends AbstractComponent(LitElement) {
           class="hidden"
           type="file"
           accept=".csv,.json,.tsv"
-          @change="${(event: Event) => this.handleFileChange(event)}"
+          @change="${(event: Event) => {
+            this.handleFileChange(event);
+          }}"
         />
       </span>
     `;

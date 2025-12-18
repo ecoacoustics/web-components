@@ -188,7 +188,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     }
 
     console.debug("oe-verification-grid-tile: firstUpdated");
-    this.intersectionObserver = new IntersectionObserver((entries) => this.handleIntersection(entries), {
+    this.intersectionObserver = new IntersectionObserver((entries) => { this.handleIntersection(entries); }, {
       root: this,
       // a threshold of zero indicates that we should trigger the callback if
       // any part of the observed elements overflow the component
@@ -247,7 +247,7 @@ export class VerificationGridTileComponent extends AbstractComponent(LitElement)
     // not want to enter a "loading" state again otherwise we cannot exit out of
     // it because exiting the loading state is dependent on the spectrogram
     // emitting a "loaded" event.
-    if (this.spectrogram?.src !== subject?.url) {
+    if (this.spectrogram?.src !== subject.url) {
       this.handleLoading();
     }
 

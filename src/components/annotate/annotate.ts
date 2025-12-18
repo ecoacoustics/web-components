@@ -229,7 +229,9 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       this.unitConverter = newUnitConverter;
     });
 
-    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => this.handleSpectrogramUpdate());
+    this.spectrogram.addEventListener(SpectrogramComponent.loadedEventName, () => {
+      this.handleSpectrogramUpdate();
+    });
   }
 
   private handleAnnotationUpdate(): void {
@@ -258,7 +260,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
         continue;
       }
 
-      if (tagElement?.elementReferences !== undefined) {
+      if (tagElement.elementReferences !== undefined) {
         litTemplateElement.innerHTML = "";
         litTemplateElement.append(...tagElement.elementReferences);
       }
@@ -542,6 +544,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const nextLabelPosition = currentPosition + 1;
 
     // TODO: programmatically determine the last label position
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     if (nextLabelPosition > EdgeLabelPosition.LEFT_EDGE) {
       console.warn("Could not find a suitable label position for the annotation.");
       return;
@@ -613,8 +616,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       <aside
         class="annotation-container ${boundingBoxClasses}"
         tabindex="0"
-        @focus="${() => focusCallback(model, true)}"
-        @blur="${() => focusCallback(model, false)}"
+        @focus="${() => {
+          focusCallback(model, true);
+        }}"
+        @blur="${() => {
+          focusCallback(model, false);
+        }}"
         style="
           left: ${watch(x)}px;
           top: ${watch(y)}px;

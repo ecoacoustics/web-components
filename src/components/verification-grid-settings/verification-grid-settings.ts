@@ -50,9 +50,13 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
         throw new Error("Could not find verification element to fullscreen");
       }
 
-      fullscreenTarget.requestFullscreen();
+      fullscreenTarget.requestFullscreen().catch((error: unknown) => {
+        console.error("Failed to enter fullscreen mode:", error);
+      });
     } else {
-      document.exitFullscreen();
+      document.exitFullscreen().catch((error: unknown) => {
+        console.error("Failed to exit fullscreen mode:", error);
+      });
     }
 
     this.updateFullscreenState();
@@ -131,7 +135,9 @@ export class VerificationGridSettingsComponent extends SignalWatcher(WithShoelac
         <button
           id="fullscreen-button"
           class="oe-btn-secondary"
-          @click="${() => this.toggleFullscreen()}"
+          @click="${() => {
+            this.toggleFullscreen();
+          }}"
           ?disabled="${!canEnterFullscreen}"
           aria-label="${buttonLabel}"
         >

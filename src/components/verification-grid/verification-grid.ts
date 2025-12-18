@@ -621,14 +621,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     pointerId: null,
     capturedPointer: false,
     observedElements: [],
-
-    // Poorly created webpages may not have a body element.
-    // In this case, we should use the component host as the highlight host.
-    //
-    // I store the highlight host in the highlight object so if a <body> tag
-    // is dynamically added/removed from the page, we will maintain the same
-    // highlight host and not leak event listeners.
-    highlightHost: document.body ?? this,
+    highlightHost: document.body,
   };
 
   private focusHead: number | null = null;
@@ -1052,7 +1045,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
     this.subjectWriter = new SubjectWriter(this._subjects);
     this.paginationFetcher.subjectStream
-      .pipeTo(this.subjectWriter!, { signal: this.paginationFetcher.abortController.signal })
+      .pipeTo(this.subjectWriter, { signal: this.paginationFetcher.abortController.signal })
       .then(() => {
         this.subjectWriter?.closeStream();
         this.paginationFetcher?.abortController.abort();
@@ -1491,7 +1484,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private handlePointerMove(event: PointerEvent): void {
-    runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => this.resizeHighlightBox(event));
+    runOnceOnNextAnimationFrame(this.highlightSelectionAnimation, () => {
+      this.resizeHighlightBox(event);
+    });
   }
 
   private handleScroll(): void {
@@ -1808,7 +1803,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     this._loadState = GridState.TILES_LOADING;
 
-    let clampedHead = Math.max(0, value);
+    const clampedHead = Math.max(0, value);
     await this.populatePageSubjectsToIndex(clampedHead);
 
     // Updating _viewHeadIndex will cause the public viewHeadIndex getter to
@@ -2202,7 +2197,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private setDecisionsDisabled(): void {
-    const decisionElements = this.decisionElements ?? [];
+    const decisionElements = this.decisionElements;
     for (const decisionElement of decisionElements) {
       decisionElement.disabled = true;
     }
@@ -2213,7 +2208,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     // If any of the decision buttons predicate's pass with the current
     // sub-selection, the button should not be disabled.
-    const decisionElements = this.slottedDecisionComponents ?? [];
+    const decisionElements = this.slottedDecisionComponents;
     for (const decisionElement of decisionElements) {
       const isDecisionDisabled = !subSelection.some((subject) => decisionElement.when(subject));
       decisionElement.disabled = isDecisionDisabled;
@@ -2245,7 +2240,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // to contribute to check if a decision is required.
     // Otherwise there would be no way to fully disable a decision without
     // also providing a custom skip button.
-    const decisionElements = this.slottedDecisionComponents ?? [];
+    const decisionElements = this.slottedDecisionComponents;
     const subject = tile.model;
 
     const oldSubject = Object.assign({}, subject);
@@ -2290,7 +2285,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region Rendering
 
   private hasDecisionElements(): boolean {
-    return Array.from(this.decisionElements ?? []).length > 0;
+    return this.decisionElements.length > 0;
   }
 
   private areTilesLoaded(): boolean {
@@ -2518,8 +2513,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       return this.emptySubjectTemplate();
     }
 
-    const customTemplate = this.customTileTemplates[0];
-    const tileTemplate = customTemplate ?? this.defaultTemplateElement;
+    const tileTemplate =
+      this.customTileTemplates.length > 0 ? this.customTileTemplates[0] : this.defaultTemplateElement;
 
     const gridTile = html`
       <oe-verification-grid-tile
@@ -2595,7 +2590,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               <oe-verification-grid-settings></oe-verification-grid-settings>
 
               <button
-                @click="${() => this.handleHelpRequest()}"
+                @click="${() => {
+                  this.handleHelpRequest();
+                }}"
                 class="oe-btn-info"
                 rel="help"
                 aria-label="Help and keyboard shortcuts"

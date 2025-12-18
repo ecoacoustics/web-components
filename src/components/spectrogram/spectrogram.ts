@@ -19,7 +19,6 @@ import { ISpectrogramOptions, SpectrogramCanvasScale, SpectrogramOptions } from 
 import { AudioInformation } from "../../helpers/audio/audioInformation";
 import { consume } from "@lit/context";
 import { spectrogramOptionsContext } from "../../helpers/constants/contextTokens";
-import { ValidNumber } from "../../helpers/types/advancedTypes";
 import { customElement } from "../../helpers/customElement";
 import { mergeOptions } from "../../helpers/options";
 import HighAccuracyTimeProcessor from "../../helpers/audio/high-accuracy-time-processor.ts?worker&url";
@@ -347,14 +346,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
   public async firstUpdated(change: PropertyValues<this>) {
     super.firstUpdated(change);
 
-    OeResizeObserver.observe(this.spectrogramContainer, (event) => this.handleResize(event));
+    OeResizeObserver.observe(this.spectrogramContainer, (event) => {
+      this.handleResize(event);
+    });
 
     // because audio context's automatically start in an active state, and start
     // processing audio even if there is no <audio> element input, we immediately
     // suspend it so that it doesn't use up additional resources / threads
     // we should manually resume the audio context when the audio's when the
     // play/paused state is updated
-    this.audioContext.suspend();
+    this.audioContext.suspend().catch((error: unknown) => {
+      console.error("Failed to suspend audio context:", error);
+    });
 
     const source = this.audioContext.createMediaElementSource(this.mediaElement);
     source.connect(this.audioContext.destination);
@@ -384,7 +387,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
 
         if (this.isValidWindowSize(oldWindowSize)) {
           // TODO: Add upper bound check
-          this.windowSize = oldWindowSize as PowerTwoWindowSize;
+          this.windowSize = oldWindowSize;
         } else {
           this.windowSize = undefined;
         }
@@ -396,7 +399,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     }
   }
 
-  public async updated(change: PropertyValues<this>) {
+  public updated(change: PropertyValues<this>) {
     super.updated(change);
 
     if (this.doneFirstRender) {
@@ -405,10 +408,16 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // only the options are updated
       if (this.invalidateSpectrogramSource(change)) {
         this.pause();
-        this.regenerateSpectrogram();
+
+        this.regenerateSpectrogram().catch((error: unknown) => {
+          throw new Error(`Failed to regenerate spectrogram`, { cause: error });
+        });
+
         this.updateCurrentTime();
       } else if (this.invalidateSpectrogramOptions(change)) {
-        this.regenerateSpectrogramOptions();
+        this.regenerateSpectrogramOptions().catch((error: unknown) => {
+          throw new Error(`Failed to regenerate spectrogram options`, { cause: error });
+        });
       }
 
       if (this.unitConverters.value) {
@@ -417,7 +426,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         this.unitConverters.value.melScale.value = this.spectrogramOptions.melScale;
       }
     } else if (this.invalidateSpectrogramSource(change)) {
-      this.renderSpectrogram();
+      this.renderSpectrogram().catch((error: unknown) => {
+        throw new Error(`Failed to render spectrogram`, { cause: error });
+      });
     }
   }
 
@@ -583,12 +594,13 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // TODO: as part of a defensive programming practice, we should remove
       // the "as any" cast and gracefully handle errors where the audio model
       // suddenly destructs itself
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.audio as any,
       signal(this.spectrogramOptions.melScale),
     );
   }
 
-  private isValidWindowSize(value: unknown): value is ValidNumber & PowerTwoWindowSize {
+  private isValidWindowSize(value: unknown): value is PowerTwoWindowSize {
     return isValidNumber(value) && isPowerOfTwo(value) && value > 0;
   }
 
@@ -625,7 +637,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     };
   }
 
-  private stretchSize(entry: DOMRectReadOnly): Size {
+  private stretchSize(entry: DOMRectReadOnly | undefined): Size {
     // in any correctly structured HTML document, a parent element should always
     // exist (at the very minimum a html tag should be present) however, we
     // cannot enforce this, so we have to check that a parent element exists
@@ -670,7 +682,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     // We do not use a truthy assertion here because if the bufferedFrameRef
     // value is zero, we still want to cancel the animation frame.
     const targetEntry = entries[0];
-    runOnceOnNextAnimationFrame(this.canvasResizeCallback, () => this.resizeCanvas(targetEntry.contentRect));
+    runOnceOnNextAnimationFrame(this.canvasResizeCallback, () => {
+      this.resizeCanvas(targetEntry.contentRect);
+    });
   }
 
   // TODO: refactor this procedure
@@ -777,7 +791,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // we use peek() here because we do not want to create a subscription
       // to the currentTime signal
       const initialTime = this.highAccuracyElapsedTime() - this.currentTime.peek();
-      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(initialTime));
+      this.interpolationCancelReference = requestAnimationFrame(() => {
+        this.pollUpdateHighAccuracyTime(initialTime);
+      });
 
       return;
     }
@@ -796,7 +812,9 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       if (mediaElementTime === 0) {
         // if the media element has not started playing yet (e.g. due to lag)
         // there is no need to update the time.
-        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(bufferTime));
+        this.interpolationCancelReference = requestAnimationFrame(() => {
+          this.pollUpdateHighAccuracyTime(bufferTime);
+        });
         return;
       }
 
@@ -809,7 +827,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       // This caused the currentTime to exceed the audio duration, and a console
       // error to be thrown.
       const audioDuration = this.audio.value?.duration ?? Infinity;
-      let timeElapsed = Math.min(bufferTime - startTime, audioDuration);
+      const timeElapsed = Math.min(bufferTime - startTime, audioDuration);
 
       // TODO: We should probably throw a console error if the desync exceeds
       // a large amount (e.g. 1 second) so that tests fail and we can
@@ -823,14 +841,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         startTime -= desync;
 
         this.currentTime = mediaElementTime;
-        this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+        this.interpolationCancelReference = requestAnimationFrame(() => {
+          this.pollUpdateHighAccuracyTime(startTime);
+        });
 
         return;
       }
 
       this.currentTime = timeElapsed;
 
-      this.interpolationCancelReference = requestAnimationFrame(() => this.pollUpdateHighAccuracyTime(startTime));
+      this.interpolationCancelReference = requestAnimationFrame(() => {
+        this.pollUpdateHighAccuracyTime(startTime);
+      });
     } else {
       this.currentTime = this.mediaElement.currentTime;
     }
@@ -870,10 +892,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
       }
 
       this.mediaElement.pause();
-      this.audioContext.suspend();
+      this.audioContext.suspend().catch((error: unknown) => {
+        console.error("Failed to suspend audio context:", error);
+      });
     } else {
-      this.mediaElement.play();
-      this.audioContext.resume();
+      // prettier-ignore
+      Promise.all([
+        this.mediaElement.play(),
+        this.audioContext.resume(),
+      ]).catch((error: unknown) => {
+        console.error("Failed to play audio element:", error);
+      });
+
       this.updateCurrentTime(true);
     }
 
@@ -919,8 +949,12 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         preload="metadata"
         crossorigin="anonymous"
         fetchpriority="low"
-        @play="${() => this.play()}"
-        @ended="${() => this.stop()}"
+        @play="${() => {
+          this.play();
+        }}"
+        @ended="${() => {
+          this.stop();
+        }}"
       >
         <slot></slot>
       </audio>

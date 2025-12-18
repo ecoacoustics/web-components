@@ -13,8 +13,8 @@ export function decisionButtonSprite(
   decisionButton: Readonly<DecisionComponent | undefined>,
 ): SvgSprite {
   const isClassification = decisionButton instanceof ClassificationComponent;
-  const width = 40 as const;
-  const height = 42 as const;
+  const width = 40;
+  const height = 42;
 
   return svg`
     <svg viewbox="0 0 ${width} ${height}" x="${x}" y="${y}" width="${width}" height="${height}">
