@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.2...web-components-v6.2.0) (2025-12-18)
+
+
+### Features
+
+* export TypeScript typings as module exports ([#583](https://github.com/ecoacoustics/web-components/issues/583)) ([40311da](https://github.com/ecoacoustics/web-components/commit/40311da767279aaa54003891ee7f78189d332d60)), closes [#582](https://github.com/ecoacoustics/web-components/issues/582)
+
 ## [6.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.1...web-components-v6.1.2) (2025-12-17)
 
 
