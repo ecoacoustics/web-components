@@ -40,6 +40,8 @@ jobs:
 
       - name: Publish to NPM
         run: pnpm publish:components
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to GitHub Releases
         env:
