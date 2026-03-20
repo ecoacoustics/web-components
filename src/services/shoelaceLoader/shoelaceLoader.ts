@@ -11,7 +11,7 @@ import arrowsFullscreenIcon from "../../../node_modules/@shoelace-style/shoelace
 import gridIcon from "../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/grid.svg?raw";
 import arrowRepeatIcon from "../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/arrow-repeat.svg?raw";
 import mouseIcon from "../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/mouse.svg?raw";
-import xMarkIcon from "../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x.svg?raw";
+import xLgIcon from "../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x-lg.svg?raw";
 
 type InlineSvg = `data:image/svg+xml,${string}`;
 
@@ -24,7 +24,7 @@ const registeredIcons: Record<string, string> = {
   "fullscreen-exit": fullscreenExitIcon,
   "arrows-fullscreen": arrowsFullscreenIcon,
   "arrow-repeat": arrowRepeatIcon,
-  "x-mark": xMarkIcon,
+  "x-lg": xLgIcon,
   mouse: mouseIcon,
   play: playIcon,
   pause: pauseIcon,
