@@ -175,9 +175,20 @@ export class AudioHelper {
     const info = this.cachedAudioInformation as AudioInformation;
 
     // recreate the processor every time!
-    await this.createAudioContext(info, downloadedBuffer, generation);
+    const startRendering = await this.createAudioContext(info, downloadedBuffer, generation);
 
+    // Critical: tell the worker to start its work() loop BEFORE the
+    // OfflineAudioContext begins pumping data. Otherwise the processor
+    // can fill its buffer before the worker is listening, causing timeouts.
     this.regenerateWorker(options, info, generation);
+
+    // Wait for the worker to enter its work() loop (sets state to PROCESSING).
+    // This ensures the worker is blocked on Atomics.wait(BUFFER_AVAILABLE)
+    // and will wake immediately when the processor signals bufferReady.
+    await this.state.waitForWorkerBusy();
+
+    // Now safe to start the audio pipeline
+    startRendering?.();
 
     // returns before the worker finishes painting
     // but abort will wait for the worker to finish
@@ -235,7 +246,17 @@ export class AudioHelper {
     return buffer;
   }
 
-  private async createAudioContext(info: AudioInformation, buffer: ArrayBuffer, generation: number) {
+  /**
+   * Creates and prepares the audio context, but does NOT start rendering.
+   * Returns a callback to start rendering, or undefined if setup failed.
+   * This separation allows the caller to ensure the worker is ready before
+   * the OfflineAudioContext begins pumping data through the processor.
+   */
+  private async createAudioContext(
+    info: AudioInformation,
+    buffer: ArrayBuffer,
+    generation: number,
+  ): Promise<(() => void) | undefined> {
     const length = info.duration * info.sampleRate * info.channels;
 
     //! creates a buffer the size of the entire audio file
@@ -266,13 +287,18 @@ export class AudioHelper {
     if (success) {
       this.generationData.set(generation, source);
 
-      source.start();
-      context.startRendering();
+      // Return a callback to start rendering.
+      // The caller should start the worker before invoking this.
+      return () => {
+        source.start();
+        context.startRendering();
+      };
     }
 
     // otherwise just forget about everything, don't bother to start.
     // no instance state to clean up
     // hopefully the garbage collector will clean up the context
+    return undefined;
   }
 
   // messages

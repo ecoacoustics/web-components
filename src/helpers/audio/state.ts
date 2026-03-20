@@ -252,6 +252,14 @@ export class State {
       await sleep(0);
     }
   }
+
+  public async waitForWorkerBusy() {
+    // waitAsync not supported in FF, wait not allowed on main thread
+    while (!this.workerProcessing) {
+      // do nothing
+      await sleep(0);
+    }
+  }
 }
 
 export class ProcessorState extends State {
@@ -278,12 +286,47 @@ export class ProcessorState extends State {
   }
 
   public busyWaitForWorkerToProcessBuffer(generation: number) {
-    // we have to do this because Chrome doesn't support Atomics.wait inside of
-    // AudioProcessorWorklet's (Firefox does)
-    while (this.bufferAvailable && this.matchesCurrentGeneration(generation)) {
-      // do nothing
-      // TODO: can we do something here other than burn cycles?
+    // Chrome doesn't support Atomics.wait inside AudioProcessorWorklets (Firefox does),
+    // so we must busy-wait. To prevent deadlocks when multiple spectrograms run
+    // concurrently (CPU starvation from high-priority audio threads), we:
+    //
+    // 1. Split the wait into multiple short attempts
+    // 2. Re-notify the worker between attempts (in case it missed the notification)
+    // 3. On final timeout, drop the buffer contents so the processor can continue
+    //    writing new samples (prevents cascading timeouts on every subsequent process() call)
+    //
+    // Note: We can't use performance.now() in AudioWorklet contexts, so we use
+    // iteration count as a proxy for time.
+    const ITERATIONS_PER_ATTEMPT = 100_000; // ~1-2ms per attempt
+    const MAX_ATTEMPTS = 2000; // Total ~2-4 seconds before giving up
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      for (let i = 0; i < ITERATIONS_PER_ATTEMPT; i++) {
+        if (!this.bufferAvailable || !this.matchesCurrentGeneration(generation)) {
+          // Normal exit: worker processed the buffer, or generation changed (abort)
+          return;
+        }
+      }
+
+      // Between attempts, re-notify the worker in case it missed the initial notification.
+      // This wakes a worker blocked on Atomics.wait for BUFFER_AVAILABLE.
+      Atomics.notify(this.state, STATE.BUFFER_AVAILABLE, 1);
     }
+
+    // All attempts exhausted. The worker couldn't process the buffer in time.
+    // This typically happens when many spectrograms cause CPU starvation.
+    // Drop the current buffer contents and reset the write head so the processor
+    // can continue writing new samples — preventing cascading timeouts where every
+    // subsequent process() call also overflows and times out.
+    // The spectrogram may have a gap but will otherwise continue rendering.
+    console.error(
+      `processor (${generation}): Timeout waiting for worker to process buffer. ` +
+        `Dropping ${this.bufferWriteHead} unprocessed samples to prevent deadlock. ` +
+        `The rendered spectrogram may have a gap.`,
+    );
+
+    this.bufferWriteHead = 0;
+    this.bufferAvailable = BUFFER_READY_STATES.NOT_READY;
   }
 
   /**
