@@ -253,12 +253,31 @@ export class State {
     }
   }
 
-  public async waitForWorkerBusy() {
+  /**
+   * Wait for the worker to transition into the PROCESSING state.
+   *
+   * Returns true if the worker became busy within the timeout, or false if the
+   * timeout was reached without the worker starting processing. This prevents
+   * the main thread from hanging indefinitely if the worker never transitions
+   * to PROCESSING (e.g., worker crash or unhandled message).
+   *
+   * @param timeoutMs - Maximum time to wait in milliseconds. Defaults to 5000ms.
+   */
+  public async waitForWorkerBusy(timeoutMs: number = 5000): Promise<boolean> {
     // waitAsync not supported in FF, wait not allowed on main thread
+    const start = Date.now();
+
     while (!this.workerProcessing) {
-      // do nothing
+      // if we've waited too long, bail out so callers can recover
+      if (Date.now() - start >= timeoutMs) {
+        return false;
+      }
+
+      // do nothing but still yield
       await sleep(0);
     }
+
+    return true;
   }
 }
 
@@ -297,8 +316,10 @@ export class ProcessorState extends State {
     //
     // Note: We can't use performance.now() in AudioWorklet contexts, so we use
     // iteration count as a proxy for time.
-    const ITERATIONS_PER_ATTEMPT = 100_000; // ~1-2ms per attempt
-    const MAX_ATTEMPTS = 2000; // Total ~2-4 seconds before giving up
+    // The values below deliberately keep the total worst-case iteration count small
+    // to avoid long synchronous stalls inside process().
+    const ITERATIONS_PER_ATTEMPT = 1_000;
+    const MAX_ATTEMPTS = 100;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       for (let i = 0; i < ITERATIONS_PER_ATTEMPT; i++) {
