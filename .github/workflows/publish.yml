@@ -1,6 +1,12 @@
 name: Publish
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "The tag name of the release to publish"
+        required: true
+        type: string
   workflow_call:
     inputs:
       tag_name:
