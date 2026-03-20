@@ -6,8 +6,13 @@ test.beforeEach(async ({ fixture }) => {
 });
 
 test.describe("Bootstrap Modal Component", () => {
+  // The bootstrap modal opens automatically on first load when the
+  // auto-dismiss preference has not been set in localStorage.
+  // Note: toBeVisible() cannot be used on the host element because it has no
+  // visible dimensions — the modal is a fixed-position dialog in shadow DOM.
   test("should show the bootstrap modal on first load", async ({ fixture }) => {
-    await expect(fixture.bootstrapModal()).toBeVisible();
+    const isOpen = await fixture.isOpen();
+    expect(isOpen).toBe(true);
   });
 
   test.describe("close button", () => {
