@@ -18,6 +18,7 @@ jobs:
     name: Publish Assets to NPM and GitHub
     runs-on: ubuntu-latest
     permissions:
+      id-token: write # required for OIDC authentication to NPM registry
       contents: write
 
     steps:
@@ -28,13 +29,11 @@ jobs:
           ref: ${{ github.ref }}
 
       # Setup .npmrc file to publish to npm
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
           scope: "@ecoacoustics"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -46,8 +45,6 @@ jobs:
 
       - name: Publish to NPM
         run: pnpm publish:components
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to GitHub Releases
         env:
