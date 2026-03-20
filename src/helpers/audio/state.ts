@@ -316,8 +316,10 @@ export class ProcessorState extends State {
     //
     // Note: We can't use performance.now() in AudioWorklet contexts, so we use
     // iteration count as a proxy for time.
-    const ITERATIONS_PER_ATTEMPT = 100_000; // ~1-2ms per attempt
-    const MAX_ATTEMPTS = 2000; // Total ~2-4 seconds before giving up
+    // The values below deliberately keep the total worst-case iteration count small
+    // to avoid long synchronous stalls inside process().
+    const ITERATIONS_PER_ATTEMPT = 1_000;
+    const MAX_ATTEMPTS = 100;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       for (let i = 0; i < ITERATIONS_PER_ATTEMPT; i++) {
