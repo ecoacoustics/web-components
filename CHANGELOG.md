@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.2.0...web-components-v6.2.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* fix deadlock when rendering many spectrograms ([#592](https://github.com/ecoacoustics/web-components/issues/592)) ([2f40457](https://github.com/ecoacoustics/web-components/commit/2f4045788439b7f828d94a3216735722f8406128))
+
 ## [6.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.2...web-components-v6.2.0) (2025-12-18)
 
 
