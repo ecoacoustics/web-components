@@ -84,43 +84,44 @@ test.describe("ProcessorState", () => {
     });
 
     /**
-     * Note: The full timeout behavior (2-second wait) is difficult to test in a unit test
-     * because the synchronous busy-wait blocks the test thread. The timeout is primarily
-     * a safety mechanism for the deadlock scenario described in issue #591, where multiple
-     * AudioWorklet processors running in high-priority threads starve the worker threads.
+     * This test exercises the timeout path of busyWaitForWorkerToProcessBuffer by
+     * setting up a buffer that will never be processed by a worker. When the method
+     * returns, it should have:
+     * - Logged an error about the deadlock/timeout, and
+     * - Dropped the buffer / reset bufferAvailable.
      *
-     * The timeout has been manually tested and verified to work correctly in the browser.
-     * For automated testing, consider:
-     * - E2E tests that create multiple spectrograms simultaneously
-     * - Manual testing on the powerful owl microsite with 4 spectrograms
-     * - Performance profiling to verify CPU usage during the timeout scenario
+     * This verifies observable behavior rather than inspecting the function source.
      */
-    test("timeout mechanism exists and has reasonable constants", () => {
-      // This test verifies the timeout implementation exists and uses sensible values
-      // We can't easily test the full timeout without actually waiting seconds
+    test("timeout mechanism logs and cleans up on unprocessed buffer", () => {
       const state = State.createState();
       const processorState = new ProcessorState(state.stateBuffer);
 
-      // Read the source to verify timeout constants are defined
-      // This is a smoke test to catch if someone accidentally removes the timeout
-      const sourceCode = processorState.busyWaitForWorkerToProcessBuffer.toString();
+      const generation = 1;
+      processorState.processorReady(generation);
+      // Mark a buffer as ready so the processor will wait for it to be processed.
+      processorState.bufferReady();
 
-      // Verify retry attempt structure exists (iteration-based, not time-based)
-      // We use iterations because performance.now() isn't available in AudioWorklet
-      expect(sourceCode).toContain("ITERATIONS_PER_ATTEMPT");
-      expect(sourceCode).toContain("MAX_ATTEMPTS");
+      // Spy on console.error to ensure a timeout/deadlock is reported.
+      const originalConsoleError = console.error;
+      let errorCalled = false;
+      // eslint-disable-next-line no-console
+      console.error = (...args: unknown[]) => {
+        errorCalled = true;
+        // Preserve existing logging behavior.
+        // eslint-disable-next-line no-console
+        originalConsoleError.apply(console, args as any);
+      };
 
-      // Verify it re-notifies the worker between attempts
-      expect(sourceCode).toContain("Atomics.notify");
+      try {
+        processorState.busyWaitForWorkerToProcessBuffer(generation);
+      } finally {
+        // Always restore console.error, even if the call throws.
+        console.error = originalConsoleError;
+      }
 
-      // Verify it logs an error on final timeout
-      expect(sourceCode).toContain("console.error");
-      expect(sourceCode).toContain("deadlock");
-
-      // Verify it drops the buffer (resets writeHead) and resets bufferAvailable
-      expect(sourceCode).toContain("bufferWriteHead");
-      expect(sourceCode).toContain("bufferAvailable");
-      expect(sourceCode).toContain("NOT_READY");
+      // The timeout path should have logged an error and cleared the buffer.
+      expect(errorCalled).toBe(true);
+      expect(processorState.bufferAvailable).toBe(false);
     });
   });
 });
