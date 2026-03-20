@@ -318,7 +318,7 @@ export class ProcessorState extends State {
     // iteration count as a proxy for time.
     // The values below deliberately keep the total worst-case iteration count small
     // to avoid long synchronous stalls inside process().
-    const ITERATIONS_PER_ATTEMPT = 1_000;
+    const ITERATIONS_PER_ATTEMPT = 1_000_000;
     const MAX_ATTEMPTS = 100;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
