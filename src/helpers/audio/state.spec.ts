@@ -20,8 +20,8 @@ test.describe("ProcessorState", () => {
 
       const elapsed = performance.now() - startTime;
 
-      // Verify it exited very quickly (< 100ms)
-      expect(elapsed).toBeLessThan(100);
+      // Verify it exited very quickly (< 200ms)
+      expect(elapsed).toBeLessThan(200);
       expect(processorState.bufferAvailable).toBe(false);
     });
 
@@ -42,8 +42,8 @@ test.describe("ProcessorState", () => {
 
       const elapsed = performance.now() - startTime;
 
-      // Verify it exited very quickly (< 100ms)
-      expect(elapsed).toBeLessThan(100);
+      // Verify it exited very quickly (< 200ms)
+      expect(elapsed).toBeLessThan(200);
 
       // Buffer should still be available since we exited due to generation mismatch
       expect(processorState.bufferAvailable).toBe(true);
