@@ -19,6 +19,16 @@ test.describe("Bootstrap Modal Component", () => {
       const icon = fixture.closeButtonIcon();
 
       await expect(icon).toBeVisible();
+
+      // When sl-icon fails to load (e.g. unregistered icon name), its shadow
+      // root is empty. Assert the shadow root contains an SVG with path data to
+      // confirm the icon actually rendered.
+      const hasSvgContent = await icon.evaluate((element: Element) => {
+        const svg = element.shadowRoot?.querySelector("svg");
+        return svg?.querySelector("path") !== null;
+      });
+
+      expect(hasSvgContent).toBe(true);
     });
   });
 });
