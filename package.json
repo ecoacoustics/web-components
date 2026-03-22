@@ -59,7 +59,7 @@
     "@types/chroma-js": "3.1.1",
     "@types/colorbrewer": "1.0.32",
     "@types/node": "22.13.5",
-    "autoprefixer": "10.4.20",
+    "autoprefixer": "10.4.21",
     "concurrently": "9.1.2",
     "eslint": "8.57.0",
     "eslint-plugin-lit": "1.13.0",
