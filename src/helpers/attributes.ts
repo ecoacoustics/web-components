@@ -21,15 +21,25 @@ export const booleanConverter = (value: string | null): boolean => value !== nul
  */
 export const nullableNumberConverter: ComplexAttributeConverter<number | null | undefined> = {
   fromAttribute(value: string | null): number | null | undefined {
-    if (value === null) return undefined;
-    if (value === "" || value === "null") return null;
-    const num = Number(value);
-    if (Number.isNaN(num)) throw new Error(`Invalid numeric value: "${value}"`);
-    return num;
+    if (value === null) {
+      return undefined;
+    }
+    if (value === "" || value === "null") {
+      return null;
+    }
+    const parsedNumber = Number(value);
+    if (Number.isNaN(parsedNumber)) {
+      throw new Error(`Invalid numeric value: "${value}"`);
+    }
+    return parsedNumber;
   },
   toAttribute(value: number | null | undefined): string | null {
-    if (value === undefined) return null;
-    if (value === null) return "";
+    if (value === undefined) {
+      return null;
+    }
+    if (value === null) {
+      return "";
+    }
     return String(value);
   },
 };

@@ -118,9 +118,9 @@ export class UnitConverter {
     // missing highFrequency → top of canvas (y = 0)
     const y = computed(() => (annotation.highFrequency == null ? 0 : this.scaleY.value(annotation.highFrequency)));
 
-    // missing endOffset → 1px wide (vertical line)
+    // missing endOffset → 0-width box; the left border is still rendered by CSS
     const width = computed(() =>
-      annotation.endOffset == null ? 1 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
+      annotation.endOffset == null ? 0 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
     );
 
     // missing lowFrequency → bottom of canvas
