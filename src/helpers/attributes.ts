@@ -22,7 +22,7 @@ export const nullableNumberConverter: ComplexAttributeConverter<number | undefin
     return num;
   },
   toAttribute(value: number | undefined): string {
-    return value == null ? "" : String(value);
+    return value === undefined ? "" : String(value);
   },
 };
 

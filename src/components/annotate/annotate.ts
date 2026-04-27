@@ -310,7 +310,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     // When frequencies are missing the annotation spans the full canvas height,
     // so substitute the actual frequency domain boundaries to keep culling correct.
     const effectiveLowFrequency = model.lowFrequency ?? this.unitConverter.frequencyDomain.value[0];
-    const effectiveHighFrequency = model.highFrequency ?? this.unitConverter.nyquist.value;
+    const effectiveHighFrequency = model.highFrequency ?? this.unitConverter.frequencyDomain.value[1];
 
     const isTimeInView = this.unitConverter.overlapsTemporalDomain([model.startOffset, effectiveEndOffset]);
     const isFrequencyInView = this.unitConverter.overlapsFrequencyDomain([effectiveLowFrequency, effectiveHighFrequency]);
