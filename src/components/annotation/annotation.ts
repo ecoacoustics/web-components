@@ -55,17 +55,17 @@ export class AnnotationComponent extends AbstractComponent(LitElement) implement
   public static readonly annotationChangedEventName = "oe-annotation-changed";
 
   @property({ attribute: "low-frequency", converter: nullableNumberConverter, reflect: true })
-  public lowFrequency?: Hertz;
+  public lowFrequency?: Hertz | null;
 
   @property({ attribute: "high-frequency", converter: nullableNumberConverter, reflect: true })
-  public highFrequency?: Hertz;
+  public highFrequency?: Hertz | null;
 
   @required()
   @property({ attribute: "start-time", type: Number, reflect: true })
   public startTime!: Seconds;
 
   @property({ attribute: "end-time", converter: nullableNumberConverter, reflect: true })
-  public endTime?: Seconds;
+  public endTime?: Seconds | null;
 
   /**
    * Makes the annotation non-editable

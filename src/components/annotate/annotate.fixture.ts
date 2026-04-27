@@ -103,9 +103,9 @@ class TestPage {
     // I use "kookaburra" here because it is a longer tag name. Therefore, it
     // pushes the tag to its limit
     // it also makes it easier to see the annotation label in the test output
-    const endTimeAttr = model.endOffset !== undefined ? `end-time="${model.endOffset}"` : "";
-    const lowFrequencyAttr = model.lowFrequency !== undefined ? `low-frequency="${model.lowFrequency}"` : "";
-    const highFrequencyAttr = model.highFrequency !== undefined ? `high-frequency="${model.highFrequency}"` : "";
+    const endTimeAttr = model.endOffset != null ? `end-time="${model.endOffset}"` : "";
+    const lowFrequencyAttr = model.lowFrequency != null ? `low-frequency="${model.lowFrequency}"` : "";
+    const highFrequencyAttr = model.highFrequency != null ? `high-frequency="${model.highFrequency}"` : "";
 
     await setContent(
       this.page,
@@ -211,19 +211,19 @@ class TestPage {
     await targetAnnotation.evaluate((element: HTMLElement, model: PartialAnnotation) => {
       element.setAttribute("start-time", model.startOffset.toString());
 
-      if (model.endOffset !== undefined) {
+      if (model.endOffset != null) {
         element.setAttribute("end-time", model.endOffset.toString());
       } else {
         element.removeAttribute("end-time");
       }
 
-      if (model.lowFrequency !== undefined) {
+      if (model.lowFrequency != null) {
         element.setAttribute("low-frequency", model.lowFrequency.toString());
       } else {
         element.removeAttribute("low-frequency");
       }
 
-      if (model.highFrequency !== undefined) {
+      if (model.highFrequency != null) {
         element.setAttribute("high-frequency", model.highFrequency.toString());
       } else {
         element.removeAttribute("high-frequency");

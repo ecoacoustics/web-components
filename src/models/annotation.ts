@@ -5,9 +5,9 @@ import { Hertz, Seconds } from "./unitConverters";
 export class Annotation {
   public constructor(
     startOffset: Seconds,
-    endOffset: Seconds | undefined,
-    lowFrequency: Hertz | undefined,
-    highFrequency: Hertz | undefined,
+    endOffset: Seconds | null | undefined,
+    lowFrequency: Hertz | null | undefined,
+    highFrequency: Hertz | null | undefined,
     tags: Tag[],
     reference: object,
     verifications: Verification[],
@@ -22,21 +22,20 @@ export class Annotation {
   }
 
   public startOffset: Seconds;
-  public endOffset: Seconds | undefined;
-  public lowFrequency: Hertz | undefined;
-  public highFrequency: Hertz | undefined;
+  public endOffset: Seconds | null | undefined;
+  public lowFrequency: Hertz | null | undefined;
+  public highFrequency: Hertz | null | undefined;
   public tags: Tag[];
   public readonly reference: Readonly<object>;
   public verifications: Verification[];
 
   public valid(): boolean {
-    // A missing frequency means that bound is unconstrained, so any existing
-    // frequency value is valid as long as the other bound is also present.
+    // null or undefined means that bound is unconstrained (no frequency bounds given)
     const frequenciesValid =
-      this.lowFrequency === undefined || this.highFrequency === undefined || this.lowFrequency < this.highFrequency;
+      this.lowFrequency == null || this.highFrequency == null || this.lowFrequency < this.highFrequency;
 
-    // A missing endOffset renders as a single vertical line, which is valid
-    const timeValid = this.endOffset === undefined || this.startOffset < this.endOffset;
+    // null or undefined endOffset renders as a single vertical line, which is valid
+    const timeValid = this.endOffset == null || this.startOffset < this.endOffset;
 
     return frequenciesValid && timeValid;
   }

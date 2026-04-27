@@ -116,11 +116,11 @@ export class UnitConverter {
     const x = computed(() => this.scaleX.value(annotation.startOffset));
 
     // missing highFrequency → top of canvas (y = 0)
-    const y = computed(() => (annotation.highFrequency === undefined ? 0 : this.scaleY.value(annotation.highFrequency)));
+    const y = computed(() => (annotation.highFrequency == null ? 0 : this.scaleY.value(annotation.highFrequency)));
 
     // missing endOffset → 1px wide (vertical line)
     const width = computed(() =>
-      annotation.endOffset === undefined ? 1 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
+      annotation.endOffset == null ? 1 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
     );
 
     // missing lowFrequency → bottom of canvas
@@ -128,7 +128,7 @@ export class UnitConverter {
     // mel scales to work when highFrequency IS defined.  When lowFrequency is
     // missing we use canvasSize.height as the raw pixel bottom.
     const height = computed(
-      () => (annotation.lowFrequency === undefined ? this.canvasSize.value.height : this.scaleY.value(annotation.lowFrequency)) - y.value,
+      () => (annotation.lowFrequency == null ? this.canvasSize.value.height : this.scaleY.value(annotation.lowFrequency)) - y.value,
     );
 
     return { x, y, width, height };

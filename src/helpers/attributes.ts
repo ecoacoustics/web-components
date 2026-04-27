@@ -9,20 +9,28 @@ export const booleanConverter = (value: string | null): boolean => value !== nul
 /**
  * A Lit attribute converter for optional numeric properties.
  *
- * - Converts `null`, `""`, or the string `"null"` to `undefined`.
- * - Converts valid numeric strings to numbers.
- * - Throws on non-numeric, non-empty strings.
- * - Serializes `undefined` as an empty string attribute (`name=""`).
+ * - `null` (attribute absent) → `undefined`
+ * - `""` (empty string attribute) or `"null"` (string null from DOM serialization) → `null`
+ * - Valid numeric string → `number`
+ * - Invalid non-empty string → throws
+ *
+ * `toAttribute` semantics:
+ * - `undefined` → removes the attribute entirely (returns `null` to Lit)
+ * - `null` → sets attribute to `""` (empty string)
+ * - `number` → sets attribute to the numeric string
  */
-export const nullableNumberConverter: ComplexAttributeConverter<number | undefined> = {
-  fromAttribute(value: string | null): number | undefined {
-    if (value === null || value === "" || value === "null") return undefined;
+export const nullableNumberConverter: ComplexAttributeConverter<number | null | undefined> = {
+  fromAttribute(value: string | null): number | null | undefined {
+    if (value === null) return undefined;
+    if (value === "" || value === "null") return null;
     const num = Number(value);
     if (Number.isNaN(num)) throw new Error(`Invalid numeric value: "${value}"`);
     return num;
   },
-  toAttribute(value: number | undefined): string {
-    return value === undefined ? "" : String(value);
+  toAttribute(value: number | null | undefined): string | null {
+    if (value === undefined) return null;
+    if (value === null) return "";
+    return String(value);
   },
 };
 

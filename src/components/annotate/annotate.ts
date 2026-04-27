@@ -304,11 +304,13 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
 
-    // When endOffset is missing we treat it as a point in time at startOffset
-    // so that a single-line annotation is still considered "in view" if startOffset is.
+    // When endOffset is missing (null or undefined) we treat it as a point in
+    // time at startOffset so that a single-line annotation is still considered
+    // "in view" if startOffset is.
     const effectiveEndOffset = model.endOffset ?? model.startOffset;
-    // When frequencies are missing the annotation spans the full canvas height,
-    // so substitute the actual frequency domain boundaries to keep culling correct.
+    // When frequencies are missing (null or undefined) the annotation spans the
+    // full canvas height, so substitute the actual frequency domain boundaries
+    // to keep culling correct.
     const effectiveLowFrequency = model.lowFrequency ?? this.unitConverter.frequencyDomain.value[0];
     const effectiveHighFrequency = model.highFrequency ?? this.unitConverter.frequencyDomain.value[1];
 
@@ -319,12 +321,12 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
       return true;
     }
 
-    // If any bound is missing the annotation can never be a full superset of
-    // the view box, so skip the superset check in that case.
+    // If any bound is missing (null or undefined) the annotation can never be
+    // a full superset of the view box, so skip the superset check in that case.
     const isSupersetOfViewBox =
-      model.endOffset !== undefined &&
-      model.lowFrequency !== undefined &&
-      model.highFrequency !== undefined &&
+      model.endOffset != null &&
+      model.lowFrequency != null &&
+      model.highFrequency != null &&
       model.startOffset < temporalDomain[0] &&
       model.endOffset >= temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
@@ -609,10 +611,11 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     //   - missing lowFrequency  → no bottom border (extends to canvas bottom)
     //   - missing highFrequency → no top border    (extends to canvas top)
     //   - missing endOffset     → only left border shown
+    // null and undefined are both treated as "missing" here.
     const boundingBoxClasses = classMap({
-      "missing-low-frequency": model.lowFrequency === undefined,
-      "missing-high-frequency": model.highFrequency === undefined,
-      "missing-end-time": model.endOffset === undefined,
+      "missing-low-frequency": model.lowFrequency == null,
+      "missing-high-frequency": model.highFrequency == null,
+      "missing-end-time": model.endOffset == null,
     });
 
     const focusCallback = (targetModel: Annotation, selected: boolean) => {

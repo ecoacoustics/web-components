@@ -236,7 +236,7 @@ test.describe("model parsing", () => {
     expect(model.endOffset).toBeUndefined();
   });
 
-  test('should treat the string "null" as undefined for low-frequency', async ({ fixture }) => {
+  test('should treat the string "null" as null for low-frequency', async ({ fixture }) => {
     await fixture.create(`
       <oe-annotation
         start-time="0"
@@ -247,10 +247,10 @@ test.describe("model parsing", () => {
     `);
 
     const model = await fixture.annotationModel();
-    expect(model.lowFrequency).toBeUndefined();
+    expect(model.lowFrequency).toBeNull();
   });
 
-  test('should treat the string "null" as undefined for high-frequency', async ({ fixture }) => {
+  test('should treat the string "null" as null for high-frequency', async ({ fixture }) => {
     await fixture.create(`
       <oe-annotation
         start-time="0"
@@ -261,10 +261,10 @@ test.describe("model parsing", () => {
     `);
 
     const model = await fixture.annotationModel();
-    expect(model.highFrequency).toBeUndefined();
+    expect(model.highFrequency).toBeNull();
   });
 
-  test("should treat an empty string attribute as undefined for low-frequency", async ({ fixture }) => {
+  test("should treat an empty string attribute as null for low-frequency", async ({ fixture }) => {
     await fixture.create(`
       <oe-annotation
         start-time="0"
@@ -275,7 +275,7 @@ test.describe("model parsing", () => {
     `);
 
     const model = await fixture.annotationModel();
-    expect(model.lowFrequency).toBeUndefined();
+    expect(model.lowFrequency).toBeNull();
   });
 });
 
