@@ -41,7 +41,17 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chromium, firefox, webkit]
         shard: [1, 2, 3, 4]
+        exclude:
+          # The playwright.config.ts excludes WebKit on both Windows and Linux,
+          # meaning WebKit tests only run on macOS in this project.
+          # On Windows: AudioContext is not enabled in the WebKit build.
+          # See: https://github.com/microsoft/playwright/issues/14105
+          - os: ubuntu-latest
+            browser: webkit
+          - os: windows-latest
+            browser: webkit
 
     steps:
       # Playwright snapshot tests generate pngs that are uploaded via
@@ -77,15 +87,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ matrix.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ matrix.os }}-
+            playwright-${{ matrix.os }}-${{ matrix.browser }}-
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run tests
-        run: pnpm test --shard ${{ matrix.shard }}/4
+        run: pnpm test --project ${{ matrix.browser }} --shard ${{ matrix.shard }}/4
         env:
           PLAYWRIGHT_SHARD: "true"
 
@@ -94,8 +104,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ matrix.os }}-${{ matrix.shard }}
-          path: test-report/
+          name: test-report-${{ matrix.os }}-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report/
           retention-days: 1
 
   Merge-Reports:
