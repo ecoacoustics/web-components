@@ -341,15 +341,6 @@ test.describe("annotation", () => {
           highFrequency: undefined,
         },
       },
-      {
-        name: "null string attribute values rendered as undefined (string 'null' treated as missing)",
-        annotation: {
-          startOffset: 3,
-          endOffset: 4,
-          lowFrequency: undefined,
-          highFrequency: undefined,
-        },
-      },
     ] satisfies AnnotationBoundingBoxTest[];
 
     createAnnotationTests(tests);

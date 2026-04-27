@@ -30,13 +30,13 @@ export class Annotation {
   public verifications: Verification[];
 
   public valid(): boolean {
-    // undefined == null evaluates to true, so either missing frequency makes
-    // the frequency constraint pass (no bounds to violate)
+    // A missing frequency means that bound is unconstrained, so any existing
+    // frequency value is valid as long as the other bound is also present.
     const frequenciesValid =
-      this.lowFrequency == null || this.highFrequency == null || this.lowFrequency < this.highFrequency;
+      this.lowFrequency === undefined || this.highFrequency === undefined || this.lowFrequency < this.highFrequency;
 
     // A missing endOffset renders as a single vertical line, which is valid
-    const timeValid = this.endOffset == null || this.startOffset < this.endOffset;
+    const timeValid = this.endOffset === undefined || this.startOffset < this.endOffset;
 
     return frequenciesValid && timeValid;
   }
