@@ -17,6 +17,31 @@ test.describe("valid", () => {
       const model = new Annotation(0, 2, 0, 0.0001, [], {}, []);
       expect(model.valid()).toBe(true);
     });
+
+    test("should accept an annotation with undefined lowFrequency", () => {
+      const model = new Annotation(0, 2, undefined, 3_000, [], {}, []);
+      expect(model.valid()).toBe(true);
+    });
+
+    test("should accept an annotation with undefined highFrequency", () => {
+      const model = new Annotation(0, 2, 0, undefined, [], {}, []);
+      expect(model.valid()).toBe(true);
+    });
+
+    test("should accept an annotation with both frequencies undefined", () => {
+      const model = new Annotation(0, 2, undefined, undefined, [], {}, []);
+      expect(model.valid()).toBe(true);
+    });
+
+    test("should accept an annotation with undefined endOffset", () => {
+      const model = new Annotation(0, undefined, 0, 3_000, [], {}, []);
+      expect(model.valid()).toBe(true);
+    });
+
+    test("should accept an annotation with all optional fields undefined", () => {
+      const model = new Annotation(0, undefined, undefined, undefined, [], {}, []);
+      expect(model.valid()).toBe(true);
+    });
   });
 
   test.describe("invalid annotations", () => {

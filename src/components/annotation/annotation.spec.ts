@@ -181,6 +181,102 @@ test.describe("model parsing", () => {
   test.fail("should throw an error if required attributes are missing", async ({ fixture }) => {
     await fixture.create("<oe-annotation></oe-annotation>");
   });
+
+  test("should return undefined for missing low-frequency attribute", async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+        high-frequency="1000"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.lowFrequency).toBeUndefined();
+    expect(model.highFrequency).toEqual(1000);
+  });
+
+  test("should return undefined for missing high-frequency attribute", async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+        low-frequency="0"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.lowFrequency).toEqual(0);
+    expect(model.highFrequency).toBeUndefined();
+  });
+
+  test("should return undefined for both missing frequency attributes", async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.lowFrequency).toBeUndefined();
+    expect(model.highFrequency).toBeUndefined();
+  });
+
+  test("should return undefined for missing end-time attribute", async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        low-frequency="0"
+        high-frequency="1000"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.endOffset).toBeUndefined();
+  });
+
+  test('should treat the string "null" as undefined for low-frequency', async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+        low-frequency="null"
+        high-frequency="1000"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.lowFrequency).toBeUndefined();
+  });
+
+  test('should treat the string "null" as undefined for high-frequency', async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+        low-frequency="0"
+        high-frequency="null"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.highFrequency).toBeUndefined();
+  });
+
+  test("should treat an empty string attribute as undefined for low-frequency", async ({ fixture }) => {
+    await fixture.create(`
+      <oe-annotation
+        start-time="0"
+        end-time="5"
+        low-frequency=""
+        high-frequency="1000"
+      ></oe-annotation>
+    `);
+
+    const model = await fixture.annotationModel();
+    expect(model.lowFrequency).toBeUndefined();
+  });
 });
 
 test.describe("tag parsing", () => {

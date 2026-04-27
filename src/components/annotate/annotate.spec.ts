@@ -294,6 +294,67 @@ test.describe("annotation", () => {
     });
   });
 
+  test.describe("missing bounds", () => {
+    const tests = [
+      {
+        name: "missing low frequency (bottom border omitted, sides extend to canvas bottom)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: undefined,
+          highFrequency: 6000,
+        },
+      },
+      {
+        name: "missing high frequency (top border omitted, sides extend to canvas top)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: 2000,
+          highFrequency: undefined,
+        },
+      },
+      {
+        name: "missing both frequencies (pillar across full canvas height)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: undefined,
+          highFrequency: undefined,
+        },
+      },
+      {
+        name: "missing end time (only left edge rendered)",
+        annotation: {
+          startOffset: 2,
+          endOffset: undefined,
+          lowFrequency: 3000,
+          highFrequency: 7000,
+        },
+      },
+      {
+        name: "missing end time and frequencies (left edge pillar)",
+        annotation: {
+          startOffset: 2,
+          endOffset: undefined,
+          lowFrequency: undefined,
+          highFrequency: undefined,
+        },
+      },
+      {
+        name: "null string attribute values rendered as undefined (string 'null' treated as missing)",
+        annotation: {
+          startOffset: 3,
+          endOffset: 4,
+          lowFrequency: undefined,
+          highFrequency: undefined,
+        },
+      },
+    ] satisfies AnnotationBoundingBoxTest[];
+
+    createAnnotationTests(tests);
+  });
+
   test.describe("updating annotations", () => {
     const inViewAnnotation = {
       startOffset: 0.2,

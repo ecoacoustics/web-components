@@ -114,13 +114,19 @@ export class UnitConverter {
 
   public annotationRect(annotation: Readonly<Annotation>): Readonly<Rect<Signal<Pixel>>> {
     const x = computed(() => this.scaleX.value(annotation.startOffset));
-    const y = computed(() => this.scaleY.value(annotation.highFrequency));
-    const width = computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset));
 
-    // we have to use the computed y offset for mel scales to work
-    // this is because in a mel scale, a 1 hertz unit is different depending on
-    // its value
-    const height = computed(() => this.scaleY.value(annotation.lowFrequency) - y.value);
+    // missing highFrequency → top of canvas (y = 0)
+    const y = computed(() => (annotation.highFrequency == null ? 0 : this.scaleY.value(annotation.highFrequency)));
+
+    // missing endOffset → 1px wide (vertical line)
+    const width = computed(() =>
+      annotation.endOffset == null ? 1 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
+    );
+
+    // missing lowFrequency → bottom of canvas
+    const height = computed(
+      () => (annotation.lowFrequency == null ? this.canvasSize.value.height : this.scaleY.value(annotation.lowFrequency)) - y.value,
+    );
 
     return { x, y, width, height };
   }

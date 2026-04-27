@@ -1,9 +1,30 @@
+import { ComplexAttributeConverter } from "lit";
 import { Tag } from "../models/tag";
 import { Enum, EnumValue } from "./types/advancedTypes";
 
 const converterNoProvidedFallback = Symbol("converter-no-fallback");
 
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
+
+/**
+ * A Lit attribute converter for optional numeric properties.
+ *
+ * - Converts `null`, `""`, or the string `"null"` to `undefined`.
+ * - Converts valid numeric strings to numbers.
+ * - Throws on non-numeric, non-empty strings.
+ * - Serializes `undefined` as an empty string attribute (`name=""`).
+ */
+export const nullableNumberConverter: ComplexAttributeConverter<number | undefined> = {
+  fromAttribute(value: string | null): number | undefined {
+    if (value === null || value === "" || value === "null") return undefined;
+    const num = Number(value);
+    if (Number.isNaN(num)) throw new Error(`Invalid numeric value: "${value}"`);
+    return num;
+  },
+  toAttribute(value: number | undefined): string {
+    return value == null ? "" : String(value);
+  },
+};
 
 export const arrayConverter = <T = unknown>(value: string | null | T[]): T[] => {
   if (Array.isArray(value)) {

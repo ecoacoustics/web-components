@@ -5,9 +5,9 @@ import { Hertz, Seconds } from "./unitConverters";
 export class Annotation {
   public constructor(
     startOffset: Seconds,
-    endOffset: Seconds,
-    lowFrequency: Hertz,
-    highFrequency: Hertz,
+    endOffset: Seconds | undefined,
+    lowFrequency: Hertz | undefined,
+    highFrequency: Hertz | undefined,
     tags: Tag[],
     reference: object,
     verifications: Verification[],
@@ -22,14 +22,22 @@ export class Annotation {
   }
 
   public startOffset: Seconds;
-  public endOffset: Seconds;
-  public lowFrequency: Hertz;
-  public highFrequency: Hertz;
+  public endOffset: Seconds | undefined;
+  public lowFrequency: Hertz | undefined;
+  public highFrequency: Hertz | undefined;
   public tags: Tag[];
   public readonly reference: Readonly<object>;
   public verifications: Verification[];
 
   public valid(): boolean {
-    return this.lowFrequency < this.highFrequency && this.startOffset < this.endOffset;
+    // undefined == null evaluates to true, so either missing frequency makes
+    // the frequency constraint pass (no bounds to violate)
+    const frequenciesValid =
+      this.lowFrequency == null || this.highFrequency == null || this.lowFrequency < this.highFrequency;
+
+    // A missing endOffset renders as a single vertical line, which is valid
+    const timeValid = this.endOffset == null || this.startOffset < this.endOffset;
+
+    return frequenciesValid && timeValid;
   }
 }

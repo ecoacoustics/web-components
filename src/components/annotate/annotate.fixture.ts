@@ -103,6 +103,10 @@ class TestPage {
     // I use "kookaburra" here because it is a longer tag name. Therefore, it
     // pushes the tag to its limit
     // it also makes it easier to see the annotation label in the test output
+    const endTimeAttr = model.endOffset !== undefined ? `end-time="${model.endOffset}"` : "";
+    const lowFrequencyAttr = model.lowFrequency !== undefined ? `low-frequency="${model.lowFrequency}"` : "";
+    const highFrequencyAttr = model.highFrequency !== undefined ? `high-frequency="${model.highFrequency}"` : "";
+
     await setContent(
       this.page,
       `
@@ -115,9 +119,9 @@ class TestPage {
           data-testid="annotation-attribute-tag"
           tags="kookaburra"
           start-time="${model.startOffset}"
-          end-time="${model.endOffset}"
-          low-frequency="${model.lowFrequency}"
-          high-frequency="${model.highFrequency}"
+          ${endTimeAttr}
+          ${lowFrequencyAttr}
+          ${highFrequencyAttr}
         ></oe-annotation>
       </oe-annotate>
     `,
@@ -206,9 +210,24 @@ class TestPage {
 
     await targetAnnotation.evaluate((element: HTMLElement, model: PartialAnnotation) => {
       element.setAttribute("start-time", model.startOffset.toString());
-      element.setAttribute("end-time", model.endOffset.toString());
-      element.setAttribute("low-frequency", model.lowFrequency.toString());
-      element.setAttribute("high-frequency", model.highFrequency.toString());
+
+      if (model.endOffset !== undefined) {
+        element.setAttribute("end-time", model.endOffset.toString());
+      } else {
+        element.removeAttribute("end-time");
+      }
+
+      if (model.lowFrequency !== undefined) {
+        element.setAttribute("low-frequency", model.lowFrequency.toString());
+      } else {
+        element.removeAttribute("low-frequency");
+      }
+
+      if (model.highFrequency !== undefined) {
+        element.setAttribute("high-frequency", model.highFrequency.toString());
+      } else {
+        element.removeAttribute("high-frequency");
+      }
     }, newModel);
   }
 }

@@ -304,16 +304,27 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const temporalDomain = this.unitConverter.temporalDomain.value;
     const frequencyDomain = this.unitConverter.frequencyDomain.value;
 
-    const isTimeInView = this.unitConverter.overlapsTemporalDomain([model.startOffset, model.endOffset]);
-    const isFrequencyInView = this.unitConverter.overlapsFrequencyDomain([model.lowFrequency, model.highFrequency]);
+    // When endOffset is missing we treat it as startOffset + ε so that a
+    // single-line annotation is still considered "in view" if startOffset is.
+    const effectiveEndOffset = model.endOffset ?? model.startOffset + Number.EPSILON;
+    // When frequencies are missing the annotation spans the full canvas height,
+    // so substitute canvas boundaries to keep culling correct.
+    const effectiveLowFrequency = model.lowFrequency ?? 0;
+    const effectiveHighFrequency = model.highFrequency ?? this.unitConverter.nyquist.value;
+
+    const isTimeInView = this.unitConverter.overlapsTemporalDomain([model.startOffset, effectiveEndOffset]);
+    const isFrequencyInView = this.unitConverter.overlapsFrequencyDomain([effectiveLowFrequency, effectiveHighFrequency]);
     const isVisible = isTimeInView && isFrequencyInView;
     if (!isVisible) {
       return true;
     }
 
-    // if the annotation is larger than the view box, then we want don't want to
-    // render it
+    // If any bound is missing the annotation can never be a full superset of
+    // the view box, so skip the superset check in that case.
     const isSupersetOfViewBox =
+      model.endOffset != null &&
+      model.lowFrequency != null &&
+      model.highFrequency != null &&
       model.startOffset < temporalDomain[0] &&
       model.endOffset >= temporalDomain[1] &&
       model.lowFrequency < frequencyDomain[0] &&
@@ -589,8 +600,19 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
     const annotationRect = this.unitConverter.annotationRect(model);
     const { x, y, width, height } = annotationRect;
 
-    const boundingBoxClasses = classMap({
+    const containerClasses = classMap({
       "box-style-spectrogram-top": this.tagStyle === AnnotationTagStyle.SPECTROGRAM_TOP,
+    });
+
+    // CSS classes applied to the inner bounding-box to suppress borders for
+    // missing annotation bounds per the spec:
+    //   - missing lowFrequency  → no bottom border (extends to canvas bottom)
+    //   - missing highFrequency → no top border    (extends to canvas top)
+    //   - missing endOffset     → only left border shown
+    const boundingBoxClasses = classMap({
+      "missing-low-frequency": model.lowFrequency == null,
+      "missing-high-frequency": model.highFrequency == null,
+      "missing-end-time": model.endOffset == null,
     });
 
     const focusCallback = (targetModel: Annotation, selected: boolean) => {
@@ -611,7 +633,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
 
     return html`
       <aside
-        class="annotation-container ${boundingBoxClasses}"
+        class="annotation-container ${containerClasses}"
         tabindex="0"
         @focus="${() => focusCallback(model, true)}"
         @blur="${() => focusCallback(model, false)}"
@@ -622,7 +644,7 @@ export class AnnotateComponent extends ChromeProvider(LitElement) {
           height: ${watch(height)}px;
         "
       >
-        <div class="bounding-box" part="annotation-bounding-box">
+        <div class="bounding-box ${boundingBoxClasses}" part="annotation-bounding-box">
           ${when(this.tagStyle === AnnotationTagStyle.EDGE, () =>
             this.edgeLabelTemplate(model, annotationRect, canvasSize),
           )}
