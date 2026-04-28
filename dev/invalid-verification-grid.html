@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Empty Verification Grid</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid id="verification-grid">
+      <template>
+        <oe-spectrogram></oe-spectrogram>
+        <oe-media-controls></oe-media-controls>
+      </template>
+
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
+    </oe-verification-grid>
+
+    <p>
+      The template in this verification grid does not include a tag template or a task meter, so we should see errors in
+      the console indicating that the verification grid is not set up correctly.
+    </p>
+  </body>
+</html>

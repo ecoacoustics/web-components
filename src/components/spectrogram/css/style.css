@@ -1,4 +1,6 @@
 :host {
+  flex: 1 1 0;
+
   --min-height: 128px;
   min-height: var(--min-height);
 }

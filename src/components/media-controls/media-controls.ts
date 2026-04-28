@@ -1,15 +1,17 @@
 import { HTMLTemplateResult, LitElement, PropertyValues, html, nothing, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { SlMenuItem } from "@shoelace-style/shoelace";
-import { SpectrogramOptions } from "../../helpers/audio/models";
 import { AxesComponent } from "../axes/axes";
 import { windowFunctions } from "../../helpers/audio/window";
 import { colorScales } from "../../helpers/audio/colors";
 import { SPACE_KEY } from "../../helpers/keyboard";
 import { when } from "lit/directives/when.js";
 import { WithShoelace } from "../../mixins/withShoelace";
+import { ISpectrogramOptions } from "../spectrogram/spectrogramOptions";
+import { customElement } from "../../helpers/customElement";
+import { ChangeEvent } from "../../helpers/types/advancedTypes";
 import mediaControlsStyles from "./css/style.css?inline";
 
 /**
@@ -68,13 +70,30 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   @property({ type: String })
   public playIconPosition: PreferenceLocation = "default";
 
+  /**
+   * We use a state variable to track whether the settings menu is open or not
+   * because Shoelace sub-menus use getComputedStyle to determine whether they
+   * are in ltr or rtl mode.
+   * This causes some performance issues when there are a lot of sub-menus or
+   * media controls on the page because each submenu causes a reflow whenever
+   * they are created.
+   * By maintaining our own open/close state we can defer the creation of the
+   * sub-menu contents until the menu is open, meaning that we only hit this
+   * reflow cost when the user actually wants to see the menu.
+   *
+   * see: https://github.com/shoelace-style/shoelace/discussions/2527
+   */
+  @state()
+  private areSettingsOpen = false;
+
   // the media controls component has access to the axes element because it is
   // possible to enable/disable certain axes features from within the media controls
   private axesElement?: AxesComponent | null;
   private spectrogramElement?: SpectrogramComponent | null;
-  private playHandler = this.handleUpdatePlaying.bind(this);
-  private keyDownHandler = this.handleKeyDown.bind(this);
-  private optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
+
+  private readonly playHandler = this.handleUpdatePlaying.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly optionsChangeHandler = this.handleSpectrogramOptionsChange.bind(this);
 
   public disconnectedCallback(): void {
     if (this.spectrogramElement) {
@@ -88,6 +107,13 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     document.removeEventListener("keydown", this.keyDownHandler);
 
     super.disconnectedCallback();
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+
+    // use add a keydown event listener so that we can bind space bar to play
+    document.addEventListener("keydown", this.keyDownHandler);
   }
 
   public toggleAudio(keyboardShortcut = false): void {
@@ -125,9 +151,6 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         return;
       }
 
-      // use add a keydown event listener so that we can bind space bar to play
-      document.addEventListener("keydown", this.keyDownHandler);
-
       if (this.for instanceof SpectrogramComponent) {
         this.spectrogramElement = this.for;
       } else {
@@ -163,17 +186,6 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     this.requestUpdate();
   }
 
-  // the handlePointerDown method is attached to the top-most container of this
-  // component. Meaning that all pointer events that occur within the media
-  // controls component can be handled by this component, but will not propagate
-  // outside to parent elements.
-  // we do this because if the user clicks on a media control e.g. the play
-  // button, we do not want other parent elements such as the verification grid
-  // tile to receive the pointer event and think that we clicked on that element
-  // and want to perform selection.
-  // if you want to explicitly listen for a pointer event on this media controls
-  // you can assign an event listener to the root element.
-  // e.g. <oe-media-controls @pointerdown="${this.handlePointerDown}">
   private handlePointerDown(event: PointerEvent) {
     event.stopPropagation();
   }
@@ -197,6 +209,14 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
 
   private handleUpdatePlaying(): void {
     this.requestUpdate();
+  }
+
+  private showSettings(): void {
+    this.areSettingsOpen = true;
+  }
+
+  private hideSettings(): void {
+    this.areSettingsOpen = false;
   }
 
   private playIcon() {
@@ -248,6 +268,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     currentValue: number,
     changeHandler: any,
   ): HTMLTemplateResult {
+    // Stop click propagation on the input range so that the menu does not close.
     return html`
       <sl-menu-item>
         ${text}
@@ -255,6 +276,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
           <label>
             <input
               @change="${changeHandler}"
+              @click="${(event: PointerEvent) => event.stopPropagation()}"
               type="range"
               min="${min}"
               max="${max}"
@@ -337,6 +359,24 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
   }
 
   private settingsTemplate() {
+    return html`
+      <sl-dropdown hoist @sl-show="${() => this.showSettings()}" @sl-hide="${() => this.hideSettings()}">
+        <a class="settings-menu-item" slot="trigger">
+          <sl-icon name="gear"></sl-icon>
+        </a>
+
+        ${when(this.areSettingsOpen, () => this.subMenuTemplate())}
+      </sl-dropdown>
+    `;
+  }
+
+  // Shoelace sub-menus use getComputedStyle to determine whether they are in
+  // ltr or rtl mode.
+  // However, this causes some performance issues because each submenu causes a
+  // reflow whenever they are created.
+  // Therefore, we maintain our own open/close state and only create the
+  // sub-menu contents when the menu is open.
+  private subMenuTemplate() {
     if (!this.spectrogramElement) {
       return nothing;
     }
@@ -345,7 +385,7 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
     const possibleWindowOverlaps = this.spectrogramElement.possibleWindowOverlaps;
     const currentOptions = this.spectrogramElement.spectrogramOptions;
 
-    const discreteDropdownHandler = (key: keyof SpectrogramOptions) => {
+    const discreteDropdownHandler = (key: keyof ISpectrogramOptions) => {
       return (event: CustomEvent<{ item: SlMenuItem }>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
@@ -363,84 +403,69 @@ export class MediaControlsComponent extends WithShoelace(AbstractComponent(LitEl
         const oldOptions = this.spectrogramElement.spectrogramOptions;
         if (key === "windowSize" && this.spectrogramElement) {
           if (this.spectrogramElement.spectrogramOptions.windowOverlap >= (newValue as number)) {
-            oldOptions.windowOverlap = (newValue as number) / 2;
+            oldOptions.windowOverlap = ((newValue as number) / 2) as any;
           }
         }
 
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: newValue,
-        } as any;
-
+        this.spectrogramElement.setMediaControlsOption(key, newValue as any);
         this.requestUpdate();
       };
     };
 
-    const rangeInputHandler = (key: keyof SpectrogramOptions) => {
-      return (event: Event) => {
+    const rangeInputHandler = (key: keyof ISpectrogramOptions) => {
+      return (event: ChangeEvent<HTMLInputElement>) => {
         if (!this.spectrogramElement) {
           throw new Error("No spectrogram element found");
         }
 
-        const newValue = (event.target as HTMLInputElement).value;
-        const oldOptions = this.spectrogramElement.spectrogramOptions;
-
-        this.spectrogramElement.spectrogramOptions = {
-          ...oldOptions,
-          [key]: Number(newValue),
-        } as any;
+        const newValue = Number(event.target.value) as any;
+        this.spectrogramElement.setMediaControlsOption(key, newValue);
       };
     };
 
     return html`
-      <sl-dropdown hoist>
-        <a class="settings-menu-item" slot="trigger">
-          <sl-icon name="gear"></sl-icon>
-        </a>
-
-        <sl-menu>
-          ${this.discreteSettingsTemplate(
-            "Colour",
-            Object.keys(colorScales),
-            currentOptions.colorMap,
-            discreteDropdownHandler("colorMap"),
-          )}
-          ${this.rangeSettingsTemplate(
-            "Brightness",
-            -0.5,
-            0.5,
-            0.01,
-            currentOptions.brightness,
-            rangeInputHandler("brightness"),
-          )}
-          ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
-          ${this.discreteSettingsTemplate(
-            "Window Function",
-            Array.from(windowFunctions.keys()),
-            currentOptions.windowFunction,
-            discreteDropdownHandler("windowFunction"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Size",
-            possibleWindowSizes,
-            currentOptions.windowSize,
-            discreteDropdownHandler("windowSize"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Window Overlap",
-            [0, ...possibleWindowOverlaps],
-            currentOptions.windowOverlap,
-            discreteDropdownHandler("windowOverlap"),
-          )}
-          ${this.discreteSettingsTemplate(
-            "Scale",
-            ["linear", "mel"],
-            currentOptions.melScale ? "mel" : "linear",
-            discreteDropdownHandler("melScale"),
-          )}
-          ${when(this.axesElement, () => this.axesSettingsTemplate())}
-        </sl-menu>
-      </sl-dropdown>
+      <sl-menu>
+        ${this.discreteSettingsTemplate(
+          "Colour",
+          Object.keys(colorScales),
+          currentOptions.colorMap,
+          discreteDropdownHandler("colorMap"),
+        )}
+        ${this.rangeSettingsTemplate(
+          "Brightness",
+          -0.5,
+          0.5,
+          0.01,
+          currentOptions.brightness,
+          rangeInputHandler("brightness"),
+        )}
+        ${this.rangeSettingsTemplate("Contrast", 0, 2, 0.01, currentOptions.contrast, rangeInputHandler("contrast"))}
+        ${this.discreteSettingsTemplate(
+          "Window Function",
+          Array.from(windowFunctions.keys()),
+          currentOptions.windowFunction,
+          discreteDropdownHandler("windowFunction"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Window Size",
+          possibleWindowSizes,
+          currentOptions.windowSize,
+          discreteDropdownHandler("windowSize"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Window Overlap",
+          [0, ...possibleWindowOverlaps],
+          currentOptions.windowOverlap,
+          discreteDropdownHandler("windowOverlap"),
+        )}
+        ${this.discreteSettingsTemplate(
+          "Scale",
+          ["linear", "mel"],
+          currentOptions.melScale ? "mel" : "linear",
+          discreteDropdownHandler("melScale"),
+        )}
+        ${when(this.axesElement, () => this.axesSettingsTemplate())}
+      </sl-menu>
     `;
   }
 

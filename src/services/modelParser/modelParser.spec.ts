@@ -1,4 +1,4 @@
-import { test } from "../tests/assertions";
+import { test } from "../../tests/assertions";
 
 test.describe("ModelParser", () => {
   test.describe("getKeyPermutations", () => {

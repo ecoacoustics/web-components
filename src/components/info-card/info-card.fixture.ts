@@ -1,8 +1,10 @@
 import { Page } from "@playwright/test";
-import { getBrowserValue, setBrowserValue, waitForContentReady } from "../../tests/helpers";
+import { getBrowserValue, setBrowserValue, waitForContentReady } from "../../tests/helpers/helpers";
 import { InfoCardComponent } from "./info-card";
 import { Subject, SubjectWrapper } from "../../models/subject";
 import { createFixture, setContent } from "../../tests/fixtures";
+import { VerificationGridTileContext } from "../verification-grid-tile/verification-grid-tile";
+import { requestUpdate } from "../../tests/helpers/updates";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -23,11 +25,13 @@ class TestPage {
     const initialTag = null;
     const model = new SubjectWrapper(subject, this.testAudioUrl, initialTag);
 
-    await setBrowserValue<InfoCardComponent>(this.component(), "model", model);
+    await setBrowserValue<InfoCardComponent>(this.component(), "tile", { model: model });
+    await requestUpdate(this.component());
   }
 
   public async subjectUrl(): Promise<string> {
-    const model = await getBrowserValue<InfoCardComponent, SubjectWrapper>(this.component(), "model");
+    const tile = await getBrowserValue<InfoCardComponent, VerificationGridTileContext>(this.component(), "tile");
+    const model = tile.model;
     return model.url;
   }
 

@@ -3,7 +3,8 @@
 import { ColorScaler, getColorScale } from "./colors";
 import { constructMfcc } from "./mel";
 import { estimateSmootherAttenuation, resolveSmoother, SmoothingFunction } from "./window";
-import { IAudioInformation, SpectrogramOptions } from "./models";
+import { AudioInformation } from "./audioInformation";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
 import FFT_indutny from "./fft";
 
 const bytesPerPixel = 4 as const;
@@ -17,7 +18,7 @@ const FftSizeCache = new Map<number, typeof FFT_indutny>();
  * reduce allocations and improve performance.
  */
 export class SpectrogramGenerator {
-  private audio: IAudioInformation;
+  private audio: AudioInformation;
   private options: SpectrogramOptions;
 
   private fft: typeof FFT_indutny;
@@ -48,7 +49,7 @@ export class SpectrogramGenerator {
   public readonly estimatedWindowLoss: number;
   private readonly amplificationFactor: number;
 
-  public constructor(audio: IAudioInformation, options: SpectrogramOptions) {
+  public constructor(audio: AudioInformation, options: SpectrogramOptions) {
     this.audio = audio;
     this.options = options;
 

@@ -1,6 +1,8 @@
 @import url("variables.css");
 
 :host {
+  flex: 1 1 0;
+
   /*
     TODO: the browser should be able to initialize these variables through the
     variables.css file.

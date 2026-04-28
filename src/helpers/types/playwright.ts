@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Locator } from "@playwright/test";
 
 /** An options object that can be passed to a locators click method */

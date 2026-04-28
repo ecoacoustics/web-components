@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+.task-meter {
+  --task-meter-rounding: var(--oe-border-rounding);
+
+  display: flex;
+  height: 0.8rem;
+
+  /* We use outline to minimize background-bleed seen with borders */
+  outline: var(--oe-border-width) solid var(--oe-border-color);
+  border-radius: var(--task-meter-rounding);
+  background-clip: padding-box;
+
+  /*
+    Only apply spacing to the top and bottom of the progress meter because we
+    want the progress meter to be vertically aligned to all the other elements
+    in the verification grid tile.
+  */
+  margin-block: var(--oe-spacing);
+}
+
+.task-meter-segment {
+  flex: 1 0;
+
+  /*
+    This default background will be overwritten if a decision is applied.
+    We use "background" instead of "background-color" here so that host
+    applications can use gradients, images, etc... for the undecided state.
+  */
+  background: var(--oe-undecided-color);
+}
+
+/*
+  We use a border-right to separate each progress-meter-item. But we do not want
+  to use a border-right on the last item because it would result in a double
+  border on the last item. One from the progress-meter-item and one from the
+  progress-meter itself.
+*/
+:not(:last-child) > .task-meter-segment {
+  border-right: var(--oe-border-width) solid var(--oe-border-color);
+}
+
+/*
+  We apply the same amount of rounding to each progress meter item that was
+  applied to the progress meter so that the first and last items are flush with
+  the progress meter.
+  If we did not round the first and last items, they would have a sharp edge
+  and cause the inner edge of the border to not be the same radius as the outer
+  borders edge.
+  We don't round every edge because we want the individual items to be separated
+  with a straight edge.
+*/
+:first-child > .task-meter-segment {
+  border-top-left-radius: var(--task-meter-rounding);
+  border-bottom-left-radius: var(--task-meter-rounding);
+}
+
+:last-child > .task-meter-segment {
+  border-top-right-radius: var(--task-meter-rounding);
+  border-bottom-right-radius: var(--task-meter-rounding);
+}

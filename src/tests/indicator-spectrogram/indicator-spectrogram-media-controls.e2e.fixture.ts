@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { setBrowserAttribute, waitForContentReady } from "../helpers";
+import { setBrowserAttribute, waitForContentReady } from "../helpers/helpers";
 import { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 import { expect } from "../assertions";
 import { Seconds } from "../../models/unitConverters";
@@ -34,7 +34,9 @@ class TestPage {
 
   public async removeSpectrogramElement() {
     const element = this.spectrogramComponent();
-    await element.evaluate((element) => element.remove());
+    await element.evaluate((element) => {
+      element.remove();
+    });
   }
 
   public async changeSpectrogramAudioSource(newSource: string) {
@@ -63,6 +65,9 @@ class TestPage {
     await this.toggleAudio(true);
   }
 
+  // This will likely be async in the future, so I have made it async to prevent
+  // breaking changes in the future.
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async audioDuration(): Promise<Seconds> {
     return 6;
   }

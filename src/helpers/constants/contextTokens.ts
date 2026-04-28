@@ -7,8 +7,9 @@
 // code would be executed when the context token bundle was imported
 
 import { createContext } from "@lit/context";
-import { SubjectWrapper } from "../../models/subject";
 import { VerificationGridInjector, VerificationGridSettings } from "verification-grid/verification-grid";
+import { VerificationGridTileContext } from "verification-grid-tile/verification-grid-tile";
+import { SpectrogramOptions } from "spectrogram/spectrogramOptions";
 
 export interface IRootContext {
   log: (message: string) => void;
@@ -18,8 +19,9 @@ export interface IRootContext {
 // across different bundles / dynamic imports
 // if the context tokens were symbols, they would have different references
 // across different bundles and dynamic imports
-export const gridTileContext = createContext<SubjectWrapper>("oe-grid-tile-context");
+export const gridTileContext = createContext<VerificationGridTileContext>("oe-grid-tile-context");
 export const rootContext = createContext<IRootContext>("oe-root-context");
 
 export const verificationGridContext = createContext<VerificationGridSettings>("oe-verification-grid-context");
 export const injectionContext = createContext<VerificationGridInjector>("oe-injection-context");
+export const spectrogramOptionsContext = createContext<Partial<SpectrogramOptions>>("oe-spectrogram-options-context");

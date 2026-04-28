@@ -1,6 +1,6 @@
 import { expect } from "../../../tests/assertions";
 import { verificationFixture as test } from "./verification.fixture";
-import { getCssVariableStyle, getEventLogs, logEvent } from "../../../tests/helpers";
+import { getCssVariableStyle, getEventLogs, logEvent } from "../../../tests/helpers/helpers";
 import { DecisionOptions } from "../../../models/decisions/decision";
 import { sleep } from "../../../helpers/utilities";
 import { CssVariable } from "../../../helpers/types/advancedTypes";
@@ -56,10 +56,10 @@ test.describe("Verification Component", () => {
     }
 
     const decisionColorTests: DecisionColorTest[] = [
-      { decision: DecisionOptions.TRUE, expectedColor: "--verification-true" },
-      { decision: DecisionOptions.FALSE, expectedColor: "--verification-false" },
-      { decision: DecisionOptions.UNSURE, expectedColor: "--verification-unsure" },
-      { decision: DecisionOptions.SKIP, expectedColor: "--decision-skip-color" },
+      { decision: DecisionOptions.TRUE, expectedColor: "--oe-verification-true" },
+      { decision: DecisionOptions.FALSE, expectedColor: "--oe-verification-false" },
+      { decision: DecisionOptions.UNSURE, expectedColor: "--oe-verification-unsure" },
+      { decision: DecisionOptions.SKIP, expectedColor: "--oe-decision-skip-color" },
     ];
 
     decisionColorTests.forEach((testCase) => {

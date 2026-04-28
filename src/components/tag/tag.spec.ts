@@ -1,6 +1,6 @@
 import { Tag } from "../../models/tag";
 import { expect } from "../../tests/assertions";
-import { getBrowserValue, setBrowserValue } from "../../tests/helpers";
+import { getBrowserValue, setBrowserValue } from "../../tests/helpers/helpers";
 import { TagComponent } from "./tag";
 import { tagsFixture as test } from "./tag.fixture";
 

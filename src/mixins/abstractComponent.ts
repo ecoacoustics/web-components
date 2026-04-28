@@ -7,8 +7,14 @@ import defaultTheming from "../helpers/themes/theming.css?inline";
 
 let themingInserted = false;
 
-export const AbstractComponent = <T extends Component>(superClass: T): Component => {
-  class AbstractComponentClass extends superClass {
+type AbstractMethods = {
+  tagName: string;
+};
+
+export const AbstractComponent = <const T extends Component>(superClass: T): Component & AbstractMethods => {
+  class AbstractComponentClass extends superClass implements AbstractMethods {
+    public static tagName: string;
+
     public static finalizeStyles(styles?: CSSResultGroup): CSSResultOrNative[] {
       // we only want to apply the theming styles once to the documents root
       if (!themingInserted) {

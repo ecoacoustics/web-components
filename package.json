@@ -1,7 +1,7 @@
 {
   "name": "@ecoacoustics/web-components",
   "description": "Ecoacoustic web components",
-  "version": "5.2.2",
+  "version": "6.2.1",
   "types": "@types/",
   "type": "module",
   "main": "./dist/components.js",
@@ -25,9 +25,14 @@
     "./@types"
   ],
   "exports": {
-    ".": "./dist/components.js",
-    "./dist/components/*": "./dist/components/*.js",
-    "./dist/models/*": "./dist/models/*.js"
+    ".": {
+      "types": "./@types/index.d.ts",
+      "default": "./dist/components.js"
+    },
+    "./*": {
+      "types": "./@types/*.d.ts",
+      "default": "./dist/*.js"
+    }
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {
@@ -80,5 +85,5 @@
       "liquidjs": "10.16.4"
     }
   },
-  "packageManager": "pnpm@9.12.3+sha256.24235772cc4ac82a62627cd47f834c72667a2ce87799a846ec4e8e555e2d4b8b"
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }

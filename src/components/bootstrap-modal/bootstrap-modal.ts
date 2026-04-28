@@ -1,4 +1,4 @@
-import { customElement, query, state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import { AbstractComponent } from "../../mixins/abstractComponent";
 import { html, HTMLTemplateResult, LitElement, unsafeCSS } from "lit";
 import { DecisionComponent } from "../decision/decision";
@@ -22,6 +22,7 @@ import { WithShoelace } from "../../mixins/withShoelace";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { closeIconTemplate } from "../../templates/closeButton";
 import { ClassificationComponent } from "../decision/classification/classification";
+import { customElement } from "../../helpers/customElement";
 import bootstrapDialogStyles from "./css/style.css?inline";
 
 // styles for individual slides
@@ -64,7 +65,6 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   public static readonly closeEventName = "close";
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   private injector!: VerificationGridInjector;
 
   // because this is an internal web component, we can use the state decorator
@@ -73,7 +73,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   // property name is important to people using the web component
   // however, in this case we are not exposing the properties to the client host
   @state()
-  public decisionElements!: DecisionComponent[];
+  public decisionElements!: ReadonlyArray<DecisionComponent>;
 
   @state()
   public hasVerificationTask!: boolean;
@@ -87,14 +87,14 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   @state()
   private slides: BootstrapSlide[] = [];
 
-  @query("#dialog-element")
+  @query("#dialog-element", true)
   private dialogElement!: HTMLDialogElement;
 
-  @query("#tutorial-slide-carousel")
+  @query("#tutorial-slide-carousel", true)
   private tutorialSlideCarouselElement!: SlCarousel;
 
   private isAdvancedDialog = false;
-  private keydownHandler = this.handleKeyDown.bind(this);
+  private readonly keydownHandler = this.handleKeyDown.bind(this);
 
   public get open(): boolean {
     return this.dialogElement.open;
@@ -213,7 +213,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private positiveDecisionColor(): Readonly<CssVariable> {
-    const defaultPositiveDecision = "--verification-true";
+    const defaultPositiveDecision = "--oe-verification-true";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
       const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.TRUE];
@@ -229,7 +229,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
   }
 
   private negativeDecisionColor(): Readonly<CssVariable> {
-    const defaultNegativeColor = "--verification-false";
+    const defaultNegativeColor = "--oe-verification-false";
 
     if (this.demoDecisionButton instanceof ClassificationComponent) {
       const decisionModel = this.demoDecisionButton?.decisionModels[DecisionOptions.FALSE];
@@ -241,7 +241,7 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
       return this.injector.colorService(decisionModel);
     }
 
-    return "--verification-false";
+    return "--oe-verification-false";
   }
 
   private renderSlide(slide: BootstrapSlide): HTMLTemplateResult {
@@ -306,8 +306,8 @@ export class VerificationBootstrapComponent extends WithShoelace(AbstractCompone
 
   public render(): HTMLTemplateResult {
     return html`
-      <dialog id="dialog-element" class="overlay" @pointerdown="${() => this.closeDialog()}">
-        <div class="dialog-container" @pointerdown="${(event: PointerEvent) => event.stopPropagation()}">
+      <dialog id="dialog-element" class="overlay" closedby="any">
+        <div class="dialog-container">
           <header class="dialog-header">
             <button
               class="oe-btn-secondary close-button"

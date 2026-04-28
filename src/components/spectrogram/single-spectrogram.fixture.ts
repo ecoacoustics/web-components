@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { SpectrogramComponent } from "./spectrogram";
-import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import { hasBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../tests/helpers/helpers";
 import { Size } from "../../models/rendering";
 import { IChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { createFixture, setContent } from "../../tests/fixtures";
@@ -25,6 +25,7 @@ class TestPage {
         id="spectrogram"
         src="${src}"
         style="position: relative; height: 632px;"
+        color-map="grayscale"
       ></oe-spectrogram>
       <oe-media-controls for="spectrogram"></oe-media-controls>
     `;

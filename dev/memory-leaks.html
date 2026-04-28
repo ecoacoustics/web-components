@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - NSW DPI</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-verification-grid id="verification-grid" autofocus>
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <oe-data-source slot="data-source" for="verification-grid" src="/kaleidoscope.csv" local></oe-data-source>
+    </oe-verification-grid>
+
+    <p>
+      This page tests for memory leaks when the verification grid is removed from the DOM after 2 seconds. You should
+      observe two things:
+    </p>
+
+    <ol>
+      <li>No errors in the console.</li>
+      <li>There should be no detached elements in the DOM.</li>
+    </ol>
+
+    <script type="module">
+      setTimeout(() => {
+        const verificationGrid = document.getElementById("verification-grid");
+        verificationGrid.remove();
+      }, 1_000);
+    </script>
+  </body>
+</html>

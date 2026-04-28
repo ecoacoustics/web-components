@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { createFixture, setContent } from "../../../tests/fixtures";
-import { waitForContentReady } from "../../../tests/helpers";
+import { waitForContentReady } from "../../../tests/helpers/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}

@@ -1,5 +1,5 @@
 import { LitElement, PropertyValues, HTMLTemplateResult, unsafeCSS } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { booleanConverter, callbackConverter } from "../../helpers/attributes";
 import { ESCAPE_KEY } from "../../helpers/keyboard";
 import { decisionColors } from "../../helpers/themes/decisionColors";
@@ -9,11 +9,12 @@ import { VerificationGridComponent, VerificationGridInjector } from "../verifica
 import { ClassificationComponent } from "./classification/classification";
 import { VerificationComponent } from "./verification/verification";
 import { consume } from "@lit/context";
-import { decisionColor } from "../../services/colors";
+import { decisionColor } from "../../services/colors/colors";
 import { injectionContext } from "../../helpers/constants/contextTokens";
 import { KeyboardShortcut } from "../../templates/keyboardShortcut";
 import { SubjectWrapper } from "../../models/subject";
 import { Constructor } from "../../helpers/types/advancedTypes";
+import { customElement } from "../../helpers/customElement";
 import decisionStyles from "./css/style.css?inline";
 
 export interface DecisionModels<T extends Decision> {
@@ -49,7 +50,6 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   protected abstract isShortcutKey(event: KeyboardEvent): boolean;
 
   @consume({ context: injectionContext, subscribe: true })
-  @state()
   protected injector: VerificationGridInjector = {
     colorService: decisionColor,
   };
@@ -81,8 +81,8 @@ export abstract class DecisionComponent extends AbstractComponent(LitElement) {
   private shouldEmitNext = true;
   private keyboardHeldDown = false;
 
-  private keyUpHandler = this.handleKeyUp.bind(this);
-  private keyDownHandler = this.handleKeyDown.bind(this);
+  private readonly keyUpHandler = this.handleKeyUp.bind(this);
+  private readonly keyDownHandler = this.handleKeyDown.bind(this);
 
   public disconnectedCallback(): void {
     if (!this.verificationGrid) {

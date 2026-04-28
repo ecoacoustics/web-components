@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deadlock Stress Test - 36 Spectrograms</title>
+    <script type="module" src="/src/index.ts"></script>
+    <style>
+      body {
+        margin: 20px;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      header {
+        margin-bottom: 20px;
+      }
+
+      .info {
+        background: #f0f0f0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .info h1 {
+        margin-top: 0;
+      }
+
+      .info ul {
+        margin: 10px 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .spectrogram-container {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        background: white;
+      }
+
+      .spectrogram-label {
+        font-size: 11px;
+        padding: 4px 8px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+        font-weight: 500;
+      }
+
+      oe-spectrogram {
+        display: block;
+        width: 100%;
+        height: 120px;
+      }
+
+      oe-spectrogram::part(canvas) {
+        width: 100%;
+        height: 100%;
+      }
+
+      .controls {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        border: 1px solid #0066cc;
+        background: #0066cc;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #0052a3;
+      }
+
+      button:active {
+        background: #003d7a;
+      }
+
+      #status {
+        display: inline-block;
+        margin-left: 10px;
+        padding: 4px 8px;
+        background: #e3f2fd;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="info">
+        <h1>🔬 Deadlock Stress Test - 36 Spectrograms</h1>
+        <p>
+          <strong>Purpose:</strong> Manual E2E test for issue #591 deadlock fix when multiple spectrograms render
+          simultaneously.
+        </p>
+        <p>
+          <strong>How to test:</strong>
+        </p>
+        <ul>
+          <li>Click "Force Reload All" to trigger all 36 spectrograms to reload simultaneously</li>
+          <li>Repeat "Force Reload All" multiple times to stress test the system</li>
+          <li>Navigate away and back to this page multiple times (back/forward buttons)</li>
+          <li>
+            Open browser DevTools and monitor:
+            <ul>
+              <li>CPU usage (should spike then normalize, not stay at 100%)</li>
+              <li>Console for timeout errors (indicates deadlock was prevented)</li>
+              <li>Network tab to see when audio files complete loading</li>
+            </ul>
+          </li>
+          <li><strong>Expected:</strong> All spectrograms should render without hanging the browser</li>
+          <li>
+            <strong>Deadlock symptom (if fix doesn't work):</strong> Browser becomes unresponsive, CPU at 100%,
+            spectrograms don't render
+          </li>
+        </ul>
+      </div>
+
+      <div class="warning">
+        ⚠️ <strong>Warning:</strong> This page intentionally creates high CPU load to test deadlock prevention. Close
+        other tabs and save your work before testing.
+      </div>
+    </header>
+
+    <div class="controls">
+      <button onclick="forceReloadAll()">Force Reload All Spectrograms</button>
+      <button onclick="location.reload()">Full Page Reload</button>
+      <span id="status">Ready</span>
+    </div>
+
+    <div class="grid">
+      <!-- Row 1 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 01</div>
+        <oe-spectrogram id="spec-01" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 02</div>
+        <oe-spectrogram id="spec-02" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 03</div>
+        <oe-spectrogram id="spec-03" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 04</div>
+        <oe-spectrogram id="spec-04" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 05</div>
+        <oe-spectrogram id="spec-05" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 06</div>
+        <oe-spectrogram id="spec-06" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 07</div>
+        <oe-spectrogram id="spec-07" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 08</div>
+        <oe-spectrogram id="spec-08" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 09</div>
+        <oe-spectrogram id="spec-09" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 10</div>
+        <oe-spectrogram id="spec-10" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 11</div>
+        <oe-spectrogram id="spec-11" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 12</div>
+        <oe-spectrogram id="spec-12" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 13</div>
+        <oe-spectrogram id="spec-13" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 14</div>
+        <oe-spectrogram id="spec-14" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 15</div>
+        <oe-spectrogram id="spec-15" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 16</div>
+        <oe-spectrogram id="spec-16" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 17</div>
+        <oe-spectrogram id="spec-17" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 18</div>
+        <oe-spectrogram id="spec-18" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 19</div>
+        <oe-spectrogram id="spec-19" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 20</div>
+        <oe-spectrogram id="spec-20" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 21</div>
+        <oe-spectrogram id="spec-21" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 22</div>
+        <oe-spectrogram id="spec-22" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 23</div>
+        <oe-spectrogram id="spec-23" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 24</div>
+        <oe-spectrogram id="spec-24" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+
+      <!-- Row 5 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 25</div>
+        <oe-spectrogram id="spec-25" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 26</div>
+        <oe-spectrogram id="spec-26" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 27</div>
+        <oe-spectrogram id="spec-27" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 28</div>
+        <oe-spectrogram id="spec-28" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 29</div>
+        <oe-spectrogram id="spec-29" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 30</div>
+        <oe-spectrogram id="spec-30" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+
+      <!-- Row 6 -->
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 31</div>
+        <oe-spectrogram id="spec-31" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 32</div>
+        <oe-spectrogram id="spec-32" window-size="512" color-map="magma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 33</div>
+        <oe-spectrogram id="spec-33" window-size="512" color-map="viridis">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 34</div>
+        <oe-spectrogram id="spec-34" window-size="512" color-map="plasma">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 35</div>
+        <oe-spectrogram id="spec-35" window-size="512" color-map="inferno">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+      <div class="spectrogram-container">
+        <div class="spectrogram-label">Spectrogram 36</div>
+        <oe-spectrogram id="spec-36" window-size="512" color-map="audacity">
+          <source src="/example.flac" />
+        </oe-spectrogram>
+      </div>
+    </div>
+
+    <script>
+      // Alternate between two audio sources to force reload
+      // Using different files ensures components actually reload on each click
+      const sources = ["/example.flac", "/example2.flac"];
+      let currentSourceIndex = 0;
+
+      function forceReloadAll() {
+        const status = document.getElementById("status");
+        status.textContent = "Reloading all spectrograms...";
+        status.style.background = "#fff3cd";
+
+        // Alternate to the next source
+        currentSourceIndex = (currentSourceIndex + 1) % sources.length;
+        const newSrc = sources[currentSourceIndex];
+
+        const spectrograms = document.querySelectorAll("oe-spectrogram");
+        let completed = 0;
+
+        spectrograms.forEach((spectrogram, index) => {
+          // Force a re-render by changing the source
+          spectrogram.src = newSrc;
+
+          // Listen for load events
+          spectrogram.addEventListener(
+            "loaded",
+            () => {
+              completed++;
+              const sourceFile = newSrc.split("/").pop();
+              status.textContent = `Loaded ${completed}/${spectrograms.length} spectrograms (${sourceFile})`;
+
+              if (completed === spectrograms.length) {
+                status.textContent = `All spectrograms loaded! ✓ (${sourceFile})`;
+                status.style.background = "#d4edda";
+              }
+            },
+            { once: true },
+          );
+
+          // Listen for error events
+          spectrogram.addEventListener(
+            "error",
+            () => {
+              status.textContent = `Error loading spectrogram ${index + 1}`;
+              status.style.background = "#f8d7da";
+            },
+            { once: true },
+          );
+        });
+
+        // Fallback timeout
+        setTimeout(() => {
+          if (completed < spectrograms.length) {
+            status.textContent = `Timeout: Only ${completed}/${spectrograms.length} loaded`;
+            status.style.background = "#f8d7da";
+          }
+        }, 30000); // 30 second timeout
+      }
+
+      // Monitor console errors
+      const originalConsoleError = console.error;
+      let deadlockTimeoutCount = 0;
+
+      console.error = function (...args) {
+        const message = args.join(" ");
+        if (message.includes("Timeout waiting for worker") || message.includes("deadlock")) {
+          deadlockTimeoutCount++;
+          console.warn(`⚠️ DEADLOCK TIMEOUT DETECTED (#${deadlockTimeoutCount})`);
+
+          // Update status
+          const status = document.getElementById("status");
+          status.textContent = `⚠️ ${deadlockTimeoutCount} deadlock timeout(s) detected - check console`;
+          status.style.background = "#f8d7da";
+        }
+        originalConsoleError.apply(console, args);
+      };
+
+      // Log page load metrics
+      window.addEventListener("load", () => {
+        console.log("📊 Page loaded with 36 spectrograms");
+        console.log("🔍 Monitor for deadlock timeout messages in console");
+        console.log("💡 Expected: CPU spike during initial render, then normalizes");
+        console.log("❌ Deadlock symptom: CPU stays at 100%, spectrograms don't render");
+      });
+    </script>
+  </body>
+</html>

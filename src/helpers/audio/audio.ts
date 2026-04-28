@@ -5,7 +5,6 @@ import BufferBuilderProcessor from "./buffer-builder-processor.ts?worker&url";
 // import workerPath from "./worker.ts?worker&url";
 import WorkerConstructor from "./worker.ts?worker&inline";
 import { Size } from "../../models/rendering";
-import { IAudioInformation, SpectrogramOptions } from "./models";
 import {
   BUFFER_PROCESSOR_NAME,
   ProcessorSetupMessage,
@@ -13,6 +12,8 @@ import {
   WorkerResizeCanvasMessage,
   WorkerSetupMessage,
 } from "./messages";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
+import { AudioInformation } from "./audioInformation";
 
 export class AudioHelper {
   private readonly spectrogramWorker: Worker | null = null;
@@ -20,7 +21,7 @@ export class AudioHelper {
   private readonly sampleBuffer: SharedArrayBuffer;
 
   private cachedResponse: Response | null = null;
-  private cachedAudioInformation: IAudioInformation | null = null;
+  private cachedAudioInformation: AudioInformation | null = null;
   private offscreenCanvas: OffscreenCanvas | null = null;
 
   // This data changes every time we render.
@@ -54,7 +55,7 @@ export class AudioHelper {
     src: string,
     canvas: HTMLCanvasElement,
     options: SpectrogramOptions,
-  ): Promise<Readonly<IAudioInformation>> {
+  ): Promise<Readonly<AudioInformation>> {
     if (this.offscreenCanvas) {
       throw new Error("Connect can only be called once. Use regenerateSpectrogram to update the spectrogram.");
     }
@@ -70,7 +71,7 @@ export class AudioHelper {
     return info;
   }
 
-  public async changeSource(src: string, options: SpectrogramOptions): Promise<IAudioInformation> {
+  public async changeSource(src: string, options: SpectrogramOptions): Promise<AudioInformation> {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized. Call connect() first.");
     }
@@ -117,6 +118,19 @@ export class AudioHelper {
     this.spectrogramWorker.postMessage(message);
   }
 
+  /**
+   * Gracefully stop any in-flight processing and free underlying resources.
+   * - Aborts the current render generation and waits for the worker to become idle
+   * - Terminates the spectrogram worker
+   */
+  public async destroy(): Promise<void> {
+    // If we never created the worker (connect was never called), skip abort
+    if (this.spectrogramWorker) {
+      await this.abort();
+      this.spectrogramWorker.postMessage(["destroy"]);
+    }
+  }
+
   private async abort() {
     const abortedGeneration = this.generation;
 
@@ -156,14 +170,25 @@ export class AudioHelper {
     options: SpectrogramOptions,
     generation: number,
     src: string | null = null,
-  ): Promise<IAudioInformation> {
+  ): Promise<AudioInformation> {
     const downloadedBuffer = src ? await this.fetchAudio(src) : await this.cachedBuffer();
-    const info = this.cachedAudioInformation as IAudioInformation;
+    const info = this.cachedAudioInformation as AudioInformation;
 
     // recreate the processor every time!
-    await this.createAudioContext(info, downloadedBuffer, generation);
+    const startRendering = await this.createAudioContext(info, downloadedBuffer, generation);
 
+    // Critical: tell the worker to start its work() loop BEFORE the
+    // OfflineAudioContext begins pumping data. Otherwise the processor
+    // can fill its buffer before the worker is listening, causing timeouts.
     this.regenerateWorker(options, info, generation);
+
+    // Wait for the worker to enter its work() loop (sets state to PROCESSING).
+    // This ensures the worker is blocked on Atomics.wait(BUFFER_AVAILABLE)
+    // and will wake immediately when the processor signals bufferReady.
+    await this.state.waitForWorkerBusy();
+
+    // Now safe to start the audio pipeline
+    startRendering?.();
 
     // returns before the worker finishes painting
     // but abort will wait for the worker to finish
@@ -171,7 +196,7 @@ export class AudioHelper {
     return info;
   }
 
-  private createAudioInformation(metadata: IAudioMetadata): IAudioInformation {
+  private createAudioInformation(metadata: IAudioMetadata): AudioInformation {
     if (!metadata.format.duration || !metadata.format.sampleRate || !metadata.format.numberOfChannels) {
       throw new Error("Could not determine all audio metadata");
     }
@@ -188,10 +213,10 @@ export class AudioHelper {
   private async fetchAudio(src: string): Promise<ArrayBuffer> {
     // TODO: see if there is a better way to do this
     // TODO: probably use web codec (AudioDecoder) for decoding partial files
-    const tag = `audio (${this.generation}): fetch and decode audio`;
+    const tag = `audio (${src}): fetch and decode audio`;
     console.time(tag);
 
-    const response = await fetch(src);
+    const response = await fetch(src, { priority: "high", cache: "force-cache" });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio: ${response.statusText}`);
     }
@@ -221,7 +246,17 @@ export class AudioHelper {
     return buffer;
   }
 
-  private async createAudioContext(info: IAudioInformation, buffer: ArrayBuffer, generation: number) {
+  /**
+   * Creates and prepares the audio context, but does NOT start rendering.
+   * Returns a callback to start rendering, or undefined if setup failed.
+   * This separation allows the caller to ensure the worker is ready before
+   * the OfflineAudioContext begins pumping data through the processor.
+   */
+  private async createAudioContext(
+    info: AudioInformation,
+    buffer: ArrayBuffer,
+    generation: number,
+  ): Promise<(() => void) | undefined> {
     const length = info.duration * info.sampleRate * info.channels;
 
     //! creates a buffer the size of the entire audio file
@@ -252,13 +287,18 @@ export class AudioHelper {
     if (success) {
       this.generationData.set(generation, source);
 
-      source.start();
-      context.startRendering();
+      // Return a callback to start rendering.
+      // The caller should start the worker before invoking this.
+      return () => {
+        source.start();
+        context.startRendering();
+      };
     }
 
     // otherwise just forget about everything, don't bother to start.
     // no instance state to clean up
     // hopefully the garbage collector will clean up the context
+    return undefined;
   }
 
   // messages
@@ -303,7 +343,7 @@ export class AudioHelper {
     this.spectrogramWorker?.postMessage(["clear-canvas"]);
   }
 
-  private regenerateWorker(options: SpectrogramOptions, audioInformation: IAudioInformation, generation: number) {
+  private regenerateWorker(options: SpectrogramOptions, audioInformation: AudioInformation, generation: number) {
     if (!this.spectrogramWorker) {
       throw new Error("Worker is not initialized");
     }

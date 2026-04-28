@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { MediaControlsComponent } from "./media-controls";
 import { SpectrogramComponent } from "../spectrogram/spectrogram";
 import { expect, test } from "../../tests/assertions";
-import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers";
+import { setBrowserAttribute, waitForContentReady } from "../../tests/helpers/helpers";
 
 class TestPage {
   public constructor(public readonly page: Page) {}
@@ -26,7 +26,7 @@ class TestPage {
           style="display: relative; width: 100px; height: 100px;"
         ></oe-spectrogram>
         <oe-media-controls for="spectrogram">
-            ${slotTemplate ?? ""}
+            ${slotTemplate}
         </oe-media-controls>
     `);
     await this.waitUntilLoaded();

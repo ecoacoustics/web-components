@@ -1,8 +1,9 @@
 import { SpectrogramGenerator } from "./spectrogram";
 import { SharedBuffersWithCanvas, WorkerMessage, GenerationMetadata } from "./messages";
-import { SpectrogramOptions, IAudioInformation } from "./models";
 import { WorkerState } from "./state";
 import { Size } from "../../models/rendering";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
+import { AudioInformation } from "./audioInformation";
 
 /** the canvas from the main thread */
 let destinationCanvas!: OffscreenCanvas;
@@ -29,7 +30,7 @@ let state: WorkerState;
 /** contains samples accumulated by the processor */
 let sampleBuffer: Float32Array;
 
-let audioInformation: IAudioInformation;
+let audioInformation: AudioInformation;
 
 function paintBuffer(generation: number): void {
   //console.log(`worker (${generation}):work:`, state.bufferWriteHead);
@@ -93,7 +94,7 @@ function work(generation: number): void {
 }
 
 function renderImageBuffer(buffer: Uint8ClampedArray, generation: number): void {
-  const imageData = new ImageData(buffer, spectrogram.width, spectrogram.height);
+  const imageData = new ImageData(buffer as any, spectrogram.width, spectrogram.height);
 
   // paint buffer to the spectrogram canvas at  a 1:1 scale
   spectrogramSurface.putImageData(imageData, 0, 0);
@@ -176,6 +177,20 @@ function resizeCanvas(data: Size): void {
   //console.log("resized canvas", data);
 }
 
+function destroy(): void {
+  console.debug("worker: destroy");
+
+  // Drop references to canvas elements so that they do not end up as detached
+  // nodes.
+  // I also reset the shared state so that if all spectrograms are destroyed,
+  // hopefully the SharedArrayBuffers can be GC'd.
+  destinationCanvas = undefined as any;
+  spectrogramCanvas = undefined as any;
+  state = undefined as any;
+
+  self.close();
+}
+
 // runs when the processor is first created
 // should only be run once and only to share buffers and canvas
 function handleMessage(event: WorkerMessage) {
@@ -193,6 +208,9 @@ function handleMessage(event: WorkerMessage) {
       break;
     case "clear-canvas":
       clearCanvas();
+      break;
+    case "destroy":
+      destroy();
       break;
     default:
       throw new Error("unknown message: " + event.data[0]);

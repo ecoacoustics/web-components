@@ -1,5 +1,6 @@
 import { Size } from "../../models/rendering";
-import { IAudioInformation, SpectrogramOptions } from "./models";
+import { SpectrogramOptions } from "../../components/spectrogram/spectrogramOptions";
+import { AudioInformation } from "./audioInformation";
 
 export const BUFFER_PROCESSOR_NAME = "buffer-builder-processor";
 export const HIGH_ACCURACY_TIME_PROCESSOR_NAME = "high-accuracy-time-processor";
@@ -17,16 +18,21 @@ export type ProcessorMessage = MessageEvent<ProcessorSetupMessage>;
 
 // worker
 
-export type GenerationMetadata = Generation & { audioInformation: IAudioInformation; options: SpectrogramOptions };
+export type GenerationMetadata = Generation & { audioInformation: AudioInformation; options: SpectrogramOptions };
 export type SharedBuffersWithCanvas = SharedBuffers & { canvas: OffscreenCanvas };
 
 export type WorkerSetupMessage = NamedMessageData<"setup", SharedBuffersWithCanvas>;
 export type WorkerResizeCanvasMessage = NamedMessageData<"resize-canvas", Size>;
 export type WorkerRegenerateSpectrogramMessage = NamedMessageData<"regenerate-spectrogram", GenerationMetadata>;
 export type WorkerClearCanvasMessage = NamedMessageData<"clear-canvas", never>;
+export type WorkerDestroyMessage = NamedMessageData<"destroy", never>;
 
 export type WorkerMessage = MessageEvent<
-  WorkerSetupMessage | WorkerResizeCanvasMessage | WorkerRegenerateSpectrogramMessage | WorkerClearCanvasMessage
+  | WorkerSetupMessage
+  | WorkerResizeCanvasMessage
+  | WorkerRegenerateSpectrogramMessage
+  | WorkerClearCanvasMessage
+  | WorkerDestroyMessage
 >;
 
 // high accuracy time processor

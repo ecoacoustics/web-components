@@ -1,4 +1,6 @@
 :host {
+  flex: 1 1 0;
+
   &::part(indicator-line) {
     stroke: red;
     stroke-width: 2;

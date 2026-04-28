@@ -1,5 +1,5 @@
 import { html, HTMLTemplateResult, LitElement, nothing, PropertyValues, svg, unsafeCSS } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { SpectrogramComponent } from "spectrogram/spectrogram";
 import {
@@ -19,6 +19,7 @@ import { hertzToMHertz } from "../../helpers/converters";
 import { ChromeProvider } from "../../mixins/chrome/chromeProvider/chromeProvider";
 import { map } from "lit/directives/map.js";
 import { ChromeTemplate } from "../../mixins/chrome/types";
+import { customElement } from "../../helpers/customElement";
 import axesStyles from "./css/style.css?inline";
 
 // TODO: this component should have optimized rendering so that it doesn't
@@ -53,9 +54,9 @@ import axesStyles from "./css/style.css?inline";
  * @csspart x-label - Apply styles to only the x axis label
  * @csspart y-label - Apply styles to only the x axis label
  *
- * @csspart legend - Apply styles to both the x and y legends
- * @csspart x-legend - Apply styles to only the x axis legend
- * @csspart y-legend - Apply styles to only the x axis legend
+ * @csspart title - Apply styles to both the x and y titles
+ * @csspart x-title - Apply styles to only the x axis title
+ * @csspart y-title - Apply styles to only the y axis title
  *
  * @slot - A spectrogram element to add axes to
  */
@@ -259,14 +260,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return svg`
         <g>
           <line
-            part="x-tick"
+            part="tick x-tick"
             x1="${xPosition}"
             x2="${xPosition}"
             y1="0"
             y2="${this.tickSize.height}"
           ></line>
           <text
-            part="x-label"
+            part="label x-label"
             text-anchor="middle"
             dominant-baseline="end"
             x="${xPosition}"
@@ -288,14 +289,14 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
       return svg`<g>
         <line
-          part="y-tick"
+          part="tick y-tick"
           x1="${xPosition}"
           x2="${xPosition + this.tickSize.width}"
           y1="${yPosition}"
           y2="${yPosition}"
         ></line>
         <text
-          part="y-label"
+          part="label y-label"
           text-anchor="end"
           dominant-baseline="middle"
           x="${xPosition}"
@@ -344,20 +345,20 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
     this.xAxisTemplate = html`
       <svg class="axes-label-chrome x-axis-chrome" width="${canvasSize.width}" height="${xAxisChromeHeight}">
-        <g part="x-ticks">${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
+        <g>${xAxisLabelsTemplate} ${xAxisTitleTemplate}</g>
       </svg>
     `;
 
     this.yAxisTemplate = html`
       <svg class="axes-label-chrome y-axis-chrome" width="${yAxisChromeWidth}" height="${canvasSize.height}">
-        <g part="y-ticks">${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
+        <g>${yAxisLabelsTemplate} ${yAxisTitleTemplate}</g>
       </svg>
     `;
 
     return svg`
       <g part="tick">
-        <g part="x-ticks">${this.xAxisTemplate}</g>
-        <g part="y-ticks">${this.yAxisTemplate}</g>
+        <g>${this.xAxisTemplate}</g>
+        <g>${this.yAxisTemplate}</g>
       </g>
     `;
   }

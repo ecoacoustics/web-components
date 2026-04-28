@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=, initial-scale=1.0" />
+    <title>Web Components - Dark Spectrogram</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <oe-axes>
+      <oe-indicator>
+        <oe-spectrogram src="/example.flac" scaling="original"></oe-spectrogram>
+      </oe-indicator>
+    </oe-axes>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 10rem;
+
+        background-color: black;
+        color: white;
+      }
+
+      oe-spectrogram {
+        display: inline-block;
+
+        &::part(tick),
+        &::part(label),
+        &::part(title),
+        &::part(grid) {
+          color: white;
+          fill: white;
+          font-weight: 1000;
+          letter-spacing: 0.05rem;
+        }
+      }
+    </style>
+  </body>
+</html>

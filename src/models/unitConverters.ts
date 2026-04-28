@@ -4,9 +4,12 @@ import { computed, Signal } from "@lit-labs/preact-signals";
 import { hertzToMels } from "../helpers/audio/mel";
 import { Annotation } from "./annotation";
 
+export type Milliseconds = number;
 export type Seconds = number;
+
 export type Hertz = number;
 export type MHertz = number;
+
 export type Sample = number;
 export type Pixel = number;
 export type EmUnit = number;
@@ -36,27 +39,20 @@ const identityFunction = (value: number) => value;
 // all the computed values also update
 export class UnitConverter {
   public constructor(
-    renderWindow: Signal<RenderWindow>,
-    canvasSize: Signal<RenderCanvasSize>,
-    audioModel: Signal<AudioModel>,
-    melScale: Signal<boolean>,
-  ) {
-    this.renderWindow = renderWindow;
-    this.canvasSize = canvasSize;
-    this.audioModel = audioModel;
-    this.melScale = melScale;
-  }
+    public readonly renderWindow: Signal<RenderWindow>,
+    public readonly canvasSize: Signal<RenderCanvasSize>,
+    public readonly audioModel: Signal<AudioModel>,
+    public readonly melScale: Signal<boolean>,
+  ) {}
 
-  public renderWindow: Signal<RenderWindow>;
-  public canvasSize: Signal<RenderCanvasSize>;
-  public audioModel: Signal<AudioModel>;
-  public melScale: Signal<boolean>;
-  public nyquist = computed(() => this.audioModel.value.sampleRate / 2);
-  private frequencyInterpolator = computed(() => (this.melScale.value ? hertzToMels : (value: Hertz): Hertz => value));
+  public readonly nyquist = computed(() => this.audioModel.value.sampleRate / 2);
+  private readonly frequencyInterpolator = computed(() =>
+    this.melScale.value ? hertzToMels : (value: Hertz): Hertz => value,
+  );
 
   // by using computed signals for the temporalDomain and frequencyDomain
   // the scale functions will automatically update when the renderWindow size changes
-  public temporalDomain: Signal<ScaleDomain<Seconds>> = computed(() => [
+  public readonly temporalDomain = computed<ScaleDomain<Seconds>>(() => [
     this.renderWindow.value.startOffset,
     this.renderWindow.value.endOffset,
   ]);
@@ -66,15 +62,15 @@ export class UnitConverter {
   // position (and vice versa)
   // this behavior is implemented by setting the domain to mel scale when melScale is set
   // this will automatically update the scales to convert to/from mel scale values
-  public frequencyDomain: Signal<ScaleDomain<Hertz>> = computed(() => [
+  public readonly frequencyDomain = computed<ScaleDomain<Hertz>>(() => [
     this.frequencyInterpolator.value(0),
     this.frequencyInterpolator.value(this.nyquist.value),
   ]);
 
   // the frequency axis/hertz/y-axis is special because we want the highest frequency to occupy the smallest pixel value
   // so that it is at the top of the canvas
-  public temporalRange: Signal<ScaleRange<Seconds>> = computed(() => [0, this.canvasSize.value.width]);
-  public frequencyRange: Signal<ScaleRange<Hertz>> = computed(() => [this.canvasSize.value.height, 0]);
+  public readonly temporalRange = computed<ScaleRange<Seconds>>(() => [0, this.canvasSize.value.width]);
+  public readonly frequencyRange = computed<ScaleRange<Hertz>>(() => [this.canvasSize.value.height, 0]);
 
   /**
    * Convert Seconds into a Pixel value on the canvas
@@ -82,7 +78,7 @@ export class UnitConverter {
    * @param value the value in seconds
    * @returns the x-offset that the seconds value should be drawn
    */
-  public scaleX: Signal<TemporalScale> = computed(() =>
+  public readonly scaleX = computed<TemporalScale>(() =>
     this.linearScale<Seconds>(this.temporalDomain.value, this.temporalRange.value),
   );
 
@@ -92,7 +88,7 @@ export class UnitConverter {
    * @param value the x-offset on the canvas
    * @returns what seconds value the x-offset represents
    */
-  public scaleXInverse = computed<InvertTemporalScale>(() =>
+  public readonly scaleXInverse = computed<InvertTemporalScale>(() =>
     this.inverseLinearScale(this.temporalDomain.value, this.temporalRange.value),
   );
 
@@ -102,7 +98,7 @@ export class UnitConverter {
    * @param value the value in Hertz
    * @returns the y-offset that the Hertz value should be drawn
    */
-  public scaleY = computed<FrequencyScale>(() =>
+  public readonly scaleY = computed<FrequencyScale>(() =>
     this.linearScale<Hertz>(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 
@@ -112,7 +108,7 @@ export class UnitConverter {
    * @param value the y-offset on the canvas
    * @returns what Hertz value the y-offset represents
    */
-  public scaleYInverse = computed<InvertFrequencyScale>(() =>
+  public readonly scaleYInverse = computed<InvertFrequencyScale>(() =>
     this.inverseLinearScale(this.frequencyDomain.value, this.frequencyRange.value, this.frequencyInterpolator.value),
   );
 

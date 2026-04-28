@@ -1,5 +1,10 @@
 import { Page } from "@playwright/test";
-import { catchEvent, removeBrowserAttribute, setBrowserAttribute, waitForContentReady } from "../../../tests/helpers";
+import {
+  catchEvent,
+  removeBrowserAttribute,
+  setBrowserAttribute,
+  waitForContentReady,
+} from "../../../tests/helpers/helpers";
 import { ClassificationComponent } from "./classification";
 import { DecisionEvent } from "../decision";
 import { createFixture, setContent } from "../../../tests/fixtures";

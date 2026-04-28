@@ -1,5 +1,121 @@
 # Changelog
 
+## [6.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.2.0...web-components-v6.2.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* fix deadlock when rendering many spectrograms ([#592](https://github.com/ecoacoustics/web-components/issues/592)) ([2f40457](https://github.com/ecoacoustics/web-components/commit/2f4045788439b7f828d94a3216735722f8406128))
+
+## [6.2.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.2...web-components-v6.2.0) (2025-12-18)
+
+
+### Features
+
+* export TypeScript typings as module exports ([#583](https://github.com/ecoacoustics/web-components/issues/583)) ([40311da](https://github.com/ecoacoustics/web-components/commit/40311da767279aaa54003891ee7f78189d332d60)), closes [#582](https://github.com/ecoacoustics/web-components/issues/582)
+
+## [6.1.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.1...web-components-v6.1.2) (2025-12-17)
+
+
+### Bug Fixes
+
+* empty buffer-builder-processor input ([#580](https://github.com/ecoacoustics/web-components/issues/580)) ([eaf2a83](https://github.com/ecoacoustics/web-components/commit/eaf2a830b94f5967cbdc0702ec8d65d3efc7bd4a)), closes [#579](https://github.com/ecoacoustics/web-components/issues/579)
+
+## [6.1.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.1.0...web-components-v6.1.1) (2025-12-04)
+
+
+### Bug Fixes
+
+* Media controls reflow on creation ([#568](https://github.com/ecoacoustics/web-components/issues/568)) ([97bdc40](https://github.com/ecoacoustics/web-components/commit/97bdc40ccf1cc6fe1db88a3d2463ed3d3fc6545a)), closes [#563](https://github.com/ecoacoustics/web-components/issues/563)
+
+## [6.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.5...web-components-v6.1.0) (2025-11-26)
+
+
+### Features
+
+* Enter DATASET_LOADING state when fetching items ([#572](https://github.com/ecoacoustics/web-components/issues/572)) ([c2627cf](https://github.com/ecoacoustics/web-components/commit/c2627cf518d6f632a2b9d5a7c3a9023b0439ba1f)), closes [#550](https://github.com/ecoacoustics/web-components/issues/550)
+
+## [6.0.5](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.4...web-components-v6.0.5) (2025-10-17)
+
+
+### Bug Fixes
+
+* Resetting options after auto-paging ([#557](https://github.com/ecoacoustics/web-components/issues/557)) ([199938a](https://github.com/ecoacoustics/web-components/commit/199938a8fe923c5de80982962e6a17154ba71f2f)), closes [#551](https://github.com/ecoacoustics/web-components/issues/551)
+
+## [6.0.4](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.3...web-components-v6.0.4) (2025-10-16)
+
+
+### Bug Fixes
+
+* Focus when clicking around decision buttons ([#555](https://github.com/ecoacoustics/web-components/issues/555)) ([417aa41](https://github.com/ecoacoustics/web-components/commit/417aa41db2291c76fb85207d8c554da40f7c53e6)), closes [#554](https://github.com/ecoacoustics/web-components/issues/554)
+
+## [6.0.3](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.2...web-components-v6.0.3) (2025-09-23)
+
+
+### Bug Fixes
+
+* Workers not being cleaned up ([#541](https://github.com/ecoacoustics/web-components/issues/541)) ([fb31a3d](https://github.com/ecoacoustics/web-components/commit/fb31a3d5d7481295e2839381552d79c0e63a8732)), closes [#540](https://github.com/ecoacoustics/web-components/issues/540)
+
+## [6.0.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.1...web-components-v6.0.2) (2025-09-21)
+
+
+### Bug Fixes
+
+* "when" condition on default skip button ([#534](https://github.com/ecoacoustics/web-components/issues/534)) ([96fe17e](https://github.com/ecoacoustics/web-components/commit/96fe17ec5d0eb5e30c8f70f515fbf15a4e3f0740)), closes [#533](https://github.com/ecoacoustics/web-components/issues/533)
+
+## [6.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.0.0...web-components-v6.0.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* Use "audacity" as default color map ([#530](https://github.com/ecoacoustics/web-components/issues/530)) ([a0ecf26](https://github.com/ecoacoustics/web-components/commit/a0ecf26edb7af5e345b43d6993a9539814534163))
+
+## [6.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.4...web-components-v6.0.0) (2025-09-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Slotted `<template>`s now replace the default template, meaning that any host applications that previously had partial <template>s that did not have an <oe-spectrogram>, <oe-task-meter>, etc... components will break.
+
+### Features
+
+* Add templatable verification grid tiles ([#513](https://github.com/ecoacoustics/web-components/issues/513)) ([1bc3bf5](https://github.com/ecoacoustics/web-components/commit/1bc3bf5fdb909460db010399f57851a99e9c8098)), closes [#371](https://github.com/ecoacoustics/web-components/issues/371) [#179](https://github.com/ecoacoustics/web-components/issues/179)
+
+## [5.3.4](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.3...web-components-v5.3.4) (2025-09-18)
+
+
+### Bug Fixes
+
+* Don't render indicator without unit converter ([#527](https://github.com/ecoacoustics/web-components/issues/527)) ([5cab610](https://github.com/ecoacoustics/web-components/commit/5cab610fff2345aabde4b3cd7e7c6bf13eb3331b)), closes [#526](https://github.com/ecoacoustics/web-components/issues/526)
+
+## [5.3.3](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.2...web-components-v5.3.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* Width of top positioned progress bar ([#523](https://github.com/ecoacoustics/web-components/issues/523)) ([1faed44](https://github.com/ecoacoustics/web-components/commit/1faed447e56d71576cfed7f6858fb8166bdb4d4f)), closes [#508](https://github.com/ecoacoustics/web-components/issues/508)
+
+## [5.3.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.1...web-components-v5.3.2) (2025-09-18)
+
+
+### Bug Fixes
+
+* Single tile view shadows ([#522](https://github.com/ecoacoustics/web-components/issues/522)) ([5cadba1](https://github.com/ecoacoustics/web-components/commit/5cadba138643367b31a2ebe93fe38a6bddeadf24)), closes [#517](https://github.com/ecoacoustics/web-components/issues/517)
+
+## [5.3.1](https://github.com/ecoacoustics/web-components/compare/web-components-v5.3.0...web-components-v5.3.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* Skip decisions not showing in progress meter ([#495](https://github.com/ecoacoustics/web-components/issues/495)) ([58cc2e7](https://github.com/ecoacoustics/web-components/commit/58cc2e7e19f3a8bcde54ce565a35f7c1a77c1012)), closes [#494](https://github.com/ecoacoustics/web-components/issues/494)
+
+## [5.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.2...web-components-v5.3.0) (2025-09-02)
+
+
+### Features
+
+* Add parser for subject verification state ([a8d0554](https://github.com/ecoacoustics/web-components/commit/a8d055420f55120fd79b09e5617728f16141c4d7)), closes [#462](https://github.com/ecoacoustics/web-components/issues/462) [#440](https://github.com/ecoacoustics/web-components/issues/440) [#441](https://github.com/ecoacoustics/web-components/issues/441) [#266](https://github.com/ecoacoustics/web-components/issues/266) [#235](https://github.com/ecoacoustics/web-components/issues/235) [#464](https://github.com/ecoacoustics/web-components/issues/464)
+
 ## [5.2.2](https://github.com/ecoacoustics/web-components/compare/web-components-v5.2.1...web-components-v5.2.2) (2025-08-26)
 
 

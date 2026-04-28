@@ -1,9 +1,9 @@
-import { Constructor, CssVariable } from "../helpers/types/advancedTypes";
-import { Classification } from "../models/decisions/classification";
-import { Decision, DecisionOptions } from "../models/decisions/decision";
-import { decisionNotRequired, OptionalDecision } from "../models/decisions/decisionNotRequired";
-import { NewTag } from "../models/decisions/newTag";
-import { Verification } from "../models/decisions/verification";
+import { Constructor, CssVariable } from "../../helpers/types/advancedTypes";
+import { Classification } from "../../models/decisions/classification";
+import { Decision, DecisionOptions } from "../../models/decisions/decision";
+import { decisionNotRequired, OptionalDecision } from "../../models/decisions/decisionNotRequired";
+import { NewTag } from "../../models/decisions/newTag";
+import { Verification } from "../../models/decisions/verification";
 
 const tagColors = new Map<unknown, CssVariable>();
 
@@ -27,7 +27,7 @@ export function decisionColor(decision: OptionalDecision): CssVariable {
     return colorBrewerColor(decision);
   }
 
-  const colorNamespaces = new Map<Constructor<Decision>, string>([[Verification, "verification"]]);
+  const colorNamespaces = new Map<Constructor<Decision>, string>([[Verification, "oe-verification"]]);
 
   const decisionConstructor = Object.getPrototypeOf(decision).constructor;
   const colorNamespace = colorNamespaces.get(decisionConstructor);
@@ -50,16 +50,16 @@ function colorBrewerColor(decision: Decision): CssVariable {
   }
 
   const nextColorId = tagColors.size;
-  const newDecisionColor: CssVariable = `--unique-color-${nextColorId}`;
+  const newDecisionColor: CssVariable = `--oe-unique-color-${nextColorId}`;
   tagColors.set(decisionIdentifier, newDecisionColor);
 
   return `${newDecisionColor}-${decision.confirmed}`;
 }
 
 function notRequiredColor(): CssVariable {
-  return "--not-required-color";
+  return "--oe-not-required-color";
 }
 
 function skippedDecisionColor(): CssVariable {
-  return "--decision-skip-color";
+  return "--oe-decision-skip-color";
 }

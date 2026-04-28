@@ -1,13 +1,13 @@
 import { Tag } from "../../models/tag";
 import { expect } from "../../tests/assertions";
-import { catchLocatorEvent, setBrowserAttribute, setBrowserValue } from "../../tests/helpers";
+import { catchLocatorEvent, setBrowserAttribute, setBrowserValue } from "../../tests/helpers/helpers";
 import { AnnotationComponent } from "./annotation";
 import { annotationFixture as test } from "./annotation.fixture";
 
 // because we don't want to assert the elementReference array, we just assert
 // the tag text and reference properties
 function assertTagModels(expected: ReadonlyArray<Tag>, realized: ReadonlyArray<Tag>) {
-  for (const i in expected) {
+  for (let i = 0; i < expected.length; i++) {
     const expectedTag = expected[i];
     const realizedTag = realized[i];
 

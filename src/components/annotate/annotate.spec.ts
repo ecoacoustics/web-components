@@ -6,7 +6,7 @@ import {
   getCssVariableStyle,
   removeBrowserAttribute,
   setBrowserAttribute,
-} from "../../tests/helpers";
+} from "../../tests/helpers/helpers";
 import { AnnotateComponent } from "./annotate";
 import { annotateFixture as test } from "./annotate.fixture";
 

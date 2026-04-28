@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { createFixture, setContent } from "../../tests/fixtures";
-import { waitForContentReady } from "../../tests/helpers";
+import { waitForContentReady } from "../../tests/helpers/helpers";
 import { TypeaheadCallback, TypeaheadComponent } from "./typeahead";
 import { Tag } from "../../models/tag";
 

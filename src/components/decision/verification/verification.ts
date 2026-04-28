@@ -42,7 +42,7 @@ export class VerificationComponent extends DecisionComponent {
   @property({ type: String })
   public shortcut = "";
 
-  @query("#decision-button")
+  @query("#decision-button", true)
   private decisionButton!: HTMLButtonElement;
 
   public get decisionConstructor(): Constructor<Decision> {
@@ -138,7 +138,7 @@ export class VerificationComponent extends DecisionComponent {
           style="--ripple-color: var(${color})"
           aria-disabled="${this.disabled}"
           aria-keyshortcuts="${this.shortcut}"
-          @click="${() => this.handleDecision()}"
+          @click="${this.handleDecision}"
         >
           <span class="oe-pill decision-color-pill" style="background: var(${color})"></span>
 

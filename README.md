@@ -39,7 +39,6 @@ Full page example:
           class="large"
           src="/example.flac"
           window-size="1024"
-          color-map="audacity"
           scaling="stretch"
         ></oe-spectrogram>
       </oe-indicator>
