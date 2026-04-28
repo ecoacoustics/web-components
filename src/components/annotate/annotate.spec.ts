@@ -294,6 +294,89 @@ test.describe("annotation", () => {
     });
   });
 
+  test.describe("missing bounds", () => {
+    interface MissingBoundsTest {
+      name: string;
+      annotation: PartialAnnotation;
+      expectedClasses: string[];
+      unexpectedClasses: string[];
+    }
+
+    const tests: MissingBoundsTest[] = [
+      {
+        name: "missing low frequency (bottom border omitted, sides extend to canvas bottom)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: undefined,
+          highFrequency: 6000,
+        },
+        expectedClasses: ["missing-low-frequency"],
+        unexpectedClasses: ["missing-high-frequency", "missing-end-time"],
+      },
+      {
+        name: "missing high frequency (top border omitted, sides extend to canvas top)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: 2000,
+          highFrequency: undefined,
+        },
+        expectedClasses: ["missing-high-frequency"],
+        unexpectedClasses: ["missing-low-frequency", "missing-end-time"],
+      },
+      {
+        name: "missing both frequencies (pillar across full canvas height)",
+        annotation: {
+          startOffset: 1,
+          endOffset: 3,
+          lowFrequency: undefined,
+          highFrequency: undefined,
+        },
+        expectedClasses: ["missing-low-frequency", "missing-high-frequency"],
+        unexpectedClasses: ["missing-end-time"],
+      },
+      {
+        name: "missing end time (only left edge rendered)",
+        annotation: {
+          startOffset: 2,
+          endOffset: undefined,
+          lowFrequency: 3000,
+          highFrequency: 7000,
+        },
+        expectedClasses: ["missing-end-time"],
+        unexpectedClasses: ["missing-low-frequency", "missing-high-frequency"],
+      },
+      {
+        name: "missing end time and frequencies (left edge pillar)",
+        annotation: {
+          startOffset: 2,
+          endOffset: undefined,
+          lowFrequency: undefined,
+          highFrequency: undefined,
+        },
+        expectedClasses: ["missing-end-time", "missing-low-frequency", "missing-high-frequency"],
+        unexpectedClasses: [],
+      },
+    ];
+
+    for (const spec of tests) {
+      test(spec.name, async ({ fixture }) => {
+        await fixture.createWithAnnotation(spec.annotation);
+
+        const boundingBox = await fixture.annotationBox(0);
+
+        for (const className of spec.expectedClasses) {
+          await expect(boundingBox).toHaveClass(new RegExp(className));
+        }
+
+        for (const className of spec.unexpectedClasses) {
+          await expect(boundingBox).not.toHaveClass(new RegExp(className));
+        }
+      });
+    }
+  });
+
   test.describe("updating annotations", () => {
     const inViewAnnotation = {
       startOffset: 0.2,

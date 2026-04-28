@@ -114,13 +114,22 @@ export class UnitConverter {
 
   public annotationRect(annotation: Readonly<Annotation>): Readonly<Rect<Signal<Pixel>>> {
     const x = computed(() => this.scaleX.value(annotation.startOffset));
-    const y = computed(() => this.scaleY.value(annotation.highFrequency));
-    const width = computed(() => this.scaleX.value(annotation.endOffset - annotation.startOffset));
 
-    // we have to use the computed y offset for mel scales to work
-    // this is because in a mel scale, a 1 hertz unit is different depending on
-    // its value
-    const height = computed(() => this.scaleY.value(annotation.lowFrequency) - y.value);
+    // missing highFrequency → top of canvas (y = 0)
+    const y = computed(() => (annotation.highFrequency == null ? 0 : this.scaleY.value(annotation.highFrequency)));
+
+    // missing endOffset → 0-width box; the left border is still rendered by CSS
+    const width = computed(() =>
+      annotation.endOffset == null ? 0 : this.scaleX.value(annotation.endOffset - annotation.startOffset),
+    );
+
+    // missing lowFrequency → bottom of canvas
+    // We have to subtract y.value here (not use canvasSize.height directly) for
+    // mel scales to work when highFrequency IS defined.  When lowFrequency is
+    // missing we use canvasSize.height as the raw pixel bottom.
+    const height = computed(
+      () => (annotation.lowFrequency == null ? this.canvasSize.value.height : this.scaleY.value(annotation.lowFrequency)) - y.value,
+    );
 
     return { x, y, width, height };
   }

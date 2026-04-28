@@ -38,6 +38,25 @@
       height: 100%;
 
       border: var(--oe-annotation-weight) solid var(--oe-annotation-color);
+
+      /* When the low frequency is missing the annotation extends to the bottom
+         of the canvas, so the bottom border is omitted. */
+      &.missing-low-frequency {
+        border-bottom: none;
+      }
+
+      /* When the high frequency is missing the annotation extends to the top
+         of the canvas, so the top border is omitted. */
+      &.missing-high-frequency {
+        border-top: none;
+      }
+
+      /* When the end time is missing only the left edge is rendered. */
+      &.missing-end-time {
+        border-top: none;
+        border-right: none;
+        border-bottom: none;
+      }
     }
   }
 }

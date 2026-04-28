@@ -4,7 +4,7 @@ import { AbstractComponent } from "../../mixins/abstractComponent";
 import { queryAllDeeplyAssignedElements, required } from "../../helpers/decorators";
 import { Annotation } from "../../models/annotation";
 import { Tag } from "../../models/tag";
-import { booleanConverter, tagArrayConverter } from "../../helpers/attributes";
+import { booleanConverter, nullableNumberConverter, tagArrayConverter } from "../../helpers/attributes";
 import { TagComponent } from "../tag/tag";
 import { Hertz, Seconds } from "../../models/unitConverters";
 import { DataComponent } from "../../helpers/dataComponent";
@@ -54,21 +54,18 @@ export class AnnotationComponent extends AbstractComponent(LitElement) implement
   public static readonly updatingEventName = "oe-annotation-updating";
   public static readonly annotationChangedEventName = "oe-annotation-changed";
 
-  @required()
-  @property({ attribute: "low-frequency", type: Number, reflect: true })
-  public lowFrequency!: Hertz;
+  @property({ attribute: "low-frequency", converter: nullableNumberConverter, reflect: true })
+  public lowFrequency?: Hertz | null;
 
-  @required()
-  @property({ attribute: "high-frequency", type: Number, reflect: true })
-  public highFrequency!: Hertz;
+  @property({ attribute: "high-frequency", converter: nullableNumberConverter, reflect: true })
+  public highFrequency?: Hertz | null;
 
   @required()
   @property({ attribute: "start-time", type: Number, reflect: true })
   public startTime!: Seconds;
 
-  @required()
-  @property({ attribute: "end-time", type: Number, reflect: true })
-  public endTime!: Seconds;
+  @property({ attribute: "end-time", converter: nullableNumberConverter, reflect: true })
+  public endTime?: Seconds | null;
 
   /**
    * Makes the annotation non-editable
