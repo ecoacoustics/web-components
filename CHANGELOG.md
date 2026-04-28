@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.2.1...web-components-v6.3.0) (2026-04-28)
+
+
+### Features
+
+* render annotations at full canvas height when frequency/time bounds are missing ([#595](https://github.com/ecoacoustics/web-components/issues/595)) ([bb83b61](https://github.com/ecoacoustics/web-components/commit/bb83b61d888052a9b4cdb64735be53e2b693607b))
+
 ## [6.2.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.2.0...web-components-v6.2.1) (2026-03-20)
 
 
