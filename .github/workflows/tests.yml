@@ -134,6 +134,7 @@ jobs:
         with:
           path: all-test-reports/
           pattern: test-report-*
+          merge-multiple: true
 
       - name: Merge Test Reports
         run: pnpm exec playwright merge-reports --reporter=html,github all-test-reports/
