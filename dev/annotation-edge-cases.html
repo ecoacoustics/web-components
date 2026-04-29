@@ -265,6 +265,56 @@
             low-frequency="9900"
             high-frequency="8000"
           ></oe-annotation>
+
+          <!-- Missing bounds test cases -->
+          <oe-annotation
+            tags="missing-low-freq"
+            start-time="0.5"
+            end-time="1.2"
+            high-frequency="5000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="missing-high-freq"
+            start-time="0.5"
+            end-time="1.2"
+            low-frequency="2000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="missing-both-freq"
+            start-time="1.5"
+            end-time="2.0"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="missing-end-time"
+            start-time="2.5"
+            low-frequency="3000"
+            high-frequency="7000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="missing-end-time-and-freq"
+            start-time="3.5"
+          ></oe-annotation>
+
+          <!-- String "null" values should be treated as missing -->
+          <oe-annotation
+            tags="null-string-low-freq"
+            start-time="4.0"
+            end-time="4.5"
+            low-frequency="null"
+            high-frequency="8000"
+          ></oe-annotation>
+
+          <oe-annotation
+            tags="null-string-high-freq"
+            start-time="4.0"
+            end-time="4.5"
+            low-frequency="4000"
+            high-frequency="null"
+          ></oe-annotation>
         </oe-annotate>
       </oe-axes>
     </oe-indicator>

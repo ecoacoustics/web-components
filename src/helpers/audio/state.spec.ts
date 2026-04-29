@@ -96,10 +96,9 @@ test.describe("ProcessorState", () => {
       const state = State.createState();
       const processorState = new ProcessorState(state.stateBuffer);
 
-      // Use generation 0, which matches the default STATE.GENERATION value in a fresh
-      // SharedArrayBuffer. Using generation 1 without first calling mainThreadState.reset()
-      // would cause matchesCurrentGeneration(1) to return false immediately (GENERATION=0),
-      // making the loop exit via the "abort" path before ever reaching the timeout.
+      // Use generation 0 because STATE.GENERATION is initialised to 0 in a fresh
+      // SharedArrayBuffer.  matchesCurrentGeneration(0) returns true, so the
+      // busy-wait loop runs to exhaustion and reaches the timeout path.
       const generation = 0;
       processorState.processorReady(generation);
       // Mark a buffer as ready so the processor will wait for it to be processed.

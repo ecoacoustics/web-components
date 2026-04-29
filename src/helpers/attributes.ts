@@ -1,9 +1,48 @@
+import { ComplexAttributeConverter } from "lit";
 import { Tag } from "../models/tag";
 import { Enum, EnumValue } from "./types/advancedTypes";
 
 const converterNoProvidedFallback = Symbol("converter-no-fallback");
 
 export const booleanConverter = (value: string | null): boolean => value !== null && value !== "false";
+
+/**
+ * A Lit attribute converter for optional numeric properties.
+ *
+ * - `null` (attribute absent) → `undefined`
+ * - `""` (empty string attribute) or `"null"` (string null from DOM serialization) → `null`
+ * - Valid numeric string → `number`
+ * - Invalid non-empty string → throws
+ *
+ * `toAttribute` semantics:
+ * - `undefined` → removes the attribute entirely (returns `null` to Lit)
+ * - `null` → sets attribute to `""` (empty string)
+ * - `number` → sets attribute to the numeric string
+ */
+export const nullableNumberConverter: ComplexAttributeConverter<number | null | undefined> = {
+  fromAttribute(value: string | null): number | null | undefined {
+    if (value === null) {
+      return undefined;
+    }
+    if (value === "" || value === "null") {
+      return null;
+    }
+    const parsedNumber = Number(value);
+    if (Number.isNaN(parsedNumber)) {
+      throw new Error(`Invalid numeric value: "${value}"`);
+    }
+    return parsedNumber;
+  },
+  toAttribute(value: number | null | undefined): string | null {
+    if (value === undefined) {
+      return null;
+    }
+    if (value === null) {
+      return "";
+    }
+    return String(value);
+  },
+};
 
 export const arrayConverter = <T = unknown>(value: string | null | T[]): T[] => {
   if (Array.isArray(value)) {

@@ -158,7 +158,8 @@ export function required() {
     const originalUpdated = target.updated;
 
     target.updated = function (changedProperties: Map<string | number | symbol, unknown>) {
-      if (this[propertyKey] === undefined) {
+      const value = this[propertyKey];
+      if (value === undefined || Number.isNaN(value)) {
         throw new Error(`Property ${propertyKey} is required by ${target.constructor.name} but is not set.`);
       }
 
