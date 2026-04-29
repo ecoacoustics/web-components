@@ -5,27 +5,27 @@ on: pull_request
 jobs:
   Setup:
     runs-on: ubuntu-latest
-    outputs:
-      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Generate cache key
-        id: cache-key
-        run: echo "key=deps-${{ hashFiles('pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
 
       - uses: pnpm/action-setup@v3
 
-      - name: Cache dependencies
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ steps.cache-key.outputs.key }}
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            deps-
+            deps-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -66,15 +66,21 @@ jobs:
 
       - uses: pnpm/action-setup@v3
 
-      - name: Cache dependencies
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ needs.Setup.outputs.cache-key }}
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            deps-
+            deps-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -116,15 +122,21 @@ jobs:
 
       - uses: pnpm/action-setup@v3
 
-      - name: Cache dependencies
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ needs.Setup.outputs.cache-key }}
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            deps-
+            deps-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
