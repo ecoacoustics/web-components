@@ -214,30 +214,37 @@ test.describe("interactions between axes and spectrogram", () => {
     interface MelScaleSizeTest {
       spectrogramSize: { width: number; height: number };
       // The difference (in kHz) between the first two y-axis labels.
-      // For mel scale, this should be 0.1 kHz (100 Hz) for all canvas heights
-      // where 100 Hz provides adequate pixel spacing at the low-frequency end.
+      // With the doubled minPixelSpacing threshold, a 500 px canvas selects
+      // 200 Hz (0.2 kHz) as the fine step, while a 1000 px canvas still fits
+      // 100 Hz (0.1 kHz) at the low-frequency end.
       expectedFirstYStep: number;
       // Conservative lower bound on how many y-axis ticks should be visible.
-      // Mel-scale grids should always show more than a handful of labels even
-      // for small canvases.
+      // Mel-scale grids should always show more labels than the coarse 1 kHz
+      // linear step produces (11 labels for the full 0–11 kHz range).
       minimumYTickCount: number;
     }
 
     const testCases = [
       {
         spectrogramSize: { width: 500, height: 500 },
-        expectedFirstYStep: 0.1,
-        minimumYTickCount: 10,
+        // With doubled minPixelSpacing a 500 px canvas no longer fits 100 Hz
+        // (100 Hz ≈ 23.6 px gap vs 27.5 px threshold), so the algorithm selects
+        // the next candidate: 200 Hz = 0.2 kHz.
+        expectedFirstYStep: 0.2,
+        minimumYTickCount: 7,
       },
       {
         spectrogramSize: { width: 1000, height: 1000 },
+        // 1000 px canvas has ≈ 47 px per 100 Hz at the low-frequency end, which
+        // exceeds the threshold, so 100 Hz = 0.1 kHz is still selected.
         expectedFirstYStep: 0.1,
-        minimumYTickCount: 25,
+        minimumYTickCount: 15,
       },
       {
         spectrogramSize: { width: 1000, height: 500 },
-        expectedFirstYStep: 0.1,
-        minimumYTickCount: 10,
+        // Height 500 px — same reasoning as the 500 × 500 case above.
+        expectedFirstYStep: 0.2,
+        minimumYTickCount: 7,
       },
     ] as const satisfies MelScaleSizeTest[];
 
@@ -250,8 +257,8 @@ test.describe("interactions between axes and spectrogram", () => {
         const realizedYStep = await fixture.yAxisStep();
 
         // The first step should be significantly finer than 1 kHz.
-        // For canvas heights ≥ 500 px the adaptive algorithm selects a 100 Hz
-        // fine step, giving a 0.1 kHz difference between the first two labels.
+        // The exact step depends on canvas height: 100 Hz for tall canvases
+        // (≥ 1000 px) and 200 Hz for medium canvases (500 px).
         expect(realizedYStep).toBeCloseTo(testCase.expectedFirstYStep, 1);
       });
 

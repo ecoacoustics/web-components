@@ -436,8 +436,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     const scale = this.unitConverter.scaleY.value;
     const fontSize = this.calculateFontSize("0.0");
 
-    // Minimum pixel gap between consecutive labels (same formula as willFitStep).
-    const minPixelSpacing = fontSize.height + fontSize.height * AxesComponent.labelPadding * 2;
+    // Minimum pixel gap between consecutive labels. We use double the label
+    // height as the base to avoid the labels from being too dense on mel-scale
+    // spectrograms (where the low-frequency region is greatly expanded).
+    const minPixelSpacing = fontSize.height * 2 + fontSize.height * AxesComponent.labelPadding * 2;
 
     // Candidate step sizes in Hz. We restrict to multiples of 100 Hz so that
     // the displayed kHz labels (one decimal place) remain unambiguous.
