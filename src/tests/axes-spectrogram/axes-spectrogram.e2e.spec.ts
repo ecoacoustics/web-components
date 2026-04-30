@@ -204,4 +204,74 @@ test.describe("interactions between axes and spectrogram", () => {
       await fixture.assertAxisRange(renderWindowXLow, renderWindowXHigh, renderWindowYLow, renderWindowYHigh);
     });
   });
+
+  test.describe("mel-scale y-axis grid lines", () => {
+    // The mel scale expands the low-frequency region and compresses the
+    // high-frequency region. The adaptive tick algorithm should produce
+    // finer labels at the bottom (low-frequency end) instead of the 1 kHz
+    // steps that the linear algorithm would choose.
+
+    interface MelScaleSizeTest {
+      spectrogramSize: { width: number; height: number };
+      // The difference (in kHz) between the first two y-axis labels.
+      // For mel scale, this should be 0.1 kHz (100 Hz) for all canvas heights
+      // where 100 Hz provides adequate pixel spacing at the low-frequency end.
+      expectedFirstYStep: number;
+      // Conservative lower bound on how many y-axis ticks should be visible.
+      // Mel-scale grids should always show more than a handful of labels even
+      // for small canvases.
+      minimumYTickCount: number;
+    }
+
+    const testCases = [
+      {
+        spectrogramSize: { width: 500, height: 500 },
+        expectedFirstYStep: 0.1,
+        minimumYTickCount: 10,
+      },
+      {
+        spectrogramSize: { width: 1000, height: 1000 },
+        expectedFirstYStep: 0.1,
+        minimumYTickCount: 25,
+      },
+      {
+        spectrogramSize: { width: 1000, height: 500 },
+        expectedFirstYStep: 0.1,
+        minimumYTickCount: 10,
+      },
+    ] as const satisfies MelScaleSizeTest[];
+
+    testCases.forEach((testCase) => {
+      const humanizedSize = `${testCase.spectrogramSize.width.toString()} x ${testCase.spectrogramSize.height.toString()}`;
+
+      test(`y-axis first step is fine-grained for mel-scale at size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.createWithMelScaleAndSize(testCase.spectrogramSize);
+
+        const realizedYStep = await fixture.yAxisStep();
+
+        // The first step should be significantly finer than 1 kHz.
+        // For canvas heights ≥ 500 px the adaptive algorithm selects a 100 Hz
+        // fine step, giving a 0.1 kHz difference between the first two labels.
+        expect(realizedYStep).toBeCloseTo(testCase.expectedFirstYStep, 1);
+      });
+
+      test(`y-axis has adequate tick density for mel-scale at size ${humanizedSize}`, async ({ fixture }) => {
+        await fixture.createWithMelScaleAndSize(testCase.spectrogramSize);
+
+        const tickCount = await fixture.yAxisTicks().count();
+        expect(tickCount).toBeGreaterThanOrEqual(testCase.minimumYTickCount);
+      });
+    });
+
+    test("y-step override is still honoured when mel-scale is active", async ({ fixture }) => {
+      // When the user sets a manual y-step, the adaptive algorithm should be
+      // bypassed and the specified step should be used exactly.
+      await fixture.createWithMelScaleStepOverrideAndSize({ width: 500, height: 500 }, 500);
+
+      const realizedYStep = await fixture.yAxisStep();
+
+      // 500 Hz = 0.5 kHz, as displayed by the 1-decimal-place kHz label
+      expect(realizedYStep).toBeCloseTo(0.5, 1);
+    });
+  });
 });

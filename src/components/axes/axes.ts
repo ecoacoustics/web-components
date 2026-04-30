@@ -457,8 +457,8 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
     // Generate all candidate tick values at the fine step.
     const candidates: Hertz[] = [];
-    for (let freq = lowFrequency; freq < highFrequency; freq += fineStep) {
-      candidates.push(freq);
+    for (let candidateFrequency = lowFrequency; candidateFrequency < highFrequency; candidateFrequency += fineStep) {
+      candidates.push(candidateFrequency);
     }
 
     // Filter: keep only candidates whose canvas position is at least
@@ -469,10 +469,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     // existing yValues() convention of not duplicating the boundary label.
     const result: Hertz[] = [];
     let previousLabelPosition: number | null = null;
-    for (const freq of candidates) {
-      const position = scale(freq);
+    for (const candidateFrequency of candidates) {
+      const position = scale(candidateFrequency);
       if (previousLabelPosition === null || Math.abs(position - previousLabelPosition) >= minPixelSpacing) {
-        result.push(freq);
+        result.push(candidateFrequency);
         previousLabelPosition = position;
       }
     }

@@ -62,6 +62,49 @@ class TestPage {
     await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
   }
 
+  /**
+   * Creates a mel-scale spectrogram wrapped in an axes component with a
+   * specific canvas size and a manual y-step override.
+   */
+  public async createWithMelScaleStepOverrideAndSize(size: Readonly<Size>, yStepHz: number) {
+    await setContent(
+      this.page,
+      `
+      <oe-axes y-step="${yStepHz.toString()}">
+        <oe-spectrogram
+          id="spectrogram"
+          src="${this.audioSource}"
+          mel-scale
+          style="width: ${size.width}px; height: ${size.height}px;"
+        ></oe-spectrogram>
+      </oe-axes>
+    `,
+    );
+    await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
+  }
+
+  /**
+   * Creates a mel-scale spectrogram wrapped in an axes component with a
+   * specific canvas size.  Uses the same size-at-creation-time hack as
+   * createWithSize to avoid ResizeObserver timing issues.
+   */
+  public async createWithMelScaleAndSize(size: Readonly<Size>) {
+    await setContent(
+      this.page,
+      `
+      <oe-axes>
+        <oe-spectrogram
+          id="spectrogram"
+          src="${this.audioSource}"
+          mel-scale
+          style="width: ${size.width}px; height: ${size.height}px;"
+        ></oe-spectrogram>
+      </oe-axes>
+    `,
+    );
+    await waitForContentReady(this.page, ["oe-axes", "oe-spectrogram"]);
+  }
+
   public async spectrogramSize(): Promise<Size> {
     return await this.spectrogramComponent().evaluate((element) => {
       const { width, height } = element.getBoundingClientRect();
