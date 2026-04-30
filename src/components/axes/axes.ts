@@ -390,6 +390,12 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return [];
     }
 
+    // For mel scale without a manual override, use an adaptive algorithm that
+    // provides denser grid lines in the expanded low-frequency region.
+    if (this.unitConverter.melScale.value && this.yStepOverride == null) {
+      return this.generateMelScaleFrequencyValues();
+    }
+
     const step =
       this.yStepOverride ??
       this.calculateStep(
@@ -406,6 +412,72 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       this.unitConverter.scaleY.value,
       false,
     );
+  }
+
+  /**
+   * Generates frequency axis tick values for mel-scale spectrograms.
+   *
+   * The mel scale expands low frequencies and compresses high frequencies on the
+   * canvas. A single uniform Hz step produces very sparse grid lines in the
+   * visually prominent low-frequency region. This method instead finds the
+   * finest "nice" Hz step that still fits without label overlap at the
+   * low-frequency end (where the mel scale is most expanded), generates all
+   * candidate ticks at that step, then filters out any candidates whose canvas
+   * positions are too close together. The result is naturally denser grid lines
+   * at low frequencies and sparser grid lines at high frequencies.
+   */
+  private generateMelScaleFrequencyValues(): Hertz[] {
+    if (!this.unitConverter) {
+      return [];
+    }
+
+    const lowFrequency = this.unitConverter.renderWindow.value.lowFrequency;
+    const highFrequency = this.unitConverter.renderWindow.value.highFrequency;
+    const scale = this.unitConverter.scaleY.value;
+    const fontSize = this.calculateFontSize("0.0");
+
+    // Minimum pixel gap between consecutive labels (same formula as willFitStep).
+    const minPixelSpacing = fontSize.height + fontSize.height * AxesComponent.labelPadding * 2;
+
+    // Candidate step sizes in Hz. We restrict to multiples of 100 Hz so that
+    // the displayed kHz labels (one decimal place) remain unambiguous.
+    const niceSteps: Hertz[] = [100, 200, 500, 1000, 2000, 5000, 10000];
+
+    // Find the finest step that provides at least minPixelSpacing at the
+    // low-frequency end, which is where the mel scale is most spread out.
+    let fineStep = niceSteps[niceSteps.length - 1];
+    for (const candidateStep of niceSteps) {
+      const lowPosition = scale(lowFrequency);
+      const stepPosition = scale(lowFrequency + candidateStep);
+      if (Math.abs(stepPosition - lowPosition) >= minPixelSpacing) {
+        fineStep = candidateStep;
+        break;
+      }
+    }
+
+    // Generate all candidate tick values at the fine step.
+    const candidates: Hertz[] = [];
+    for (let freq = lowFrequency; freq < highFrequency; freq += fineStep) {
+      candidates.push(freq);
+    }
+
+    // Filter: keep only candidates whose canvas position is at least
+    // minPixelSpacing away from the previously kept tick. Iterating from low
+    // to high frequency means the compressed high-frequency end is where most
+    // candidates are naturally removed.
+    // Note: highFrequency itself is excluded (loop uses <) to match the
+    // existing yValues() convention of not duplicating the boundary label.
+    const result: Hertz[] = [];
+    let previousLabelPosition: number | null = null;
+    for (const freq of candidates) {
+      const position = scale(freq);
+      if (previousLabelPosition === null || Math.abs(position - previousLabelPosition) >= minPixelSpacing) {
+        result.push(freq);
+        previousLabelPosition = position;
+      }
+    }
+
+    return result;
   }
 
   private willFitStep(
