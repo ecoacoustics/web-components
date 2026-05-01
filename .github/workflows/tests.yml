@@ -3,14 +3,53 @@ name: Run Tests
 on: pull_request
 
 jobs:
+  Setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
   Run-Tests:
-    timeout-minutes: 80
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
+    needs: Setup
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3, 4]
+        exclude:
+          # The playwright.config.ts excludes WebKit on both Windows and Linux,
+          # meaning WebKit tests only run on macOS in this project.
+          # On Windows: AudioContext is not enabled in the WebKit build.
+          # See: https://github.com/microsoft/playwright/issues/14105
+          - os: ubuntu-latest
+            browser: webkit
+          - os: windows-latest
+            browser: webkit
 
     steps:
       # Playwright snapshot tests generate pngs that are uploaded via
@@ -26,25 +65,104 @@ jobs:
           sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/opt/off/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
 
       - uses: pnpm/action-setup@v3
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          version: 8
-          run_install: |
-            - recursive: true
-            - args: [--frozen-lockfile]
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ matrix.os }}-${{ matrix.browser }}-
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm test --project ${{ matrix.browser }} --shard ${{ matrix.shard }}/4
+        env:
+          PLAYWRIGHT_SHARD: "true"
+          # Include runner OS in the blob report filename so that
+          # ubuntu+chromium+shard1 and windows+chromium+shard1 produce different
+          # filenames (e.g. report-Linux-chromium-1.zip vs report-Windows-chromium-1.zip).
+          # This prevents filename collisions when merge-multiple: true flattens
+          # all artifacts into a single directory for playwright merge-reports.
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ runner.os }}-${{ matrix.browser }}-${{ matrix.shard }}.zip
 
       - name: Upload Test Report
-        # I use if always to ensure that the artifact is uploaded even if the
-        # tests fail
+        # Upload test report even if tests fail so we can merge reports from all shards
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ matrix.os }}
-          path: ./test-report/
+          name: test-report-${{ matrix.os }}-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  Merge-Reports:
+    # Run merge reports even if some tests fail so we can still see results
+    if: always()
+    needs: [Setup, Run-Tests]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      # Cache is keyed per OS so that Linux packages are never restored on Windows/macOS.
+      # Only the pnpm content-addressable store is cached (not node_modules), so that
+      # pnpm install reconstructs the correct OS-native junctions/symlinks on each platform.
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download All Test Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-reports/
+          pattern: test-report-*
+          merge-multiple: true
+
+      - name: Merge Test Reports
+        # Pass --config so merge-reports knows the testDir to normalize paths from
+        # different OSes (Linux /home/runner/..., macOS /Users/runner/..., Windows D:\a\...).
+        run: pnpm exec playwright merge-reports --config playwright.config.ts --reporter=html,github all-test-reports/
+        
+      - name: Upload Merged Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-test-report
+          path: playwright-report/
           retention-days: 7
-          overwrite: true

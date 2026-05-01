@@ -116,7 +116,9 @@ test.describe("ProcessorState", () => {
       };
 
       try {
-        processorState.busyWaitForWorkerToProcessBuffer(generation);
+        // Pass maxAttempts = 1 so only 1M iterations run (~50ms), keeping the test fast
+        // while still exercising the full timeout → error → cleanup code path.
+        processorState.busyWaitForWorkerToProcessBuffer(generation, 1);
       } finally {
         // Always restore console.error, even if the call throws.
         console.error = originalConsoleError;

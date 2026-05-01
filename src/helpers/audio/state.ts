@@ -304,7 +304,7 @@ export class ProcessorState extends State {
     return generation > current;
   }
 
-  public busyWaitForWorkerToProcessBuffer(generation: number) {
+  public busyWaitForWorkerToProcessBuffer(generation: number, maxAttempts = 100) {
     // Chrome doesn't support Atomics.wait inside AudioProcessorWorklets (Firefox does),
     // so we must busy-wait. To prevent deadlocks when multiple spectrograms run
     // concurrently (CPU starvation from high-priority audio threads), we:
@@ -319,9 +319,8 @@ export class ProcessorState extends State {
     // The values below deliberately keep the total worst-case iteration count small
     // to avoid long synchronous stalls inside process().
     const ITERATIONS_PER_ATTEMPT = 1_000_000;
-    const MAX_ATTEMPTS = 100;
 
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       for (let i = 0; i < ITERATIONS_PER_ATTEMPT; i++) {
         if (!this.bufferAvailable || !this.matchesCurrentGeneration(generation)) {
           // Normal exit: worker processed the buffer, or generation changed (abort)
