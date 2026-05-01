@@ -155,7 +155,9 @@ jobs:
           merge-multiple: true
 
       - name: Merge Test Reports
-        run: pnpm exec playwright merge-reports --reporter=html,github all-test-reports/
+        # Pass --config so merge-reports knows the testDir to normalize paths from
+        # different OSes (Linux /home/runner/..., macOS /Users/runner/..., Windows D:\a\...).
+        run: pnpm exec playwright merge-reports --config playwright.config.ts --reporter=html,github all-test-reports/
         
       - name: Upload Merged Test Report
         if: always()
