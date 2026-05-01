@@ -100,6 +100,12 @@ jobs:
         run: pnpm test --project ${{ matrix.browser }} --shard ${{ matrix.shard }}/4
         env:
           PLAYWRIGHT_SHARD: "true"
+          # Include runner OS in the blob report filename so that
+          # ubuntu+chromium+shard1 and windows+chromium+shard1 produce different
+          # filenames (e.g. report-Linux-chromium-1.zip vs report-Windows-chromium-1.zip).
+          # This prevents filename collisions when merge-multiple: true flattens
+          # all artifacts into a single directory for playwright merge-reports.
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ runner.os }}-${{ matrix.browser }}-${{ matrix.shard }}.zip
 
       - name: Upload Test Report
         # Upload test report even if tests fail so we can merge reports from all shards

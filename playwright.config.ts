@@ -4,13 +4,8 @@ const isCi = !!process.env.CI;
 
 function getPlaywrightReporters(): any {
   if (process.env.PLAYWRIGHT_SHARD) {
-    // Use RUNNER_OS to make the blob report filename unique per OS.
-    // Without this, ubuntu+chromium+shard1 and windows+chromium+shard1 both
-    // produce "report-chromium-1.zip", which causes overwrites/corruption when
-    // all artifacts are merged into a single flat directory for merging.
-    const osName = process.env.RUNNER_OS ?? "local";
     return [
-      ["blob", { outputName: `${osName}-report` }],
+      ["blob"],
       ["github"],
     ];
   }
