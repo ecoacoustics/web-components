@@ -418,7 +418,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   private basicStepper =
     (step: number, labelSize: Pixel, scale: FrequencyScale | TemporalScale) =>
     (_index: number, last: number, _start: number, end: number) => {
-      let next = last + step;
+      let next = Math.min(end, last + step);
       let overNext = Math.min(end, next + step);
 
       if (Math.abs((scale(overNext) ?? 0) - (scale(next) ?? 0)) < labelSize) {
@@ -530,16 +530,15 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     }
 
     // if we are rendering in a linear scale, we can easily virtually measure
-    // if the axis will fit. However, if we are using mel scale, then we have to
+    // if the axis will fit.
+    // However, if we are using mel scale, then we have to
     // do some more complex calculations to check that the labels will fit
-    // if (!melScale) {
+    // Those calculations are done in the melStepper function.
+    // Ultimately we choose a step here that would fit in a linear scale,
+    // and let the melStepper use that as a starting point that adjusts
+    // as frequency goes up.
     const domainDelta = Math.abs(domain[1] - domain[0]);
     const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
-
-    // prettier removes the brackets because they are not need
-    // however, I want to add them because it makes the code and algorithm
-    // more readable
-    // prettier-ignore
     const proposedSize = numberOfProposedLabels * labelLength;
     return proposedSize < canvasSize;
   }
