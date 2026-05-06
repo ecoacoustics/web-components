@@ -19,7 +19,7 @@ test.describe("interactions between axes and spectrogram", () => {
 
     const testCases = [
       {
-        spectrogramSize: { width: 1000, height: 1000 },
+        spectrogramSize: { width: 1000, height: 1500 },
         expectedXStep: 0.2,
         expectedYStep: 0.2,
         expectedXTickCount: 26,
@@ -40,7 +40,7 @@ test.describe("interactions between axes and spectrogram", () => {
         expectedYTickCount: 23,
       },
       {
-        spectrogramSize: { width: 500, height: 1000 },
+        spectrogramSize: { width: 500, height: 1500 },
         expectedXStep: 0.5,
         expectedYStep: 0.2,
         expectedXTickCount: 11,

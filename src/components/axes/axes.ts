@@ -11,6 +11,7 @@ import {
   ScaleDomain,
   ScaleRange,
   EmUnit,
+  Pixel,
 } from "../../models/unitConverters";
 import { booleanConverter } from "../../helpers/attributes";
 import { queryDeeplyAssignedElement } from "../../helpers/decorators";
@@ -68,7 +69,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
   // label padding is the minimum additional distance between the labels
   // while the titleOffset is the distance between the axis title and the axis labels
-  private static labelPadding: EmUnit = 0.25;
+  private static labelPadding: EmUnit = 0.75;
   private static tickSize: EmUnit = 0.75;
   private static titleOffset: EmUnit = 0.25;
 
@@ -125,6 +126,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   // I have this as a private property so that we don't have to re-calculate the
   // value every time we need to use it
   private emUnitFontSize!: Size;
+  private basicLabelFontSize!: Size;
   private xAxisTemplate!: HTMLTemplateResult;
   private yAxisTemplate!: HTMLTemplateResult;
 
@@ -156,7 +158,10 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
 
   public firstUpdated(change: PropertyValues<this>): void {
     super.firstUpdated(change);
+
+    // TODO: we need to recalculate the font size if the font styles change, but we don't currently have a way to detect that, so for now we will just calculate the font size once on initialization
     this.emUnitFontSize = this.calculateFontSize("M");
+    this.basicLabelFontSize = this.calculateFontSize("00.0");
   }
 
   protected handleSlotChange(): void {
@@ -271,7 +276,7 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
             text-anchor="middle"
             dominant-baseline="end"
             x="${xPosition}"
-            y="${labelYPosition + this.tickSize.height}"
+            y="${labelYPosition}"
           >
             ${value.toFixed(1)}
           </text>
@@ -368,19 +373,16 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return [];
     }
 
+    const labelLength = this.totalLabelSize("width");
+
     const step =
       this.xStepOverride ??
-      this.calculateStep(
-        this.unitConverter.temporalDomain.value,
-        this.unitConverter.temporalRange.value,
-        this.unitConverter.scaleX.value,
-        "width",
-      );
+      this.calculateStep(this.unitConverter.temporalDomain.value, this.unitConverter.temporalRange.value, labelLength);
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.startOffset,
       this.unitConverter.renderWindow.value.endOffset,
-      step,
+      this.basicStepper(step, labelLength, this.unitConverter.scaleX.value),
       this.unitConverter.scaleX.value,
     );
   }
@@ -390,151 +392,156 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
       return [];
     }
 
-    // For mel scale without a manual override, use an adaptive algorithm that
-    // provides denser grid lines in the expanded low-frequency region.
-    if (this.unitConverter.melScale.value && this.yStepOverride == null) {
-      return this.generateMelScaleFrequencyValues();
-    }
+    const labelLength = this.totalLabelSize("height");
 
     const step =
       this.yStepOverride ??
       this.calculateStep(
         this.unitConverter.frequencyDomain.value,
         this.unitConverter.frequencyRange.value,
-        this.unitConverter.scaleY.value,
-        "height",
+        labelLength,
       );
+
+    const stepper = this.unitConverter.melScale.value
+      ? this.melStepper(step, labelLength, this.unitConverter.scaleY.value)
+      : this.basicStepper(step, labelLength, this.unitConverter.scaleY.value);
 
     return this.generateAxisValues(
       this.unitConverter.renderWindow.value.lowFrequency,
       this.unitConverter.renderWindow.value.highFrequency,
-      step,
+      stepper,
       this.unitConverter.scaleY.value,
       false,
     );
   }
 
-  /**
-   * Generates frequency axis tick values for mel-scale spectrograms.
-   *
-   * The mel scale expands low frequencies and compresses high frequencies on the
-   * canvas. A single uniform Hz step produces very sparse grid lines in the
-   * visually prominent low-frequency region. This method instead finds the
-   * finest "nice" Hz step that still fits without label overlap at the
-   * low-frequency end (where the mel scale is most expanded), generates all
-   * candidate ticks at that step, then filters out any candidates whose canvas
-   * positions are too close together. The result is naturally denser grid lines
-   * at low frequencies and sparser grid lines at high frequencies.
-   */
-  private generateMelScaleFrequencyValues(): Hertz[] {
-    if (!this.unitConverter) {
-      return [];
-    }
+  private basicStepper =
+    (step: number, labelSize: Pixel, scale: FrequencyScale | TemporalScale) =>
+    (_index: number, last: number, _start: number, end: number) => {
+      let next = last + step;
+      let overNext = Math.min(end, next + step);
 
-    const lowFrequency = this.unitConverter.renderWindow.value.lowFrequency;
-    const highFrequency = this.unitConverter.renderWindow.value.highFrequency;
-    const scale = this.unitConverter.scaleY.value;
-    const fontSize = this.calculateFontSize("0.0");
-
-    // Minimum pixel gap between consecutive labels. We use double the label
-    // height as the base to avoid the labels from being too dense on mel-scale
-    // spectrograms (where the low-frequency region is greatly expanded).
-    const minPixelSpacing = fontSize.height * 2 + fontSize.height * AxesComponent.labelPadding * 2;
-
-    // Candidate step sizes in Hz. We restrict to multiples of 100 Hz so that
-    // the displayed kHz labels (one decimal place) remain unambiguous.
-    const niceSteps: Hertz[] = [100, 200, 500, 1000, 2000, 5000, 10000];
-
-    // Find the finest step that provides at least minPixelSpacing at the
-    // low-frequency end, which is where the mel scale is most spread out.
-    let fineStep = niceSteps[niceSteps.length - 1];
-    for (const candidateStep of niceSteps) {
-      const lowPosition = scale(lowFrequency);
-      const stepPosition = scale(lowFrequency + candidateStep);
-      if (Math.abs(stepPosition - lowPosition) >= minPixelSpacing) {
-        fineStep = candidateStep;
-        break;
+      if (Math.abs((scale(overNext) ?? 0) - (scale(next) ?? 0)) < labelSize) {
+        next = overNext;
       }
+
+      return next;
+    };
+
+  private melStepper(baseStep: Hertz, labelSize: Pixel, frequencyScale: FrequencyScale) {
+    if (baseStep <= 0) {
+      throw new Error("Step must be greater than 0");
     }
 
-    // Generate all candidate tick values at the fine step.
-    const candidates: Hertz[] = [];
-    for (let candidateFrequency = lowFrequency; candidateFrequency < highFrequency; candidateFrequency += fineStep) {
-      candidates.push(candidateFrequency);
-    }
+    let currentStep = baseStep;
 
-    // Filter: keep only candidates whose canvas position is at least
-    // minPixelSpacing away from the previously kept tick. Iterating from low
-    // to high frequency means the compressed high-frequency end is where most
-    // candidates are naturally removed.
-    // Note: highFrequency itself is excluded (loop uses <) to match the
-    // existing yValues() convention of not duplicating the boundary label.
-    const result: Hertz[] = [];
-    let previousLabelPosition: number | null = null;
-    for (const candidateFrequency of candidates) {
-      const position = scale(candidateFrequency);
-      if (previousLabelPosition === null || Math.abs(position - previousLabelPosition) >= minPixelSpacing) {
-        result.push(candidateFrequency);
-        previousLabelPosition = position;
+    const overlaps = (first: Hertz, second: Hertz) =>
+      Math.abs(frequencyScale(first) - frequencyScale(second)) < labelSize;
+
+    const characteristic = (value: number) => Math.floor(Math.log10(Math.max(value, 1)));
+
+    const isMagnitudeBoundary = (value: number) => Math.log10(value) % 1 === 0;
+
+    const stepScaledForMagnitude = (next: Hertz) =>
+      baseStep * Math.pow(10, characteristic(next) - characteristic(baseStep));
+
+    const checkMagnitudeBoundary = (last: Hertz, next: Hertz) => {
+      const lastCharacteristic = characteristic(last);
+      const nextCharacteristic = characteristic(next);
+
+      return isMagnitudeBoundary(next) || nextCharacteristic > lastCharacteristic;
+    };
+
+    const nextMagnitudeBoundary = (last: Hertz): Hertz => {
+      const lastCharacteristic = characteristic(last);
+
+      return Math.pow(10, lastCharacteristic + 1);
+    };
+
+    const step = (currentStep: number, last: number, stepCount: number) => {
+      let next = last;
+      for (let i = 0; i < stepCount; i++) {
+        // we calculate the next value by rounding up to the nearest multiple of the current step size
+        next = Math.ceil((next + 1) / currentStep) * currentStep;
+        if (checkMagnitudeBoundary(last, next)) {
+          next = nextMagnitudeBoundary(last);
+          currentStep = stepScaledForMagnitude(next);
+        }
       }
-    }
 
-    return result;
+      return { next, currentStep };
+    };
+
+    // In mel scale, higher frequencies are compressed on screen.
+    // We step by round multiples of the current step size. When an overlap
+    // is detected we switch to the next order of magnitude (×10) so that
+    // key boundaries like 1000 and 10000 are always emitted.
+    return (_index: number, last: Hertz, start: Hertz, end: Hertz): Hertz => {
+      // first label is always guaranteed to fit, so just shortcut
+      if (last == start) {
+        return start + baseStep;
+      }
+
+      // we calculate the next value by rounding up to the nearest multiple of the current step size
+      let { next, currentStep: updatedStep } = step(currentStep, last, 1);
+
+      // over meaning the one after the next
+      let { next: overNext, currentStep: updatedStep2 } = step(currentStep, last, 2);
+
+      let nextOverlapsPrevious = overlaps(last, next);
+      let overNextOverlapsNext = overlaps(next, overNext);
+
+      // if next next overlaps previous or over next, choose over next
+
+      if (nextOverlapsPrevious || overNextOverlapsNext) {
+        next = overNext;
+        currentStep = updatedStep2;
+      } else {
+        currentStep = updatedStep;
+      }
+
+      // don't emit past end, but also check if we're coming up to the end label
+      if (overlaps(next, end) || next > end) {
+        next = end;
+      }
+
+      return next;
+    };
+  }
+
+  private totalLabelSize(key: keyof Size): number {
+    const fontSize = this.basicLabelFontSize[key];
+    const labelPadding = this.labelPadding[key];
+
+    // we double the padding because the padding is applied to both sides of
+    // the label
+    return fontSize + labelPadding * 2;
   }
 
   private willFitStep(
     proposedStep: number,
     canvasSize: number,
     domain: ScaleDomain<Seconds | Hertz>,
-    fontSize: number,
-    scale: FrequencyScale | TemporalScale,
-    melScale: boolean,
+    labelLength: Pixel,
   ): boolean {
     if (!this.unitConverter) {
       console.error("Cannot calculate step without unit converter");
       return false;
     }
 
-    const textLabelPadding = fontSize * AxesComponent.labelPadding;
-
     // if we are rendering in a linear scale, we can easily virtually measure
     // if the axis will fit. However, if we are using mel scale, then we have to
     // do some more complex calculations to check that the labels will fit
-    if (!melScale) {
-      const domainDelta = Math.abs(domain[1] - domain[0]);
-      const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
+    // if (!melScale) {
+    const domainDelta = Math.abs(domain[1] - domain[0]);
+    const numberOfProposedLabels = Math.ceil(domainDelta / proposedStep);
 
-      // we double the padding because the padding is applied to both sides of
-      // the label
-      //
-      // prettier removes the brackets because they are not need
-      // however, I want to add them because it makes the code and algorithm
-      // more readable
-      // prettier-ignore
-      const proposedSize = numberOfProposedLabels * (fontSize + (textLabelPadding * 2));
-      return proposedSize < canvasSize;
-    }
-
-    // to check if the mel scale will fit, we can calculate the canvas position
-    // of the last two labels and check if they overlap
-    // this is because the last two labels will be the closest together and the
-    // most likely to be overlapping
-    const proposedValues = this.generateAxisValues(
-      this.unitConverter.renderWindow.value.lowFrequency,
-      this.unitConverter.renderWindow.value.highFrequency,
-      proposedStep,
-      scale,
-      false,
-    );
-
-    const lastTwoValues = proposedValues.slice(-2);
-    const lastTwoPositions = lastTwoValues.map((value) => scale(value));
-    const positionDelta = Math.abs(lastTwoPositions[0] - lastTwoPositions[1]);
-
-    // we multiple the padding by two so that the padding is virtually applied
-    // to both labels in the axes
+    // prettier removes the brackets because they are not need
+    // however, I want to add them because it makes the code and algorithm
+    // more readable
     // prettier-ignore
-    return positionDelta > fontSize + (textLabelPadding * 2);
+    const proposedSize = numberOfProposedLabels * labelLength;
+    return proposedSize < canvasSize;
   }
 
   // the calculate step function will use a binary search to find the largest
@@ -542,23 +549,20 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
   private calculateStep(
     domain: ScaleDomain<Seconds | Hertz>,
     range: ScaleRange<Seconds | Hertz>,
-    scale: FrequencyScale | TemporalScale,
-    sizeKey: keyof Size,
-  ): number {
+    labelLength: Pixel,
+  ): Seconds | Hertz {
     if (!this.unitConverter) {
       console.error("Cannot calculate step without unit converter");
-      return 0;
+      return 0 as Seconds | Hertz;
     }
 
     const niceFactors = [50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02] as const;
-    const fontSize = this.calculateFontSize("0.0");
-    const totalLabelSize = fontSize[sizeKey] + this.labelPadding[sizeKey];
 
     // the domain is the lowest and highest values that we want to show on the axis
     // meanwhile the range is the first and last position that we can position elements
     // we absolute the range to get the canvas size because for frequency the start of the range
     // is at the bottom of the canvas (since we want the lowest frequency to be at the bottom of the canvas)
-    const domainDelta = domain[1] - domain[0];
+    const domainMagnitude = domain[1] - domain[0];
     const canvasSize = Math.abs(range[1] - range[0]);
 
     // the domain midpoint is the value that would be at the center of the axis
@@ -568,43 +572,65 @@ export class AxesComponent extends SignalWatcher(ChromeProvider(LitElement)) {
     // e.g. in the case that domain = [700, 800] we want the midpoint to be 750 not 50
     //      (in this case, 50 would be below the domain minimum of 700!)
     // prettier-ignore
-    const domainMidpoint = (domainDelta / 2) + domain[0];
+    const domainMidpoint = (domainMagnitude / 2) + domain[0];
+
+    // the initial proposed step is the largest power of 10 that is smaller than the domain midpoint
+    // this ensures we start with a step that's roughly 1/10th of the way into the domain,
+    // which is a good heuristic for finding a "nice" step size
     const initialProposedStep = Math.pow(10, Math.floor(Math.log10(domainMidpoint)));
 
     for (const factor of niceFactors) {
       const proposedStep = initialProposedStep / factor;
 
-      if (
-        this.willFitStep(
-          proposedStep,
-          canvasSize,
-          domain,
-          totalLabelSize,
-          scale,
-          sizeKey === "height" && this.unitConverter.melScale.value,
-        )
-      ) {
+      if (this.willFitStep(proposedStep, canvasSize, domain, labelLength)) {
         return proposedStep;
       }
     }
 
+    // edge case that should not happen
     return initialProposedStep;
   }
 
   private generateAxisValues(
     start: Seconds | Hertz,
     end: Seconds | Hertz,
-    step: Seconds | Hertz,
+    step: (
+      index: number,
+      lastValue: Seconds | Hertz,
+      start: Seconds | Hertz,
+      end: Seconds | Hertz,
+    ) => Seconds | Hertz | null,
     scale: FrequencyScale | TemporalScale,
     includeEnd = true,
   ): number[] {
-    if (step === 0) {
-      return [];
-    }
+    const values: number[] = [start];
+    let index = 1;
+    let lastValue = start;
+    let nullCount = 0;
 
-    const values: number[] = [];
-    for (let i = start; i < end; i += step) {
-      values.push(i);
+    while (lastValue < end) {
+      let nextValue = step(index, lastValue, start, end);
+
+      if (nextValue === null) {
+        nullCount++;
+        if (nullCount > 10) {
+          console.warn("Step function is returning null too many times. Aborting.");
+          break;
+        }
+        continue;
+      }
+
+      if (nextValue <= lastValue) {
+        console.warn(
+          `Step function is not producing increasing values. Last value: ${lastValue}, Next value: ${nextValue}, Start: ${start}, End: ${end}, Index: ${index}`,
+        );
+
+        break;
+      }
+
+      values.push(nextValue);
+      lastValue = nextValue;
+      index++;
     }
 
     if (!includeEnd) {
