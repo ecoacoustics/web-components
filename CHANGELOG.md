@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.3.0...web-components-v6.4.0) (2026-05-06)
+
+
+### Features
+
+* **axes:** Adaptive mel-scale y-axis grid lines for finer low-frequency granularity ([#598](https://github.com/ecoacoustics/web-components/issues/598)) ([428b6d4](https://github.com/ecoacoustics/web-components/commit/428b6d4727dfb02649a27482c79beee092e50c15))
+
 ## [6.3.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.2.1...web-components-v6.3.0) (2026-04-28)
 
 
