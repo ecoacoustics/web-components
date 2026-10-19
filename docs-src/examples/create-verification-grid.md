@@ -78,12 +78,12 @@ event that did not previously exist.
 
 #### Customizing the End State
 
-Add a `<template slot="end-state">` inside the grid to replace the completion
+Add a `<template slot="no-subjects-remaining">` inside the grid to replace the completion
 message when the dataset is empty or all subjects have been reviewed:
 
 ```html
 <oe-verification-grid>
-  <template slot="end-state">
+  <template slot="no-subjects-remaining">
     <h2>Thanks for reviewing these recordings!</h2>
     <p>You can close this page now.</p>
   </template>
@@ -92,15 +92,69 @@ message when the dataset is empty or all subjects have been reviewed:
 ```
 
 The template is cloned into the grid, following the custom tile-template pattern.
-It is not displayed while data or tiles are loading, while the current page has
-subjects, or when the grid shows an error. Without an end-state template, the
+The slot and cloned content are only created when no subjects remain, not rendered
+and hidden. They are removed again when navigating back to subjects. The supplied
+template's contents stay inert while data or tiles are loading, while the current
+page has subjects, or when the grid shows an error. Without a `no-subjects-remaining` template, the
 existing “No un-validated results found” and validated-count messages are unchanged.
-If multiple end-state templates are supplied, only the first is used.
+If multiple templates are supplied for this slot, only the first is used.
 
-Templates do not receive automatic data bindings. For dynamic content, use custom
-elements inside the template; they can read the grid's public properties (such as
-`decisionHeadIndex`) and listen to its events. Use a template rather than live DOM
-content so that its contents remain inert until the end state is shown.
+##### Using JavaScript in the Completion Template
+
+Templates do not receive automatic data bindings, but an embedded classic script
+can read the grid's public properties and fetch application data when the template
+is instantiated. For example:
+
+```html
+<oe-verification-grid id="verification-grid">
+  <template slot="no-subjects-remaining">
+    <p data-completion-message>
+      Validated: <span data-validated-count></span>. Deleted: <span data-deleted-count>Loading…</span>.
+    </p>
+    <script>
+      queueMicrotask(() => {
+        const grid = document.getElementById("verification-grid");
+        const completionMessage = grid.shadowRoot.querySelector("[data-completion-message]");
+        completionMessage.querySelector("[data-validated-count]").textContent = grid.decisionHeadIndex;
+        fetch("/api/verifications/deleted/count")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Could not fetch deleted verifications");
+            }
+            return response.json();
+          })
+          .then((result) => {
+            completionMessage.querySelector("[data-deleted-count]").textContent = result.count;
+          })
+          .catch(() => {
+            completionMessage.querySelector("[data-deleted-count]").textContent = "Unavailable";
+          });
+      });
+    </script>
+  </template>
+  <!-- Add decisions and a data source as usual. -->
+</oe-verification-grid>
+```
+
+`decisionHeadIndex` is the grid's validated-subject count, not a deletion count.
+The example `/api/verifications/deleted/count` endpoint must be supplied by your
+application and return JSON such as `{ "count": 2 }`; the grid does not track deleted
+verifications. Fetched values are assigned with `textContent`, not interpreted as HTML.
+
+The script runs when the template is cloned into the DOM, not while reviewing
+subjects. It runs again if the user returns to subjects and later reaches completion
+again, but not on ordinary re-renders of the same completion view.
+Use `queueMicrotask` to wait until Lit has finished inserting the completion DOM
+before querying it. Use the grid's ID to find it: `document.currentScript` is `null`
+for scripts running inside a shadow root. The callback scopes declarations to each
+script execution.
+
+This script example requires a template parsed as part of the HTML document.
+Scripts created with `innerHTML` do not execute when cloned; for dynamically
+constructed templates, use a custom element's `connectedCallback` instead.
+Inline scripts must also be permitted by your application's Content Security Policy.
+Only use trusted, application-controlled templates: scripts and event handlers
+inside them can execute. Do not insert untrusted HTML into the template.
 
 ### How to Publish Your Verification Grid
 
