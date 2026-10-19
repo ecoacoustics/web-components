@@ -53,6 +53,7 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
+import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
@@ -289,6 +290,7 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
+ * @slot end-state - A template element shown instead of the default completion message when the dataset is exhausted or empty
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
@@ -419,6 +421,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   @queryAssignedElements({ selector: "template" })
   private customTileTemplates!: ReadonlyArray<HTMLTemplateElement>;
+
+  @queryAssignedElements({ slot: "end-state", selector: "template" })
+  private endStateTemplates!: ReadonlyArray<HTMLTemplateElement>;
 
   @queryAssignedElements({ selector: `#${VerificationGridComponent.defaultSkipButtonId}` })
   private defaultSkipButton?: ReadonlyArray<SkipComponent>;
@@ -2407,6 +2412,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region Templates
 
   private noItemsTemplate(): HTMLTemplateResult {
+    const customTemplate = this.endStateTemplates[0];
+    if (customTemplate) {
+      return html`<div class="message-overlay">${templateContent(customTemplate)}</div>`;
+    }
+
     return html`
       <div class="message-overlay">
         <p>
@@ -2545,6 +2555,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     return html`
       <slot id="tile-template-slot" name="tile-content"></slot>
+      <slot name="end-state" hidden @slotchange="${() => this.requestUpdate()}"></slot>
 
       ${VerificationGridComponent.defaultGridTileTemplate}
 

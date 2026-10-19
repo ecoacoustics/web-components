@@ -38,6 +38,7 @@ import {
   partialCompleteCompound,
   partialVerifiedSubjects,
 } from "./verification-grid.e2e.datasets";
+import { setContent } from "../fixtures";
 
 test.describe("while the initial bootstrap dialog is open", () => {
   test.beforeEach(async ({ fixture }) => {
@@ -2041,6 +2042,126 @@ test.describe("resuming datasets", () => {
   // TODO: Add tests once we improve the classification download namespace
   // see: https://github.com/ecoacoustics/web-components/issues/463
   test.describe.skip("classification task", () => {});
+});
+
+test.describe("end-state templates", () => {
+  const customTemplate = `
+    <oe-verification verified="true"></oe-verification>
+    <template slot="end-state">
+      <h2>Thanks for reviewing these recordings!</h2>
+      <p>You can close this page now.</p>
+    </template>
+  `;
+
+  test.describe("exhausted datasets", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.create(customTemplate, [], fixture.smallJsonInput);
+    });
+
+    test("should show custom content only after the last subjects are reviewed", async ({ fixture }) => {
+      await expect(fixture.gridTileComponents()).toHaveCount(3);
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeHidden();
+
+      await fixture.makeVerificationDecision("true");
+      await expect(fixture.messageOverlay()).toHaveText(
+        "Thanks for reviewing these recordings! You can close this page now.",
+      );
+      await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
+      await expect(fixture.gridTileComponents()).toHaveCount(0);
+
+      await fixture.viewPreviousHistoryPage();
+      await expect(fixture.gridTileComponents()).toHaveCount(3);
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeHidden();
+    });
+
+    test("should preserve the default completion message and validated count", async ({ fixture }) => {
+      await fixture
+        .gridComponent()
+        .locator('template[slot="end-state"]')
+        .evaluate((template) => {
+          template.remove();
+        });
+      await fixture.makeVerificationDecision("true");
+      await expect(fixture.messageOverlay()).toHaveText(
+        "No un-validated results found All 3 annotations are validated",
+      );
+    });
+  });
+
+  test.describe("without subjects", () => {
+    test.beforeEach(async ({ fixture }) => {
+      await fixture.setNoBootstrap();
+      await setContent(fixture.page, `<oe-verification-grid>${customTemplate}</oe-verification-grid>`);
+    });
+
+    test("should show custom content for an initially empty dataset", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+      await expect(fixture.messageOverlay()).toHaveText(
+        "Thanks for reviewing these recordings! You can close this page now.",
+      );
+      await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
+    });
+
+    test("should restore the default message when the end-state template is removed", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
+
+      await fixture
+        .gridComponent()
+        .locator('template[slot="end-state"]')
+        .evaluate((template) => {
+          template.remove();
+        });
+      await expect(fixture.messageOverlay()).toHaveText(
+        "No un-validated results found All 0 annotations are validated",
+      );
+    });
+
+    test("should use the default message for an empty dataset without a template", async ({ fixture }) => {
+      await setContent(
+        fixture.page,
+        `<oe-verification-grid><oe-verification verified="true"></oe-verification></oe-verification-grid>`,
+      );
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+      await expect(fixture.messageOverlay()).toHaveText(
+        "No un-validated results found All 0 annotations are validated",
+      );
+    });
+
+    test("should not show custom content while subjects are loading", async ({ fixture }) => {
+      await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "dataset-fetching");
+      await expect(fixture.messageOverlay()).toContainText("Loading");
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeHidden();
+    });
+
+    test("should not show custom content while tiles are loading", async ({ fixture }) => {
+      await fixture.page.route("**/example.flac", () => {});
+      await setContent(
+        fixture.page,
+        `<oe-verification-grid id="verification-grid">
+          ${customTemplate}
+          <oe-data-source slot="data-source" for="verification-grid" src="${fixture.smallJsonInput}"></oe-data-source>
+        </oe-verification-grid>`,
+      );
+      await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "tiles-loading");
+      await expect(fixture.gridTileComponents()).toHaveCount(3);
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeHidden();
+    });
+
+    test("should not show custom content when the grid shows an error", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.transitionError();
+      });
+      await expect(fixture.messageOverlay()).toHaveText("Failed to load data source");
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeHidden();
+    });
+  });
 });
 
 test.describe.fixme("empty datasets", () => {

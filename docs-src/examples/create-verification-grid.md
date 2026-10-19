@@ -76,6 +76,32 @@ attribute confirms or denies the existence of an audio event and not creating
 any new tags, `additional-tags` creates additional information/tags to an audio
 event that did not previously exist.
 
+#### Customizing the End State
+
+Add a `<template slot="end-state">` inside the grid to replace the completion
+message when the dataset is empty or all subjects have been reviewed:
+
+```html
+<oe-verification-grid>
+  <template slot="end-state">
+    <h2>Thanks for reviewing these recordings!</h2>
+    <p>You can close this page now.</p>
+  </template>
+  <!-- Add decisions and a data source as usual. -->
+</oe-verification-grid>
+```
+
+The template is cloned into the grid, following the custom tile-template pattern.
+It is not displayed while data or tiles are loading, while the current page has
+subjects, or when the grid shows an error. Without an end-state template, the
+existing “No un-validated results found” and validated-count messages are unchanged.
+If multiple end-state templates are supplied, only the first is used.
+
+Templates do not receive automatic data bindings. For dynamic content, use custom
+elements inside the template; they can read the grid's public properties (such as
+`decisionHeadIndex`) and listen to its events. Use a template rather than live DOM
+content so that its contents remain inert until the end state is shown.
+
 ### How to Publish Your Verification Grid
 
 So that other people can use your verification grid, you will need to publish the
