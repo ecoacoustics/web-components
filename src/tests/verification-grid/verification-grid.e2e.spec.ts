@@ -2112,8 +2112,8 @@ test.describe("subjects-exhausted templates", () => {
     await fixture.changeGridSize(1);
     await expect(fixture.gridTileComponents()).toHaveCount(1);
     await fixture.makeVerificationDecision("true");
+    await expect.poll(() => fixture.getVerificationHead()).toBeGreaterThan(0);
     const decisionHeadIndex = await fixture.getVerificationHead();
-    expect(decisionHeadIndex).toBeGreaterThan(0);
     expect(decisionHeadIndex).toBeLessThan(3);
 
     await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
@@ -2882,12 +2882,12 @@ test.describe("default templates", () => {
     await fixture.create();
   });
 
-  test("should place decision elements in the correct location", ({ fixture }) => {
+  test("should place decision elements in the correct location", async ({ fixture }) => {
     const koalaDecision = fixture.page.getByText("Koala").first();
     const notKoalaDecision = fixture.page.getByText("Not Koala").first();
 
-    expect(koalaDecision).toBeTruthy();
-    expect(notKoalaDecision).toBeTruthy();
+    await expect(koalaDecision).toBeVisible();
+    await expect(notKoalaDecision).toBeVisible();
   });
 
   test("should have the expected elements", async ({ fixture }) => {
