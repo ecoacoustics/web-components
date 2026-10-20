@@ -2234,20 +2234,52 @@ test.describe("subjects-exhausted templates", () => {
     });
 
     test("should not show custom content while tiles are loading", async ({ fixture }) => {
-      await fixture.page.route("**/example.flac", () => {});
-      await setContent(
-        fixture.page,
-        `<oe-verification-grid id="verification-grid">
-          ${customTemplate}
-          <oe-data-source slot="data-source" for="verification-grid" src="${fixture.smallJsonInput}"></oe-data-source>
-        </oe-verification-grid>`,
-      );
-      await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "tiles-loading");
-      await expect(fixture.gridTileComponents()).toHaveCount(3);
-      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
-        0,
-      );
-      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
+      // Gate only the audio fetch to avoid suspected WebKit blob-worker
+      // loading failures caused by browser-wide request interception.
+      const releaseAudioFetch = await fixture.page.evaluateHandle(() => {
+        const originalFetch = window.fetch;
+        let release!: () => void;
+        const audioFetchGate = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+
+        window.fetch = async (input, options) => {
+          const url = input instanceof Request ? input.url : input.toString();
+          if (new URL(url, document.baseURI).pathname === "/example.flac") {
+            await audioFetchGate;
+          }
+
+          return originalFetch.call(window, input, options);
+        };
+
+        return () => {
+          window.fetch = originalFetch;
+          release();
+        };
+      });
+
+      try {
+        await setContent(
+          fixture.page,
+          `<oe-verification-grid id="verification-grid">
+            ${customTemplate}
+            <oe-data-source slot="data-source" for="verification-grid" src="${fixture.smallJsonInput}"></oe-data-source>
+          </oe-verification-grid>`,
+        );
+        await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "tiles-loading");
+        await expect(fixture.gridTileComponents()).toHaveCount(3);
+        await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
+          0,
+        );
+        await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
+      } finally {
+        await releaseAudioFetch.evaluate((release) => {
+          release();
+        });
+        await releaseAudioFetch.dispose();
+      }
+
+      await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
     });
 
     test("should not show custom content when the grid shows an error", async ({ fixture }) => {
