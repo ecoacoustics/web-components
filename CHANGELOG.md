@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.4.0...web-components-v6.5.0) (2026-10-20)
+
+
+### Features
+
+* **verification-grid:** Add customizable verification-grid end state ([#601](https://github.com/ecoacoustics/web-components/issues/601)) ([f337894](https://github.com/ecoacoustics/web-components/commit/f3378945d91a3fc4dfd636b5a066072d601a1ac8))
+
 ## [6.4.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.3.0...web-components-v6.4.0) (2026-05-06)
 
 
