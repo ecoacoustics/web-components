@@ -2169,6 +2169,21 @@ test.describe("subjects-exhausted templates", () => {
       await setContent(fixture.page, `<oe-verification-grid>${customTemplate}</oe-verification-grid>`);
     });
 
+    test("should hide live children assigned to the subjects-exhausted slot", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        const liveNotification = document.createElement("div");
+        liveNotification.slot = "subjects-exhausted";
+        liveNotification.textContent = "Live notification content";
+        grid.appendChild(liveNotification);
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+
+      await expect(fixture.messageOverlay()).toHaveText(
+        "Thanks for reviewing these recordings! You can close this page now.",
+      );
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toBeHidden();
+    });
+
     test("should show custom content for an initially empty dataset", async ({ fixture }) => {
       await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
         grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });

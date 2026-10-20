@@ -2415,7 +2415,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     return html`
       <div class="message-overlay">
-        <slot name="subjects-exhausted" @slotchange="${() => this.requestUpdate()}"></slot>
+        <slot name="subjects-exhausted" hidden @slotchange="${() => this.requestUpdate()}"></slot>
         ${customTemplate
           ? templateContent(customTemplate)
           : html`
