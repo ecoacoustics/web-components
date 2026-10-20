@@ -1,6 +1,6 @@
 :host {
   display: block;
-  height: 100dvh;
+  min-height: 100dvh;
 }
 
 #highlight-box {
@@ -47,8 +47,13 @@
 .verification-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
   background-color: var(--oe-background-color);
+
+  &:has(.message-overlay) {
+    height: auto;
+  }
 }
 
 /* The verification grid that contains verification grid tiles */

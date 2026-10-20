@@ -2053,6 +2053,57 @@ test.describe("subjects-exhausted templates", () => {
     </template>
   `;
 
+  for (const initiallyEmpty of [true, false]) {
+    test(`should grow around tall completion content ${initiallyEmpty ? "for an empty dataset" : "after reviewing subjects"}`, async ({
+      fixture,
+    }) => {
+      const tallTemplate = `
+        <oe-verification verified="true"></oe-verification>
+        <template slot="subjects-exhausted">
+          <div id="completion-content" style="height: 1200px">Thanks for reviewing these recordings!</div>
+        </template>
+      `;
+      await fixture.page.setViewportSize({ width: 1280, height: 720 });
+      if (initiallyEmpty) {
+        await fixture.setNoBootstrap();
+        await setContent(fixture.page, `<oe-verification-grid>${tallTemplate}</oe-verification-grid>`);
+        await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+          grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+        });
+      } else {
+        await fixture.create(tallTemplate, [], fixture.smallJsonInput);
+        await fixture.makeVerificationDecision("true");
+      }
+
+      await expect(fixture.messageOverlay()).toHaveText("Thanks for reviewing these recordings!");
+      await expect
+        .poll(() =>
+          fixture.gridComponent().evaluate((grid) => {
+            const contentElement = grid.shadowRoot?.querySelector("#completion-content");
+            const footerElement = grid.shadowRoot?.querySelector(".footer-container");
+            if (!contentElement || !footerElement) {
+              return false;
+            }
+
+            const content = contentElement.getBoundingClientRect();
+            const footer = footerElement.getBoundingClientRect();
+            const host = grid.getBoundingClientRect();
+            return content.top >= host.top && footer.top >= content.bottom && host.bottom >= footer.bottom;
+          }),
+        )
+        .toBe(true);
+
+      if (!initiallyEmpty) {
+        await fixture.viewPreviousHistoryPage();
+        await expect(fixture.gridTileComponents()).toHaveCount(3);
+        await expect(fixture.gridComponent().locator("#completion-content")).toHaveCount(0);
+        await expect
+          .poll(() => fixture.gridComponent().evaluate((grid) => grid.getBoundingClientRect().height))
+          .toBe(720);
+      }
+    });
+  }
+
   test("should show the verified count from the grid in the completion content", async ({ fixture }) => {
     await fixture.page.addInitScript(() => {
       localStorage.setItem("oe-auto-dismiss-bootstrap", "true");
