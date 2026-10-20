@@ -2883,11 +2883,11 @@ test.describe("default templates", () => {
   });
 
   test("should place decision elements in the correct location", async ({ fixture }) => {
-    const koalaDecision = fixture.page.getByText("Koala").first();
-    const notKoalaDecision = fixture.page.getByText("Not Koala").first();
+    const affirmativeDecision = fixture.verificationButton("true");
+    const negativeDecision = fixture.verificationButton("false");
 
-    await expect(koalaDecision).toBeVisible();
-    await expect(notKoalaDecision).toBeVisible();
+    await expect(affirmativeDecision).toBeVisible();
+    await expect(negativeDecision).toBeVisible();
   });
 
   test("should have the expected elements", async ({ fixture }) => {
