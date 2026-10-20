@@ -2044,27 +2044,20 @@ test.describe("resuming datasets", () => {
   test.describe.skip("classification task", () => {});
 });
 
-test.describe("no-subjects-remaining templates", () => {
+test.describe("subjects-exhausted templates", () => {
   const customTemplate = `
     <oe-verification verified="true"></oe-verification>
-    <template slot="no-subjects-remaining">
+    <template slot="subjects-exhausted">
       <h2>Thanks for reviewing these recordings!</h2>
       <p>You can close this page now.</p>
     </template>
   `;
 
-  test("should run embedded JavaScript and fetch counts only when the completion content is instantiated", async ({
-    fixture,
-  }) => {
-    let deletedCountRequests = 0;
-    await fixture.page.route("**/api/verifications/deleted/count", async (route) => {
-      deletedCountRequests++;
-      await route.fulfill({ contentType: "application/json", body: JSON.stringify({ count: 2 }) });
-    });
+  test("should show the verified count from the grid in the completion content", async ({ fixture }) => {
     await fixture.page.addInitScript(() => {
       localStorage.setItem("oe-auto-dismiss-bootstrap", "true");
     });
-    await fixture.page.route("**/no-subjects-remaining-test.html", async (route) => {
+    await fixture.page.route("**/subjects-exhausted-test.html", async (route) => {
       await route.fulfill({
         contentType: "text/html",
         headers: {
@@ -2076,29 +2069,12 @@ test.describe("no-subjects-remaining templates", () => {
           <script type="module" src="/src/index.ts"></script>
           <oe-verification-grid id="verification-grid">
             <oe-verification verified="true"></oe-verification>
-            <template slot="no-subjects-remaining">
-              <p data-completion-message>
-                Validated: <span data-validated-count></span>.
-                Deleted: <span data-deleted-count>Loading…</span>.
-              </p>
+            <template slot="subjects-exhausted">
+              <p>You verified <span class="verified-count"></span> recordings.</p>
               <script>
                 queueMicrotask(() => {
                   const grid = document.getElementById("verification-grid");
-                  const completionMessage = grid.shadowRoot.querySelector("[data-completion-message]");
-                  completionMessage.querySelector("[data-validated-count]").textContent = grid.decisionHeadIndex;
-                  fetch("/api/verifications/deleted/count")
-                    .then((response) => {
-                      if (!response.ok) {
-                        throw new Error("Could not fetch deleted verifications");
-                      }
-                      return response.json();
-                    })
-                    .then((result) => {
-                      completionMessage.querySelector("[data-deleted-count]").textContent = result.count;
-                    })
-                    .catch(() => {
-                      completionMessage.querySelector("[data-deleted-count]").textContent = "Unavailable";
-                    });
+                  grid.shadowRoot.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
                 });
               </script>
             </template>
@@ -2107,31 +2083,12 @@ test.describe("no-subjects-remaining templates", () => {
         `,
       });
     });
-    await fixture.page.goto("http://localhost:3000/no-subjects-remaining-test.html");
+    await fixture.page.goto("http://localhost:3000/subjects-exhausted-test.html");
     await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
-    await expect(fixture.gridComponent().locator("[data-validated-count]")).toHaveCount(0);
-    await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
-    expect(deletedCountRequests).toBe(0);
+    await expect(fixture.gridComponent().locator(".verified-count")).toHaveCount(0);
 
     await fixture.makeVerificationDecision("true");
-    await expect(fixture.messageOverlay().locator("[data-validated-count]")).toHaveText("3");
-    await expect(fixture.messageOverlay().locator("[data-deleted-count]")).toHaveText("2");
-    expect(deletedCountRequests).toBe(1);
-
-    await fixture.gridComponent().evaluate(async (grid: VerificationGridComponent) => {
-      grid.requestUpdate();
-      await grid.updateComplete;
-    });
-    expect(deletedCountRequests).toBe(1);
-
-    await fixture.viewPreviousHistoryPage();
-    await expect(fixture.gridComponent().locator("[data-validated-count]")).toHaveCount(0);
-    await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
-
-    await fixture.continueVerifyingButton().click();
-    await expect(fixture.messageOverlay().locator("[data-validated-count]")).toHaveText("3");
-    await expect(fixture.messageOverlay().locator("[data-deleted-count]")).toHaveText("2");
-    expect(deletedCountRequests).toBe(2);
+    await expect(fixture.messageOverlay()).toHaveText("You verified 3 recordings.");
   });
 
   test.describe("exhausted datasets", () => {
@@ -2144,7 +2101,7 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
         0,
       );
-      await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
 
       await fixture.makeVerificationDecision("true");
       await expect(fixture.messageOverlay()).toHaveText(
@@ -2158,13 +2115,13 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
         0,
       );
-      await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
     });
 
     test("should preserve the default completion message and validated count", async ({ fixture }) => {
       await fixture
         .gridComponent()
-        .locator('template[slot="no-subjects-remaining"]')
+        .locator('template[slot="subjects-exhausted"]')
         .evaluate((template) => {
           template.remove();
         });
@@ -2191,9 +2148,7 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
     });
 
-    test("should restore the default message when the no-subjects-remaining template is removed", async ({
-      fixture,
-    }) => {
+    test("should restore the default message when the subjects-exhausted template is removed", async ({ fixture }) => {
       await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
         grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
       });
@@ -2201,7 +2156,7 @@ test.describe("no-subjects-remaining templates", () => {
 
       await fixture
         .gridComponent()
-        .locator('template[slot="no-subjects-remaining"]')
+        .locator('template[slot="subjects-exhausted"]')
         .evaluate((template) => {
           template.remove();
         });
@@ -2229,7 +2184,7 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
         0,
       );
-      await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
     });
 
     test("should not show custom content while tiles are loading", async ({ fixture }) => {
@@ -2246,7 +2201,7 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
         0,
       );
-      await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
     });
 
     test("should not show custom content when the grid shows an error", async ({ fixture }) => {
@@ -2257,7 +2212,7 @@ test.describe("no-subjects-remaining templates", () => {
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
         0,
       );
-      await expect(fixture.gridComponent().locator('slot[name="no-subjects-remaining"]')).toHaveCount(0);
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
     });
   });
 });

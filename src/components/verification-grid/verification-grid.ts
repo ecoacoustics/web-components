@@ -290,7 +290,7 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
- * @slot no-subjects-remaining - A template element shown instead of the default completion message when the dataset is exhausted or empty
+ * @slot subjects-exhausted - A template element shown instead of the default completion message when the dataset is exhausted or empty
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
@@ -2411,11 +2411,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region Templates
 
   private noItemsTemplate(): HTMLTemplateResult {
-    const customTemplate = this.querySelector<HTMLTemplateElement>(":scope > template[slot='no-subjects-remaining']");
+    const customTemplate = this.querySelector<HTMLTemplateElement>(":scope > template[slot='subjects-exhausted']");
 
     return html`
       <div class="message-overlay">
-        <slot name="no-subjects-remaining" @slotchange="${() => this.requestUpdate()}"></slot>
+        <slot name="subjects-exhausted" @slotchange="${() => this.requestUpdate()}"></slot>
         ${customTemplate
           ? templateContent(customTemplate)
           : html`
