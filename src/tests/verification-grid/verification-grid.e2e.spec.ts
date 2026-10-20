@@ -2044,13 +2044,35 @@ test.describe("resuming datasets", () => {
   test.describe.skip("classification task", () => {});
 });
 
-test.describe("subjects-exhausted templates", () => {
-  const customTemplate = `
+test.describe("subjects-exhausted slot", () => {
+  const customContent = `
     <oe-verification verified="true"></oe-verification>
-    <template slot="subjects-exhausted">
+    <div slot="subjects-exhausted">
       <h2>Thanks for reviewing these recordings!</h2>
       <p>You can close this page now.</p>
-    </template>
+    </div>
+  `;
+  const countContent = `
+    <oe-verification verified="true"></oe-verification>
+    <oe-verification verified="false"></oe-verification>
+    <div slot="subjects-exhausted">
+      <p>You verified <span class="verified-count"></span> recordings.</p>
+    </div>
+    <script type="module">
+      await customElements.whenDefined("oe-verification-grid");
+      const grid = document.getElementById("verification-grid");
+      await grid.updateComplete;
+
+      const updateCount = () => {
+        grid.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
+      };
+      grid.shadowRoot.addEventListener("slotchange", (event) => {
+        if (event.target.name === "subjects-exhausted") {
+          updateCount();
+        }
+      });
+      updateCount();
+    </script>
   `;
 
   test("should show the verified count from the grid in the completion content", async ({ fixture }) => {
@@ -2068,16 +2090,7 @@ test.describe("subjects-exhausted templates", () => {
           <!doctype html>
           <script type="module" src="/src/index.ts"></script>
           <oe-verification-grid id="verification-grid">
-            <oe-verification verified="true"></oe-verification>
-            <template slot="subjects-exhausted">
-              <p>You verified <span class="verified-count"></span> recordings.</p>
-              <script>
-                queueMicrotask(() => {
-                  const grid = document.getElementById("verification-grid");
-                  grid.shadowRoot.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
-                });
-              </script>
-            </template>
+            ${countContent}
             <oe-data-source slot="data-source" for="verification-grid" src="${fixture.smallJsonInput}"></oe-data-source>
           </oe-verification-grid>
         `,
@@ -2085,29 +2098,16 @@ test.describe("subjects-exhausted templates", () => {
     });
     await fixture.page.goto("http://localhost:3000/subjects-exhausted-test.html");
     await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
-    await expect(fixture.gridComponent().locator(".verified-count")).toHaveCount(0);
+    await expect(fixture.gridComponent().locator(".verified-count")).toBeHidden();
 
     await fixture.makeVerificationDecision("true");
-    await expect(fixture.messageOverlay()).toHaveText("You verified 3 recordings.");
+    await expect(fixture.page.getByText("You verified 3 recordings.", { exact: true })).toBeVisible();
   });
 
   test("should reset the verified count when switching a partially reviewed grid to an empty source", async ({
     fixture,
   }) => {
-    const countTemplate = `
-      <oe-verification verified="true"></oe-verification>
-      <oe-verification verified="false"></oe-verification>
-      <template slot="subjects-exhausted">
-        <p>You verified <span class="verified-count"></span> recordings.</p>
-        <script>
-          queueMicrotask(() => {
-            const grid = document.getElementById("verification-grid");
-            grid.shadowRoot.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
-          });
-        </script>
-      </template>
-    `;
-    await fixture.create(countTemplate, [], fixture.smallJsonInput);
+    await fixture.create(countContent, [], fixture.smallJsonInput);
 
     await fixture.changeGridSize(1);
     await expect(fixture.gridTileComponents()).toHaveCount(1);
@@ -2119,12 +2119,12 @@ test.describe("subjects-exhausted templates", () => {
     await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
       grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
     });
-    await expect(fixture.messageOverlay()).toHaveText("You verified 0 recordings.");
+    await expect(fixture.page.getByText("You verified 0 recordings.", { exact: true })).toBeVisible();
   });
 
   test.describe("exhausted datasets", () => {
     test.beforeEach(async ({ fixture }) => {
-      await fixture.create(customTemplate, [], fixture.smallJsonInput);
+      await fixture.create(customContent, [], fixture.smallJsonInput);
     });
 
     test("should show custom content only after the last subjects are reviewed", async ({ fixture }) => {
@@ -2135,9 +2135,10 @@ test.describe("subjects-exhausted templates", () => {
       await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
 
       await fixture.makeVerificationDecision("true");
-      await expect(fixture.messageOverlay()).toHaveText(
+      await expect(fixture.gridComponent().locator('[slot="subjects-exhausted"]')).toHaveText(
         "Thanks for reviewing these recordings! You can close this page now.",
       );
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
       await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
       await expect(fixture.gridTileComponents()).toHaveCount(0);
 
@@ -2152,24 +2153,46 @@ test.describe("subjects-exhausted templates", () => {
     test("should preserve the default completion message and validated count", async ({ fixture }) => {
       await fixture
         .gridComponent()
-        .locator('template[slot="subjects-exhausted"]')
-        .evaluate((template) => {
-          template.remove();
+        .locator('[slot="subjects-exhausted"]')
+        .evaluate((content) => {
+          content.remove();
         });
       await fixture.makeVerificationDecision("true");
       await expect(fixture.messageOverlay()).toHaveText(
         "No un-validated results found All 3 annotations are validated",
       );
     });
+
+    test("should preserve live content state when navigating away from exhaustion", async ({ fixture }) => {
+      await fixture
+        .gridComponent()
+        .locator('[slot="subjects-exhausted"]')
+        .evaluate((content) => {
+          const input = document.createElement("input");
+          input.setAttribute("aria-label", "Feedback");
+          content.appendChild(input);
+        });
+      await fixture.makeVerificationDecision("true");
+      const feedback = fixture.page.getByRole("textbox", { name: "Feedback", includeHidden: true });
+      await feedback.fill("Keep this feedback");
+
+      await fixture.viewPreviousHistoryPage();
+      await expect(feedback).toBeHidden();
+      await expect(feedback).toHaveValue("Keep this feedback");
+
+      await fixture.viewNextHistoryPage();
+      await expect(feedback).toBeVisible();
+      await expect(feedback).toHaveValue("Keep this feedback");
+    });
   });
 
   test.describe("without subjects", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.setNoBootstrap();
-      await setContent(fixture.page, `<oe-verification-grid>${customTemplate}</oe-verification-grid>`);
+      await setContent(fixture.page, `<oe-verification-grid>${customContent}</oe-verification-grid>`);
     });
 
-    test("should hide live children assigned to the subjects-exhausted slot", async ({ fixture }) => {
+    test("should project additional live children and their updates", async ({ fixture }) => {
       await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
         const liveNotification = document.createElement("div");
         liveNotification.slot = "subjects-exhausted";
@@ -2178,23 +2201,28 @@ test.describe("subjects-exhausted templates", () => {
         grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
       });
 
-      await expect(fixture.messageOverlay()).toHaveText(
-        "Thanks for reviewing these recordings! You can close this page now.",
-      );
-      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toBeHidden();
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
+      await expect(fixture.page.getByText("Live notification content", { exact: true })).toBeVisible();
+      await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(1);
+      await fixture
+        .gridComponent()
+        .locator('[slot="subjects-exhausted"]')
+        .last()
+        .evaluate((content) => {
+          content.textContent = "Updated notification content";
+        });
+      await expect(fixture.page.getByText("Updated notification content", { exact: true })).toBeVisible();
     });
 
     test("should show custom content for an initially empty dataset", async ({ fixture }) => {
       await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
         grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
       });
-      await expect(fixture.messageOverlay()).toHaveText(
-        "Thanks for reviewing these recordings! You can close this page now.",
-      );
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
       await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
     });
 
-    test("should restore the default message when the subjects-exhausted template is removed", async ({ fixture }) => {
+    test("should restore the default message when the subjects-exhausted content is removed", async ({ fixture }) => {
       await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
         grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
       });
@@ -2202,16 +2230,16 @@ test.describe("subjects-exhausted templates", () => {
 
       await fixture
         .gridComponent()
-        .locator('template[slot="subjects-exhausted"]')
-        .evaluate((template) => {
-          template.remove();
+        .locator('[slot="subjects-exhausted"]')
+        .evaluate((content) => {
+          content.remove();
         });
       await expect(fixture.messageOverlay()).toHaveText(
         "No un-validated results found All 0 annotations are validated",
       );
     });
 
-    test("should use the default message for an empty dataset without a template", async ({ fixture }) => {
+    test("should use the default message for an empty dataset without custom content", async ({ fixture }) => {
       await setContent(
         fixture.page,
         `<oe-verification-grid><oe-verification verified="true"></oe-verification></oe-verification-grid>`,
@@ -2222,6 +2250,15 @@ test.describe("subjects-exhausted templates", () => {
       await expect(fixture.messageOverlay()).toHaveText(
         "No un-validated results found All 0 annotations are validated",
       );
+
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        const notification = document.createElement("div");
+        notification.slot = "subjects-exhausted";
+        notification.textContent = "Added after exhaustion";
+        grid.appendChild(notification);
+      });
+      await expect(fixture.page.getByText("Added after exhaustion", { exact: true })).toBeVisible();
+      await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
     });
 
     test("should not show custom content while subjects are loading", async ({ fixture }) => {
@@ -2262,7 +2299,7 @@ test.describe("subjects-exhausted templates", () => {
         await setContent(
           fixture.page,
           `<oe-verification-grid id="verification-grid">
-            ${customTemplate}
+            ${customContent}
             <oe-data-source slot="data-source" for="verification-grid" src="${fixture.smallJsonInput}"></oe-data-source>
           </oe-verification-grid>`,
         );
