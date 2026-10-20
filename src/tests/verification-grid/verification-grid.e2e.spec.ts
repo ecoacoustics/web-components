@@ -2888,6 +2888,29 @@ test.describe("default templates", () => {
 
     await expect(affirmativeDecision).toBeVisible();
     await expect(negativeDecision).toBeVisible();
+    await expect(affirmativeDecision).toContainText("True");
+    await expect(negativeDecision).toContainText("False");
+
+    // The decision elements are slotted into the shadow DOM decisions
+    // container, so we assert their location using their bounding boxes.
+    const decisionsContainerBox = await fixture.footerControls().locator("#decisions-container").boundingBox();
+    expect(decisionsContainerBox).not.toBeNull();
+
+    for (const decision of [affirmativeDecision, negativeDecision]) {
+      const decisionBox = await decision.boundingBox();
+      expect(decisionBox).not.toBeNull();
+
+      if (decisionsContainerBox && decisionBox) {
+        expect(decisionBox.x).toBeGreaterThanOrEqual(decisionsContainerBox.x);
+        expect(decisionBox.y).toBeGreaterThanOrEqual(decisionsContainerBox.y);
+        expect(decisionBox.x + decisionBox.width).toBeLessThanOrEqual(
+          decisionsContainerBox.x + decisionsContainerBox.width,
+        );
+        expect(decisionBox.y + decisionBox.height).toBeLessThanOrEqual(
+          decisionsContainerBox.y + decisionsContainerBox.height,
+        );
+      }
+    }
   });
 
   test("should have the expected elements", async ({ fixture }) => {
