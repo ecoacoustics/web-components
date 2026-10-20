@@ -2213,6 +2213,11 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private updateDecisionWhen(subSelection = this.currentSubSelection): void {
+    if (this.hasFinishedDatasource) {
+      this.setDecisionsDisabled();
+      return;
+    }
+
     let allDecisionsDisabled = true;
 
     // If any of the decision buttons predicate's pass with the current
@@ -2625,7 +2630,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               )}
             </span>
 
-            <span class="decision-controls">
+            <span class="decision-controls" ?hidden="${this.hasFinishedDatasource && this.subjectWriter?.closed}">
               <h2 class="verification-controls-title">
                 ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
               </h2>

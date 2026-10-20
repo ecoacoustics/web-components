@@ -2046,7 +2046,7 @@ test.describe("resuming datasets", () => {
 
 test.describe("subjects-exhausted templates", () => {
   const customTemplate = `
-    <oe-verification verified="true"></oe-verification>
+    <oe-verification verified="true" shortcut="Y"></oe-verification>
     <template slot="subjects-exhausted">
       <h2>Thanks for reviewing these recordings!</h2>
       <p>You can close this page now.</p>
@@ -2127,6 +2127,48 @@ test.describe("subjects-exhausted templates", () => {
       await fixture.create(customTemplate, [], fixture.smallJsonInput);
     });
 
+    for (const completionContent of ["custom", "default"]) {
+      test(`should hide and disable decision controls with ${completionContent} completion content`, async ({
+        fixture,
+      }) => {
+        if (completionContent === "default") {
+          await fixture
+            .gridComponent()
+            .locator('template[slot="subjects-exhausted"]')
+            .evaluate((template) => {
+              template.remove();
+            });
+        }
+
+        const decisionControls = fixture.gridComponent().locator(".decision-controls");
+        const prompt = fixture.gridComponent().locator(".verification-controls-title");
+        await expect(decisionControls).toBeVisible();
+        await fixture.makeVerificationDecision("true");
+        await expect(fixture.messageOverlay()).toBeVisible();
+        await expect(fixture.gridTileComponents()).toHaveCount(0);
+        await expect(decisionControls).toBeHidden();
+        await expect(prompt).toBeHidden();
+        await expect(fixture.verificationButton("true")).toBeHidden();
+        await expect(fixture.skipButton()).toBeHidden();
+        await expect(fixture.gridComponent().locator("oe-verification")).toHaveJSProperty("disabled", true);
+        await expect(fixture.gridComponent().locator("oe-skip")).toHaveJSProperty("disabled", true);
+
+        await logEvent(fixture.page, "decision-made");
+        await fixture.gridComponent().press("Y");
+        await fixture.gridComponent().press("s");
+        expect(await getEventLogs(fixture.page, "decision-made")).toHaveLength(0);
+        await expect(fixture.gridComponent()).toHaveJSProperty("decisionHeadIndex", 3);
+
+        await fixture.viewPreviousHistoryPage();
+        await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "loaded");
+        await expect(decisionControls).toBeVisible();
+        await expect(prompt).toBeVisible();
+        await expect(fixture.verificationButton("true")).toBeVisible();
+        await expect(fixture.gridComponent().locator("oe-verification")).toHaveJSProperty("disabled", false);
+        await expect(fixture.gridComponent().locator("oe-skip")).toHaveJSProperty("disabled", false);
+      });
+    }
+
     test("should show custom content only after the last subjects are reviewed", async ({ fixture }) => {
       await expect(fixture.gridTileComponents()).toHaveCount(3);
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
@@ -2192,6 +2234,9 @@ test.describe("subjects-exhausted templates", () => {
         "Thanks for reviewing these recordings! You can close this page now.",
       );
       await expect(fixture.page.getByText("No un-validated results found")).toBeHidden();
+      await expect(fixture.gridComponent().locator(".decision-controls")).toBeHidden();
+      await expect(fixture.gridComponent().locator("oe-verification")).toHaveJSProperty("disabled", true);
+      await expect(fixture.gridComponent().locator("oe-skip")).toHaveJSProperty("disabled", true);
     });
 
     test("should restore the default message when the subjects-exhausted template is removed", async ({ fixture }) => {
@@ -2222,6 +2267,9 @@ test.describe("subjects-exhausted templates", () => {
       await expect(fixture.messageOverlay()).toHaveText(
         "No un-validated results found All 0 annotations are validated",
       );
+      await expect(fixture.gridComponent().locator(".decision-controls")).toBeHidden();
+      await expect(fixture.gridComponent().locator("oe-verification")).toHaveJSProperty("disabled", true);
+      await expect(fixture.gridComponent().locator("oe-skip")).toHaveJSProperty("disabled", true);
     });
 
     test("should not show custom content while subjects are loading", async ({ fixture }) => {
