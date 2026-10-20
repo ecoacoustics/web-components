@@ -1060,8 +1060,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.paginationFetcher?.abortController.abort();
       });
 
-    await this.setViewHead(0);
     this.decisionHeadIndex = 0;
+    await this.setViewHead(0);
 
     // Fire and forget finding the decision head.
     this.findDecisionHead();

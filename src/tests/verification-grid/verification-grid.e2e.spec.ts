@@ -2091,6 +2091,37 @@ test.describe("subjects-exhausted templates", () => {
     await expect(fixture.messageOverlay()).toHaveText("You verified 3 recordings.");
   });
 
+  test("should reset the verified count when switching a partially reviewed grid to an empty source", async ({
+    fixture,
+  }) => {
+    const countTemplate = `
+      <oe-verification verified="true"></oe-verification>
+      <oe-verification verified="false"></oe-verification>
+      <template slot="subjects-exhausted">
+        <p>You verified <span class="verified-count"></span> recordings.</p>
+        <script>
+          queueMicrotask(() => {
+            const grid = document.getElementById("verification-grid");
+            grid.shadowRoot.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
+          });
+        </script>
+      </template>
+    `;
+    await fixture.create(countTemplate, [], fixture.smallJsonInput);
+
+    await fixture.changeGridSize(1);
+    await expect(fixture.gridTileComponents()).toHaveCount(1);
+    await fixture.makeVerificationDecision("true");
+    const decisionHeadIndex = await fixture.getVerificationHead();
+    expect(decisionHeadIndex).toBeGreaterThan(0);
+    expect(decisionHeadIndex).toBeLessThan(3);
+
+    await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+      grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+    });
+    await expect(fixture.messageOverlay()).toHaveText("You verified 0 recordings.");
+  });
+
   test.describe("exhausted datasets", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(customTemplate, [], fixture.smallJsonInput);
