@@ -53,6 +53,7 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
+import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
@@ -289,6 +290,7 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
+ * @slot subjects-exhausted - A template element shown instead of the default completion message when the dataset is exhausted or empty
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
@@ -1058,8 +1060,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
         this.paginationFetcher?.abortController.abort();
       });
 
-    await this.setViewHead(0);
     this.decisionHeadIndex = 0;
+    await this.setViewHead(0);
 
     // Fire and forget finding the decision head.
     this.findDecisionHead();
@@ -1781,6 +1783,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       // timeout is reached (because we want to give it as much of a chance as
       // possible to recover from a potentially slow API response).
       this.datasetLoadingController.stop();
+      // The subject writer's closed state is not reactive.
+      this.requestUpdate();
     }
   }
 
@@ -2407,12 +2411,19 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region Templates
 
   private noItemsTemplate(): HTMLTemplateResult {
+    const customTemplate = this.querySelector<HTMLTemplateElement>(":scope > template[slot='subjects-exhausted']");
+
     return html`
       <div class="message-overlay">
-        <p>
-          <strong>No un-validated results found</strong>
-        </p>
-        <p>All ${this.decisionHeadIndex} annotations are validated</p>
+        <slot name="subjects-exhausted" hidden @slotchange="${() => this.requestUpdate()}"></slot>
+        ${customTemplate
+          ? templateContent(customTemplate)
+          : html`
+              <p>
+                <strong>No un-validated results found</strong>
+              </p>
+              <p>All ${this.decisionHeadIndex} annotations are validated</p>
+            `}
       </div>
     `;
   }
@@ -2457,7 +2468,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private gridLoadedTemplate(): HTMLTemplateResult {
     if (this.hasFinishedDatasource) {
-      return this.noItemsTemplate();
+      return this.subjectWriter?.closed ? this.noItemsTemplate() : this.loadingTemplate();
     }
 
     return html`
