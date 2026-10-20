@@ -205,6 +205,10 @@
 }
 
 .decision-controls {
+  &[hidden] {
+    display: none;
+  }
+
   flex-direction: column;
   align-content: center;
   align-items: center;
