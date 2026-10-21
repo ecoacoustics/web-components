@@ -53,7 +53,6 @@ import { HeapVariable } from "../../helpers/types/advancedTypes";
 import { loadingSpinnerTemplate } from "../../templates/loadingSpinner";
 import { choose } from "lit/directives/choose.js";
 import { cache } from "lit/directives/cache.js";
-import { templateContent } from "lit/directives/template-content.js";
 import { GridPageFetcher, PageFetcher } from "../../services/gridPageFetcher/gridPageFetcher";
 import { SubjectWriter } from "../../services/subjectWriter/subjectWriter";
 import { SpectrogramOptions } from "../spectrogram/spectrogramOptions";
@@ -290,16 +289,19 @@ interface SelectionOptions {
  * @slot - A template element that will be used to create each grid tile
  * @slot - Decision elements that will be used to create the decision buttons
  * @slot data-source - An `oe-data-source` element that provides the data
- * @slot subjects-exhausted - A template element shown instead of the default completion message when the dataset is exhausted or empty
+ * @slot subjects-exhausted - Content shown instead of the default completion message when the dataset is exhausted or empty
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
+ * @event subjects-exhausted - Emits after the completion slot is rendered, including for an empty dataset
  */
 @customElement("oe-verification-grid")
 export class VerificationGridComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(verificationGridStyles);
 
   public static readonly decisionMadeEventName = "decision-made";
+  /** The event emitted when the grid shows its completion content. */
+  public static readonly subjectsExhaustedEventName = "subjects-exhausted";
   private static readonly loadedEventName = "grid-loaded";
   private static readonly defaultGridTileTemplateId = "oe-default-tile-template";
   private static readonly defaultSkipButtonId = "oe-default-skip-button";
@@ -569,6 +571,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private get hasDatasource(): boolean {
     return this.getPage !== undefined;
+  }
+
+  private wasSubjectsExhausted = false;
+
+  private get isSubjectsExhausted(): boolean {
+    return (
+      (this._loadState === GridState.TILES_LOADING || this._loadState === GridState.LOADED) &&
+      this.hasFinishedDatasource &&
+      this.subjectWriter?.closed === true
+    );
   }
 
   private get hasFinishedDatasource(): boolean {
@@ -885,6 +897,13 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
+    const isSubjectsExhausted = this.isSubjectsExhausted && !change.has("getPage") && !change.has("urlTransformer");
+    const shouldEmitSubjectsExhausted = isSubjectsExhausted && !this.wasSubjectsExhausted;
+    this.wasSubjectsExhausted = isSubjectsExhausted;
+    if (shouldEmitSubjectsExhausted) {
+      this.dispatchEvent(new CustomEvent(VerificationGridComponent.subjectsExhaustedEventName));
+    }
+
     if (this.gridContainer && change.has("targetGridSize")) {
       this.gridController.setTarget(this.targetGridSize);
     }
@@ -1049,7 +1068,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private async resetForNewDataSource() {
+    this.wasSubjectsExhausted = false;
     this._subjects = [];
+    this._viewHeadIndex = 0;
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
     this.subjectWriter = new SubjectWriter(this._subjects);
@@ -1797,7 +1818,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
   }
 
-  private async setViewHead(value: number): Promise<void> {
+  private async setViewHead(value: number, advanceDecisionHead = false): Promise<void> {
     // If the viewHead will not change, I do not perform any updates because we
     // might end up in an unexpected state.
     // Note that I have never seen this condition trigger, but it is a
@@ -1814,6 +1835,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     let clampedHead = Math.max(0, value);
     await this.populatePageSubjectsToIndex(clampedHead);
+
+    if (advanceDecisionHead) {
+      this.decisionHeadIndex = clampedHead;
+    }
 
     // Updating _viewHeadIndex will cause the public viewHeadIndex getter to
     // return the new value.
@@ -2046,12 +2071,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    // Setting the view head is more likely to fail due to failures to fetch
-    // more subjects.
-    // Therefore, we set the viewHead first so that if it fails to fetch more
-    // subjects, the decisionHead is not advanced incorrectly.
-    await this.setViewHead(position);
-    this.decisionHeadIndex = position;
+    // Advance both heads together after successfully fetching any required subjects.
+    await this.setViewHead(position, true);
 
     // If the last tile that was selected was auto-selected, we should
     // continue auto-selection onto the next page.
@@ -2411,19 +2432,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   //#region Templates
 
   private noItemsTemplate(): HTMLTemplateResult {
-    const customTemplate = this.querySelector<HTMLTemplateElement>(":scope > template[slot='subjects-exhausted']");
-
     return html`
       <div class="message-overlay">
-        <slot name="subjects-exhausted" hidden @slotchange="${() => this.requestUpdate()}"></slot>
-        ${customTemplate
-          ? templateContent(customTemplate)
-          : html`
-              <p>
-                <strong>No un-validated results found</strong>
-              </p>
-              <p>All ${this.decisionHeadIndex} annotations are validated</p>
-            `}
+        <slot name="subjects-exhausted">
+          <p>
+            <strong>No un-validated results found</strong>
+          </p>
+          <p>All ${this.decisionHeadIndex} annotations are validated</p>
+        </slot>
       </div>
     `;
   }
@@ -2467,8 +2483,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private gridLoadedTemplate(): HTMLTemplateResult {
+    if (this.isSubjectsExhausted) {
+      return this.noItemsTemplate();
+    }
+
     if (this.hasFinishedDatasource) {
-      return this.subjectWriter?.closed ? this.noItemsTemplate() : this.loadingTemplate();
+      return this.loadingTemplate();
     }
 
     return html`
