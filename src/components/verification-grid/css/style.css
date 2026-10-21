@@ -51,6 +51,11 @@
   min-height: 100dvh;
   background-color: var(--oe-background-color);
 
+  /*
+    Message overlays can contain subjects-exhausted templates taller than the
+    viewport. Let them expand the container and push the footer down instead
+    of overlapping it, while keeping tile review sized to the viewport.
+  */
   &:has(.message-overlay) {
     height: auto;
   }
