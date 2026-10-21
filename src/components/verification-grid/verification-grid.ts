@@ -574,7 +574,14 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private wasSubjectsExhausted = false;
-  private readonly subjectsExhaustedAnimationIdentifier = newAnimationIdentifier();
+
+  private get isSubjectsExhausted(): boolean {
+    return (
+      (this._loadState === GridState.TILES_LOADING || this._loadState === GridState.LOADED) &&
+      this.hasFinishedDatasource &&
+      this.subjectWriter?.closed === true
+    );
+  }
 
   private get hasFinishedDatasource(): boolean {
     return this.currentPageIndices.start >= this.currentPageIndices.end;
@@ -899,15 +906,12 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
-    // Page advancement can update the decision head after rendering the slot.
-    runOnceOnNextAnimationFrame(this.subjectsExhaustedAnimationIdentifier, () => {
-      const isSubjectsExhausted = !!this.shadowRoot?.querySelector('slot[name="subjects-exhausted"]');
-      const shouldEmitSubjectsExhausted = isSubjectsExhausted && !this.wasSubjectsExhausted;
-      this.wasSubjectsExhausted = isSubjectsExhausted;
-      if (shouldEmitSubjectsExhausted) {
-        this.dispatchEvent(new CustomEvent(VerificationGridComponent.subjectsExhaustedEventName));
-      }
-    });
+    const isSubjectsExhausted = this.isSubjectsExhausted && !change.has("getPage") && !change.has("urlTransformer");
+    const shouldEmitSubjectsExhausted = isSubjectsExhausted && !this.wasSubjectsExhausted;
+    this.wasSubjectsExhausted = isSubjectsExhausted;
+    if (shouldEmitSubjectsExhausted) {
+      this.dispatchEvent(new CustomEvent(VerificationGridComponent.subjectsExhaustedEventName));
+    }
 
     if (this.gridContainer && change.has("targetGridSize")) {
       this.gridController.setTarget(this.targetGridSize);
@@ -1075,6 +1079,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private async resetForNewDataSource() {
     this.wasSubjectsExhausted = false;
     this._subjects = [];
+    this._viewHeadIndex = 0;
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);
     this.subjectWriter = new SubjectWriter(this._subjects);
@@ -1822,7 +1827,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this._subjects.slice(requestedIndex, requestedIndex + this.availableGridCells);
   }
 
-  private async setViewHead(value: number): Promise<void> {
+  private async setViewHead(value: number, advanceDecisionHead = false): Promise<void> {
     // If the viewHead will not change, I do not perform any updates because we
     // might end up in an unexpected state.
     // Note that I have never seen this condition trigger, but it is a
@@ -1839,6 +1844,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
     let clampedHead = Math.max(0, value);
     await this.populatePageSubjectsToIndex(clampedHead);
+
+    if (advanceDecisionHead) {
+      this.decisionHeadIndex = clampedHead;
+    }
 
     // Updating _viewHeadIndex will cause the public viewHeadIndex getter to
     // return the new value.
@@ -2092,12 +2101,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     this.clearSelection();
     this.resetSpectrogramSettings();
 
-    // Setting the view head is more likely to fail due to failures to fetch
-    // more subjects.
-    // Therefore, we set the viewHead first so that if it fails to fetch more
-    // subjects, the decisionHead is not advanced incorrectly.
-    await this.setViewHead(position);
-    this.decisionHeadIndex = position;
+    // Advance both heads together after successfully fetching any required subjects.
+    await this.setViewHead(position, true);
 
     // If the last tile that was selected was auto-selected, we should
     // continue auto-selection onto the next page.
@@ -2517,6 +2522,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private gridLoadedTemplate(): HTMLTemplateResult {
+    if (this.isSubjectsExhausted) {
+      return this.noItemsTemplate();
+    }
+
     if (this.hasFinishedDatasource) {
       return this.hasExhaustedSubjects() ? this.noItemsTemplate() : this.loadingTemplate();
     }
