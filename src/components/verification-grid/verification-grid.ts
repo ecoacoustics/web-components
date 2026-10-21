@@ -293,12 +293,15 @@ interface SelectionOptions {
  *
  * @event { DecisionMadeEvent } decision-made - Emits information about a batch of decisions that was made
  * @event grid-loaded - Emits when all the spectrograms have been loaded
+ * @event subjects-exhausted - Emits after the completion slot is rendered, including for an empty dataset
  */
 @customElement("oe-verification-grid")
 export class VerificationGridComponent extends WithShoelace(AbstractComponent(LitElement)) {
   public static styles = unsafeCSS(verificationGridStyles);
 
   public static readonly decisionMadeEventName = "decision-made";
+  /** The event emitted when the grid shows its completion content. */
+  public static readonly subjectsExhaustedEventName = "subjects-exhausted";
   private static readonly loadedEventName = "grid-loaded";
   private static readonly defaultGridTileTemplateId = "oe-default-tile-template";
   private static readonly defaultSkipButtonId = "oe-default-skip-button";
@@ -569,6 +572,9 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   private get hasDatasource(): boolean {
     return this.getPage !== undefined;
   }
+
+  private wasSubjectsExhausted = false;
+  private readonly subjectsExhaustedAnimationIdentifier = newAnimationIdentifier();
 
   private get hasFinishedDatasource(): boolean {
     return this.currentPageIndices.start >= this.currentPageIndices.end;
@@ -884,6 +890,16 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
+    // Page advancement can update the decision head after rendering the slot.
+    runOnceOnNextAnimationFrame(this.subjectsExhaustedAnimationIdentifier, () => {
+      const isSubjectsExhausted = !!this.shadowRoot?.querySelector('slot[name="subjects-exhausted"]');
+      const shouldEmitSubjectsExhausted = isSubjectsExhausted && !this.wasSubjectsExhausted;
+      this.wasSubjectsExhausted = isSubjectsExhausted;
+      if (shouldEmitSubjectsExhausted) {
+        this.dispatchEvent(new CustomEvent(VerificationGridComponent.subjectsExhaustedEventName));
+      }
+    });
+
     if (this.gridContainer && change.has("targetGridSize")) {
       this.gridController.setTarget(this.targetGridSize);
     }
@@ -1048,6 +1064,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   private async resetForNewDataSource() {
+    this.wasSubjectsExhausted = false;
     this._subjects = [];
 
     this.paginationFetcher = new GridPageFetcher(this.getPage!, this.urlTransformer);

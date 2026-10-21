@@ -2066,11 +2066,7 @@ test.describe("subjects-exhausted slot", () => {
       const updateCount = () => {
         grid.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
       };
-      grid.shadowRoot.addEventListener("slotchange", (event) => {
-        if (event.target.name === "subjects-exhausted") {
-          updateCount();
-        }
-      });
+      grid.addEventListener("subjects-exhausted", updateCount);
       updateCount();
     </script>
   `;
@@ -2125,6 +2121,39 @@ test.describe("subjects-exhausted slot", () => {
   test.describe("exhausted datasets", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.create(customContent, [], fixture.smallJsonInput);
+    });
+
+    test("should emit once per completion view with the final count and rendered slot", async ({ fixture }) => {
+      const notifications = await fixture.gridComponent().evaluateHandle((grid: VerificationGridComponent) => {
+        const notifications: { count: number; hasSlot: boolean }[] = [];
+        grid.addEventListener("subjects-exhausted", () => {
+          notifications.push({
+            count: grid.decisionHeadIndex,
+            hasSlot: !!grid.shadowRoot?.querySelector('slot[name="subjects-exhausted"]'),
+          });
+        });
+        return notifications;
+      });
+      expect(await notifications.jsonValue()).toEqual([]);
+
+      await fixture.makeVerificationDecision("true");
+      await expect.poll(() => notifications.jsonValue()).toEqual([{ count: 3, hasSlot: true }]);
+      await fixture.gridComponent().evaluate(async (grid: VerificationGridComponent) => {
+        grid.requestUpdate();
+        await grid.updateComplete;
+      });
+      expect(await notifications.jsonValue()).toEqual([{ count: 3, hasSlot: true }]);
+
+      await fixture.viewPreviousHistoryPage();
+      expect(await notifications.jsonValue()).toEqual([{ count: 3, hasSlot: true }]);
+      await fixture.viewNextHistoryPage();
+      await expect
+        .poll(() => notifications.jsonValue())
+        .toEqual([
+          { count: 3, hasSlot: true },
+          { count: 3, hasSlot: true },
+        ]);
+      await notifications.dispose();
     });
 
     test("should show custom content only after the last subjects are reviewed", async ({ fixture }) => {
@@ -2190,6 +2219,45 @@ test.describe("subjects-exhausted slot", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.setNoBootstrap();
       await setContent(fixture.page, `<oe-verification-grid>${customContent}</oe-verification-grid>`);
+    });
+
+    test("should let event listeners create slot content for each empty source", async ({ fixture }) => {
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.querySelector('[slot="subjects-exhausted"]')?.remove();
+        let notificationCount = 0;
+        grid.addEventListener("subjects-exhausted", () => {
+          notificationCount++;
+          let content = grid.querySelector('[slot="subjects-exhausted"]');
+          if (!content) {
+            content = document.createElement("div");
+            content.slot = "subjects-exhausted";
+            grid.appendChild(content);
+          }
+          content.textContent = `Completion ${notificationCount}: ${grid.decisionHeadIndex} reviewed`;
+        });
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+      await expect(fixture.page.getByText("Completion 1: 0 reviewed", { exact: true })).toBeVisible();
+
+      await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
+        grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+      });
+      await expect(fixture.page.getByText("Completion 2: 0 reviewed", { exact: true })).toBeVisible();
+    });
+
+    test("should not emit while loading or showing an error", async ({ fixture }) => {
+      const notifications = await fixture.gridComponent().evaluateHandle(async (grid: VerificationGridComponent) => {
+        const notifications: string[] = [];
+        grid.addEventListener("subjects-exhausted", () => notifications.push("exhausted"));
+        grid.requestUpdate();
+        await grid.updateComplete;
+        grid.transitionError();
+        await grid.updateComplete;
+        return notifications;
+      });
+      await expect(fixture.messageOverlay()).toHaveText("Failed to load data source");
+      expect(await notifications.jsonValue()).toEqual([]);
+      await notifications.dispose();
     });
 
     test("should project additional live children and their updates", async ({ fixture }) => {
