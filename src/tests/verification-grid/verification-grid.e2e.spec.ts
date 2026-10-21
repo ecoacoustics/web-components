@@ -2156,6 +2156,30 @@ test.describe("subjects-exhausted slot", () => {
       await notifications.dispose();
     });
 
+    test("should not emit for unreviewed subjects when replacing an exhausted source", async ({ fixture }) => {
+      await fixture.makeVerificationDecision("true");
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
+      const notifications = await fixture.gridComponent().evaluateHandle((grid: VerificationGridComponent) => {
+        const notifications: number[] = [];
+        grid.addEventListener("subjects-exhausted", () => {
+          notifications.push(grid.decisionHeadIndex);
+        });
+        return notifications;
+      });
+      await fixture.page.route("**/replacement-subjects.json", async (route) => {
+        await route.fulfill({ json: [{ AudioLink: "http://localhost:3000/example.flac", Tag: "koala" }] });
+      });
+      await fixture.changeGridSource("http://localhost:3000/replacement-subjects.json");
+
+      await expect(fixture.gridTileComponents()).toHaveCount(1);
+      expect(await fixture.getVerificationHead()).toBe(0);
+      expect(await notifications.jsonValue()).toEqual([]);
+
+      await fixture.makeVerificationDecision("true");
+      await expect.poll(() => notifications.jsonValue()).toEqual([1]);
+      await notifications.dispose();
+    });
+
     test("should show custom content only after the last subjects are reviewed", async ({ fixture }) => {
       await expect(fixture.gridTileComponents()).toHaveCount(3);
       await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toHaveCount(
@@ -2219,6 +2243,34 @@ test.describe("subjects-exhausted slot", () => {
     test.beforeEach(async ({ fixture }) => {
       await fixture.setNoBootstrap();
       await setContent(fixture.page, `<oe-verification-grid>${customContent}</oe-verification-grid>`);
+    });
+
+    test("should notify from the completion update without waiting for an animation frame", async ({ fixture }) => {
+      const count = await fixture.gridComponent().evaluate(async (grid: VerificationGridComponent) => {
+        const requestAnimationFrame = window.requestAnimationFrame;
+        const pendingFrames: FrameRequestCallback[] = [];
+        window.requestAnimationFrame = (callback) => pendingFrames.push(callback);
+        try {
+          const exhausted = new Promise<number>((resolve) => {
+            grid.addEventListener(
+              "subjects-exhausted",
+              () => {
+                resolve(grid.decisionHeadIndex);
+              },
+              { once: true },
+            );
+          });
+          grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
+          return await exhausted;
+        } finally {
+          window.requestAnimationFrame = requestAnimationFrame;
+          for (const callback of pendingFrames) {
+            requestAnimationFrame(callback);
+          }
+        }
+      });
+      expect(count).toBe(0);
+      await expect(fixture.page.getByRole("heading", { name: "Thanks for reviewing these recordings!" })).toBeVisible();
     });
 
     test("should let event listeners create slot content for each empty source", async ({ fixture }) => {
