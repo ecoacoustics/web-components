@@ -6,6 +6,7 @@ import { Pixel } from "../../models/unitConverters";
 import { CssVariable } from "../../helpers/types/advancedTypes";
 import { MousePosition } from "../../components/verification-grid/verification-grid";
 import { sleep } from "../../helpers/utilities";
+import type { SpectrogramComponent } from "../../components/spectrogram/spectrogram";
 
 export type DeviceMock = (page: Page) => Promise<void>;
 
@@ -305,16 +306,56 @@ export async function insertContent(target: Locator, content: string) {
   );
 }
 
+/**
+ * Waits for fixture elements and their renders, without waiting for unrelated
+ * network requests to become idle.
+ */
 export async function waitForContentReady(page: Page, selectors: string[] = []) {
-  // wait for the page to emit the "load"
-  await page.waitForLoadState();
+  await Promise.all(selectors.map((selector) => page.locator(selector).first().waitFor({ state: "visible" })));
 
-  // TODO: we should replace this with a visibility locator
-  // see: https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-selector
-  await Promise.all(selectors.map((selector) => page.waitForSelector(selector)));
+  await page.locator("*").evaluateAll(async (elements) => {
+    await Promise.all(
+      elements.map(async (element) => {
+        if ("updateComplete" in element) {
+          await element.updateComplete;
+        }
+      }),
+    );
+  });
 
-  // wait until all network requests have completed
-  await page.waitForLoadState("networkidle");
+  await expect
+    .poll(
+      () =>
+        page.locator("oe-spectrogram").evaluateAll((elements: SpectrogramComponent[]) =>
+          elements.every((element) => {
+            if (!element.src && !element.querySelector("source[src]")) {
+              return true;
+            }
+
+            // "loaded" means metadata is available, not that the worker has
+            // finished painting. Inspect the existing render state in tests.
+            const state = element["audioHelper"]["state"];
+            return (
+              element.unitConverters.peek() !== undefined &&
+              state.isProcessorComplete(state.generation) &&
+              state.workerIdle
+            );
+          }),
+        ),
+      { message: "Spectrogram workers should finish rendering", intervals: [500], timeout: 8_000 },
+    )
+    .toBe(true);
+
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve();
+          });
+        });
+      }),
+  );
 }
 
 export async function setElementSize(target: Locator, shape: Size) {

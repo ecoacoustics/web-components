@@ -210,16 +210,14 @@ export const test = base.extend({
       });
     }
 
-    await use(page);
+    try {
+      await use(page);
+    } finally {
+      // Keep the Firefox teardown workaround without creating a page for
+      // tests that never request the page fixture.
+      // https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
+      await page.close();
+      await page.context().close();
+    }
   },
-});
-
-// We manually destroy/close the page fixture after each test to make some
-// Firefox tests less flaky.
-// I suspect that this is not the correct fix and that there are underlying
-// issues within our tests.
-// see: https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
-test.afterEach(async ({ page, context }) => {
-  await page.close();
-  await context.close();
 });
