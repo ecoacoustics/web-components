@@ -34,6 +34,8 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     needs: Setup
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
     strategy:
       fail-fast: false
@@ -88,16 +90,18 @@ jobs:
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-v2-${{ matrix.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ matrix.os }}-${{ matrix.browser }}-
+            playwright-v2-${{ matrix.os }}-${{ matrix.browser }}-
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run tests
-        run: pnpm test --project ${{ matrix.browser }} --shard ${{ matrix.shard }}/4
+        id: tests
+        continue-on-error: true
+        run: pnpm test --project ${{ matrix.browser }} --shard ${{ matrix.shard }}/4 --retries=0
         env:
           PLAYWRIGHT_SHARD: "true"
           # Include runner OS in the blob report filename so that
@@ -106,6 +110,25 @@ jobs:
           # This prevents filename collisions when merge-multiple: true flattens
           # all artifacts into a single directory for playwright merge-reports.
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ runner.os }}-${{ matrix.browser }}-${{ matrix.shard }}.zip
+
+      - name: Retry failed tests without competing workers
+        if: ${{ !cancelled() && steps.tests.outcome == 'failure' }}
+        shell: bash
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const report = JSON.parse(readFileSync("test-results/run.json", "utf8"));
+            const lastRun = JSON.parse(readFileSync("test-results/.last-run.json", "utf8"));
+            if (report.errors.length > 0 || lastRun.status !== "failed" || lastRun.failedTests.length === 0) {
+              throw new Error("The first pass failed outside retryable tests; refusing an empty or misleading retry.");
+            }
+          '
+          # Do not reapply --shard: --last-failed already selects this shard's failures.
+          pnpm test --project ${{ matrix.browser }} --last-failed --workers=1 --retries=0 --trace=on
+        env:
+          PLAYWRIGHT_SHARD: "true"
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report-retry
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: retry-${{ runner.os }}-${{ matrix.browser }}-${{ matrix.shard }}.zip
 
       - name: Upload Test Report
         # Upload test report even if tests fail so we can merge reports from all shards
@@ -116,12 +139,21 @@ jobs:
           path: blob-report/
           retention-days: 1
 
+      - name: Upload Retry Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-report-${{ matrix.os }}-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report-retry/
+          if-no-files-found: ignore
+          retention-days: 1
+
   Merge-Reports:
     # Run merge reports even if some tests fail so we can still see results
     if: always()
     needs: [Setup, Run-Tests]
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -158,11 +190,36 @@ jobs:
         # Pass --config so merge-reports knows the testDir to normalize paths from
         # different OSes (Linux /home/runner/..., macOS /Users/runner/..., Windows D:\a\...).
         run: pnpm exec playwright merge-reports --config playwright.config.ts --reporter=html,github all-test-reports/
-        
+
+      - name: Download Retry Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-retry-reports/
+          pattern: retry-report-*
+          merge-multiple: true
+
+      - name: Merge Retry Reports
+        shell: bash
+        run: |
+          if compgen -G "all-retry-reports/*.zip" > /dev/null; then
+            pnpm exec playwright merge-reports --config playwright.config.ts --reporter=html,github all-retry-reports/
+          fi
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-retry-report
+
       - name: Upload Merged Test Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: merged-test-report
           path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Merged Retry Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-retry-report
+          path: playwright-retry-report/
+          if-no-files-found: ignore
           retention-days: 7

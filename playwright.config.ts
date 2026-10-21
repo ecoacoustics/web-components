@@ -4,10 +4,7 @@ const isCi = !!process.env.CI;
 
 function getPlaywrightReporters(): any {
   if (process.env.PLAYWRIGHT_SHARD) {
-    return [
-      ["blob"],
-      ["github"],
-    ];
+    return [["blob"], ["github"], ["json", { outputFile: "test-results/run.json" }]];
   }
 
   return [
@@ -32,10 +29,8 @@ export default defineConfig({
   // however, it is possible that this breaks some tests down the line
   // (if we do not code good, isolated and independent tests)
   fullyParallel: false,
-  // by enabling retries, playwright will automatically detect flaky tests
-  // if we are running the tests locally, I want to disable retries so that
-  // flakey tests are considered failures
-  retries: isCi ? 3 : 0,
+  // CI reruns failures once in a separate, single-worker pass.
+  retries: 0,
   // we start the vite server so that we can access the public/ directory
   // that contains audio files used in testing
   webServer: {
