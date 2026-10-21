@@ -96,8 +96,13 @@ there are no subjects. Without it, the grid shows its default completion message
 The content stays live in the light DOM, but is only displayed when the grid
 renders the slot.
 
+The grid emits `subjects-exhausted` after rendering the completion slot, including
+for an empty dataset. It fires again when returning to completion from history or
+exhausting a new data source, but not on unrelated re-renders. Listen on the grid
+to update or create the slotted content without accessing its shadow DOM.
+
 To show how many subjects were verified, read the grid's `decisionHeadIndex`
-property when the content is assigned to the slot:
+property in the event listener:
 
 ```html
 <oe-verification-grid id="verification-grid">
@@ -114,11 +119,7 @@ property when the content is assigned to the slot:
   const updateCount = () => {
     grid.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
   };
-  grid.shadowRoot.addEventListener("slotchange", (event) => {
-    if (event.target.name === "subjects-exhausted") {
-      updateCount();
-    }
-  });
+  grid.addEventListener("subjects-exhausted", updateCount);
   updateCount();
 </script>
 ```
