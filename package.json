@@ -53,8 +53,8 @@
     "@11ty/eleventy": "3.0.0",
     "@11ty/eleventy-plugin-syntaxhighlight": "5.0.0",
     "@custom-elements-manifest/analyzer": "0.10.4",
-    "@playwright/test": "1.53.1",
-    "@sand4rt/experimental-ct-web": "1.53.1",
+    "@playwright/test": "1.62.1",
+    "@sand4rt/experimental-ct-web": "1.62.1",
     "@types/audioworklet": "0.0.71",
     "@types/chroma-js": "3.1.1",
     "@types/colorbrewer": "1.0.32",
@@ -80,10 +80,5 @@
     "vite-plugin-node-polyfills": "0.23.0",
     "vite-svg-loader": "5.1.0"
   },
-  "pnpm": {
-    "overrides": {
-      "liquidjs": "10.16.4"
-    }
-  },
-  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
+  "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6"
 }
