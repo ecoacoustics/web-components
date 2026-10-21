@@ -2281,6 +2281,37 @@ test.describe("subjects-exhausted templates", () => {
       await expect(fixture.gridComponent().locator('slot[name="subjects-exhausted"]')).toHaveCount(0);
     });
 
+    test("should keep decision controls visible until the pending subject stream finishes", async ({ fixture }) => {
+      const finishFetching = await fixture.gridComponent().evaluateHandle((grid: VerificationGridComponent) => {
+        let finish!: () => void;
+        const pendingPage = new Promise<{ subjects: [] }>((resolve) => {
+          finish = () => {
+            resolve({ subjects: [] });
+          };
+        });
+        grid.getPage = () => pendingPage;
+        return finish;
+      });
+
+      try {
+        await expect(fixture.gridComponent()).toHaveJSProperty("loadState", "dataset-fetching");
+        await expect(fixture.messageOverlay()).toContainText("Loading");
+        await expect(fixture.gridComponent().locator(".decision-controls")).toBeVisible();
+        await expect(fixture.gridComponent().locator(".verification-controls-title")).toBeVisible();
+        await expect(fixture.gridComponent().locator("oe-verification")).toHaveJSProperty("disabled", true);
+      } finally {
+        await finishFetching.evaluate((finish) => {
+          finish();
+        });
+        await finishFetching.dispose();
+      }
+
+      await expect(fixture.messageOverlay()).toHaveText(
+        "Thanks for reviewing these recordings! You can close this page now.",
+      );
+      await expect(fixture.gridComponent().locator(".decision-controls")).toBeHidden();
+    });
+
     test("should not show custom content while tiles are loading", async ({ fixture }) => {
       // Gate only the audio fetch to avoid suspected WebKit blob-worker
       // loading failures caused by browser-wide request interception.

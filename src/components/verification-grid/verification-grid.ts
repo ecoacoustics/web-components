@@ -575,6 +575,15 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.currentPageIndices.start >= this.currentPageIndices.end;
   }
 
+  /**
+   * An empty current page can still be waiting for subjects to arrive.
+   * Completion requires the subject writer to be closed, confirming that no
+   * more subjects can arrive, as well as no subjects remaining on this page.
+   */
+  private hasExhaustedSubjects(): boolean {
+    return this.hasFinishedDatasource && this.subjectWriter?.closed === true;
+  }
+
   private readonly keydownHandler = this.handleKeyDown.bind(this);
   private readonly keyupHandler = this.handleKeyUp.bind(this);
   private readonly blurHandler = this.handleWindowBlur.bind(this);
@@ -2473,7 +2482,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
 
   private gridLoadedTemplate(): HTMLTemplateResult {
     if (this.hasFinishedDatasource) {
-      return this.subjectWriter?.closed ? this.noItemsTemplate() : this.loadingTemplate();
+      return this.hasExhaustedSubjects() ? this.noItemsTemplate() : this.loadingTemplate();
     }
 
     return html`
@@ -2630,7 +2639,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
               )}
             </span>
 
-            <span class="decision-controls" ?hidden="${this.hasFinishedDatasource && this.subjectWriter?.closed}">
+            <span class="decision-controls" ?hidden="${this.hasExhaustedSubjects()}">
               <h2 class="verification-controls-title">
                 ${this.hasDecisionElements() ? this.decisionPromptTemplate() : this.noDecisionsTemplate()}
               </h2>
