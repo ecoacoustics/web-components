@@ -74,10 +74,10 @@
     "typescript": "5.4.5",
     "typescript-eslint": "7.15.0",
     "user-agent-data-types": "0.4.2",
-    "vite": "6.2.0",
-    "vite-plugin-cem": "0.8.2",
+    "vite": "8.3.4",
+    "vite-plugin-cem": "0.8.5",
     "vite-plugin-mkcert": "1.17.6",
-    "vite-plugin-node-polyfills": "0.23.0",
+    "vite-plugin-node-polyfills": "0.28.0",
     "vite-svg-loader": "5.1.0"
   },
   "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6"

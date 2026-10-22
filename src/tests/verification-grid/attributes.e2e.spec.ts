@@ -4,8 +4,10 @@ import { expect, expectConsoleError } from "../assertions";
 
 test.describe("single verification grid", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
+    // Resize before creating the grid so that the initial grid size has
+    // settled before tests read it.
     await fixture.page.setViewportSize({ width: 1920, height: 1080 });
+    await fixture.create();
   });
 
   test.describe("changing attributes", () => {

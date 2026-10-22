@@ -25,6 +25,16 @@ export default defineConfig({
       plugins: [postcssNested, autoprefixer],
     },
   },
+  // Oxc reads decorator and class field semantics from the tsconfig.json that
+  // includes each file. Test-only modules (e.g. src/tests/fakes/) are excluded
+  // from tsconfig.json but are still bundled for component tests, so we set
+  // the semantics globally to match tsconfig.base.json
+  // ("experimentalDecorators": true, "useDefineForClassFields": false).
+  oxc: {
+    decorator: { legacy: true },
+    typescript: { removeClassFieldsWithoutInitializer: true },
+    assumptions: { setPublicClassFields: true },
+  },
   // we set the base to an empty string because Vite's default base is "/" which converts all module imports into
   // absolute paths. This works for a Vite server, but will fail when the components.js (the root file) is not at the
   // top level path (when it is in a sub-directory of the project).
