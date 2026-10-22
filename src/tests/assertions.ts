@@ -185,6 +185,16 @@ export const test = base.extend({
     // If you really need to expect a page error, you can use test.fail() and
     // expect().toThrow()
     page.on("pageerror", (error) => {
+      // Browsers report this when a ResizeObserver callback causes another
+      // resize in the same frame (e.g. the verification grid's dynamic grid
+      // size controller adding tiles). The pending notifications are delivered
+      // in the next frame, so this is benign. Only WebKit surfaces it as a page
+      // error in Playwright.
+      // see: https://drafts.csswg.org/resize-observer/#deliver-resize-error
+      if (error.message.includes("ResizeObserver loop completed with undelivered notifications")) {
+        return;
+      }
+
       throw new Error(`Page error occurred: "${error} ${error.stack}"`);
     });
 
@@ -210,16 +220,14 @@ export const test = base.extend({
       });
     }
 
-    await use(page);
+    try {
+      await use(page);
+    } finally {
+      // Keep the Firefox teardown workaround without creating a page for
+      // tests that never request the page fixture.
+      // https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
+      await page.close();
+      await page.context().close();
+    }
   },
-});
-
-// We manually destroy/close the page fixture after each test to make some
-// Firefox tests less flaky.
-// I suspect that this is not the correct fix and that there are underlying
-// issues within our tests.
-// see: https://github.com/microsoft/playwright/issues/31050#issuecomment-2633407029
-test.afterEach(async ({ page, context }) => {
-  await page.close();
-  await context.close();
 });

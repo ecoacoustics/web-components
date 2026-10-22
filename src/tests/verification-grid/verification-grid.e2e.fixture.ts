@@ -832,6 +832,12 @@ class TestPage {
     await decisionEvent;
   }
 
+  public async makeSkipDecision() {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+    await this.skipButton().click();
+    await decisionEvent;
+  }
+
   public async makeClassificationDecision(tag: string, decision: boolean) {
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
 
@@ -854,13 +860,26 @@ class TestPage {
   }
 
   public async viewPreviousHistoryPage() {
-    // When navigating into history, the verification grid will have to load its
-    // grid tiles again.
-    // Therefore, we wait for the grid-loaded event to ensure that the grid has
-    // finished loading before allowing the test to continue.
-    const historyLoadedEvent = catchLocatorEvent(this.gridComponent(), "grid-loaded");
+    // The "decision-made" event is emitted before the grid auto-pages.
+    // If we clicked the previous page button during the auto-page timeout,
+    // the pending auto-page would move the grid forward again after we
+    // navigated into history.
+    // If the dataset has been exhausted, there are no tiles to load, and there
+    // can't be a pending auto-page.
+    await expect
+      .poll(() =>
+        this.gridComponent().evaluate((element: VerificationGridComponent) => {
+          const hasTiles = Array.from(element["gridTiles"]).length > 0;
+          return !hasTiles || ((element.loadState as string) === "loaded" && !element["shouldAutoPage"]());
+        }),
+      )
+      .toBe(true);
+
+    // Clicking the previous page button synchronously puts the grid into a
+    // loading state. Therefore, once the click has been dispatched, we can wait
+    // for the history page to load without racing a "grid-loaded" listener.
     await this.previousPageButton().click();
-    await historyLoadedEvent;
+    await expect(this.gridComponent()).toHaveJSProperty("loadState", "loaded");
   }
 
   public async viewNextHistoryPage() {

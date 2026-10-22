@@ -95,6 +95,14 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     return subjectEntries.map((value) => this.subjectRowTemplate(value));
   }
 
+  private toggleExpanded(event: MouseEvent) {
+    // The anchor has an href="#" so that it is styled and focusable as a link.
+    // We prevent the default navigation so that the hash is not added to the
+    // host page's URL.
+    event.preventDefault();
+    this.showExpanded = !this.showExpanded;
+  }
+
   private showMoreButtonTemplate() {
     const shouldBeVisible = this.subjectRowCount() > this.defaultLines;
 
@@ -103,9 +111,7 @@ export class InfoCardComponent extends AbstractComponent(LitElement) {
     }
 
     return html`
-      <a id="show-more" href="javascript:void 0" @click="${() => (this.showExpanded = !this.showExpanded)}">
-        ${this.showExpanded ? "Show Less" : "Show More"}
-      </a>
+      <a id="show-more" href="#" @click="${this.toggleExpanded}"> ${this.showExpanded ? "Show Less" : "Show More"} </a>
     `;
   }
 

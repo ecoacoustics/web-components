@@ -75,6 +75,32 @@ Then you can run the following commands:
 - `pnpm build` to build the components
 - `pnpm test` to run the tests
 
+### Test performance and retries
+
+Verification-grid tests are grouped by behavior in `src/tests/verification-grid/`.
+Keep their suite titles stable: screenshot names are derived from those titles.
+Files run independently across workers and CI shards; tests within a file remain sequential.
+
+Fixture readiness waits for element visibility, Lit updates, sourced spectrograms'
+render workers to finish, and their `<audio>` elements to stop downloading, rather
+than network idleness. Waiting for the media download prevents Firefox from logging
+a CORS console error when a test replaces or closes the page mid-download. Render
+readiness is checked every 500 ms with an eight-second timeout. Screenshot
+assertions can also retry for up to eight seconds instead of sleeping unconditionally.
+
+Tests do not retry inline. In CI, each shard finishes its first pass before rerunning
+only its failed tests once with `--last-failed --workers=1 --retries=0 --trace=on`.
+Infrastructure/global errors are not retried. Locally, the same command can rerun
+failures from the last invocation (add the same `--project` used for that invocation).
+The Firefox page/context teardown workaround runs only when a test requests a page.
+
+CI retains separate `merged-test-report` (first pass) and `merged-retry-report`
+(if needed) artifacts. A recovered failure remains a failure in the first-pass
+report and a pass in the retry report, rather than being labeled as a native
+Playwright flaky result. The shard succeeds only if its first pass or its retry
+passes. Retry traces are retained in the retry report. Browser installation and
+caching share an explicit `PLAYWRIGHT_BROWSERS_PATH` on every runner OS.
+
 ### GitHub Releases
 
 You can manually import the example components in this repository using the [GitHub releases page](https://github.com/ecoacoustics/web-components/releases)
