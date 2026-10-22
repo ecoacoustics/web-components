@@ -335,14 +335,22 @@ export async function waitForContentReady(page: Page, selectors: string[] = []) 
             // "loaded" means metadata is available, not that the worker has
             // finished painting. Inspect the existing render state in tests.
             const state = element["audioHelper"]["state"];
+
+            // The <audio> element downloads the source independently of the
+            // render worker. If a test replaces or closes the page while that
+            // cross-origin download is still in flight, Firefox logs the
+            // cancelled request as a CORS console error.
+            const mediaElement = element["mediaElement"];
+
             return (
               element.unitConverters.peek() !== undefined &&
               state.isProcessorComplete(state.generation) &&
-              state.workerIdle
+              state.workerIdle &&
+              mediaElement.networkState !== HTMLMediaElement.NETWORK_LOADING
             );
           }),
         ),
-      { message: "Spectrogram workers should finish rendering", intervals: [500], timeout: 8_000 },
+      { message: "Spectrogram workers and media downloads should finish", intervals: [500], timeout: 8_000 },
     )
     .toBe(true);
 
