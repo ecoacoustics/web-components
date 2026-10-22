@@ -5,8 +5,8 @@ import { sleep } from "../../helpers/utilities";
 
 test.describe("single verification grid", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
     await fixture.page.setViewportSize({ width: 1920, height: 1080 });
+    await fixture.create();
   });
 
   test.describe("data sources", () => {
@@ -28,8 +28,8 @@ test.describe("single verification grid", () => {
 
 test.describe("single verification grid", () => {
   test.beforeEach(async ({ fixture }) => {
-    await fixture.create();
     await fixture.page.setViewportSize({ width: 1920, height: 1080 });
+    await fixture.create();
   });
 
   test.describe("pagination", () => {

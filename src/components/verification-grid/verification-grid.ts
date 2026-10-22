@@ -1827,6 +1827,27 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // selectedTiles property is also updated to reflect that all (or one in
     // single decision mode) tile is selected.
     this.updateSubSelection();
+
+    // We intentionally do not await this check so that callers (e.g. auto
+    // paging) are not delayed from updating other state, such as the decision
+    // head.
+    void this.markLoadedAfterTilesUpdate();
+  }
+
+  /**
+   * Grid tiles only re-enter a loading state if their audio source changes.
+   * If every tile on a new page uses the same source as the tile it replaces,
+   * no tile will emit a "loaded" event, and the grid would be stuck in the
+   * "TILES_LOADING" state with the decision buttons disabled.
+   * Therefore, once the tiles have received their new subjects, we check if
+   * they are all already loaded.
+   */
+  private async markLoadedAfterTilesUpdate(): Promise<void> {
+    await this.updateComplete;
+    await Promise.all(Array.from(this.gridTiles).map((tile) => tile.updateComplete));
+    if (this._loadState === GridState.TILES_LOADING) {
+      this.markLoadedIfTilesLoaded();
+    }
   }
 
   //#endregion
@@ -2323,6 +2344,10 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     // "loaded" events before the first event handler completes, meaning that
     // this methods will see that all of the tiles are loaded twice and re-run
     // the logic below multiple times.
+    this.markLoadedIfTilesLoaded();
+  }
+
+  private markLoadedIfTilesLoaded(): void {
     if (this.areTilesLoaded() && this._loadState !== GridState.LOADED) {
       console.debug("All verification grid tiles have loaded");
       this._loadState = GridState.LOADED;
