@@ -26,9 +26,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8
           run_install: |
-            - recursive: true
             - args: [--frozen-lockfile]
 
       # TODO: We are building the components twice (once for publishing to CDN)
