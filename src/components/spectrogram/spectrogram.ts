@@ -886,6 +886,18 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
     this.paused = this.mediaElement.paused;
   }
 
+  private handleMediaElementPlay(): void {
+    // The media element's "play" event is dispatched asynchronously. If the
+    // spectrogram was paused before the event was dispatched (e.g. a quick
+    // play/pause double click), calling play() here would resume playback
+    // against the user's most recent request.
+    if (this.mediaElement.paused) {
+      return;
+    }
+
+    this.play();
+  }
+
   // creates a render window from an audio segment if no explicit render window
   // is provided
   private parseRenderWindow(): RenderWindow {
@@ -919,7 +931,7 @@ export class SpectrogramComponent extends SignalWatcher(ChromeHost(LitElement)) 
         preload="metadata"
         crossorigin="anonymous"
         fetchpriority="low"
-        @play="${() => this.play()}"
+        @play="${this.handleMediaElementPlay}"
         @ended="${() => this.stop()}"
       >
         <slot></slot>
