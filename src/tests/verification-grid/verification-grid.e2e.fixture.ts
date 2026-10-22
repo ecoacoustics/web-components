@@ -832,6 +832,12 @@ class TestPage {
     await decisionEvent;
   }
 
+  public async makeSkipDecision() {
+    const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
+    await this.skipButton().click();
+    await decisionEvent;
+  }
+
   public async makeClassificationDecision(tag: string, decision: boolean) {
     const decisionEvent = catchLocatorEvent(this.gridComponent(), "decision-made");
 
