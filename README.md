@@ -81,10 +81,12 @@ Verification-grid tests are grouped by behavior in `src/tests/verification-grid/
 Keep their suite titles stable: screenshot names are derived from those titles.
 Files run independently across workers and CI shards; tests within a file remain sequential.
 
-Fixture readiness waits for element visibility, Lit updates, and sourced spectrograms'
-render workers to finish, rather than network idleness. Render readiness is checked
-every 500 ms with an eight-second timeout. Screenshot assertions can also retry
-for up to eight seconds instead of sleeping unconditionally.
+Fixture readiness waits for element visibility, Lit updates, sourced spectrograms'
+render workers to finish, and their `<audio>` elements to stop downloading, rather
+than network idleness. Waiting for the media download prevents Firefox from logging
+a CORS console error when a test replaces or closes the page mid-download. Render
+readiness is checked every 500 ms with an eight-second timeout. Screenshot
+assertions can also retry for up to eight seconds instead of sleeping unconditionally.
 
 Tests do not retry inline. In CI, each shard finishes its first pass before rerunning
 only its failed tests once with `--last-failed --workers=1 --retries=0 --trace=on`.
