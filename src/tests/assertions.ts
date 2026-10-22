@@ -185,6 +185,16 @@ export const test = base.extend({
     // If you really need to expect a page error, you can use test.fail() and
     // expect().toThrow()
     page.on("pageerror", (error) => {
+      // Browsers report this when a ResizeObserver callback causes another
+      // resize in the same frame (e.g. the verification grid's dynamic grid
+      // size controller adding tiles). The pending notifications are delivered
+      // in the next frame, so this is benign. Only WebKit surfaces it as a page
+      // error in Playwright.
+      // see: https://drafts.csswg.org/resize-observer/#deliver-resize-error
+      if (error.message.includes("ResizeObserver loop completed with undelivered notifications")) {
+        return;
+      }
+
       throw new Error(`Page error occurred: "${error} ${error.stack}"`);
     });
 

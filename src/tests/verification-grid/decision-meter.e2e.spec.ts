@@ -156,7 +156,11 @@ test.describe("decision meter", () => {
     // component, we have seen bugs where only skip decisions fail to show
     // correctly in the progress meter.
     test("should show skip decisions correctly", async ({ fixture }) => {
-      await fixture.skipButton().click();
+      await fixture.makeSkipDecision();
+
+      // Skipping with no sub-selection completes every tile, so the grid
+      // auto-pages. We navigate back in history to inspect the skipped tile.
+      await fixture.viewPreviousHistoryPage();
 
       const realizedColors = await fixture.progressMeterColors();
       expect(realizedColors).toEqual([await fixture.skipColor()]);
