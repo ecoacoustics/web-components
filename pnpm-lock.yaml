@@ -249,8 +249,8 @@ importers:
         specifier: ^2.2.0
         version: 2.10.2(eslint@8.57.0(supports-color@8.1.1))
       postcss-nested:
-        specifier: 7.0.2
-        version: 7.0.2(postcss@8.5.31)
+        specifier: 9.0.1
+        version: 9.0.1(postcss@8.5.31)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
@@ -2427,14 +2427,14 @@ packages:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
 
-  postcss-nested@7.0.2:
-    resolution: {integrity: sha512-5osppouFc0VR9/VYzYxO03VaDa3e8F23Kfd6/9qcZTUI8P58GIYlArOET2Wq0ywSl2o2PjELhYOFI4W7l5QHKw==}
-    engines: {node: '>=18.0'}
+  postcss-nested@9.0.1:
+    resolution: {integrity: sha512-FfeEbUMZ9nhld7AUMA32mGKstuXpQoDNj60v722j6+vH06H2kfuGhjmYdxDlkslx8H9+GrR7/cvlfS1zsuBscw==}
+    engines: {node: ^22.0.0 || ^24.0.0 || >= 26.0.0}
     peerDependencies:
       postcss: ^8.2.14
 
-  postcss-selector-parser@7.1.1:
-    resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
+  postcss-selector-parser@7.1.7:
+    resolution: {integrity: sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==}
     engines: {node: '>=4'}
 
   postcss-value-parser@4.2.0:
@@ -5340,12 +5340,12 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-nested@7.0.2(postcss@8.5.31):
+  postcss-nested@9.0.1(postcss@8.5.31):
     dependencies:
       postcss: 8.5.31
-      postcss-selector-parser: 7.1.1
+      postcss-selector-parser: 7.1.7
 
-  postcss-selector-parser@7.1.1:
+  postcss-selector-parser@7.1.7:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
