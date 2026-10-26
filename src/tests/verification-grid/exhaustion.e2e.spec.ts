@@ -425,7 +425,7 @@ test.describe("subjects-exhausted slot", () => {
         await finishFetching.dispose();
       }
 
-      await expect(fixture.messageOverlay()).toHaveText(
+      await expect(fixture.gridComponent().locator('[slot="subjects-exhausted"]')).toHaveText(
         "Thanks for reviewing these recordings! You can close this page now.",
       );
       await expect(fixture.gridComponent().locator(".decision-controls")).toBeHidden();
