@@ -37,29 +37,29 @@ test.describe("subjects-exhausted slot", () => {
     test(`should grow around tall completion content ${initiallyEmpty ? "for an empty dataset" : "after reviewing subjects"}`, async ({
       fixture,
     }) => {
-      const tallTemplate = `
+      const tallContent = `
         <oe-verification verified="true"></oe-verification>
-        <template slot="subjects-exhausted">
-          <div id="completion-content" style="height: 1200px">Thanks for reviewing these recordings!</div>
-        </template>
+        <div slot="subjects-exhausted" id="completion-content" style="height: 1200px">
+          Thanks for reviewing these recordings!
+        </div>
       `;
       await fixture.page.setViewportSize({ width: 1280, height: 720 });
       if (initiallyEmpty) {
         await fixture.setNoBootstrap();
-        await setContent(fixture.page, `<oe-verification-grid>${tallTemplate}</oe-verification-grid>`);
+        await setContent(fixture.page, `<oe-verification-grid>${tallContent}</oe-verification-grid>`);
         await fixture.gridComponent().evaluate((grid: VerificationGridComponent) => {
           grid.getPage = () => Promise.resolve({ subjects: [], context: {}, totalItems: 0 });
         });
       } else {
-        await fixture.create(tallTemplate, [], fixture.smallJsonInput);
+        await fixture.create(tallContent, [], fixture.smallJsonInput);
         await fixture.makeVerificationDecision("true");
       }
 
-      await expect(fixture.messageOverlay()).toHaveText("Thanks for reviewing these recordings!");
+      await expect(fixture.page.getByText("Thanks for reviewing these recordings!", { exact: true })).toBeVisible();
       await expect
         .poll(() =>
           fixture.gridComponent().evaluate((grid) => {
-            const contentElement = grid.shadowRoot?.querySelector("#completion-content");
+            const contentElement = grid.querySelector("#completion-content");
             const footerElement = grid.shadowRoot?.querySelector(".footer-container");
             if (!contentElement || !footerElement) {
               return false;
@@ -76,7 +76,7 @@ test.describe("subjects-exhausted slot", () => {
       if (!initiallyEmpty) {
         await fixture.viewPreviousHistoryPage();
         await expect(fixture.gridTileComponents()).toHaveCount(3);
-        await expect(fixture.gridComponent().locator("#completion-content")).toHaveCount(0);
+        await expect(fixture.gridComponent().locator("#completion-content")).toBeHidden();
         await expect
           .poll(() => fixture.gridComponent().evaluate((grid) => grid.getBoundingClientRect().height))
           .toBe(720);
