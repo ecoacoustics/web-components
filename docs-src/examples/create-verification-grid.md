@@ -78,38 +78,50 @@ event that did not previously exist.
 
 #### Customizing the End State
 
-Add a `subjects-exhausted` template inside the grid to replace the default
+Add an element with `slot="subjects-exhausted"` inside the grid to replace the default
 message shown when there are no subjects left to review:
 
 ```html
 <oe-verification-grid>
-  <template slot="subjects-exhausted">
+  <div slot="subjects-exhausted">
     <h2>Thanks for reviewing these recordings!</h2>
     <p>You can close this page now.</p>
-  </template>
+  </div>
   <!-- Add decisions and a data source here. -->
 </oe-verification-grid>
 ```
 
-The custom template is shown when the data source is exhausted, including when
+The custom content is shown when the data source is exhausted, including when
 there are no subjects. Without it, the grid shows its default completion message.
+The content stays live in the light DOM, but is only displayed when the grid
+renders the slot.
+
+The grid emits `subjects-exhausted` after rendering the completion slot, including
+for an empty dataset. It fires again when returning to completion from history or
+exhausting a new data source, but not on unrelated re-renders. Listen on the grid
+to update or create the slotted content without accessing its shadow DOM.
 
 To show how many subjects were verified, read the grid's `decisionHeadIndex`
-property from a script inside the template:
+property in the event listener:
 
 ```html
 <oe-verification-grid id="verification-grid">
-  <template slot="subjects-exhausted">
+  <div slot="subjects-exhausted">
     <p>You verified <span class="verified-count"></span> recordings.</p>
-    <script>
-      queueMicrotask(() => {
-        const grid = document.getElementById("verification-grid");
-        grid.shadowRoot.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
-      });
-    </script>
-  </template>
+  </div>
   <!-- Add decisions and a data source here. -->
 </oe-verification-grid>
+<script type="module">
+  await customElements.whenDefined("oe-verification-grid");
+  const grid = document.getElementById("verification-grid");
+  await grid.updateComplete;
+
+  const updateCount = () => {
+    grid.querySelector(".verified-count").textContent = grid.decisionHeadIndex;
+  };
+  grid.addEventListener("subjects-exhausted", updateCount);
+  updateCount();
+</script>
 ```
 
 ### How to Publish Your Verification Grid
