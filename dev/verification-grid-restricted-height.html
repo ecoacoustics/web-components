@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verification Grid - Restricted Height</title>
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <h1>Verification grid height check</h1>
+    <button id="height-toggle" type="button">Restrict grid to 320px</button>
+
+    <oe-verification-grid id="verification-grid">
+      <oe-verification verified="true" shortcut="Y"></oe-verification>
+      <oe-verification verified="false" shortcut="N"></oe-verification>
+
+      <div slot="subjects-exhausted" class="exhausted-content">
+        <h2>All subjects are complete</h2>
+        <p>This custom completion content is taller than the restricted grid height.</p>
+        <p>Scroll down to check that the content and grid footer remain accessible.</p>
+      </div>
+    </oe-verification-grid>
+
+    <script type="module">
+      const grid = document.querySelector("#verification-grid");
+      const heightToggle = document.querySelector("#height-toggle");
+      let hasReturnedSubject = false;
+      let isHeightRestricted = false;
+
+      grid.getPage = () => {
+        if (hasReturnedSubject) {
+          return { subjects: [], context: {}, totalItems: 1 };
+        }
+
+        hasReturnedSubject = true;
+        return {
+          subjects: [{ url: "/example.flac" }],
+          context: {},
+          totalItems: 1,
+        };
+      };
+
+      heightToggle.addEventListener("click", () => {
+        isHeightRestricted = !isHeightRestricted;
+        grid.style.height = isHeightRestricted ? "320px" : "";
+        heightToggle.textContent = isHeightRestricted ? "Restore default height" : "Restrict grid to 320px";
+      });
+    </script>
+
+    <style>
+      body {
+        margin: 16px;
+      }
+
+      #height-toggle {
+        margin-bottom: 16px;
+      }
+
+      .exhausted-content {
+        box-sizing: border-box;
+        min-height: 680px;
+        padding: 24px;
+        background: #f1f5f2;
+        color: #183b2b;
+      }
+    </style>
+  </body>
+</html>

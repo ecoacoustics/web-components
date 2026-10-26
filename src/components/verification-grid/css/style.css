@@ -13,7 +13,6 @@
 */
 :host([data-message-overlay]) {
   height: auto;
-  min-height: 100dvh;
 }
 
 #highlight-box {
