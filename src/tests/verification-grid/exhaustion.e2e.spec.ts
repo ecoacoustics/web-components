@@ -4,6 +4,7 @@ import { VerificationGridComponent } from "../../components/verification-grid/ve
 import { emptyDataset } from "./verification-grid.e2e.datasets";
 import { setContent } from "../fixtures";
 import { getEventLogs, logEvent } from "../helpers/helpers";
+import { IPageFetcherResponse } from "../../services/gridPageFetcher/gridPageFetcher";
 
 test.describe("subjects-exhausted templates", () => {
   const customTemplate = `
@@ -245,9 +246,9 @@ test.describe("subjects-exhausted templates", () => {
     test("should keep decision controls visible until the pending subject stream finishes", async ({ fixture }) => {
       const finishFetching = await fixture.gridComponent().evaluateHandle((grid: VerificationGridComponent) => {
         let finish!: () => void;
-        const pendingPage = new Promise<{ subjects: [] }>((resolve) => {
+        const pendingPage = new Promise<IPageFetcherResponse<Record<string, never>>>((resolve) => {
           finish = () => {
-            resolve({ subjects: [] });
+            resolve({ subjects: [], context: {}, totalItems: 0 });
           };
         });
         grid.getPage = () => pendingPage;
