@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v7.0.0...web-components-v7.0.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **verification-grid:** Restore consumer control over host height, keep overlay growth scoped ([2912e7d](https://github.com/ecoacoustics/web-components/commit/2912e7de97601742909ecdb30254807663a4a3af))
+
 ## [7.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.2...web-components-v7.0.0) (2026-10-26)
 
 
