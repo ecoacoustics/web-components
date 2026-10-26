@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.0.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.2...web-components-v7.0.0) (2026-10-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **verification-grid:** `subjects-exhausted` no longer accepts or clones a `<template>`. Provide completion content as a child element using `slot="subjects-exhausted"` instead.
+
+### Features
+
+* **verification-grid:** replace exhausted templates with a live slot ([b29f3e7](https://github.com/ecoacoustics/web-components/commit/b29f3e710ee24808a2b2f4313b70b5d7b53c398a))
+
+
+### Bug Fixes
+
+* **verification-gris:** Prevent tall subjects-exhausted templates from overlapping grid controls ([#608](https://github.com/ecoacoustics/web-components/issues/608)) ([4f12718](https://github.com/ecoacoustics/web-components/commit/4f127183ccf1672168eca3c8b05da527314de33d))
+
 ## [6.5.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.1...web-components-v6.5.2) (2026-10-26)
 
 
