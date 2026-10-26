@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.5.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.0...web-components-v6.5.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* prevent stale play events resuming audio and avoid javascript: link ([67723d1](https://github.com/ecoacoustics/web-components/commit/67723d13ed35a3b30b0c16276d8f6ee2d00cd24a))
+* tile loading state bug ([e9af862](https://github.com/ecoacoustics/web-components/commit/e9af862e4e2f18d407921d6ed484014eb443b3ef))
+
 ## [6.5.0](https://github.com/ecoacoustics/web-components/compare/web-components-v6.4.0...web-components-v6.5.0) (2026-10-20)
 
 
