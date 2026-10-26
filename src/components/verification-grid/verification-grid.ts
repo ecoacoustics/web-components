@@ -596,6 +596,23 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
     return this.hasFinishedDatasource && this.subjectWriter?.closed === true;
   }
 
+  /**
+   * Whether the verification grid is currently displaying a message overlay
+   * (e.g. loading, failure, or subjects-exhausted content) instead of grid
+   * tiles.
+   *
+   * This state is reflected onto the host through the "data-message-overlay"
+   * attribute so that the host styles can temporarily release the fixed
+   * viewport height while an overlay is shown.
+   */
+  private get isMessageOverlayShown(): boolean {
+    if (this._loadState === GridState.TILES_LOADING || this._loadState === GridState.LOADED) {
+      return this.isSubjectsExhausted || this.hasFinishedDatasource;
+    }
+
+    return true;
+  }
+
   private readonly keydownHandler = this.handleKeyDown.bind(this);
   private readonly keyupHandler = this.handleKeyUp.bind(this);
   private readonly blurHandler = this.handleWindowBlur.bind(this);
@@ -906,6 +923,8 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
   }
 
   protected async updated(change: PropertyValueMap<this>): Promise<void> {
+    this.toggleAttribute("data-message-overlay", this.isMessageOverlayShown);
+
     const isSubjectsExhausted = this.isSubjectsExhausted && !change.has("getPage") && !change.has("urlTransformer");
     const shouldEmitSubjectsExhausted = isSubjectsExhausted && !this.wasSubjectsExhausted;
     this.wasSubjectsExhausted = isSubjectsExhausted;
@@ -2387,7 +2406,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       console.debug("All verification grid tiles have loaded");
       this._loadState = GridState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-      this.updateDecisionWhen();
+      this.updateSubSelection();
     }
   }
 

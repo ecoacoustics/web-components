@@ -1,6 +1,18 @@
 :host {
   display: block;
-  min-height: 100dvh;
+  height: 100dvh;
+}
+
+/*
+  Message overlays can contain subjects-exhausted templates taller than the
+  viewport. While a message overlay is shown, we temporarily release the fixed
+  viewport height so that the host can grow around the overlay content and
+  push the footer down instead of overlapping it.
+  Tile review remains sized to the host height so that consumers can constrain
+  the height of the verification grid.
+*/
+:host([data-message-overlay]) {
+  height: auto;
 }
 
 #highlight-box {
@@ -47,18 +59,20 @@
 .verification-container {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  min-height: 100dvh;
+  height: 100%;
   background-color: var(--oe-background-color);
+}
 
-  /*
-    Message overlays can contain subjects-exhausted templates taller than the
-    viewport. Let them expand the container and push the footer down instead
-    of overlapping it, while keeping tile review sized to the viewport.
-  */
-  &:has(.message-overlay) {
-    height: auto;
-  }
+/*
+  While a message overlay is shown, the host has an auto height (see the :host
+  styles above), meaning that the container's percentage height cannot resolve.
+  We instead inherit the host's min-height so that short overlay content still
+  fills the viewport (keeping the footer at the bottom of the screen) while
+  tall overlay content can expand the container and the host.
+*/
+:host([data-message-overlay]) .verification-container {
+  height: auto;
+  min-height: inherit;
 }
 
 /* The verification grid that contains verification grid tiles */

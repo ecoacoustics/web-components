@@ -295,3 +295,20 @@ test.describe("single verification grid", () => {
     }
   });
 });
+
+test.describe("host sizing", () => {
+  test("should allow a consumer to constrain the height of the verification grid", async ({ fixture }) => {
+    await fixture.page.setViewportSize({ width: 1280, height: 720 });
+    await fixture.create();
+    await fixture.page.addStyleTag({ content: "#verification-grid { height: 400px; }" });
+
+    await expect.poll(() => fixture.gridComponent().evaluate((grid) => grid.getBoundingClientRect().height)).toBe(400);
+  });
+
+  test("should fill the viewport height by default", async ({ fixture }) => {
+    await fixture.page.setViewportSize({ width: 1280, height: 720 });
+    await fixture.create();
+
+    await expect.poll(() => fixture.gridComponent().evaluate((grid) => grid.getBoundingClientRect().height)).toBe(720);
+  });
+});
