@@ -2406,7 +2406,7 @@ export class VerificationGridComponent extends WithShoelace(AbstractComponent(Li
       console.debug("All verification grid tiles have loaded");
       this._loadState = GridState.LOADED;
       this.dispatchEvent(new CustomEvent(VerificationGridComponent.loadedEventName));
-      this.updateDecisionWhen();
+      this.updateSubSelection();
     }
   }
 
