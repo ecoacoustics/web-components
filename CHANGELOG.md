@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.2](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.1...web-components-v6.5.2) (2026-10-26)
+
+
+### Bug Fixes
+
+* **verification-grid:** Hide decision controls when verification subjects are exhausted ([24f76ba](https://github.com/ecoacoustics/web-components/commit/24f76ba99525621cb6a96d25317af43921ac6266))
+
 ## [6.5.1](https://github.com/ecoacoustics/web-components/compare/web-components-v6.5.0...web-components-v6.5.1) (2026-10-26)
 
 
