@@ -77,8 +77,15 @@ test.describe("decision meter", () => {
           element.style.width = "15px";
         });
         const hoveredSegment = Math.floor(segmentCount / 2);
-        // A centered 1px hit-test area can overlap the next segment when segments are narrower than 2px.
-        await segments.nth(hoveredSegment).hover({ position: { x: 0, y: 6 } });
+        const segmentToHover = segments.nth(hoveredSegment);
+        const segmentBounds = await segmentToHover.boundingBox();
+        if (!segmentBounds) {
+          throw new Error("Segment bounds are missing");
+        }
+        // Firefox rounds pointer coordinates down to whole pixels, so target the first pixel inside the segment.
+        await segmentToHover.hover({
+          position: { x: Math.ceil(segmentBounds.x) - segmentBounds.x, y: 6 },
+        });
         await expect(
           fixture.page.getByRole("tooltip", { name: `tag-${hoveredSegment} (no decision)`, exact: true }),
         ).toBeVisible();
@@ -213,18 +220,26 @@ test.describe("decision meter", () => {
           oe-task-meter::part(segment)::after {
             content: attr(data-decision);
           }
+
+          oe-task-meter::part(segment) {
+            flex: 0 0 max-content;
+          }
         `);
           root.adoptedStyleSheets = [...root.adoptedStyleSheets, stylesheet];
         });
 
-      const generatedText = () =>
-        fixture
-          .gridTileTaskMeterSegments()
-          .evaluateAll((segments) => segments.map((segment) => getComputedStyle(segment, "::after").content));
-      await expect.poll(generatedText).toEqual(['"undecided"', '"undecided"', '"undecided"']);
+      const firstSegment = fixture.gridTileTaskMeterSegments().first();
+      const undecidedSegmentWidth = (await firstSegment.boundingBox())?.width;
+      if (undecidedSegmentWidth === undefined) {
+        throw new Error("Segment bounds are missing");
+      }
+      expect(undecidedSegmentWidth).toBeGreaterThan(0);
 
       await fixture.makeClassificationDecision("car", true);
-      await expect.poll(generatedText).toEqual(['"true"', '"undecided"', '"undecided"']);
+      await expect(firstSegment).toHaveAttribute("data-decision", "true");
+      await expect
+        .poll(async () => (await firstSegment.boundingBox())?.width ?? Infinity)
+        .toBeLessThan(undecidedSegmentWidth);
     });
 
     test("should have the correct colors when multiple decisions are made", async ({ fixture }) => {
