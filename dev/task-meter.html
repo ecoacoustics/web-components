@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components - Task Meter</title>
+    <style>
+      body {
+        margin: 2rem;
+        color: var(--oe-font-color);
+        background: var(--oe-background-color);
+        font-family: var(--oe-font-family);
+      }
+
+      main {
+        --container-width: 300px;
+      }
+
+      .example-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(var(--container-width), 1fr));
+        gap: 2rem;
+      }
+
+      .customisation-grid {
+        grid-template-columns: repeat(auto-fit, minmax(max(240px, var(--container-width)), 1fr));
+      }
+
+      .example-grid > section {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .width-control {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .width-control input {
+        width: min(400px, 60vw);
+      }
+
+      article {
+        margin-block: 1.5rem;
+      }
+
+      div.context-host,
+      div.example {
+        width: var(--container-width);
+      }
+
+      article h3,
+      article h4 {
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        font-weight: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Task meter states</h1>
+    <p>
+      Standalone meters with mocked contexts. Hover over each segment to inspect its decision. Narrow meters reduce gaps
+      and internal lines to keep every segment inside the outline.
+    </p>
+    <label class="width-control">
+      Container width
+      <input id="container-width" type="range" min="15" max="600" value="300" />
+      <output id="container-width-value" for="container-width">300px</output>
+    </label>
+    <main id="columns">
+      <div class="example-grid">
+        <section id="verification">
+          <h2>Verification</h2>
+          <p>One segment: verification.</p>
+        </section>
+        <section id="classification">
+          <h2>Classification</h2>
+          <p>One segment per required tag.</p>
+        </section>
+        <section id="verify-and-correct">
+          <h2>Verify and correct</h2>
+          <p>Two segments: verification, then corrected tag.</p>
+        </section>
+      </div>
+      <h2>Customisation</h2>
+      <p>
+        Each example is plain HTML and CSS. The <code>data-verification</code> or
+        <code>data-classifications</code> attribute describes the mocked decisions, and the declarative shadow root
+        scopes each example's styles to its own meter.
+      </p>
+      <div id="customisation" class="example-grid customisation-grid">
+        <section>
+          <h3>Size and spacing</h3>
+          <p>Host styles and inherited sizing properties.</p>
+
+          <article>
+            <h4>Default</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Dense layout with host styles</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    height: 0.5em;
+                    margin: 0;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Host height</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    height: 1.5rem;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Height inherited from an ancestor</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  :host {
+                    --oe-task-meter-height: 1.5rem;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Minimum width</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    --oe-task-meter-min-width: 2em;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Host margin removed</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    margin: 0;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+        </section>
+
+        <section>
+          <h3>Borders, gaps, and colours</h3>
+          <p>CSS properties and exposed parts.</p>
+
+          <article>
+            <h4>Gap</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    --oe-task-meter-gap: 4px;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>No rounding</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    --oe-task-meter-rounding: 0;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Thick, coloured border</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    --oe-task-meter-border-width: 3px;
+                    --oe-task-meter-border-color: rebeccapurple;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Prefer 3rem segments before adding gaps</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    --oe-task-meter-segment-min-width: 3rem;
+                    --oe-task-meter-gap: 4px;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Overridden with ::part()</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter::part(meter) {
+                    outline-style: dashed;
+                  }
+
+                  oe-task-meter::part(true) {
+                    background: gold;
+                  }
+
+                  oe-task-meter::part(false) {
+                    background: black;
+                  }
+
+                  oe-task-meter::part(undecided) {
+                    background: repeating-linear-gradient(90deg, #eee 0 2px, #fff 2px 4px);
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+        </section>
+
+        <section>
+          <h3>Text, emoji, and tooltips</h3>
+          <p>Opt-in CSS-generated labels, clipped at narrow widths.</p>
+
+          <article>
+            <h4>Decision text from data-decision</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    height: 1.75em;
+                  }
+
+                  oe-task-meter::part(segment) {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    color: white;
+                    text-shadow: 0 1px 2px black;
+                  }
+
+                  oe-task-meter::part(segment)::after {
+                    content: attr(data-decision);
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 0.875em;
+                  }
+
+                  oe-task-meter::part(skip),
+                  oe-task-meter::part(undecided) {
+                    color: black;
+                    text-shadow: none;
+                  }
+                </style>
+                <oe-task-meter></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>Verification emoji</h4>
+            <div class="example">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    height: 1.75em;
+                  }
+
+                  oe-task-meter::part(segment) {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                  }
+
+                  oe-task-meter::part(verification true)::before {
+                    content: "✅";
+                  }
+
+                  oe-task-meter::part(verification false)::before {
+                    content: "❌";
+                  }
+                </style>
+                <div data-verification="true"><oe-task-meter></oe-task-meter></div>
+                <div data-verification="false"><oe-task-meter></oe-task-meter></div>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>tooltip-placement="bottom"</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <oe-task-meter tooltip-placement="bottom"></oe-task-meter>
+              </template>
+            </div>
+          </article>
+
+          <article>
+            <h4>disable-tooltips</h4>
+            <div class="example" data-classifications="true false skip undecided">
+              <template shadowrootmode="open">
+                <oe-task-meter disable-tooltips></oe-task-meter>
+              </template>
+            </div>
+          </article>
+        </section>
+
+        <section>
+          <h3>Coloured verification labels</h3>
+          <p>Transparent backgrounds, coloured text, and emoji only for true, false, and unsure.</p>
+
+          <article>
+            <h4>No decision, true, false, unsure, and skip</h4>
+            <div class="example">
+              <template shadowrootmode="open">
+                <style>
+                  oe-task-meter {
+                    height: 1.75em;
+                  }
+
+                  oe-task-meter::part(segment) {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    column-gap: 0.3em;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    background: none;
+                    color: var(--oe-font-color);
+                  }
+
+                  oe-task-meter::part(segment)::after {
+                    content: attr(data-decision);
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 0.875em;
+                  }
+
+                  oe-task-meter::part(true) {
+                    color: var(--oe-verification-true);
+                  }
+
+                  oe-task-meter::part(true)::before {
+                    content: "✅";
+                  }
+
+                  oe-task-meter::part(false) {
+                    color: var(--oe-verification-false);
+                  }
+
+                  oe-task-meter::part(false)::before {
+                    content: "❌";
+                  }
+
+                  /* --oe-verification-unsure is a hatched gradient, so use its solid magenta for text. */
+                  oe-task-meter::part(unsure) {
+                    color: #d0d;
+                  }
+
+                  oe-task-meter::part(unsure)::before {
+                    content: "❓";
+                  }
+
+                  oe-task-meter::part(skip),
+                  oe-task-meter::part(undecided) {
+                    color: color-mix(in srgb, var(--oe-font-color) 60%, transparent);
+                  }
+
+                  oe-task-meter::part(undecided)::after {
+                    content: "no decision";
+                  }
+                </style>
+                <div data-verification="undecided"><oe-task-meter></oe-task-meter></div>
+                <div data-verification="true"><oe-task-meter></oe-task-meter></div>
+                <div data-verification="false"><oe-task-meter></oe-task-meter></div>
+                <div data-verification="unsure"><oe-task-meter></oe-task-meter></div>
+                <div data-verification="skip"><oe-task-meter></oe-task-meter></div>
+              </template>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { ContextRoot } from "@lit/context";
+
+      // The customisation meters are parsed before their context providers
+      // exist. The context root replays their requests once providers attach.
+      new ContextRoot().attach(document.body);
+    </script>
+
+    <script type="module">
+      import "/src/index.ts";
+      import "@shoelace-style/shoelace/dist/components/tooltip/tooltip.js";
+      import { ContextProvider } from "@lit/context";
+      import { gridTileContext, injectionContext } from "/src/helpers/constants/contextTokens.ts";
+      import {
+        requiredVerificationPlaceholder,
+        requiredNewTagPlaceholder,
+      } from "/src/components/verification-grid-tile/verification-grid-tile.ts";
+      import { SubjectWrapper } from "/src/models/subject.ts";
+      import { Classification } from "/src/models/decisions/classification.ts";
+      import { Verification } from "/src/models/decisions/verification.ts";
+      import { NewTag } from "/src/models/decisions/newTag.ts";
+      import { DecisionOptions } from "/src/models/decisions/decision.ts";
+      import { decisionNotRequired } from "/src/models/decisions/decisionNotRequired.ts";
+      import { decisionColor } from "/src/services/colors/colors.ts";
+      import { decisionColors } from "/src/helpers/themes/decisionColors.ts";
+
+      const columns = document.getElementById("columns");
+      const columnWidthInput = document.getElementById("container-width");
+      const columnWidthValue = document.getElementById("container-width-value");
+      columnWidthInput.addEventListener("input", () => {
+        const columnWidth = `${columnWidthInput.value}px`;
+        columns.style.setProperty("--container-width", columnWidth);
+        columnWidthValue.textContent = columnWidth;
+      });
+
+      const originalTag = { text: "Koala" };
+      const correctedTag = { text: "Possum" };
+      const classificationTags = [{ text: "Koala" }, { text: "Possum" }, { text: "Bird" }];
+      const meterStyles = new CSSStyleSheet();
+      meterStyles.replaceSync(decisionColors.cssText);
+
+      function provideContexts(contextHost, model, requiredDecisions) {
+        const providers = [
+          new ContextProvider(contextHost, {
+            context: gridTileContext,
+            initialValue: { model, requiredDecisions },
+          }),
+          new ContextProvider(contextHost, {
+            context: injectionContext,
+            initialValue: { colorService: decisionColor },
+          }),
+        ];
+
+        // Plain elements have no controller lifecycle, so announce the
+        // providers manually for any meters that were connected first.
+        for (const provider of providers) {
+          provider.hostConnected();
+        }
+      }
+
+      function addExample(columnId, label, requiredDecisions, configure) {
+        const model = new SubjectWrapper({}, "", originalTag);
+        configure(model);
+
+        const article = document.createElement("article");
+        const heading = document.createElement("h3");
+        heading.textContent = label;
+        const contextHost = document.createElement("div");
+        contextHost.classList.add("context-host");
+        provideContexts(contextHost, model, requiredDecisions);
+
+        const taskMeter = document.createElement("oe-task-meter");
+
+        // Decision colors normally come from the grid tile's shadow root.
+        const shadowRoot = contextHost.attachShadow({ mode: "open" });
+        shadowRoot.adoptedStyleSheets = [meterStyles];
+        shadowRoot.append(taskMeter);
+        article.append(heading, contextHost);
+        document.getElementById(columnId).append(article);
+      }
+
+      const verificationStates = [
+        ["No decision", undefined],
+        ["Verified true", new Verification(DecisionOptions.TRUE, originalTag)],
+        ["Verified false", new Verification(DecisionOptions.FALSE, originalTag)],
+        ["Unsure", new Verification(DecisionOptions.UNSURE, originalTag)],
+        ["Skipped", new Verification(DecisionOptions.SKIP, originalTag)],
+        ["Not required", decisionNotRequired],
+      ];
+
+      for (const [label, verification] of verificationStates) {
+        addExample("verification", label, [requiredVerificationPlaceholder], (model) => {
+          model.verification = verification;
+        });
+      }
+
+      const classificationStates = [
+        ["No decision", undefined],
+        ["True", DecisionOptions.TRUE],
+        ["False", DecisionOptions.FALSE],
+        ["Skipped", DecisionOptions.SKIP],
+      ];
+
+      for (const [label, confirmed] of classificationStates) {
+        addExample("classification", label, classificationTags, (model) => {
+          if (confirmed !== undefined) {
+            for (const tag of classificationTags) {
+              model.classifications.set(tag.text, new Classification(confirmed, tag));
+            }
+          }
+        });
+      }
+
+      addExample("classification", "Mixed: true / false / skipped", classificationTags, (model) => {
+        const outcomes = [DecisionOptions.TRUE, DecisionOptions.FALSE, DecisionOptions.SKIP];
+        for (const [index, tag] of classificationTags.entries()) {
+          model.classifications.set(tag.text, new Classification(outcomes[index], tag));
+        }
+      });
+      addExample("classification", "Partial: true / no decision / no decision", classificationTags, (model) => {
+        const tag = classificationTags[0];
+        model.classifications.set(tag.text, new Classification(DecisionOptions.TRUE, tag));
+      });
+
+      const correctionStates = [
+        ["No decisions", undefined, undefined],
+        [
+          "Verified true / correction not required",
+          new Verification(DecisionOptions.TRUE, originalTag),
+          decisionNotRequired,
+        ],
+        ["Verified false / awaiting correction", new Verification(DecisionOptions.FALSE, originalTag), undefined],
+        [
+          "Verified false / corrected to Possum",
+          new Verification(DecisionOptions.FALSE, originalTag),
+          new NewTag(DecisionOptions.TRUE, correctedTag),
+        ],
+        [
+          "Verified false / correction skipped",
+          new Verification(DecisionOptions.FALSE, originalTag),
+          new NewTag(DecisionOptions.SKIP, null),
+        ],
+        ["Both skipped", new Verification(DecisionOptions.SKIP, originalTag), new NewTag(DecisionOptions.SKIP, null)],
+        ["Both not required", decisionNotRequired, decisionNotRequired],
+      ];
+
+      for (const [label, verification, newTag] of correctionStates) {
+        addExample(
+          "verify-and-correct",
+          label,
+          [requiredVerificationPlaceholder, requiredNewTagPlaceholder],
+          (model) => {
+            model.verification = verification;
+            model.newTag = newTag;
+          },
+        );
+      }
+
+      const decisionOptions = {
+        true: DecisionOptions.TRUE,
+        false: DecisionOptions.FALSE,
+        unsure: DecisionOptions.UNSURE,
+        skip: DecisionOptions.SKIP,
+      };
+      const exampleTagNames = ["Koala", "Possum", "Bird", "Frog", "Bat", "Owl"];
+
+      function provideMockedDecisions(contextHost) {
+        const model = new SubjectWrapper({}, "", originalTag);
+        const { verification, classifications } = contextHost.dataset;
+        let requiredDecisions;
+
+        if (verification !== undefined) {
+          requiredDecisions = [requiredVerificationPlaceholder];
+          if (verification !== "undecided") {
+            model.verification = new Verification(decisionOptions[verification], originalTag);
+          }
+        } else {
+          const outcomes = classifications.trim().split(/\s+/);
+          requiredDecisions = outcomes.map((_, index) => ({ text: exampleTagNames[index] }));
+          for (const [index, outcome] of outcomes.entries()) {
+            if (outcome !== "undecided") {
+              const tag = requiredDecisions[index];
+              model.classifications.set(tag.text, new Classification(decisionOptions[outcome], tag));
+            }
+          }
+        }
+
+        provideContexts(contextHost, model, requiredDecisions);
+      }
+
+      const mockedDecisionSelector = "[data-verification], [data-classifications]";
+      for (const example of document.querySelectorAll("#customisation .example")) {
+        // Decision colors normally come from the grid tile's shadow root.
+        example.shadowRoot.adoptedStyleSheets = [meterStyles];
+        const contextHosts = example.matches(mockedDecisionSelector)
+          ? [example]
+          : example.shadowRoot.querySelectorAll(mockedDecisionSelector);
+        for (const contextHost of contextHosts) {
+          provideMockedDecisions(contextHost);
+        }
+      }
+    </script>
+  </body>
+</html>

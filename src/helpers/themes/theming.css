@@ -1,3 +1,10 @@
+/* Normalize unitless zero before the task meter uses its gap in length calculations. */
+@property --oe-task-meter-gap {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
 /*
   Because different operating systems ship with different fonts, there might be
   slightly inconsistencies across operating systems.
