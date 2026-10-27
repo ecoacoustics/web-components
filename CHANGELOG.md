@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.0](https://github.com/ecoacoustics/web-components/compare/web-components-v7.0.1...web-components-v7.1.0) (2026-10-27)
+
+
+### Features
+
+* **task-meter:** improve customization and add dev showcase ([#627](https://github.com/ecoacoustics/web-components/issues/627)) ([5f69ac8](https://github.com/ecoacoustics/web-components/commit/5f69ac8c56fc852d92778776019a3ea8911cf869))
+
 ## [7.0.1](https://github.com/ecoacoustics/web-components/compare/web-components-v7.0.0...web-components-v7.0.1) (2026-10-26)
 
 
