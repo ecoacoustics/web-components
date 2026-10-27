@@ -220,7 +220,7 @@ importers:
         version: 1.62.1
       '@sand4rt/experimental-ct-web':
         specifier: 1.62.1
-        version: 1.62.1(@types/node@22.13.5)(terser@5.39.0)
+        version: 1.62.1(@types/node@26.6.5)(terser@5.39.0)
       '@types/audioworklet':
         specifier: 0.0.71
         version: 0.0.71
@@ -231,8 +231,8 @@ importers:
         specifier: 1.0.32
         version: 1.0.32
       '@types/node':
-        specifier: 22.13.5
-        version: 22.13.5
+        specifier: 26.6.5
+        version: 26.6.5
       autoprefixer:
         specifier: 10.6.1
         version: 10.6.1(postcss@8.5.31)
@@ -280,16 +280,16 @@ importers:
         version: 0.4.2
       vite:
         specifier: 8.3.4
-        version: 8.3.4(@types/node@22.13.5)(terser@5.39.0)
+        version: 8.3.4(@types/node@26.6.5)(terser@5.39.0)
       vite-plugin-cem:
         specifier: 0.8.5
-        version: 0.8.5(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0))
+        version: 0.8.5(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0))
       vite-plugin-mkcert:
         specifier: 1.17.6
-        version: 1.17.6(supports-color@8.1.1)(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0))
+        version: 1.17.6(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0))
       vite-plugin-node-polyfills:
         specifier: 0.28.0
-        version: 0.28.0(rollup@4.34.8)(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0))
+        version: 0.28.0(rollup@4.34.8)(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0))
       vite-svg-loader:
         specifier: 5.1.0
         version: 5.1.0(vue@3.5.33(typescript@5.4.5))
@@ -827,8 +827,8 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/node@22.13.5':
-    resolution: {integrity: sha512-+lTU0PxZXn0Dr1NBtC7Y8cR21AJr87dLLU953CWA6pMxxv/UDc7jYAY90upcrie1nRcD6XNG5HOYEDtgW5TxAg==}
+  '@types/node@26.6.5':
+    resolution: {integrity: sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==}
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
@@ -2888,8 +2888,8 @@ packages:
     resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
     engines: {node: '>=18'}
 
-  undici-types@6.20.0:
-    resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   universal-user-agent@6.0.1:
     resolution: {integrity: sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ==}
@@ -3432,11 +3432,11 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/experimental-ct-core@1.62.1(@types/node@22.13.5)(terser@5.39.0)':
+  '@playwright/experimental-ct-core@1.62.1(@types/node@26.6.5)(terser@5.39.0)':
     dependencies:
       playwright: 1.62.1
       playwright-core: 1.62.1
-      vite: 8.3.4(@types/node@22.13.5)(terser@5.39.0)
+      vite: 8.3.4(@types/node@26.6.5)(terser@5.39.0)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
@@ -3577,9 +3577,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.34.8':
     optional: true
 
-  '@sand4rt/experimental-ct-web@1.62.1(@types/node@22.13.5)(terser@5.39.0)':
+  '@sand4rt/experimental-ct-web@1.62.1(@types/node@26.6.5)(terser@5.39.0)':
     dependencies:
-      '@playwright/experimental-ct-core': 1.62.1(@types/node@22.13.5)(terser@5.39.0)
+      '@playwright/experimental-ct-core': 1.62.1(@types/node@26.6.5)(terser@5.39.0)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
@@ -3637,9 +3637,9 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/node@22.13.5':
+  '@types/node@26.6.5':
     dependencies:
-      undici-types: 6.20.0
+      undici-types: 8.9.0
 
   '@types/react@19.2.14':
     dependencies:
@@ -5838,7 +5838,7 @@ snapshots:
 
   uint8array-extras@1.5.0: {}
 
-  undici-types@6.20.0: {}
+  undici-types@8.9.0: {}
 
   universal-user-agent@6.0.1: {}
 
@@ -5873,28 +5873,28 @@ snapshots:
       is-typed-array: 1.1.15
       which-typed-array: 1.1.20
 
-  vite-plugin-cem@0.8.5(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0)):
+  vite-plugin-cem@0.8.5(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0)):
     dependencies:
       '@custom-elements-manifest/analyzer': 0.10.4
       glob: 8.1.0
       typescript: 5.7.3
-      vite: 8.3.4(@types/node@22.13.5)(terser@5.39.0)
+      vite: 8.3.4(@types/node@26.6.5)(terser@5.39.0)
 
-  vite-plugin-mkcert@1.17.6(supports-color@8.1.1)(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0)):
+  vite-plugin-mkcert@1.17.6(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0)):
     dependencies:
       '@octokit/rest': 20.1.2
       axios: 1.15.2(debug@4.4.3(supports-color@8.1.1))
       debug: 4.4.3(supports-color@8.1.1)
       picocolors: 1.1.1
-      vite: 8.3.4(@types/node@22.13.5)(terser@5.39.0)
+      vite: 8.3.4(@types/node@26.6.5)(terser@5.39.0)
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-node-polyfills@0.28.0(rollup@4.34.8)(vite@8.3.4(@types/node@22.13.5)(terser@5.39.0)):
+  vite-plugin-node-polyfills@0.28.0(rollup@4.34.8)(vite@8.3.4(@types/node@26.6.5)(terser@5.39.0)):
     dependencies:
       '@rollup/plugin-inject': 5.0.5(rollup@4.34.8)
       node-stdlib-browser: 1.3.1
-      vite: 8.3.4(@types/node@22.13.5)(terser@5.39.0)
+      vite: 8.3.4(@types/node@26.6.5)(terser@5.39.0)
     transitivePeerDependencies:
       - rollup
 
@@ -5903,7 +5903,7 @@ snapshots:
       svgo: 3.3.3
       vue: 3.5.33(typescript@5.4.5)
 
-  vite@8.3.4(@types/node@22.13.5)(terser@5.39.0):
+  vite@8.3.4(@types/node@26.6.5)(terser@5.39.0):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -5911,7 +5911,7 @@ snapshots:
       rolldown: 1.2.14
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 22.13.5
+      '@types/node': 26.6.5
       fsevents: 2.3.3
       terser: 5.39.0
 
